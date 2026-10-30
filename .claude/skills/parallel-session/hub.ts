@@ -240,7 +240,7 @@ article{display:grid;grid-template-columns:200px 1fr;gap:20px;background:#fff;bo
 .thumb span{display:block;width:200px;padding:60px 0;text-align:center;background:#EEF1F4;color:#545861}
 p{margin:6px 0}ol{margin:6px 0;padding-left:22px}.links{font-size:14px;color:#545861}a{color:#1A7285}
 .seen{margin-left:12px;white-space:nowrap}
-.score{font-family:"JetBrains Mono",monospace;font-size:13px;background:#EEF1F4;padding:1px 6px;border-radius:4px;white-space:nowrap}
+.score{font-family:"JetBrains Mono",monospace;font-size:13px;background:#EEF1F4;padding:1px 6px;border-radius:4px}
 textarea{width:100%;box-sizing:border-box;min-height:56px;margin-top:8px;font:inherit;border:1px solid #D0D2D8;border-radius:4px;padding:8px}
 button{font:600 14px "JetBrains Mono",monospace;background:#1A7285;color:#fff;border:0;border-radius:4px;padding:10px 14px;cursor:pointer}
 .note{color:#545861;font-size:14px}.badge{font-size:12px;background:#1A7285;color:#fff;padding:1px 8px;border-radius:4px}#count{color:#9333EA}
