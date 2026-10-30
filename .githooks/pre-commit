@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Only what is irreversible or fast: secrets, format, lint on the staged files. Every other check
+# is the session's choice from the commands in CLAUDE.md.
+set -euo pipefail
+
+# Fail closed: a missing scanner would let every secret through without a word.
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "[pre-commit] gitleaks not found: brew install gitleaks" >&2
+  exit 1
+fi
+gitleaks git --pre-commit --staged --redact --no-banner --log-level warn
+
+# --check, not --write: re-staging a rewritten file would sweep another session's unstaged lines
+# in that file into this commit. Both tools get every staged path and skip what their own config
+# ignores, so the hook and `bun run check` judge the same files.
+staged=()
+while IFS= read -r -d '' f; do staged+=("$f"); done < <(git diff --cached --name-only --diff-filter=ACMR -z)
+[ ${#staged[@]} -gt 0 ] || exit 0
+if [ -x node_modules/.bin/prettier ]; then
+  node_modules/.bin/prettier --check --ignore-unknown --no-error-on-unmatched-pattern --log-level warn "${staged[@]}"
+fi
+if [ -x node_modules/.bin/eslint ]; then
+  node_modules/.bin/eslint --cache --no-warn-ignored "${staged[@]}"
+fi

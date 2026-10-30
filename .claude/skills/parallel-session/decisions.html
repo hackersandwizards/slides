@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>Open decisions</title>
+    <style>
+      :root {
+        --bg: #f7f9fa;
+        --surface: #ffffff;
+        --surface-2: #eef1f3;
+        --text: #19283a;
+        --muted: #545861;
+        --line: #d0d2d8;
+        --accent: #1a7285;
+        --accent-ink: #ffffff;
+        --accent-soft: color-mix(in srgb, #1a7285 12%, white);
+        --mark: #9333ea;
+        --ok: #15803d;
+        --ok-soft: color-mix(in srgb, #15803d 12%, white);
+        --p1: #a3402a;
+        --p1-soft: color-mix(in srgb, #a3402a 12%, white);
+        --p2: #b45309;
+        --p2-soft: color-mix(in srgb, #f59e0b 16%, white);
+        --p3: #545861;
+        --p3-soft: #eceef1;
+        --radius: 20px 5px;
+        --gutter: max(16px, env(safe-area-inset-left));
+        --sans:
+          "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI",
+          Roboto, Helvetica, Arial, sans-serif;
+        --mono:
+          "JetBrains Mono Variable", ui-monospace, "SF Mono", "Cascadia Code",
+          Menlo, monospace;
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #0b1118;
+          --surface: #111a24;
+          --surface-2: #18232f;
+          --text: color-mix(in srgb, white 92%, #0b1118);
+          --muted: color-mix(in srgb, white 70%, #0b1118);
+          --line: #25313e;
+          --accent: color-mix(in srgb, #1a7285 40%, white);
+          --accent-ink: #0b1118;
+          --accent-soft: color-mix(in srgb, #1a7285 30%, #111a24);
+          --mark: color-mix(in srgb, #9333ea 40%, white);
+          --ok: #4ade80;
+          --ok-soft: color-mix(in srgb, #15803d 30%, #111a24);
+          --p1: #f29a80;
+          --p1-soft: color-mix(in srgb, #a3402a 35%, #111a24);
+          --p2: #f59e0b;
+          --p2-soft: color-mix(in srgb, #b45309 35%, #111a24);
+          --p3: color-mix(in srgb, white 70%, #0b1118);
+          --p3-soft: #1c2733;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #0b1118;
+        --surface: #111a24;
+        --surface-2: #18232f;
+        --text: color-mix(in srgb, white 92%, #0b1118);
+        --muted: color-mix(in srgb, white 70%, #0b1118);
+        --line: #25313e;
+        --accent: color-mix(in srgb, #1a7285 40%, white);
+        --accent-ink: #0b1118;
+        --accent-soft: color-mix(in srgb, #1a7285 30%, #111a24);
+        --mark: color-mix(in srgb, #9333ea 40%, white);
+        --ok: #4ade80;
+        --ok-soft: color-mix(in srgb, #15803d 30%, #111a24);
+        --p1: #f29a80;
+        --p1-soft: color-mix(in srgb, #a3402a 35%, #111a24);
+        --p2: #f59e0b;
+        --p2-soft: color-mix(in srgb, #b45309 35%, #111a24);
+        --p3: color-mix(in srgb, white 70%, #0b1118);
+        --p3-soft: #1c2733;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        overflow-x: clip;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.55 var(--sans);
+        overflow-wrap: break-word;
+      }
+      .wrap {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 24px max(var(--gutter), env(safe-area-inset-right)) 80px
+          var(--gutter);
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--mono);
+        letter-spacing: -0.02em;
+      }
+      h1 {
+        font-size: 24px;
+        margin: 0 0 4px;
+      }
+      h2.repo {
+        font-size: 20px;
+        margin: 32px 0 4px;
+        padding-top: 12px;
+        border-top: 2px solid var(--line);
+      }
+      h3.group {
+        font-size: 15px;
+        margin: 26px 0 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0 0 18px;
+      }
+      .progress {
+        height: 8px;
+        background: var(--surface-2);
+        border-radius: 99px;
+        overflow: hidden;
+        margin: 10px 0 4px;
+      }
+      .progress > i {
+        display: block;
+        height: 100%;
+        background: linear-gradient(135deg, #1a7285, #9333ea);
+        width: 0;
+        transition: width 0.3s;
+      }
+      .stats {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .bar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: var(--bg);
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .chip {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--text);
+        border-radius: 99px;
+        padding: 5px 12px;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .chip[aria-pressed="true"] {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-ink);
+      }
+      select,
+      input[type="search"] {
+        font: inherit;
+        font-size: 13px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 6px 10px;
+        max-width: 100%;
+      }
+      input[type="search"] {
+        flex: 1;
+        min-width: 140px;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 16px 18px;
+        margin-bottom: 12px;
+      }
+      .card.done {
+        opacity: 0.8;
+      }
+      .card header {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .card h2 {
+        font-size: 16px;
+        margin: 0;
+        flex: 1 1 260px;
+        line-height: 1.35;
+        min-width: 0;
+      }
+      .badge {
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 6px;
+        padding: 2px 7px;
+        white-space: nowrap;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+      .b-p1 {
+        background: var(--p1-soft);
+        color: var(--p1);
+      }
+      .b-p2 {
+        background: var(--p2-soft);
+        color: var(--p2);
+      }
+      .b-p3 {
+        background: var(--p3-soft);
+        color: var(--p3);
+      }
+      .b-area {
+        background: var(--surface-2);
+        color: var(--muted);
+      }
+      .b-ok {
+        background: var(--ok-soft);
+        color: var(--ok);
+      }
+      .ctx {
+        margin: 10px 0 0;
+        white-space: pre-line;
+      }
+      .ctx.muted {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      details summary {
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 8px;
+      }
+      .opts {
+        display: grid;
+        gap: 8px;
+        margin: 14px 0 10px;
+      }
+      .opt {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+      .opt:has(input:checked) {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .opt input {
+        margin-top: 4px;
+        accent-color: var(--accent);
+      }
+      .opt b {
+        display: block;
+        font-size: 14px;
+      }
+      .opt span {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        white-space: pre-line;
+      }
+      .rec {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--mark);
+        margin-left: 6px;
+      }
+      label.f {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin: 10px 0 4px;
+      }
+      textarea {
+        width: 100%;
+        font: inherit;
+        font-size: 14px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 8px 10px;
+        min-height: 44px;
+        resize: vertical;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+        align-items: center;
+      }
+      .btn {
+        font: inherit;
+        font-size: 14px;
+        border-radius: 8px;
+        padding: 7px 14px;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--text);
+      }
+      .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-ink);
+        font-weight: 600;
+      }
+      .saved {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 40px 0;
+      }
+      .export {
+        margin-top: 12px;
+      }
+      .export textarea {
+        font-family: var(--mono);
+        font-size: 12px;
+        min-height: 160px;
+      }
+      :focus-visible {
+        outline: 3px solid var(--mark);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Open decisions</h1>
+      <p class="sub" id="repos"></p>
+      <p class="sub">
+        <b>Open</b>: what an agent may not decide alone. <b>Assumptions</b>:
+        what an agent decided itself, with its reason. <b>Decided</b>: already
+        settled. Pick an option or write your own answer and a note. Everything
+        saves at once in this browser. "Export answers" downloads answers.json,
+        keyed by repository and id.
+      </p>
+      <div class="progress"><i id="prog"></i></div>
+      <div class="stats" id="stats"></div>
+
+      <div class="bar" role="toolbar" aria-label="Filter">
+        <button class="chip" data-status="all" aria-pressed="true">All</button>
+        <button class="chip" data-status="open" aria-pressed="false">
+          Open
+        </button>
+        <button class="chip" data-status="assumed" aria-pressed="false">
+          Assumptions
+        </button>
+        <button class="chip" data-status="decided" aria-pressed="false">
+          Decided
+        </button>
+        <button class="chip" data-status="answered" aria-pressed="false">
+          Answered
+        </button>
+        <select id="prio" aria-label="Priority">
+          <option value="">All priorities</option>
+          <option value="1">P1 urgent</option>
+          <option value="2">P2 important</option>
+          <option value="3">P3 later</option>
+        </select>
+        <select id="area" aria-label="Area">
+          <option value="">All areas</option>
+        </select>
+        <input type="search" id="q" placeholder="Search" aria-label="Search" />
+        <button class="btn primary" id="export">Export answers</button>
+      </div>
+      <div class="export" id="exportBox" hidden>
+        <label class="f" for="exportText">answers.json to copy</label>
+        <textarea id="exportText" readonly></textarea>
+      </div>
+
+      <div id="list"></div>
+    </div>
+
+    <script src="../../../docs/tracking/decisions/items.js"></script>
+    <script>
+      (function () {
+        "use strict";
+        const AREAS = window.DECISION_AREAS || {};
+        const GROUPS = [
+          ["open", "Open"],
+          ["assumed", "Assumptions"],
+          ["decided", "Already decided"],
+        ];
+        const PREFIX = "decisions-answers-v1:";
+        const reg = window.DECISION_REPOS || {},
+          repos = Object.keys(reg).sort();
+        const items = repos.flatMap((r) =>
+          (Array.isArray(reg[r]) ? reg[r] : []).map((it) => ({
+            ...it,
+            repo: r,
+            key: r + ":" + it.id,
+          })),
+        );
+        if (!items.length) {
+          document.getElementById("list").innerHTML =
+            '<p class="empty">No rows loaded: docs/tracking/decisions/items.js is missing in this repository.</p>';
+          return;
+        }
+        const $ = (s) => document.querySelector(s);
+        const esc = (s) =>
+          String(s ?? "").replace(
+            /[&<>"']/g,
+            (c) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[c],
+          );
+        const has = (a) => !!(a && (a.option || a.text || a.note));
+        const store = {
+          get(k) {
+            try {
+              return JSON.parse(localStorage.getItem(k) || "{}") || {};
+            } catch (e) {
+              return {};
+            }
+          },
+          set(k, v) {
+            try {
+              localStorage.setItem(k, JSON.stringify(v));
+              return true;
+            } catch (e) {
+              return false;
+            }
+          },
+        };
+        const answers = {};
+        repos.forEach((r) => {
+          answers[r] = store.get(PREFIX + r);
+        });
+        const ans = (it) => answers[it.repo][it.id];
+        const byKey = (k) => items.find((i) => i.key === k);
+        const domId = (it) => it.key.replace(/[^A-Za-z0-9_-]/g, "_");
+        let status = "all";
+        const groupOf = (it) =>
+          it.status === "decided"
+            ? "decided"
+            : it.status === "assumed"
+              ? "assumed"
+              : "open";
+        const label = (it, k) =>
+          (it.options || []).find((o) => o.key === k)?.label || "";
+
+        function matches(it) {
+          if (status === "answered") {
+            if (!has(ans(it))) return false;
+          } else if (status !== "all" && groupOf(it) !== status) return false;
+          if ($("#prio").value && String(it.priority) !== $("#prio").value)
+            return false;
+          if ($("#area").value && it.area !== $("#area").value) return false;
+          const q = $("#q").value.trim().toLowerCase();
+          if (
+            q &&
+            !(
+              it.title +
+              " " +
+              (it.context || "") +
+              " " +
+              (it.decision || "") +
+              " " +
+              (it.assumption || "") +
+              " " +
+              (it.options || [])
+                .map((o) => o.label + " " + (o.detail || ""))
+                .join(" ")
+            )
+              .toLowerCase()
+              .includes(q)
+          )
+            return false;
+          return true;
+        }
+        function stats() {
+          const n = (g) => items.filter((i) => groupOf(i) === g).length;
+          const openAns = items.filter(
+            (i) => groupOf(i) === "open" && has(ans(i)),
+          ).length;
+          const all = items.filter((i) => has(ans(i))).length;
+          $("#prog").style.width = n("open")
+            ? (openAns / n("open")) * 100 + "%"
+            : "0";
+          $("#stats").textContent =
+            `${n("open")} open (${openAns} answered) · ${n("assumed")} assumptions · ${n("decided")} already decided · ${all} answers saved`;
+        }
+        function render() {
+          stats();
+          const sorted = items
+            .filter(matches)
+            .sort(
+              (a, b) =>
+                a.priority - b.priority ||
+                (a.order ?? 999) - (b.order ?? 999) ||
+                a.id.localeCompare(b.id),
+            );
+          if (!sorted.length) {
+            $("#list").innerHTML =
+              '<p class="empty">Nothing in this filter.</p>';
+            return;
+          }
+          const groups = (l) =>
+            GROUPS.map(([g, name]) => {
+              const s = l.filter((i) => groupOf(i) === g);
+              if (!s.length) return "";
+              return `<section><h3 class="group">${name} (${s.length})</h3>${s.map(card).join("")}</section>`;
+            }).join("");
+          $("#list").innerHTML =
+            repos.length === 1
+              ? groups(sorted)
+              : repos
+                  .map((r) => {
+                    const l = sorted.filter((i) => i.repo === r);
+                    if (!l.length) return "";
+                    return `<section><h2 class="repo">${esc(AREAS[r] || r)} (${l.length})</h2>${groups(l)}</section>`;
+                  })
+                  .join("");
+        }
+        function form(it, a) {
+          const d = domId(it),
+            k = esc(it.key);
+          const opts = (it.options || [])
+            .map(
+              (o) =>
+                `<label class="opt"><input type="radio" name="o-${d}" value="${esc(o.key)}" ${o.key === a.option ? "checked" : ""} data-key="${k}"><div><b>${esc(o.label)}${o.key === it.recommended ? '<span class="rec">RECOMMENDED</span>' : ""}</b>${o.detail ? `<span>${esc(o.detail)}</span>` : ""}</div></label>`,
+            )
+            .join("");
+          return `${opts ? `<div class="opts" role="radiogroup" aria-label="Options">${opts}</div>` : ""}
+      <label class="f" for="t-${d}">Your answer</label>
+      <textarea id="t-${d}" data-field="text" data-key="${k}" placeholder="Your own variant or answer (optional)">${esc(a.text || "")}</textarea>
+      <label class="f" for="n-${d}">Note</label>
+      <textarea id="n-${d}" data-field="note" data-key="${k}" placeholder="Note (optional)">${esc(a.note || "")}</textarea>
+      <div class="actions">
+        ${it.recommended && label(it, it.recommended) ? `<button class="btn primary" data-rec="${k}">${it.status === "assumed" ? "Confirm" : "Take recommendation"}</button>` : ""}
+        <button class="btn" data-clear="${k}">Clear answer</button>
+        <span class="saved" id="s-${d}">${has(a) ? "Saved " + esc(fmt(a.at)) : ""}</span>
+      </div>`;
+        }
+        function fmt(t) {
+          try {
+            return t
+              ? new Date(t).toLocaleString("en-GB", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })
+              : "";
+          } catch (e) {
+            return "";
+          }
+        }
+        function card(it) {
+          const g = groupOf(it),
+            a = ans(it) || {},
+            done = has(a),
+            d = domId(it);
+          const head = `<header><h2>${esc(it.title)}</h2><span class="badge b-p${esc(it.priority)}">P${esc(it.priority)}</span><span class="badge b-area">${esc(AREAS[it.area] || it.area)}</span>${done ? '<span class="badge b-ok">answered</span>' : ""}${g === "decided" ? '<span class="badge b-ok">decided</span>' : ""}${g === "assumed" ? '<span class="badge b-area">assumption</span>' : ""}</header>`;
+          if (g === "decided") {
+            return `<article class="card done" id="c-${d}">${head}${it.decision ? `<p class="ctx"><b>Decision:</b> ${esc(it.decision)}</p>` : ""}${it.context ? `<details><summary>Context</summary><p class="ctx muted">${esc(it.context)}</p></details>` : ""}${it.detail ? `<details><summary>More background</summary><p class="ctx muted">${esc(it.detail)}</p></details>` : ""}<details ${done ? "open" : ""}><summary>Add a comment</summary>${form(it, a)}</details></article>`;
+          }
+          if (g === "assumed") {
+            const lab = label(it, it.recommended);
+            return `<article class="card" id="c-${d}">${head}<p class="ctx"><b>Assumed:</b> ${esc(lab)}${lab && it.assumption ? " · " : ""}${esc(it.assumption || "")}</p><details><summary>Context</summary><p class="ctx muted">${esc(it.context)}</p></details>${it.detail ? `<details><summary>More background</summary><p class="ctx muted">${esc(it.detail)}</p></details>` : ""}<details ${done ? "open" : ""}><summary>Decide otherwise or confirm</summary>${form(it, a)}</details></article>`;
+          }
+          return `<article class="card" id="c-${d}">${head}<p class="ctx">${esc(it.context)}</p>${it.detail ? `<details><summary>More background</summary><p class="ctx muted">${esc(it.detail)}</p></details>` : ""}${form(it, a)}</article>`;
+        }
+        function update(key, patch) {
+          const it = byKey(key),
+            bucket = answers[it.repo];
+          const a = {
+            option: null,
+            text: "",
+            note: "",
+            ...(bucket[it.id] || {}),
+            ...patch,
+            at: new Date().toISOString(),
+          };
+          if (has(a)) bucket[it.id] = a;
+          else delete bucket[it.id];
+          const ok = store.set(PREFIX + it.repo, bucket);
+          const el = document.getElementById("s-" + domId(it));
+          if (el)
+            el.textContent = ok
+              ? has(a)
+                ? "Saved " + fmt(a.at)
+                : ""
+              : "Not saved: browser storage blocked, export instead";
+          stats();
+          if (!$("#exportBox").hidden) showExport();
+        }
+        function exportObj() {
+          const o = {};
+          repos.forEach((r) => {
+            Object.keys(answers[r])
+              .sort()
+              .forEach((id) => {
+                const a = answers[r][id];
+                if (has(a))
+                  (o[r] || (o[r] = {}))[id] = {
+                    option: a.option || null,
+                    text: a.text || "",
+                    note: a.note || "",
+                    at: a.at,
+                  };
+              });
+          });
+          return o;
+        }
+        function showExport() {
+          $("#exportText").value = JSON.stringify(exportObj(), null, 2);
+          $("#exportBox").hidden = false;
+        }
+        document.addEventListener("click", (e) => {
+          const t = e.target.closest("button");
+          if (!t) return;
+          if (t.dataset.status) {
+            status = t.dataset.status;
+            document
+              .querySelectorAll("[data-status]")
+              .forEach((b) => b.setAttribute("aria-pressed", String(b === t)));
+            render();
+            return;
+          }
+          if (t.id === "export") {
+            showExport();
+            try {
+              const url = URL.createObjectURL(
+                new Blob([$("#exportText").value], {
+                  type: "application/json",
+                }),
+              );
+              const l = document.createElement("a");
+              l.href = url;
+              l.download = "answers.json";
+              document.body.appendChild(l);
+              l.click();
+              l.remove();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } catch (err) {}
+            $("#exportText").focus();
+            $("#exportText").select();
+            return;
+          }
+          if (t.dataset.rec) {
+            const it = byKey(t.dataset.rec);
+            update(it.key, { option: it.recommended });
+            render();
+            return;
+          }
+          if (t.dataset.clear) {
+            const it = byKey(t.dataset.clear);
+            delete answers[it.repo][it.id];
+            store.set(PREFIX + it.repo, answers[it.repo]);
+            render();
+            if (!$("#exportBox").hidden) showExport();
+            return;
+          }
+        });
+        document.addEventListener("change", (e) => {
+          const r = e.target;
+          if (r.type === "radio" && r.dataset.key)
+            update(r.dataset.key, { option: r.value });
+        });
+        document.addEventListener("input", (e) => {
+          const t = e.target;
+          if (t.dataset && t.dataset.field && t.dataset.key)
+            update(t.dataset.key, { [t.dataset.field]: t.value });
+        });
+        ["#prio", "#area"].forEach((s) =>
+          $(s).addEventListener("change", render),
+        );
+        $("#q").addEventListener("input", render);
+        $("#repos").textContent = repos
+          .map(
+            (r) =>
+              `${AREAS[r] || r}: ${items.filter((i) => i.repo === r).length}`,
+          )
+          .join(" · ");
+        const used = [...new Set(items.map((i) => i.area))].sort((a, b) =>
+          (AREAS[a] || a).localeCompare(AREAS[b] || b),
+        );
+        $("#area").innerHTML =
+          '<option value="">All areas</option>' +
+          used
+            .map(
+              (a) =>
+                `<option value="${esc(a)}">${esc(AREAS[a] || a)} (${items.filter((i) => i.area === a).length})</option>`,
+            )
+            .join("");
+        render();
+      })();
+    </script>
+  </body>
+</html>

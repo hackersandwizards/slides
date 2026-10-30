@@ -1,0 +1,1102 @@
+@import "tailwindcss";
+/* The brand tokens from @hackersandwizards/brand: colours, both families and the type roles.
+   Every colour and size below reads from them. */
+@import "@hackersandwizards/brand/tokens.css";
+/* Tailwind never scans node_modules, so a consumer's build sees neither the engine's classes nor
+   the brand tokens unless named here. It keeps a theme variable only where a scanned file names
+   it: the brand line keeps every token the file names. Both paths are relative to this file in a
+   consumer's node_modules, where the brand package is this one's sibling. */
+@source "../components";
+@source "../lib";
+@source "../../brand/tokens/tokens.css";
+
+/* The brand's one font set, the static files of @hackersandwizards/brand, weights 400 to 700.
+   Self-hosted, so a PDF export has no network dependency and cannot silently fall back to a
+   system font mid-render: Chrome embeds a variable font in a PDF as Type 3 glyphs, which viewers
+   draw slowly and blurred. */
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/inter-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/inter-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/inter-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/inter-latin-700-normal.woff2") format("woff2");
+}
+
+/* Central European letters (Ł, ř): declared after the main faces, so the browser takes these for
+   their characters only. The website ships 400 and 600; the other weights take the nearer one. */
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/inter-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0100-024F, U+1E00-1EFF;
+}
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/inter-latin-ext-600-normal.woff2") format("woff2");
+  unicode-range: U+0100-024F, U+1E00-1EFF;
+}
+
+/* Arrows and box drawing, which the latin subsets lack: the website's own faces for those ranges. */
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/inter-arrows-400-normal.woff2") format("woff2");
+  unicode-range: U+2190-21FF;
+}
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/inter-arrows-500-normal.woff2") format("woff2");
+  unicode-range: U+2190-21FF;
+}
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/inter-arrows-600-normal.woff2") format("woff2");
+  unicode-range: U+2190-21FF;
+}
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/inter-arrows-700-normal.woff2") format("woff2");
+  unicode-range: U+2190-21FF;
+}
+
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/jetbrains-mono-symbols-400-normal.woff2") format("woff2");
+  unicode-range: U+2190-21FF, U+2500-257F;
+}
+
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/jetbrains-mono-symbols-500-normal.woff2") format("woff2");
+  unicode-range: U+2190-21FF, U+2500-257F;
+}
+
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/jetbrains-mono-symbols-600-normal.woff2") format("woff2");
+  unicode-range: U+2190-21FF, U+2500-257F;
+}
+
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/jetbrains-mono-symbols-700-normal.woff2") format("woff2");
+  unicode-range: U+2190-21FF, U+2500-257F;
+}
+
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/jetbrains-mono-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("@hackersandwizards/brand/fonts/jetbrains-mono-latin-700-normal.woff2") format("woff2");
+}
+
+/* The slide scale: the website's type roles at stage size. A slide is designed at 1440x810, where
+   running text is 24px against the website's 16px body, so every role is its website size times
+   --slide-stage (1.5), read from the role tokens, never copied. A fluid role resolves to its largest
+   step on a slide: the slide's rem is 1.1111vw, so each clamp's preferred value lands above its
+   maximum at any stage size. At 1920 a rem is 21.333px, so body reaches 32px and card text 36px,
+   the Meet floor (18pt on the slide, half that in a 960px Meet window). Line heights stay the slide's own,
+   tighter than the website's reading rhythm, so a projected card holds its text.
+
+   Tailwind step  role                    size with the tokens of 2026-10-28
+   text-xs        label                   0.75 x 1.5 = 1.125rem
+   text-sm        between label and code  1.25rem, see below
+   text-base      body                    1 x 1.5 = 1.5rem
+   text-lg        between body and h4     1.625rem, see below
+   text-xl, -2xl  h4 (title)              1.125 x 1.5 = 1.6875rem
+   text-3xl       lead                    1.25 x 1.5 = 1.875rem
+   text-4xl       h3                      1.5 x 1.5 = 2.25rem
+   text-7xl       h1                      3 x 1.5 = 4.5rem
+   .slide-title   h1, slide size          3.375rem, see .slide-title
+   text-5xl, -6xl, -8xl  statement steps  2, 2.5 and 4 x the slide body
+
+   text-sm and text-lg keep their sizes from before the roles: the code role at stage size
+   (1.3125rem) and h4 (1.6875rem) push 27 hub slides under the fit guard or deeper into it
+   (audit of 2026-10-28), and a guard that shrinks the whole body loses more than the step gains.
+   The statement steps carry the title, statement, closing and big-number slides. The website
+   has no role for type that fills a stage (its display role at stage size, 5.25rem, sits between
+   two of them), so they stay steps of the slide body. Not inline, so the utilities read the
+   variables and a delivered deck sets them back (.slide-scale-delivered). */
+@theme {
+  /* Deep dive: the brand purple (#9333ea is purple-600). Delivered decks keep the rose they were
+     delivered with (.slide-scale-delivered). */
+  --color-deep-50: oklch(97.7% 0.014 308.299);
+  --color-deep-100: oklch(94.6% 0.033 307.174);
+  --color-deep-200: oklch(90.2% 0.063 306.703);
+  --color-deep-300: oklch(82.7% 0.119 306.383);
+  --color-deep-400: oklch(71.4% 0.203 305.504);
+  --color-deep-500: oklch(62.7% 0.265 303.9);
+  --color-deep-600: oklch(55.8% 0.288 302.321);
+  --color-deep-700: oklch(49.6% 0.265 301.924);
+  --color-deep-800: oklch(43.8% 0.218 303.724);
+  --color-deep-900: oklch(38.1% 0.176 304.987);
+  --color-deep-950: oklch(29.1% 0.149 302.717);
+  /* The brand corner on the slide scale (see :root below): cards and code blocks take the full
+     corner, number and icon tiles, inline code and the hint bar the small one. A text chip stays the
+     website's pill (TrainingList.astro .tl-chip). */
+  --radius-brand: var(--slide-radius);
+  --radius-brand-sm: var(--slide-radius-sm);
+  /* Not inline, so a delivered deck sets them back. */
+  --color-section-deepdive: color-mix(in srgb, var(--color-amber) 4%, var(--color-bg));
+  /* Badge colors: opaque teal tints, for overlapping card borders */
+  --color-badge-bg: color-mix(in srgb, var(--color-teal) 12%, white);
+  --color-badge-border: color-mix(in srgb, var(--color-teal) 25%, white);
+  --text-xs: calc(var(--type-label-size) * var(--slide-stage));
+  --text-xs--line-height: 1.4;
+  --text-sm: 1.25rem;
+  --text-sm--line-height: 1.4;
+  --text-base: calc(var(--type-body-size) * var(--slide-stage));
+  --text-base--line-height: 1.45;
+  --text-lg: 1.625rem;
+  --text-lg--line-height: 1.4;
+  --text-xl: calc(var(--type-h4-size) * var(--slide-stage));
+  --text-xl--line-height: 1.4;
+  --text-2xl: calc(var(--type-h4-size) * var(--slide-stage));
+  --text-2xl--line-height: 1.35;
+  --text-3xl: calc(var(--type-lead-size) * var(--slide-stage));
+  --text-3xl--line-height: 1.2;
+  --text-4xl: calc(var(--type-h3-size) * var(--slide-stage));
+  --text-4xl--line-height: calc(2.5 / 2.25);
+  --text-5xl: calc(var(--text-base) * 2);
+  --text-5xl--line-height: 1;
+  --text-6xl: calc(var(--text-base) * 2.5);
+  --text-6xl--line-height: 1;
+  --text-7xl: calc(var(--type-h1-size) * var(--slide-stage));
+  --text-7xl--line-height: 1;
+  --text-8xl: calc(var(--text-base) * 4);
+  --text-8xl--line-height: 1;
+
+  /* The brand tokens reset Tailwind's tracking and leading steps; the slides keep the ones they
+     use, at Tailwind's values. */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  /* Families by role, so a change to a role's family in the brand tokens reaches every slide:
+     headings and stats take the heading role's, labels the label role's, code keeps font-mono. */
+  --font-heading: var(--type-h1-family);
+  --font-label: var(--type-label-family);
+
+  /* Brand colors */
+  --color-brand: var(--color-teal);
+  --color-brand-accent: var(--color-purple);
+  /* The website's dark green and amber: both carry text at 4.5:1 or better on white and on the
+     page background, where its light green and amber reach 1.6:1 and 2.1:1. */
+  --color-success: var(--color-green-dark);
+  --color-accent: var(--color-amber-dark);
+  /* The brand has no signal red; its red-brown area hue is the nearest, 6:1 on the page. */
+  --color-warning: var(--color-factory);
+  --color-error: var(--color-factory);
+
+  /* Semantic presentation colors */
+  --color-primary: var(--color-teal);
+  --color-primary-bg: color-mix(in srgb, var(--color-teal) 7%, transparent);
+  --color-primary-border: color-mix(in srgb, var(--color-teal) 25%, transparent);
+  --color-secondary: var(--color-purple);
+  --color-secondary-bg: color-mix(in srgb, var(--color-purple) 7%, transparent);
+  --color-secondary-border: color-mix(in srgb, var(--color-purple) 25%, transparent);
+  --color-insight: var(--color-amber);
+  --color-insight-bg: color-mix(in srgb, var(--color-amber) 8%, transparent);
+  --color-constraint: var(--color-factory);
+  --color-constraint-bg: color-mix(in srgb, var(--color-factory) 8%, transparent);
+
+  /* Code blocks: the website's code, Shiki's github-dark, whose tokens lib/code-highlight.tsx
+     colours. The terminal block takes the theme's background, its green for a command and the
+     website's lifted comment grey (5.34:1). */
+  --color-code-bg: #24292e;
+  --color-code-command: #85e89d;
+  --color-code-comment: #959da5;
+
+  /* Section backgrounds: the page colour tinted towards the section's hue, as the bg-section-*
+     utilities below do. Only deepdive is read as a colour (a gradient stop), so it sits in the
+     @theme block above with the badges. */
+  --color-section-intro: var(--color-bg);
+  --color-section-primary: color-mix(in srgb, var(--color-teal) 5%, var(--color-bg));
+  --color-section-secondary: color-mix(in srgb, var(--color-purple) 4%, var(--color-bg));
+  --color-section-accent: color-mix(in srgb, var(--color-amber-dark) 7%, var(--color-bg));
+  --color-section-success: color-mix(in srgb, var(--color-green-dark) 7%, var(--color-bg));
+
+  /* Text hierarchy: the brand's three text steps, ink, muted and subtle. */
+  --color-text: var(--color-ink);
+  --color-text-muted: var(--color-muted);
+  --color-text-subtle: var(--color-subtle);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* The slide scale: the website's shapes sized for a room. A slide is a 1920x1080 page seen on a
+   projector from the back row, in a shared screen at half size, or as a thumbnail at a quarter.
+   Viewing distance sets the factor: a laptop at 60 cm shows a website px at about 0.35 mrad, a
+   3 m projector image seen from 8 m shows a slide px at 0.2 mrad, so a website px needs about 1.8
+   slide px at 1920 to look the same. The type roles take 2 (--slide-stage, 1.5 rem on the 1440
+   stage, see the type table above), and the shapes follow that factor, except where the quarter
+   size thumbnail sets a floor for the header strip: under 4px at 1920 it drops below one pixel
+   there and vanishes.
+   All lengths in rem, so they grow with the stage (a rem is 21.333px at 1920).
+
+   --slide-strip     the header strip: website 3px x 2 = 6px fails the thumbnail floor and reads
+                     thin across a room; 0.75rem = 16px at 1920, 8px at half size, 4px at a quarter
+   --slide-hairline  every border and rule: website 1px x 2 = 2px at 1920, 1px at half size. The
+                     thumbnail floor of 4px drew cards with a heavy grey frame, where the attendee
+                     survey readout's 1.5px hairline read as the website's card. Painted as an
+                     overlay, so the box keeps its 1px layout: a real wide border shrank 22 talks and
+                     37 hub slides under the fit guard (measured 2026-10-28)
+   --slide-radius    the brand corner: website 20px 5px x 2 = 40px 10px at 1920
+   --slide-radius-sm the brand corner on a tile, badge or inline code, which stands a line tall: the
+                     website's small marks round 4px 1px (patterns.css .dest-swatch), and 6px 1.5px
+                     x 2 = 12px 3px at 1920 keeps that 4:1 at a line's height
+   --slide-marker    the list marker, the website's teal square (EventRow.astro .event-facts):
+                     0.375rem x 2 = 12px at 1920, its corner a sixth of the side on the brand
+                     diagonal, as the print marker Benedikt chose ("die finde ich besser"). A blind
+                     test on one slide (2026-10-28, ten reviewers) put a third first seven times;
+                     his choice and one shape across media decide
+
+   --slide-footer-inset  the corner row's distance from the slide's bottom and right edges: 1.5rem,
+                     32px at 1920
+   --slide-footer-mark   the corner row's height, the wizard emoji of the wordmark: 2.25rem, 48px
+   --slide-wordmark      the corner wordmark's box, whose centre is its text centre: 1.956rem,
+                     42px at 1920, 1.3 times the 1.5rem typed name it replaces
+   --slide-closing-lockup the closing slide's lockup, wizard and wordmark: 4.3rem, 92px at 1920
+                     (both blind-scored, 2026-10-29)
+   --slide-footer-band   the band above the bottom edge that a slide's content never enters: the
+                     corner row plus a 2rem gap, 43px at 1920. The bottom padding of 4.25rem it
+                     replaces left 11px between content and the page counter, and timelines, card
+                     grids and closing lines read as crowded against it (Benedikt, 2026-10-29)
+
+   Card padding stays each component's own (2rem, 43px at 1920, for most cards): the website's
+   32px x 2 would take a fifth of a card's width at four columns and push bodies under the fit
+   guard. */
+:root {
+  --slide-footer-inset: 1.5rem;
+  --slide-footer-mark: 2.25rem;
+  --slide-wordmark: 1.956rem;
+  --slide-closing-lockup: 4.3rem;
+  --slide-footer-band: calc(var(--slide-footer-inset) + var(--slide-footer-mark) + 2rem);
+  --slide-strip: 0.75rem;
+  --slide-hairline: 0.09375rem;
+  --slide-radius: 1.875rem 0.46875rem;
+  --slide-radius-sm: 0.5625rem 0.140625rem;
+  --slide-marker: 0.5625rem;
+  --slide-marker-radius: 0.09375rem 0;
+  --slide-stage: 1.5;
+  --radius: 0.625rem;
+  --background: var(--color-bg);
+  --foreground: var(--color-ink);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* A slide headline never leaves one word on its last line. Headings take the heading family and
+     weight, as the website's base styles set them; a class names any other. */
+  :is(h1, h2, h3) {
+    text-wrap: balance;
+  }
+  :is(h1, h2, h3, h4) {
+    font-family: var(--font-heading);
+    font-weight: 700;
+  }
+
+  /* Slide-specific: custom cursor, no scrollbars, no overflow */
+  .slide-viewport {
+    overflow: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    cursor:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Ccircle cx='6' cy='6' r='3' fill='%231A7285' /%3E%3Ccircle cx='6' cy='6' r='4' fill='%231A7285' fill-opacity='0.4' /%3E%3Ccircle cx='6' cy='6' r='5' fill='%231A7285' fill-opacity='0.2' /%3E%3C/svg%3E")
+        6 6,
+      auto;
+  }
+  .slide-viewport::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+::selection {
+  background-color: var(--color-brand) !important;
+  color: white !important;
+}
+
+/* A slide is a 16:9 stage designed at 1440x810: every rem-sized length (Tailwind's type, spacing
+   and container scales) grows with the viewport, so a projector at 1920x1080 shows the slide a
+   third larger instead of a laptop-sized layout in the middle of an empty canvas. Scoped to pages
+   that render a slide, so the app shell and the catalogue keep their 16px root. The print route
+   lays out every slide at 1920x1080, whatever window opens it. */
+@media screen and (width >= 48rem) {
+  html:has(.slide-viewport, .slide-story) {
+    font-size: min(1.1111vw, 1.9753vh);
+  }
+}
+
+html:has(.print-slide) {
+  font-size: 21.333px;
+}
+
+.slide-content {
+  height: 100vh;
+  width: 100%;
+  max-width: 1920px;
+}
+
+/* A content slide's title sits on one line at the same height on every slide, whatever the slide
+   type and whether a kicker runs above it, and the slide's body takes the space below.
+   Title, statement, divider and closing slides keep their own centred layout. Unlayered, so it
+   wins over the slide's own `justify-center`, `items-center` and padding utilities. */
+.slide-titled {
+  justify-content: flex-start;
+  align-items: stretch;
+  /* Sides 4.5rem, 96px at 1920: the 5% graphics-safe margin a projector or a Meet crop leaves. */
+  padding: 5.5rem 4.5rem 0;
+}
+
+/* No slide's content enters the footer band: the bottom padding is the band, on every slide type,
+   and the fit guard in SlideShell shrinks a body that would reach into it. A delivered deck keeps
+   the margins it was delivered with. Below `md` a slide scrolls and keeps its own padding. */
+@media screen and (width >= 48rem), print {
+  .slide-content:not(.slide-scale-delivered *) {
+    padding-bottom: var(--slide-footer-band);
+  }
+}
+
+.slide-titled > .slide-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 1.5rem;
+}
+
+/* The body sits a little above the centre of the free space, closer to its title: two spacers
+   share what is left, the lower one taking more. A body that fills the space has none to share. */
+.slide-titled > .slide-body::before,
+.slide-titled > .slide-body::after {
+  content: "";
+  flex: 1 1 0;
+}
+
+.slide-titled > .slide-body::after {
+  flex-grow: 1.25;
+}
+
+/* A body with a part that grows to fill the space, such as gantt rows, takes all of it. */
+.slide-titled > .slide-body:has(> .flex-1)::before,
+.slide-titled > .slide-body:has(> .flex-1)::after {
+  flex-grow: 0;
+}
+
+/* The kicker (section label, principle, stage strip) hangs above the title line instead of
+   pushing the title down. */
+.slide-titled .slide-kicker {
+  /* Tall enough for the principle pill at the type scale, so the pill clears the title. */
+  height: 2.5rem;
+  /* Its top stays 53px down, inside the 5% safe area; the net height is zero. */
+  margin: -3rem 0 0.5rem;
+}
+
+/* Borders and rules on a slide take the hairline of the slide scale: the one-class specificity
+   of the utilities they replace, placed after them. A border-2 or border-4 keeps its width. */
+@layer utilities {
+  /* A box or rule keeps its 1px border for layout, and an overlay in its own border colour and
+     corner paints the hairline inward over the padding: a wider border grew every card and table
+     row and shrank slides under the fit guard. */
+  :where(.slide-viewport, .print-slide, .slide-story)
+    :is(.border, .border-t, .border-b, .border-l, .border-r, .border-x, .border-y):not(
+      .absolute,
+      .fixed,
+      .sticky
+    ) {
+    position: relative;
+  }
+  :where(.slide-viewport, .print-slide, .slide-story)
+    :is(.border, .border-t, .border-b, .border-l, .border-r, .border-x, .border-y)::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-width: 0;
+    border-style: inherit;
+    border-color: inherit;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+  :where(.slide-viewport, .print-slide, .slide-story) :is(.border, .border-t, .border-y)::after {
+    border-top-width: var(--slide-hairline);
+  }
+  :where(.slide-viewport, .print-slide, .slide-story) :is(.border, .border-b, .border-y)::after {
+    border-bottom-width: var(--slide-hairline);
+  }
+  :where(.slide-viewport, .print-slide, .slide-story) :is(.border, .border-l, .border-x)::after {
+    border-left-width: var(--slide-hairline);
+  }
+  :where(.slide-viewport, .print-slide, .slide-story) :is(.border, .border-r, .border-x)::after {
+    border-right-width: var(--slide-hairline);
+  }
+}
+
+/* In the components layer, so a slide's own colour utility still wins. */
+@layer components {
+  /* The website's tag chip (TrainingList.astro .tl-chip): a pill tinted with its hue, text mixed
+     from the hue and the ink, no outline. --chip names the hue, teal by default. */
+  .slide-chip {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--chip, var(--color-teal)) 16%, white);
+    color: color-mix(in srgb, var(--chip, var(--color-teal)) 40%, var(--color-ink));
+    font-weight: 500;
+  }
+
+  /* The list marker: the website's small teal square, centred on the first line of its item.
+     A second level steps down in size and tone and stays square. A marker's own colour utility
+     (bg-success, bg-warning) wins, since this sits in the components layer. */
+  .slide-marker {
+    --marker: var(--slide-marker);
+    flex-shrink: 0;
+    width: var(--marker);
+    height: var(--marker);
+    border-radius: calc(var(--marker) / 6) 0;
+    background: var(--color-teal);
+  }
+  .slide-marker-nested {
+    --marker: calc(var(--slide-marker) * 0.75);
+    background: color-mix(in srgb, var(--color-teal) 55%, var(--color-bg));
+  }
+  /* Beside text that may wrap, on the middle of the first line's cap height, as on the website: for
+     Inter the line box's middle is the cap height's middle at every line height. Measured at 4x
+     within 0.7px at 100% and 50%, wrapped items included. */
+  .items-start > .slide-marker {
+    margin-top: calc((1lh - var(--marker)) / 2);
+  }
+
+  /* The website's label-caps (typography.css): metadata, chips and table heads in the label
+     role's family, weight, tracking and case. Each label keeps its own step, so a kicker strip
+     stays one line tall. */
+  .label-caps {
+    font-family: var(--type-label-family);
+    font-weight: var(--type-label-weight);
+    letter-spacing: var(--type-label-tracking);
+    text-transform: var(--type-label-case);
+  }
+
+  /* The h1 role at a slide's own size: 72px at 1920, 36pt on the slide, the floor for a title
+     watched in a Meet window. The h1 role at stage size (5.25rem) fits three words on a line. */
+  .slide-title {
+    font-family: var(--type-h1-family);
+    font-size: 3.375rem;
+    line-height: 1.1;
+    font-weight: var(--type-h1-weight);
+    letter-spacing: var(--type-h1-tracking);
+    color: var(--color-text);
+  }
+}
+
+@media screen and (width >= 48rem), print {
+  .slide-scale-delivered .decision-grid {
+    display: none;
+  }
+  .slide-scale-delivered .decision-canvas {
+    display: block;
+  }
+}
+
+@media screen and (width >= 48rem), print {
+  .process-canvas {
+    display: none;
+  }
+  .slide-scale-delivered .process-canvas {
+    display: block;
+  }
+  .slide-scale-delivered .process-row {
+    display: none;
+  }
+}
+
+/* A delivered deck keeps the scale, margins and colours it was delivered with (see the deck
+   registry): the rose deep dive, and the values it shipped with where the brand tokens replaced
+   them (text subtle, signal red, deep-dive section and badge tints). The fonts, the brand corner,
+   the list marker and the code colours (the website's github-dark) are the brand's here too. */
+.slide-scale-delivered {
+  --color-subtle: #5c6272;
+  --color-factory: var(--color-red);
+  --color-section-deepdive: #fbf7f2;
+  --color-badge-bg: #e0f0f3;
+  --color-badge-border: #c0dde2;
+}
+
+/* A semantic colour resolves its brand token on the root, so a component reading it through var()
+   needs it set back as well, except where the KINETIC theme sets its own. */
+.slide-scale-delivered:not(.theme-kinetic-dark) {
+  --color-text-subtle: #5c6272;
+  --color-warning: var(--color-red);
+  --color-error: var(--color-red);
+  --color-constraint: var(--color-red);
+  --color-constraint-bg: color-mix(in srgb, var(--color-red) 8.235%, transparent);
+}
+
+.slide-scale-delivered {
+  --color-deep-50: oklch(96.9% 0.015 12.422);
+  --color-deep-100: oklch(94.1% 0.03 12.58);
+  --color-deep-200: oklch(89.2% 0.058 10.001);
+  --color-deep-300: oklch(81% 0.117 11.638);
+  --color-deep-400: oklch(71.2% 0.194 13.428);
+  --color-deep-500: oklch(64.5% 0.246 16.439);
+  --color-deep-600: oklch(58.6% 0.253 17.585);
+  --color-deep-700: oklch(51.4% 0.222 16.935);
+  --color-deep-800: oklch(45.5% 0.188 13.697);
+  --color-deep-900: oklch(41% 0.159 10.272);
+  --color-deep-950: oklch(27.1% 0.105 12.094);
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.4;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(1.75 / 1.25);
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: calc(2 / 1.5);
+}
+
+.slide-scale-delivered .slide-titled {
+  padding: 4.5rem 4rem 4.25rem;
+}
+
+.slide-scale-delivered .slide-titled > .slide-body {
+  padding-top: 0.75rem;
+}
+
+.slide-scale-delivered .slide-titled > .slide-body::after {
+  flex-grow: 2;
+}
+
+.slide-scale-delivered .slide-titled .slide-kicker {
+  height: 1.75rem;
+  margin: -2.75rem 0 1rem;
+}
+
+@layer components {
+  .slide-scale-delivered .slide-title {
+    font-size: 3rem;
+  }
+}
+
+.slide-scale-delivered .card-text-lg {
+  font-size: calc(1.125rem * var(--card-boost, 1.12));
+}
+
+.slide-scale-delivered .card-text-base {
+  font-size: calc(1rem * var(--card-boost, 1.12));
+}
+
+/* A pipeline whose stages wrap steps down until they hold one row (PipelineRow in ContentSlide):
+   1 closes the gaps from 1rem towards 0.5rem and the stage padding from 1.25rem towards 0.75rem by
+   the share `--tighten`, 2 also sets the labels from text-lg to text-base, the body size and the
+   floor, 3 lays out two balanced rows at the full sizes, with no arrow at the break. A stage takes
+   no transition, so each step lays out at once for the next measurement and never animates in. */
+.pipeline-stage {
+  transition: none;
+}
+
+.pipeline-row[data-step="1"],
+.pipeline-row[data-step="1"] > div {
+  gap: calc(1rem - 0.5rem * var(--tighten));
+}
+
+.pipeline-row[data-step="1"] .pipeline-stage {
+  padding-inline: calc(1.25rem - 0.5rem * var(--tighten));
+}
+
+.pipeline-row[data-step="2"],
+.pipeline-row[data-step="2"] > div {
+  gap: 0.5rem;
+}
+
+.pipeline-row[data-step="2"] .pipeline-stage {
+  padding-inline: 0.75rem;
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+}
+
+.pipeline-break {
+  display: none;
+}
+
+/* The break takes a line of its own between the two rows, so each row gap is half. */
+.pipeline-row[data-step="3"] {
+  row-gap: 0.5rem;
+}
+
+.pipeline-row[data-step="3"] .pipeline-break {
+  display: block;
+  flex-basis: 100%;
+}
+
+.pipeline-row[data-step="3"] .pipeline-break + div > span {
+  display: none;
+}
+
+/* Card body text, raised to the 36px floor wherever the slide has room for it: read in a
+   half-size video call, a card's text arrives at half its size. The fit guard in SlideShell sets
+   `--card-boost` to 1 on a body that would otherwise have to shrink further for it. */
+.card-text-lg {
+  font-size: calc(var(--text-lg) * var(--card-boost, 1.04));
+}
+
+.card-text-base {
+  font-size: calc(var(--text-base) * var(--card-boost, 1.125));
+}
+
+/* Card and body text: no single word on a last line. */
+.slide-content :is(p, li) {
+  text-wrap: pretty;
+}
+
+/* A slide is laid out for a projector. Below Tailwind's `md` it becomes one column that scrolls
+ * instead of clipping, with headings and card padding cut to fit 390px. Unlayered, so it wins over
+ * the utilities it overrides (`overflow-hidden`, `px-16`, `grid-cols-*`, `text-5xl`). Screen only:
+ * a PDF page is a projector slide whatever width the print layout reports. */
+@media screen and (width < 48rem) {
+  .slide-viewport {
+    overflow-y: auto;
+  }
+  .slide-content {
+    height: auto;
+    min-height: 100vh;
+    padding: 4rem 1.25rem 6rem;
+  }
+  .slide-content > * {
+    max-width: 100%;
+  }
+  .slide-titled .slide-kicker {
+    height: auto;
+    margin: 0 0 1rem;
+  }
+  .slide-content .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .slide-content pre {
+    white-space: pre-wrap;
+  }
+  .slide-content :is(pre, code, a) {
+    overflow-wrap: anywhere;
+  }
+  .slide-content :is(th, td) {
+    padding: 0.5rem 0.625rem;
+    font-size: var(--type-small-size);
+  }
+  .slide-content :is(.p-8, .p-10) {
+    padding: 1.25rem;
+  }
+  /* On a phone the root is 16px, so the website's roles apply at their own size. */
+  .slide-content :is(.slide-title, .text-5xl, .text-6xl, .text-7xl, .text-8xl, .text-\[5rem\]) {
+    font-size: var(--type-display-size);
+    line-height: var(--type-display-line-height);
+  }
+}
+
+/* Presentation-specific utilities */
+@layer utilities {
+  /* Gradient text */
+  /* The website keeps its gradient to the header strip: emphasised words take the brand colour. A
+     delivered deck keeps the gradient text it was shown with. */
+  .text-gradient-brand {
+    color: var(--color-brand);
+  }
+  .slide-scale-delivered .text-gradient-brand {
+    background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Section backgrounds: the brand page colour, tinted a few percent towards the section's hue.
+     Flat, so screen and PDF match and the content, not the wash, carries the slide. */
+  .bg-section-intro {
+    background: var(--background);
+  }
+
+  .bg-section-primary {
+    background: color-mix(in srgb, var(--color-primary) 5%, var(--background));
+  }
+
+  .bg-section-secondary {
+    background: color-mix(in srgb, var(--color-secondary) 4%, var(--background));
+  }
+
+  .bg-section-accent {
+    background: color-mix(in srgb, var(--color-accent) 7%, var(--background));
+  }
+
+  .bg-section-success {
+    background: color-mix(in srgb, var(--color-success) 7%, var(--background));
+  }
+
+  /* Stronger glow for light backgrounds */
+  .glow-primary-strong {
+    box-shadow:
+      0 0 30px color-mix(in srgb, var(--color-teal) 25%, transparent),
+      0 0 60px color-mix(in srgb, var(--color-teal) 12%, transparent),
+      0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .glow-secondary-strong {
+    box-shadow:
+      0 0 30px color-mix(in srgb, var(--color-purple) 25%, transparent),
+      0 0 60px color-mix(in srgb, var(--color-purple) 12%, transparent),
+      0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .glow-accent-strong {
+    box-shadow:
+      0 0 30px color-mix(in srgb, var(--color-amber) 30%, transparent),
+      0 0 60px color-mix(in srgb, var(--color-amber) 15%, transparent),
+      0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .glow-success-strong {
+    box-shadow:
+      0 0 30px color-mix(in srgb, var(--color-green) 25%, transparent),
+      0 0 60px color-mix(in srgb, var(--color-green) 12%, transparent),
+      0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Transition slide radial spotlight */
+  .spotlight-radial {
+    background: radial-gradient(
+      ellipse 60% 50% at center,
+      rgba(255, 255, 255, 0.6) 0%,
+      transparent 70%
+    );
+  }
+
+  /* KINETIC deck theme: dark, premium, with gold as the strategic accent. A client's palette for
+     its own decks, declared here like the delivered rose, so it stays off the brand tokens. */
+  .theme-kinetic-dark {
+    --color-brand: #f2b441;
+    --color-brand-accent: #5cd0a0;
+    --color-primary: #f2b441;
+    --color-primary-bg: #f2b44118;
+    --color-primary-border: #f2b44140;
+    --color-secondary: #5cd0a0;
+    --color-secondary-bg: #5cd0a018;
+    --color-secondary-border: #5cd0a040;
+    --color-accent: #f2b441;
+    --color-success: #5cd0a0;
+    --color-warning: #f0736b;
+    --color-error: #f0736b;
+    --color-text: #f2f5f9;
+    --color-text-muted: #c8d0dc;
+    --color-text-subtle: #97a2b3;
+    --color-code-bg: #191e27;
+    --color-code-comment: #97a2b3;
+  }
+
+  .theme-kinetic-dark .bg-section-intro,
+  .theme-kinetic-dark .bg-section-primary,
+  .theme-kinetic-dark .bg-section-secondary,
+  .theme-kinetic-dark .bg-section-accent,
+  .theme-kinetic-dark .bg-section-success {
+    background:
+      radial-gradient(ellipse at top left, rgba(242, 180, 65, 0.14) 0%, transparent 42%),
+      radial-gradient(ellipse at bottom right, rgba(92, 208, 160, 0.1) 0%, transparent 48%), #0f1217;
+  }
+
+  .theme-kinetic-dark .bg-white\/90,
+  .theme-kinetic-dark .bg-white\/95 {
+    background-color: rgba(25, 30, 39, 0.92) !important;
+  }
+
+  .theme-kinetic-dark .border-text-subtle\/20,
+  .theme-kinetic-dark .border-primary-border,
+  .theme-kinetic-dark .border-primary\/30,
+  .theme-kinetic-dark .border-primary\/20 {
+    border-color: rgba(46, 56, 72, 0.95) !important;
+  }
+
+  .theme-kinetic-dark .shadow-lg,
+  .theme-kinetic-dark .shadow-md,
+  .theme-kinetic-dark .shadow-sm {
+    box-shadow: 0 18px 70px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Brand dark: a proposal, on no deck by default (decision row in docs/tracking/decisions).
+     The website's night tokens for page, cards and text, teal and purple lifted towards white
+     so they read on night, and dark text on those lifted fills. */
+  .theme-brand-dark {
+    /* The engine's semantic colours are inlined from these tokens at build time, so the theme
+       sets the tokens themselves; a token derived from another is set again, since it resolved
+       on the root. */
+    --background: var(--color-night);
+    --color-bg: var(--color-night);
+    --color-ink: var(--color-night-ink);
+    --color-muted: var(--color-night-muted);
+    --color-subtle: var(--color-night-subtle);
+    --color-border: color-mix(in srgb, var(--color-night-ink) 18%, var(--color-night));
+    --color-teal: color-mix(in srgb, #1a7285 55%, white);
+    --color-purple: color-mix(in srgb, #9333ea 60%, white);
+    --color-green-dark: var(--color-green);
+    --color-amber-dark: var(--color-amber);
+    --color-factory: var(--color-factory-light);
+    --color-code-bg: var(--color-night-2);
+    --color-text: var(--color-ink);
+    --color-text-muted: var(--color-muted);
+    --color-text-subtle: var(--color-subtle);
+    --color-brand: var(--color-teal);
+    --color-brand-accent: var(--color-purple);
+    --color-primary: var(--color-teal);
+    --color-secondary: var(--color-purple);
+    --color-success: var(--color-green);
+    --color-accent: var(--color-amber);
+    /* Dark text steps used on light tints turn light. */
+    --color-teal-dark: color-mix(in srgb, var(--color-teal) 70%, white);
+    --color-deep-700: var(--color-deep-300);
+    --color-deep-800: var(--color-deep-200);
+    --color-deep-900: var(--color-deep-100);
+    color-scheme: dark;
+  }
+
+  /* The Night wordmark on a dark theme, the light one everywhere else. */
+  .hw-wordmark-night,
+  :is(.theme-brand-dark, .theme-kinetic-dark) .hw-wordmark {
+    display: none;
+  }
+  :is(.theme-brand-dark, .theme-kinetic-dark) .hw-wordmark-night {
+    display: block;
+  }
+
+  .theme-brand-dark .slide-chip {
+    background: color-mix(in srgb, var(--chip, var(--color-teal)) 22%, var(--color-night));
+    color: color-mix(in srgb, var(--chip, var(--color-teal)) 35%, white);
+  }
+
+  .theme-brand-dark .bg-white,
+  .theme-brand-dark .bg-white\/90,
+  .theme-brand-dark .bg-white\/95,
+  .theme-brand-dark .bg-background {
+    background-color: var(--color-night-2) !important;
+  }
+
+  .theme-brand-dark .text-white {
+    color: var(--color-night);
+  }
+
+  .theme-brand-dark .shadow-lg,
+  .theme-brand-dark .shadow-md,
+  .theme-brand-dark .shadow-sm {
+    box-shadow: 0 18px 70px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* Homepage card hover effects */
+.talk-card {
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease;
+}
+
+.talk-card:hover {
+  transform: translateY(-3px) scale(1.008);
+  border-color: color-mix(in srgb, var(--card-accent, var(--color-teal)) 30%, transparent);
+  box-shadow:
+    0 0 40px color-mix(in srgb, var(--card-accent, var(--color-teal)) 14%, transparent),
+    0 8px 28px rgba(0, 0, 0, 0.06);
+}
+
+.hero-card {
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.5s ease;
+}
+
+.hero-card:hover {
+  transform: translateY(-4px);
+}
+
+/* ─── Print layout ─────────────────────────────────────────────────────────── */
+.print-slide {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  page-break-after: always;
+  break-after: page;
+}
+
+/* The last slide must not push a blank page after it. Next renders its scripts after the slides
+   inside <body>, so the last slide is not always `:last-child`. */
+.print-slide:not(:has(~ .print-slide)) {
+  page-break-after: auto;
+  break-after: auto;
+}
+
+.print-slide > :first-child {
+  min-height: 1080px !important;
+  max-height: 1080px !important;
+  height: 1080px !important;
+}
+
+.print-watermark {
+  position: absolute;
+  bottom: var(--slide-footer-inset);
+  right: var(--slide-footer-inset);
+  z-index: 40;
+}
+
+@media print {
+  @page {
+    size: 1920px 1080px;
+    margin: 0;
+  }
+
+  html,
+  body {
+    width: 1920px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-slide {
+    page-break-inside: avoid;
+  }
+
+  /* Remove radial spotlight overlay */
+  .spotlight-radial {
+    background: none !important;
+  }
+
+  canvas {
+    display: none !important;
+  }
+
+  /* A blurred shadow and a translucent full-slide gradient each print as a bitmap, together more
+     than half of a deck's PDF and most of its render time. The tint they add is a few percent. */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .absolute.inset-0.bg-gradient-to-br {
+    display: none !important;
+  }
+
+  /* A page is captured the moment it is printed: every element shows its final state. */
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

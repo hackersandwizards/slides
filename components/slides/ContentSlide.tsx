@@ -1,0 +1,967 @@
+"use client";
+
+import { Fragment, useLayoutEffect, useRef } from "react";
+import Image from "../ui/image";
+import type {
+  ContentSlide as ContentSlideType,
+  ContentBlock,
+  SectionTheme,
+  StageState,
+} from "../../types/slide";
+import { Particles } from "../ui/particles";
+import { BlurFade } from "../ui/blur-fade";
+import { SectionHeader } from "./SectionHeader";
+import { Visual } from "./Visuals";
+import { SlideShell } from "./SlideShell";
+import { renderMarkdown } from "../../lib/markdown";
+import { highlightCode } from "../../lib/code-highlight";
+import { getStageClasses } from "../../lib/stage-utils";
+import { getSectionStyle } from "../../lib/section-styles";
+import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
+import {
+  TitledContent,
+  SlideTitle,
+  SlideCard,
+  CodePanel,
+  SlideSubtitle,
+  Ornament,
+} from "./primitives";
+
+type LabeledGridBlockType = Extract<ContentBlock, { type: "labeled-grid" }>;
+
+const LABELED_GRID_COLS: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+};
+
+/** The deck's own column count, or three for a multiple of three items, so three cards never
+ *  wrap as two plus an orphan. */
+function labeledGridColumns(block: LabeledGridBlockType): number {
+  if (block.columns && block.columns in LABELED_GRID_COLS) return block.columns;
+  return block.items.length % 3 === 0 ? 3 : 2;
+}
+
+function LabeledGridBlock({
+  block,
+  centered,
+}: {
+  block: LabeledGridBlockType;
+  centered?: boolean;
+}) {
+  // When `reveal` is set, items appear one per ArrowRight; otherwise all show at once.
+  const { revealedCount } = useProgressiveReveal({
+    totalSteps: block.items.length,
+    startFull: !block.reveal,
+  });
+  return (
+    <div
+      className={`grid gap-5 ${LABELED_GRID_COLS[labeledGridColumns(block)]} ${centered ? "mx-auto w-full max-w-6xl" : ""}`}
+    >
+      {block.items.map((item, i) => {
+        const revealed = i < revealedCount;
+        return (
+          <div
+            key={i}
+            inert={!revealed}
+            className={`rounded-brand p-6 transition-all duration-500 ${
+              revealed ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+            } ${
+              item.highlighted
+                ? "border border-success bg-success/8"
+                : "border border-border bg-white"
+            }`}
+          >
+            <p className={`text-xl font-bold ${item.highlighted ? "text-success" : "text-text"}`}>
+              {item.title}
+            </p>
+            <p className="card-text-lg mt-1 text-text-muted">{renderMarkdown(item.subtitle)}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const KICKER_DOT_COLOR: Record<SectionTheme, string> = {
+  primary: "bg-primary",
+  secondary: "bg-secondary",
+  accent: "bg-accent",
+  warning: "bg-accent",
+  success: "bg-success",
+  deepdive: "bg-deep-500",
+};
+
+interface Props {
+  slide: ContentSlideType;
+}
+
+const TWO_COL_VARIANTS = {
+  "success-error": {
+    left: {
+      card: "border-success/30 bg-white",
+      title: "text-success",
+      dot: "bg-success",
+    },
+    right: {
+      card: "border-error/30 bg-white",
+      title: "text-error",
+      dot: "bg-error",
+    },
+  },
+  "error-success": {
+    left: {
+      card: "border-error/30 bg-white",
+      title: "text-error",
+      dot: "bg-error",
+    },
+    right: {
+      card: "border-success/30 bg-white",
+      title: "text-success",
+      dot: "bg-success",
+    },
+  },
+  error: {
+    left: {
+      card: "border-error/30 bg-white",
+      title: "text-error",
+      dot: "bg-error",
+    },
+    right: {
+      card: "border-error/30 bg-white",
+      title: "text-error",
+      dot: "bg-error",
+    },
+  },
+  "error-neutral": {
+    left: {
+      card: "border-error/30 bg-white",
+      title: "text-error",
+      dot: "bg-error",
+    },
+    right: {
+      card: "border-border bg-white",
+      title: "text-text",
+      dot: "",
+    },
+  },
+  success: {
+    left: {
+      card: "border-success/30 bg-white",
+      title: "text-success",
+      dot: "bg-success",
+    },
+    right: {
+      card: "border-success/30 bg-white",
+      title: "text-success",
+      dot: "bg-success",
+    },
+  },
+  neutral: {
+    left: {
+      card: "border-border bg-white",
+      title: "text-text",
+      dot: "",
+    },
+    right: {
+      card: "border-border bg-white",
+      title: "text-text",
+      dot: "",
+    },
+  },
+};
+
+function renderColumnContent(text: string) {
+  if (text.startsWith("```") && text.endsWith("```")) {
+    const language = text.slice(3, text.indexOf("\n")).trim();
+    const codeContent = text.slice(text.indexOf("\n") + 1, text.lastIndexOf("```"));
+    return (
+      <CodePanel as="pre" className="overflow-x-auto p-5 text-base leading-relaxed">
+        <code className="font-code">{highlightCode(codeContent.replace(/\n$/, ""), language)}</code>
+      </CodePanel>
+    );
+  }
+  return text.split("\n\n").map((paragraph, i) => {
+    if (paragraph.startsWith("•")) {
+      const items = paragraph.split("\n").filter((line) => line.startsWith("•"));
+      return (
+        <ul key={i} className="space-y-3">
+          {items.map((item, j) => (
+            <li key={j} className="flex items-start gap-3 text-xl text-text-muted">
+              <span className="slide-marker" />
+              {renderMarkdown(item.slice(2))}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    return (
+      <p key={i} className="mb-4 text-xl text-text-muted">
+        {renderMarkdown(paragraph)}
+      </p>
+    );
+  });
+}
+
+interface PipelineStage {
+  title: string;
+  state?: string;
+}
+
+function getPipelineArrow(
+  stageIndex: number,
+  stages: PipelineStage[],
+  showLoops?: boolean,
+): string {
+  if (!showLoops) return "→";
+  const currentTitle = stages[stageIndex].title.toLowerCase();
+  const nextTitle = stages[stageIndex + 1]?.title.toLowerCase();
+  if (
+    (currentTitle === "refine" && nextTitle === "challenge") ||
+    (currentTitle === "review" && nextTitle === "rework")
+  ) {
+    return "⇄";
+  }
+  return "→";
+}
+
+type PipelineBlock = Extract<ContentBlock, { type: "pipeline" }>;
+
+/** A pipeline reads as one row. Where its stages wrap, the row steps through `data-step` in
+ *  slides.css: 1 closes its gaps and stage padding just as far as one row needs, so the row still
+ *  spans its box, 2 also sets the labels at body size, the floor, and 3 splits it into two
+ *  balanced rows. The fit guard in SlideShell lays the body out wider until a row at 3 holds one
+ *  line, sends `pipeline-settle` whenever it changes the width, and sends `pipeline-reset` to
+ *  measure the body with its rows at full spacing. A delivered deck keeps the layout it was
+ *  delivered with. */
+function PipelineRow({ block }: { block: PipelineBlock }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const row = ref.current;
+    if (!row || row.closest(".slide-scale-delivered")) return;
+    const stages = [...row.querySelectorAll<HTMLElement>(".pipeline-stage")];
+    const wraps = () => new Set(stages.map((stage) => stage.offsetTop)).size > 1;
+    const tighten = (share: number) => row.style.setProperty("--tighten", String(share));
+    const reset = () => {
+      delete row.dataset.step;
+      row.style.removeProperty("--tighten");
+    };
+    const settle = () => {
+      reset();
+      if (!wraps()) return;
+      row.dataset.step = "1";
+      tighten(1);
+      if (wraps()) {
+        row.dataset.step = "2";
+        if (wraps()) row.dataset.step = "3";
+        return;
+      }
+      // The least tightening that holds one row, to 1/256.
+      let loose = 0;
+      let tight = 1;
+      for (let i = 0; i < 8; i++) {
+        const share = (loose + tight) / 2;
+        tighten(share);
+        if (wraps()) loose = share;
+        else tight = share;
+      }
+      tighten(tight);
+    };
+    settle();
+    row.addEventListener("pipeline-settle", settle);
+    row.addEventListener("pipeline-reset", reset);
+    return () => {
+      row.removeEventListener("pipeline-settle", settle);
+      row.removeEventListener("pipeline-reset", reset);
+    };
+  }, []);
+  const half = Math.ceil(block.stages.length / 2);
+  return (
+    <div ref={ref} className="pipeline-row flex flex-wrap items-center justify-center gap-4">
+      {block.stages.map((stage, i) => (
+        <Fragment key={i}>
+          {i === half && <span className="pipeline-break" />}
+          <div className="flex items-center gap-4">
+            {i > 0 && block.showArrows !== false && (
+              <span className="text-2xl text-secondary">
+                {getPipelineArrow(i - 1, block.stages, block.showLoops)}
+              </span>
+            )}
+            <div
+              className={`pipeline-stage flex items-center gap-3 rounded-brand px-5 py-3 text-lg font-semibold ${getStageClasses(stage.state as StageState)}`}
+            >
+              {stage.logo && (
+                <Image
+                  src={stage.logo}
+                  alt={stage.title}
+                  width={24}
+                  height={24}
+                  className="h-6 w-6 object-contain"
+                />
+              )}
+              {stage.title}
+            </div>
+          </div>
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+const CALLOUT_VARIANTS = {
+  info: "border-secondary/30 bg-secondary/8 text-text",
+  // On their tint the brand amber and green drop under 4.5:1 (4.29 and 4.27), so the text mixes
+  // them 40% with ink, as the website's chips do.
+  warning:
+    "border-accent/30 bg-accent/8 text-[color-mix(in_srgb,var(--color-amber-dark)_60%,var(--color-ink))]",
+  success:
+    "border-success/30 bg-success/8 text-[color-mix(in_srgb,var(--color-green-dark)_60%,var(--color-ink))]",
+};
+
+function ContentBlockRenderer({
+  block,
+  centered,
+  sectionTheme,
+  besideBars,
+}: {
+  block: ContentBlock;
+  centered?: boolean;
+  sectionTheme?: SectionTheme;
+  /** The slide carries a bars block: a callout ends level with the bars' track, not the values. */
+  besideBars?: boolean;
+}) {
+  switch (block.type) {
+    case "flow":
+    case "layers":
+    case "timeline":
+    case "transform":
+    case "bars":
+    case "numbers":
+    case "annotated":
+    case "annotated-code":
+    case "cards":
+      return <Visual block={block} />;
+    case "paragraph":
+      if (centered) {
+        return (
+          <p className="mx-auto max-w-3xl text-xl leading-relaxed text-text-muted sm:text-2xl md:text-3xl">
+            {renderMarkdown(block.text)}
+          </p>
+        );
+      }
+      if (block.centered) {
+        const dotColor = sectionTheme ? KICKER_DOT_COLOR[sectionTheme] : "bg-text-subtle";
+        return (
+          <div className="mt-8 flex flex-col items-center gap-6">
+            <Ornament dot={dotColor} />
+            <p className="max-w-4xl text-center text-2xl leading-snug font-semibold tracking-tight text-balance text-text md:text-3xl">
+              {renderMarkdown(block.text)}
+            </p>
+          </div>
+        );
+      }
+      return (
+        <p className="max-w-[72rem] text-[1.75rem] leading-snug text-text-muted">
+          {renderMarkdown(block.text)}
+        </p>
+      );
+
+    case "bullets": {
+      const List = block.ordered ? "ol" : "ul";
+      return (
+        <List className="max-w-[60rem] space-y-4">
+          {block.items.map((item, i) => {
+            const isNested = typeof item === "object";
+            const text = isNested ? item.text : item;
+            return (
+              <li key={i}>
+                <div className="flex items-start gap-4 text-2xl text-text-muted">
+                  {block.ordered ? (
+                    <span className="w-8 shrink-0 font-semibold text-primary tabular-nums">
+                      {i + 1}.
+                    </span>
+                  ) : (
+                    <span className="slide-marker" />
+                  )}
+                  <span>{renderMarkdown(text)}</span>
+                </div>
+                {isNested && item.children.length > 0 && (
+                  <ul className="mt-3 ml-10 space-y-3">
+                    {item.children.map((child, j) => (
+                      <li key={j} className="flex items-start gap-3 text-xl text-text-muted">
+                        <span className="slide-marker slide-marker-nested" />
+                        <span>{renderMarkdown(child)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </List>
+      );
+    }
+
+    case "table":
+      return (
+        <div className="overflow-x-auto rounded-brand border-2 border-border bg-white">
+          <table
+            className={`w-full border-collapse ${block.widths ? "table-fixed" : ""} ${block.compact ? "text-lg" : "text-xl"}`}
+          >
+            {block.widths && (
+              <colgroup>
+                {block.widths.map((w, i) => (
+                  <col
+                    key={i}
+                    style={{ width: `${(w / block.widths!.reduce((a, b) => a + b, 0)) * 100}%` }}
+                  />
+                ))}
+              </colgroup>
+            )}
+            {block.headers && (
+              <thead>
+                <tr className="bg-gradient-to-r from-primary/8 to-primary/4">
+                  {block.headers.map((header, i) => (
+                    <th
+                      key={i}
+                      className="label-caps border-b-2 border-border px-6 py-4 text-left text-base text-text"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {block.rows.map((row, rowIndex) => (
+                <tr
+                  key={rowIndex}
+                  className={`transition-colors hover:bg-primary/5 ${rowIndex % 2 === 1 ? "bg-primary/3" : ""}`}
+                >
+                  {row.map((cell, cellIndex) => (
+                    <td
+                      key={cellIndex}
+                      className={`border-b border-border px-6 py-4 text-left ${cellIndex === 0 ? "font-bold text-text" : "text-text-muted"}`}
+                    >
+                      {renderMarkdown(cell)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+
+    case "two-column": {
+      const v = TWO_COL_VARIANTS[block.variant ?? "neutral"];
+      const sides = [
+        { data: block.left, style: v.left },
+        { data: block.right, style: v.right },
+      ] as const;
+
+      return (
+        <div className="grid grid-cols-2 gap-10">
+          {sides.map(({ data, style }, i) => (
+            <div key={i} className={`rounded-brand border p-7 ${style.card}`}>
+              {data.title && (
+                <h3 className={`mb-5 font-heading text-2xl font-bold ${style.title}`}>
+                  {renderMarkdown(data.title)}
+                </h3>
+              )}
+              {data.text && renderColumnContent(data.text)}
+              {data.items && (
+                <ul className="space-y-4">
+                  {data.items.map((item, j) => (
+                    <li key={j} className="flex items-start gap-3 text-xl text-text-muted">
+                      <span className={`slide-marker ${style.dot}`} />
+                      <span>{renderMarkdown(item)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    case "code":
+      return (
+        <CodePanel as="pre" className="overflow-x-auto p-6">
+          <code className="font-code text-lg">{highlightCode(block.code, block.language)}</code>
+        </CodePanel>
+      );
+
+    case "code-and-text":
+      return (
+        <div className="grid grid-cols-2 gap-8">
+          <CodePanel className="overflow-hidden">
+            <pre className="overflow-x-auto p-6 text-base leading-relaxed">
+              <code className="font-code">{highlightCode(block.code, block.language)}</code>
+            </pre>
+          </CodePanel>
+
+          <div className="flex flex-col justify-center space-y-8">
+            {block.sections.map((section, i) => (
+              <div key={i}>
+                <h3 className="label-caps mb-2 text-xl text-accent">{section.title}</h3>
+                <p className="text-xl leading-relaxed text-text-muted">
+                  {renderMarkdown(section.text)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+
+    case "hooks":
+      return (
+        <div className="space-y-2.5">
+          {block.items.map((hook, i) => (
+            <SlideCard key={i} className="flex items-baseline gap-4 p-3">
+              <code className="rounded-brand-sm bg-primary/8 px-3 py-1 font-code text-base text-text">
+                {hook.name}
+              </code>
+              <span className="text-lg text-text-muted">{hook.description}</span>
+            </SlideCard>
+          ))}
+        </div>
+      );
+
+    case "pipeline":
+      return (
+        <div
+          className={`rounded-brand border-2 border-dashed p-6 ${block.containerLabel ? "border-secondary bg-secondary/5" : "border-secondary-border bg-white"}`}
+        >
+          {block.containerLabel && (
+            <div className="mb-4 flex items-center gap-2">
+              <div className="slide-marker bg-secondary" />
+              <span className="label-caps text-sm text-secondary">{block.containerLabel}</span>
+              {block.containerLogos &&
+                block.containerLogos.map((logo, li) => (
+                  <Image
+                    key={li}
+                    src={logo.src}
+                    alt={logo.alt}
+                    width={28}
+                    height={28}
+                    className="ml-1 h-7 w-auto"
+                  />
+                ))}
+            </div>
+          )}
+          <div
+            className={`flex flex-wrap ${block.containerSideNotes ? "items-center justify-center gap-6" : "items-center justify-center gap-4"}`}
+          >
+            <PipelineRow block={block} />
+            {block.containerSideNotes && (
+              <>
+                <div className="h-16 w-px bg-secondary/30" />
+                <ul className="space-y-1.5">
+                  {block.containerSideNotes.map((note, ni) => (
+                    <li key={ni} className="flex items-start gap-2 text-base text-text-muted">
+                      <span className="slide-marker slide-marker-nested bg-secondary" />
+                      <span>{renderMarkdown(note)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+          {block.containerFooter && (
+            <p className="mt-4 border-t border-secondary/20 pt-3 text-base text-text-muted">
+              {renderMarkdown(block.containerFooter)}
+            </p>
+          )}
+        </div>
+      );
+
+    case "image":
+      return (
+        <Image
+          src={block.src}
+          alt={block.alt || ""}
+          width={1920}
+          height={1080}
+          className="h-auto max-h-[60vh] w-auto max-w-full rounded-brand border border-border"
+        />
+      );
+
+    case "image-and-grid":
+      return (
+        <div className="grid grid-cols-[2fr_3fr] items-center gap-10">
+          <div className="flex justify-center">
+            <Image
+              src={block.image.src}
+              alt={block.image.alt || ""}
+              width={1200}
+              height={1500}
+              className="h-auto max-h-[45vh] w-auto rounded-brand border border-border"
+            />
+          </div>
+          <div className="flex flex-col gap-4">
+            {block.gridTitle && (
+              <h3 className="label-caps mb-2 text-base text-deep-700">
+                {renderMarkdown(block.gridTitle)}
+              </h3>
+            )}
+            {block.items.map((item, i) => (
+              <div key={i} className="rounded-brand border-2 border-deep-200/50 bg-white px-6 py-4">
+                <h4 className="mb-1 text-lg text-text">{renderMarkdown(item.title)}</h4>
+                <p className="text-base text-text-muted">{renderMarkdown(item.subtitle)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+
+    case "video":
+      return (
+        <div>
+          <video
+            src={block.src}
+            controls
+            aria-label={block.alt}
+            muted
+            playsInline
+            className="w-full rounded-brand border border-border"
+          />
+          {block.caption && (
+            <p className="mt-3 text-center text-sm text-text-muted">{block.caption}</p>
+          )}
+        </div>
+      );
+
+    case "callout":
+      if (centered) {
+        return (
+          <SlideCard className="mx-auto max-w-3xl px-8 py-5">
+            <p className="text-lg leading-relaxed text-text-muted sm:text-xl md:text-2xl">
+              {renderMarkdown(block.text)}
+            </p>
+          </SlideCard>
+        );
+      }
+      return (
+        <div
+          className={`max-w-full rounded-brand border-2 px-8 py-6 ${block.fullWidth ? "w-full" : "w-fit"} ${besideBars ? "md:w-[calc(100%-16rem)]" : ""} ${CALLOUT_VARIANTS[block.variant ?? "info"]}`}
+        >
+          <p className="text-[1.75rem] leading-snug font-medium">{renderMarkdown(block.text)}</p>
+        </div>
+      );
+
+    case "four-column":
+      return (
+        <div className="grid grid-cols-4 gap-6">
+          {block.columns.map((col, i) => (
+            <SlideCard key={i} className="p-5">
+              <h3 className="mb-3 font-heading text-lg font-bold text-text">
+                {col.title}
+                {col.subtitle && (
+                  <span className="ml-2 text-sm font-normal text-text-subtle">
+                    ({col.subtitle})
+                  </span>
+                )}
+              </h3>
+              <ul className="space-y-2">
+                {col.items.map((item, j) => (
+                  <li key={j} className="card-text-base flex items-start gap-2 text-text-muted">
+                    <span className="slide-marker" />
+                    {renderMarkdown(item)}
+                  </li>
+                ))}
+              </ul>
+            </SlideCard>
+          ))}
+        </div>
+      );
+
+    case "labeled-grid":
+      return <LabeledGridBlock block={block} centered={centered} />;
+
+    case "terminal":
+      return (
+        <CodePanel className="mx-auto max-w-4xl overflow-hidden text-left">
+          <div className="border-b border-white/15 px-6 py-3 font-mono text-xs text-code-comment">
+            terminal
+          </div>
+          <div className="space-y-2 px-6 py-5 font-mono text-lg leading-[2] sm:text-xl">
+            {block.commands.map((cmd, i) => (
+              <BlurFade key={i} delay={0.3 + i * 0.15} duration={0.4}>
+                <div>
+                  <span
+                    className={
+                      cmd.prefix === "$"
+                        ? "text-code-command"
+                        : cmd.prefix === "→"
+                          ? "text-insight"
+                          : "text-white/40"
+                    }
+                  >
+                    {cmd.prefix}
+                  </span>{" "}
+                  <code className="text-white/80">{cmd.text}</code>
+                </div>
+              </BlurFade>
+            ))}
+          </div>
+        </CodePanel>
+      );
+
+    case "linked-image": {
+      const img = (
+        <Image
+          src={block.src}
+          alt={block.alt || ""}
+          width={1920}
+          height={1080}
+          className="mx-auto h-auto max-h-[60vh] w-auto max-w-[85%] rounded-brand border border-border"
+        />
+      );
+      if (block.href) {
+        return (
+          <a href={block.href} target="_blank" rel="noopener noreferrer">
+            {img}
+          </a>
+        );
+      }
+      return img;
+    }
+
+    case "positions": {
+      type PositionAccent = "primary" | "secondary" | "accent" | "success" | "warning";
+      const accentClass = (c?: PositionAccent) =>
+        c === "primary"
+          ? "text-primary"
+          : c === "secondary"
+            ? "text-secondary"
+            : c === "accent" || c === "warning"
+              ? "text-accent"
+              : c === "success"
+                ? "text-success"
+                : "text-text";
+      const ruleClass = (c?: PositionAccent) =>
+        c === "primary"
+          ? "bg-primary/50"
+          : c === "secondary"
+            ? "bg-secondary/50"
+            : c === "accent" || c === "warning"
+              ? "bg-accent/60"
+              : c === "success"
+                ? "bg-success/50"
+                : "bg-text-subtle/30";
+      const borderClass = (c?: PositionAccent) =>
+        c === "primary"
+          ? "border-primary/40"
+          : c === "secondary"
+            ? "border-secondary/40"
+            : c === "accent" || c === "warning"
+              ? "border-accent/50"
+              : c === "success"
+                ? "border-success/40"
+                : "border-border";
+
+      const renderSide = (side: typeof block.left, numeral: string, alignRight = false) => (
+        <div
+          className={`relative flex flex-col gap-8 ${alignRight ? "items-end text-right" : "items-start text-left"}`}
+        >
+          <div className="flex items-center gap-3">
+            {!alignRight && (
+              <span
+                className={`text-xs font-bold tracking-[0.25em] tabular-nums ${accentClass(side.accent)} opacity-70`}
+              >
+                {numeral}
+              </span>
+            )}
+            {!alignRight && <span className={`h-px w-10 ${ruleClass(side.accent)}`} />}
+            <span className={`label-caps text-sm ${accentClass(side.accent)}`}>{side.name}</span>
+            {alignRight && <span className={`h-px w-10 ${ruleClass(side.accent)}`} />}
+            {alignRight && (
+              <span
+                className={`text-xs font-bold tracking-[0.25em] tabular-nums ${accentClass(side.accent)} opacity-70`}
+              >
+                {numeral}
+              </span>
+            )}
+          </div>
+
+          <h3
+            className={`font-heading text-8xl leading-[0.85] font-bold tracking-[-0.045em] lg:text-[9rem] ${accentClass(side.accent)}`}
+          >
+            {side.stance}
+          </h3>
+
+          <p
+            className={`mt-2 font-heading text-2xl leading-snug font-medium text-text-muted italic md:text-3xl ${alignRight ? "border-r-2 pr-5" : "border-l-2 pl-5"} ${borderClass(side.accent)}`}
+          >
+            {`“${side.quote}”`}
+          </p>
+        </div>
+      );
+
+      return (
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-stretch gap-20">
+          <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-14 pt-4">
+            {renderSide(block.left, "01", true)}
+
+            {/* Center axis: vertical divider with anchored ampersand */}
+            <div
+              aria-hidden="true"
+              className="relative flex flex-col items-center self-stretch px-2"
+            >
+              <div className="w-px flex-1 bg-gradient-to-b from-transparent to-text-subtle/30" />
+              <span className="my-4 text-6xl leading-none text-text-subtle/35 md:text-7xl">
+                &amp;
+              </span>
+              <div className="w-px flex-1 bg-gradient-to-b from-text-subtle/30 to-transparent" />
+            </div>
+
+            {renderSide(block.right, "02", false)}
+          </div>
+
+          {block.middle && (
+            <p className="text-center text-lg text-text-subtle italic">{block.middle}</p>
+          )}
+
+          {/* Resolution as stamped punchline */}
+          <div className="relative flex flex-col items-center gap-6">
+            <div className="flex items-center gap-4">
+              <div className="h-px w-16 bg-text-subtle/30" />
+              <span className="label-caps text-xs text-text-subtle">The verdict</span>
+              <div className="h-px w-16 bg-text-subtle/30" />
+            </div>
+            <h2 className="max-w-4xl text-center text-4xl leading-[1.05] text-balance text-text md:text-5xl">
+              {renderMarkdown(block.resolution)}
+            </h2>
+          </div>
+        </div>
+      );
+    }
+
+    default:
+      return null;
+  }
+}
+
+function CenteredContentSlide({ slide }: Props) {
+  return (
+    <SlideShell direction="col" overflowHidden>
+      <div className="absolute top-1/3 left-1/3 h-[31.25rem] w-[31.25rem] rounded-full bg-brand/8 blur-[120px]" />
+      <div className="absolute right-1/3 bottom-1/3 h-[25rem] w-[25rem] rounded-full bg-brand-accent/6 blur-[100px]" />
+      <div className="spotlight-radial absolute inset-0 z-[1]" />
+      <Particles
+        className="absolute inset-0"
+        quantity={60}
+        size={1.0}
+        staticity={25}
+        color="#1A7285"
+      />
+
+      <div className="slide-content relative z-10 flex flex-col items-center justify-center space-y-6 px-8 text-center md:space-y-8">
+        {slide.sectionLabel && (
+          <BlurFade delay={0.1} duration={0.4}>
+            <p className="label-caps text-sm text-primary">{slide.sectionLabel}</p>
+          </BlurFade>
+        )}
+
+        <BlurFade delay={0.2} duration={0.6}>
+          <h1 className="max-w-5xl text-4xl text-text sm:text-5xl md:text-6xl">
+            {renderMarkdown(slide.headline)}
+          </h1>
+        </BlurFade>
+
+        {slide.subtitle && (
+          <BlurFade delay={0.35} duration={0.5}>
+            <p className="max-w-3xl text-xl leading-relaxed whitespace-pre-line text-text-muted sm:text-2xl md:text-3xl">
+              {renderMarkdown(slide.subtitle)}
+            </p>
+          </BlurFade>
+        )}
+
+        {slide.content.map((block, i) => (
+          <BlurFade key={i} delay={0.4 + i * 0.1} duration={0.5}>
+            <ContentBlockRenderer block={block} centered />
+          </BlurFade>
+        ))}
+
+        {slide.footer && (
+          <BlurFade delay={0.5 + slide.content.length * 0.1} duration={0.5}>
+            <p className="mx-auto max-w-4xl border-t border-border pt-5 text-lg text-text-muted">
+              {renderMarkdown(slide.footer)}
+            </p>
+          </BlurFade>
+        )}
+      </div>
+    </SlideShell>
+  );
+}
+
+function StandardContentSlide({ slide }: Props) {
+  const styles = getSectionStyle(slide.sectionTheme);
+  const hasBars = slide.content.some((b) => b.type === "bars");
+
+  return (
+    <SlideShell>
+      <div className={`absolute inset-0 ${styles.gradient}`} />
+
+      <TitledContent>
+        {/* The badge shares the section label's row, in the flow: placed absolutely in the corner,
+            a long headline ran underneath it. */}
+        <div className="flex items-start justify-between gap-8">
+          <SectionHeader
+            label={slide.sectionLabel}
+            labelColor={styles.label}
+            principle={slide.principle}
+            pillColor={styles.pill}
+            stageMarker={slide.stageMarker}
+            stagePrefix={slide.stagePrefix}
+            stageMarkerTheme={slide.sectionTheme === "deepdive" ? "deepdive" : "default"}
+          />
+          {slide.badge && (
+            <div className="label-caps flex shrink-0 items-center gap-2.5 rounded-full border border-primary/40 bg-white px-5 py-2 text-sm text-primary">
+              <span className="slide-marker" />
+              {slide.badge}
+            </div>
+          )}
+        </div>
+
+        <SlideTitle delay={0.15}>{renderMarkdown(slide.headline)}</SlideTitle>
+
+        {slide.subtitle && (
+          <SlideSubtitle delay={0.22}>{renderMarkdown(slide.subtitle)}</SlideSubtitle>
+        )}
+
+        <div className="slide-body">
+          <div className="space-y-6">
+            {slide.content.map((block, index) => (
+              <BlurFade key={index} delay={0.2 + index * 0.1} duration={0.5}>
+                <ContentBlockRenderer
+                  block={block}
+                  sectionTheme={slide.sectionTheme}
+                  besideBars={hasBars}
+                />
+              </BlurFade>
+            ))}
+          </div>
+
+          {slide.footer && (
+            <BlurFade delay={0.3 + slide.content.length * 0.1} duration={0.5}>
+              <p className={`mt-8 border-t-2 text-2xl text-text ${styles.border} pt-6`}>
+                {renderMarkdown(slide.footer)}
+              </p>
+            </BlurFade>
+          )}
+        </div>
+      </TitledContent>
+    </SlideShell>
+  );
+}
+
+export function ContentSlide({ slide }: Props) {
+  if (slide.layout === "centered") {
+    return <CenteredContentSlide slide={slide} />;
+  }
+  return <StandardContentSlide slide={slide} />;
+}

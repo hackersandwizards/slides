@@ -1,0 +1,6 @@
+.claude/
+.agents/
+.githooks/
+node_modules/
+coverage/
+bun.lock
