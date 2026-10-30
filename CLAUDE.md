@@ -2,9 +2,8 @@
 
 The hackers&wizards slide engine as one package, `@hackersandwizards/slides`: the slide components,
 the deck types, the slide stylesheet and the PDF renderer. Three repos run it and keep only their
-decks: `talks` and `hycle-private/talks` on Next.js, `trainer-hub` on Astro. Benedikt decided on
-2026-10-30 (os `docs/tracking/2026-10-30-repo-coupling.md`, row C1) that the engine leaves its
-three hand-synced copies for this repo.
+decks: `talks` and `hycle-private/talks` on Next.js, `trainer-hub` on Astro. The reasoning is in os
+`docs/tracking/2026-10-30-repo-coupling.md`.
 
 This repo stays private on GitHub (`github.com/hackersandwizards/slides`, team `trainers` read, as
 `brand`). Consumers install it as a Git dependency pinned to a tag,
