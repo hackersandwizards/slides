@@ -1,6 +1,11 @@
 ---
 name: blind-review
-description: Decide how much review a result a person will see deserves, from none to a large blind panel, and run it blind (personas, criteria, scoring, noise, stop rules, screenshots, the Claude and Codex reviewer commands). Use before handing over or shipping anything a person will read or see: copy, mail, a page, a document, slides, a logo or other brand element, a design variant, a report, and for "blind review", "review this", "panel", "score the variants", "which version is better".
+description: >-
+  Decide how much review a result a person will see deserves, from none to a large blind panel, and
+  run it blind (personas, criteria, scoring, noise, stop rules, screenshots, the Claude and Codex
+  reviewer commands). Use before handing over or shipping anything a person will read or see: copy,
+  mail, a page, a document, slides, a logo or other brand element, a design variant, a report, and
+  for "blind review", "review this", "panel", "score the variants", "which version is better".
 ---
 
 # Blind review
