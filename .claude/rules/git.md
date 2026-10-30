@@ -24,7 +24,7 @@ Other sessions share this working tree and its index.
   Abandon the repair if it races.
 - `git checkout -- <path>` and `git restore` install whatever another session staged there. Revert
   with `git show HEAD:<path> > <path>`, after reading `HEAD` for that path, since it moves while
-  your run is open.
+  your run is open. In a file another session also edits, revert only your own hunks.
 - Commit and push each finished batch without being asked: one coherent unit whose checks pass.
   Stay on the current branch unless the user asks for another. In a cloud session
   (`CLAUDE_CODE_REMOTE=true`), commit and push to `main` as on the Mac, whatever branch the

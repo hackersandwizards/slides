@@ -14,7 +14,8 @@ in the repo the work belongs to, never here.
   row per open piece of work with owner and evidence (a commit hash, a file, or "not established"),
   in the shape the file already uses.
 - `docs/tracking/decisions/items.js`: one row per decision the person may veto, an open question or
-  an assumption an agent made. Routine choices stay out.
+  an assumption an agent made. An `open` row is only for direction, money, a relationship or anything
+  leaving the company. Every other point an agent settles is an `assumed` row.
 - `docs/tracking/YYYY-MM-DD-<topic>.md`: one report per topic, what was measured, with evidence.
 - `~/Downloads/stand-entscheidungen/<topic>/`: an `index.html` and a `review.json` for review.
   Never the only copy of a fact.
@@ -27,12 +28,16 @@ rows plus the `open` and `assumed` rows in `items.js`. No third list exists.
 
 1. At start, read `GOAL.md` and `items.js` in every repo the work touches. Where `GOAL.md` is
    missing and the work spans sessions or delegates, create it with the goal quoted from the
-   person's message. Check: the first section quotes the person.
+   person's message. A `GOAL.md` row outside the session's goal waits for its own session, whoever
+   it is assigned to. Check: the first section quotes the person.
 2. Every message from the person that adds, decides or changes work gets its row in the same turn.
    Check: `git diff` shows the row.
 3. A delegate's brief names the rows it owns by item or `id`, quotes the `items.js` row format, and
    says whether the delegate works in the shared checkout or a worktree. A delegate edits only
-   those rows.
+   those rows. Each delegate gets one batch with its write paths and a completion check, and ends
+   when that batch is committed. Further work goes to a fresh delegate briefed from paths, commits
+   and open findings, never to a running one. A delegate messages only a result, a blocker or a
+   question.
 4. A finished item leaves `GOAL.md` in the commit that finishes it. A row the person decided takes
    `status: "decided"` and the answer in `decision`, then leaves `items.js`: in the commit that
    carries the decision out, or, where work remains, as one `GOAL.md` row naming the `id`.

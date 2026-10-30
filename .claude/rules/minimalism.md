@@ -20,7 +20,8 @@ prompts) and in any document. Say the least that fully does the job, then stop.
   switched off is a decision: neither a cleanup nor a fix by another route changes it without
   asking. Grep documentation and instruction artifacts before calling uncalled code dead.
 - Before reporting done, remove what your own run created and no longer needs: scratch files,
-  backups, container images and build or runner caches.
+  backups, container images and build or runner caches. Remove only exact paths your own run
+  created, never by prefix, and never a scratch file that is the only copy of a deliverable.
 - No interface, factory or config for a single case, and no scaffolding for later.
 - Change what exists by removal first, then replacement, then addition. Where a removal drops a
   rule you still want, replace it.
@@ -40,6 +41,7 @@ prompts) and in any document. Say the least that fully does the job, then stop.
   record. A line preserving something observed, a measured number, a verbatim phrasing, how a
   particular person sounds, stays: without it the model invents a plausible substitute.
 
-**Output:** name what you left out and when adding it becomes worth it. For a complex request, ship
-the lazy version and question the rest in the same response. Never stall on an answer you can
-default.
+**Output:** name what you left out and when adding it becomes worth it. For a complex request, build
+the simplest version that works first and improve it from review or research. Simple never means
+skipping the research or review the task needs: finding the simple solution often takes research.
+Never stall on an answer you can default.

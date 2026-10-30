@@ -15,26 +15,22 @@
   transcript, and only a person can rotate it.
 - Delegate only work that needs little from the rest of the session and hands back a compact
   result: independent parallel paths, a blind review, or work whose context would bloat this one.
-  Launch every such task whose files and resources are free at once, and launch the next as each
-  report lands. Serialise only work sharing a heavy resource on one machine, such as a whole test
-  gate, a browser suite or a load run. Fan out as parallel
-  Agent calls, never through the Workflow tool.
+  Launch ready work within the machine's free capacity, nested and headless jobs included, and
+  queue the rest. A whole test gate, a browser suite or a load run runs one at a time. Fan out as
+  parallel Agent calls, never through the Workflow tool.
 - Before fanning out a third delegate, or leaving a session running for the person's return, load
   `parallel-session`.
-- Hand a delegate or reviewer a screenshot judged only on layout, content or presence downscaled to
-  1000 px on its long side (`sips -Z 1000 in.png --out out.png`), and one judged on legibility,
-  typography or logo detail at full size or as a full-resolution crop of that detail. An image
-  costs `⌈width / 28⌉ × ⌈height / 28⌉` tokens, up to 4,784 at a 2,576 px long edge.
 - Delegates in one session share its scratchpad. Prefix every scratch file with its run, and fetch
   into a directory named for the run, since a resume guard adopts files another run left.
 - Check that SendMessage is available before fanning out: a fan-out you cannot prod runs serially
   in your own context. Prod a quiet agent with SendMessage for its findings and do other work
   meanwhile. Never spawn a replacement for a silent agent, and never end a turn while a phase is
   still owed its report. Where an agent is gone for good, do that phase yourself.
-- A delegate's own delegates report to the top-level session, never to the delegate that spawned
-  them. The top session relays each such report to its spawner with SendMessage when it arrives.
-- Wait for a background command with `Monitor` and an `until` loop, or start it with
-  `run_in_background` and wait on its exit. A foreground `sleep` chained to a check is blocked.
+- Wait for a background command with `Monitor` and an `until` loop (30 minutes at most, 10 under
+  `claude -p`), with a foreground command whose `timeout` stays within 10 minutes, or, in the
+  top-level session, by starting it with `run_in_background` and waiting on its exit. A delegate
+  waits inside its turn and ends it only with its result, a blocker or a question. A foreground
+  `sleep` chained to a check is blocked.
 - Stop a finished delegate's task before you stop the process it left running. Stopping the process
   first wakes the delegate to re-report its whole context, which cost two 650,000-token re-sends in
   one evening. Leave idle entries of finished delegates alone. Read the scratch folder named in a
@@ -56,24 +52,3 @@
 - Add an MCP server, permission or hook at project scope (`.mcp.json` or `.claude/settings.json` in
   the folder it serves), never `settings.local.json` or user scope, unless the person names that
   scope.
-- Only work that must notice an absence earns a schedule. Deterministic work becomes a gate, and
-  event-driven work becomes an agent the event calls. A run a person triggers at your request is
-  your run, so say what it will do in the world when you ask for the trigger.
-- A scheduled task carries only what is true because it runs on a schedule: the cadence, the
-  colleague it delegates to, the standing approval and its limit, and the ledger that dedupes
-  across runs. A standing approval names the outward acts and their limits, never the record
-  writes, which the skill names. The procedure sits in a skill the task loads, counts included, so
-  every run of a task is identical: a count that seems to differ by weekday becomes one number in
-  the skill. Every run ends its report with its outcome, done, deferred or blocked, and the reason
-  for anything but done. A task's identifier is immutable, so a rename is a delete plus a create,
-  and the new registration inherits neither its last-run time nor its tool grants.
-  Its model and permission mode live on that registration in the app's `scheduled-tasks.json`,
-  its tool grants in the app, never in the task's `SKILL.md`. Change them in the app's edit form:
-  the app rewrites that file from its own store and has dropped a permission mode edited there.
-- A scheduled run reading a time window starts at the earlier of its default and the start
-  `bun ~/.claude/scripts/schedule/last-run.ts <task id>` prints, never at the app's last-run time,
-  which also stamps dispatches that never started. Where the script exits non-zero, the run takes
-  its default and says so. The run reports how far back it reached. A task whose work belongs
-  to its own day or slot says in one line that it does not catch up.
-- Name a skill for its function and a scheduled task for its job, with the cadence as the last
-  segment. Create the task without a `title`, so the app shows that name.

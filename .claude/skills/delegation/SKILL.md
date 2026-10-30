@@ -1,8 +1,8 @@
 ---
 name: delegation
 description: >-
-  Which model tier and effort to run Codex at, how Codex hands authored copy to Claude, and the one
-  thing Claude starts Codex for, when running or configuring Codex or when either side needs copy written.
+  Which model tier and effort to run Codex at, how Codex hands authored copy to Claude, and what
+  Claude starts Codex for, when running or configuring Codex or when either side needs copy written.
 ---
 
 # Delegation
@@ -44,7 +44,7 @@ re-casing, no polish. Any text change goes through another `claude -p` call.
 
 ## Claude -> Codex
 
-Claude starts Codex only for a capability Claude does not have, and never to author text. Image
-generation is that capability.
+Claude starts Codex only for a capability Claude does not have, image generation, or as an
+independent blind reviewer. Codex never authors text.
 
 Verify what a run did with `git log`, never from its own summary.

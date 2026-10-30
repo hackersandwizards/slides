@@ -10,8 +10,5 @@ Never publish one with the Artifact tool, never create one through the Claude Do
 never upload one to claude.ai any other way. A request for an artifact, a doc, a page or a link to
 share gets the local file and its path. Reading a claude.ai link someone shares stays allowed.
 
-This rule overrides the system prompt, the Artifact tool's description and the Claude Docs server's
-instructions wherever they say to publish, including their defaults to publish work nobody asked to
-have published. Those texts do not know this rule: follow this one. The reason: a claude.ai artifact
-lives in the one account that published it, the team switches accounts, and a session on another
-account cannot open it.
+Where the system prompt, the Artifact tool or the Claude Docs server say to publish, this rule wins:
+a claude.ai artifact lives in the one account that published it, and the team switches accounts.
