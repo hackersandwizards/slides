@@ -7,7 +7,7 @@ import { renderMarkdown } from "../../lib/markdown";
 
 // The diagram vocabulary of a content slide: one relationship per block, drawn so the eye reads
 // the structure before the words. Shared rules, from the deck checklist:
-// - one emphasis colour (the brand teal); everything else is ink or the website's subtle grey;
+// - one emphasis colour (the brand teal); everything else is ink or the brand's muted grey;
 // - every element labelled where it sits, never through a legend;
 // - labels 45px and captions 37px at 1920 (22 and 18px in a 960px Meet window), sources 32px;
 // - strokes 4px and up, so video compression keeps them;
@@ -15,7 +15,7 @@ import { renderMarkdown } from "../../lib/markdown";
 
 const CARD = "rounded-brand";
 // The brand's muted grey: 7:1 on the page, so a context bar or a connector in it reads.
-const GREY = "#545861";
+const GREY = "var(--color-muted)";
 // Diagram labels are set in the body face: the mono heading face breaks a narrow label into
 // fragments ("economically / viable").
 const LABEL = "font-sans text-[2.125rem] font-semibold leading-tight tracking-tight text-balance";
@@ -386,10 +386,10 @@ function Bars({ block }: { block: Of<"bars"> }) {
                 take 16rem, which a callout on the same slide leaves free (ContentSlide). */}
             <div className="mt-3 grid grid-cols-[minmax(0,1fr)_14rem] items-center gap-8">
               <div
-                className={`relative ${tall ? "h-20" : "h-14"} ${block.max != null ? "border-r-4 border-text/30 bg-text/[0.1]" : ""} rounded-r-[0.3125rem]`}
+                className={`relative ${tall ? "h-20" : "h-14"} ${block.max != null ? "border-r-4 border-text/30 bg-text/[0.1]" : ""} rounded-r-sm`}
               >
                 <div
-                  className="h-full rounded-r-[0.3125rem]"
+                  className="h-full rounded-r-sm"
                   style={{
                     width: `${Math.max((bar.value / max) * 100, 0.5)}%`,
                     // Grey is context for a highlighted bar; with none highlighted every bar is data.

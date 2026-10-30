@@ -129,7 +129,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
               </div>
               {last && (
                 <p
-                  className={`${FRAME_SIZE} flex items-center justify-center rounded-lg border border-slate-800 text-slate-400`}
+                  className={`${FRAME_SIZE} flex items-center justify-center rounded-sm border border-slate-800 text-slate-400`}
                 >
                   End of the deck
                 </p>
@@ -199,13 +199,13 @@ function SpeakerWindow({ notes, basePath }: Props) {
                 else if (event.key === "Enter" && (event.metaKey || event.ctrlKey))
                   void edit.save();
               }}
-              className="min-h-0 flex-1 resize-none rounded-lg bg-slate-900 px-5 py-4 leading-relaxed text-slate-100 outline-2 outline-insight"
+              className="min-h-0 flex-1 resize-none rounded-sm bg-slate-900 px-5 py-4 leading-relaxed text-slate-100 outline-2 outline-insight"
               style={{ fontSize: size }}
             />
           ) : (
             <div
               ref={notesBox}
-              className="min-h-0 flex-1 overflow-y-auto rounded-lg bg-slate-900 px-5 py-4 leading-relaxed whitespace-pre-line"
+              className="min-h-0 flex-1 overflow-y-auto rounded-sm bg-slate-900 px-5 py-4 leading-relaxed whitespace-pre-line"
               style={{ fontSize: size }}
             >
               {note || <span className="text-slate-400">No notes on this slide.</span>}
@@ -291,7 +291,7 @@ function Frame({ name, src, title }: { name: string; src: string; title: string 
     return () => observer.disconnect();
   }, []);
   return (
-    <div ref={box} className={`${FRAME_SIZE} relative overflow-hidden rounded-lg bg-black`}>
+    <div ref={box} className={`${FRAME_SIZE} relative overflow-hidden rounded-sm bg-black`}>
       <iframe
         name={name}
         src={src}
@@ -341,7 +341,7 @@ function IconButton({
       onKeyUp={(event) => {
         if (event.key === " ") event.preventDefault();
       }}
-      className="flex h-9 min-w-9 items-center justify-center gap-2 rounded-md bg-slate-800 px-2 text-slate-100 hover:bg-slate-700"
+      className="flex h-9 min-w-9 items-center justify-center gap-2 rounded-sm bg-slate-800 px-2 text-slate-100 hover:bg-slate-700"
     >
       {children}
     </button>

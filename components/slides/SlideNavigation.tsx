@@ -186,7 +186,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
           onClick={() => setHelp(false)}
         >
-          <dl className="grid grid-cols-[auto_auto] gap-x-6 gap-y-2 rounded-lg bg-slate-900 px-6 py-5 text-sm text-slate-100">
+          <dl className="grid grid-cols-[auto_auto] gap-x-6 gap-y-2 rounded-sm bg-slate-900 px-6 py-5 text-sm text-slate-100">
             {KEYS.map(([keys, what]) => (
               <div key={keys} className="contents">
                 <dt className="font-mono text-slate-300">{keys}</dt>

@@ -49,7 +49,7 @@ export function TrendPlot({ data, print }: PlotProps) {
         />
         <Tooltip
           contentStyle={{
-            backgroundColor: "#ffffff",
+            backgroundColor: "var(--color-white)",
             border: "2px solid var(--color-primary-border)",
             borderRadius: "12px",
             fontSize: "1rem",
@@ -109,7 +109,7 @@ export function BarPlot({ data, print }: PlotProps) {
         <Tooltip
           cursor={{ fill: "var(--color-brand)", fillOpacity: 0.06 }}
           contentStyle={{
-            backgroundColor: "#ffffff",
+            backgroundColor: "var(--color-white)",
             border: "2px solid var(--color-primary-border)",
             borderRadius: "12px",
             fontSize: "1rem",
