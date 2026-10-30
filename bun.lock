@@ -6,7 +6,7 @@
       "name": "@hackersandwizards/slides",
       "devDependencies": {
         "@eslint/js": "10.0.1",
-        "@hackersandwizards/brand": "git+ssh://git@github.com/hackersandwizards/brand.git#v0.7.0",
+        "@hackersandwizards/brand": "git+ssh://git@github.com/hackersandwizards/brand.git#v0.9.1",
         "@testing-library/jest-dom": "7.0.1",
         "@testing-library/react": "16.3.3",
         "@types/node": "26.4.1",
@@ -125,7 +125,7 @@
 
     "@exodus/bytes": ["@exodus/bytes@1.16.0", "", { "peerDependencies": { "@noble/hashes": "^1.8.0 || ^2.0.0" }, "optionalPeers": ["@noble/hashes"] }, "sha512-IcpW84uEn3N7ETtNZMlxKhfl6Pec8rUNGOTBtWbK1FKhJxIFAptZyVrvVRVBimAJxJCgc3PxepxkdWWG4DVzfA=="],
 
-    "@hackersandwizards/brand": ["@hackersandwizards/brand@git+ssh://git@github.com/hackersandwizards/brand.git#4b66e902f7d2b43a40d768ad8eb1b11d166c104b", { "hasInstallScript": true }, "4b66e902f7d2b43a40d768ad8eb1b11d166c104b"],
+    "@hackersandwizards/brand": ["@hackersandwizards/brand@git+ssh://git@github.com/hackersandwizards/brand.git#778987f6c88616958dd332988ad086561ce9215c", { "hasInstallScript": true }, "778987f6c88616958dd332988ad086561ce9215c"],
 
     "@humanfs/core": ["@humanfs/core@0.19.2", "", { "dependencies": { "@humanfs/types": "^0.15.0" } }, "sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA=="],
 

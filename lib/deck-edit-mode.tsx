@@ -224,7 +224,7 @@ export function DeckEdit({ deck }: { deck: string }) {
         ref={badge}
         role="status"
         style={{ zIndex: 90, background: note?.error ? "var(--color-factory)" : LEAD }}
-        className="shadow-overlay fixed bottom-4 left-4 max-w-md rounded-sm px-3 py-2 font-sans text-sm text-white"
+        className="fixed bottom-4 left-4 max-w-md rounded-sm px-3 py-2 font-sans text-sm text-white shadow-overlay"
       >
         {note?.text ?? "Edit mode: click a text. Enter saves, Esc cancels, E ends."}
       </div>
