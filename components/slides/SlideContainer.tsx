@@ -65,7 +65,7 @@ export function HwWordmark() {
 export function BrandStrip() {
   return (
     <div
-      className="absolute inset-x-0 top-0 z-40 h-(--slide-strip) bg-gradient-to-r from-brand to-brand-accent"
+      className="brand-strip absolute inset-x-0 top-0 z-40 h-(--slide-strip) bg-gradient-to-r from-brand to-brand-accent"
       aria-hidden="true"
     />
   );

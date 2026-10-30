@@ -460,6 +460,67 @@ html:has(.print-slide) {
   }
 }
 
+/* Title and transition slides: one gradient field, the slide's left half, carrying the headline in
+   large white type (`.slide-split-lead`); the subtitle, label and speaker stay on the ground beside
+   it. The os design guide: the gradient is a bounded field, only large white type on it. A delivered
+   deck or a client theme keeps the centred slide it shipped with, glow and particles included
+   (`.slide-classic`), and so does a phone, where the slide is one column. */
+.slide-field,
+.slide-classic {
+  display: none;
+}
+
+@media screen and (width >= 48rem), print {
+  .slide-field {
+    display: block;
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 50%;
+    background: var(--gradient-magic);
+  }
+  .slide-split:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *) {
+    align-items: flex-start;
+    justify-content: flex-end;
+    text-align: left;
+    padding: 5.5rem 4.5rem var(--slide-footer-band) calc(50% + 4.5rem);
+  }
+  .slide-split:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *) > .slide-split-lead {
+    position: absolute;
+    left: 4.5rem;
+    bottom: var(--slide-footer-band);
+    width: calc(50% - 9rem);
+  }
+  .slide-split:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *) > .slide-split-lead > * {
+    color: white;
+    text-align: left;
+    font-size: var(--text-7xl);
+  }
+  /* The field is the slide's one gradient, so the strip steps aside: across the field it shows as a
+     seam, and stopped at the field's edge as a second one. */
+  :is(.slide-viewport, .print-slide):has(.slide-field):not(
+      .slide-scale-delivered,
+      .theme-kinetic-dark
+    )
+    > .brand-strip {
+    display: none;
+  }
+}
+
+@media screen and (width < 48rem) {
+  .slide-classic {
+    display: block;
+  }
+}
+
+:is(.slide-scale-delivered, .theme-kinetic-dark) .slide-field {
+  display: none;
+}
+
+:is(.slide-scale-delivered, .theme-kinetic-dark) .slide-classic {
+  display: block;
+}
+
 .slide-titled > .slide-body {
   flex: 1 1 auto;
   min-height: 0;

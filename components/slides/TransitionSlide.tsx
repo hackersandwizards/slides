@@ -15,30 +15,34 @@ const PRETEXT_COLORS: Record<string, string> = {
   "The Bigger Picture": "text-success",
 };
 
+/** The headline on the left half's gradient field, the label, subtitle and speaker on the ground
+ *  beside it (`.slide-split` in `slides.css`). A delivered deck keeps its centred headline with the
+ *  glow, spotlight and particles (`.slide-classic`). */
 export function TransitionSlide({ slide }: Props) {
   const preTextColor = slide.preText ? (PRETEXT_COLORS[slide.preText] ?? "text-text-muted") : "";
   const isLiveDemo = slide.headline.includes("LIVE DEMO");
 
   return (
     <SlideShell direction="col" overflowHidden background={slide.background ?? "bg-section-intro"}>
+      <div className="slide-field" aria-hidden="true" />
       <div
-        className="absolute top-1/3 left-1/3 h-[31.25rem] w-[31.25rem] rounded-full bg-brand/8 blur-[120px]"
+        className="slide-classic absolute top-1/3 left-1/3 h-[31.25rem] w-[31.25rem] rounded-full bg-brand/8 blur-[120px]"
         aria-hidden="true"
       />
       <div
-        className="absolute right-1/3 bottom-1/3 h-[25rem] w-[25rem] rounded-full bg-brand-accent/6 blur-[100px]"
+        className="slide-classic absolute right-1/3 bottom-1/3 h-[25rem] w-[25rem] rounded-full bg-brand-accent/6 blur-[100px]"
         aria-hidden="true"
       />
       {/* Radial spotlight behind headline */}
-      <div className="spotlight-radial absolute inset-0 z-[1]" />
+      <div className="slide-classic spotlight-radial absolute inset-0 z-[1]" />
       <Particles
-        className="absolute inset-0"
+        className="slide-classic absolute inset-0"
         quantity={60}
         size={1.0}
         staticity={25}
         color={BRAND_HEX}
       />
-      <div className="slide-content relative z-10 flex flex-col items-center justify-center px-4 text-center">
+      <div className="slide-content slide-split relative z-10 flex flex-col items-center justify-center px-4 text-center">
         {slide.preText && (
           <BlurFade delay={0.05} duration={0.4}>
             <p
@@ -49,7 +53,7 @@ export function TransitionSlide({ slide }: Props) {
           </BlurFade>
         )}
 
-        <BlurFade delay={0.1} duration={0.5}>
+        <BlurFade delay={0.1} duration={0.5} className="slide-split-lead">
           {/* The padding keeps the glyphs inside the box, which a 0.95 line height leaves them
               outside of, and the negative margin takes it back out of the layout. A layer cut to the
               box, such as the one BlurFade's filter draws on while it runs, then cannot clip the g
