@@ -349,9 +349,10 @@
 
    --slide-footer-inset  the corner row's distance from the slide's bottom and right edges: 1.5rem,
                      32px at 1920
-   --slide-footer-mark   the corner row's height, the wizard emoji of the wordmark: 2.25rem, 48px
-   --slide-wordmark      the corner wordmark's box, whose centre is its text centre: 1.956rem,
-                     42px at 1920, 1.3 times the 1.5rem typed name it replaces
+   --slide-footer-mark   the corner row's height: 2.25rem, 48px
+   --slide-corner-lockup the corner lockup's box, sized so its letters keep the 1.956rem, 42px at
+                     1920, the composed wordmark had, 1.3 times the 1.5rem typed name it replaced:
+                     the wordmark is 952 of the lockup's 1489 units, so 3.06rem
    --slide-closing-lockup the closing slide's lockup, wizard and wordmark: 4.3rem, 92px at 1920
                      (both blind-scored, 2026-10-29)
    --slide-footer-band   the band above the bottom edge that a slide's content never enters: the
@@ -365,7 +366,7 @@
 :root {
   --slide-footer-inset: 1.5rem;
   --slide-footer-mark: 2.25rem;
-  --slide-wordmark: 1.956rem;
+  --slide-corner-lockup: calc(1.956rem * 1489 / 952);
   --slide-closing-lockup: 4.3rem;
   --slide-footer-band: calc(var(--slide-footer-inset) + var(--slide-footer-mark) + 2rem);
   --slide-strip: 0.75rem;

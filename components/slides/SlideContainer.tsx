@@ -29,38 +29,33 @@ export function PageCounter({ label }: { label: string }) {
 }
 
 /**
- * The brand lockup in the slide corner: the wizard emoji beside the pixel wordmark
- * (`@hackersandwizards/brand` `logos/wordmark.svg`, copied into `public/` by `postinstall`), with
- * no line under it. The wordmark's box is centred on its letters, so the emoji and the page counter
- * beside it centre on the text; the emoji then rises by the brand's `--logo-wizard-lift` onto the
- * letters. On a dark theme the Night wordmark replaces it (`slides.css`).
+ * The brand lockup in the slide corner, the design guide's logo for slides:
+ * `@hackersandwizards/brand` `logos/lockup.svg`, copied into `public/` by `postinstall`, the Night
+ * cut on a dark theme (`slides.css`). Its letters keep the corner wordmark's size, so the wizard,
+ * larger in the lockup than in the former composed corner, overhangs the row above and below
+ * without moving it. The lockup's box is the wizard's and carries the wizard's lift, so it takes
+ * the brand's `--logo-wizard-lift` and its letters centre on the page counter beside it.
  */
 export function HwWordmark() {
+  const className =
+    "h-(--slide-corner-lockup) w-auto shrink-0 translate-y-(--logo-wizard-lift) my-[calc((var(--slide-footer-mark)-var(--slide-corner-lockup))/2)]";
   return (
-    <span className="pointer-events-none inline-flex items-center gap-[0.375rem]">
+    <span className="pointer-events-none inline-flex items-center">
       <Image
-        src="/hw-emoji-wordmark.png"
+        src="/hw-lockup.svg"
         alt=""
-        width={192}
-        height={192}
+        width={7989}
+        height={1489}
         priority
-        className="h-(--slide-footer-mark) w-(--slide-footer-mark) shrink-0 translate-y-(--logo-wizard-lift) object-contain"
+        className={`hw-wordmark ${className}`}
       />
       <Image
-        src="/hw-wordmark.svg"
+        src="/hw-lockup-night.svg"
         alt=""
-        width={6571}
-        height={952}
+        width={7989}
+        height={1489}
         priority
-        className="hw-wordmark h-(--slide-wordmark) w-auto"
-      />
-      <Image
-        src="/hw-wordmark-night.svg"
-        alt=""
-        width={6571}
-        height={952}
-        priority
-        className="hw-wordmark-night h-(--slide-wordmark) w-auto"
+        className={`hw-wordmark-night ${className}`}
       />
     </span>
   );
