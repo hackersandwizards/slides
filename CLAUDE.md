@@ -13,7 +13,7 @@ writes into another repo.
 
 **External trainers can read this whole repo, its history included**, because the trainer hub
 installs it. Nothing goes in that a trainer may not see: no customer deck, price, rate, client
-term, personal data or secret. Decks live in the consumers.
+term, personal data or secret. Decks live in the consumers, except the fictional specimen deck.
 
 ## Layout
 
@@ -32,6 +32,10 @@ term, personal data or secret. Decks live in the consumers.
   since Tailwind never scans `node_modules`.
 - `scripts/render-pdf.ts`: prints a deck's print route to a PDF; each consumer's `export-pdf.ts`
   resolves deck, URL and file name and calls it.
+- `specimen/`: `slide-catalogue.ts`, the specimen deck, every slide type and variant with fictional
+  content, its images, and the specimen page `index.html` with its compiled `build/slides.css`, one slide per slide
+  type in print mode, which the brand kit links. `bun run specimen` (`scripts/specimen.ts`)
+  writes the page, and `bun run check` fails while it differs from a fresh build.
 - `test/`: the engine's unit tests.
 
 Consumers import by path, `@hackersandwizards/slides/types/slide`, and ship the source: Next lists
@@ -53,8 +57,8 @@ are peer dependencies, so each consumer holds one copy of each.
 1. Change the engine here, `bun run check` green, raise `version`, commit, tag `v<version>`, push
    with the tag.
 2. In each consumer, raise the tag in `package.json`, `bun install`, run its gate. The regression
-   decks are trainer-hub's `slide-master` and talks' `slide-catalogue`, which carry every slide
-   type and variant; a new slide type or variant lands there first.
+   decks are this repo's `specimen/slide-catalogue.ts`, which talks shows and tests, and
+   trainer-hub's `slide-master`; a new slide type or variant lands in the specimen deck first.
 
 ## Behavioral rules
 

@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "0.4.8",
+  "version": "0.5.0",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -14,18 +14,20 @@
     "lib",
     "types",
     "styles",
-    "scripts/render-pdf.ts"
+    "scripts/render-pdf.ts",
+    "specimen"
   ],
   "scripts": {
     "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks || true",
-    "check": "bun run format:check && bun run lint && bun run typecheck && bun .claude/skills/engineering/check-unique-names.ts && bun run test && brand-colours",
+    "check": "bun run format:check && bun run lint && bun run typecheck && bun .claude/skills/engineering/check-unique-names.ts && bun run test && bun scripts/specimen.ts --check && brand-colours",
     "lint": "eslint --cache --concurrency=auto .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "fix": "eslint --cache --concurrency=auto . --fix && prettier --write .",
-    "check:staged": "bun .claude/skills/engineering/check-staged.ts"
+    "check:staged": "bun .claude/skills/engineering/check-staged.ts",
+    "specimen": "bun scripts/specimen.ts"
   },
   "peerDependencies": {
     "@hackersandwizards/brand": "*",
@@ -53,6 +55,8 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@hackersandwizards/brand": "git+ssh://git@github.com/hackersandwizards/brand.git#v0.9.16",
+    "@tailwindcss/node": "4.3.3",
+    "@tailwindcss/oxide": "4.3.3",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@types/node": "26.6.6",

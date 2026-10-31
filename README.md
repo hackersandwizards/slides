@@ -29,6 +29,7 @@ for a private repo; the `git+ssh://` form clones through git, over HTTPS with th
 | `@hackersandwizards/slides/lib/<module>`             | hooks, navigation, presenter sync      |
 | `@hackersandwizards/slides/lib/adapter`              | `SlidesAdapterProvider`                |
 | `@hackersandwizards/slides/scripts/render-pdf`       | `renderPdf` for an export script       |
+| `@hackersandwizards/slides/specimen/slide-catalogue` | the fictional specimen deck            |
 
 The package ships TypeScript source. Let the build transpile it: Next
 `transpilePackages: ["@hackersandwizards/slides"]`, Astro `vite.ssr.noExternal`, vitest
