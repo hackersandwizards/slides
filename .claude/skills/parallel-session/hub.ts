@@ -6,23 +6,14 @@
 // skipped. The index also lists every open items.js row and every open GOAL.md (else TODO.md) row,
 // grouped by who acts and ordered by priority. Usage:
 // bun hub.ts [--check] [--dir <hub>] [<repo> ...] (repos default to the current directory). --check only validates every items.js row and review.json and exits 1 on a defect.
-import {
-  existsSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 
 const htmlEscape = (s: string) =>
   s.replace(
     /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ]!,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
   );
 
 type Candidate = {
@@ -51,9 +42,7 @@ const checkAt = args.indexOf("--check");
 const checkOnly = checkAt >= 0 && !!args.splice(checkAt, 1);
 const dirAt = args.indexOf("--dir");
 const root = resolve(
-  dirAt >= 0
-    ? args.splice(dirAt, 2)[1]
-    : join(homedir(), "Downloads", "stand-entscheidungen"),
+  dirAt >= 0 ? args.splice(dirAt, 2)[1] : join(homedir(), "Downloads", "stand-entscheidungen"),
 );
 const repos = (args.length ? args : ["."]).map((r) => resolve(r));
 const repo = repos[0];
@@ -73,44 +62,29 @@ for (const r of repos) {
 const rows = Object.values(decisionWindow.DECISION_REPOS ?? {}).flat();
 // Defects the build cannot survive; --check reports them with the rest.
 const broken: string[] = [];
-const REQUIRED = [
-  "id",
-  "title",
-  "area",
-  "priority",
-  "order",
-  "status",
-  "context",
-];
-const defects = Object.entries(decisionWindow.DECISION_REPOS ?? {}).flatMap(
-  ([repoKey, list]) => {
-    const seen = new Set<string>();
-    return list.flatMap((r, i) => {
-      if (!r.id) {
-        broken.push(
-          `${repoKey} row ${i + 1} (${String(r.title ?? "untitled")}) has no id`,
-        );
-        return [];
-      }
-      const at = `${repoKey}:${r.id}`;
-      const out = REQUIRED.filter((k) => r[k] === undefined || r[k] === "").map(
-        (k) => `${at} lacks ${k}`,
-      );
-      if (seen.has(r.id)) out.push(`${at} duplicate id`);
-      seen.add(r.id);
-      if (!["open", "assumed", "decided"].includes(r.status))
-        out.push(`${at} status ${r.status}`);
-      if (![1, 2, 3].includes(r.priority as number))
-        out.push(`${at} priority ${r.priority}`);
-      const keys = ((r.options as { key: string }[]) ?? []).map((o) => o.key);
-      if (r.recommended && !keys.includes(r.recommended as string))
-        out.push(`${at} recommended not an option`);
-      if (r.status === "decided" && !r.decision)
-        out.push(`${at} decided without decision`);
-      return out;
-    });
-  },
-);
+const REQUIRED = ["id", "title", "area", "priority", "order", "status", "context"];
+const defects = Object.entries(decisionWindow.DECISION_REPOS ?? {}).flatMap(([repoKey, list]) => {
+  const seen = new Set<string>();
+  return list.flatMap((r, i) => {
+    if (!r.id) {
+      broken.push(`${repoKey} row ${i + 1} (${String(r.title ?? "untitled")}) has no id`);
+      return [];
+    }
+    const at = `${repoKey}:${r.id}`;
+    const out = REQUIRED.filter((k) => r[k] === undefined || r[k] === "").map(
+      (k) => `${at} lacks ${k}`,
+    );
+    if (seen.has(r.id)) out.push(`${at} duplicate id`);
+    seen.add(r.id);
+    if (!["open", "assumed", "decided"].includes(r.status)) out.push(`${at} status ${r.status}`);
+    if (![1, 2, 3].includes(r.priority as number)) out.push(`${at} priority ${r.priority}`);
+    const keys = ((r.options as { key: string }[]) ?? []).map((o) => o.key);
+    if (r.recommended && !keys.includes(r.recommended as string))
+      out.push(`${at} recommended not an option`);
+    if (r.status === "decided" && !r.decision) out.push(`${at} decided without decision`);
+    return out;
+  });
+});
 const ids = new Set(rows.map((r) => r.id));
 if (!existsSync(root)) {
   console.error(`hub folder ${root} does not exist`);
@@ -134,22 +108,13 @@ for (const file of reviewFiles) {
   }
   if (rv.status && !["decide", "use", "info"].includes(rv.status))
     defects.push(`${at} status ${rv.status}`);
-  if ((rv.current?.candidates?.length ?? 0) > 3)
-    defects.push(`${at} more than three candidates`);
-  if (
-    rv.row &&
-    !rv.row.endsWith("*") &&
-    !rv.current?.decision &&
-    ids.size &&
-    !ids.has(rv.row)
-  )
+  if ((rv.current?.candidates?.length ?? 0) > 3) defects.push(`${at} more than three candidates`);
+  if (rv.row && !rv.row.endsWith("*") && !rv.current?.decision && ids.size && !ids.has(rv.row))
     defects.push(`${at} row ${rv.row} not found`);
 }
 defects.unshift(...broken);
 if (checkOnly) {
-  console.log(
-    defects.length ? defects.join("\n") : `ok: ${repos.length} repo(s)`,
-  );
+  console.log(defects.length ? defects.join("\n") : `ok: ${repos.length} repo(s)`);
   process.exit(defects.length ? 1 : 0);
 }
 if (broken.length) {
@@ -184,9 +149,7 @@ function firstImage(dir: string, index?: string): string | undefined {
 }
 
 const topics = readdirSync(root)
-  .filter(
-    (name) => !/^[_.]/.test(name) && statSync(join(root, name)).isDirectory(),
-  )
+  .filter((name) => !/^[_.]/.test(name) && statSync(join(root, name)).isDirectory())
   .map((name) => {
     const dir = join(root, name);
     const reviewPath = join(dir, "review.json");
@@ -204,10 +167,7 @@ const topics = readdirSync(root)
     const candidates = [...(review.current?.candidates ?? [])]
       .sort((a, b) => Number(!!b.recommended) - Number(!!a.recommended))
       .slice(0, 3);
-    const thumb =
-      review.thumb ??
-      candidates.find((c) => c.image)?.image ??
-      firstImage(dir, index);
+    const thumb = review.thumb ?? candidates.find((c) => c.image)?.image ?? firstImage(dir, index);
     const mtime = statSync(index ? join(dir, index) : dir).mtimeMs;
     return { name, review, index, title, candidates, thumb, mtime };
   })
@@ -215,11 +175,7 @@ const topics = readdirSync(root)
 
 const reportHref = (p: string) =>
   "file://" +
-  (p.startsWith("/")
-    ? p
-    : p.startsWith("~/")
-      ? join(homedir(), p.slice(2))
-      : join(repo, p));
+  (p.startsWith("/") ? p : p.startsWith("~/") ? join(homedir(), p.slice(2)) : join(repo, p));
 
 const listHref = (path: string) =>
   "file://" + join(path, ".claude/skills/parallel-session/decisions.html");
@@ -251,20 +207,14 @@ const work: Work[] = repos.flatMap((r) => {
   const items: { point: string; owner: string; evidence: string }[] = [];
   let skip = file.endsWith("GOAL.md");
   for (const line of readFileSync(file, "utf8").split("\n")) {
-    if (line.startsWith("## "))
-      skip = /goal|ziel|done means|waiting/i.test(line);
+    if (line.startsWith("## ")) skip = /goal|ziel|done means|waiting/i.test(line);
     if (skip) continue;
     if (line.startsWith("|")) {
       const [point, owner = "", evidence = ""] = line
         .split(/(?<!\\)\|/)
         .slice(1, -1)
         .map((c) => c.trim());
-      if (
-        !point ||
-        /^:?-+:?$/.test(point) ||
-        /^(punkt|item|point)$/i.test(point)
-      )
-        continue;
+      if (!point || /^:?-+:?$/.test(point) || /^(punkt|item|point)$/i.test(point)) continue;
       items.push({ point, owner, evidence });
     } else if (/^- (?!\[x\])/i.test(line)) {
       const text = line.replace(/^- (\[ \] )?/, "");
@@ -294,9 +244,7 @@ const work: Work[] = repos.flatMap((r) => {
     } as Work;
   });
 });
-work.sort(
-  (a, b) => a.prio - b.prio || (a.due ?? "9").localeCompare(b.due ?? "9"),
-);
+work.sort((a, b) => a.prio - b.prio || (a.due ?? "9").localeCompare(b.due ?? "9"));
 const mine = work.filter((w) => w.who === "me");
 const others = work.filter((w) => w.who === "others");
 const agents = work.filter((w) => w.who === "agents");
@@ -308,10 +256,7 @@ const openRows: Open[] = lists
       .DECISION_REPOS![key].filter((r) => r.status === "open")
       .map((row) => ({ row, key, path, prio: row.priority as number })),
   )
-  .sort(
-    (a, b) =>
-      a.prio - b.prio || (a.row.order as number) - (b.row.order as number),
-  );
+  .sort((a, b) => a.prio - b.prio || (a.row.order as number) - (b.row.order as number));
 const topicOf = (id: string) =>
   topics.find((t) => {
     const r = t.review.row;
@@ -326,8 +271,7 @@ const slot = (who: string, due?: string) =>
   `<span class="slot">${due ? `<span class="due">bis ${dateDe(due)}</span> ` : ""}${htmlEscape(oneLine(who, 28))}</span>`;
 const decRow = ({ row, key, path }: Open) => {
   const t = topicOf(row.id);
-  const opts =
-    (row.options as { key: string; label: string; detail?: string }[]) ?? [];
+  const opts = (row.options as { key: string; label: string; detail?: string }[]) ?? [];
   const rec = opts.find((o) => o.key === row.recommended);
   const domId = `${key}:${row.id}`.replace(/[^A-Za-z0-9_-]/g, "_");
   return `<details class="item"><summary>${tick(key + row.id)}<span class="t">${htmlEscape(String(row.title))} <small>${htmlEscape(key)}</small></span>${slot("Du entscheidest")}</summary>
@@ -392,12 +336,8 @@ function card(t: (typeof topics)[number]): string {
 </article>`;
 }
 
-const done = topics.filter(
-  (t) => decided(t.review.row) || !!t.review.current?.decision,
-);
-const info = topics.filter(
-  (t) => !done.includes(t) && t.review.status === "info",
-);
+const done = topics.filter((t) => decided(t.review.row) || !!t.review.current?.decision);
+const info = topics.filter((t) => !done.includes(t) && t.review.status === "info");
 const open = topics.filter((t) => !done.includes(t) && !info.includes(t));
 const stamp = new Date().toLocaleString("de-DE", {
   dateStyle: "medium",
@@ -405,12 +345,8 @@ const stamp = new Date().toLocaleString("de-DE", {
 });
 const assumed = lists
   .map(({ path, key }) => {
-    const n = decisionWindow.DECISION_REPOS![key].filter(
-      (r) => r.status === "assumed",
-    ).length;
-    return n
-      ? `<a href="${htmlEscape(listHref(path))}">${htmlEscape(key)} ${n}</a>`
-      : "";
+    const n = decisionWindow.DECISION_REPOS![key].filter((r) => r.status === "assumed").length;
+    return n ? `<a href="${htmlEscape(listHref(path))}">${htmlEscape(key)} ${n}</a>` : "";
   })
   .filter(Boolean);
 const p1 = openRows.filter((o) => o.prio === 1);
@@ -431,10 +367,7 @@ const meta = Object.fromEntries(
           t: r.title,
           s: r.status,
           o: Object.fromEntries(
-            ((r.options as { key: string; label: string }[]) ?? []).map((o) => [
-              o.key,
-              o.label,
-            ]),
+            ((r.options as { key: string; label: string }[]) ?? []).map((o) => [o.key, o.label]),
           ),
         },
       ]),
