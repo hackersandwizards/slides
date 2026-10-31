@@ -3,9 +3,9 @@
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import { useMemo, type ReactNode } from "react";
-import { SlidesAdapterProvider, type ImageProps } from "./adapter";
+import { SlidesAdapterProvider, type AdapterImageProps } from "./adapter";
 
-function NextImageWithAlt({ alt, ...rest }: ImageProps) {
+function NextImageWithAlt({ alt, ...rest }: AdapterImageProps) {
   return <NextImage {...rest} alt={alt ?? ""} />;
 }
 

@@ -2,10 +2,10 @@ import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import Image from "../components/ui/image";
-import { SlidesAdapterProvider, type ImageProps } from "../lib/adapter";
+import { SlidesAdapterProvider, type AdapterImageProps } from "../lib/adapter";
 import { PrintProvider } from "../lib/print-context";
 
-const Framework = ({ loading }: ImageProps) => <i data-loading={loading} />;
+const Framework = ({ loading }: AdapterImageProps) => <i data-loading={loading} />;
 const loadingOf = (ui: ReactNode, adapter: boolean) =>
   render(
     adapter ? (
