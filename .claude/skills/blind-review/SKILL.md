@@ -49,6 +49,9 @@ none, because receipt".
    legibility, typography or logo detail at full size or as a full-resolution crop of that detail.
    An image costs `⌈width / 28⌉ × ⌈height / 28⌉` tokens, up to 4,784 at a 2,576 px long edge.
    Check: every image is at its real display size in context, at 1000 px or at full resolution.
+   Build every candidate to the system's current rules for that ground and surface (the asset cut,
+   the type allowed on it), except the one rule the comparison tests. Check: before scoring, each
+   candidate is checked against those rules and the report names any it breaks.
 5. For a shared brand element (logo, colour, lockup, frame), compare the whole system across every
    surface before the first surface, and name the combinations you skipped. Check: the report
    lists the surfaces and the skipped combinations.
