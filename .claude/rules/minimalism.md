@@ -9,7 +9,8 @@ prompts) and in any document. Say the least that fully does the job, then stop.
    silently, as a missing allowlist entry or fail-closed guard does, include it and name why.
 2. Standard library does it? Use it.
 3. Native platform feature covers it? Use it.
-4. An installed dependency solves it? Use it. Never add one for what a few lines do.
+4. A dependency solves it, installed or added to the project? Use it. Never add one for what a few
+   lines do.
 5. Can it be one line? One line.
 6. Only then: the minimum code that works.
 
@@ -19,9 +20,11 @@ prompts) and in any document. Say the least that fully does the job, then stop.
   wherever you find them, never another session's uncommitted work. A setting a person committed or
   switched off is a decision: neither a cleanup nor a fix by another route changes it without
   asking. Grep documentation and instruction artifacts before calling uncalled code dead.
-- Before reporting done, remove what your own run created and no longer needs: scratch files,
-  backups, container images and build or runner caches. Remove only exact paths your own run
-  created, never by prefix, and never a scratch file that is the only copy of a deliverable.
+- Leave the machine as you found it, apart from updates. Before reporting done, remove what your
+  own run created and no longer needs: scratch files, backups, container images, build or runner
+  caches and software installed outside a project, which stays only with the person's go. Remove
+  only exact paths your own run created, never by prefix, and never a scratch file that is the only
+  copy of a deliverable.
 - No interface, factory or config for a single case, and no scaffolding for later.
 - Change what exists by removal first, then replacement, then addition. Where a removal drops a
   rule you still want, replace it.

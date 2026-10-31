@@ -21,5 +21,7 @@ Work through each repository you are given, one at a time.
    back only an update you cannot make green.
 3. Commit everything as one commit and push it. Nothing changed means no commit.
 
+Keep one version per tool on the machine, the newest; an older one only for a named regression.
+
 Report per repository: the commit hash or "nothing to update", and each dependency or advisory left
 behind, with the failing check or advisory ID.
