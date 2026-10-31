@@ -4,41 +4,22 @@
 // (assumed rows). Agent work is left out. Answers stay in this browser until the row leaves the
 // rebuilt page; "kopieren" puts them in one block for the chat. Usage:
 // bun hub.ts [--check [<repo> ...]]   --check validates the found lists (or the given repos), exit 1 on a defect.
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
 // The one setting: where the page goes.
 const PAGE =
-  process.env.STAND_PAGE ??
-  join(homedir(), "Downloads", "stand-entscheidungen", "index.html");
+  process.env.STAND_PAGE ?? join(homedir(), "Downloads", "stand-entscheidungen", "index.html");
 const SCAN = join(homedir(), "dev");
 const PEOPLE = ["Benedikt", "Stefan"]; // a row without `owner` is the first one's
 const LIST = "docs/tracking/decisions/items.js";
-const SKIP = new Set([
-  "node_modules",
-  "dist",
-  "build",
-  "target",
-  "vendor",
-  "venv",
-  "coverage",
-]);
+const SKIP = new Set(["node_modules", "dist", "build", "target", "vendor", "venv", "coverage"]);
 
 const esc = (s: unknown) =>
   String(s ?? "").replace(
     /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ]!,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
   );
 const git = (cwd: string, ...a: string[]) => {
   const r = Bun.spawnSync(["git", "-C", cwd, ...a], { stderr: "ignore" });
@@ -54,8 +35,7 @@ function find(dir: string, depth: number, out: string[]) {
   } catch {
     return;
   }
-  if (entries.some((e) => e.name === ".git") && existsSync(join(dir, LIST)))
-    out.push(dir);
+  if (entries.some((e) => e.name === ".git") && existsSync(join(dir, LIST))) out.push(dir);
   if (depth < 6)
     for (const e of entries)
       if (e.isDirectory() && !e.name.startsWith(".") && !SKIP.has(e.name))
@@ -63,7 +43,7 @@ function find(dir: string, depth: number, out: string[]) {
 }
 const args = process.argv.slice(2);
 const checkOnly = args[0] === "--check";
-let paths: string[] = [];
+let paths: string[];
 if (checkOnly && args.length > 1) paths = args.slice(1).map((p) => resolve(p));
 else {
   const found: string[] = [];
@@ -74,8 +54,7 @@ else {
     const had = byRemote.get(remote);
     if (
       !had ||
-      (!statSync(join(had, ".git")).isDirectory() &&
-        statSync(join(p, ".git")).isDirectory())
+      (!statSync(join(had, ".git")).isDirectory() && statSync(join(p, ".git")).isDirectory())
     )
       byRemote.set(remote, p);
   }
@@ -109,19 +88,10 @@ for (const path of paths) {
     defects.push(`${path}/${LIST}: ${(e as Error).message}`);
     continue;
   }
-  for (const [key, rows] of Object.entries(w.DECISION_REPOS ?? {}))
-    lists.push({ path, key, rows });
+  for (const [key, rows] of Object.entries(w.DECISION_REPOS ?? {})) lists.push({ path, key, rows });
 }
 
-const REQUIRED = [
-  "id",
-  "title",
-  "area",
-  "priority",
-  "order",
-  "status",
-  "context",
-];
+const REQUIRED = ["id", "title", "area", "priority", "order", "status", "context"];
 for (const { path, key, rows } of lists) {
   const seen = new Set<string>();
   rows.forEach((r, i) => {
@@ -132,25 +102,19 @@ for (const { path, key, rows } of lists) {
     seen.add(r.id);
     if (!["open", "assumed", "decided"].includes(r.status))
       defects.push(`${at} status ${r.status}`);
-    if (![1, 2, 3].includes(r.priority))
-      defects.push(`${at} priority ${r.priority}`);
+    if (![1, 2, 3].includes(r.priority)) defects.push(`${at} priority ${r.priority}`);
     const keys = (r.options ?? []).map((o) => o.key);
     if (r.recommended && !keys.includes(r.recommended))
       defects.push(`${at} recommended not an option`);
-    if (r.status === "decided" && !r.decision)
-      defects.push(`${at} decided without decision`);
+    if (r.status === "decided" && !r.decision) defects.push(`${at} decided without decision`);
     for (const [k, file] of Object.entries(r.images ?? {})) {
-      if (!keys.includes(k))
-        defects.push(`${at} image key ${k} is not an option`);
-      if (!existsSync(join(path, file)))
-        defects.push(`${at} image ${file} not found`);
+      if (!keys.includes(k)) defects.push(`${at} image key ${k} is not an option`);
+      if (!existsSync(join(path, file))) defects.push(`${at} image ${file} not found`);
     }
   });
 }
 if (checkOnly) {
-  console.log(
-    defects.length ? defects.join("\n") : `ok: ${lists.length} list(s)`,
-  );
+  console.log(defects.length ? defects.join("\n") : `ok: ${lists.length} list(s)`);
   process.exit(defects.length ? 1 : 0);
 }
 
@@ -167,30 +131,20 @@ type Task = {
   who: string;
 };
 const tasks: Task[] = lists.flatMap((list) => {
-  const file = ["GOAL.md", "TODO.md"]
-    .map((f) => join(list.path, f))
-    .find(existsSync);
+  const file = ["GOAL.md", "TODO.md"].map((f) => join(list.path, f)).find(existsSync);
   if (!file) return [];
   const out: Task[] = [];
   let skip = file.endsWith("GOAL.md");
   for (const line of readFileSync(file, "utf8").split("\n")) {
-    if (line.startsWith("## "))
-      skip = /goal|ziel|done means|waiting/i.test(line);
+    if (line.startsWith("## ")) skip = /goal|ziel|done means|waiting/i.test(line);
     if (skip) continue;
-    let point = "",
-      owner = "",
-      evidence = "";
+    let point: string, owner: string, evidence: string;
     if (line.startsWith("|")) {
       [point, owner = "", evidence = ""] = line
         .split(/(?<!\\)\|/)
         .slice(1, -1)
         .map((c) => c.trim());
-      if (
-        !point ||
-        /^:?-+:?$/.test(point) ||
-        /^(punkt|item|point)$/i.test(point)
-      )
-        continue;
+      if (!point || /^:?-+:?$/.test(point) || /^(punkt|item|point)$/i.test(point)) continue;
     } else if (/^- (?!\[x\])/i.test(line)) {
       const text = line.replace(/^- (\[ \] )?/, "");
       point = text.split(/ Owner: | Beleg: | Evidence: /)[0];
@@ -214,8 +168,7 @@ const tasks: Task[] = lists.flatMap((list) => {
   return out;
 });
 
-const href = (path: string, file: string) =>
-  "file://" + encodeURI(resolve(path, file));
+const href = (path: string, file: string) => "file://" + encodeURI(resolve(path, file));
 // Paths under docs/tracking/ in a row's text become links where the file exists.
 const linkify = (path: string, text: unknown) =>
   esc(text).replace(/(docs\/tracking\/[\w./äöü-]*\w)/g, (p) =>
@@ -250,16 +203,10 @@ function taskItem(t: Task) {
 const all = lists.flatMap((list) => list.rows.map((r) => ({ list, r })));
 const byPrio = (a: { r: Row }, b: { r: Row }) =>
   a.r.priority - b.r.priority || a.r.order - b.r.order;
-const decide = all
-  .filter(({ r }) => r.status === "open" && r.options?.length)
-  .sort(byPrio);
-const check = all
-  .filter(({ r }) => r.status === "open" && !r.options?.length)
-  .sort(byPrio);
+const decide = all.filter(({ r }) => r.status === "open" && r.options?.length).sort(byPrio);
+const check = all.filter(({ r }) => r.status === "open" && !r.options?.length).sort(byPrio);
 const assumed = all.filter(({ r }) => r.status === "assumed");
-tasks.sort(
-  (a, b) => a.prio - b.prio || (a.due ?? "9").localeCompare(b.due ?? "9"),
-);
+tasks.sort((a, b) => a.prio - b.prio || (a.due ?? "9").localeCompare(b.due ?? "9"));
 const group = (title: string, inner: string, open: boolean) =>
   inner
     ? `<details class="group"${open ? " open" : ""}><summary>${title}</summary>${inner}</details>`
