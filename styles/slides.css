@@ -334,14 +334,11 @@
                      overlay, so the box keeps its 1px layout: a real wide border shrank 22 talks and
                      37 hub slides under the fit guard (measured 2026-10-28)
    --slide-radius    the brand corner: website 20px 5px x 2 = 40px 10px at 1920
-   --slide-radius-sm the brand corner on a tile, badge or inline code, which stands a line tall: the
-                     website's small marks round 4px 1px (patterns.css .dest-swatch), and 6px 1.5px
-                     x 2 = 12px 3px at 1920 keeps that 4:1 at a line's height
+   --slide-radius-sm the brand corner on a tile, badge or inline code, which stands a line tall:
+                     6px 1.5px x 2 = 12px 3px at 1920 keeps the corner's 4:1 at a line's height
    --slide-marker    the list marker, the website's teal square (EventRow.astro .event-facts):
-                     0.375rem x 2 = 12px at 1920, its corner a sixth of the side on the brand
-                     diagonal, as the print marker Benedikt chose ("die finde ich besser"). A blind
-                     test on one slide (2026-10-28, ten reviewers) put a third first seven times;
-                     his choice and one shape across media decide
+                     0.375rem x 2 = 12px at 1920. Square, as every mark too small for the brand
+                     corner at its full value, on the website and on paper alike
 
    --slide-footer-inset  the corner row's distance from the slide's bottom edge: 1.5rem, 32px at
                      1920
@@ -385,7 +382,6 @@
   --slide-radius: 1.875rem 0.46875rem;
   --slide-radius-sm: 0.5625rem 0.140625rem;
   --slide-marker: 0.5625rem;
-  --slide-marker-radius: 0.09375rem 0;
   --slide-stage: 1.5;
   /* The third text step: muted, since brand v0.8 folds subtle into muted. Its own name, so a
      delivered deck keeps the grey it shipped with (.slide-scale-delivered). */
@@ -627,7 +623,6 @@ html:has(.print-slide) {
     flex-shrink: 0;
     width: var(--marker);
     height: var(--marker);
-    border-radius: calc(var(--marker) / 6) 0;
     background: var(--color-teal);
   }
   .slide-marker-nested {

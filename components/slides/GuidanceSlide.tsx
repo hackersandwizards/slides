@@ -89,7 +89,7 @@ export function GuidanceSlide({ slide }: Props) {
               {examples.map((_, i) => (
                 <div
                   key={i}
-                  className={`h-2.5 w-2.5 rounded-(--slide-marker-radius) transition-colors ${
+                  className={`h-2.5 w-2.5 transition-colors ${
                     i === activeExample ? "bg-primary" : "bg-primary-border"
                   }`}
                 />
