@@ -4,7 +4,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 
-function fail(message: string): never {
+function refuseCommit(message: string): never {
   console.error(`[check:staged] ${message}`);
   process.exit(1);
 }
@@ -15,13 +15,13 @@ const scan = spawnSync(
   ["git", "--pre-commit", "--staged", "--redact", "--no-banner", "--log-level", "warn"],
   { stdio: "inherit" },
 );
-if (scan.error) fail("gitleaks not found: brew install gitleaks");
+if (scan.error) refuseCommit("gitleaks not found: brew install gitleaks");
 if (scan.status !== 0) process.exit(1);
 
 const listed = spawnSync("git", ["diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"], {
   encoding: "utf8",
 });
-if (listed.status !== 0) fail("git diff --cached failed");
+if (listed.status !== 0) refuseCommit("git diff --cached failed");
 const staged = listed.stdout.split("\0").filter(Boolean);
 if (staged.length === 0) process.exit(0);
 
@@ -52,7 +52,7 @@ for (const path of staged) {
   bytes += path.length + 1;
 }
 
-function run(bin: string, args: string[]): Promise<{ out: string; code: number }> {
+function runStagedTool(bin: string, args: string[]): Promise<{ out: string; code: number }> {
   return new Promise((done) => {
     const child = spawn(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
     let out = "";
@@ -68,8 +68,8 @@ const runs = Object.entries(tools)
   .flatMap(([tool, flags]) => {
     const bin = `node_modules/.bin/${tool}`;
     // Fail closed: a checkout without `bun install`, such as a fresh worktree, would pass every file.
-    if (!existsSync(bin)) fail(`${tool} not installed: bun install`);
-    return chunks.map((paths) => run(bin, [...flags, ...paths]));
+    if (!existsSync(bin)) refuseCommit(`${tool} not installed: bun install`);
+    return chunks.map((paths) => runStagedTool(bin, [...flags, ...paths]));
   });
 
 // Concurrent for speed, reported in a fixed order so the output reads the same on every run.
