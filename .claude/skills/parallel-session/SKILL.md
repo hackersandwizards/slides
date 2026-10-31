@@ -12,7 +12,9 @@ in the repo the work belongs to, never here.
 
 - `GOAL.md` at the repo root: the goal in the person's words, the limits, what done means, and one
   row per open piece of work with owner and evidence (a commit hash, a file, or "not established"),
-  in the shape the file already uses.
+  in the shape the file already uses. The owner starts with `P1`, `P2` or `P3` (P1 costs most if
+  missed), then an ISO deadline where the row has one, then whoever moves next: the person, an
+  agent, or anyone else, such as `P1 2026-11-02 Benedikt (Key), then Ray`.
 - `docs/tracking/decisions/items.js`: one row per decision, open question or agent assumption the
   person may veto. An `open` row is only for direction, money, a relationship or anything leaving
   the company. Every other such point an agent settles is an `assumed` row; a minor or reversible
@@ -51,9 +53,10 @@ rows plus the `open` and `assumed` rows in `items.js`. No third list exists.
    topic's `_verlauf/` in the hub.
 7. Each topic the person must see gets a hub folder. Then run
    `bun ${CLAUDE_SKILL_DIR}/hub.ts <repo> ...` with every repo the session touched. Check: the
-   hub's `index.html` shows the topic. That page is the person's one entry point: it also links
-   each repo's decision list with its open and assumed counts, lists every open priority-1 row, and
-   lists every open `GOAL.md` row under "Später zu tun".
+   hub's `index.html` shows the topic. That page is the person's one entry point, worked top to bottom:
+   priority-1 decisions and the person's priority-1 or dated rows, the other open decisions (each
+   opening to its recommendation and options), open topics, the person's other rows, rows waiting
+   on others, then, collapsed, agent rows, assumption counts per decision list, and decided topics.
    A batch that changes an asset hub topics show, such as a logo, colour or lockup, re-renders every
    topic showing the old asset or moves it to `_archiv/`, in that batch. Check: no topic folder
    showing that asset is older than the change.
