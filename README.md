@@ -46,6 +46,13 @@ as `"3 / 9"`. A break, lunch, a live demo or the thanks is not a chapter. A deck
 timetable, or a map that returns before each part (`overview`, `phased-pills`), keeps that instead.
 A chapter divider is a `transition`; `deep-dive-divider` marks a deep-dive part only.
 
+A concept slide whose words claim a mechanism or a relationship in up to four short cards, and
+which has no diagram of the engine, may carry a generated marker sketch beside them: the
+`image-and-grid` block takes the sketch as its image and the cards as its items, words unchanged.
+`bun run brand-slide-sketch-prompt` (brand v0.13.0 or later) prints the prompt. No other slide gets
+a sketch: on a title, agenda, transition, statement, comparison, process, data or closing slide, and
+on a concept slide of paragraphs, the slide without one scored higher in blind panels.
+
 ## Work on the package
 
 ```sh
