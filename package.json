@@ -42,6 +42,9 @@
       "optional": true
     }
   },
+  "overrides": {
+    "minimatch": "11.0.3"
+  },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@hackersandwizards/brand": "git+ssh://git@github.com/hackersandwizards/brand.git#v0.9.3",
