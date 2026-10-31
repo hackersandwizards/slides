@@ -611,8 +611,8 @@ function ContentBlockRenderer({
             )}
             {block.items.map((item, i) => (
               <div key={i} className="rounded-brand border-2 border-deep-200/40 bg-white px-6 py-4">
-                <h4 className="mb-1 text-lg text-text">{renderMarkdown(item.title)}</h4>
-                <p className="text-base text-text-muted">{renderMarkdown(item.subtitle)}</p>
+                <p className="mb-1 text-xl font-bold text-text">{renderMarkdown(item.title)}</p>
+                <p className="card-text-lg text-text">{renderMarkdown(item.subtitle)}</p>
               </div>
             ))}
           </div>
