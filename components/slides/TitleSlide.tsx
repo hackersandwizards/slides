@@ -2,7 +2,6 @@
 
 import type { TitleSlide as TitleSlideType } from "../../types/slide";
 import { Particles } from "../ui/particles";
-import { BRAND_HEX } from "../../lib/theme";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { HwWordmark } from "./SlideContainer";
@@ -33,7 +32,7 @@ export function TitleSlide({ slide }: Props) {
         quantity={120}
         size={1.2}
         staticity={15}
-        color={BRAND_HEX}
+        color="--color-teal"
       />
 
       <div className="slide-content slide-split slide-split-lockup relative z-10 flex flex-col items-center justify-center px-8">

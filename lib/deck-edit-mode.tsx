@@ -36,9 +36,13 @@ const STYLE = `
 html[data-deck-edit] body :is(h1,h2,h3,h4,h5,h6,p,li,blockquote,figcaption,td,th,dt,dd):hover,
 html[data-deck-edit] body *:not(:has(*)):hover { outline: 2px dashed ${LEAD}; outline-offset: 2px; cursor: text; }`;
 
-const FIELD = `<!doctype html><style>html,body{margin:0;height:100%}textarea{box-sizing:border-box;
-width:100%;height:100%;border:0;padding:8px;font:18px/1.4 system-ui,sans-serif;color:#19283a;
-background:#fff;resize:none;outline:none}</style><textarea spellcheck="false"></textarea>`;
+// The field is its own document, where the deck's custom properties do not reach: the ink is read
+// off the deck when the field opens.
+const fieldDoc = (
+  ink: string,
+) => `<!doctype html><style>html,body{margin:0;height:100%}textarea{box-sizing:border-box;
+width:100%;height:100%;border:0;padding:8px;font:18px/1.4 system-ui,sans-serif;color:${ink};
+background:white;resize:none;outline:none}</style><textarea spellcheck="false"></textarea>`;
 
 export function DeckEdit({ deck }: { deck: string }) {
   // Stays on across the reload a save causes: read after hydration, so the server render agrees.
@@ -122,10 +126,12 @@ export function DeckEdit({ deck }: { deck: string }) {
         zIndex: "90",
         border: `2px solid ${LEAD}`,
         borderRadius: "6px",
-        background: "#fff",
+        background: "white",
         boxShadow: "0 8px 24px rgb(0 0 0 / 0.4)",
       });
-      frame.srcdoc = FIELD;
+      frame.srcdoc = fieldDoc(
+        getComputedStyle(document.documentElement).getPropertyValue("--color-ink"),
+      );
       frame.addEventListener("load", () => {
         const area = frame.contentDocument?.querySelector("textarea");
         if (!area) return;

@@ -9,7 +9,6 @@ import type {
   StageState,
 } from "../../types/slide";
 import { Particles } from "../ui/particles";
-import { BRAND_HEX } from "../../lib/theme";
 import { BlurFade } from "../ui/blur-fade";
 import { SectionHeader } from "./SectionHeader";
 import { Visual } from "./Visuals";
@@ -856,7 +855,7 @@ function CenteredContentSlide({ slide }: Props) {
         quantity={60}
         size={1.0}
         staticity={25}
-        color={BRAND_HEX}
+        color="--color-teal"
       />
 
       <div className="slide-content relative z-10 flex flex-col items-center justify-center space-y-6 px-8 text-center md:space-y-8">

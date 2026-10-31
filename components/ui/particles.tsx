@@ -12,24 +12,8 @@ interface ParticlesProps extends ComponentPropsWithoutRef<"div"> {
   staticity?: number;
   ease?: number;
   size?: number;
+  /** A CSS colour, or the name of a custom property holding one (`--color-teal`); white by default. */
   color?: string;
-}
-
-function hexToRgb(hex: string): number[] {
-  hex = hex.replace("#", "");
-
-  if (hex.length === 3) {
-    hex = hex
-      .split("")
-      .map((char) => char + char)
-      .join("");
-  }
-
-  const hexInt = parseInt(hex, 16);
-  const red = (hexInt >> 16) & 255;
-  const green = (hexInt >> 8) & 255;
-  const blue = hexInt & 255;
-  return [red, green, blue];
 }
 
 type Circle = {
@@ -49,13 +33,14 @@ export const Particles: React.FC<ParticlesProps> = ({
   staticity = 50,
   ease = 50,
   size = 0.4,
-  color = "#ffffff",
+  color,
   ...props
 }) => {
   const printMode = usePrintMode();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const context = useRef<CanvasRenderingContext2D | null>(null);
+  const fill = useRef("white");
   const circles = useRef<Circle[]>([]);
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
@@ -72,6 +57,10 @@ export const Particles: React.FC<ParticlesProps> = ({
     if (printMode) return;
     if (canvasRef.current) {
       context.current = canvasRef.current.getContext("2d");
+      // A canvas does not resolve var(): the property is read off the canvas, theme included.
+      fill.current = color?.startsWith("--")
+        ? getComputedStyle(canvasRef.current).getPropertyValue(color).trim() || "white"
+        : (color ?? "white");
     }
     onResize();
 
@@ -182,16 +171,16 @@ export const Particles: React.FC<ParticlesProps> = ({
     };
   };
 
-  const rgb = hexToRgb(color);
-
   const drawCircle = (circle: Circle, update = false) => {
     if (context.current) {
       const { x, y, translateX, translateY, size, alpha } = circle;
       context.current.translate(translateX, translateY);
       context.current.beginPath();
       context.current.arc(x, y, size, 0, 2 * Math.PI);
-      context.current.fillStyle = `rgba(${rgb.join(", ")}, ${alpha})`;
+      context.current.globalAlpha = alpha;
+      context.current.fillStyle = fill.current;
       context.current.fill();
+      context.current.globalAlpha = 1;
       context.current.setTransform(dpr.current, 0, 0, dpr.current, 0, 0);
 
       if (!update) {

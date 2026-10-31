@@ -9,7 +9,7 @@ import typescript from "shiki/langs/typescript.mjs";
 import yaml from "shiki/langs/yaml.mjs";
 
 // The website's code: Shiki's github-dark, Astro's default theme, with its comment grey lifted
-// from #6A737D (3.05:1 on #24292e) to the theme's own #959DA5 (5.34:1), as the website's
+// (3.05:1 on the theme's background) to the theme's own description grey (5.34:1), as the website's
 // `comment-contrast` transformer does (website astro.config.mjs). Synchronous, with the JavaScript
 // regex engine, so a slide renders its code in the same pass on the server, in the browser and in
 // the print route. A language not loaded here renders as plain text.
@@ -23,7 +23,11 @@ const LANGS = new Set(highlighter.getLoadedLanguages());
 // Plain text carries no token colour: it takes the theme's foreground.
 const FG = highlighter.getTheme(THEME).fg;
 
-const COMMENT_FIX: Record<string, string> = { "#6A737D": "#959DA5" };
+// Both greys read from the theme, so its package owns them.
+const COMMENT = githubDark.tokenColors
+  ?.find((t) => [t.scope].flat().includes("comment"))
+  ?.settings.foreground?.toUpperCase();
+const COMMENT_LIFT = githubDark.colors?.descriptionForeground;
 
 /** Each line's tokens, in their theme colours: one entry per line of `code`. */
 export function highlightLines(code: string, language?: string): ReactNode[] {
@@ -38,7 +42,7 @@ export function highlightLines(code: string, language?: string): ReactNode[] {
             <span
               key={j}
               style={{
-                color: (color && COMMENT_FIX[color]) ?? token.color ?? FG,
+                color: (color === COMMENT ? COMMENT_LIFT : token.color) ?? FG,
                 fontStyle: (token.fontStyle ?? 0) & 1 ? "italic" : undefined,
               }}
             >

@@ -5,7 +5,6 @@ import { Mail } from "lucide-react";
 import { Linkedin } from "../../lib/icons";
 import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { Particles } from "../ui/particles";
-import { BRAND_HEX } from "../../lib/theme";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { SlideCard, Wash, Ornament } from "./primitives";
@@ -131,7 +130,7 @@ function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
         quantity={50}
         size={0.8}
         staticity={30}
-        color={BRAND_HEX}
+        color="--color-teal"
       />
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-16">
         <BlurFade delay={0.1} duration={0.5}>
@@ -188,7 +187,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
         quantity={100}
         size={1.0}
         staticity={20}
-        color={BRAND_HEX}
+        color="--color-teal"
       />
       <div className="slide-classic w-full">
         <div className="slide-content relative z-10 flex flex-col items-center justify-center space-y-16 px-4 text-center md:space-y-20">

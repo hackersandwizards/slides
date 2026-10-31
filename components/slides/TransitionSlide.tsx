@@ -2,7 +2,6 @@
 
 import type { TransitionSlide as TransitionSlideType } from "../../types/slide";
 import { Particles } from "../ui/particles";
-import { BRAND_HEX } from "../../lib/theme";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 
@@ -40,7 +39,7 @@ export function TransitionSlide({ slide }: Props) {
         quantity={60}
         size={1.0}
         staticity={25}
-        color={BRAND_HEX}
+        color="--color-teal"
       />
       <div className="slide-content slide-split relative z-10 flex flex-col items-center justify-center px-4 text-center">
         {slide.preText && (
