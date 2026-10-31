@@ -11,14 +11,11 @@ that the public may not see.
 
 Add the dependency in exactly this form, pinned to the newest tag
 (`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
-`@hackersandwizards/brand`, which the stylesheet needs. This repo is public; brand is private, so
-your machine needs GitHub read access to brand. Bun rewrites `github:` and `git+https://` to
-GitHub's tarball API, which answers 404 for a private repo; the `git+ssh://` form clones through git, over HTTPS with the credential helper
-(`gh auth login`, `gh auth setup-git`) or over SSH. Without access Bun stops at
-`InstallFailed cloning repository for @hackersandwizards/slides` and names no cause.
+`@hackersandwizards/brand`, which the stylesheet needs. Both repos are public: Bun fetches the
+`git+https://` form through GitHub's tarball API without any GitHub access.
 
 ```json
-"@hackersandwizards/slides": "git+ssh://git@github.com/hackersandwizards/slides.git#v<version>"
+"@hackersandwizards/slides": "git+https://github.com/hackersandwizards/slides.git#v<version>"
 ```
 
 | Import                                               | What                                   |

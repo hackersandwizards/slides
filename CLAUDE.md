@@ -6,7 +6,7 @@ decks: `talks` and `hycle-private/talks` on Next.js, `trainer-hub` on Astro. The
 `docs/tracking/2026-10-30-repo-coupling.md`.
 
 This repo is public on GitHub (`github.com/hackersandwizards/slides`). Consumers install it as a Git dependency pinned to a tag,
-`git+ssh://git@github.com/hackersandwizards/slides.git#v<version>`. `"private": true` stays:
+`git+https://github.com/hackersandwizards/slides.git#v<version>`, which needs no GitHub access. `"private": true` stays:
 nothing is ever published. A release is a tag `v<version>` matching `package.json`. Nothing here
 writes into another repo.
 
