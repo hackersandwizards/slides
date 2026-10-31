@@ -33,6 +33,15 @@ The package ships TypeScript source. Let the build transpile it: Next
 `test.server.deps.inline`. A Next app wraps its root layout in `SlidesAdapterProvider` with
 `next/image` and its router; without a provider the engine uses a plain `<img>` and `history`.
 
+## Deck structure
+
+A deck that runs an hour or longer with three or more chapters shows an `agenda` slide before its
+first chapter, listing the chapters in order. Each chapter opens with a `transition` slide: its
+`headline` is the chapter's agenda item, its `preText` the chapter's position in the agenda, such
+as `"3 / 9"`. A break, lunch, a live demo or the thanks is not a chapter. A deck whose agenda is a
+timetable, or a map that returns before each part (`overview`, `phased-pills`), keeps that instead.
+A chapter divider is a `transition`; `deep-dive-divider` marks a deep-dive part only.
+
 ## Work on the package
 
 ```sh
