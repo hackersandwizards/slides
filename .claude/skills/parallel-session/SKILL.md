@@ -13,9 +13,10 @@ in the repo the work belongs to, never here.
 - `GOAL.md` at the repo root: the goal in the person's words, the limits, what done means, and one
   row per open piece of work with owner and evidence (a commit hash, a file, or "not established"),
   in the shape the file already uses.
-- `docs/tracking/decisions/items.js`: one row per decision the person may veto, an open question or
-  an assumption an agent made. An `open` row is only for direction, money, a relationship or anything
-  leaving the company. Every other point an agent settles is an `assumed` row.
+- `docs/tracking/decisions/items.js`: one row per decision, open question or agent assumption the
+  person may veto. An `open` row is only for direction, money, a relationship or anything leaving
+  the company. Every other such point an agent settles is an `assumed` row; a minor or reversible
+  default is named in the report only.
 - `docs/tracking/YYYY-MM-DD-<topic>.md`: one report per topic, what was measured, with evidence.
 - `~/Downloads/stand-entscheidungen/<topic>/`: an `index.html` and a `review.json` for review.
   Never the only copy of a fact.
