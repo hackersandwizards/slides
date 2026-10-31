@@ -469,95 +469,10 @@ html:has(.print-slide) {
   }
 }
 
-/* Title and transition slides: one gradient field, the slide's left half, carrying the headline in
-   large white type (`.slide-split-lead`); the subtitle, label and speaker stay on the ground beside
-   it. The os design guide: the gradient is a bounded field, only large white type on it. A phone,
-   where the slide is one column, keeps the centred slide, glow and particles included
-   (`.slide-classic`). */
-.slide-field,
-.slide-classic,
-.slide-split-mark,
-.slide-split-only {
+/* A closing slide that shows the lockup in its centre column hides the corner, so the slide carries
+   one lockup. */
+:is(.slide-viewport, .print-slide):has(.slide-closing-mark) > :is(.slide-corner, .print-watermark) {
   display: none;
-}
-
-@media screen and (width >= 48rem), print {
-  .slide-field {
-    display: block;
-    position: absolute;
-    inset-block: 0;
-    left: 0;
-    width: 50%;
-    background: var(--gradient-magic);
-  }
-  .slide-split {
-    align-items: flex-start;
-    justify-content: flex-end;
-    text-align: left;
-    padding: 5.5rem 4.5rem var(--slide-footer-band) calc(50% + 4.5rem);
-  }
-  .slide-split > .slide-split-lead {
-    position: absolute;
-    left: 4.5rem;
-    bottom: var(--slide-footer-band);
-    width: calc(50% - 9rem);
-  }
-  .slide-split > .slide-split-lead > * {
-    color: white;
-    text-align: left;
-    font-size: var(--text-7xl);
-  }
-  /* Title and closing slide: the column beside the field spans the headline's height, its text
-     level with the headline's first line and the lockup on the column's left edge under it, on the
-     headline's last line; at least 3rem apart. The corner steps aside, the lockup being in the
-     column. Blind-scored against the text above the corner lockup, which read as crowded with
-     empty space above it (2026-10-31). */
-  .slide-split-lockup {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto minmax(3rem, auto) auto;
-    column-gap: 9rem;
-    align-content: end;
-    padding: 5.5rem 4.5rem var(--slide-footer-band);
-  }
-  .slide-split-lockup > * {
-    grid-area: 1 / 2;
-    align-self: start;
-  }
-  .slide-split-lockup > .slide-split-lead {
-    position: static;
-    grid-area: 1 / 1 / -1;
-    align-self: end;
-    width: auto;
-  }
-  .slide-split-lockup > .slide-split-mark {
-    display: flex;
-    grid-area: 3 / 2;
-    align-self: end;
-  }
-  .slide-split-lockup > :not(.slide-split-lead) > p {
-    margin-top: 0;
-    color: var(--color-text);
-  }
-  /* The closing line is one or two words, a step larger than a title. */
-  .slide-split-closing > .slide-split-lead > * {
-    font-size: var(--text-8xl);
-  }
-  :is(.slide-viewport, .print-slide):has(.slide-split-lockup)
-    > :is(.slide-corner, .print-watermark) {
-    display: none;
-  }
-  /* The field is the slide's one gradient, so the strip steps aside: across the field it shows as a
-     seam, and stopped at the field's edge as a second one. */
-  :is(.slide-viewport, .print-slide):has(.slide-field) > .brand-strip {
-    display: none;
-  }
-}
-
-@media screen and (width < 48rem) {
-  .slide-classic {
-    display: block;
-  }
 }
 
 .slide-titled > .slide-body {

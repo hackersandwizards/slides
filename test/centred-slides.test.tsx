@@ -1,0 +1,35 @@
+import { render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { slideComponents } from "../lib/slide-components";
+import type { Slide } from "../types/slide";
+
+// Title, section divider and closing slide centre their headline on the ground, with no gradient
+// field and no decoration: no particle canvas, no gradient, no glow.
+const cases: { slide: Slide; headline: string }[] = [
+  {
+    slide: { type: "title", title: "Agentic Coding", subtitle: "Two days" },
+    headline: "Agentic Coding",
+  },
+  {
+    slide: { type: "transition", preText: "Part two", headline: "The pipeline" },
+    headline: "The pipeline",
+  },
+  {
+    slide: {
+      type: "closing",
+      variant: "contact",
+      line1: "Thank you.",
+      speakers: [{ name: "Mara Lindqvist", company: "Lumen Freight" }],
+    },
+    headline: "Thank you.",
+  },
+];
+
+describe("centred slides", () => {
+  it.each(cases)("$slide.type slide carries no field and no decoration", ({ slide, headline }) => {
+    const SlideComponent = slideComponents[slide.type];
+    const { container, getByText } = render(<SlideComponent slide={slide} />);
+    expect(getByText(headline)).not.toBeNull();
+    expect(container.querySelector("canvas, [class*='gradient'], [class*='blur-']")).toBeNull();
+  });
+});

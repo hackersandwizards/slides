@@ -7,8 +7,7 @@ import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { Particles } from "../ui/particles";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { SlideCard, Wash, Ornament } from "./primitives";
-import { HwWordmark } from "./SlideContainer";
+import { SlideCard, Wash } from "./primitives";
 
 interface Props {
   slide: ClosingSlideType;
@@ -41,85 +40,6 @@ const COMPANIES_WITH_LOGO = new Set(["hackers&wizards", ...PARTNERS.map((p) => p
 
 const partnersOf = (slide: ClosingSlideType) =>
   PARTNERS.filter((p) => slide.speakers?.some((s) => s.company.toLowerCase() === p.company));
-
-/** The closing line on the left half's gradient field, as on the title slide; beside it the line
- *  under it, the speakers and the lockup on the closing line's baseline (`.slide-split-lockup` in
- *  `slides.css`). A phone keeps the centred layout. */
-function SplitContact({ slide }: { slide: ClosingSlideType }) {
-  return (
-    <div className="slide-content slide-split slide-split-lockup slide-split-closing slide-split-only relative z-10">
-      <BlurFade delay={0.1} duration={0.5} className="slide-split-lead">
-        <p className="font-heading leading-[1.02] font-bold tracking-[-0.03em] whitespace-pre-line">
-          {slide.line1}
-        </p>
-      </BlurFade>
-      <BlurFade delay={0.2} duration={0.4}>
-        <div className="flex flex-col gap-10">
-          {slide.closingQuote && (
-            <p className="font-heading text-3xl leading-tight font-bold tracking-tight text-text-muted">
-              {slide.closingQuote}
-            </p>
-          )}
-          {slide.speakers?.map((speaker, index) => (
-            <div key={index} className="flex items-center gap-6">
-              {speaker.imageSrc && (
-                <Image
-                  src={speaker.imageSrc}
-                  alt={speaker.name}
-                  width={160}
-                  height={160}
-                  className="h-24 w-24 shrink-0 rounded-full object-cover"
-                />
-              )}
-              <div>
-                <p className="font-heading text-3xl font-bold tracking-tight text-text">
-                  {speaker.name}
-                </p>
-                {!COMPANIES_WITH_LOGO.has(speaker.company.toLowerCase()) && (
-                  <p className="label-caps mt-1 text-sm text-text-muted">{speaker.company}</p>
-                )}
-                {speaker.contact && (
-                  <a
-                    href={`mailto:${speaker.contact}`}
-                    className="mt-1 block text-xl font-medium text-brand"
-                  >
-                    {speaker.contact}
-                  </a>
-                )}
-                {speaker.linkedIn && (
-                  <a
-                    href={speaker.linkedIn}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block text-xl font-medium text-brand"
-                  >
-                    {speaker.linkedIn.replace(/^https?:\/\/(www\.)?/, "")}
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </BlurFade>
-      <BlurFade delay={0.3} duration={0.4} className="slide-split-mark items-center gap-6">
-        {partnersOf(slide).map((p) => (
-          <span key={p.company} className="flex items-center gap-6">
-            <Image
-              src={p.src}
-              alt={p.alt}
-              width={p.width}
-              height={p.height}
-              className="h-(--slide-corner-lockup)"
-              style={{ width: "auto" }}
-            />
-            <span className="text-3xl text-text-subtle">&times;</span>
-          </span>
-        ))}
-        <HwWordmark />
-      </BlurFade>
-    </div>
-  );
-}
 
 function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
   return (
@@ -157,6 +77,8 @@ function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
   );
 }
 
+/** The closing line centred on the ground, the speakers and the lockup under it, no gradient field and
+ *  no decoration, as on the title slide. */
 function ContactVariant({ slide }: { slide: ClosingSlideType }) {
   const hasSpeakerImages = slide.speakers?.some((s) => s.imageSrc);
 
@@ -177,28 +99,13 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
 
   return (
     <SlideShell direction="col" overflowHidden background={slide.background ?? "bg-section-intro"}>
-      <div className="slide-field" aria-hidden="true" />
-      <SplitContact slide={slide} />
-      <div className="slide-classic absolute top-1/3 left-1/4 h-[31.25rem] w-[31.25rem] rounded-full bg-brand/7 blur-[120px]" />
-      <div className="slide-classic absolute right-1/4 bottom-1/3 h-[25rem] w-[25rem] rounded-full bg-brand-accent/7 blur-[100px]" />
-
-      <Particles
-        className="slide-classic absolute inset-0"
-        quantity={100}
-        size={1.0}
-        staticity={20}
-        color="--color-teal"
-      />
-      <div className="slide-classic w-full">
-        <div className="slide-content relative z-10 flex flex-col items-center justify-center space-y-16 px-4 text-center md:space-y-20">
+      <div className="w-full">
+        <div className="slide-content relative z-10 flex flex-col items-center justify-center space-y-12 px-4 text-center md:space-y-14 md:pt-(--slide-footer-band)">
           {slide.line1 && (
             <BlurFade delay={0.1} duration={0.5}>
-              <div className="flex flex-col items-center gap-8">
-                <p className="font-heading text-5xl font-bold tracking-tighter text-text sm:text-6xl md:text-7xl lg:text-8xl">
-                  {slide.line1}
-                </p>
-                <Ornament dot="bg-primary" />
-              </div>
+              <p className="font-heading text-5xl font-bold tracking-tighter text-text sm:text-6xl md:text-7xl lg:text-8xl">
+                {slide.line1}
+              </p>
             </BlurFade>
           )}
 
@@ -273,7 +180,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
           ) : (
             <>
               <BlurFade delay={0.2} duration={0.5}>
-                <div className="flex items-center justify-center gap-8 md:gap-12">
+                <div className="slide-closing-mark flex items-center justify-center gap-8 md:gap-12">
                   {partnersOf(slide).map((p) => (
                     <span key={p.company} className="flex items-center gap-8 md:gap-12">
                       <Image
@@ -310,7 +217,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
 
               {slide.speakers && slide.speakers.length > 0 && (
                 <BlurFade delay={0.3} duration={0.4}>
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-8">
                     {slide.speakers.map((speaker, index) => (
                       <div key={index} className="text-center">
                         <p className="font-heading text-xl font-bold text-text md:text-2xl">
