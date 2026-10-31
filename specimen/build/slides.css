@@ -3558,8 +3558,8 @@
       font-size: var(--text-xl);
       line-height: var(--tw-leading, var(--text-xl--line-height));
     }
-    .lg\:text-\[9rem\] {
-      font-size: 9rem;
+    .lg\:text-\[8rem\] {
+      font-size: 8rem;
     }
   }
   @media (width >= 80rem) {

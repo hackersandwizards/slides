@@ -620,15 +620,16 @@ function ContentBlockRenderer({
       );
 
     case "video":
+      // As tall as an image may be, so a 16:9 clip under a headline fits without shrinking the body.
       return (
-        <div>
+        <div className="w-fit max-w-full">
           <video
             src={block.src}
             controls
             aria-label={block.alt}
             muted
             playsInline
-            className="w-full rounded-brand border border-border"
+            className="h-auto max-h-[60vh] w-auto max-w-full rounded-brand border border-border"
           />
           {block.caption && (
             <p className="mt-3 text-center text-sm text-text-muted">{block.caption}</p>
@@ -790,9 +791,15 @@ function ContentBlockRenderer({
           </div>
 
           <h3
-            className={`font-heading text-8xl leading-[0.85] font-bold tracking-[-0.045em] lg:text-[9rem] ${accentClass(side.accent)}`}
+            className={`font-heading text-8xl leading-[0.85] font-bold tracking-[-0.045em] lg:text-[8rem] ${accentClass(side.accent)}`}
           >
-            {side.stance}
+            {/* A line breaks only between words: "All-in" never splits at its hyphen. */}
+            {side.stance.split(" ").map((word, i) => (
+              <Fragment key={i}>
+                {i > 0 && " "}
+                <span className="whitespace-nowrap">{word}</span>
+              </Fragment>
+            ))}
           </h3>
 
           <p

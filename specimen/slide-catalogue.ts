@@ -402,13 +402,13 @@ const slides: Slide[] = [
         type: "positions",
         left: {
           name: "Mara Lindqvist",
-          stance: "Platform lead",
+          stance: "Shared",
           accent: "primary",
           quote: "Every team should use the same harness.",
         },
         right: {
           name: "Jonas Okafor",
-          stance: "Team lead",
+          stance: "Owned",
           accent: "secondary",
           quote: "Every team knows its own work best.",
         },
@@ -489,8 +489,8 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    sectionLabel: "Visual: bars and numbers",
-    headline: "Bars with a track, numbers with a source",
+    sectionLabel: "Visual: bars",
+    headline: "Bars with a track",
     content: [
       {
         type: "bars",
@@ -502,6 +502,14 @@ const slides: Slide[] = [
         ],
         source: "Fictional survey, 2026",
       },
+    ],
+    notes: "visual blocks: bars with max and highlight.",
+  },
+  {
+    type: "content",
+    sectionLabel: "Visual: numbers",
+    headline: "Numbers with a source",
+    content: [
       {
         type: "numbers",
         items: [
@@ -511,7 +519,7 @@ const slides: Slide[] = [
         source: "Fictional figures",
       },
     ],
-    notes: "visual blocks: bars with max and highlight, numbers.",
+    notes: "visual blocks: numbers with a source.",
   },
   {
     type: "content",

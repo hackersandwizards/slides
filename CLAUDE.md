@@ -31,6 +31,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   since Tailwind never scans `node_modules`.
 - `scripts/render-pdf.ts`: prints a deck's print route to a PDF; each consumer's `export-pdf.ts`
   resolves deck, URL and file name and calls it.
+- `scripts/density.ts`: the `slides-density` command each consumer runs in its gate: fails on a
+  slide the fit guard shrinks below 0.8, lists those below 0.9. The engine's own regression decks
+  are covered where talks runs it over the specimen deck.
 - `specimen/`: `slide-catalogue.ts`, the specimen deck, every slide type and variant with fictional
   content, its images, and the specimen page `index.html` with its compiled `build/slides.css`, one slide per slide
   type in print mode, which the brand kit links. `bun run specimen` (`scripts/specimen.ts`)

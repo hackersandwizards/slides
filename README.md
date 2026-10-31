@@ -28,6 +28,10 @@ Add the dependency in exactly this form, pinned to the newest tag
 | `@hackersandwizards/slides/scripts/render-pdf`       | `renderPdf` for an export script       |
 | `@hackersandwizards/slides/specimen/slide-catalogue` | the fictional specimen deck            |
 
+The command `slides-density [--serve "<command>"] <print-url> ...` belongs in each consumer's gate:
+it renders each deck's print route and fails on a slide the fit guard shrinks below 0.8, and lists
+those below 0.9. `--serve` starts the consumer's server for the run and stops it afterwards.
+
 The package ships TypeScript source. Let the build transpile it: Next
 `transpilePackages: ["@hackersandwizards/slides"]`, Astro `vite.ssr.noExternal`, vitest
 `test.server.deps.inline`. A Next app wraps its root layout in `SlidesAdapterProvider` with
