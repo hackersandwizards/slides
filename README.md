@@ -1,19 +1,19 @@
 # @hackersandwizards/slides
 
-The hackers&wizards slide engine as one private package: every slide type, the deck types, the
+The hackers&wizards slide engine as one package: every slide type, the deck types, the
 slide stylesheet and the PDF renderer. `talks`, `trainer-hub` and `hycle-private/talks` install it
 and keep only their decks.
 
-Maintainer: Benedikt Stemmildt. Trainers can read the whole repo, its history included, so nothing
-goes in that a trainer may not see.
+Maintainer: Benedikt Stemmildt. The repo is public, its history included, so nothing goes in
+that the public may not see.
 
 ## Use it in another repo
 
 Add the dependency in exactly this form, pinned to the newest tag
 (`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
-`@hackersandwizards/brand`, which the stylesheet needs. Your machine needs GitHub read access to
-both repos. Bun rewrites `github:` and `git+https://` to GitHub's tarball API, which answers 404
-for a private repo; the `git+ssh://` form clones through git, over HTTPS with the credential helper
+`@hackersandwizards/brand`, which the stylesheet needs. This repo is public; brand is private, so
+your machine needs GitHub read access to brand. Bun rewrites `github:` and `git+https://` to
+GitHub's tarball API, which answers 404 for a private repo; the `git+ssh://` form clones through git, over HTTPS with the credential helper
 (`gh auth login`, `gh auth setup-git`) or over SSH. Without access Bun stops at
 `InstallFailed cloning repository for @hackersandwizards/slides` and names no cause.
 
