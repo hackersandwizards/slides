@@ -45,7 +45,7 @@ const partnersOf = (slide: ClosingSlideType) =>
 
 /** The closing line on the left half's gradient field, as on the title slide; beside it the line
  *  under it, the speakers and the lockup on the closing line's baseline (`.slide-split-lockup` in
- *  `slides.css`). A delivered deck and a phone keep the centred layout. */
+ *  `slides.css`). A client theme and a phone keep the centred layout. */
 function SplitContact({ slide }: { slide: ClosingSlideType }) {
   return (
     <div className="slide-content slide-split slide-split-lockup slide-split-closing slide-split-only relative z-10">

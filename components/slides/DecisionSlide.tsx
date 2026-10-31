@@ -20,18 +20,6 @@ const TEAM: Record<DecisionTeam, string> = {
   "complicated-subsystem": "border-factory bg-factory/15 text-factory",
 };
 
-function Branch({ branch, top }: { branch: DecisionBranch; top: number }) {
-  return (
-    <div
-      className={`absolute flex h-[7.5rem] w-[18.75rem] flex-col justify-center rounded-brand border px-4 ${TEAM[branch.team]}`}
-      style={{ left: "35rem", top: `${top / 16}rem` }}
-    >
-      <p className="text-lg leading-tight font-bold">{branch.title}</p>
-      <p className="text-sm leading-snug text-text">{branch.text}</p>
-    </div>
-  );
-}
-
 // An arrowhead at the right end of a 4px connector.
 function Head() {
   return (
@@ -84,17 +72,6 @@ function GridBranch({ branch, row }: { branch: DecisionBranch; row: 1 | 2 }) {
     </div>
   );
 }
-
-// Canvas coordinates in sixteenths of a rem (px at a 16px root, the SVG's viewBox units), so the
-// canvas scales with the slide: need 0-200, diamond centred on 360, branches 560-860 with the yes box
-// centred on y 70 and the no box on y 330, outcome 920-1120, the flow line on y 200.
-const LINES = [
-  "M 200 200 H 268",
-  "M 360 110 V 70 H 558",
-  "M 360 290 V 330 H 558",
-  "M 860 70 H 890 V 330 H 860",
-  "M 890 200 H 918",
-];
 
 // A need, a question, two branches (yes up, no down) that join again on the outcome.
 export function DecisionSlide({ slide }: Props) {
@@ -159,52 +136,6 @@ export function DecisionSlide({ slide }: Props) {
               <Elbow side="in" half="bottom" label={slide.no.label} />
               <GridBranch branch={slide.no} row={2} />
               <Elbow side="out" half="bottom" />
-            </div>
-            {/* Delivered decks keep the canvas they were delivered with (slides.css). */}
-            <div className="decision-canvas relative mx-auto hidden h-[25rem] w-[70rem]">
-              <svg viewBox="0 0 1120 400" className="absolute inset-0 h-full w-full" aria-hidden>
-                <defs>
-                  <marker
-                    id="decision-arrow"
-                    markerWidth="12"
-                    markerHeight="12"
-                    refX="10"
-                    refY="6"
-                    markerUnits="userSpaceOnUse"
-                    orient="auto"
-                  >
-                    <path d="M0,0 L12,6 L0,12 Z" className="fill-success" />
-                  </marker>
-                </defs>
-                {LINES.map((d, i) => (
-                  <path
-                    key={d}
-                    d={d}
-                    fill="none"
-                    strokeWidth={3}
-                    className="stroke-success"
-                    markerEnd={i === 3 ? undefined : "url(#decision-arrow)"}
-                  />
-                ))}
-              </svg>
-              <div className="absolute top-[9.375rem] left-0 flex h-[6.25rem] w-[12.5rem] items-center rounded-brand border border-success bg-success/15 px-4 text-base leading-tight font-bold text-text">
-                {slide.need}
-              </div>
-              <div className="absolute top-[8.5rem] left-[18.5rem] h-[8rem] w-[8rem] rotate-45 border-2 border-success bg-white" />
-              <div className="absolute top-[9.375rem] left-[19rem] flex h-[6.25rem] w-[7rem] items-center justify-center text-center text-xs leading-tight font-bold text-text">
-                {slide.question}
-              </div>
-              <span className="label-caps absolute top-[2.625rem] left-[23.25rem] text-sm text-text-muted">
-                {slide.yes.label}
-              </span>
-              <span className="label-caps absolute top-[21.125rem] left-[23.25rem] text-sm text-text-muted">
-                {slide.no.label}
-              </span>
-              <Branch branch={slide.yes} top={10} />
-              <Branch branch={slide.no} top={270} />
-              <div className="absolute top-[9.375rem] left-[57.5rem] flex h-[6.25rem] w-[12.5rem] items-center rounded-brand bg-ink/7 px-4 text-base leading-tight font-bold text-text">
-                {slide.outcome}
-              </div>
             </div>
           </BlurFade>
 

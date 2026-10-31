@@ -15,9 +15,8 @@ describe("DecisionSlide", () => {
       outcome,
       ...[yes, no].flatMap((b) => [b.label, b.title, b.text]),
     ]) {
-      // In the stacked phone flow, the desktop grid and the delivered decks' canvas; CSS shows
-      // one of them.
-      expect(getAllByText(text)).toHaveLength(3);
+      // In the stacked phone flow and the desktop grid; CSS shows one of them.
+      expect(getAllByText(text)).toHaveLength(2);
     }
   });
 });

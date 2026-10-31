@@ -111,7 +111,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
           }}
         >
           <section aria-label="Current slide" className="flex min-h-0 flex-col gap-2">
-            <h2 className="text-sm font-semibold tracking-wide text-night-muted">Now</h2>
+            <h2 className="text-sm font-bold tracking-wide text-night-muted">Now</h2>
             <div className="[container-type:size] min-h-0 flex-1">
               {frames && (
                 <Frame name={ROLE_NAMES.follow} src={frames.follow} title="Current slide" />
@@ -120,7 +120,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
           </section>
 
           <section aria-label="Next slide" className="flex min-h-0 flex-col gap-2">
-            <h2 className="text-sm font-semibold tracking-wide text-night-muted">Next slide</h2>
+            <h2 className="text-sm font-bold tracking-wide text-night-muted">Next slide</h2>
             <div className="[container-type:size] min-h-0 flex-1">
               <div className={last ? "hidden" : "contents"}>
                 {frames && (
@@ -155,7 +155,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
 
         <section aria-label="Speaker notes" className="flex min-h-0 flex-1 flex-col gap-2">
           <div className="flex items-center gap-2">
-            <h2 className="flex-1 text-sm font-semibold tracking-wide text-night-muted">
+            <h2 className="flex-1 text-sm font-bold tracking-wide text-night-muted">
               {edit.open && edit.open.slide !== slide
                 ? `Notes of slide ${edit.open.slide + 1}, being edited`
                 : "Notes"}

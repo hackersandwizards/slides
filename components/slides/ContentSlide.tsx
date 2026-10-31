@@ -234,13 +234,12 @@ type PipelineBlock = Extract<ContentBlock, { type: "pipeline" }>;
  *  spans its box, 2 also sets the labels at body size, the floor, and 3 splits it into two
  *  balanced rows. The fit guard in SlideShell lays the body out wider until a row at 3 holds one
  *  line, sends `pipeline-settle` whenever it changes the width, and sends `pipeline-reset` to
- *  measure the body with its rows at full spacing. A delivered deck keeps the layout it was
- *  delivered with. */
+ *  measure the body with its rows at full spacing. */
 function PipelineRow({ block }: { block: PipelineBlock }) {
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const row = ref.current;
-    if (!row || row.closest(".slide-scale-delivered")) return;
+    if (!row) return;
     const stages = [...row.querySelectorAll<HTMLElement>(".pipeline-stage")];
     const wraps = () => new Set(stages.map((stage) => stage.offsetTop)).size > 1;
     const tighten = (share: number) => row.style.setProperty("--tighten", String(share));
@@ -363,7 +362,7 @@ function ContentBlockRenderer({
         );
       }
       return (
-        <p className="max-w-[72rem] text-[1.75rem] leading-snug text-text-muted">
+        <p className="max-w-[72rem] text-xl leading-snug text-text-muted">
           {renderMarkdown(block.text)}
         </p>
       );
@@ -649,7 +648,7 @@ function ContentBlockRenderer({
         <div
           className={`max-w-full rounded-brand border-2 px-8 py-6 ${block.fullWidth ? "w-full" : "w-fit"} ${besideBars ? "md:w-[calc(100%-16rem)]" : ""} ${CALLOUT_VARIANTS[block.variant ?? "info"]}`}
         >
-          <p className="text-[1.75rem] leading-snug font-medium">{renderMarkdown(block.text)}</p>
+          <p className="text-xl leading-snug font-medium">{renderMarkdown(block.text)}</p>
         </div>
       );
 

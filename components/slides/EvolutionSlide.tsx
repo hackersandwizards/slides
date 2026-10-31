@@ -95,13 +95,13 @@ export function EvolutionSlide({ slide }: Props) {
 
                         <div className="mt-6 mb-4 flex flex-1 flex-col items-center text-center">
                           <h2
-                            className={`font-heading text-2xl leading-tight font-bold transition-colors duration-300 ${
+                            className={`font-heading text-3xl leading-tight font-bold transition-colors duration-300 ${
                               isHighlighted
                                 ? "text-text"
                                 : isDimmed
                                   ? "text-text-subtle"
                                   : isRevealed
-                                    ? "text-text-muted"
+                                    ? "text-text"
                                     : "text-text-subtle/40"
                             }`}
                           >

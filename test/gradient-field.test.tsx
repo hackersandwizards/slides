@@ -4,7 +4,7 @@ import { slideComponents } from "../lib/slide-components";
 import type { Slide } from "../types/slide";
 
 // Title and transition slides carry one gradient field with only the headline on it; the smaller
-// lines stay on the ground, and the glow and particles render only for a delivered deck.
+// lines stay on the ground, and the glow and particles render only for a client theme and a phone.
 const cases: { slide: Slide; lead: string; aside: string }[] = [
   {
     slide: { type: "title", title: "Agentic Coding", subtitle: "Two days" },

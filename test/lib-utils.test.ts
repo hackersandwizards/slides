@@ -103,8 +103,4 @@ describe("cornerMark", () => {
       "lockup",
     ]);
   });
-
-  it("keeps the lockup on every slide of a delivered deck", () => {
-    expect(cornerMark({ slides, scale: "delivered" }, 1)).toBe("lockup");
-  });
 });

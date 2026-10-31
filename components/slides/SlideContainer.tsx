@@ -10,7 +10,6 @@ interface Props {
   children: ReactNode;
   logo?: SlideLogo;
   theme?: "kinetic-dark" | "brand-dark";
-  scale?: "delivered";
   /** The page counter, "05 / 24"; none on a title slide. */
   page?: string;
   /** The h&w corner mark, `cornerMark()`: the lockup by default. */
@@ -25,7 +24,7 @@ export type CornerMark = "lockup" | "wordmark";
 export function PageCounter({ label }: { label: string }) {
   return (
     // Below `md` the navigation's own position pill takes its place.
-    <span className="hidden font-mono text-[1.25rem] leading-none font-bold text-text-subtle tabular-nums md:inline">
+    <span className="hidden font-mono text-sm leading-none font-bold text-text-subtle tabular-nums md:inline">
       {label}
     </span>
   );
@@ -97,8 +96,8 @@ export function BrandStrip() {
   );
 }
 
-export function SlideContainer({ children, logo, theme, scale, page, mark }: Props) {
-  const viewportClassName = `slide-viewport fixed inset-0 overflow-hidden${theme ? ` theme-${theme}` : ""}${scale ? ` slide-scale-${scale}` : ""}`;
+export function SlideContainer({ children, logo, theme, page, mark }: Props) {
+  const viewportClassName = `slide-viewport fixed inset-0 overflow-hidden${theme ? ` theme-${theme}` : ""}`;
 
   const renderHW = (l: LogoConfig) => (
     <div

@@ -75,7 +75,7 @@ function AgendaCard({
         <div className="flex flex-col gap-1 sm:gap-2">
           {section.title && (
             <h2
-              className={`font-heading text-lg font-semibold sm:text-xl md:text-2xl lg:text-3xl ${isActive ? "text-text" : "text-text-muted"}`}
+              className={`font-heading text-lg font-bold sm:text-xl md:text-2xl lg:text-3xl ${isActive ? "text-text" : "text-text-muted"}`}
             >
               {section.title}
             </h2>
@@ -213,7 +213,7 @@ export function RegularSlide({ slide }: Props) {
                           }`}
                         >
                           {section.title && (
-                            <h2 className="font-heading text-xl font-semibold text-brand sm:text-2xl md:text-3xl">
+                            <h2 className="font-heading text-xl font-bold text-brand sm:text-2xl md:text-3xl">
                               {section.title}
                             </h2>
                           )}

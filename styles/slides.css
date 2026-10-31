@@ -197,12 +197,11 @@
    The statement steps carry the title, statement, closing and big-number slides. The website
    has no role for type that fills a stage (its display role at stage size, 5.25rem, sits between
    two of them), so they stay steps of the slide body. Not inline, so the utilities read the
-   variables and a delivered deck sets them back (.slide-scale-delivered). */
+   variables. */
 @theme {
   /* Deep dive: the brand purple and its tints on the opacity ladder (7, 15, 25, 40, 70 %), its
-     text and headline in purple, body text in ink. The steps keep their names, since a delivered deck sets
-     them back to the rose it was delivered with (.slide-scale-delivered); the dark theme sets them
-     again on the night ground. */
+     text and headline in purple, body text in ink. The dark theme sets them again on the night
+     ground. */
   --color-deep-50: color-mix(in srgb, var(--color-purple) 7%, var(--color-bg));
   --color-deep-100: color-mix(in srgb, var(--color-purple) 15%, var(--color-bg));
   --color-deep-200: color-mix(in srgb, var(--color-purple) 25%, var(--color-bg));
@@ -219,10 +218,10 @@
      website's pill (TrainingList.astro .tl-chip). */
   --radius-brand: var(--slide-radius);
   --radius-brand-sm: var(--slide-radius-sm);
-  /* Not inline, so a delivered deck sets them back. */
+  /* Not inline, so a theme sets them again. */
   --color-section-deepdive: color-mix(in srgb, var(--color-amber) 7%, var(--color-bg));
   /* Status: an error or a constraint is the brand's signal red, a warning its dark amber, as on
-     every surface. Not inline, so a delivered deck and a theme set them back. */
+     every surface. Not inline, so a theme sets them again. */
   --color-warning: var(--color-amber-dark);
   --color-error: var(--color-red);
   --color-insight-bg: color-mix(in srgb, var(--color-amber) 7%, transparent);
@@ -348,7 +347,7 @@
    --slide-footer-side   the corner row's distance from the slide's right edge: the content's 4.5rem
                      side margin (.slide-titled), so the row ends where the text ends, inside the
                      graphics-safe margin. At 1.5rem blind reviewers read the mark as tight to the
-                     edge and off the grid (2026-10-31). A delivered deck keeps 1.5rem
+                     edge and off the grid (2026-10-31)
    --slide-footer-mark   the corner row's height: 2.25rem, 48px
    --slide-corner-wordmark the wordmark's box, 1.956rem, 42px at 1920, 1.3 times the 1.5rem typed
                      name it replaced. The corner shows the wordmark alone, in its two colours, on
@@ -386,8 +385,7 @@
   --slide-radius-sm: 0;
   --slide-marker: 0.5625rem;
   --slide-stage: 1.5;
-  /* The third text step: muted, since brand v0.8 folds subtle into muted. Its own name, so a
-     delivered deck keeps the grey it shipped with (.slide-scale-delivered). */
+  /* The third text step: muted, since brand v0.8 folds subtle into muted. */
   --slide-text-subtle: var(--color-muted);
   --background: var(--color-bg);
   --foreground: var(--color-ink);
@@ -464,18 +462,17 @@ html:has(.print-slide) {
 }
 
 /* No slide's content enters the footer band: the bottom padding is the band, on every slide type,
-   and the fit guard in SlideShell shrinks a body that would reach into it. A delivered deck keeps
-   the margins it was delivered with. Below `md` a slide scrolls and keeps its own padding. */
+   and the fit guard in SlideShell shrinks a body that would reach into it. Below `md` a slide scrolls and keeps its own padding. */
 @media screen and (width >= 48rem), print {
-  .slide-content:not(.slide-scale-delivered *) {
+  .slide-content {
     padding-bottom: var(--slide-footer-band);
   }
 }
 
 /* Title and transition slides: one gradient field, the slide's left half, carrying the headline in
    large white type (`.slide-split-lead`); the subtitle, label and speaker stay on the ground beside
-   it. The os design guide: the gradient is a bounded field, only large white type on it. A delivered
-   deck or a client theme keeps the centred slide it shipped with, glow and particles included
+   it. The os design guide: the gradient is a bounded field, only large white type on it. A client
+   theme keeps the centred slide it shipped with, glow and particles included
    (`.slide-classic`), and so does a phone, where the slide is one column. */
 .slide-field,
 .slide-classic,
@@ -493,19 +490,19 @@ html:has(.print-slide) {
     width: 50%;
     background: var(--gradient-magic);
   }
-  .slide-split:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *) {
+  .slide-split:not(.theme-kinetic-dark *) {
     align-items: flex-start;
     justify-content: flex-end;
     text-align: left;
     padding: 5.5rem 4.5rem var(--slide-footer-band) calc(50% + 4.5rem);
   }
-  .slide-split:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *) > .slide-split-lead {
+  .slide-split:not(.theme-kinetic-dark *) > .slide-split-lead {
     position: absolute;
     left: 4.5rem;
     bottom: var(--slide-footer-band);
     width: calc(50% - 9rem);
   }
-  .slide-split:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *) > .slide-split-lead > * {
+  .slide-split:not(.theme-kinetic-dark *) > .slide-split-lead > * {
     color: white;
     text-align: left;
     font-size: var(--text-7xl);
@@ -515,7 +512,7 @@ html:has(.print-slide) {
      headline's last line; at least 3rem apart. The corner steps aside, the lockup being in the
      column. Blind-scored against the text above the corner lockup, which read as crowded with
      empty space above it (2026-10-31). */
-  .slide-split-lockup:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *) {
+  .slide-split-lockup:not(.theme-kinetic-dark *) {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto minmax(3rem, auto) auto;
@@ -523,47 +520,36 @@ html:has(.print-slide) {
     align-content: end;
     padding: 5.5rem 4.5rem var(--slide-footer-band);
   }
-  .slide-split-lockup:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *) > * {
+  .slide-split-lockup:not(.theme-kinetic-dark *) > * {
     grid-area: 1 / 2;
     align-self: start;
   }
-  .slide-split-lockup:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *) > .slide-split-lead {
+  .slide-split-lockup:not(.theme-kinetic-dark *) > .slide-split-lead {
     position: static;
     grid-area: 1 / 1 / -1;
     align-self: end;
     width: auto;
   }
-  .slide-split-lockup:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *) > .slide-split-mark {
+  .slide-split-lockup:not(.theme-kinetic-dark *) > .slide-split-mark {
     display: flex;
     grid-area: 3 / 2;
     align-self: end;
   }
-  .slide-split-lockup:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *)
-    > :not(.slide-split-lead)
-    > p {
+  .slide-split-lockup:not(.theme-kinetic-dark *) > :not(.slide-split-lead) > p {
     margin-top: 0;
     color: var(--color-text);
   }
   /* The closing line is one or two words, a step larger than a title. */
-  .slide-split-closing:not(:is(.slide-scale-delivered, .theme-kinetic-dark) *)
-    > .slide-split-lead
-    > * {
+  .slide-split-closing:not(.theme-kinetic-dark *) > .slide-split-lead > * {
     font-size: var(--text-8xl);
   }
-  :is(.slide-viewport, .print-slide):has(.slide-split-lockup):not(
-      .slide-scale-delivered,
-      .theme-kinetic-dark
-    )
+  :is(.slide-viewport, .print-slide):has(.slide-split-lockup):not(.theme-kinetic-dark)
     > :is(.slide-corner, .print-watermark) {
     display: none;
   }
   /* The field is the slide's one gradient, so the strip steps aside: across the field it shows as a
      seam, and stopped at the field's edge as a second one. */
-  :is(.slide-viewport, .print-slide):has(.slide-field):not(
-      .slide-scale-delivered,
-      .theme-kinetic-dark
-    )
-    > .brand-strip {
+  :is(.slide-viewport, .print-slide):has(.slide-field):not(.theme-kinetic-dark) > .brand-strip {
     display: none;
   }
 }
@@ -574,11 +560,11 @@ html:has(.print-slide) {
   }
 }
 
-:is(.slide-scale-delivered, .theme-kinetic-dark) .slide-field {
+.theme-kinetic-dark .slide-field {
   display: none;
 }
 
-:is(.slide-scale-delivered, .theme-kinetic-dark) .slide-classic {
+.theme-kinetic-dark .slide-classic {
   display: block;
 }
 
@@ -711,116 +697,9 @@ html:has(.print-slide) {
 }
 
 @media screen and (width >= 48rem), print {
-  .slide-scale-delivered .decision-grid {
-    display: none;
-  }
-  .slide-scale-delivered .decision-canvas {
-    display: block;
-  }
-}
-
-@media screen and (width >= 48rem), print {
   .process-canvas {
     display: none;
   }
-  .slide-scale-delivered .process-canvas {
-    display: block;
-  }
-  .slide-scale-delivered .process-row {
-    display: none;
-  }
-}
-
-/* A delivered deck keeps the scale, margins and colours it was delivered with (see the deck
-   registry): the rose deep dive, and the values it shipped with where the brand tokens replaced
-   them (text subtle, signal red, deep-dive section, badge and status tints, the small corner). The
-   fonts, the brand corner, the list marker and the code colours (the website's github-dark) are the
-   brand's here too. */
-.slide-scale-delivered {
-  --slide-footer-side: var(--slide-footer-inset);
-  --radius-brand-sm: 0.5625rem 0.140625rem;
-  --slide-text-subtle: #5c6272;
-  --color-factory: var(--color-red);
-  --color-section-deepdive: #fbf7f2;
-  --color-badge-bg: #e0f0f3;
-  --color-badge-border: #c0dde2;
-}
-
-/* A semantic colour resolves its brand token on the root, so a component reading it through var()
-   needs it set back as well, except where the KINETIC theme sets its own. */
-.slide-scale-delivered:not(.theme-kinetic-dark) {
-  --color-text-subtle: #5c6272;
-  --color-warning: var(--color-red);
-  --color-error: var(--color-red);
-  --color-constraint: var(--color-red);
-  --color-insight-bg: color-mix(in srgb, var(--color-amber) 8%, transparent);
-  --color-constraint-bg: color-mix(in srgb, var(--color-red) 8.235%, transparent);
-}
-
-/* The section tints a delivered deck was delivered with. */
-.slide-scale-delivered .bg-section-primary {
-  background: color-mix(in srgb, var(--color-primary) 5%, var(--background));
-}
-
-.slide-scale-delivered .bg-section-secondary {
-  background: color-mix(in srgb, var(--color-secondary) 4%, var(--background));
-}
-
-.slide-scale-delivered {
-  --color-deep-50: oklch(96.9% 0.015 12.422);
-  --color-deep-100: oklch(94.1% 0.03 12.58);
-  --color-deep-200: oklch(89.2% 0.058 10.001);
-  --color-deep-300: oklch(81% 0.117 11.638);
-  --color-deep-400: oklch(71.2% 0.194 13.428);
-  --color-deep-500: oklch(64.5% 0.246 16.439);
-  --color-deep-600: oklch(58.6% 0.253 17.585);
-  --color-deep-700: oklch(51.4% 0.222 16.935);
-  --color-deep-800: oklch(45.5% 0.188 13.697);
-  --color-deep-900: oklch(41% 0.159 10.272);
-  --color-deep-950: oklch(27.1% 0.105 12.094);
-  --text-xs: 0.875rem;
-  --text-xs--line-height: 1.4;
-  --text-sm: 1rem;
-  --text-sm--line-height: 1.45;
-  --text-base: 1rem;
-  --text-base--line-height: 1.5;
-  --text-lg: 1.125rem;
-  --text-lg--line-height: calc(1.75 / 1.125);
-  --text-xl: 1.25rem;
-  --text-xl--line-height: calc(1.75 / 1.25);
-  --text-2xl: 1.5rem;
-  --text-2xl--line-height: calc(2 / 1.5);
-}
-
-.slide-scale-delivered .slide-titled {
-  padding: 4.5rem 4rem 4.25rem;
-}
-
-.slide-scale-delivered .slide-titled > .slide-body {
-  padding-top: 0.75rem;
-}
-
-.slide-scale-delivered .slide-titled > .slide-body::after {
-  flex-grow: 2;
-}
-
-.slide-scale-delivered .slide-titled .slide-kicker {
-  height: 1.75rem;
-  margin: -2.75rem 0 1rem;
-}
-
-@layer components {
-  .slide-scale-delivered .slide-title {
-    font-size: 3rem;
-  }
-}
-
-.slide-scale-delivered .card-text-lg {
-  font-size: calc(1.125rem * var(--card-boost, 1.12));
-}
-
-.slide-scale-delivered .card-text-base {
-  font-size: calc(1rem * var(--card-boost, 1.12));
 }
 
 /* A pipeline whose stages wrap steps down until they hold one row (PipelineRow in ContentSlide):
@@ -932,16 +811,9 @@ html:has(.print-slide) {
 /* Presentation-specific utilities */
 @layer utilities {
   /* Gradient text */
-  /* The website keeps its gradient to the header strip: emphasised words take the brand colour. A
-     delivered deck keeps the gradient text it was shown with. */
+  /* The website keeps its gradient to the header strip: emphasised words take the brand colour. */
   .text-gradient-brand {
     color: var(--color-brand);
-  }
-  .slide-scale-delivered .text-gradient-brand {
-    background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   /* Section backgrounds: the brand page colour, tinted a few percent towards the section's hue.
@@ -976,7 +848,7 @@ html:has(.print-slide) {
   }
 
   /* KINETIC deck theme: dark, premium, with gold as the strategic accent. A client's palette for
-     its own decks, declared here like the delivered rose, so it stays off the brand tokens. */
+     its own decks, declared here, so it stays off the brand tokens. */
   .theme-kinetic-dark {
     --color-brand: #f2b441;
     --color-brand-accent: #5cd0a0;

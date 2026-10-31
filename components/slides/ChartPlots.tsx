@@ -37,13 +37,13 @@ export function TrendPlot({ data, print }: PlotProps) {
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-primary-border)" opacity={0.5} />
         <XAxis
           dataKey="name"
-          tick={{ fill: "var(--color-text-subtle)", fontSize: "1.25rem" }}
+          tick={{ fill: "var(--color-text-subtle)", fontSize: "var(--text-sm)" }}
           axisLine={{ stroke: "var(--color-text-subtle)" }}
           tickLine={false}
           tickMargin={14}
         />
         <YAxis
-          tick={{ fill: "var(--color-text-subtle)", fontSize: "1.25rem" }}
+          tick={{ fill: "var(--color-text-subtle)", fontSize: "var(--text-sm)" }}
           axisLine={{ stroke: "var(--color-text-subtle)" }}
           tickLine={false}
         />
@@ -51,9 +51,9 @@ export function TrendPlot({ data, print }: PlotProps) {
           contentStyle={{
             backgroundColor: "var(--color-white)",
             border: "2px solid var(--color-primary-border)",
-            borderRadius: "12px",
-            fontSize: "1rem",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            borderRadius: "var(--radius-brand)",
+            fontSize: "var(--text-xs)",
+            boxShadow: "var(--shadow-overlay)",
           }}
           labelStyle={{ color: "var(--color-text)" }}
           itemStyle={{ color: "var(--color-brand)" }}
@@ -95,14 +95,14 @@ export function BarPlot({ data, print }: PlotProps) {
         />
         <XAxis
           dataKey="name"
-          tick={{ fill: "var(--color-text-subtle)", fontSize: "1.25rem" }}
+          tick={{ fill: "var(--color-text-subtle)", fontSize: "var(--text-sm)" }}
           axisLine={{ stroke: "var(--color-text-subtle)" }}
           tickLine={false}
           tickMargin={14}
           interval={0}
         />
         <YAxis
-          tick={{ fill: "var(--color-text-subtle)", fontSize: "1.25rem" }}
+          tick={{ fill: "var(--color-text-subtle)", fontSize: "var(--text-sm)" }}
           axisLine={{ stroke: "var(--color-text-subtle)" }}
           tickLine={false}
         />
@@ -111,9 +111,9 @@ export function BarPlot({ data, print }: PlotProps) {
           contentStyle={{
             backgroundColor: "var(--color-white)",
             border: "2px solid var(--color-primary-border)",
-            borderRadius: "12px",
-            fontSize: "1rem",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            borderRadius: "var(--radius-brand)",
+            fontSize: "var(--text-xs)",
+            boxShadow: "var(--shadow-overlay)",
           }}
           labelStyle={{ color: "var(--color-text)" }}
           itemStyle={{ color: "var(--color-brand)" }}

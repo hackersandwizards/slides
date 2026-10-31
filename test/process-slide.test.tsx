@@ -19,7 +19,7 @@ describe("ProcessSlide", () => {
     const titles = Array.from({ length: count }, (_, i) => `Step ${i + 1}`);
     const { getAllByText } = render(<ProcessSlide slide={makeSlide(titles)} />);
     for (const title of titles) {
-      // Once in the desktop row, once on the circle that phones and delivered decks show.
+      // Once in the desktop row, once on the circle that phones show.
       expect(getAllByText(title)).toHaveLength(2);
     }
   });

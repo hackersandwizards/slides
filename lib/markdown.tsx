@@ -20,7 +20,7 @@ export function renderMarkdown(text: string): React.ReactNode {
           href={link[2]}
           target="_blank"
           rel="noreferrer"
-          className="text-primary underline decoration-from-font underline-offset-4 in-[.slide-scale-delivered]:text-accent"
+          className="text-primary underline decoration-from-font underline-offset-4"
         >
           {link[1]}
         </a>

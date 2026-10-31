@@ -53,7 +53,7 @@ export function SectionHeader({
           from `md` up: where it does not fit beside the label, the whole pill moves to the next
           row. The minimums are the band heights in slides.css. */}
       <div
-        className={`slide-kicker mb-4 flex h-auto! min-h-10 flex-wrap items-center gap-5 max-md:min-h-0 [.slide-scale-delivered_&]:h-7! [.slide-scale-delivered_&]:min-h-0 ${hasStageStrip ? "[.slide-scale-delivered_&]:flex-nowrap" : ""}`}
+        className={`slide-kicker mb-4 flex h-auto! min-h-10 flex-wrap items-center gap-5 max-md:min-h-0`}
       >
         {label && (
           <span className={`text-xl leading-tight font-medium ${labelColor ?? ""}`}>{label}</span>

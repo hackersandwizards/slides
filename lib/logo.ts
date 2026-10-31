@@ -20,13 +20,11 @@ export function resolveSlideLogo(
 }
 
 /** The h&w corner mark: the lockup, wizard and wordmark, on a title and a closing slide, the
- *  wordmark alone on every other slide. A delivered deck keeps the lockup it was delivered with. */
+ *  wordmark alone on every other slide. */
 export function cornerMark(
-  presentation: Pick<Presentation, "scale" | "slides">,
+  presentation: Pick<Presentation, "slides">,
   index: number,
 ): "lockup" | "wordmark" {
   const type = presentation.slides[index]?.type;
-  return presentation.scale === "delivered" || type === "title" || type === "closing"
-    ? "lockup"
-    : "wordmark";
+  return type === "title" || type === "closing" ? "lockup" : "wordmark";
 }

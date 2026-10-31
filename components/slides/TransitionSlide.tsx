@@ -16,8 +16,8 @@ const PRETEXT_COLORS: Record<string, string> = {
 };
 
 /** The headline on the left half's gradient field, the label, subtitle and speaker on the ground
- *  beside it (`.slide-split` in `slides.css`). A delivered deck keeps its centred headline with the
- *  glow, spotlight and particles (`.slide-classic`). */
+ *  beside it (`.slide-split` in `slides.css`). A client theme and a phone keep the centred headline
+ *  with the glow, spotlight and particles (`.slide-classic`). */
 export function TransitionSlide({ slide }: Props) {
   const preTextColor = slide.preText ? (PRETEXT_COLORS[slide.preText] ?? "text-text-muted") : "";
   const isLiveDemo = slide.headline.includes("LIVE DEMO");
@@ -65,7 +65,7 @@ export function TransitionSlide({ slide }: Props) {
 
         {slide.subtitle && (
           <BlurFade delay={0.2} duration={0.4}>
-            <p className="mt-6 max-w-3xl text-lg font-medium whitespace-pre-line text-text-muted sm:mt-8 sm:text-xl md:mt-10 md:text-2xl lg:text-3xl">
+            <p className="mt-6 max-w-3xl text-lg font-medium whitespace-pre-line text-text sm:mt-8 sm:text-xl md:mt-10 md:text-2xl lg:text-3xl">
               {slide.subtitle}
             </p>
           </BlurFade>

@@ -170,9 +170,7 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSlideType }) {
         >
           <div className="mb-6 flex items-center gap-3">
             <XCircle className="h-6 w-6 text-text-subtle" />
-            <h3 className="font-heading text-2xl font-semibold text-text-muted">
-              {slide.left.label}
-            </h3>
+            <h3 className="font-heading text-2xl font-bold text-text-muted">{slide.left.label}</h3>
           </div>
           <ul className="space-y-3">
             {slide.left.items.map((item, i) => (
@@ -207,9 +205,7 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSlideType }) {
         >
           <div className="mb-6 flex items-center gap-3">
             <CheckCircle className="h-6 w-6 text-primary" />
-            <h3 className="font-heading text-2xl font-semibold text-primary">
-              {slide.right.label}
-            </h3>
+            <h3 className="font-heading text-2xl font-bold text-primary">{slide.right.label}</h3>
           </div>
           <ul className="space-y-3">
             {slide.right.items.map((item, i) => (
@@ -240,7 +236,7 @@ function SplitVariant({ slide }: { slide: ComparisonSlideType }) {
     <div className="grid w-full max-w-6xl grid-cols-2 gap-8">
       <BlurFade delay={0.2} duration={0.6}>
         <SlideCard className="h-full p-8">
-          <h3 className="mb-6 font-heading text-2xl font-semibold text-text">{slide.left.label}</h3>
+          <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.left.label}</h3>
           <ul className="space-y-3">
             {slide.left.items.map((item, i) => (
               <MarkedItem key={i} mark={"\u2022"} tone="text-primary">
@@ -253,9 +249,7 @@ function SplitVariant({ slide }: { slide: ComparisonSlideType }) {
 
       <BlurFade delay={0.3} duration={0.6}>
         <SlideCard className="h-full p-8">
-          <h3 className="mb-6 font-heading text-2xl font-semibold text-text">
-            {slide.right.label}
-          </h3>
+          <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.right.label}</h3>
           <ul className="space-y-3">
             {slide.right.items.map((item, i) => (
               <MarkedItem key={i} mark={"\u2022"} tone="text-primary">

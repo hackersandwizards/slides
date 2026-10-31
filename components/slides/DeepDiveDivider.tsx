@@ -38,7 +38,7 @@ export function DeepDiveDivider({ slide }: Props) {
         <BlurFade delay={0.15} duration={0.5}>
           {/* Padding with a matching negative margin, as on the transition slide's headline: it keeps
               the descenders inside the box BlurFade's filter cuts its layer to. */}
-          <h1 className="-my-[0.2em] py-[0.2em] font-heading text-[5rem] leading-[0.95] font-bold tracking-(--type-h1-tracking) text-balance whitespace-pre-line text-deep-950 xl:text-[6.5rem]">
+          <h1 className="-my-[0.2em] py-[0.2em] font-heading text-7xl leading-[0.95] font-bold tracking-(--type-h1-tracking) text-balance whitespace-pre-line text-deep-950 xl:text-8xl">
             {slide.headline}
           </h1>
         </BlurFade>

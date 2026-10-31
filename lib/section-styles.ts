@@ -76,12 +76,12 @@ export const COLUMN_STYLES: Record<ColumnAccent, ColumnStyle> = {
     card: "border-border bg-gradient-to-br from-white via-primary/7 to-secondary/7",
     bar: "bg-gradient-to-r from-primary via-secondary to-accent",
     badge: "bg-primary/7 text-primary border-border",
-    glow: "shadow-card [.slide-scale-delivered_&]:shadow-[0_30px_60px_-20px]",
+    glow: "shadow-card",
   },
   deepdive: {
     card: "border-deep-300/40 bg-gradient-to-br from-white via-deep-50 to-amber/7",
     bar: "bg-gradient-to-r from-deep-400 via-amber to-factory-light",
     badge: "bg-deep-50 text-deep-700 border-deep-200",
-    glow: "shadow-card [.slide-scale-delivered_&]:shadow-[0_30px_60px_-20px]",
+    glow: "shadow-card",
   },
 };

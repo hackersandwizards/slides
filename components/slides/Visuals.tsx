@@ -18,9 +18,9 @@ const CARD = "rounded-brand";
 const GREY = "var(--color-muted)";
 // Diagram labels are set in the body face: the mono heading face breaks a narrow label into
 // fragments ("economically / viable").
-const LABEL = "font-sans text-[2.125rem] font-semibold leading-tight tracking-tight text-balance";
+const LABEL = "font-sans text-4xl font-semibold leading-tight tracking-tight text-balance";
 // The smallest running text a visual sets: 36px at 1920, the checklist's floor.
-const CAPTION = "text-[1.75rem] leading-snug";
+const CAPTION = "text-xl leading-snug";
 // Context marks (a bar that is not the point) in a lighter grey, 3:1 on the page: the brand ink
 // a little past its border-strong step, which reaches 2.9:1.
 const CONTEXT = "color-mix(in srgb, var(--color-ink) 52%, white)";
@@ -66,7 +66,7 @@ function Flow({ block }: { block: Of<"flow"> }) {
             <path d="M0 0 H28 L14 24 Z" fill={GREY} />
           </svg>
           <span
-            className={`absolute top-6 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-6 font-sans text-[1.75rem] font-semibold text-text`}
+            className={`absolute top-6 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-6 font-sans text-xl font-semibold text-text`}
           >
             {block.loop}
           </span>
@@ -534,7 +534,7 @@ function Annotated({ block }: { block: Of<"annotated"> }) {
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-brand-sm bg-primary font-heading text-2xl font-bold text-white">
               {i + 1}
             </span>
-            <p className="pt-1 text-3xl leading-snug text-text [&_strong]:block [&_strong]:text-[2.25rem]">
+            <p className="pt-1 text-3xl leading-snug text-text [&_strong]:block [&_strong]:text-4xl">
               {renderMarkdown(n.text)}
             </p>
           </li>
@@ -565,7 +565,7 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
       <pre
         className={`min-w-0 flex-[1.4] overflow-hidden border-4 border-text bg-code-bg py-6 ${CARD}`}
       >
-        <code className="block font-code text-[1.6875rem] leading-snug">
+        <code className="block font-code text-xl leading-snug">
           {lines.map((line, i) => {
             const n = marked.get(i + 1);
             return (
@@ -600,7 +600,7 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
               <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-brand-sm bg-primary font-heading text-2xl font-bold text-white">
                 {i + 1}
               </span>
-              <p className="pt-1 text-3xl leading-snug text-text [&_strong]:block [&_strong]:text-[2.25rem]">
+              <p className="pt-1 text-3xl leading-snug text-text [&_strong]:block [&_strong]:text-4xl">
                 {renderMarkdown(n.text)}
               </p>
             </li>

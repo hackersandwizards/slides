@@ -716,8 +716,6 @@ export interface Presentation {
   date?: string;
   speakers?: string[];
   theme?: "kinetic-dark" | "brand-dark";
-  /** "delivered" renders with the type scale and margins the deck was delivered with. */
-  scale?: "delivered";
   logo?: LogoConfig;
   // Per-slide logo override. An explicit `null` forces the default h&w logo on
   // that slide (overriding `logo`); an absent index falls back to `logo`.

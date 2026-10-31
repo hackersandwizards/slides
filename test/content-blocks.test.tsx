@@ -19,7 +19,7 @@ describe("content blocks", () => {
       { type: "bars", bars: [{ label: "a", value: 50, display: "50%" }] },
       { type: "callout", text: "Note" },
     ]);
-    const box = c.querySelector("p.text-\\[1\\.75rem\\]")?.parentElement;
+    const box = c.querySelector("p.text-xl")?.parentElement;
     expect(box?.className).toContain("md:w-[calc(100%-16rem)]");
     expect(box?.className.split(" ")).not.toContain("w-[calc(100%-16rem)]");
   });
