@@ -43,10 +43,10 @@ are peer dependencies, so each consumer holds one copy of each.
 
 - `bun run check`: format, lint, typecheck, unique function names, tests, the brand colour scan
   (`brand-colours.json` holds the exceptions). No hook runs it:
-  `.githooks/pre-commit` scans the staged changes with `gitleaks` and runs `prettier --check` and
-  `eslint` on the staged files. `bun install` points `core.hooksPath` at `.githooks/`.
+  `.githooks/pre-commit` runs `bun run check:staged`: `gitleaks` over the staged changes,
+  `prettier --check` and `eslint` on the staged files. `bun install` points `core.hooksPath` at `.githooks/`.
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
-- One test file: `bunx vitest run <file>`.
+- One test file: `bun run test <file>`.
 
 ## Releasing a change
 

@@ -17,14 +17,15 @@
     "scripts/render-pdf.ts"
   ],
   "scripts": {
-    "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$PWD\" ] && git config core.hooksPath .githooks || true",
+    "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks || true",
     "check": "bun run format:check && bun run lint && bun run typecheck && bun .claude/skills/engineering/check-unique-names.ts && bun run test && brand-colours",
     "lint": "eslint --cache --concurrency=auto .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "fix": "eslint --cache --concurrency=auto . --fix && prettier --write ."
+    "fix": "eslint --cache --concurrency=auto . --fix && prettier --write .",
+    "check:staged": "bun .claude/skills/engineering/check-staged.ts"
   },
   "peerDependencies": {
     "@hackersandwizards/brand": "*",
