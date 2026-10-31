@@ -41,12 +41,13 @@ export function renderMarkdown(text: string): React.ReactNode {
       );
     }
     const text = part.slice(1, -1);
-    // A chip with spaces stays on one line; one without, such as a path, may break inside itself,
-    // since it has no other break and a long one ran into the next column.
+    // A short chip with spaces stays on one line; a long one, such as a whole command, and one
+    // without spaces, such as a path, may break inside themselves, since a long one ran past the
+    // slide's edge or into the next column.
     return (
       <code
         key={i}
-        className={`rounded-brand-sm bg-primary/7 px-2 font-code text-primary ${text.includes(" ") ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
+        className={`rounded-brand-sm bg-primary/7 px-2 font-code text-primary ${text.includes(" ") && text.length <= 40 ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
       >
         {text}
       </code>

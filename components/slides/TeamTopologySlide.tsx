@@ -27,7 +27,8 @@ function Chips({ labels, className }: { labels: string[]; className: string }) {
 // Team Topologies' shapes: stream-aligned teams run horizontally, the complicated-subsystem
 // teams they consume sit under them as blocks, platform teams lie underneath as a service, and
 // each enabling team stands vertically beside the whole flow. A team's name sits above its
-// roles: beside them, three enabling columns left the roles a column too narrow for one chip.
+// roles: beside them, three enabling columns left the roles a column too narrow for one chip. A
+// platform team's roles follow its description on the same line where they fit.
 export function TeamTopologySlide({ slide }: Props) {
   const subsystems = slide.complicatedSubsystem ?? [];
   return (
@@ -77,7 +78,7 @@ export function TeamTopologySlide({ slide }: Props) {
                     <span className="text-xl leading-tight font-bold text-teal-dark">
                       {team.name}
                     </span>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                       {team.description && (
                         <span className="text-lg text-text-muted">{team.description}</span>
                       )}

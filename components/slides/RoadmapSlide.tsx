@@ -5,7 +5,7 @@ import { BlurFade } from "../ui/blur-fade";
 import { renderMarkdown } from "../../lib/markdown";
 import { COLUMN_STYLES } from "../../lib/section-styles";
 import { SlideShell } from "./SlideShell";
-import { TitledContent, SlideTitle } from "./primitives";
+import { TitledContent, SlideTitle, SlideSubtitle } from "./primitives";
 
 interface Props {
   slide: RoadmapSlideType;
@@ -41,12 +41,12 @@ function ColumnCard({ column, delay }: { column: RoadmapColumn; delay: number })
           </h3>
 
           {column.subtitle && (
-            <p className="mt-4 max-w-md text-lg leading-snug text-text-muted">
+            <p className="mt-4 text-lg leading-snug text-text-muted">
               {renderMarkdown(column.subtitle)}
             </p>
           )}
 
-          <ul className="mt-8 space-y-4">
+          <ul className="mt-6 space-y-4">
             {column.items.map((item, i) => (
               <BlurFade key={i} delay={delay + 0.05 + i * 0.04} duration={0.35}>
                 <li className="flex items-start gap-4">
@@ -99,11 +99,7 @@ export function RoadmapSlide({ slide }: Props) {
         </SlideTitle>
 
         {slide.subtitle && (
-          <BlurFade delay={0.1} duration={0.4}>
-            <p className="mt-4 max-w-5xl text-2xl whitespace-pre-line text-text-muted">
-              {renderMarkdown(slide.subtitle)}
-            </p>
-          </BlurFade>
+          <SlideSubtitle delay={0.1}>{renderMarkdown(slide.subtitle)}</SlideSubtitle>
         )}
         <div className="slide-body">
           <div className="grid w-full grid-cols-2 gap-8">

@@ -3,18 +3,13 @@ import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
 import type { Slide } from "../types/slide";
 
-// Title and transition slides carry one gradient field with only the headline on it; the smaller
-// lines stay on the ground, and the glow and particles render only for a client theme and a phone.
+// A title slide carries one gradient field with only the headline on it; the smaller lines stay on
+// the ground, and the glow and particles render only on a phone. A section divider carries none.
 const cases: { slide: Slide; lead: string; aside: string }[] = [
   {
     slide: { type: "title", title: "Agentic Coding", subtitle: "Two days" },
     lead: "Agentic Coding",
     aside: "Two days",
-  },
-  {
-    slide: { type: "transition", preText: "Part two", headline: "The pipeline", subtitle: "Next" },
-    lead: "The pipeline",
-    aside: "Part two",
   },
 ];
 
@@ -30,4 +25,12 @@ describe("gradient field", () => {
       expect(container.querySelector(".slide-classic")).not.toBeNull();
     },
   );
+});
+
+describe("section divider", () => {
+  it("centres its headline on the ground, with no field and no decoration", () => {
+    const slide: Slide = { type: "transition", preText: "Part two", headline: "The pipeline" };
+    const { container } = render(<slideComponents.transition slide={slide} />);
+    expect(container.querySelector(".slide-field, .slide-split, .slide-classic")).toBeNull();
+  });
 });

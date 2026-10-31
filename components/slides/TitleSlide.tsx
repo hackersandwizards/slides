@@ -12,7 +12,7 @@ interface Props {
 
 /** The title on the left half's gradient field, the subtitle on the ground beside it, level with
  *  the title's first line, and the lockup under it on the title's last line (`.slide-split-lockup`
- *  in `slides.css`). A client theme and a phone keep the centred title with the glow, particles
+ *  in `slides.css`). A phone keeps the centred title with the glow, particles
  *  and rule (`.slide-classic`) and the lockup in the corner. */
 export function TitleSlide({ slide }: Props) {
   return (

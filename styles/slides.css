@@ -471,9 +471,9 @@ html:has(.print-slide) {
 
 /* Title and transition slides: one gradient field, the slide's left half, carrying the headline in
    large white type (`.slide-split-lead`); the subtitle, label and speaker stay on the ground beside
-   it. The os design guide: the gradient is a bounded field, only large white type on it. A client
-   theme keeps the centred slide it shipped with, glow and particles included
-   (`.slide-classic`), and so does a phone, where the slide is one column. */
+   it. The os design guide: the gradient is a bounded field, only large white type on it. A phone,
+   where the slide is one column, keeps the centred slide, glow and particles included
+   (`.slide-classic`). */
 .slide-field,
 .slide-classic,
 .slide-split-mark,
@@ -490,19 +490,19 @@ html:has(.print-slide) {
     width: 50%;
     background: var(--gradient-magic);
   }
-  .slide-split:not(.theme-kinetic-dark *) {
+  .slide-split {
     align-items: flex-start;
     justify-content: flex-end;
     text-align: left;
     padding: 5.5rem 4.5rem var(--slide-footer-band) calc(50% + 4.5rem);
   }
-  .slide-split:not(.theme-kinetic-dark *) > .slide-split-lead {
+  .slide-split > .slide-split-lead {
     position: absolute;
     left: 4.5rem;
     bottom: var(--slide-footer-band);
     width: calc(50% - 9rem);
   }
-  .slide-split:not(.theme-kinetic-dark *) > .slide-split-lead > * {
+  .slide-split > .slide-split-lead > * {
     color: white;
     text-align: left;
     font-size: var(--text-7xl);
@@ -512,7 +512,7 @@ html:has(.print-slide) {
      headline's last line; at least 3rem apart. The corner steps aside, the lockup being in the
      column. Blind-scored against the text above the corner lockup, which read as crowded with
      empty space above it (2026-10-31). */
-  .slide-split-lockup:not(.theme-kinetic-dark *) {
+  .slide-split-lockup {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto minmax(3rem, auto) auto;
@@ -520,36 +520,36 @@ html:has(.print-slide) {
     align-content: end;
     padding: 5.5rem 4.5rem var(--slide-footer-band);
   }
-  .slide-split-lockup:not(.theme-kinetic-dark *) > * {
+  .slide-split-lockup > * {
     grid-area: 1 / 2;
     align-self: start;
   }
-  .slide-split-lockup:not(.theme-kinetic-dark *) > .slide-split-lead {
+  .slide-split-lockup > .slide-split-lead {
     position: static;
     grid-area: 1 / 1 / -1;
     align-self: end;
     width: auto;
   }
-  .slide-split-lockup:not(.theme-kinetic-dark *) > .slide-split-mark {
+  .slide-split-lockup > .slide-split-mark {
     display: flex;
     grid-area: 3 / 2;
     align-self: end;
   }
-  .slide-split-lockup:not(.theme-kinetic-dark *) > :not(.slide-split-lead) > p {
+  .slide-split-lockup > :not(.slide-split-lead) > p {
     margin-top: 0;
     color: var(--color-text);
   }
   /* The closing line is one or two words, a step larger than a title. */
-  .slide-split-closing:not(.theme-kinetic-dark *) > .slide-split-lead > * {
+  .slide-split-closing > .slide-split-lead > * {
     font-size: var(--text-8xl);
   }
-  :is(.slide-viewport, .print-slide):has(.slide-split-lockup):not(.theme-kinetic-dark)
+  :is(.slide-viewport, .print-slide):has(.slide-split-lockup)
     > :is(.slide-corner, .print-watermark) {
     display: none;
   }
   /* The field is the slide's one gradient, so the strip steps aside: across the field it shows as a
      seam, and stopped at the field's edge as a second one. */
-  :is(.slide-viewport, .print-slide):has(.slide-field):not(.theme-kinetic-dark) > .brand-strip {
+  :is(.slide-viewport, .print-slide):has(.slide-field) > .brand-strip {
     display: none;
   }
 }
@@ -558,14 +558,6 @@ html:has(.print-slide) {
   .slide-classic {
     display: block;
   }
-}
-
-.theme-kinetic-dark .slide-field {
-  display: none;
-}
-
-.theme-kinetic-dark .slide-classic {
-  display: block;
 }
 
 .slide-titled > .slide-body {
@@ -847,56 +839,6 @@ html:has(.print-slide) {
     );
   }
 
-  /* KINETIC deck theme: dark, premium, with gold as the strategic accent. A client's palette for
-     its own decks, declared here, so it stays off the brand tokens. */
-  .theme-kinetic-dark {
-    --color-brand: #f2b441;
-    --color-brand-accent: #5cd0a0;
-    --color-primary: #f2b441;
-    --color-primary-bg: #f2b44118;
-    --color-primary-border: #f2b44140;
-    --color-secondary: #5cd0a0;
-    --color-secondary-bg: #5cd0a018;
-    --color-secondary-border: #5cd0a040;
-    --color-accent: #f2b441;
-    --color-success: #5cd0a0;
-    --color-warning: #f0736b;
-    --color-error: #f0736b;
-    --color-text: #f2f5f9;
-    --color-text-muted: #c8d0dc;
-    --color-text-subtle: #97a2b3;
-    --color-code-bg: #191e27;
-    --color-code-comment: #97a2b3;
-  }
-
-  .theme-kinetic-dark .bg-section-intro,
-  .theme-kinetic-dark .bg-section-primary,
-  .theme-kinetic-dark .bg-section-secondary,
-  .theme-kinetic-dark .bg-section-accent,
-  .theme-kinetic-dark .bg-section-success {
-    background:
-      radial-gradient(ellipse at top left, rgba(242, 180, 65, 0.14) 0%, transparent 42%),
-      radial-gradient(ellipse at bottom right, rgba(92, 208, 160, 0.1) 0%, transparent 48%), #0f1217;
-  }
-
-  .theme-kinetic-dark .bg-white\/90,
-  .theme-kinetic-dark .bg-white\/95 {
-    background-color: rgba(25, 30, 39, 0.92) !important;
-  }
-
-  .theme-kinetic-dark .border-text-subtle\/20,
-  .theme-kinetic-dark .border-primary-border,
-  .theme-kinetic-dark .border-primary\/30,
-  .theme-kinetic-dark .border-primary\/20 {
-    border-color: rgba(46, 56, 72, 0.95) !important;
-  }
-
-  .theme-kinetic-dark .shadow-lg,
-  .theme-kinetic-dark .shadow-md,
-  .theme-kinetic-dark .shadow-sm {
-    box-shadow: 0 18px 70px rgba(0, 0, 0, 0.35);
-  }
-
   /* Brand dark: a proposal, on no deck by default (decision row in docs/tracking/decisions).
      The website's night tokens for page, cards and text, teal and purple in their night cuts
      (teal-night, purple-night), and dark text on those fills. */
@@ -949,10 +891,10 @@ html:has(.print-slide) {
 
   /* The Night wordmark on a dark theme, the light one everywhere else. */
   .hw-wordmark-night,
-  :is(.theme-brand-dark, .theme-kinetic-dark) .hw-wordmark {
+  .theme-brand-dark .hw-wordmark {
     display: none;
   }
-  :is(.theme-brand-dark, .theme-kinetic-dark) .hw-wordmark-night {
+  .theme-brand-dark .hw-wordmark-night {
     display: block;
   }
 

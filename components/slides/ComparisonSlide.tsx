@@ -31,6 +31,20 @@ interface Props {
   slide: ComparisonSlideType;
 }
 
+/** The sources under a comparison, on every variant. */
+function Footnotes({ notes }: { notes?: string[] }) {
+  if (!notes?.length) return null;
+  return (
+    <div className="mt-6 max-w-4xl">
+      {notes.map((note, i) => (
+        <p key={i} className="text-sm text-text-subtle">
+          {note}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 function VsVariant({ slide }: { slide: ComparisonSlideType }) {
   const printMode = usePrintMode();
   // With `revealPunchline`, step 2 keeps the right side lit and adds the punchline.
@@ -70,7 +84,7 @@ function VsVariant({ slide }: { slide: ComparisonSlideType }) {
 
   return (
     <>
-      <div className="grid w-full max-w-6xl grid-cols-2 gap-8">
+      <div className="grid w-full grid-cols-2 gap-8">
         {sides.map((side, i) => {
           const isActive = Math.min(activeIndex, 1) === i || printMode;
           const pros = side.items.filter((item) => !item.startsWith("-"));
@@ -137,15 +151,7 @@ function VsVariant({ slide }: { slide: ComparisonSlideType }) {
         </BlurFade>
       )}
 
-      {slide.footnotes && slide.footnotes.length > 0 && (
-        <div className="mt-6 max-w-4xl">
-          {slide.footnotes.map((note, i) => (
-            <p key={i} className="text-sm text-text-subtle">
-              {note}
-            </p>
-          ))}
-        </div>
-      )}
+      <Footnotes notes={slide.footnotes} />
     </>
   );
 }
@@ -227,39 +233,53 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSlideType }) {
           <p className="text-gradient-brand font-heading text-2xl font-bold">{slide.punchline}</p>
         </div>
       )}
+
+      <Footnotes notes={slide.footnotes} />
     </>
   );
 }
 
 function SplitVariant({ slide }: { slide: ComparisonSlideType }) {
   return (
-    <div className="grid w-full max-w-6xl grid-cols-2 gap-8">
-      <BlurFade delay={0.2} duration={0.6}>
-        <SlideCard className="h-full p-8">
-          <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.left.label}</h3>
-          <ul className="space-y-3">
-            {slide.left.items.map((item, i) => (
-              <MarkedItem key={i} mark={"\u2022"} tone="text-primary">
-                {item}
-              </MarkedItem>
-            ))}
-          </ul>
-        </SlideCard>
-      </BlurFade>
+    <>
+      <div className="grid w-full grid-cols-2 gap-8">
+        <BlurFade delay={0.2} duration={0.6}>
+          <SlideCard className="h-full p-8">
+            <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.left.label}</h3>
+            <ul className="space-y-3">
+              {slide.left.items.map((item, i) => (
+                <MarkedItem key={i} mark={"\u2022"} tone="text-primary">
+                  {item}
+                </MarkedItem>
+              ))}
+            </ul>
+          </SlideCard>
+        </BlurFade>
 
-      <BlurFade delay={0.3} duration={0.6}>
-        <SlideCard className="h-full p-8">
-          <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.right.label}</h3>
-          <ul className="space-y-3">
-            {slide.right.items.map((item, i) => (
-              <MarkedItem key={i} mark={"\u2022"} tone="text-primary">
-                {item}
-              </MarkedItem>
-            ))}
-          </ul>
-        </SlideCard>
-      </BlurFade>
-    </div>
+        <BlurFade delay={0.3} duration={0.6}>
+          <SlideCard className="h-full p-8">
+            <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.right.label}</h3>
+            <ul className="space-y-3">
+              {slide.right.items.map((item, i) => (
+                <MarkedItem key={i} mark={"\u2022"} tone="text-primary">
+                  {item}
+                </MarkedItem>
+              ))}
+            </ul>
+          </SlideCard>
+        </BlurFade>
+      </div>
+
+      {slide.punchline && (
+        <BlurFade delay={0.5} duration={0.6}>
+          <p className="text-gradient-brand mt-10 max-w-3xl text-center font-heading text-2xl font-bold">
+            {slide.punchline}
+          </p>
+        </BlurFade>
+      )}
+
+      <Footnotes notes={slide.footnotes} />
+    </>
   );
 }
 

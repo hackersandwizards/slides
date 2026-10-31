@@ -177,7 +177,10 @@ function renderColumnContent(text: string) {
     const language = text.slice(3, text.indexOf("\n")).trim();
     const codeContent = text.slice(text.indexOf("\n") + 1, text.lastIndexOf("```"));
     return (
-      <CodePanel as="pre" className="overflow-x-auto p-5 text-base leading-relaxed">
+      <CodePanel
+        as="pre"
+        className="p-5 text-base leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap"
+      >
         <code className="font-code">{highlightCode(codeContent.replace(/\n$/, ""), language)}</code>
       </CodePanel>
     );
@@ -488,7 +491,7 @@ function ContentBlockRenderer({
 
     case "code":
       return (
-        <CodePanel as="pre" className="overflow-x-auto p-6">
+        <CodePanel as="pre" className="p-6 [overflow-wrap:anywhere] whitespace-pre-wrap">
           <code className="font-code text-lg">{highlightCode(block.code, block.language)}</code>
         </CodePanel>
       );
@@ -497,7 +500,7 @@ function ContentBlockRenderer({
       return (
         <div className="grid grid-cols-2 gap-8">
           <CodePanel className="overflow-hidden">
-            <pre className="overflow-x-auto p-6 text-base leading-relaxed">
+            <pre className="p-6 text-base leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap">
               <code className="font-code">{highlightCode(block.code, block.language)}</code>
             </pre>
           </CodePanel>

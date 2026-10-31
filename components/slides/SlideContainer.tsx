@@ -9,7 +9,7 @@ import { HW_LOGO } from "../../lib/logo";
 interface Props {
   children: ReactNode;
   logo?: SlideLogo;
-  theme?: "kinetic-dark" | "brand-dark";
+  theme?: "brand-dark";
   /** The page counter, "05 / 24"; none on a title slide. */
   page?: string;
   /** The h&w corner mark, `cornerMark()`: the lockup by default. */

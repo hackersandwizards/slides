@@ -23,8 +23,8 @@ term, personal data or secret. Decks live in the consumers.
 - `lib/`: hooks, navigation, presenter sync, the edit mode, themes and section styles.
   `lib/adapter.tsx` is the one seam to a consumer's framework: `SlidesAdapterProvider` takes an
   `Image` component and a `navigate(href, replace)`. Without a provider the engine renders a plain
-  `<img>` and moves with `history` inside one island (the trainer hub). The Next consumers wrap
-  their root layout in a provider with `next/image` and the router.
+  `<img>` and moves with `history` inside one island (the trainer hub). `lib/next-adapter.tsx` is that
+  provider for the Next consumers, `next/image` and the router, and each wraps its root layout in it.
 - `types/slide.ts`: the slide types and content blocks a deck may use.
 - `styles/slides.css`: the slide scale, the type table and every slide length, read by the
   components by name, never as a literal size. It imports Tailwind and the brand tokens and fonts

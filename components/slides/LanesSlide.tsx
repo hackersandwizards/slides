@@ -28,7 +28,7 @@ export function LanesSlide({ slide }: Props) {
         <div className="slide-body">
           {slide.codeSnippet && (
             <BlurFade delay={0.2} duration={0.5}>
-              <CodePanel as="pre" className="mb-8 overflow-x-auto p-6">
+              <CodePanel as="pre" className="mb-8 p-6 [overflow-wrap:anywhere] whitespace-pre-wrap">
                 <code className="font-code text-lg">
                   {highlightCode(slide.codeSnippet.code, slide.codeSnippet.language)}
                 </code>
