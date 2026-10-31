@@ -14,7 +14,11 @@ interface Props {
   scale?: "delivered";
   /** The page counter, "05 / 24"; none on a title slide. */
   page?: string;
+  /** The h&w corner mark, `cornerMark()`: the lockup by default. */
+  mark?: CornerMark;
 }
+
+export type CornerMark = "lockup" | "wordmark";
 
 /** The page counter beside the corner logo, legible in a half-size video call and a step below the
  *  company name, on its centre line: at 1.625rem it outranked the name, and blind reviewers read the
@@ -29,33 +33,56 @@ export function PageCounter({ label }: { label: string }) {
 }
 
 /**
- * The brand lockup in the slide corner, the design guide's logo for slides:
- * `@hackersandwizards/brand` `logos/lockup.svg`, copied into `public/` by `postinstall`, the Night
- * cut on a dark theme (`slides.css`). Its letters keep the corner wordmark's size, so the wizard,
- * larger in the lockup than in the former composed corner, overhangs the row above and below
- * without moving it. The lockup's box is the wizard's and carries the wizard's lift, so it takes
- * the brand's `--logo-wizard-lift` and its letters centre on the page counter beside it.
+ * The h&w mark in the slide corner, from `@hackersandwizards/brand` `logos/`, copied into `public/`
+ * by `postinstall`, the Night cut on a dark theme (`slides.css`). `lockup`, wizard and wordmark,
+ * goes on a title and a closing slide, `wordmark` alone on every other slide. Both keep the
+ * wordmark at `--slide-corner-wordmark`: the lockup's box is the wizard's, taller than the
+ * letters and taller again in the Night cut, so each cut takes its own height, overhangs the row
+ * above and below without moving it, and carries the brand's `--logo-wizard-lift` so its letters
+ * centre on the page counter beside it.
  */
-export function HwWordmark() {
-  const className =
-    "h-(--slide-corner-lockup) w-auto shrink-0 translate-y-(--logo-wizard-lift) my-[calc((var(--slide-footer-mark)-var(--slide-corner-lockup))/2)]";
+export function HwWordmark({ mark = "lockup" }: { mark?: CornerMark }) {
+  if (mark === "wordmark") {
+    const className =
+      "h-(--slide-corner-wordmark) w-auto shrink-0 my-[calc((var(--slide-footer-mark)-var(--slide-corner-wordmark))/2)]";
+    return (
+      <span className="pointer-events-none inline-flex items-center">
+        <Image
+          src="/hw-wordmark.svg"
+          alt=""
+          width={6571}
+          height={952}
+          priority
+          className={`hw-wordmark ${className}`}
+        />
+        <Image
+          src="/hw-wordmark-night.svg"
+          alt=""
+          width={6571}
+          height={952}
+          priority
+          className={`hw-wordmark-night ${className}`}
+        />
+      </span>
+    );
+  }
   return (
     <span className="pointer-events-none inline-flex items-center">
       <Image
         src="/hw-lockup.svg"
         alt=""
-        width={7989}
+        width={8042}
         height={1489}
         priority
-        className={`hw-wordmark ${className}`}
+        className="hw-wordmark my-[calc((var(--slide-footer-mark)-var(--slide-corner-lockup))/2)] h-(--slide-corner-lockup) w-auto shrink-0 translate-y-(--logo-wizard-lift)"
       />
       <Image
         src="/hw-lockup-night.svg"
         alt=""
-        width={7989}
-        height={1489}
+        width={8196}
+        height={1641}
         priority
-        className={`hw-wordmark-night ${className}`}
+        className="hw-wordmark-night my-[calc((var(--slide-footer-mark)-var(--slide-corner-lockup-night))/2)] h-(--slide-corner-lockup-night) w-auto shrink-0 translate-y-(--logo-wizard-lift)"
       />
     </span>
   );
@@ -71,17 +98,17 @@ export function BrandStrip() {
   );
 }
 
-export function SlideContainer({ children, logo, theme, scale, page }: Props) {
+export function SlideContainer({ children, logo, theme, scale, page, mark }: Props) {
   const viewportClassName = `slide-viewport fixed inset-0 overflow-hidden${theme ? ` theme-${theme}` : ""}${scale ? ` slide-scale-${scale}` : ""}`;
 
   const renderHW = (l: LogoConfig) => (
     <div
-      className="fixed right-(--slide-footer-inset) bottom-(--slide-footer-inset) z-40 flex items-center gap-5"
+      className="fixed right-(--slide-footer-side) bottom-(--slide-footer-inset) z-40 flex items-center gap-5"
       aria-hidden="true"
     >
       {page && <PageCounter label={page} />}
       {l.src === HW_LOGO.src ? (
-        <HwWordmark />
+        <HwWordmark mark={mark} />
       ) : (
         <Image
           src={l.src}

@@ -203,7 +203,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                 <Image
                   src="/hw-lockup.svg"
                   alt="hackers&wizards"
-                  width={7989}
+                  width={8042}
                   height={1489}
                   className="hw-wordmark h-(--slide-closing-lockup)"
                   style={{ width: "auto" }}
@@ -211,9 +211,9 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                 <Image
                   src="/hw-lockup-night.svg"
                   alt="hackers&wizards"
-                  width={7989}
-                  height={1489}
-                  className="hw-wordmark-night h-(--slide-closing-lockup)"
+                  width={8196}
+                  height={1641}
+                  className="hw-wordmark-night h-(--slide-closing-lockup-night)"
                   style={{ width: "auto" }}
                 />
               </div>

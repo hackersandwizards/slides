@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { resolveSlideLogo } from "../lib/logo";
+import type { Presentation } from "../types/slide";
+import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
 import { arrivedBackwards, ignoredKey } from "../lib/slide-utils";
 
@@ -85,5 +86,25 @@ describe("ignoredKey", () => {
     for (const modifier of ["metaKey", "ctrlKey", "altKey"])
       expect(ignoredKey(key(true, { [modifier]: true }))).toBe(true);
     expect(ignoredKey(key(true, { shiftKey: true }))).toBe(false);
+  });
+});
+
+describe("cornerMark", () => {
+  const slides = [
+    { type: "title" },
+    { type: "regular" },
+    { type: "closing" },
+  ] as Presentation["slides"];
+
+  it("puts the lockup on the title and the closing slide and the wordmark elsewhere", () => {
+    expect(slides.map((_, i) => cornerMark({ slides }, i))).toEqual([
+      "lockup",
+      "wordmark",
+      "lockup",
+    ]);
+  });
+
+  it("keeps the lockup on every slide of a delivered deck", () => {
+    expect(cornerMark({ slides, scale: "delivered" }, 1)).toBe("lockup");
   });
 });

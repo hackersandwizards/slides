@@ -343,14 +343,25 @@
                      test on one slide (2026-10-28, ten reviewers) put a third first seven times;
                      his choice and one shape across media decide
 
-   --slide-footer-inset  the corner row's distance from the slide's bottom and right edges: 1.5rem,
-                     32px at 1920
+   --slide-footer-inset  the corner row's distance from the slide's bottom edge: 1.5rem, 32px at
+                     1920
+   --slide-footer-side   the corner row's distance from the slide's right edge: the content's 4.5rem
+                     side margin (.slide-titled), so the row ends where the text ends, inside the
+                     graphics-safe margin. At 1.5rem blind reviewers read the mark as tight to the
+                     edge and off the grid (2026-10-31). A delivered deck keeps 1.5rem
    --slide-footer-mark   the corner row's height: 2.25rem, 48px
-   --slide-corner-lockup the corner lockup's box, sized so its letters keep the 1.956rem, 42px at
-                     1920, the composed wordmark had, 1.3 times the 1.5rem typed name it replaced:
-                     the wordmark is 952 of the lockup's 1489 units, so 3.06rem
+   --slide-corner-wordmark the wordmark's box, 1.956rem, 42px at 1920, 1.3 times the 1.5rem typed
+                     name it replaced. The corner shows the wordmark alone, in its two colours, on
+                     every slide but the title and the closing slide, which carry the lockup: the
+                     wizard on every slide read as busy, and the wordmark in one muted colour or
+                     smaller lost attribution in photos and phone feeds (blind panels 2026-10-30
+                     and 2026-10-31)
+   --slide-corner-lockup the corner lockup's box, sized so its letters keep the wordmark's size: the
+                     wordmark is 952 of the day lockup's 1489 units and of the night cut's 1640.612,
+                     whose box grows round the wizard's edge, so each cut takes its own height
    --slide-closing-lockup the closing slide's lockup, wizard and wordmark: 4.3rem, 92px at 1920
-                     (both blind-scored, 2026-10-29)
+                     (both blind-scored, 2026-10-29); the night cut scales by 1640.612 / 1489 so its
+                     letters keep that size
    --slide-footer-band   the band above the bottom edge that a slide's content never enters: the
                      corner row plus a 2rem gap, 43px at 1920. The bottom padding of 4.25rem it
                      replaces left 11px between content and the page counter, and timelines, card
@@ -362,8 +373,12 @@
 :root {
   --slide-footer-inset: 1.5rem;
   --slide-footer-mark: 2.25rem;
-  --slide-corner-lockup: calc(1.956rem * 1489 / 952);
+  --slide-footer-side: 4.5rem;
+  --slide-corner-wordmark: 1.956rem;
+  --slide-corner-lockup: calc(var(--slide-corner-wordmark) * 1489 / 952);
+  --slide-corner-lockup-night: calc(var(--slide-corner-wordmark) * 1640.612 / 952);
   --slide-closing-lockup: 4.3rem;
+  --slide-closing-lockup-night: calc(var(--slide-closing-lockup) * 1640.612 / 1489);
   --slide-footer-band: calc(var(--slide-footer-inset) + var(--slide-footer-mark) + 2rem);
   --slide-strip: 0.75rem;
   --slide-hairline: 0.09375rem;
@@ -674,6 +689,7 @@ html:has(.print-slide) {
    them (text subtle, signal red, deep-dive section and badge tints). The fonts, the brand corner,
    the list marker and the code colours (the website's github-dark) are the brand's here too. */
 .slide-scale-delivered {
+  --slide-footer-side: var(--slide-footer-inset);
   --slide-text-subtle: #5c6272;
   --color-factory: var(--color-red);
   --color-section-deepdive: #fbf7f2;
@@ -1065,7 +1081,7 @@ html:has(.print-slide) {
 .print-watermark {
   position: absolute;
   bottom: var(--slide-footer-inset);
-  right: var(--slide-footer-inset);
+  right: var(--slide-footer-side);
   z-index: 40;
 }
 
