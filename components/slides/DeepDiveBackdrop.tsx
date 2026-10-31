@@ -1,7 +1,5 @@
-// Shared "Part Two" deepdive decoration, previously copy-pasted across
-// DeepDiveDivider, PhasedPillsSlide (deepdive variant) and DualPillOverview.
-// Decorative only (aria-hidden). Keeping it here locks the deepdive brand
-// identity in one place — a stated goal in CLAUDE.md.
+// The "Part Two" deepdive decoration DeepDiveDivider, PhasedPillsSlide's deepdive variant and
+// DualPillOverview share, kept in one place so their brand identity cannot drift apart.
 
 import type { ReactNode } from "react";
 

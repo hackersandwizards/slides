@@ -42,8 +42,6 @@ export function EvolutionSlide({ slide }: Props) {
                 const dense = slide.stages.length >= 6;
                 const isRevealed = isStatic || index < revealedCount;
                 const isActive = activeIndex === index;
-                // In progressive mode, only use activeIndex for highlighting
-                // In static mode, use the data's isHighlighted flag
                 const isHighlighted = isStatic ? stage.isHighlighted : isActive;
                 const isDimmed = stage.isDimmed;
 
@@ -68,11 +66,7 @@ export function EvolutionSlide({ slide }: Props) {
                     >
                       <div
                         className={`relative flex min-h-80 w-full flex-col rounded-brand border ${dense ? "px-3 py-6" : "p-6"} transition-all duration-300 ${
-                          isHighlighted
-                            ? "border-primary bg-primary/7"
-                            : isDimmed
-                              ? "border-border bg-white"
-                              : "border-border bg-white"
+                          isHighlighted ? "border-primary bg-primary/7" : "border-border bg-white"
                         }`}
                       >
                         {/* Stage badge — uses overlay for gradient so transitions stay smooth. It
@@ -135,17 +129,14 @@ export function EvolutionSlide({ slide }: Props) {
                           </p>
                         </div>
 
-                        {/* Market position badge */}
                         {stage.badge && (
                           <div
-                            className={`mt-auto border-t pt-4 text-center text-base font-semibold transition-colors duration-300 ${twoLineBadges ? "min-h-[calc(2lh+1rem)]" : ""} ${
-                              isHighlighted
-                                ? "border-border text-primary"
+                            className={`mt-auto border-t border-border pt-4 text-center text-base font-semibold transition-colors duration-300 ${twoLineBadges ? "min-h-[calc(2lh+1rem)]" : ""} ${
+                              isHighlighted || (isRevealed && !isDimmed)
+                                ? "text-primary"
                                 : isDimmed
-                                  ? "border-border text-text-subtle"
-                                  : isRevealed
-                                    ? "border-border text-primary"
-                                    : "border-border text-text-subtle/40"
+                                  ? "text-text-subtle"
+                                  : "text-text-subtle/40"
                             }`}
                           >
                             {stage.badge}
@@ -171,7 +162,6 @@ export function EvolutionSlide({ slide }: Props) {
               })}
             </div>
 
-            {/* Footer bar */}
             {slide.footer && (
               <div
                 inert={!footerVisible}

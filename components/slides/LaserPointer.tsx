@@ -13,7 +13,7 @@ interface Stroke {
   createdAt: number;
 }
 
-const FADE_DURATION = 2000; // 2 seconds to fully fade
+const FADE_DURATION = 2000;
 const LASER_RGB = "26, 114, 133";
 const LASER_COLOR = `rgba(${LASER_RGB}, 1)`;
 const LASER_GLOW_COLOR = `rgba(${LASER_RGB}, 0.6)`;

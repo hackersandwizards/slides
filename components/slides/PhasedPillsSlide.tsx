@@ -127,7 +127,6 @@ function DeepDivePhasedPills({ slide }: Props) {
       <HairlineRule color="rose" position="top" />
       <HairlineRule color="amber" position="bottom" />
 
-      {/* Centered editorial content */}
       <div className="slide-content relative z-10 flex w-full max-w-[93.75rem] flex-col items-center justify-center px-16">
         {/* The part mark leads the content rather than sitting in the corner: a map of fifteen
             tactics grew up under a corner mark. */}

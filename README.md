@@ -18,15 +18,15 @@ Add the dependency in exactly this form, pinned to the newest tag
 "@hackersandwizards/slides": "git+https://github.com/hackersandwizards/slides.git#v<version>"
 ```
 
-| Import                                               | What                                   |
-| ---------------------------------------------------- | -------------------------------------- |
-| `@hackersandwizards/slides/styles/slides.css`        | the slide stylesheet, Tailwind 4       |
-| `@hackersandwizards/slides/types/slide`              | `Presentation`, `Slide` and the blocks |
-| `@hackersandwizards/slides/components/slides/<Name>` | a slide component                      |
-| `@hackersandwizards/slides/lib/<module>`             | hooks, navigation, presenter sync      |
-| `@hackersandwizards/slides/lib/adapter`              | `SlidesAdapterProvider`                |
-| `@hackersandwizards/slides/scripts/render-pdf`       | `renderPdf` for an export script       |
-| `@hackersandwizards/slides/specimen/slide-catalogue` | the fictional specimen deck            |
+| Import                                               | What                                       |
+| ---------------------------------------------------- | ------------------------------------------ |
+| `@hackersandwizards/slides/styles/slides.css`        | the slide stylesheet, Tailwind 4           |
+| `@hackersandwizards/slides/types/slide`              | `Presentation`, `Slide` and the blocks     |
+| `@hackersandwizards/slides/components/slides/<Name>` | a slide component                          |
+| `@hackersandwizards/slides/lib/<module>`             | a module `exports` in `package.json` names |
+| `@hackersandwizards/slides/lib/next-adapter`         | `NextSlidesAdapter`                        |
+| `@hackersandwizards/slides/scripts/render-pdf`       | `renderPdf` for an export script           |
+| `@hackersandwizards/slides/specimen/slide-catalogue` | the fictional specimen deck                |
 
 The command `slides-density [--serve "<command>"] <print-url> ...` belongs in each consumer's gate:
 it renders each deck's print route and fails on a slide the fit guard shrinks below 0.8, and lists
@@ -34,8 +34,9 @@ those below 0.9. `--serve` starts the consumer's server for the run and stops it
 
 The package ships TypeScript source. Let the build transpile it: Next
 `transpilePackages: ["@hackersandwizards/slides"]`, Astro `vite.ssr.noExternal`, vitest
-`test.server.deps.inline`. A Next app wraps its root layout in `SlidesAdapterProvider` with
-`next/image` and its router; without a provider the engine uses a plain `<img>` and `history`.
+`test.server.deps.inline`. A Next app wraps its root layout in `NextSlidesAdapter`, which puts
+`next/image` and its router behind the engine; without it the engine uses a plain `<img>` and
+`history`.
 
 ## Deck structure
 

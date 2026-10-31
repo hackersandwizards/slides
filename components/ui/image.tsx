@@ -13,9 +13,17 @@ export default function Image({ priority, unoptimized, alt, ...rest }: ImageProp
   // Lazy there means the PDF exports empty image frames, and each element screenshot scrolls a new
   // batch into view and waits for it. Print always loads eagerly.
   const printMode = usePrintMode();
-  if (Framework)
-    return <Framework {...rest} alt={alt ?? ""} priority={priority} unoptimized={unoptimized} />;
   const eager = priority || printMode;
+  if (Framework)
+    return (
+      <Framework
+        {...rest}
+        alt={alt ?? ""}
+        priority={priority}
+        loading={eager ? "eager" : undefined}
+        unoptimized={unoptimized}
+      />
+    );
   return (
     <img
       {...rest}

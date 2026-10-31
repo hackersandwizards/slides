@@ -1,10 +1,7 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 
-// The shared slide-frame contract: a full-viewport flex-centered root. Every
-// slide opened with a hand-copied `relative flex min-h-screen items-center
-// justify-center <bg>` wrapper; this owns it so the frame can change in one
-// place. The inner gradient wash / decoration stays as the slide's own
-// children (it varies per slide).
+// The full-viewport frame every slide sits in, owned here so it changes in one place. A slide's
+// gradient wash and decoration stay its own children.
 export function SlideShell({
   children,
   background = "bg-section-intro",

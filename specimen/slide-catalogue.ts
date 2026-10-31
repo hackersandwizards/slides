@@ -19,7 +19,6 @@ const longBullets = [
 ];
 
 const slides: Slide[] = [
-  // ─── title ──────────────────────────────────────────────────────────────
   {
     type: "title",
     title: "Slide Catalogue",
@@ -32,7 +31,6 @@ const slides: Slide[] = [
     notes: "title: no subtitle, longest title.",
   },
 
-  // ─── agenda ─────────────────────────────────────────────────────────────
   {
     type: "agenda",
     headline: "Agenda",
@@ -149,7 +147,6 @@ const slides: Slide[] = [
     notes: "content: max-length bullets.",
   },
 
-  // ─── content blocks ─────────────────────────────────────────────────────
   {
     type: "content",
     sectionLabel: "Block: table",
@@ -562,7 +559,6 @@ const slides: Slide[] = [
     notes: "visual blocks: cards with icons, numbered cards.",
   },
 
-  // ─── regular ────────────────────────────────────────────────────────────
   {
     type: "regular",
     headline: "Regular slide with a profile sidebar",
@@ -601,7 +597,6 @@ const slides: Slide[] = [
     notes: "regular: centered alignment, no profile.",
   },
 
-  // ─── statement ──────────────────────────────────────────────────────────
   {
     type: "statement",
     lines: ["Ship plans", "before code"],
@@ -624,7 +619,6 @@ const slides: Slide[] = [
     notes: "statement: secondary background, image, quote closing, attribution.",
   },
 
-  // ─── evolution ──────────────────────────────────────────────────────────
   {
     type: "evolution",
     headline: "From autocomplete to delivery harness",
@@ -665,7 +659,6 @@ const slides: Slide[] = [
     notes: "evolution: six stages (dense), static, accent background.",
   },
 
-  // ─── grid ───────────────────────────────────────────────────────────────
   {
     type: "grid",
     variant: "pillars",
@@ -734,7 +727,6 @@ const slides: Slide[] = [
     notes: "grid: quotes, one with an image.",
   },
 
-  // ─── comparison ─────────────────────────────────────────────────────────
   {
     type: "comparison",
     variant: "vs",
@@ -771,7 +763,6 @@ const slides: Slide[] = [
     notes: "comparison: split, no headline, long items.",
   },
 
-  // ─── guidance ───────────────────────────────────────────────────────────
   {
     type: "guidance",
     headline: "Writing a ticket the agent can work from",
@@ -799,7 +790,6 @@ const slides: Slide[] = [
     notes: "guidance: no headline, code example.",
   },
 
-  // ─── media ──────────────────────────────────────────────────────────────
   {
     type: "media",
     sectionLabel: "Media",
@@ -839,7 +829,6 @@ const slides: Slide[] = [
     notes: "media: video, no headline.",
   },
 
-  // ─── profiles ───────────────────────────────────────────────────────────
   {
     type: "profiles",
     headline: "Your trainers",
@@ -890,7 +879,6 @@ const slides: Slide[] = [
     notes: "profiles: three, no images.",
   },
 
-  // ─── overview ───────────────────────────────────────────────────────────
   {
     type: "overview",
     foundationsActive: true,
@@ -924,7 +912,6 @@ const slides: Slide[] = [
     notes: "overview: six by six, external ideate, three parallel lanes.",
   },
 
-  // ─── process ────────────────────────────────────────────────────────────
   {
     type: "process",
     headline: "The weekly loop",
@@ -948,7 +935,6 @@ const slides: Slide[] = [
     notes: "process: six nodes (dense), success background.",
   },
 
-  // ─── phased pills ───────────────────────────────────────────────────────
   {
     type: "phased-pills",
     title: "Pipeline stages",
@@ -981,7 +967,6 @@ const slides: Slide[] = [
     notes: "phased-pills: three phases, new and active states.",
   },
 
-  // ─── dual pill overview ─────────────────────────────────────────────────
   {
     type: "dual-pill-overview",
     preText: "Programme",
@@ -1020,7 +1005,6 @@ const slides: Slide[] = [
     notes: "dual-pill-overview: ingredients and deepdive accents.",
   },
 
-  // ─── roadmap ────────────────────────────────────────────────────────────
   {
     type: "roadmap",
     preText: "Roadmap",
@@ -1050,7 +1034,6 @@ const slides: Slide[] = [
     notes: "roadmap: two columns, with and without descriptions.",
   },
 
-  // ─── lanes ──────────────────────────────────────────────────────────────
   {
     type: "lanes",
     sectionLabel: "Lanes",
@@ -1076,7 +1059,6 @@ const slides: Slide[] = [
     notes: "lanes: with code snippet.",
   },
 
-  // ─── chart ──────────────────────────────────────────────────────────────
   {
     type: "chart",
     variant: "cycle",
@@ -1130,7 +1112,6 @@ const slides: Slide[] = [
     notes: "chart: bar.",
   },
 
-  // ─── question ───────────────────────────────────────────────────────────
   {
     type: "question",
     headline: "Where does your team review today?",
@@ -1144,7 +1125,6 @@ const slides: Slide[] = [
     notes: "question: four options.",
   },
 
-  // ─── transition ─────────────────────────────────────────────────────────
   {
     type: "transition",
     preText: "Part two",
@@ -1161,7 +1141,6 @@ const slides: Slide[] = [
     notes: "transition: headline only, secondary background.",
   },
 
-  // ─── deep-dive divider ──────────────────────────────────────────────────
   {
     type: "deep-dive-divider",
     partLabel: "Part two",
@@ -1172,7 +1151,6 @@ const slides: Slide[] = [
     notes: "deep-dive-divider: all fields.",
   },
 
-  // ─── gantt ──────────────────────────────────────────────────────────────
   {
     type: "gantt",
     sectionLabel: "Plan",
@@ -1204,7 +1182,6 @@ const slides: Slide[] = [
     notes: "gantt: kicker, principle, sublabels, continuous bar, milestones, footer.",
   },
 
-  // ─── team topology ──────────────────────────────────────────────────────
   {
     type: "team-topology",
     headline: "Four team types",
@@ -1230,7 +1207,6 @@ const slides: Slide[] = [
     notes: "team-topology: minimal.",
   },
 
-  // ─── wheel ──────────────────────────────────────────────────────────────
   {
     type: "wheel",
     headline: "Six areas of autonomy",
@@ -1260,7 +1236,6 @@ const slides: Slide[] = [
     notes: "wheel: four segments.",
   },
 
-  // ─── decision ───────────────────────────────────────────────────────────
   {
     type: "decision",
     headline: "Service or enablement",
@@ -1299,7 +1274,6 @@ const slides: Slide[] = [
     notes: "decision: complicated-subsystem branch.",
   },
 
-  // ─── closing ────────────────────────────────────────────────────────────
   {
     type: "closing",
     variant: "contact",

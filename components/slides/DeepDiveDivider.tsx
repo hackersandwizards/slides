@@ -17,7 +17,6 @@ export function DeepDiveDivider({ slide }: Props) {
       <HairlineRule color="rose" position="top" />
       <HairlineRule color="amber" position="bottom" />
 
-      {/* Top-left chapter mark */}
       {slide.partLabel && (
         <BlurFade delay={0.05} duration={0.4} className="absolute top-20 left-20 z-10">
           <div className="flex items-center gap-3">
@@ -27,7 +26,6 @@ export function DeepDiveDivider({ slide }: Props) {
         </BlurFade>
       )}
 
-      {/* Centered content stack */}
       <div className="slide-content relative z-10 flex w-full max-w-[75rem] flex-col items-center justify-center px-16 text-center">
         {slide.kicker && (
           <BlurFade delay={0.1} duration={0.4}>

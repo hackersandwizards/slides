@@ -15,6 +15,10 @@ import { usePrintMode } from "./print-context";
 const pending = { ahead: new Set<symbol>(), behind: new Set<symbol>() };
 const pendingListeners = new Set<() => void>();
 const notifyPending = () => pendingListeners.forEach((listener) => listener());
+const subscribePending = (listener: () => void) => {
+  pendingListeners.add(listener);
+  return () => pendingListeners.delete(listener);
+};
 
 /** Registers this handler as holding a reveal step ahead while `ahead` is true, and one to take
  *  back while `behind` is true. */
@@ -38,10 +42,7 @@ export const hasPendingReveal = () => pending.ahead.size > 0;
 /** The same, as a hook that re-renders when it changes; `"behind"` asks for a step to take back. */
 export function usePendingReveal(direction: keyof typeof pending = "ahead"): boolean {
   return useSyncExternalStore(
-    (listener) => {
-      pendingListeners.add(listener);
-      return () => pendingListeners.delete(listener);
-    },
+    subscribePending,
     () => pending[direction].size > 0,
     () => false,
   );

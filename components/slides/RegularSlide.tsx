@@ -22,7 +22,6 @@ const AGENDA_STYLES = [
     border: "border-border",
     activeBorder: "border-primary/40",
     iconBg: "bg-primary/15 text-primary",
-    shadow: "",
   },
   {
     bg: "bg-section-primary",
@@ -30,7 +29,6 @@ const AGENDA_STYLES = [
     border: "border-border",
     activeBorder: "border-primary/40",
     iconBg: "bg-primary/15 text-primary",
-    shadow: "",
   },
   {
     bg: "bg-section-accent",
@@ -38,7 +36,6 @@ const AGENDA_STYLES = [
     border: "border-accent/25",
     activeBorder: "border-accent/40",
     iconBg: "bg-accent/15 text-accent",
-    shadow: "",
   },
 ];
 
@@ -58,9 +55,7 @@ function AgendaCard({
     <BlurFade delay={0.2 + index * 0.15} duration={0.5}>
       <div
         className={`flex h-full items-start gap-3 rounded-brand border p-4 transition-all duration-300 sm:gap-4 sm:rounded-brand sm:p-6 md:gap-6 md:p-8 ${
-          isActive
-            ? `${style.activeBorder} ${style.activeBg} ${style.shadow}`
-            : `${style.border} ${style.bg} hover:${style.activeBorder} `
+          isActive ? `${style.activeBorder} ${style.activeBg}` : `${style.border} ${style.bg}`
         }`}
       >
         {IconComponent && (

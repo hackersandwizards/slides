@@ -66,7 +66,6 @@ export function StatementSlide({ slide }: Props) {
           </BlurFade>
         )}
 
-        {/* ── Hero block: lines + subtitle ── */}
         <div className={`text-center ${hasSupporting ? "mb-2" : ""}`}>
           {slide.lines.map((line, index) => (
             <BlurFade key={index} delay={0.1 + index * 0.08} duration={0.4}>
@@ -105,7 +104,6 @@ export function StatementSlide({ slide }: Props) {
           )}
         </div>
 
-        {/* ── Supporting content: points + closing ── */}
         {hasSupporting && (
           <div className="mt-10 w-full max-w-4xl">
             {slide.points && slide.points.length > 0 && (

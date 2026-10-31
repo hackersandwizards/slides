@@ -19,8 +19,6 @@ const ACCENT_STYLES = {
   neutral: {
     border: "border-border",
     bg: "bg-text-subtle/7",
-    glow: " ",
-    shadow: "",
     badgeBg: "bg-text-subtle",
     gradient: "bg-gradient-to-r from-text-subtle to-text-muted",
     icon: "text-text-muted",
@@ -29,8 +27,6 @@ const ACCENT_STYLES = {
   primary: {
     border: "border-primary",
     bg: "bg-primary/7",
-    glow: "",
-    shadow: "",
     badgeBg: "bg-primary",
     gradient: "bg-gradient-to-r from-primary to-secondary",
     icon: "text-primary",
@@ -39,8 +35,6 @@ const ACCENT_STYLES = {
   secondary: {
     border: "border-secondary",
     bg: "bg-secondary/7",
-    glow: "",
-    shadow: "",
     badgeBg: "bg-secondary",
     gradient: "bg-secondary",
     icon: "text-secondary",
@@ -49,8 +43,6 @@ const ACCENT_STYLES = {
   accent: {
     border: "border-accent",
     bg: "bg-accent/7",
-    glow: "",
-    shadow: "",
     badgeBg: "bg-accent",
     gradient: "bg-accent",
     icon: "text-accent",
@@ -59,8 +51,6 @@ const ACCENT_STYLES = {
   success: {
     border: "border-success",
     bg: "bg-success/7",
-    glow: "",
-    shadow: "",
     badgeBg: "bg-success",
     gradient: "bg-success",
     icon: "text-success",
@@ -107,16 +97,11 @@ function PillarCard({
           isActive ? "opacity-100" : retainPastColor ? "opacity-70" : "opacity-0"
         }`}
       />
-      <div
-        className={`absolute inset-0 rounded-brand transition-opacity duration-500 ${accent.glow} ${
-          isActive ? "opacity-100" : "opacity-0"
-        }`}
-      />
 
       <div
         className={`absolute -top-6 left-1/2 z-20 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-brand-sm text-xl font-bold transition-all duration-500 ${
           isActive
-            ? `${accent.gradient} text-white ${accent.shadow} scale-110`
+            ? `${accent.gradient} scale-110 text-white`
             : retainPastColor
               ? `${accent.badgeBg} text-white`
               : "border border-badge-border bg-badge-bg text-primary"
@@ -177,7 +162,7 @@ function StatCard({
     >
       <div
         className={`flex h-full flex-col rounded-brand border p-8 transition-all ${
-          isHighlight ? `${accent.glow} ${accent.border} ${accent.bg}` : "border-border bg-white"
+          isHighlight ? `${accent.border} ${accent.bg}` : "border-border bg-white"
         }`}
       >
         <div

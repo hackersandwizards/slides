@@ -11,7 +11,8 @@
 // and stops it at the end. Exit 1 on any slide below FAIL or any deck that does not render.
 
 import { spawn, type ChildProcess } from "node:child_process";
-import puppeteer from "puppeteer";
+import { constants } from "node:os";
+import puppeteer, { type Browser } from "puppeteer";
 
 const FAIL = 0.8;
 const NOTICE = 0.9;
@@ -26,12 +27,19 @@ if (!urls.length) {
 }
 
 let server: ChildProcess | undefined;
-if (serve) server = await start(serve, new URL(urls[0]).origin);
-const browser = await puppeteer.launch({ headless: true, protocolTimeout: 900_000 });
+// The server runs detached, so a signal reaches only this process and would leave it running.
+for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const)
+  process.on(signal, () => {
+    server?.kill();
+    process.exit(128 + constants.signals[signal]);
+  });
+if (serve) await start(serve, new URL(urls[0]).origin);
+let browser: Browser | undefined;
 let failed = 0;
 let noticed = 0;
 let broken = 0;
 try {
+  browser = await puppeteer.launch({ headless: true, protocolTimeout: 900_000 });
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 1080 });
   for (const url of urls) {
@@ -55,7 +63,7 @@ try {
     }
   }
 } finally {
-  await browser.close();
+  await browser?.close();
   server?.kill();
 }
 console.log(
@@ -63,7 +71,7 @@ console.log(
 );
 process.exit(failed || broken ? 1 : 0);
 
-async function start(command: string, origin: string): Promise<ChildProcess> {
+async function start(command: string, origin: string) {
   const answers = () =>
     fetch(origin).then(
       () => true,
@@ -71,7 +79,7 @@ async function start(command: string, origin: string): Promise<ChildProcess> {
     );
   // A server left over from an earlier run would answer for this one and be judged instead.
   if (await answers()) throw new Error(`${origin} already answers: stop that server first`);
-  const child = spawn(command, { shell: true, stdio: "ignore", detached: true });
+  const child = (server = spawn(command, { shell: true, stdio: "ignore", detached: true }));
   // Started detached, so the kill reaches the shell's children too.
   const kill = child.kill.bind(child);
   child.kill = () => {
@@ -83,7 +91,7 @@ async function start(command: string, origin: string): Promise<ChildProcess> {
     }
   };
   for (let i = 0; i < 300; i++) {
-    if (await answers()) return child;
+    if (await answers()) return;
     await new Promise((r) => setTimeout(r, 200));
   }
   child.kill();

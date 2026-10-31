@@ -815,7 +815,6 @@ function ContentBlockRenderer({
           <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-14 pt-4">
             {renderSide(block.left, "01", true)}
 
-            {/* Center axis: vertical divider with anchored ampersand */}
             <div
               aria-hidden="true"
               className="relative flex flex-col items-center self-stretch px-2"
@@ -834,7 +833,6 @@ function ContentBlockRenderer({
             <p className="text-center text-lg text-text-subtle italic">{block.middle}</p>
           )}
 
-          {/* Resolution as stamped punchline */}
           <div className="relative flex flex-col items-center gap-6">
             <div className="flex items-center gap-4">
               <div className="h-px w-16 bg-text-subtle/25" />

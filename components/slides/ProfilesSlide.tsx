@@ -21,7 +21,6 @@ const ACCENT = {
     text: "text-primary",
     border: "border-primary",
     cardBg: "bg-primary/7",
-    glow: "",
     pillIdle: "bg-primary/7 text-primary hover:bg-primary/15",
     dot: "from-primary to-primary/70",
     avatarFrame: "from-primary/25 to-primary/7",
@@ -31,7 +30,6 @@ const ACCENT = {
     text: "text-secondary",
     border: "border-secondary",
     cardBg: "bg-secondary/7",
-    glow: "",
     pillIdle: "bg-secondary/7 text-secondary hover:bg-secondary/15",
     dot: "from-secondary to-secondary/70",
     avatarFrame: "from-secondary/25 to-secondary/7",
@@ -69,7 +67,7 @@ export function ProfilesSlide({ slide }: Props) {
                 >
                   <div
                     className={`flex w-full flex-col rounded-brand border p-10 transition-all duration-300 ${
-                      isHighlighted ? `${a.border} ${a.cardBg} ${a.glow}` : "border-border bg-white"
+                      isHighlighted ? `${a.border} ${a.cardBg}` : "border-border bg-white"
                     }`}
                   >
                     <div className="flex items-center gap-8">

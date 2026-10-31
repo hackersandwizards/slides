@@ -19,19 +19,17 @@ const defaultIcons: LucideIcon[] = [
   iconMap.refresh,
 ];
 
-// Lay N nodes evenly around an ellipse, starting at the top and going
-// clockwise, centred in the canvas so the top and bottom cards stay inside it. Larger loops
-// (e.g. the 6-step Readiness Radar) render every node instead of dropping the overflow.
+// N nodes sit evenly around an ellipse from the top, clockwise, centred in the canvas so the top
+// and bottom cards stay inside it. A loop of more than four renders every node rather than dropping
+// the overflow.
 const CENTER_X = 50;
 const CENTER_Y = 50;
 const RADIUS_X = 32;
 const RADIUS_Y = 32;
 
 // Canvas is 960×520 (in sixteenths of a rem, so it scales with the slide like its nodes do) for
-// the common 4-node diamond. Loops with more
-// nodes stack two cards per side, which need extra vertical room — give them a
-// taller canvas so the side cards don't collide (the percentage-based radii
-// then map to more pixels, opening the gap).
+// the common 4-node diamond. Loops with more nodes stack two cards per side and get a taller
+// canvas, so the side cards don't collide: the percentage-based radii map to more pixels.
 const CANVAS_W = 960;
 const NODE_HALF_W = 120;
 const NODE_HALF_H = 80;
@@ -136,12 +134,10 @@ export function ProcessSlide({ slide }: Props) {
                 />
               </div>
             </div>
-            {/* Circular loop container (diamond for 4 nodes) */}
             <div
               className="process-canvas relative max-md:[zoom:0.44]"
               style={{ width: `${CANVAS_W / 16}rem`, height: `${canvasH / 16}rem` }}
             >
-              {/* SVG arrows */}
               <svg
                 className="absolute inset-0 h-full w-full"
                 viewBox={`0 0 ${CANVAS_W} ${canvasH}`}
@@ -220,7 +216,6 @@ export function ProcessSlide({ slide }: Props) {
                 })}
               </svg>
 
-              {/* Nodes */}
               {slide.nodes.map((node, index) => {
                 const pos = positions[index];
                 const isRevealed = index < revealedCount;
@@ -320,7 +315,6 @@ export function ProcessSlide({ slide }: Props) {
               })}
             </div>
 
-            {/* Footer */}
             {slide.footer && (
               <div
                 inert={!footerVisible}

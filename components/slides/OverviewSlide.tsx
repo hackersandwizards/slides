@@ -72,12 +72,10 @@ export function OverviewSlide({ slide }: Props) {
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-6 py-16">
         <BlurFade delay={0.1} duration={0.5}>
           <div className="relative w-full max-w-[81rem] rounded-brand border-2 border-dashed border-border bg-white px-6 pt-12 pb-10">
-            {/* The Factory badge */}
             <div className="absolute -top-5 left-1/2 -translate-x-1/2">
               <GradientTitlePill>The Factory</GradientTitlePill>
             </div>
 
-            {/* Foundations Container */}
             <div className={foundationsContainerClasses}>
               <div className="mb-4 flex items-center gap-2">
                 <div className="slide-marker bg-primary" />
@@ -99,10 +97,8 @@ export function OverviewSlide({ slide }: Props) {
               </div>
             </div>
 
-            {/* Pipeline section */}
             {ideateExternal ? (
               <div className="mt-6 flex flex-col items-stretch gap-4 md:flex-row">
-                {/* Ideate external box */}
                 <div className="flex items-center">
                   <div
                     className={`rounded-brand px-4 py-3 text-base font-semibold ${getStageClasses(pipeline[0]?.state, "secondary")}`}
@@ -111,7 +107,6 @@ export function OverviewSlide({ slide }: Props) {
                   </div>
                 </div>
 
-                {/* Pipeline container with remaining stages */}
                 {parallelLanes && parallelLanes > 1 ? (
                   <div className="flex flex-1 flex-col gap-3">
                     {Array.from({ length: parallelLanes }).map((_, laneIndex) => (

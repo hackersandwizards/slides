@@ -59,7 +59,6 @@ export function GanttSlide({ slide }: Props) {
         <SlideTitle>{slide.headline}</SlideTitle>
 
         <div className="slide-body">
-          {/* Column header */}
           <BlurFade delay={0.15} duration={0.4}>
             <div className="mb-2 flex items-end gap-4">
               <div className="hidden w-80 shrink-0 md:block" />
@@ -76,7 +75,6 @@ export function GanttSlide({ slide }: Props) {
             </div>
           </BlurFade>
 
-          {/* Rows */}
           <div className="flex flex-1 flex-col gap-2">
             {slide.rows.map((row, rowIndex) => (
               <BlurFade
@@ -101,7 +99,6 @@ export function GanttSlide({ slide }: Props) {
                     className="relative grid flex-1 grid-rows-[auto_1fr] gap-x-1 gap-y-1.5"
                     style={track}
                   >
-                    {/* Column guides */}
                     {slide.columns.map((_, i) => (
                       <div
                         key={`guide-${i}`}
@@ -140,7 +137,6 @@ export function GanttSlide({ slide }: Props) {
             ))}
           </div>
 
-          {/* Milestones */}
           {slide.milestones && slide.milestones.length > 0 && (
             <BlurFade delay={0.25 + slide.rows.length * 0.05} duration={0.4}>
               <div className="mt-3 md:hidden">

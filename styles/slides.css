@@ -277,7 +277,6 @@
   --font-heading: var(--type-h1-family);
   --font-label: var(--type-label-family);
 
-  /* Brand colors */
   --color-brand: var(--color-teal);
   --color-brand-accent: var(--color-purple);
   /* The website's dark green and amber: both carry text at 4.5:1 or better on white and on the
@@ -285,7 +284,6 @@
   --color-success: var(--color-green-dark);
   --color-accent: var(--color-amber-dark);
 
-  /* Semantic presentation colors */
   --color-primary: var(--color-teal);
   --color-primary-bg: color-mix(in srgb, var(--color-teal) 7%, transparent);
   --color-primary-border: color-mix(in srgb, var(--color-teal) 25%, transparent);
@@ -408,7 +406,6 @@
     font-weight: 700;
   }
 
-  /* Slide-specific: custom cursor, no scrollbars, no overflow */
   .slide-viewport {
     overflow: hidden;
     scrollbar-width: none;
@@ -714,9 +711,7 @@ html:has(.print-slide) {
   }
 }
 
-/* Presentation-specific utilities */
 @layer utilities {
-  /* Gradient text */
   /* The website keeps its gradient to the header strip: emphasised words take the brand colour. */
   .text-gradient-brand {
     color: var(--color-brand);
@@ -744,7 +739,6 @@ html:has(.print-slide) {
     background: color-mix(in srgb, var(--color-success) 7%, var(--background));
   }
 
-  /* Transition slide radial spotlight */
   .spotlight-radial {
     background: radial-gradient(
       ellipse 60% 50% at center,
@@ -863,7 +857,6 @@ html:has(.print-slide) {
   transform: translateY(-4px);
 }
 
-/* ─── Print layout ─────────────────────────────────────────────────────────── */
 .print-slide {
   position: relative;
   width: 1920px;
@@ -910,7 +903,6 @@ html:has(.print-slide) {
     page-break-inside: avoid;
   }
 
-  /* Remove radial spotlight overlay */
   .spotlight-radial {
     background: none !important;
   }

@@ -17,6 +17,8 @@ export interface ImageProps {
   style?: CSSProperties;
   /** `next/image`'s above-the-fold hint. */
   priority?: boolean;
+  /** `"eager"` on the print route, which stacks every slide below the first screen. */
+  loading?: "eager" | "lazy";
   unoptimized?: boolean;
 }
 

@@ -1,5 +1,3 @@
-// ─── SHARED TYPES ──────────────────────────────────────────────────────────
-
 export type SectionTheme = "primary" | "secondary" | "accent" | "warning" | "success" | "deepdive";
 
 export type StageState = "default" | "active" | "new";
@@ -10,15 +8,11 @@ export interface Stage {
   state?: StageState;
 }
 
-// ─── 1. TITLE ──────────────────────────────────────────────────────────────
-
 export interface TitleSlide {
   type: "title";
   title: string;
   subtitle?: string;
 }
-
-// ─── 2. CONTENT ────────────────────────────────────────────────────────────
 
 export type ContentBlock =
   | { type: "paragraph"; text: string; centered?: boolean }
@@ -204,8 +198,6 @@ export interface ContentSlide {
   stagePrefix?: string;
 }
 
-// ─── 3. REGULAR ────────────────────────────────────────────────────────────
-
 export interface ContentSection {
   title?: string;
   items?: string[];
@@ -231,8 +223,6 @@ export interface RegularSlide {
   align?: "left" | "center";
 }
 
-// ─── 4. STATEMENT ──────────────────────────────────────────────────────────
-
 export interface StatementSlide {
   type: "statement";
   background?: string;
@@ -249,8 +239,6 @@ export interface StatementSlide {
   imageAlt?: string;
   attribution?: string;
 }
-
-// ─── 5. EVOLUTION ──────────────────────────────────────────────────────────
 
 export interface EvolutionStage {
   multiplier: string;
@@ -270,8 +258,6 @@ export interface EvolutionSlide {
   static?: boolean;
   footer?: string;
 }
-
-// ─── 6. GRID ───────────────────────────────────────────────────────────────
 
 export interface GridCard {
   title: string;
@@ -299,8 +285,6 @@ export interface GridSlide {
   numberFrom?: number;
 }
 
-// ─── 7. COMPARISON ─────────────────────────────────────────────────────────
-
 export interface ComparisonSide {
   label: string;
   items: string[];
@@ -320,8 +304,6 @@ export interface ComparisonSlide {
   footnotes?: string[];
 }
 
-// ─── 8. GUIDANCE ───────────────────────────────────────────────────────────
-
 export interface GuidanceExample {
   title: string;
   bad: string;
@@ -336,8 +318,6 @@ export interface GuidanceSlide {
   points?: string[];
   examples: GuidanceExample[];
 }
-
-// ─── 9. MEDIA ──────────────────────────────────────────────────────────────
 
 export interface MediaSlide {
   type: "media";
@@ -355,8 +335,6 @@ export interface MediaSlide {
     height?: number;
   }[];
 }
-
-// ─── 10. PROFILES ──────────────────────────────────────────────────────────
 
 export interface Profile {
   name: string;
@@ -376,8 +354,6 @@ export interface ProfilesSlide {
   footer?: string;
 }
 
-// ─── 11. PHASED PILLS ──────────────────────────────────────────────────────
-
 export interface PillItem {
   number: number;
   title: string;
@@ -396,8 +372,6 @@ export interface PhasedPillsSlide {
   phases: PillPhase[];
 }
 
-// ─── 12. OVERVIEW ──────────────────────────────────────────────────────────
-
 export interface OverviewSlide {
   type: "overview";
   foundationsActive?: boolean;
@@ -407,8 +381,6 @@ export interface OverviewSlide {
   ideateExternal?: boolean;
   parallelLanes?: number;
 }
-
-// ─── 13. PROCESS ───────────────────────────────────────────────────────────
 
 export interface ProcessNode {
   title: string;
@@ -425,8 +397,6 @@ export interface ProcessSlide {
   footer?: string;
 }
 
-// ─── 14. LANES ─────────────────────────────────────────────────────────────
-
 export interface PipelineLane {
   label: string;
   stages: string[];
@@ -442,8 +412,6 @@ export interface LanesSlide {
   lanes: PipelineLane[];
   footer?: string;
 }
-
-// ─── 15. CHART ─────────────────────────────────────────────────────────────
 
 export interface ChartSegment {
   label: string;
@@ -475,8 +443,6 @@ export interface ChartSlide {
   series2Label?: string;
 }
 
-// ─── 16. QUESTION ──────────────────────────────────────────────────────────
-
 export interface QuestionOption {
   label: string;
   text: string;
@@ -489,8 +455,6 @@ export interface QuestionSlide {
   options: QuestionOption[];
 }
 
-// ─── 17. TRANSITION ────────────────────────────────────────────────────────
-
 export interface TransitionSlide {
   type: "transition";
   preText?: string;
@@ -500,8 +464,6 @@ export interface TransitionSlide {
   speakerName?: string;
   speakerCompany?: string;
 }
-
-// ─── 18. CLOSING ───────────────────────────────────────────────────────────
 
 export interface ClosingSlide {
   type: "closing";
@@ -520,8 +482,6 @@ export interface ClosingSlide {
   headline?: string;
   background?: string;
 }
-
-// ─── 19. ROADMAP ───────────────────────────────────────────────────────────
 
 export interface RoadmapItem {
   title: string;
@@ -545,8 +505,6 @@ export interface RoadmapSlide {
   columns: [RoadmapColumn, RoadmapColumn];
 }
 
-// ─── 20. DEEP DIVE DIVIDER ─────────────────────────────────────────────────
-
 export interface DeepDiveDividerSlide {
   type: "deep-dive-divider";
   partLabel?: string;
@@ -555,8 +513,6 @@ export interface DeepDiveDividerSlide {
   headline: string;
   subtitle?: string;
 }
-
-// ─── 21. DUAL PILL OVERVIEW ────────────────────────────────────────────────
 
 export interface DualPillOverviewSlide {
   type: "dual-pill-overview";
@@ -578,8 +534,6 @@ export interface DualPillOverviewSlide {
     phases: PillPhase[];
   };
 }
-
-// ─── 22. GANTT ─────────────────────────────────────────────────────────────
 
 export interface GanttBar {
   label: string;
@@ -611,8 +565,6 @@ export interface GanttSlide {
   footer?: string;
 }
 
-// ─── 23. TEAM TOPOLOGY ─────────────────────────────────────────────────────
-
 // Team Topologies' visual grammar: stream-aligned teams as horizontal bars, platform teams
 // underneath them, enabling teams as vertical bars beside them, complicated-subsystem teams as
 // their own blocks the stream teams consume.
@@ -629,15 +581,11 @@ export interface TeamTopologySlide {
   caption?: string;
 }
 
-// ─── 24. AGENDA ────────────────────────────────────────────────────────────
-
 export interface AgendaSlide {
   type: "agenda";
   headline: string;
   items: string[];
 }
-
-// ─── 25. WHEEL ─────────────────────────────────────────────────────────────
 
 // Areas around a central disc: six in practice, four or five still lay out.
 export interface WheelSlide {
@@ -648,8 +596,6 @@ export interface WheelSlide {
   segments: { title: string; text: string }[];
   caption?: string;
 }
-
-// ─── 26. DECISION ──────────────────────────────────────────────────────────
 
 export type DecisionTeam = "platform" | "enabling" | "complicated-subsystem";
 
@@ -673,8 +619,6 @@ export interface DecisionSlide {
   outcome: string;
   caption?: string;
 }
-
-// ─── UNION & PRESENTATION ──────────────────────────────────────────────────
 
 export type SlideBase = {
   notes?: string;
