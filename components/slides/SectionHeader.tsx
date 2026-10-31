@@ -49,10 +49,11 @@ export function SectionHeader({
   return (
     <BlurFade delay={0.1} duration={0.5}>
       {/* The kicker band is one line tall at least and grows with what wraps in it, so a long
-          label or a stage prefix beside the strip pushes the title down instead of running into
-          it. The minimums are the band heights in slides.css. */}
+          label pushes the title down instead of running into it. The stage strip stays one line
+          from `md` up: where it does not fit beside the label, the whole pill moves to the next
+          row. The minimums are the band heights in slides.css. */}
       <div
-        className={`slide-kicker mb-4 flex h-auto! min-h-10 items-center gap-5 max-md:min-h-0 [.slide-scale-delivered_&]:h-7! [.slide-scale-delivered_&]:min-h-0 ${hasStageStrip ? "" : "flex-wrap"}`}
+        className={`slide-kicker mb-4 flex h-auto! min-h-10 flex-wrap items-center gap-5 max-md:min-h-0 [.slide-scale-delivered_&]:h-7! [.slide-scale-delivered_&]:min-h-0 ${hasStageStrip ? "[.slide-scale-delivered_&]:flex-nowrap" : ""}`}
       >
         {label && (
           <span className={`text-xl leading-tight font-medium ${labelColor ?? ""}`}>{label}</span>
@@ -66,7 +67,7 @@ export function SectionHeader({
         )}
         {hasStageStrip && (
           <div
-            className={`flex min-w-0 flex-wrap items-center gap-1 rounded-brand-sm border px-4 py-1.5 md:rounded-full [.slide-scale-delivered_&]:min-w-auto md:[.slide-scale-delivered_&]:flex-nowrap ${themeStyles.container}`}
+            className={`flex min-w-0 flex-wrap items-center gap-1 rounded-brand-sm border px-4 py-1.5 md:shrink-0 md:flex-nowrap md:rounded-full ${themeStyles.container}`}
           >
             <span className={`label-caps mr-1.5 text-xl ${themeStyles.label}`}>Stage</span>
             {stagePrefix && (

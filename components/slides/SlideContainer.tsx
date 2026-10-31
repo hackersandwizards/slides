@@ -4,8 +4,7 @@ import type { ReactNode } from "react";
 import { MotionConfig } from "motion/react";
 import Image from "../ui/image";
 import type { LogoConfig, SlideLogo } from "../../types/slide";
-
-const HW_LOGO: LogoConfig = { src: "/hw-logo.svg", alt: "hackers&wizards", width: 80, height: 65 };
+import { HW_LOGO } from "../../lib/logo";
 
 interface Props {
   children: ReactNode;

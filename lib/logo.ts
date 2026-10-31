@@ -1,4 +1,8 @@
-import type { Presentation, SlideLogo } from "../types/slide";
+import type { LogoConfig, Presentation, SlideLogo } from "../types/slide";
+
+/** The default logo, and the one a deck names to stand for the h&w corner mark (`HwWordmark`):
+ *  the brand package's lockup, which `postinstall` copies into each consumer's `public/`. */
+export const HW_LOGO: LogoConfig = { src: "/hw-lockup.svg", alt: "hackers&wizards" };
 
 // Resolve the logo(s) for a given slide. An explicit per-slide entry in
 // `slideLogos` wins over the deck-wide `logo` — including a `null`, which means

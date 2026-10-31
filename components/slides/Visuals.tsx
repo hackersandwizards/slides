@@ -37,9 +37,10 @@ function Icon({ name, className }: { name?: string; className?: string }) {
   return Glyph ? <Glyph className={className} strokeWidth={2.75} aria-hidden /> : null;
 }
 
+// The colour a step's name states, never a status role: Red is the brand red, not the warning.
 const TONES = {
-  warning: { text: "text-warning" },
-  success: { text: "text-success" },
+  red: "text-red",
+  green: "text-success",
 } as const;
 
 // ─── flow: steps in order on one line, an optional loop back ────────────────
@@ -96,7 +97,7 @@ function Flow({ block }: { block: Of<"flow"> }) {
           {block.steps.map((step, i) => {
             const on = block.highlight === i;
             // A tone (red, green) colours the step's words only, so the nodes stay one family.
-            const tone = step.tone ? TONES[step.tone].text : undefined;
+            const tone = step.tone ? TONES[step.tone] : undefined;
             return (
               <div key={i} className="flex flex-col items-center px-5 text-center">
                 <span

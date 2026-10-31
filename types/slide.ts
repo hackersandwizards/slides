@@ -119,7 +119,7 @@ export type VisualBlock =
         text?: string;
         icon?: string;
         /** A step whose own name is a state, such as Red or Green in TDD, takes that colour. */
-        tone?: "warning" | "success";
+        tone?: "red" | "green";
       }[];
       highlight?: number;
       /** Label of an arrow from the last step back to the first. */

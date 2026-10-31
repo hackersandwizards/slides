@@ -1028,6 +1028,7 @@ html:has(.print-slide) {
     --color-green-dark: var(--color-green);
     --color-amber-dark: var(--color-amber);
     --color-factory: var(--color-factory-light);
+    --color-red: var(--color-red-night);
     --color-code-bg: var(--color-night-2);
     --color-text: var(--color-ink);
     --color-text-muted: var(--color-muted);
