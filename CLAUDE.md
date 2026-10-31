@@ -27,8 +27,10 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `types/slide.ts`: the slide types and content blocks a deck may use.
 - `styles/slides.css`: the slide scale, the type table and every slide length, read by the
   components by name, never as a literal size. It imports Tailwind and the brand tokens and fonts
-  from `@hackersandwizards/brand`, and names its own `components/` and `lib/` as Tailwind sources,
-  since Tailwind never scans `node_modules`.
+  from `@hackersandwizards/brand` through the package, never a sibling path, and names its own
+  `components/` and `lib/` as Tailwind sources, since Tailwind never scans `node_modules`.
+  `styles/sources.css` names the same sources for a consumer stylesheet that renders the
+  components without importing `slides.css`.
 - `scripts/render-pdf.ts`: prints a deck's print route to a PDF; each consumer's `export-pdf.ts`
   resolves deck, URL and file name and calls it.
 - `scripts/density.ts`: the `slides-density` command each consumer runs in its gate: fails on a
@@ -40,7 +42,10 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   writes the page, and `bun run check` fails while it differs from a fresh build.
 - `test/`: the engine's unit tests.
 
-Consumers import by path, `@hackersandwizards/slides/types/slide`, and ship the source: Next lists
+`exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
+consumer imports, `types/slide`, both stylesheets, `scripts/render-pdf`, the specimen deck and its
+images, and the `slides-density` command in `bin`. Moving or renaming one of them, or adding one, is
+a release. Consumers import by those names, `@hackersandwizards/slides/types/slide`, and ship the source: Next lists
 the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest config in
 `server.deps.inline`. React, motion, lucide-react, recharts, shiki, Tailwind and the brand package
 are peer dependencies, so each consumer holds one copy of each.

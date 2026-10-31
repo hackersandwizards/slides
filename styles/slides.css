@@ -1,14 +1,13 @@
 @import "tailwindcss";
 /* The brand tokens from @hackersandwizards/brand: colours, both families and the type roles.
-   Every colour and size below reads from them. */
-@import "@hackersandwizards/brand/tokens.css";
-/* Tailwind never scans node_modules, so a consumer's build sees neither the engine's classes nor
-   the brand tokens unless named here. It keeps a theme variable only where a scanned file names
-   it: the brand line keeps every token the file names. Both paths are relative to this file in a
-   consumer's node_modules, where the brand package is this one's sibling. */
+   Every colour and size below reads from them. theme(static) keeps every token, where Tailwind
+   keeps only those a scanned file names; resolved through the package, it reads the pinned brand
+   in this checkout and in a consumer's node_modules alike. */
+@import "@hackersandwizards/brand/tokens.css" theme(static);
+/* Tailwind never scans node_modules, so a consumer's build sees the engine's classes only because
+   this file names them, relative to itself. */
 @source "../components";
 @source "../lib";
-@source "../../brand/tokens/tokens.css";
 
 /* The brand's one font set, the static files of @hackersandwizards/brand, weights 400 to 700.
    Self-hosted, so a PDF export has no network dependency and cannot silently fall back to a

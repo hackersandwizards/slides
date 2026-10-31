@@ -1,0 +1,6 @@
+/* For a consumer stylesheet that renders the engine's components without importing slides.css:
+   Tailwind never scans node_modules, so this names the engine's classes and the theme variables
+   slides.css names, relative to this file. */
+@source "../components";
+@source "../lib";
+@source "./slides.css";

@@ -67,12 +67,7 @@ const compiler = await compile(readFileSync(stylesheet, "utf8"), {
   from: stylesheet,
   onDependency: () => {},
 });
-// slides.css names the brand tokens at the path a consumer's node_modules gives them; here they are
-// in this repo's node_modules, and the sibling path would read whatever repo lies next to this one.
-const sources = compiler.sources
-  .filter((s) => !relative(root, s.base).startsWith(".."))
-  .concat({ base: join(brand, "tokens"), pattern: "tokens.css", negated: false });
-const candidates = new Scanner({ sources }).scan();
+const candidates = new Scanner({ sources: compiler.sources }).scan();
 for (const { markup } of frames)
   candidates.push(...new Scanner({}).scanFiles([{ content: markup, extension: "html" }]));
 const css = compiler

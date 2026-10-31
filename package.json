@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -11,6 +11,26 @@
   },
   "bin": {
     "slides-density": "scripts/density.ts"
+  },
+  "exports": {
+    "./components/*": "./components/*.tsx",
+    "./lib/deck-edit": "./lib/deck-edit.ts",
+    "./lib/deck-edit-mode": "./lib/deck-edit-mode.tsx",
+    "./lib/logo": "./lib/logo.ts",
+    "./lib/markdown": "./lib/markdown.tsx",
+    "./lib/navigate": "./lib/navigate.ts",
+    "./lib/next-adapter": "./lib/next-adapter.tsx",
+    "./lib/print-context": "./lib/print-context.tsx",
+    "./lib/slide-components": "./lib/slide-components.ts",
+    "./lib/slide-utils": "./lib/slide-utils.ts",
+    "./lib/stage-utils": "./lib/stage-utils.ts",
+    "./lib/use-progressive-reveal": "./lib/use-progressive-reveal.ts",
+    "./types/slide": "./types/slide.ts",
+    "./styles/slides.css": "./styles/slides.css",
+    "./styles/sources.css": "./styles/sources.css",
+    "./scripts/render-pdf": "./scripts/render-pdf.ts",
+    "./specimen/slide-catalogue": "./specimen/slide-catalogue.ts",
+    "./specimen/slide-catalogue/*": "./specimen/slide-catalogue/*"
   },
   "files": [
     "components",
