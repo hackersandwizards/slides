@@ -1,0 +1,9 @@
+{
+  "styles/slides.css": {
+    "hex": 21,
+    "tokenHex": 0,
+    "font": 0,
+    "palette": 0,
+    "reason": "Two palettes that are not the brand's, each declared in one block with its comment: the code block colours of Shiki's github-dark, which the website's code also takes (background, command green, the comment grey lifted to 5.34:1), and the KINETIC deck theme, a client's own palette for its decks."
+  }
+}

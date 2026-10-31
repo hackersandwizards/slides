@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$PWD\" ] && git config core.hooksPath .githooks || true",
-    "check": "bun run format:check && bun run lint && bun run typecheck && bun .claude/skills/engineering/check-unique-names.ts && bun run test",
+    "check": "bun run format:check && bun run lint && bun run typecheck && bun .claude/skills/engineering/check-unique-names.ts && bun run test && brand-colours",
     "lint": "eslint --cache --concurrency=auto .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@hackersandwizards/brand": "git+ssh://git@github.com/hackersandwizards/brand.git#v0.9.9",
+    "@hackersandwizards/brand": "git+ssh://git@github.com/hackersandwizards/brand.git#v0.9.12",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@types/node": "26.6.6",
