@@ -277,7 +277,10 @@ const taskRow = (w: Work) => {
   const who =
     w.who === "me"
       ? "Du erledigst"
-      : (w.actor.match(/^[^(,;:]+/)?.[0].trim() ?? "").replace(/^Agent /, "");
+      : w.actor
+          .split(/ ?[(,;]|: /)[0]
+          .trim()
+          .replace(/^Agent /, "");
   return `<details class="item"><summary>${tick(w.label + w.point)}<span class="t">${htmlEscape(oneLine(w.point, 110))} <small>${htmlEscape(w.label)}</small></span>${slot(who, w.due)}</summary>
 <div class="body"><p>${htmlEscape(w.point)}</p>${w.actor ? `<p><b>Wer:</b> ${htmlEscape(w.actor)}</p>` : ""}${w.evidence ? `<p class="note"><b>Beleg:</b> ${htmlEscape(w.evidence)}</p>` : ""}<p class="links">${htmlEscape(w.label)}</p></div></details>`;
 };
