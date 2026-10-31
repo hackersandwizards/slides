@@ -39,7 +39,7 @@ The package ships TypeScript source. Let the build transpile it: Next
 
 ```sh
 bun install      # also points the git hooks at .githooks/
-bun run check    # format, lint, typecheck, unique names, tests
+bun run check    # format, lint, typecheck, unique names, tests, brand colours
 ```
 
 A release is a tag `v<version>` matching `version` in `package.json`; consumers then raise the tag

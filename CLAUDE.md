@@ -41,7 +41,8 @@ are peer dependencies, so each consumer holds one copy of each.
 
 ## Commands
 
-- `bun run check`: format, lint, typecheck, unique function names, tests. No hook runs it:
+- `bun run check`: format, lint, typecheck, unique function names, tests, the brand colour scan
+  (`brand-colours.json` holds the exceptions). No hook runs it:
   `.githooks/pre-commit` scans the staged changes with `gitleaks` and runs `prettier --check` and
   `eslint` on the staged files. `bun install` points `core.hooksPath` at `.githooks/`.
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
