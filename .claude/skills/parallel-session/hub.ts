@@ -3,8 +3,8 @@
 // only `current` reaches the page. A topic with `current.decision`, or whose `row` is `decided` in
 // any given repo's docs/tracking/decisions/items.js, lands under "Decided". A topic ticked
 // "reviewed" moves to a collapsed section at the bottom. Folders starting with "_" or "." are
-// skipped. Usage: bun hub.ts [--check] [--dir <hub>] [<repo> ...] (repos default to the current
-// directory). --check only validates every items.js row and review.json and exits 1 on a defect.
+// skipped. The index also lists every open GOAL.md (else TODO.md) row per repo. Usage:
+// bun hub.ts [--check] [--dir <hub>] [<repo> ...] (repos default to the current directory). --check only validates every items.js row and review.json and exits 1 on a defect.
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -215,6 +215,61 @@ const urgent = lists.flatMap(({ key }) =>
     .DECISION_REPOS![key].filter((r) => r.status === "open" && r.priority === 1)
     .map((row) => ({ key, row })),
 );
+// Open work: the rows under each repo's GOAL.md (else TODO.md) "##" sections, minus the goal and
+// done-means ones. A row is a table line (Punkt | Owner | Beleg), a top-level "- " bullet whose
+// owner and evidence follow "Owner:" and "Evidence:"/"Beleg:", or an unticked "- [ ]".
+const oneLine = (s: string, n = 140) => {
+  const t = s.replace(/\s+/g, " ").trim();
+  return t.length > n ? t.slice(0, t.lastIndexOf(" ", n - 1)) + " …" : t;
+};
+const work = repos.flatMap((r) => {
+  const file = ["GOAL.md", "TODO.md"].map((f) => join(r, f)).find(existsSync);
+  if (!file) return [];
+  const label = lists.find((l) => l.path === r)?.key ?? r.split("/").pop()!;
+  const items: { point: string; owner: string; evidence: string }[] = [];
+  let skip = file.endsWith("GOAL.md");
+  for (const line of readFileSync(file, "utf8").split("\n")) {
+    if (line.startsWith("## ")) skip = /goal|ziel|done means|waiting/i.test(line);
+    if (skip) continue;
+    if (line.startsWith("|")) {
+      const [point, owner = "", evidence = ""] = line
+        .split(/(?<!\\)\|/)
+        .slice(1, -1)
+        .map((c) => c.trim());
+      if (!point || /^:?-+:?$/.test(point) || /^(punkt|item|point)$/i.test(point)) continue;
+      items.push({ point, owner, evidence });
+    } else if (/^- (?!\[x\])/i.test(line)) {
+      const text = line.replace(/^- (\[ \] )?/, "");
+      items.push({
+        point: text.split(/ Owner: | Beleg: | Evidence: /)[0],
+        owner: text.match(/Owner: ([^.]*)\./)?.[1] ?? "",
+        evidence: text.match(/(?:Evidence|Beleg): (.*)$/)?.[1] ?? "",
+      });
+    }
+  }
+  return items.map((i) => ({ ...i, label, file }));
+});
+const workSection = () => {
+  if (!work.length) return "";
+  const byRepo = [...new Set(work.map((w) => w.label))].map((label) => {
+    const rows = work.filter((w) => w.label === label);
+    return `<h3>${htmlEscape(label)} (${rows.length}) <small><a href="${htmlEscape("file://" + rows[0].file)}">${htmlEscape(rows[0].file.split("/").pop()!)}</a></small></h3>\n<table>${rows
+      .map(
+        (w) =>
+          `<tr><td>${htmlEscape(oneLine(w.point))}</td><td>${htmlEscape(oneLine(w.owner, 60) || "–")}</td><td class="note">${htmlEscape(oneLine(w.evidence) || "–")}</td></tr>`,
+      )
+      .join("")}</table>`;
+  });
+  const assumed = lists.map(({ path, key }) => {
+    const n = decisionWindow.DECISION_REPOS![key].filter((r) => r.status === "assumed").length;
+    const href = "file://" + join(path, ".claude/skills/parallel-session/decisions.html");
+    return `<a href="${htmlEscape(href)}">${htmlEscape(key)} ${n}</a>`;
+  });
+  return `<h2>Später zu tun (${work.length})</h2>
+<p class="note">Every open row of each repo's GOAL.md (personal site: TODO.md): point, owner, evidence.</p>
+${byRepo.join("\n")}
+${assumed.length ? `<p><b>Annahmen</b> to veto: ${assumed.join(" · ")}</p>` : ""}`;
+};
 const done = topics.filter((t) => decided(t.review.row) || !!t.review.current?.decision);
 const info = topics.filter((t) => !done.includes(t) && t.review.status === "info");
 const open = topics.filter((t) => !done.includes(t) && !info.includes(t));
@@ -243,6 +298,7 @@ p{margin:6px 0}ol{margin:6px 0;padding-left:22px}.links{font-size:14px;color:#54
 .score{font-family:"JetBrains Mono",monospace;font-size:13px;background:#EEF1F4;padding:1px 6px;border-radius:4px}
 textarea{width:100%;box-sizing:border-box;min-height:56px;margin-top:8px;font:inherit;border:1px solid #D0D2D8;border-radius:4px;padding:8px}
 button{font:600 14px "JetBrains Mono",monospace;background:#1A7285;color:#fff;border:0;border-radius:4px;padding:10px 14px;cursor:pointer}
+table{width:100%;border-collapse:collapse;background:#fff;font-size:14px;margin-bottom:12px}td{border-top:1px solid #D0D2D8;padding:6px 8px;vertical-align:top}td:nth-child(2){width:18%}td:nth-child(3){width:34%}
 .note{color:#545861;font-size:14px}.badge{font-size:12px;background:#1A7285;color:#fff;padding:1px 8px;border-radius:4px}#count{color:#9333EA}
 </style></head><body><main>
 <header><div><h1>Decision review: <span id="count"></span> open</h1><div class="note">Built ${htmlEscape(stamp)}. Newest first. Feedback and ticks stay saved in this browser.</div></div>
@@ -250,6 +306,7 @@ button{font:600 14px "JetBrains Mono",monospace;background:#1A7285;color:#fff;bo
 <p class="note">"reviewed" replaces deleting: the tick moves the topic to the bottom and the files stay. "Export feedback" downloads every field with text as one Markdown file.</p>
 <article data-topic="_allgemein" data-title="General" data-question=""><span></span><div><h3>General</h3><textarea placeholder="What applies to every topic"></textarea></div></article>
 ${lists.length ? `<h2>Decision lists</h2>\n<ul>${lists.map(decisionListItem).join("")}</ul>${urgent.length ? `<h3>Open with priority 1</h3>\n<ol>${urgent.map((u) => `<li>${htmlEscape(u.key)}: ${htmlEscape(String(u.row.title))}</li>`).join("")}</ol>` : ""}` : ""}
+${workSection()}
 <h2>Open</h2>
 <section id="open">${open.map(card).join("\n")}</section>
 ${done.length ? `<h2>Decided</h2>\n<section id="decided">${done.map(card).join("\n")}</section>` : ""}
