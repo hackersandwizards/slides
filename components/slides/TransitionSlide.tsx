@@ -26,11 +26,11 @@ export function TransitionSlide({ slide }: Props) {
     <SlideShell direction="col" overflowHidden background={slide.background ?? "bg-section-intro"}>
       <div className="slide-field" aria-hidden="true" />
       <div
-        className="slide-classic absolute top-1/3 left-1/3 h-[31.25rem] w-[31.25rem] rounded-full bg-brand/8 blur-[120px]"
+        className="slide-classic absolute top-1/3 left-1/3 h-[31.25rem] w-[31.25rem] rounded-full bg-brand/7 blur-[120px]"
         aria-hidden="true"
       />
       <div
-        className="slide-classic absolute right-1/3 bottom-1/3 h-[25rem] w-[25rem] rounded-full bg-brand-accent/6 blur-[100px]"
+        className="slide-classic absolute right-1/3 bottom-1/3 h-[25rem] w-[25rem] rounded-full bg-brand-accent/7 blur-[100px]"
         aria-hidden="true"
       />
       {/* Radial spotlight behind headline */}

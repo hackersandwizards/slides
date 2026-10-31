@@ -38,11 +38,11 @@ export function StatementSlide({ slide }: Props) {
   return (
     <SlideShell direction="col" overflowHidden background={slide.background ?? "bg-section-intro"}>
       <div
-        className="absolute top-1/4 left-1/4 h-[37.5rem] w-[37.5rem] rounded-full bg-primary/8 blur-[120px]"
+        className="absolute top-1/4 left-1/4 h-[37.5rem] w-[37.5rem] rounded-full bg-primary/7 blur-[120px]"
         aria-hidden="true"
       />
       <div
-        className="absolute right-1/4 bottom-1/4 h-[31.25rem] w-[31.25rem] rounded-full bg-secondary/8 blur-[100px]"
+        className="absolute right-1/4 bottom-1/4 h-[31.25rem] w-[31.25rem] rounded-full bg-secondary/7 blur-[100px]"
         aria-hidden="true"
       />
 
@@ -93,7 +93,7 @@ export function StatementSlide({ slide }: Props) {
 
           {slide.crossedOut && (
             <BlurFade delay={0.15 + slide.lines.length * 0.08} duration={0.4}>
-              <p className="mt-10 text-3xl text-text-subtle line-through decoration-warning/80 decoration-[6px] sm:text-4xl md:text-5xl">
+              <p className="mt-10 text-3xl text-text-subtle line-through decoration-warning decoration-[6px] sm:text-4xl md:text-5xl">
                 {slide.crossedOut}
               </p>
             </BlurFade>
@@ -131,9 +131,9 @@ export function StatementSlide({ slide }: Props) {
               >
                 {slide.closingStyle === "quote" ? (
                   <p className="mt-10 text-center text-2xl font-semibold tracking-tight text-text-subtle italic md:text-3xl">
-                    <span className="text-primary/60">&ldquo;</span>
+                    <span className="text-primary/70">&ldquo;</span>
                     {renderMarkdown(slide.closing)}
-                    <span className="text-primary/60">&rdquo;</span>
+                    <span className="text-primary/70">&rdquo;</span>
                   </p>
                 ) : (
                   <p className="mt-10 text-center text-2xl font-semibold tracking-tight text-balance text-text md:text-3xl">

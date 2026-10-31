@@ -80,7 +80,7 @@ function VsVariant({ slide }: { slide: ComparisonSlideType }) {
             <BlurFade key={i} delay={0.2 + i * 0.1} duration={0.6}>
               <div
                 className={`h-full rounded-brand border p-8 transition-all duration-300 ${
-                  isActive ? "border-primary bg-primary/8" : "border-border bg-white"
+                  isActive ? "border-primary bg-primary/7" : "border-border bg-white"
                 }`}
               >
                 <h3 className="mb-6 font-heading text-2xl font-bold text-text">{side.label}</h3>
@@ -113,7 +113,7 @@ function VsVariant({ slide }: { slide: ComparisonSlideType }) {
                   <div className={pros.length > 0 ? "mt-4 border-t border-border pt-4" : ""}>
                     <ul className="space-y-2.5">
                       {cons.map((con, j) => (
-                        <MarkedItem key={j} mark={"\u2212"} tone="text-warning">
+                        <MarkedItem key={j} mark={"\u2212"} tone="text-error">
                           {con.slice(1).trim()}
                         </MarkedItem>
                       ))}
@@ -165,7 +165,7 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSlideType }) {
       <div className="grid w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-stretch gap-6">
         <div
           className={`rounded-brand border p-8 transition-all duration-500 ${
-            phase >= 2 ? "border-border bg-text-subtle/5" : "border-border bg-white"
+            phase >= 2 ? "border-border bg-text-subtle/7" : "border-border bg-white"
           }`}
         >
           <div className="mb-6 flex items-center gap-3">
@@ -180,7 +180,7 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSlideType }) {
                 key={i}
                 className={`text-xl transition-all duration-300 ${
                   phase >= 2
-                    ? "text-text-muted line-through decoration-text-subtle/60 decoration-2"
+                    ? "text-text-muted line-through decoration-text-subtle/70 decoration-2"
                     : "text-text"
                 }`}
               >
@@ -201,7 +201,7 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSlideType }) {
           inert={phase < 2}
           className={`rounded-brand border p-8 transition-all duration-500 ${
             phase >= 2
-              ? "translate-y-0 border-primary/40 bg-primary/8 opacity-100"
+              ? "translate-y-0 border-primary/40 bg-primary/7 opacity-100"
               : "translate-y-4 opacity-0"
           }`}
         >

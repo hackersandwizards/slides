@@ -22,7 +22,7 @@ export function DeepDiveDivider({ slide }: Props) {
         <BlurFade delay={0.05} duration={0.4} className="absolute top-20 left-20 z-10">
           <div className="flex items-center gap-3">
             <div className="h-2 w-2 rotate-45 bg-deep-500" />
-            <span className="label-caps text-xs text-deep-700/80">{slide.partLabel}</span>
+            <span className="label-caps text-xs text-deep-700/100">{slide.partLabel}</span>
           </div>
         </BlurFade>
       )}
@@ -45,7 +45,7 @@ export function DeepDiveDivider({ slide }: Props) {
 
         {slide.subtitle && (
           <BlurFade delay={0.25} duration={0.4}>
-            <p className="mt-10 max-w-2xl text-2xl leading-snug font-medium text-balance whitespace-pre-line text-deep-900/75">
+            <p className="mt-10 max-w-2xl text-2xl leading-snug font-medium text-balance whitespace-pre-line text-deep-900/100">
               {slide.subtitle}
             </p>
           </BlurFade>

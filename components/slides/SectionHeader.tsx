@@ -28,19 +28,19 @@ export function SectionHeader({
   const themeStyles =
     stageMarkerTheme === "deepdive"
       ? {
-          container: "border-deep-300/50 bg-deep-50/70",
-          label: "text-deep-700/70",
+          container: "border-deep-300/40 bg-deep-50/70",
+          label: "text-deep-700",
           active: "bg-deep-500 text-white",
-          idle: "text-deep-900/45",
+          idle: "text-deep-900/70",
           sep: "text-deep-300/70",
           prefix: "bg-deep-500 text-white",
-          bigSep: "text-deep-500/80",
+          bigSep: "text-deep-500/100",
         }
       : {
           container: "border-border bg-white",
           label: "text-text-subtle",
           active: "bg-secondary text-white",
-          idle: "text-text-subtle/60",
+          idle: "text-text-subtle/70",
           sep: "text-text-subtle/40",
           prefix: "bg-text text-white",
           bigSep: "text-text-subtle",
@@ -73,7 +73,7 @@ export function SectionHeader({
             {stagePrefix && (
               <span className="flex items-center">
                 <span
-                  className={`rounded-brand-sm px-2.5 py-0.5 font-mono text-xl font-semibold whitespace-nowrap ${themeStyles.prefix}`}
+                  className={`rounded-brand-sm px-2.5 py-0.5 font-mono text-xl font-bold whitespace-nowrap ${themeStyles.prefix}`}
                 >
                   {stagePrefix}
                 </span>
@@ -85,7 +85,7 @@ export function SectionHeader({
               return (
                 <span key={stage} className="flex items-center">
                   <span
-                    className={`rounded-brand-sm px-2 py-0.5 font-mono text-xl font-semibold whitespace-nowrap transition-colors ${isActive ? themeStyles.active : themeStyles.idle}`}
+                    className={`rounded-brand-sm px-2 py-0.5 font-mono text-xl font-bold whitespace-nowrap transition-colors ${isActive ? themeStyles.active : themeStyles.idle}`}
                   >
                     {stage}
                   </span>

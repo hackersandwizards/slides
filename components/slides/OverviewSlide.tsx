@@ -56,11 +56,11 @@ export function OverviewSlide({ slide }: Props) {
   } = slide;
 
   const foundationsContainerClasses = `rounded-brand border-2 border-dashed p-5 transition-all duration-300  ${
-    foundationsActive ? "border-primary bg-primary/8" : "border-primary-border/60 bg-white"
+    foundationsActive ? "border-primary bg-primary/7" : "border-primary-border/70 bg-white"
   }`;
 
   const pipelineContainerClasses = `rounded-brand border-2 border-dashed p-7 transition-all duration-300  ${
-    pipelineActive ? "border-secondary bg-secondary/8" : "border-secondary-border/60 bg-white"
+    pipelineActive ? "border-secondary bg-secondary/7" : "border-secondary-border/70 bg-white"
   }`;
 
   return (

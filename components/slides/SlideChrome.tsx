@@ -8,7 +8,7 @@ import { themeDotColor, type StageCategory } from "../../lib/stage-utils";
 
 export function GradientTitlePill({ children }: { children: ReactNode }) {
   return (
-    <span className="label-caps inline-block rounded-full bg-gradient-to-r from-primary via-brand-accent/80 to-secondary px-8 py-2.5 text-base whitespace-nowrap text-white">
+    <span className="label-caps inline-block rounded-full bg-gradient-to-r from-primary via-brand-accent/70 to-secondary px-8 py-2.5 text-base whitespace-nowrap text-white">
       {children}
     </span>
   );

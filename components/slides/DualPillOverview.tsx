@@ -26,10 +26,10 @@ const accentToColumnStyle: Record<
 };
 
 const compactCategoryStyle: Record<StageCategory, string> = {
-  primary: "border border-primary/50 bg-primary/10 text-text",
-  secondary: "border border-secondary/50 bg-secondary/10 text-text",
-  accent: "border border-accent/50 bg-accent/10 text-text",
-  success: "border border-success/50 bg-success/10 text-text",
+  primary: "border border-primary/40 bg-primary/7 text-text",
+  secondary: "border border-secondary/40 bg-secondary/7 text-text",
+  accent: "border border-accent/40 bg-accent/7 text-text",
+  success: "border border-success/40 bg-success/7 text-text",
   deepdive: "border border-deep-300 bg-deep-50 text-deep-900",
 };
 
@@ -46,7 +46,7 @@ function CompactPill({
     <div
       className={`relative flex items-center gap-1.5 rounded-brand-sm px-2.5 py-1 text-sm font-semibold ${compactCategoryStyle[category]}`}
     >
-      <span className="font-mono text-sm opacity-80">#{number}</span>
+      <span className="font-mono text-sm opacity-70">#{number}</span>
       <span>{title}</span>
     </div>
   );
@@ -141,7 +141,7 @@ export function DualPillOverview({ slide }: Props) {
       <TitledContent>
         {slide.preText && (
           <BlurFade delay={0.1} duration={0.5}>
-            <span className="slide-kicker label-caps block text-sm text-deep-700/80">
+            <span className="slide-kicker label-caps block text-sm text-deep-700/100">
               {slide.preText}
             </span>
           </BlurFade>

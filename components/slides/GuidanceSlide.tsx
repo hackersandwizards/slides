@@ -64,14 +64,14 @@ export function GuidanceSlide({ slide }: Props) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="rounded-brand border-2 border-warning/30 bg-warning/5 p-6">
-                    <p className="label-caps mb-3 text-sm text-warning">Bad</p>
+                  <div className="rounded-brand border-2 border-error/25 bg-error/7 p-6">
+                    <p className="label-caps mb-3 text-sm text-error">Bad</p>
                     <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
                       {example.bad}
                     </pre>
                   </div>
 
-                  <div className="rounded-brand border-2 border-success/40 bg-success/8 p-6">
+                  <div className="rounded-brand border-2 border-success/40 bg-success/7 p-6">
                     <p className="label-caps mb-3 text-sm text-[color-mix(in_srgb,var(--color-green-dark)_60%,var(--color-ink))]">
                       Good
                     </p>

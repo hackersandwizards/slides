@@ -66,7 +66,7 @@ export function CodePanel({
   ...props
 }: { as?: "div" | "pre" } & HTMLAttributes<HTMLElement>) {
   return (
-    <Tag className={`rounded-brand border border-white/10 bg-code-bg ${className}`} {...props} />
+    <Tag className={`rounded-brand border border-white/7 bg-code-bg ${className}`} {...props} />
   );
 }
 
@@ -81,10 +81,10 @@ export function ChartFrame({ children }: { children: ReactNode }) {
 
 // Full class strings, so Tailwind finds them in this file.
 const WASH = {
-  3: "from-primary/3 via-transparent to-secondary/3",
-  4: "from-primary/4 via-transparent to-secondary/4",
-  5: "from-primary/5 via-transparent to-secondary/5",
-  6: "from-primary/6 via-transparent to-secondary/6",
+  3: "from-primary/7 via-transparent to-secondary/7",
+  4: "from-primary/7 via-transparent to-secondary/7",
+  5: "from-primary/7 via-transparent to-secondary/7",
+  6: "from-primary/7 via-transparent to-secondary/7",
 } as const;
 
 /** The diagonal teal-to-purple tint behind a slide, at a strength in percent. */

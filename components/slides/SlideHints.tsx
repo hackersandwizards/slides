@@ -68,17 +68,17 @@ export function SlideHints({ slideIndex }: Props) {
     // Bottom centre, clear of the kicker and title above and the page counter and logo in the
     // bottom corners; a titled slide's body ends above it. Below `md` a phone has no arrow keys.
     <div className="fixed bottom-5 left-1/2 z-50 hidden -translate-x-1/2 md:block">
-      <div className="flex items-center gap-4 rounded-brand-sm border border-primary-border bg-white/80 px-3 py-1.5 backdrop-blur-sm">
+      <div className="flex items-center gap-4 rounded-brand-sm border border-primary-border bg-white/70 px-3 py-1.5 backdrop-blur-sm">
         {hints.map((hint, index) => (
           <div key={index} className="flex items-center gap-1.5 text-xs text-text-muted">
-            <span className="flex h-6 w-6 items-center justify-center bg-primary/10 text-primary">
+            <span className="flex h-6 w-6 items-center justify-center bg-primary/7 text-primary">
               {hint.icon}
             </span>
             <span>{hint.text}</span>
           </div>
         ))}
         <div className="flex items-center gap-1.5 border-l border-primary-border pl-3 text-xs text-text-subtle">
-          <span className="flex h-5 w-5 items-center justify-center bg-primary/10 text-xs text-primary">
+          <span className="flex h-5 w-5 items-center justify-center bg-primary/7 text-xs text-primary">
             H
           </span>
           <span>hide</span>

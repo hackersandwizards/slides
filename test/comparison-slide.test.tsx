@@ -36,7 +36,7 @@ describe("ComparisonSlide", () => {
       <SlideComponent slide={slide(["Fast"], ["Edits files"]) as Slide} />,
     );
     sessionStorage.removeItem("slide-direction");
-    expect(getByText("Agent").parentElement?.className).toContain("border-primary bg-primary/8");
+    expect(getByText("Agent").parentElement?.className).toContain("border-primary bg-primary/7");
   });
 
   // The flag is consumed, so a reload of the same slide opens at step 0.

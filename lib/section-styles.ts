@@ -13,42 +13,42 @@ export interface SectionStyle {
 // Every section sits on the brand page; its colour is the eyebrow's, so a deck does not change
 // background tint slide by slide. The deep-dive part keeps its own warm identity.
 export const DEFAULT_SECTION_STYLE: SectionStyle = {
-  gradient: "bg-gradient-to-br from-secondary/3 via-transparent to-primary/3",
+  gradient: "bg-gradient-to-br from-secondary/7 via-transparent to-primary/7",
   label: "text-secondary",
-  border: "border-secondary/20",
+  border: "border-secondary/25",
   pill: ACCENT_PILL,
 };
 
 export const SECTION_STYLES: Record<SectionTheme, SectionStyle> = {
   primary: {
-    gradient: "bg-gradient-to-br from-primary/3 via-transparent to-secondary/3",
+    gradient: "bg-gradient-to-br from-primary/7 via-transparent to-secondary/7",
     label: "text-primary",
     border: "border-border",
     pill: ACCENT_PILL,
   },
   secondary: DEFAULT_SECTION_STYLE,
   accent: {
-    gradient: "bg-gradient-to-br from-accent/3 via-transparent to-primary/3",
+    gradient: "bg-gradient-to-br from-accent/7 via-transparent to-primary/7",
     label: "text-accent",
-    border: "border-accent/20",
+    border: "border-accent/25",
     pill: ACCENT_PILL,
   },
   warning: {
-    gradient: "bg-gradient-to-br from-accent/3 via-transparent to-brand/3",
+    gradient: "bg-gradient-to-br from-accent/7 via-transparent to-brand/7",
     label: "text-accent",
-    border: "border-accent/20",
+    border: "border-accent/25",
     pill: ACCENT_PILL,
   },
   success: {
-    gradient: "bg-gradient-to-br from-success/3 via-transparent to-primary/3",
+    gradient: "bg-gradient-to-br from-success/7 via-transparent to-primary/7",
     label: "text-success",
-    border: "border-success/20",
+    border: "border-success/25",
     pill: "slide-chip [--chip:var(--color-success)]",
   },
   deepdive: {
-    gradient: "bg-gradient-to-br from-secondary/3 via-transparent to-primary/3",
+    gradient: "bg-gradient-to-br from-secondary/7 via-transparent to-primary/7",
     label: "text-secondary",
-    border: "border-secondary/20",
+    border: "border-secondary/25",
     pill: ACCENT_PILL,
   },
 };
@@ -73,15 +73,15 @@ export interface ColumnStyle {
 
 export const COLUMN_STYLES: Record<ColumnAccent, ColumnStyle> = {
   ingredients: {
-    card: "border-border bg-gradient-to-br from-white via-primary/5 to-secondary/10",
+    card: "border-border bg-gradient-to-br from-white via-primary/7 to-secondary/7",
     bar: "bg-gradient-to-r from-primary via-secondary to-accent",
-    badge: "bg-primary/10 text-primary border-border",
+    badge: "bg-primary/7 text-primary border-border",
     glow: "shadow-card [.slide-scale-delivered_&]:shadow-[0_30px_60px_-20px]",
   },
   deepdive: {
-    card: "border-deep-300/40 bg-gradient-to-br from-white via-deep-50 to-amber/5",
+    card: "border-deep-300/40 bg-gradient-to-br from-white via-deep-50 to-amber/7",
     bar: "bg-gradient-to-r from-deep-400 via-amber to-factory-light",
-    badge: "bg-deep-100 text-deep-700 border-deep-200",
+    badge: "bg-deep-50 text-deep-700 border-deep-200",
     glow: "shadow-card [.slide-scale-delivered_&]:shadow-[0_30px_60px_-20px]",
   },
 };

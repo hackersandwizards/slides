@@ -199,28 +199,37 @@
    two of them), so they stay steps of the slide body. Not inline, so the utilities read the
    variables and a delivered deck sets them back (.slide-scale-delivered). */
 @theme {
-  /* Deep dive: the brand purple (#9333ea is purple-600). Delivered decks keep the rose they were
-     delivered with (.slide-scale-delivered). */
-  --color-deep-50: oklch(97.7% 0.014 308.299);
-  --color-deep-100: oklch(94.6% 0.033 307.174);
-  --color-deep-200: oklch(90.2% 0.063 306.703);
-  --color-deep-300: oklch(82.7% 0.119 306.383);
-  --color-deep-400: oklch(71.4% 0.203 305.504);
-  --color-deep-500: oklch(62.7% 0.265 303.9);
-  --color-deep-600: oklch(55.8% 0.288 302.321);
-  --color-deep-700: oklch(49.6% 0.265 301.924);
-  --color-deep-800: oklch(43.8% 0.218 303.724);
-  --color-deep-900: oklch(38.1% 0.176 304.987);
-  --color-deep-950: oklch(29.1% 0.149 302.717);
+  /* Deep dive: the brand purple and its tints on the opacity ladder (7, 15, 25, 40, 70 %), its
+     text and headline in purple, body text in ink. The steps keep their names, since a delivered deck sets
+     them back to the rose it was delivered with (.slide-scale-delivered); the dark theme sets them
+     again on the night ground. */
+  --color-deep-50: color-mix(in srgb, var(--color-purple) 7%, var(--color-bg));
+  --color-deep-100: color-mix(in srgb, var(--color-purple) 15%, var(--color-bg));
+  --color-deep-200: color-mix(in srgb, var(--color-purple) 25%, var(--color-bg));
+  --color-deep-300: color-mix(in srgb, var(--color-purple) 40%, var(--color-bg));
+  --color-deep-400: color-mix(in srgb, var(--color-purple) 70%, var(--color-bg));
+  --color-deep-500: var(--color-purple);
+  --color-deep-600: var(--color-purple);
+  --color-deep-700: var(--color-purple);
+  --color-deep-800: var(--color-purple);
+  --color-deep-900: var(--color-ink);
+  --color-deep-950: var(--color-purple);
   /* The brand corner on the slide scale (see :root below): cards and code blocks take the full
-     corner, number and icon tiles, inline code and the hint bar the small one. A text chip stays the
+     corner; number and icon tiles, inline code and the hint bar are square. A text chip stays the
      website's pill (TrainingList.astro .tl-chip). */
   --radius-brand: var(--slide-radius);
   --radius-brand-sm: var(--slide-radius-sm);
   /* Not inline, so a delivered deck sets them back. */
-  --color-section-deepdive: color-mix(in srgb, var(--color-amber) 4%, var(--color-bg));
+  --color-section-deepdive: color-mix(in srgb, var(--color-amber) 7%, var(--color-bg));
+  /* Status: an error or a constraint is the brand's signal red, a warning its dark amber, as on
+     every surface. Not inline, so a delivered deck and a theme set them back. */
+  --color-warning: var(--color-amber-dark);
+  --color-error: var(--color-red);
+  --color-insight-bg: color-mix(in srgb, var(--color-amber) 7%, transparent);
+  --color-constraint: var(--color-red);
+  --color-constraint-bg: color-mix(in srgb, var(--color-red) 7%, transparent);
   /* Badge colors: opaque teal tints, for overlapping card borders */
-  --color-badge-bg: color-mix(in srgb, var(--color-teal) 12%, white);
+  --color-badge-bg: color-mix(in srgb, var(--color-teal) 15%, white);
   --color-badge-border: color-mix(in srgb, var(--color-teal) 25%, white);
   --text-xs: calc(var(--type-label-size) * var(--slide-stage));
   --text-xs--line-height: 1.4;
@@ -277,9 +286,6 @@
      page background, where its light green and amber reach 1.6:1 and 2.1:1. */
   --color-success: var(--color-green-dark);
   --color-accent: var(--color-amber-dark);
-  /* The brand has no signal red; its red-brown area hue is the nearest, 6:1 on the page. */
-  --color-warning: var(--color-factory);
-  --color-error: var(--color-factory);
 
   /* Semantic presentation colors */
   --color-primary: var(--color-teal);
@@ -289,9 +295,6 @@
   --color-secondary-bg: color-mix(in srgb, var(--color-purple) 7%, transparent);
   --color-secondary-border: color-mix(in srgb, var(--color-purple) 25%, transparent);
   --color-insight: var(--color-amber);
-  --color-insight-bg: color-mix(in srgb, var(--color-amber) 8%, transparent);
-  --color-constraint: var(--color-factory);
-  --color-constraint-bg: color-mix(in srgb, var(--color-factory) 8%, transparent);
 
   /* Code blocks: the website's code, Shiki's github-dark, whose tokens lib/code-highlight.tsx
      colours. The terminal block takes the theme's background, its green for a command and the
@@ -300,12 +303,12 @@
   --color-code-command: #85e89d;
   --color-code-comment: #959da5;
 
-  /* Section backgrounds: the page colour tinted towards the section's hue, as the bg-section-*
-     utilities below do. Only deepdive is read as a colour (a gradient stop), so it sits in the
-     @theme block above with the badges. */
+  /* Section backgrounds: the page colour tinted 7 % towards the section's hue, the first step of
+     the opacity ladder, as the bg-section-* utilities below do. Only deepdive is read as a colour
+     (a gradient stop), so it sits in the @theme block above with the badges. */
   --color-section-intro: var(--color-bg);
-  --color-section-primary: color-mix(in srgb, var(--color-teal) 5%, var(--color-bg));
-  --color-section-secondary: color-mix(in srgb, var(--color-purple) 4%, var(--color-bg));
+  --color-section-primary: color-mix(in srgb, var(--color-teal) 7%, var(--color-bg));
+  --color-section-secondary: color-mix(in srgb, var(--color-purple) 7%, var(--color-bg));
   --color-section-accent: color-mix(in srgb, var(--color-amber-dark) 7%, var(--color-bg));
   --color-section-success: color-mix(in srgb, var(--color-green-dark) 7%, var(--color-bg));
 
@@ -334,8 +337,8 @@
                      overlay, so the box keeps its 1px layout: a real wide border shrank 22 talks and
                      37 hub slides under the fit guard (measured 2026-10-28)
    --slide-radius    the brand corner: website 20px 5px x 2 = 40px 10px at 1920
-   --slide-radius-sm the brand corner on a tile, badge or inline code, which stands a line tall:
-                     6px 1.5px x 2 = 12px 3px at 1920 keeps the corner's 4:1 at a line's height
+   --slide-radius-sm a tile, badge, stage pill or inline code, which stands a line tall: square,
+                     as every mark too small for the brand corner at its full value
    --slide-marker    the list marker, the website's teal square (EventRow.astro .event-facts):
                      0.375rem x 2 = 12px at 1920. Square, as every mark too small for the brand
                      corner at its full value, on the website and on paper alike
@@ -380,7 +383,7 @@
   --slide-strip: 0.75rem;
   --slide-hairline: 0.09375rem;
   --slide-radius: 1.875rem 0.46875rem;
-  --slide-radius-sm: 0.5625rem 0.140625rem;
+  --slide-radius-sm: 0;
   --slide-marker: 0.5625rem;
   --slide-stage: 1.5;
   /* The third text step: muted, since brand v0.8 folds subtle into muted. Its own name, so a
@@ -414,7 +417,7 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     cursor:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Ccircle cx='6' cy='6' r='3' fill='%231A7285' /%3E%3Ccircle cx='6' cy='6' r='4' fill='%231A7285' fill-opacity='0.4' /%3E%3Ccircle cx='6' cy='6' r='5' fill='%231A7285' fill-opacity='0.2' /%3E%3C/svg%3E")
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Ccircle cx='6' cy='6' r='3' fill='%231A7285' /%3E%3Ccircle cx='6' cy='6' r='4' fill='%231A7285' fill-opacity='0.4' /%3E%3Ccircle cx='6' cy='6' r='5' fill='%231A7285' fill-opacity='0.25' /%3E%3C/svg%3E")
         6 6,
       auto;
   }
@@ -659,7 +662,7 @@ html:has(.print-slide) {
      from the hue and the ink, no outline. --chip names the hue, teal by default. */
   .slide-chip {
     border-color: transparent;
-    background: color-mix(in srgb, var(--chip, var(--color-teal)) 16%, white);
+    background: color-mix(in srgb, var(--chip, var(--color-teal)) 15%, white);
     color: color-mix(in srgb, var(--chip, var(--color-teal)) 40%, var(--color-ink));
     font-weight: 500;
   }
@@ -676,7 +679,7 @@ html:has(.print-slide) {
   }
   .slide-marker-nested {
     --marker: calc(var(--slide-marker) * 0.75);
-    background: color-mix(in srgb, var(--color-teal) 55%, var(--color-bg));
+    background: color-mix(in srgb, var(--color-teal) 40%, var(--color-bg));
   }
   /* Beside text that may wrap, on the middle of the first line's cap height, as on the website: for
      Inter the line box's middle is the cap height's middle at every line height. Measured at 4x
@@ -730,10 +733,12 @@ html:has(.print-slide) {
 
 /* A delivered deck keeps the scale, margins and colours it was delivered with (see the deck
    registry): the rose deep dive, and the values it shipped with where the brand tokens replaced
-   them (text subtle, signal red, deep-dive section and badge tints). The fonts, the brand corner,
-   the list marker and the code colours (the website's github-dark) are the brand's here too. */
+   them (text subtle, signal red, deep-dive section, badge and status tints, the small corner). The
+   fonts, the brand corner, the list marker and the code colours (the website's github-dark) are the
+   brand's here too. */
 .slide-scale-delivered {
   --slide-footer-side: var(--slide-footer-inset);
+  --radius-brand-sm: 0.5625rem 0.140625rem;
   --slide-text-subtle: #5c6272;
   --color-factory: var(--color-red);
   --color-section-deepdive: #fbf7f2;
@@ -748,7 +753,17 @@ html:has(.print-slide) {
   --color-warning: var(--color-red);
   --color-error: var(--color-red);
   --color-constraint: var(--color-red);
+  --color-insight-bg: color-mix(in srgb, var(--color-amber) 8%, transparent);
   --color-constraint-bg: color-mix(in srgb, var(--color-red) 8.235%, transparent);
+}
+
+/* The section tints a delivered deck was delivered with. */
+.slide-scale-delivered .bg-section-primary {
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--background));
+}
+
+.slide-scale-delivered .bg-section-secondary {
+  background: color-mix(in srgb, var(--color-secondary) 4%, var(--background));
 }
 
 .slide-scale-delivered {
@@ -936,11 +951,11 @@ html:has(.print-slide) {
   }
 
   .bg-section-primary {
-    background: color-mix(in srgb, var(--color-primary) 5%, var(--background));
+    background: color-mix(in srgb, var(--color-primary) 7%, var(--background));
   }
 
   .bg-section-secondary {
-    background: color-mix(in srgb, var(--color-secondary) 4%, var(--background));
+    background: color-mix(in srgb, var(--color-secondary) 7%, var(--background));
   }
 
   .bg-section-accent {
@@ -1022,14 +1037,19 @@ html:has(.print-slide) {
     --color-ink: var(--color-night-ink);
     --color-muted: var(--color-night-muted);
     --slide-text-subtle: var(--color-muted);
-    --color-border: color-mix(in srgb, var(--color-night-ink) 18%, var(--color-night));
+    --color-border: color-mix(in srgb, var(--color-night-ink) 15%, var(--color-night));
     --color-teal: var(--color-teal-night);
     --color-purple: var(--color-purple-night);
     --color-green-dark: var(--color-green);
     --color-amber-dark: var(--color-amber);
     --color-factory: var(--color-factory-light);
     --color-red: var(--color-red-night);
+    --color-warning: var(--color-amber);
+    --color-error: var(--color-red);
+    --color-constraint: var(--color-red);
+    --color-constraint-bg: color-mix(in srgb, var(--color-red) 7%, transparent);
     --color-code-bg: var(--color-night-2);
+    --color-section-deepdive: color-mix(in srgb, var(--color-amber) 7%, var(--color-bg));
     --color-text: var(--color-ink);
     --color-text-muted: var(--color-muted);
     --color-text-subtle: var(--color-muted);
@@ -1041,9 +1061,17 @@ html:has(.print-slide) {
     --color-accent: var(--color-amber);
     /* Dark text steps used on light tints turn light. */
     --color-teal-dark: color-mix(in srgb, var(--color-teal) 70%, white);
-    --color-deep-700: var(--color-deep-300);
-    --color-deep-800: var(--color-deep-200);
-    --color-deep-900: var(--color-deep-100);
+    --color-deep-50: color-mix(in srgb, var(--color-purple) 7%, var(--color-bg));
+    --color-deep-100: color-mix(in srgb, var(--color-purple) 15%, var(--color-bg));
+    --color-deep-200: color-mix(in srgb, var(--color-purple) 25%, var(--color-bg));
+    --color-deep-300: color-mix(in srgb, var(--color-purple) 40%, var(--color-bg));
+    --color-deep-400: color-mix(in srgb, var(--color-purple) 70%, var(--color-bg));
+    --color-deep-500: var(--color-purple);
+    --color-deep-600: var(--color-purple);
+    --color-deep-700: var(--color-purple);
+    --color-deep-800: var(--color-purple);
+    --color-deep-900: var(--color-ink);
+    --color-deep-950: var(--color-purple);
     color-scheme: dark;
   }
 
@@ -1057,7 +1085,7 @@ html:has(.print-slide) {
   }
 
   .theme-brand-dark .slide-chip {
-    background: color-mix(in srgb, var(--chip, var(--color-teal)) 22%, var(--color-night));
+    background: color-mix(in srgb, var(--chip, var(--color-teal)) 25%, var(--color-night));
     color: color-mix(in srgb, var(--chip, var(--color-teal)) 35%, white);
   }
 
@@ -1071,6 +1099,15 @@ html:has(.print-slide) {
   .theme-brand-dark .text-white {
     color: var(--color-night);
   }
+
+  /* A card's white gradient stop turns the card ground too. */
+  .theme-brand-dark .from-white {
+    --tw-gradient-from: var(--color-night-2);
+  }
+
+  .theme-brand-dark .to-white {
+    --tw-gradient-to: var(--color-night-2);
+  }
 }
 
 /* Homepage card hover effects */
@@ -1083,10 +1120,8 @@ html:has(.print-slide) {
 
 .talk-card:hover {
   transform: translateY(-3px) scale(1.008);
-  border-color: color-mix(in srgb, var(--card-accent, var(--color-teal)) 30%, transparent);
-  box-shadow:
-    0 0 40px color-mix(in srgb, var(--card-accent, var(--color-teal)) 14%, transparent),
-    0 8px 28px rgba(0, 0, 0, 0.06);
+  border-color: color-mix(in srgb, var(--card-accent, var(--color-teal)) 25%, transparent);
+  box-shadow: var(--shadow-overlay);
 }
 
 .hero-card {

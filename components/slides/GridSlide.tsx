@@ -18,7 +18,7 @@ const defaultIcons: LucideIcon[] = [iconMap.brain, iconMap.shield, iconMap.wrenc
 const ACCENT_STYLES = {
   neutral: {
     border: "border-border",
-    bg: "bg-text-subtle/5",
+    bg: "bg-text-subtle/7",
     glow: " ",
     shadow: "",
     badgeBg: "bg-text-subtle",
@@ -28,7 +28,7 @@ const ACCENT_STYLES = {
   },
   primary: {
     border: "border-primary",
-    bg: "bg-primary/8",
+    bg: "bg-primary/7",
     glow: "",
     shadow: "",
     badgeBg: "bg-primary",
@@ -38,7 +38,7 @@ const ACCENT_STYLES = {
   },
   secondary: {
     border: "border-secondary",
-    bg: "bg-secondary/8",
+    bg: "bg-secondary/7",
     glow: "",
     shadow: "",
     badgeBg: "bg-secondary",
@@ -48,7 +48,7 @@ const ACCENT_STYLES = {
   },
   accent: {
     border: "border-accent",
-    bg: "bg-accent/8",
+    bg: "bg-accent/7",
     glow: "",
     shadow: "",
     badgeBg: "bg-accent",
@@ -58,7 +58,7 @@ const ACCENT_STYLES = {
   },
   success: {
     border: "border-success",
-    bg: "bg-success/8",
+    bg: "bg-success/7",
     glow: "",
     shadow: "",
     badgeBg: "bg-success",
@@ -104,7 +104,7 @@ function PillarCard({
       />
       <div
         className={`absolute inset-0 rounded-brand ${accent.bg} transition-opacity duration-500 ${
-          isActive ? "opacity-100" : retainPastColor ? "opacity-60" : "opacity-0"
+          isActive ? "opacity-100" : retainPastColor ? "opacity-70" : "opacity-0"
         }`}
       />
       <div

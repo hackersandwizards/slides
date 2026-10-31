@@ -34,7 +34,7 @@ function PillBox({
       className={`relative flex items-center gap-3 rounded-brand px-6 py-2.5 text-xl font-semibold ${getStageClasses(state, category)}`}
     >
       {state === "active" && <PulseDot category={category} offset="-top-1.5 -right-1.5" />}
-      <span className="font-mono text-base opacity-80">#{number}</span>
+      <span className="font-mono text-base opacity-70">#{number}</span>
       {/* A stage not yet reached keeps its full muted ink: faded further it read as disabled. */}
       <span>{title}</span>
     </div>
@@ -134,7 +134,7 @@ function DeepDivePhasedPills({ slide }: Props) {
         <BlurFade delay={0.1} duration={0.5} className="mb-8 self-start">
           <div className="flex items-center gap-3">
             <div className="h-2 w-2 rotate-45 bg-deep-500" />
-            <span className="label-caps text-xs text-deep-700/80">Part Two · Map</span>
+            <span className="label-caps text-xs text-deep-700/100">Part Two · Map</span>
           </div>
         </BlurFade>
         {title && (
@@ -182,7 +182,7 @@ function DeepDivePhasedPills({ slide }: Props) {
             counter like any other line. */}
         <BlurFade delay={0.15} duration={0.5} className="mt-10 self-end">
           <div className="flex items-center gap-3">
-            <span className="label-caps text-xs text-deep-700/60">Where each tactic lives</span>
+            <span className="label-caps text-xs text-deep-700">Where each tactic lives</span>
             <svg width="32" height="8" viewBox="0 0 32 8" fill="none" aria-hidden="true">
               <path
                 d="M0 4h28M22 1l5 3-5 3"
