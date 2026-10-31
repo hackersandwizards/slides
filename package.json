@@ -52,7 +52,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@hackersandwizards/brand": "git+ssh://git@github.com/hackersandwizards/brand.git#v0.9.12",
+    "@hackersandwizards/brand": "git+ssh://git@github.com/hackersandwizards/brand.git#v0.9.16",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@types/node": "26.6.6",
