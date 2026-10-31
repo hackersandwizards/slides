@@ -171,17 +171,17 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
     a === "primary" ? "text-primary" : a === "secondary" ? "text-secondary" : "text-primary";
   const accentBg = (a?: "primary" | "secondary") =>
     a === "primary"
-      ? "bg-primary/12 hover:bg-primary/20 text-primary"
+      ? "bg-primary/15 hover:bg-primary/15 text-primary"
       : a === "secondary"
-        ? "bg-secondary/12 hover:bg-secondary/20 text-secondary"
-        : "bg-primary/12 hover:bg-primary/20 text-primary";
+        ? "bg-secondary/15 hover:bg-secondary/15 text-secondary"
+        : "bg-primary/15 hover:bg-primary/15 text-primary";
 
   return (
     <SlideShell direction="col" overflowHidden background={slide.background ?? "bg-section-intro"}>
       <div className="slide-field" aria-hidden="true" />
       <SplitContact slide={slide} />
-      <div className="slide-classic absolute top-1/3 left-1/4 h-[31.25rem] w-[31.25rem] rounded-full bg-brand/8 blur-[120px]" />
-      <div className="slide-classic absolute right-1/4 bottom-1/3 h-[25rem] w-[25rem] rounded-full bg-brand-accent/6 blur-[100px]" />
+      <div className="slide-classic absolute top-1/3 left-1/4 h-[31.25rem] w-[31.25rem] rounded-full bg-brand/7 blur-[120px]" />
+      <div className="slide-classic absolute right-1/4 bottom-1/3 h-[25rem] w-[25rem] rounded-full bg-brand-accent/7 blur-[100px]" />
 
       <Particles
         className="slide-classic absolute inset-0"
@@ -263,7 +263,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                       {!isLast && (
                         <div
                           aria-hidden="true"
-                          className="hidden w-px self-stretch bg-gradient-to-b from-transparent via-text-subtle/30 to-transparent md:block"
+                          className="hidden w-px self-stretch bg-gradient-to-b from-transparent via-text-subtle/25 to-transparent md:block"
                         />
                       )}
                     </div>
@@ -348,9 +348,9 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
           {slide.closingQuote && (
             <BlurFade delay={0.35} duration={0.4}>
               <p className="mx-auto max-w-[80rem] px-[5vw] text-center font-heading text-3xl leading-tight font-bold tracking-tight text-balance text-text-muted">
-                <span className="text-primary/50">&ldquo;</span>
+                <span className="text-primary/70">&ldquo;</span>
                 {slide.closingQuote}
-                <span className="text-primary/50">&rdquo;</span>
+                <span className="text-primary/70">&rdquo;</span>
               </p>
             </BlurFade>
           )}

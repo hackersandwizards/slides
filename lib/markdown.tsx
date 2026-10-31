@@ -46,7 +46,7 @@ export function renderMarkdown(text: string): React.ReactNode {
     return (
       <code
         key={i}
-        className={`rounded-brand-sm bg-primary/10 px-2 font-code text-primary ${text.includes(" ") ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
+        className={`rounded-brand-sm bg-primary/7 px-2 font-code text-primary ${text.includes(" ") ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
       >
         {text}
       </code>

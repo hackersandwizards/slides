@@ -69,7 +69,7 @@ export function EvolutionSlide({ slide }: Props) {
                       <div
                         className={`relative flex min-h-80 w-full flex-col rounded-brand border ${dense ? "px-3 py-6" : "p-6"} transition-all duration-300 ${
                           isHighlighted
-                            ? "border-primary bg-primary/8"
+                            ? "border-primary bg-primary/7"
                             : isDimmed
                               ? "border-border bg-white"
                               : "border-border bg-white"
@@ -87,7 +87,7 @@ export function EvolutionSlide({ slide }: Props) {
                                 ? "bg-text-subtle text-white"
                                 : isRevealed
                                   ? "border-2 border-badge-border bg-badge-bg text-primary"
-                                  : "bg-badge-bg text-text-subtle/50"
+                                  : "bg-badge-bg text-text-subtle/70"
                           }`}
                         >
                           {stage.multiplier}
@@ -115,7 +115,7 @@ export function EvolutionSlide({ slide }: Props) {
                                   ? "text-text-subtle"
                                   : isRevealed
                                     ? "text-primary"
-                                    : "text-text-subtle/30"
+                                    : "text-text-subtle/40"
                             }`}
                           >
                             {stage.subtitle}
@@ -128,7 +128,7 @@ export function EvolutionSlide({ slide }: Props) {
                                   ? "text-text-subtle"
                                   : isRevealed
                                     ? "text-text-subtle"
-                                    : "text-text-subtle/30"
+                                    : "text-text-subtle/40"
                             }`}
                           >
                             {stage.description}
@@ -145,7 +145,7 @@ export function EvolutionSlide({ slide }: Props) {
                                   ? "border-border text-text-subtle"
                                   : isRevealed
                                     ? "border-border text-primary"
-                                    : "border-border text-text-subtle/30"
+                                    : "border-border text-text-subtle/40"
                             }`}
                           >
                             {stage.badge}
@@ -181,7 +181,7 @@ export function EvolutionSlide({ slide }: Props) {
                     : "pointer-events-none translate-y-4 opacity-0"
                 }`}
               >
-                <div className="mt-4 rounded-brand border border-secondary/30 bg-secondary/5 px-10 py-5 text-center">
+                <div className="mt-4 rounded-brand border border-secondary/25 bg-secondary/7 px-10 py-5 text-center">
                   <p className="text-xl font-medium text-secondary">{slide.footer}</p>
                 </div>
               </div>

@@ -99,14 +99,14 @@ export function ProcessSlide({ slide }: Props) {
                       <div
                         className={`flex min-w-0 flex-1 flex-col items-center rounded-brand border bg-white ${dense ? "px-3" : "px-4"} py-6 text-center transition-all duration-500 ${
                           highlighted
-                            ? "border-brand bg-brand/8"
+                            ? "border-brand bg-brand/7"
                             : isRevealed
                               ? "border-border"
                               : "border-primary-border/40 opacity-40"
                         }`}
                       >
                         <span
-                          className={`flex h-14 w-14 items-center justify-center rounded-full ${highlighted ? "bg-gradient-to-r from-brand to-brand-accent text-white" : "bg-brand/10 text-brand"}`}
+                          className={`flex h-14 w-14 items-center justify-center rounded-full ${highlighted ? "bg-gradient-to-r from-brand to-brand-accent text-white" : "bg-brand/7 text-brand"}`}
                         >
                           <Icon className="h-7 w-7" aria-hidden />
                         </span>
@@ -259,11 +259,11 @@ export function ProcessSlide({ slide }: Props) {
                     >
                       <div
                         className={`absolute inset-0 rounded-brand bg-white transition-opacity duration-500 ${
-                          highlighted ? "opacity-0" : isRevealed ? "opacity-100" : "opacity-60"
+                          highlighted ? "opacity-0" : isRevealed ? "opacity-100" : "opacity-70"
                         }`}
                       />
                       <div
-                        className={`absolute inset-0 rounded-brand bg-brand/8 transition-opacity duration-500 ${
+                        className={`absolute inset-0 rounded-brand bg-brand/7 transition-opacity duration-500 ${
                           highlighted ? "opacity-100" : "opacity-0"
                         }`}
                       />
@@ -279,8 +279,8 @@ export function ProcessSlide({ slide }: Props) {
                             highlighted
                               ? "opacity-0"
                               : isRevealed
-                                ? "bg-brand/10 opacity-100"
-                                : "bg-primary/5 opacity-50"
+                                ? "bg-brand/7 opacity-100"
+                                : "bg-primary/7 opacity-40"
                           }`}
                         />
                         <div
@@ -309,7 +309,7 @@ export function ProcessSlide({ slide }: Props) {
                       </h3>
                       <p
                         className={`card-text-base relative z-10 mt-1.5 leading-snug transition-colors duration-500 ${
-                          isRevealed ? "text-text-muted" : "text-text-subtle/60"
+                          isRevealed ? "text-text-muted" : "text-text-subtle/70"
                         }`}
                       >
                         {node.description}
@@ -330,7 +330,7 @@ export function ProcessSlide({ slide }: Props) {
                     : "pointer-events-none translate-y-4 opacity-0"
                 }`}
               >
-                <div className="rounded-brand border border-border bg-brand-accent/5 px-8 py-4 text-center">
+                <div className="rounded-brand border border-border bg-brand-accent/7 px-8 py-4 text-center">
                   <p className="text-lg font-medium text-brand-accent">{slide.footer}</p>
                 </div>
               </div>

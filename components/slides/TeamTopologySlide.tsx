@@ -42,7 +42,7 @@ export function TeamTopologySlide({ slide }: Props) {
                 {slide.streamAligned.map((team) => (
                   <div
                     key={team.name}
-                    className="flex flex-col items-start gap-3 rounded-brand border border-success bg-success/10 px-6 py-5"
+                    className="flex flex-col items-start gap-3 rounded-brand border border-success bg-success/7 px-6 py-5"
                   >
                     <span className="text-xl leading-tight font-bold text-text">{team.name}</span>
                     <Chips labels={team.roles} className="text-text" />
@@ -54,7 +54,7 @@ export function TeamTopologySlide({ slide }: Props) {
                     {subsystems.map((team) => (
                       <div
                         key={team.name}
-                        className="flex flex-1 flex-col gap-1 rounded-brand border border-factory bg-factory/10 px-6 py-4"
+                        className="flex flex-1 flex-col gap-1 rounded-brand border border-factory bg-factory/7 px-6 py-4"
                       >
                         <span className="text-xl leading-tight font-bold text-factory">
                           {team.name}
@@ -72,7 +72,7 @@ export function TeamTopologySlide({ slide }: Props) {
                 {slide.platform.map((team) => (
                   <div
                     key={team.name}
-                    className="flex flex-col items-start gap-2 rounded-brand border border-primary bg-primary/10 px-6 py-4"
+                    className="flex flex-col items-start gap-2 rounded-brand border border-primary bg-primary/7 px-6 py-4"
                   >
                     <span className="text-xl leading-tight font-bold text-teal-dark">
                       {team.name}
@@ -90,7 +90,7 @@ export function TeamTopologySlide({ slide }: Props) {
               {slide.enabling.map((team) => (
                 <div
                   key={team.name}
-                  className="flex flex-col gap-2 rounded-brand border border-secondary bg-secondary/10 px-5 py-5 md:w-64"
+                  className="flex flex-col gap-2 rounded-brand border border-secondary bg-secondary/7 px-5 py-5 md:w-64"
                 >
                   <span className="text-xl leading-tight font-bold text-deep-800">{team.name}</span>
                   {team.experts.map((expert) => (

@@ -15,23 +15,23 @@ interface Props {
 const BAR_STYLE: Record<SectionTheme, { solid: string; soft: string; text: string }> = {
   primary: {
     solid: "bg-primary",
-    soft: "bg-primary/25 border border-primary/50",
+    soft: "bg-primary/25 border border-primary/40",
     text: "text-primary",
   },
   secondary: {
     solid: "bg-secondary",
-    soft: "bg-secondary/25 border border-secondary/50",
+    soft: "bg-secondary/25 border border-secondary/40",
     text: "text-secondary",
   },
-  accent: { solid: "bg-accent", soft: "bg-accent/30 border border-accent/60", text: "text-accent" },
+  accent: { solid: "bg-accent", soft: "bg-accent/25 border border-accent/70", text: "text-accent" },
   success: {
     solid: "bg-success",
-    soft: "bg-success/30 border border-success/60",
+    soft: "bg-success/25 border border-success/70",
     text: "text-success",
   },
   warning: {
     solid: "bg-warning",
-    soft: "bg-warning/25 border border-warning/50",
+    soft: "bg-warning/25 border border-warning/40",
     text: "text-warning",
   },
   deepdive: {
@@ -47,7 +47,7 @@ export function GanttSlide({ slide }: Props) {
 
   return (
     <SlideShell background="bg-section-intro">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-transparent to-secondary/4" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/7 via-transparent to-secondary/7" />
 
       <TitledContent>
         <SectionHeader

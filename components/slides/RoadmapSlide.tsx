@@ -75,7 +75,7 @@ export function RoadmapSlide({ slide }: Props) {
   return (
     <SlideShell overflowHidden>
       <div
-        className="absolute top-1/4 left-1/4 h-[37.5rem] w-[37.5rem] rounded-full bg-primary/8 blur-[120px]"
+        className="absolute top-1/4 left-1/4 h-[37.5rem] w-[37.5rem] rounded-full bg-primary/7 blur-[120px]"
         aria-hidden="true"
       />
       <div

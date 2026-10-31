@@ -15,7 +15,7 @@ interface Props {
 export function LanesSlide({ slide }: Props) {
   return (
     <SlideShell>
-      <div className="absolute inset-0 bg-gradient-to-br from-secondary/3 via-transparent to-primary/3" />
+      <div className="absolute inset-0 bg-gradient-to-br from-secondary/7 via-transparent to-primary/7" />
 
       <TitledContent>
         <SectionHeader
@@ -45,7 +45,7 @@ export function LanesSlide({ slide }: Props) {
                   <div
                     className={`flex flex-col items-start gap-3 rounded-brand border p-5 md:flex-row md:items-center md:gap-6 ${
                       isFirst
-                        ? "border-secondary bg-secondary/8 opacity-100"
+                        ? "border-secondary bg-secondary/7 opacity-100"
                         : "border-secondary/25 bg-white opacity-70"
                     }`}
                   >
@@ -61,8 +61,8 @@ export function LanesSlide({ slide }: Props) {
                           <div
                             className={`rounded-brand border px-4 py-2 text-base font-semibold ${
                               isFirst
-                                ? "border-secondary/30 bg-white text-text"
-                                : "border-secondary/20 bg-white text-text-muted"
+                                ? "border-secondary/25 bg-white text-text"
+                                : "border-secondary/25 bg-white text-text-muted"
                             }`}
                           >
                             {stage}

@@ -17,24 +17,24 @@ type Accent = "primary" | "secondary";
 
 const ACCENT = {
   primary: {
-    ring: "ring-primary/30",
+    ring: "ring-primary/25",
     text: "text-primary",
     border: "border-primary",
-    cardBg: "bg-primary/8",
+    cardBg: "bg-primary/7",
     glow: "",
-    pillIdle: "bg-primary/10 text-primary hover:bg-primary/20",
+    pillIdle: "bg-primary/7 text-primary hover:bg-primary/15",
     dot: "from-primary to-primary/70",
-    avatarFrame: "from-primary/25 to-primary/5",
+    avatarFrame: "from-primary/25 to-primary/7",
   },
   secondary: {
-    ring: "ring-secondary/30",
+    ring: "ring-secondary/25",
     text: "text-secondary",
     border: "border-secondary",
-    cardBg: "bg-secondary/8",
+    cardBg: "bg-secondary/7",
     glow: "",
-    pillIdle: "bg-secondary/10 text-secondary hover:bg-secondary/20",
+    pillIdle: "bg-secondary/7 text-secondary hover:bg-secondary/15",
     dot: "from-secondary to-secondary/70",
-    avatarFrame: "from-secondary/25 to-secondary/5",
+    avatarFrame: "from-secondary/25 to-secondary/7",
   },
 } satisfies Record<Accent, Record<string, string>>;
 

@@ -16,16 +16,16 @@ const DOTTED_GRID = {
 const INTENSITY: Record<Intensity, { wash: string; blobA: string; blobB: string; dotted: string }> =
   {
     strong: {
-      wash: "from-deep-100/40 via-section-deepdive to-amber/8",
+      wash: "from-deep-100/40 via-section-deepdive to-amber/7",
       blobA: "-top-48 -left-32 h-[40rem] w-[40rem] bg-deep-200/40 blur-[160px]",
-      blobB: "-bottom-40 -right-32 h-[35rem] w-[35rem] bg-amber/20 blur-[140px]",
-      dotted: "opacity-[0.05]",
+      blobB: "-bottom-40 -right-32 h-[35rem] w-[35rem] bg-amber/15 blur-[140px]",
+      dotted: "opacity-7",
     },
     soft: {
-      wash: "from-deep-100/30 via-section-deepdive to-amber/6",
-      blobA: "-top-40 -left-32 h-[35rem] w-[35rem] bg-deep-200/30 blur-[140px]",
-      blobB: "-bottom-40 -right-32 h-[30rem] w-[30rem] bg-amber/16 blur-[120px]",
-      dotted: "opacity-[0.04]",
+      wash: "from-deep-100/25 via-section-deepdive to-amber/7",
+      blobA: "-top-40 -left-32 h-[35rem] w-[35rem] bg-deep-200/25 blur-[140px]",
+      blobB: "-bottom-40 -right-32 h-[30rem] w-[30rem] bg-amber/15 blur-[120px]",
+      dotted: "opacity-7",
     },
   };
 
@@ -47,7 +47,7 @@ export function DeepDiveBackdrop({ intensity = "strong" }: { intensity?: Intensi
 
 const HAIRLINE_COLOR = {
   rose: { line: "via-deep-300/70 to-deep-300/70", diamond: "bg-deep-400" },
-  amber: { line: "via-amber/50 to-amber/50", diamond: "bg-amber" },
+  amber: { line: "via-amber/40 to-amber/40", diamond: "bg-amber" },
 } as const;
 
 // Full-width hairline rule with a center diamond — the deepdive top/bottom

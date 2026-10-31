@@ -123,7 +123,7 @@ export function DecisionSlide({ slide }: Props) {
                   <p className="text-sm leading-snug text-text">{branch.text}</p>
                 </div>
               ))}
-              <div className="rounded-brand bg-ink/5 px-4 py-3 text-base leading-tight font-bold text-text">
+              <div className="rounded-brand bg-ink/7 px-4 py-3 text-base leading-tight font-bold text-text">
                 {slide.outcome}
               </div>
             </div>
@@ -137,7 +137,7 @@ export function DecisionSlide({ slide }: Props) {
                   "minmax(0,15rem) 4rem minmax(0,14rem) 7.5rem minmax(0,1fr) 3.5rem minmax(0,17rem)",
               }}
             >
-              <div className="col-start-1 row-span-2 row-start-1 self-center rounded-brand border border-primary bg-primary/10 px-5 py-4 text-2xl leading-tight font-bold text-text">
+              <div className="col-start-1 row-span-2 row-start-1 self-center rounded-brand border border-primary bg-primary/7 px-5 py-4 text-2xl leading-tight font-bold text-text">
                 {slide.need}
               </div>
               <div className="relative col-start-2 row-span-2 row-start-1 h-1 self-center bg-primary">
@@ -150,7 +150,7 @@ export function DecisionSlide({ slide }: Props) {
               <Elbow side="in" half="top" label={slide.yes.label} />
               <GridBranch branch={slide.yes} row={1} />
               <Elbow side="out" half="top" />
-              <div className="relative col-start-7 row-span-2 row-start-1 self-center rounded-brand bg-ink/5 px-5 py-4 text-2xl leading-tight font-bold text-text">
+              <div className="relative col-start-7 row-span-2 row-start-1 self-center rounded-brand bg-ink/7 px-5 py-4 text-2xl leading-tight font-bold text-text">
                 <span className="absolute top-1/2 -left-8 h-1 w-8 -translate-y-1/2 bg-primary">
                   <Head />
                 </span>
@@ -202,7 +202,7 @@ export function DecisionSlide({ slide }: Props) {
               </span>
               <Branch branch={slide.yes} top={10} />
               <Branch branch={slide.no} top={270} />
-              <div className="absolute top-[9.375rem] left-[57.5rem] flex h-[6.25rem] w-[12.5rem] items-center rounded-brand bg-ink/5 px-4 text-base leading-tight font-bold text-text">
+              <div className="absolute top-[9.375rem] left-[57.5rem] flex h-[6.25rem] w-[12.5rem] items-center rounded-brand bg-ink/7 px-4 text-base leading-tight font-bold text-text">
                 {slide.outcome}
               </div>
             </div>

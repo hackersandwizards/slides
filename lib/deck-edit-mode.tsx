@@ -97,7 +97,7 @@ export function DeckEdit({ deck }: { deck: string }) {
       if (!(element instanceof HTMLElement)) return;
       const outline = refused.get(element)?.outline ?? element.style.outline;
       clearTimeout(refused.get(element)?.timer);
-      element.style.outline = "3px solid var(--color-factory)";
+      element.style.outline = "3px solid var(--color-error)";
       refused.set(element, { outline, timer: setTimeout(() => restore(element), 2500) });
     };
     const close = () => {
@@ -223,7 +223,7 @@ export function DeckEdit({ deck }: { deck: string }) {
       <div
         ref={badge}
         role="status"
-        style={{ zIndex: 90, background: note?.error ? "var(--color-factory)" : LEAD }}
+        style={{ zIndex: 90, background: note?.error ? "var(--color-error)" : LEAD }}
         className="fixed bottom-4 left-4 max-w-md rounded-sm px-3 py-2 font-sans text-sm text-white shadow-overlay"
       >
         {note?.text ?? "Edit mode: click a text. Enter saves, Esc cancels, E ends."}

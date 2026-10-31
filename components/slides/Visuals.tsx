@@ -356,7 +356,7 @@ function Transform({ block }: { block: Of<"transform"> }) {
         {block.after.items.map((item, i) => (
           <li
             key={i}
-            className={`rounded-[0_0.140625rem_0.5625rem_0] border-y-2 border-r-2 border-l-[6px] border-y-border border-r-border border-l-primary bg-white px-6 py-3.5 ${CAPTION} font-semibold text-text`}
+            className={`border-y-2 border-r-2 border-l-[6px] border-y-border border-r-border border-l-primary bg-white px-6 py-3.5 ${CAPTION} font-semibold text-text`}
           >
             {renderMarkdown(item)}
           </li>
@@ -387,7 +387,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
                 take 16rem, which a callout on the same slide leaves free (ContentSlide). */}
             <div className="mt-3 grid grid-cols-[minmax(0,1fr)_14rem] items-center gap-8">
               <div
-                className={`relative ${tall ? "h-20" : "h-14"} ${block.max != null ? "border-r-4 border-text/30 bg-text/[0.1]" : ""} rounded-r-sm`}
+                className={`relative ${tall ? "h-20" : "h-14"} ${block.max != null ? "border-r-4 border-text/25 bg-text/[0.1]" : ""} rounded-r-sm`}
               >
                 <div
                   className="h-full rounded-r-sm"
@@ -513,7 +513,7 @@ function Annotated({ block }: { block: Of<"annotated"> }) {
           {block.notes.map((n, i) => (
             <div
               key={i}
-              className="absolute inset-x-0 -translate-y-1/2 border-y-[3px] border-primary bg-primary/30"
+              className="absolute inset-x-0 -translate-y-1/2 border-y-[3px] border-primary bg-primary/25"
               style={{ top: at(n.y), height: `${((n.h ?? 0.03) / span) * 100}%` }}
             />
           ))}
@@ -630,7 +630,7 @@ function Cards({ block }: { block: Of<"cards"> }) {
               {i + 1}
             </span>
           ) : item.icon ? (
-            <span className="flex h-16 w-16 items-center justify-center rounded-brand-sm bg-primary/10 text-primary">
+            <span className="flex h-16 w-16 items-center justify-center rounded-brand-sm bg-primary/7 text-primary">
               <Icon name={item.icon} className="h-9 w-9" />
             </span>
           ) : (

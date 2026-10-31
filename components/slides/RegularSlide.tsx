@@ -18,25 +18,25 @@ interface Props {
 const AGENDA_STYLES = [
   {
     bg: "bg-section-intro",
-    activeBg: "bg-primary/8",
+    activeBg: "bg-primary/7",
     border: "border-border",
-    activeBorder: "border-primary/50",
+    activeBorder: "border-primary/40",
     iconBg: "bg-primary/15 text-primary",
     shadow: "",
   },
   {
     bg: "bg-section-primary",
-    activeBg: "bg-primary/12",
+    activeBg: "bg-primary/15",
     border: "border-border",
-    activeBorder: "border-primary/50",
+    activeBorder: "border-primary/40",
     iconBg: "bg-primary/15 text-primary",
     shadow: "",
   },
   {
     bg: "bg-section-accent",
-    activeBg: "bg-accent/12",
-    border: "border-accent/30",
-    activeBorder: "border-accent/50",
+    activeBg: "bg-accent/15",
+    border: "border-accent/25",
+    activeBorder: "border-accent/40",
     iconBg: "bg-accent/15 text-accent",
     shadow: "",
   },
@@ -66,7 +66,7 @@ function AgendaCard({
         {IconComponent && (
           <div
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-brand-sm sm:h-12 sm:w-12 md:h-16 md:w-16 ${
-              isActive ? style.iconBg : "bg-primary/8 text-text-subtle"
+              isActive ? style.iconBg : "bg-primary/7 text-text-subtle"
             }`}
           >
             <IconComponent className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8" />
@@ -107,7 +107,7 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
               className="h-36 w-36 rounded-full border-4 border-border object-cover md:h-44 md:w-44"
             />
           ) : (
-            <div className="flex h-36 w-36 items-center justify-center rounded-full border-4 border-border bg-gradient-to-br from-brand/5 to-white md:h-44 md:w-44">
+            <div className="flex h-36 w-36 items-center justify-center rounded-full border-4 border-border bg-gradient-to-br from-brand/7 to-white md:h-44 md:w-44">
               <User className="h-16 w-16 text-brand/40 md:h-20 md:w-20" />
             </div>
           )}
@@ -125,7 +125,7 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
               href={profile.linkedIn}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-brand/5 px-4 py-1.5 text-sm text-brand transition-colors hover:bg-brand/10 md:text-base"
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-brand/7 px-4 py-1.5 text-sm text-brand transition-colors hover:bg-brand/7 md:text-base"
             >
               <Linkedin className="h-4 w-4" />
               LinkedIn
@@ -209,7 +209,7 @@ export function RegularSlide({ slide }: Props) {
                       >
                         <div
                           className={`flex flex-col gap-3 transition-opacity duration-300 md:gap-4 ${
-                            isActive || printMode ? "opacity-100" : isRevealed ? "opacity-60" : ""
+                            isActive || printMode ? "opacity-100" : isRevealed ? "opacity-70" : ""
                           }`}
                         >
                           {section.title && (
@@ -242,7 +242,7 @@ export function RegularSlide({ slide }: Props) {
                               href={section.link.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex w-fit items-center gap-2 rounded-brand-sm border border-border bg-brand/5 px-4 py-2.5 text-base text-brand transition-all hover:border-brand/30 hover:bg-brand/10 md:gap-3 md:px-5 md:py-3 md:text-lg"
+                              className="inline-flex w-fit items-center gap-2 rounded-brand-sm border border-border bg-brand/7 px-4 py-2.5 text-base text-brand transition-all hover:border-brand/25 hover:bg-brand/7 md:gap-3 md:px-5 md:py-3 md:text-lg"
                             >
                               {section.link.label}
                             </a>

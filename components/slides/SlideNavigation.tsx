@@ -183,13 +183,13 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
         <div
           role="dialog"
           aria-label="Keyboard shortcuts"
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40"
           onClick={() => setHelp(false)}
         >
-          <dl className="grid grid-cols-[auto_auto] gap-x-6 gap-y-2 rounded-sm bg-slate-900 px-6 py-5 text-sm text-slate-100">
+          <dl className="grid grid-cols-[auto_auto] gap-x-6 gap-y-2 rounded-sm bg-night px-6 py-5 text-sm text-night-ink">
             {KEYS.map(([keys, what]) => (
               <div key={keys} className="contents">
-                <dt className="font-mono text-slate-300">{keys}</dt>
+                <dt className="font-mono text-night-muted">{keys}</dt>
                 <dd>{what}</dd>
               </div>
             ))}
@@ -200,23 +200,23 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
         <button
           onClick={stepBack}
           disabled={atStart}
-          className={`flex h-12 w-12 items-center justify-center rounded-full border border-slate-700/50 bg-slate-800/90 backdrop-blur-sm transition-all focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${
-            atStart ? "cursor-not-allowed opacity-30" : "opacity-100 active:scale-95"
+          className={`flex h-12 w-12 items-center justify-center rounded-full border border-night-ink/15 bg-night-2 backdrop-blur-sm transition-all focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${
+            atStart ? "cursor-not-allowed opacity-25" : "opacity-100 active:scale-95"
           }`}
           aria-label="Previous slide"
         >
           <ChevronLeft className="h-6 w-6 text-white" />
         </button>
 
-        <div className="rounded-full border border-slate-700/50 bg-slate-800/90 px-3 py-1.5 text-xs text-slate-400 backdrop-blur-sm">
+        <div className="rounded-full border border-night-ink/15 bg-night-2 px-3 py-1.5 text-xs text-night-muted backdrop-blur-sm">
           {currentIndex + 1} / {totalSlides}
         </div>
 
         <button
           onClick={stepForward}
           disabled={atEnd}
-          className={`flex h-12 w-12 items-center justify-center rounded-full border border-slate-700/50 bg-slate-800/90 backdrop-blur-sm transition-all focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${
-            atEnd ? "cursor-not-allowed opacity-30" : "opacity-100 active:scale-95"
+          className={`flex h-12 w-12 items-center justify-center rounded-full border border-night-ink/15 bg-night-2 backdrop-blur-sm transition-all focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${
+            atEnd ? "cursor-not-allowed opacity-25" : "opacity-100 active:scale-95"
           }`}
           aria-label="Next slide"
         >

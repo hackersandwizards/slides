@@ -25,7 +25,7 @@ export type CornerMark = "lockup" | "wordmark";
 export function PageCounter({ label }: { label: string }) {
   return (
     // Below `md` the navigation's own position pill takes its place.
-    <span className="hidden font-mono text-[1.25rem] leading-none font-semibold text-text-subtle tabular-nums md:inline">
+    <span className="hidden font-mono text-[1.25rem] leading-none font-bold text-text-subtle tabular-nums md:inline">
       {label}
     </span>
   );

@@ -79,13 +79,13 @@ function SpeakerWindow({ notes, basePath }: Props) {
   const [split, dividerHandlers] = useSplit(region);
 
   return (
-    <div className="fixed inset-0 z-[55] flex flex-col gap-4 bg-slate-950 p-4 font-sans text-slate-100">
+    <div className="fixed inset-0 z-[55] flex flex-col gap-4 bg-night p-4 font-sans text-night-ink">
       <header className="flex items-center gap-6 text-lg">
-        <span className="font-mono text-2xl font-semibold tabular-nums">
+        <span className="font-mono text-2xl font-bold tabular-nums">
           {slide + 1} / {total}
         </span>
         <span
-          className={`rounded-full px-3 py-1 text-sm font-semibold ${pending ? "bg-insight text-slate-950" : "bg-slate-800 text-slate-300"}`}
+          className={`rounded-full px-3 py-1 text-sm font-semibold ${pending ? "bg-insight text-night" : "bg-night-ink/15 text-night-muted"}`}
         >
           {pending ? "More on this slide" : last ? "Last slide" : "Next press: next slide"}
         </span>
@@ -111,7 +111,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
           }}
         >
           <section aria-label="Current slide" className="flex min-h-0 flex-col gap-2">
-            <h2 className="text-sm font-semibold tracking-wide text-slate-400">Now</h2>
+            <h2 className="text-sm font-semibold tracking-wide text-night-muted">Now</h2>
             <div className="[container-type:size] min-h-0 flex-1">
               {frames && (
                 <Frame name={ROLE_NAMES.follow} src={frames.follow} title="Current slide" />
@@ -120,7 +120,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
           </section>
 
           <section aria-label="Next slide" className="flex min-h-0 flex-col gap-2">
-            <h2 className="text-sm font-semibold tracking-wide text-slate-400">Next slide</h2>
+            <h2 className="text-sm font-semibold tracking-wide text-night-muted">Next slide</h2>
             <div className="[container-type:size] min-h-0 flex-1">
               <div className={last ? "hidden" : "contents"}>
                 {frames && (
@@ -129,7 +129,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
               </div>
               {last && (
                 <p
-                  className={`${FRAME_SIZE} flex items-center justify-center rounded-sm border border-slate-800 text-slate-400`}
+                  className={`${FRAME_SIZE} flex items-center justify-center rounded-sm border border-night-ink/15 text-night-muted`}
                 >
                   End of the deck
                 </p>
@@ -150,17 +150,17 @@ function SpeakerWindow({ notes, basePath }: Props) {
           {...dividerHandlers}
           className="group flex h-4 shrink-0 cursor-row-resize touch-none items-center justify-center outline-none"
         >
-          <span className="h-1 w-16 rounded-full bg-slate-700 group-hover:bg-slate-500 group-focus-visible:bg-insight" />
+          <span className="h-1 w-16 rounded-full bg-night-ink/25 group-hover:bg-night-ink/40 group-focus-visible:bg-insight" />
         </div>
 
         <section aria-label="Speaker notes" className="flex min-h-0 flex-1 flex-col gap-2">
           <div className="flex items-center gap-2">
-            <h2 className="flex-1 text-sm font-semibold tracking-wide text-slate-400">
+            <h2 className="flex-1 text-sm font-semibold tracking-wide text-night-muted">
               {edit.open && edit.open.slide !== slide
                 ? `Notes of slide ${edit.open.slide + 1}, being edited`
                 : "Notes"}
             </h2>
-            <span role="alert" className="text-sm text-red-300">
+            <span role="alert" className="text-sm text-red-night">
               {edit.error}
             </span>
             {EDITABLE &&
@@ -199,16 +199,16 @@ function SpeakerWindow({ notes, basePath }: Props) {
                 else if (event.key === "Enter" && (event.metaKey || event.ctrlKey))
                   void edit.save();
               }}
-              className="min-h-0 flex-1 resize-none rounded-sm bg-slate-900 px-5 py-4 leading-relaxed text-slate-100 outline-2 outline-insight"
+              className="min-h-0 flex-1 resize-none rounded-sm bg-night-2 px-5 py-4 leading-relaxed text-night-ink outline-2 outline-insight"
               style={{ fontSize: size }}
             />
           ) : (
             <div
               ref={notesBox}
-              className="min-h-0 flex-1 overflow-y-auto rounded-sm bg-slate-900 px-5 py-4 leading-relaxed whitespace-pre-line"
+              className="min-h-0 flex-1 overflow-y-auto rounded-sm bg-night-2 px-5 py-4 leading-relaxed whitespace-pre-line"
               style={{ fontSize: size }}
             >
-              {note || <span className="text-slate-400">No notes on this slide.</span>}
+              {note || <span className="text-night-muted">No notes on this slide.</span>}
             </div>
           )}
         </section>
@@ -341,7 +341,7 @@ function IconButton({
       onKeyUp={(event) => {
         if (event.key === " ") event.preventDefault();
       }}
-      className="flex h-9 min-w-9 items-center justify-center gap-2 rounded-sm bg-slate-800 px-2 text-slate-100 hover:bg-slate-700"
+      className="flex h-9 min-w-9 items-center justify-center gap-2 rounded-sm bg-night-ink/15 px-2 text-night-ink hover:bg-night-ink/25"
     >
       {children}
     </button>
@@ -514,7 +514,7 @@ function Timer() {
   return (
     <span className="flex items-center gap-2">
       <span
-        className={`font-mono text-2xl tabular-nums ${paused ? "text-slate-400" : ""}`}
+        className={`font-mono text-2xl tabular-nums ${paused ? "text-night-muted" : ""}`}
         aria-label="Elapsed time"
       >
         {formatDuration(elapsed)}
@@ -544,7 +544,7 @@ function Timer() {
 function Clock() {
   const now = useNow();
   return (
-    <span className="font-mono text-2xl text-slate-300 tabular-nums" aria-label="Clock">
+    <span className="font-mono text-2xl text-night-muted tabular-nums" aria-label="Clock">
       {new Date(now).toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",

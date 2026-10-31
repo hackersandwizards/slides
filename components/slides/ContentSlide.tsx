@@ -70,7 +70,7 @@ function LabeledGridBlock({
               revealed ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
             } ${
               item.highlighted
-                ? "border border-success bg-success/8"
+                ? "border border-success bg-success/7"
                 : "border border-border bg-white"
             }`}
           >
@@ -101,43 +101,43 @@ interface Props {
 const TWO_COL_VARIANTS = {
   "success-error": {
     left: {
-      card: "border-success/30 bg-white",
+      card: "border-success/25 bg-white",
       title: "text-success",
       dot: "bg-success",
     },
     right: {
-      card: "border-error/30 bg-white",
+      card: "border-error/25 bg-white",
       title: "text-error",
       dot: "bg-error",
     },
   },
   "error-success": {
     left: {
-      card: "border-error/30 bg-white",
+      card: "border-error/25 bg-white",
       title: "text-error",
       dot: "bg-error",
     },
     right: {
-      card: "border-success/30 bg-white",
+      card: "border-success/25 bg-white",
       title: "text-success",
       dot: "bg-success",
     },
   },
   error: {
     left: {
-      card: "border-error/30 bg-white",
+      card: "border-error/25 bg-white",
       title: "text-error",
       dot: "bg-error",
     },
     right: {
-      card: "border-error/30 bg-white",
+      card: "border-error/25 bg-white",
       title: "text-error",
       dot: "bg-error",
     },
   },
   "error-neutral": {
     left: {
-      card: "border-error/30 bg-white",
+      card: "border-error/25 bg-white",
       title: "text-error",
       dot: "bg-error",
     },
@@ -149,12 +149,12 @@ const TWO_COL_VARIANTS = {
   },
   success: {
     left: {
-      card: "border-success/30 bg-white",
+      card: "border-success/25 bg-white",
       title: "text-success",
       dot: "bg-success",
     },
     right: {
-      card: "border-success/30 bg-white",
+      card: "border-success/25 bg-white",
       title: "text-success",
       dot: "bg-success",
     },
@@ -311,13 +311,13 @@ function PipelineRow({ block }: { block: PipelineBlock }) {
 }
 
 const CALLOUT_VARIANTS = {
-  info: "border-secondary/30 bg-secondary/8 text-text",
+  info: "border-secondary/25 bg-secondary/7 text-text",
   // On their tint the brand amber and green drop under 4.5:1 (4.29 and 4.27), so the text mixes
   // them 40% with ink, as the website's chips do.
   warning:
-    "border-accent/30 bg-accent/8 text-[color-mix(in_srgb,var(--color-amber-dark)_60%,var(--color-ink))]",
+    "border-accent/25 bg-accent/7 text-[color-mix(in_srgb,var(--color-amber-dark)_60%,var(--color-ink))]",
   success:
-    "border-success/30 bg-success/8 text-[color-mix(in_srgb,var(--color-green-dark)_60%,var(--color-ink))]",
+    "border-success/25 bg-success/7 text-[color-mix(in_srgb,var(--color-green-dark)_60%,var(--color-ink))]",
 };
 
 function ContentBlockRenderer({
@@ -422,7 +422,7 @@ function ContentBlockRenderer({
             )}
             {block.headers && (
               <thead>
-                <tr className="bg-gradient-to-r from-primary/8 to-primary/4">
+                <tr className="bg-gradient-to-r from-primary/7 to-primary/7">
                   {block.headers.map((header, i) => (
                     <th
                       key={i}
@@ -438,7 +438,7 @@ function ContentBlockRenderer({
               {block.rows.map((row, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className={`transition-colors hover:bg-primary/5 ${rowIndex % 2 === 1 ? "bg-primary/3" : ""}`}
+                  className={`transition-colors hover:bg-primary/7 ${rowIndex % 2 === 1 ? "bg-primary/7" : ""}`}
                 >
                   {row.map((cell, cellIndex) => (
                     <td
@@ -522,7 +522,7 @@ function ContentBlockRenderer({
         <div className="space-y-2.5">
           {block.items.map((hook, i) => (
             <SlideCard key={i} className="flex items-baseline gap-4 p-3">
-              <code className="rounded-brand-sm bg-primary/8 px-3 py-1 font-code text-base text-text">
+              <code className="rounded-brand-sm bg-primary/7 px-3 py-1 font-code text-base text-text">
                 {hook.name}
               </code>
               <span className="text-lg text-text-muted">{hook.description}</span>
@@ -534,7 +534,7 @@ function ContentBlockRenderer({
     case "pipeline":
       return (
         <div
-          className={`rounded-brand border-2 border-dashed p-6 ${block.containerLabel ? "border-secondary bg-secondary/5" : "border-secondary-border bg-white"}`}
+          className={`rounded-brand border-2 border-dashed p-6 ${block.containerLabel ? "border-secondary bg-secondary/7" : "border-secondary-border bg-white"}`}
         >
           {block.containerLabel && (
             <div className="mb-4 flex items-center gap-2">
@@ -559,7 +559,7 @@ function ContentBlockRenderer({
             <PipelineRow block={block} />
             {block.containerSideNotes && (
               <>
-                <div className="h-16 w-px bg-secondary/30" />
+                <div className="h-16 w-px bg-secondary/25" />
                 <ul className="space-y-1.5">
                   {block.containerSideNotes.map((note, ni) => (
                     <li key={ni} className="flex items-start gap-2 text-base text-text-muted">
@@ -572,7 +572,7 @@ function ContentBlockRenderer({
             )}
           </div>
           {block.containerFooter && (
-            <p className="mt-4 border-t border-secondary/20 pt-3 text-base text-text-muted">
+            <p className="mt-4 border-t border-secondary/25 pt-3 text-base text-text-muted">
               {renderMarkdown(block.containerFooter)}
             </p>
           )}
@@ -609,7 +609,7 @@ function ContentBlockRenderer({
               </h3>
             )}
             {block.items.map((item, i) => (
-              <div key={i} className="rounded-brand border-2 border-deep-200/50 bg-white px-6 py-4">
+              <div key={i} className="rounded-brand border-2 border-deep-200/40 bg-white px-6 py-4">
                 <h4 className="mb-1 text-lg text-text">{renderMarkdown(item.title)}</h4>
                 <p className="text-base text-text-muted">{renderMarkdown(item.subtitle)}</p>
               </div>
@@ -703,7 +703,7 @@ function ContentBlockRenderer({
                   >
                     {cmd.prefix}
                   </span>{" "}
-                  <code className="text-white/80">{cmd.text}</code>
+                  <code className="text-white">{cmd.text}</code>
                 </div>
               </BlurFade>
             ))}
@@ -745,21 +745,21 @@ function ContentBlockRenderer({
                 : "text-text";
       const ruleClass = (c?: PositionAccent) =>
         c === "primary"
-          ? "bg-primary/50"
+          ? "bg-primary/40"
           : c === "secondary"
-            ? "bg-secondary/50"
+            ? "bg-secondary/40"
             : c === "accent" || c === "warning"
-              ? "bg-accent/60"
+              ? "bg-accent/70"
               : c === "success"
-                ? "bg-success/50"
-                : "bg-text-subtle/30";
+                ? "bg-success/40"
+                : "bg-text-subtle/25";
       const borderClass = (c?: PositionAccent) =>
         c === "primary"
           ? "border-primary/40"
           : c === "secondary"
             ? "border-secondary/40"
             : c === "accent" || c === "warning"
-              ? "border-accent/50"
+              ? "border-accent/40"
               : c === "success"
                 ? "border-success/40"
                 : "border-border";
@@ -812,11 +812,11 @@ function ContentBlockRenderer({
               aria-hidden="true"
               className="relative flex flex-col items-center self-stretch px-2"
             >
-              <div className="w-px flex-1 bg-gradient-to-b from-transparent to-text-subtle/30" />
-              <span className="my-4 text-6xl leading-none text-text-subtle/35 md:text-7xl">
+              <div className="w-px flex-1 bg-gradient-to-b from-transparent to-text-subtle/25" />
+              <span className="my-4 text-6xl leading-none text-text-subtle/40 md:text-7xl">
                 &amp;
               </span>
-              <div className="w-px flex-1 bg-gradient-to-b from-text-subtle/30 to-transparent" />
+              <div className="w-px flex-1 bg-gradient-to-b from-text-subtle/25 to-transparent" />
             </div>
 
             {renderSide(block.right, "02", false)}
@@ -829,9 +829,9 @@ function ContentBlockRenderer({
           {/* Resolution as stamped punchline */}
           <div className="relative flex flex-col items-center gap-6">
             <div className="flex items-center gap-4">
-              <div className="h-px w-16 bg-text-subtle/30" />
+              <div className="h-px w-16 bg-text-subtle/25" />
               <span className="label-caps text-xs text-text-subtle">The verdict</span>
-              <div className="h-px w-16 bg-text-subtle/30" />
+              <div className="h-px w-16 bg-text-subtle/25" />
             </div>
             <h2 className="max-w-4xl text-center text-4xl leading-[1.05] text-balance text-text md:text-5xl">
               {renderMarkdown(block.resolution)}
@@ -849,8 +849,8 @@ function ContentBlockRenderer({
 function CenteredContentSlide({ slide }: Props) {
   return (
     <SlideShell direction="col" overflowHidden>
-      <div className="absolute top-1/3 left-1/3 h-[31.25rem] w-[31.25rem] rounded-full bg-brand/8 blur-[120px]" />
-      <div className="absolute right-1/3 bottom-1/3 h-[25rem] w-[25rem] rounded-full bg-brand-accent/6 blur-[100px]" />
+      <div className="absolute top-1/3 left-1/3 h-[31.25rem] w-[31.25rem] rounded-full bg-brand/7 blur-[120px]" />
+      <div className="absolute right-1/3 bottom-1/3 h-[25rem] w-[25rem] rounded-full bg-brand-accent/7 blur-[100px]" />
       <div className="spotlight-radial absolute inset-0 z-[1]" />
       <Particles
         className="absolute inset-0"

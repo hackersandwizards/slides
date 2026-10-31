@@ -86,7 +86,7 @@ export function WheelSlide({ slide }: Props) {
                     );
                   })}
                 </svg>
-                <div className="absolute inset-[22%] flex items-center justify-center rounded-full bg-ink/5 p-3 text-center text-base leading-tight font-bold text-text">
+                <div className="absolute inset-[22%] flex items-center justify-center rounded-full bg-ink/7 p-3 text-center text-base leading-tight font-bold text-text">
                   {slide.center}
                 </div>
               </div>
