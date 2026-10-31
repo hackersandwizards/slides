@@ -35,7 +35,8 @@ rows plus the `open` and `assumed` rows in `items.js`. No third list exists.
    person's message. A `GOAL.md` row outside the session's goal waits for its own session, whoever
    it is assigned to. Check: the first section quotes the person.
 2. Every message from the person that adds, decides or changes work gets its row in the same turn.
-   A pasted block from the page holds one `repo:id: choice, note` line per answer: write each into
+   A pasted block from the page holds one `repo:id: choice, note` line per answer, `repo:GOAL <start of the row>` for a
+   `GOAL.md` row: write each into
    its repo (step 4), commit, rebuild the page, and confirm every id with its commit; report an id
    that is unknown or already decided. Check: `git diff` shows the row.
 3. A delegate's brief names the rows it owns by item or `id`, quotes the `items.js` row format, and

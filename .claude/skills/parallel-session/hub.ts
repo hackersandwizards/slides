@@ -212,7 +212,7 @@ const groupHtml = (title: string, inner: string, open: boolean) =>
     ? `<details class="group"${open ? " open" : ""}><summary>${title}</summary>${inner}</details>`
     : "";
 const partHtml = (id: string, title: string, note: string, inner: string) =>
-  `<section class="part" id="${id}"><h2>${title} <span class="count" data-for="${id}"></span></h2><p class="note">${note}</p>${inner || '<p class="note empty">Nichts offen.</p>'}</section>`;
+  `<section class="part" id="${id}"><h2>${title} <span class="count" data-for="${id}"></span></h2><p class="note">${note}</p>${inner}<p class="note empty" hidden>Nichts offen.</p></section>`;
 const decideHtml = [1, 2, 3]
   .map((p) => {
     const g = decide.filter(({ r }) => r.priority === p);
@@ -285,7 +285,7 @@ header{position:sticky;top:0;z-index:2;background:var(--color-bg);border-top:3px
 h1,h2,summary,button{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:600;margin:0}
 h1{font-size:var(--text-page)}
 #state{font-size:var(--text-ui);margin:0;flex:1;color:var(--color-muted)}
-.bar{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-top:6px}.jump{order:1}.find{order:2;display:flex;gap:6px;align-items:center}
+.row2{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-top:6px}.bar{display:contents}.jump{order:1}.find{order:2;display:flex;gap:6px;align-items:center}
 .jump .count{color:inherit;margin-left:4px}
 .who{display:flex;gap:4px;align-items:center;font-size:var(--text-ui)}
 .who button{background:var(--surface);color:var(--color-ink);border:1px solid var(--field-line);border-radius:var(--radius-pill);padding:0 14px;min-height:44px;font-size:var(--text-ui)}
@@ -332,24 +332,24 @@ p{margin:6px 0}a{color:var(--color-teal)}.note{color:var(--color-muted);font-siz
 .sources ul{margin:0;padding-left:20px;font-size:var(--text-ui)}
 @media (max-width:640px){main{padding:0 14px 48px}
 /* On the phone only the jump bar stays: header and bar dissolve so it sticks to main. */
-header,.bar{display:contents}.top{padding-top:12px;border-top:3px solid;border-image:var(--gradient-magic) 1;margin:0 -14px;padding-inline:14px}
+header,.row2{display:contents}.top{padding-top:12px;border-top:3px solid;border-image:var(--gradient-magic) 1;margin:0 -14px;padding-inline:14px}
 h1{font-size:var(--text-heading);flex:1}#state{flex-basis:100%;order:3}
-.who,.find{margin-top:6px}.find input{flex:1;width:auto;min-width:0}
-.jump{position:sticky;top:0;z-index:2;background:var(--color-bg);margin:6px -14px 0;padding:0 8px;box-shadow:0 6px 8px -6px rgb(0 0 0/.3)}
+.bar{display:flex;gap:6px;margin-top:6px}.find{flex:1;min-width:0}.find input{flex:1;width:auto;min-width:0}.who button{padding:0 10px}
+.jump{position:sticky;top:0;z-index:2;background:var(--color-bg);margin:6px -14px 0;padding:0 8px;box-shadow:0 6px 8px -6px rgb(0 0 0/.3);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}.jump a{padding:0 7px}
 section.part,details.item{scroll-margin-top:120px}.opts.pics{grid-template-columns:1fr}}
 </style></head><body><main>
 <header><div class="top"><h1>Was dich braucht</h1><p id="state" role="status"></p><button id="copy" type="button">Antworten kopieren</button></div>
-<div class="bar"><div class="who" role="group" aria-label="Für wen">${[...PEOPLE, "alle"].map((p) => `<button type="button" data-who="${p}" aria-pressed="false">${p}</button>`).join("")}</div>
-<div class="find"><input type="search" id="q" placeholder="Filtern" aria-label="Punkte filtern"><span id="hits" aria-live="polite"></span></div>
+<div class="row2"><div class="bar"><div class="who" role="group" aria-label="Für wen">${[...PEOPLE, "alle"].map((p) => `<button type="button" data-who="${p}" aria-pressed="false">${p}</button>`).join("")}</div>
+<div class="find"><input type="search" id="q" placeholder="Filtern" aria-label="Punkte filtern"><span id="hits" aria-live="polite"></span></div></div>
 <nav class="jump" aria-label="Abschnitte"><a href="#entscheiden">Entscheiden <span class="count" data-for="entscheiden"></span></a><a href="#pruefen">Prüfen <span class="count" data-for="pruefen"></span></a><a href="#erledigen">Erledigen <span class="count" data-for="erledigen"></span></a><a href="#annahmen">Annahmen <span class="count" data-for="annahmen"></span></a></nav>
 </div></header>
-<details class="sources"><summary>${lists.length} Entscheidungslisten unter ~/dev gefunden, gebaut ${hubEscape(stamp)}. So kommt deine Antwort an</summary><ul>${sources}</ul>
+<details class="sources"><summary>${lists.length} Entscheidungslisten unter ~/dev, gebaut ${hubEscape(stamp)}</summary><ul>${sources}</ul>
 <p class="note">Wähle, schreib eine Notiz, oder hake ab: alles bleibt in diesem Browser. „Antworten kopieren“ legt alles als einen Block in die Zwischenablage; füg ihn in den Chat mit Ada ein. Ada trägt jede Zeile in ihr Repo ein, committet, baut die Seite neu und bestätigt jede id. Eine Antwort verschwindet hier, wenn ihre Zeile von der neuen Seite verschwindet. Fehlt ein Repo in der Liste, liegt es nicht unter ~/dev oder hat keine Entscheidungsliste.</p>
 <label class="lbl" for="block">Der Block zum Kopieren</label><textarea id="block" readonly></textarea></details>
 ${partHtml("entscheiden", "Entscheiden", "Eine Frage mit Optionen. Nichts ist vorausgewählt.", decideHtml)}
 ${partHtml("pruefen", "Prüfen", "Ansehen und antworten: „passt“ oder was zu ändern ist.", check.map(({ list, r }) => rowHtml(list, r, "check")).join(""))}
 ${partHtml("erledigen", "Erledigen", "Deine Aufgaben aus GOAL.md. Abhaken, wenn erledigt.", tasks.map(taskHtml).join(""))}
-${partHtml("annahmen", "Annahmen", "Was Agenten selbst entschieden haben. Wähle eine andere Option, um eine zu kippen.", assumedHtml)}
+${partHtml("annahmen", "Annahmen", "Was Agenten selbst entschieden haben. Musst du nicht durchgehen; wähle eine andere Option nur, wenn du eine kippen willst.", assumedHtml)}
 </main>
 <script>
 // Option labels per "repo:id", so the block names each choice.
@@ -362,7 +362,7 @@ const known = new Set(items.map((d) => d.dataset.k));
 // An answer whose row left the page was carried out: drop it.
 for (let i = localStorage.length - 1; i >= 0; i--) {
   const k = localStorage.key(i);
-  if (k.startsWith(STORE) && k !== STORE + "who" && !known.has(k.slice(STORE.length))) localStorage.removeItem(k);
+  if (k.startsWith(STORE) && k !== STORE + "who" && k !== STORE + "copied" && !known.has(k.slice(STORE.length))) localStorage.removeItem(k);
 }
 const hhmm = (iso) => new Date(iso).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
 function load(d) {
@@ -402,20 +402,27 @@ function block() {
   });
   return lines.length ? "Antworten von der Seite „Was dich braucht“:\\n" + lines.join("\\n") : "";
 }
+// Answers changed since the last copy have not reached Ada.
+const uncopied = () => { const c = localStorage.getItem(STORE + "copied") || ""; return answered().filter((d) => read(d.dataset.k).at > c).length; };
 function state() {
-  const n = answered().length;
+  const n = answered().length, open = uncopied();
   document.getElementById("copy").textContent = n ? n + (n === 1 ? " Antwort" : " Antworten") + " kopieren" : "Antworten kopieren";
-  document.getElementById("state").textContent = n
-    ? n + (n === 1 ? " Antwort" : " Antworten") + " in diesem Browser. Kopieren und in den Chat mit Ada einfügen."
-    : "Wähle oder notiere direkt an der Zeile; danach kopieren und in den Chat mit Ada einfügen.";
+  document.getElementById("state").textContent = !n
+    ? "Wähle direkt an der Zeile. Antworten bleiben in diesem Browser, bis du sie kopierst und in den Chat mit Ada einfügst; Ada bestätigt jede mit Commit."
+    : open
+      ? open + " noch nicht kopiert, nur in diesem Browser. Kopieren, in den Chat mit Ada einfügen; Ada bestätigt jede mit Commit."
+      : "Alles kopiert um " + hhmm(localStorage.getItem(STORE + "copied")) + ". Eine Antwort verschwindet hier, wenn Ada sie eingetragen hat.";
   document.getElementById("block").value = block();
 }
+addEventListener("beforeunload", (e) => { if (uncopied()) e.preventDefault(); });
 document.getElementById("copy").addEventListener("click", async () => {
   const text = block();
   const btn = document.getElementById("copy");
   if (!text) { btn.textContent = "Noch nichts gewählt"; setTimeout(state, 1500); return; }
   try { await navigator.clipboard.writeText(text); }
   catch (e) { const t = document.getElementById("block"); t.closest("details").open = true; t.select(); document.execCommand("copy"); }
+  try { localStorage.setItem(STORE + "copied", new Date().toISOString()); } catch (e) {}
+  state();
   btn.textContent = "Kopiert: in den Chat einfügen";
   setTimeout(state, 2500);
 });
@@ -436,6 +443,7 @@ function apply() {
     if (term && shown) g.open = true;
   }
   for (const s of document.querySelectorAll(".count[data-for]")) s.textContent = document.querySelectorAll("#" + s.dataset.for + " details.item:not([hidden])").length;
+  for (const p of document.querySelectorAll("section.part")) p.querySelector(".empty").hidden = !!p.querySelector("details.item:not([hidden])");
   for (const b of document.querySelectorAll(".who button")) b.setAttribute("aria-pressed", b.dataset.who === who);
   document.getElementById("hits").textContent = term ? hits + " Treffer" : "";
   current();
