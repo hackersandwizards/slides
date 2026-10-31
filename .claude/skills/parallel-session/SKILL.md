@@ -1,12 +1,12 @@
 ---
 name: parallel-session
-description: Track parallel work and the person's decisions in repo files (GOAL.md, docs/tracking/decisions/items.js, dated reports, a review hub), so the person can review after being away, and choose between the shared checkout and a worktree per delegate. Use before fanning out a third delegate, before leaving a session running, and for "what is open", "what needs me", "decision list", "Entscheidungsliste", "worktree".
+description: Track parallel work and the person's decisions in repo files (GOAL.md, docs/tracking/decisions/items.js, dated reports) and the one generated page of what needs the person, so the person can review after being away, and choose between the shared checkout and a worktree per delegate. Use before fanning out a third delegate, before leaving a session running, and for "what is open", "what needs me", "decision list", "Entscheidungsliste", "worktree".
 ---
 
 # Parallel session
 
-This folder holds tooling only: `decisions.html` and `hub.ts`. Goal, work and decision data live
-in the repo the work belongs to, never here.
+This folder holds tooling only: `hub.ts`. Goal, work and decision data live in the repo the work
+belongs to, never here.
 
 ## One home per fact
 
@@ -15,13 +15,14 @@ in the repo the work belongs to, never here.
   in the shape the file already uses. The owner starts with `P1`, `P2` or `P3` (P1 costs most if
   missed), then an ISO deadline where the row has one, then whoever moves next: the person, an
   agent, or anyone else, such as `P1 2026-11-02 Benedikt (Key), then Ray`.
-- `docs/tracking/decisions/items.js`: one row per decision, open question or agent assumption the
-  person may veto. An `open` row is only for direction, money, a relationship or anything leaving
-  the company. Every other such point an agent settles is an `assumed` row; a minor or reversible
-  default is named in the report only.
+- `docs/tracking/decisions/items.js`: one row per decision, review request or agent assumption the
+  person may veto. An `open` row is a question with options, or, without options, a review request
+  whose `context` says what to look at. It is only for direction, money, a relationship or anything
+  leaving the company. Every other such point an agent settles is an `assumed` row; a minor or
+  reversible default is named in the report only. A task, even one phrased as a question ("Who
+  fixes the privacy policy?"), is a `GOAL.md` row.
 - `docs/tracking/YYYY-MM-DD-<topic>.md`: one report per topic, what was measured, with evidence.
-- `~/Downloads/stand-entscheidungen/<topic>/`: an `index.html` and a `review.json` for review.
-  Never the only copy of a fact.
+  Its images sit in `docs/tracking/YYYY-MM-DD-<topic>/`, JPEG at most 1600 px wide.
 
 Work that waits on a decision keeps its `GOAL.md` row, which names the `items.js` row's `id`
 instead of repeating the question. The open points for the person's return are the open `GOAL.md`
@@ -34,7 +35,9 @@ rows plus the `open` and `assumed` rows in `items.js`. No third list exists.
    person's message. A `GOAL.md` row outside the session's goal waits for its own session, whoever
    it is assigned to. Check: the first section quotes the person.
 2. Every message from the person that adds, decides or changes work gets its row in the same turn.
-   Check: `git diff` shows the row.
+   A pasted block from the page holds one `repo:id: choice, note` line per answer: write each into
+   its repo (step 4), commit, rebuild the page, and confirm every id with its commit; report an id
+   that is unknown or already decided. Check: `git diff` shows the row.
 3. A delegate's brief names the rows it owns by item or `id`, quotes the `items.js` row format, and
    says whether the delegate works in the shared checkout or a worktree. A delegate edits only
    those rows. Each delegate gets one batch with its write paths and a completion check, and ends
@@ -45,21 +48,15 @@ rows plus the `open` and `assumed` rows in `items.js`. No third list exists.
    `status: "decided"` and the answer in `decision`, then leaves `items.js`: in the commit that
    carries the decision out, or, where work remains, as one `GOAL.md` row naming the `id`.
    `git log -S '<id>'` finds a removed row.
-5. Before each commit that touches `items.js` or a `review.json`, run
-   `bun ${CLAUDE_SKILL_DIR}/hub.ts --check <repo> ...` with every repo whose rows a `review.json`
-   may name. Check: it prints `ok`.
+5. Before each commit that touches `items.js`, run `bun ${CLAUDE_SKILL_DIR}/hub.ts --check <repo>`.
+   Check: it prints `ok`.
 6. A report states the current state only. A later batch on the same topic edits that report and
-   deletes what it superseded. Earlier rounds and raw reviews go to the scratchpad, or to the
-   topic's `_verlauf/` in the hub.
-7. Each topic the person must see gets a hub folder. Then run
-   `bun ${CLAUDE_SKILL_DIR}/hub.ts <repo> ...` with every repo the session touched. Check: the
-   hub's `index.html` shows the topic. That page is the person's one entry point, worked top to bottom:
-   priority-1 decisions and the person's priority-1 or dated rows, the other open decisions (each
-   opening to its recommendation and options), open topics, the person's other rows, rows waiting
-   on others, then, collapsed, agent rows, assumption counts per decision list, and decided topics.
-   A batch that changes an asset hub topics show, such as a logo, colour or lockup, re-renders every
-   topic showing the old asset or moves it to `_archiv/`, in that batch. Check: no topic folder
-   showing that asset is older than the change.
+   deletes what it superseded. Earlier rounds and raw reviews go to the scratchpad.
+7. After each commit that changes `items.js` or the person's `GOAL.md` rows, run
+   `bun ${CLAUDE_SKILL_DIR}/hub.ts`. It finds every `items.js` under `~/dev` and writes the page
+   (`~/Downloads/stand-entscheidungen/index.html`, or `STAND_PAGE`). Check: its output names the
+   repo. A batch that changes an asset a row's images show, such as a logo, colour or lockup,
+   re-renders those images in that batch.
 8. When the person returns, report from the rows, ordered by what each costs if missed. Before
    ending the session, read the transcript from its first message: every item of the first report,
    every question put and its answer, every promise. Check: each unfinished one has a row.
@@ -98,41 +95,6 @@ The file assigns `window.DECISION_REPOS["<repo>"] = [ ... ]`, optionally
 `window.DECISION_AREAS = { <area>: "<label>" }`. Required per row: a unique `id`, `title`, `area`,
 `priority` (1 to 3), `order`, `status` (`open`, `assumed` or `decided`) and `context`. Optional:
 `options` (each `key`, `label`, `detail`), `recommended` (an option key), `assumption`, `decision`
-(required once `decided`), `detail`. `decided` means the person's own answer; a choice an agent
-made is `assumed`. The repo's `.claude/skills/parallel-session/decisions.html`, opened from disk,
-renders the rows; the hub's "An Ada übergeben" writes its answers with the hub's notes and ticks to
-`~/Downloads/feedback-<date>.md`, which Ada reads when the person says so.
-
-## review.json
-
-An open topic, with every field filled:
-
-```json
-{
-  "status": "decide",
-  "report": "docs/tracking/2026-01-15-pricing-page.md",
-  "row": "pricing-page-layout",
-  "current": {
-    "question": "Which pricing page layout ships?",
-    "candidates": [
-      {
-        "label": "Two tiers side by side",
-        "score": "8.5 / 10",
-        "image": "a.png",
-        "recommended": true
-      },
-      {
-        "label": "One tier with a toggle",
-        "score": "7.0 / 10",
-        "image": "b.png"
-      }
-    ]
-  }
-}
-```
-
-`status` is `decide`, `use` or `info`. `row` may be a prefix ending in `*`. `current` holds the
-latest state only: at most three `candidates`, `recommended` on one of them, and `todo` or `result`
-where the topic needs them. A decided topic replaces `question` and `candidates` with
-`"decision": "<the chosen option>"`, and only a decided topic carries `decision`. The person hides
-a reviewed topic by ticking "reviewed"; a topic folder that vanished is theirs, not a defect.
+(required once `decided`), `detail`, `images` (option key to a repo-relative image path, one per
+option at most), `owner` (who answers; without it, Benedikt, so a row for Stefan sets
+`owner: "Stefan"`). `decided` means the person's own answer; a choice an agent made is `assumed`.
