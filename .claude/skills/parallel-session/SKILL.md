@@ -100,7 +100,8 @@ The file assigns `window.DECISION_REPOS["<repo>"] = [ ... ]`, optionally
 `options` (each `key`, `label`, `detail`), `recommended` (an option key), `assumption`, `decision`
 (required once `decided`), `detail`. `decided` means the person's own answer; a choice an agent
 made is `assumed`. The repo's `.claude/skills/parallel-session/decisions.html`, opened from disk,
-renders the rows and exports the answers as `answers.json`, keyed by repo and `id`.
+renders the rows; the hub's "An Ada übergeben" writes its answers with the hub's notes and ticks to
+`~/Downloads/feedback-<date>.md`, which Ada reads when the person says so.
 
 ## review.json
 

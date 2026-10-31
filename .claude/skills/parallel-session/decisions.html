@@ -391,14 +391,6 @@
         text-align: center;
         padding: 40px 0;
       }
-      .export {
-        margin-top: 12px;
-      }
-      .export textarea {
-        font-family: var(--mono);
-        font-size: var(--text-micro);
-        min-height: 160px;
-      }
       :focus-visible {
         outline: 3px solid var(--mark);
         outline-offset: 2px;
@@ -413,8 +405,9 @@
         <b>Open</b>: what an agent may not decide alone. <b>Assumptions</b>:
         what an agent decided itself, with its reason. <b>Decided</b>: already
         settled. Pick an option or write your own answer and a note. Everything
-        saves at once in this browser. "Export answers" downloads answers.json,
-        keyed by repository and id.
+        saves at once, only in this browser: Ada sees nothing until you press
+        "An Ada übergeben" in the <a id="hub">review hub</a>, which puts these
+        answers, with the hub's notes and ticks, into one file in Downloads.
       </p>
       <div class="progress"><i id="prog"></i></div>
       <div class="stats" id="stats"></div>
@@ -443,11 +436,6 @@
           <option value="">All areas</option>
         </select>
         <input type="search" id="q" placeholder="Search" aria-label="Search" />
-        <button class="btn primary" id="export">Export answers</button>
-      </div>
-      <div class="export" id="exportBox" hidden>
-        <label class="f" for="exportText">answers.json to copy</label>
-        <textarea id="exportText" readonly></textarea>
       </div>
 
       <div id="list"></div>
@@ -666,31 +654,8 @@
               ? has(a)
                 ? "Saved " + fmt(a.at)
                 : ""
-              : "Not saved: browser storage blocked, export instead";
+              : "Not saved: browser storage blocked";
           stats();
-          if (!$("#exportBox").hidden) showExport();
-        }
-        function exportObj() {
-          const o = {};
-          repos.forEach((r) => {
-            Object.keys(answers[r])
-              .sort()
-              .forEach((id) => {
-                const a = answers[r][id];
-                if (has(a))
-                  (o[r] || (o[r] = {}))[id] = {
-                    option: a.option || null,
-                    text: a.text || "",
-                    note: a.note || "",
-                    at: a.at,
-                  };
-              });
-          });
-          return o;
-        }
-        function showExport() {
-          $("#exportText").value = JSON.stringify(exportObj(), null, 2);
-          $("#exportBox").hidden = false;
         }
         document.addEventListener("click", (e) => {
           const t = e.target.closest("button");
@@ -701,26 +666,6 @@
               .querySelectorAll("[data-status]")
               .forEach((b) => b.setAttribute("aria-pressed", String(b === t)));
             render();
-            return;
-          }
-          if (t.id === "export") {
-            showExport();
-            try {
-              const url = URL.createObjectURL(
-                new Blob([$("#exportText").value], {
-                  type: "application/json",
-                }),
-              );
-              const l = document.createElement("a");
-              l.href = url;
-              l.download = "answers.json";
-              document.body.appendChild(l);
-              l.click();
-              l.remove();
-              setTimeout(() => URL.revokeObjectURL(url), 1000);
-            } catch (err) {}
-            $("#exportText").focus();
-            $("#exportText").select();
             return;
           }
           if (t.dataset.rec) {
@@ -734,7 +679,6 @@
             delete answers[it.repo][it.id];
             store.set(PREFIX + it.repo, answers[it.repo]);
             render();
-            if (!$("#exportBox").hidden) showExport();
             return;
           }
         });
@@ -752,6 +696,11 @@
           $(s).addEventListener("change", render),
         );
         $("#q").addEventListener("input", render);
+        // The hub lives in ~/Downloads/stand-entscheidungen; home is read off this file's own path.
+        const home = location.pathname.match(/^\/(Users|home)\/[^/]+/);
+        if (home)
+          $("#hub").href =
+            "file://" + home[0] + "/Downloads/stand-entscheidungen/index.html";
         $("#repos").textContent = repos
           .map(
             (r) =>
