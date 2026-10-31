@@ -16,19 +16,19 @@ const PEOPLE = ["Benedikt", "Stefan"]; // a row without `owner` is the first one
 const LIST = "docs/tracking/decisions/items.js";
 const SKIP = new Set(["node_modules", "dist", "build", "target", "vendor", "venv", "coverage"]);
 
-const esc = (s: unknown) =>
+const hubEscape = (s: unknown) =>
   String(s ?? "").replace(
     /[&<>"']/g,
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
   );
-const git = (cwd: string, ...a: string[]) => {
+const gitRead = (cwd: string, ...a: string[]) => {
   const r = Bun.spawnSync(["git", "-C", cwd, ...a], { stderr: "ignore" });
   return r.exitCode === 0 ? r.stdout.toString().trim() : "";
 };
 
 // Every repo once: dot folders (worktrees under .claude/worktrees) are not entered, and clones
 // sharing an origin collapse into the one whose .git is a directory.
-function find(dir: string, depth: number, out: string[]) {
+function findLists(dir: string, depth: number, out: string[]) {
   let entries;
   try {
     entries = readdirSync(dir, { withFileTypes: true });
@@ -39,7 +39,7 @@ function find(dir: string, depth: number, out: string[]) {
   if (depth < 6)
     for (const e of entries)
       if (e.isDirectory() && !e.name.startsWith(".") && !SKIP.has(e.name))
-        find(join(dir, e.name), depth + 1, out);
+        findLists(join(dir, e.name), depth + 1, out);
 }
 const args = process.argv.slice(2);
 const checkOnly = args[0] === "--check";
@@ -47,10 +47,10 @@ let paths: string[];
 if (checkOnly && args.length > 1) paths = args.slice(1).map((p) => resolve(p));
 else {
   const found: string[] = [];
-  find(SCAN, 0, found);
+  findLists(SCAN, 0, found);
   const byRemote = new Map<string, string>();
   for (const p of found.sort()) {
-    const remote = git(p, "config", "--get", "remote.origin.url") || p;
+    const remote = gitRead(p, "config", "--get", "remote.origin.url") || p;
     const had = byRemote.get(remote);
     if (
       !had ||
@@ -168,67 +168,67 @@ const tasks: Task[] = lists.flatMap((list) => {
   return out;
 });
 
-const href = (path: string, file: string) => "file://" + encodeURI(resolve(path, file));
+const fileHref = (path: string, file: string) => "file://" + encodeURI(resolve(path, file));
 // Paths under docs/tracking/ in a row's text become links where the file exists.
-const linkify = (path: string, text: unknown) =>
-  esc(text).replace(/(docs\/tracking\/[\w./äöü-]*\w)/g, (p) =>
-    existsSync(join(path, p)) ? `<a href="${esc(href(path, p))}">${p}</a>` : p,
+const linkPaths = (path: string, text: unknown) =>
+  hubEscape(text).replace(/(docs\/tracking\/[\w./äöü-]*\w)/g, (p) =>
+    existsSync(join(path, p)) ? `<a href="${hubEscape(fileHref(path, p))}">${p}</a>` : p,
   );
-const dateDe = (iso: string) => iso.split("-").reverse().join(".");
-const ownerOf = (r: Row) => r.owner ?? PEOPLE[0];
+const hubDate = (iso: string) => iso.split("-").reverse().join(".");
+const rowOwner = (r: Row) => r.owner ?? PEOPLE[0];
 
 // One <details> per point. Rows with options get radios (nothing preselected) and their images;
 // every point gets a note field. data-k is the block's "repo:id".
-function rowItem(list: List, r: Row, kind: string) {
+function rowHtml(list: List, r: Row, kind: string) {
   const k = `${list.key}:${r.id}`;
   const opts = r.options ?? [];
   const choice = (o: Option) => {
     const img = r.images?.[o.key];
-    return `<label class="opt${o.key === r.recommended ? " rec" : ""}">${img ? `<a class="pic" href="${esc(href(list.path, img))}" target="_blank"><img loading="lazy" src="${esc(href(list.path, img))}" alt="${esc(o.label)}"></a>` : ""}<span class="choice"><input type="radio" name="${esc(k)}" value="${esc(o.key)}"> <span>${o.key === r.recommended ? '<span class="tag">Empfehlung</span> ' : ""}<b>${esc(o.label)}</b>${o.detail ? ` <span class="note">${esc(o.detail)}</span>` : ""}</span></span></label>`;
+    return `<label class="opt${o.key === r.recommended ? " rec" : ""}">${img ? `<a class="pic" href="${hubEscape(fileHref(list.path, img))}" target="_blank"><img loading="lazy" src="${hubEscape(fileHref(list.path, img))}" alt="${hubEscape(o.label)}"></a>` : ""}<span class="choice"><input type="radio" name="${hubEscape(k)}" value="${hubEscape(o.key)}"> <span>${o.key === r.recommended ? '<span class="tag">Empfehlung</span> ' : ""}<b>${hubEscape(o.label)}</b>${o.detail ? ` <span class="note">${hubEscape(o.detail)}</span>` : ""}</span></span></label>`;
   };
-  return `<details class="item" data-k="${esc(k)}" data-who="${esc(ownerOf(r))}" data-kind="${kind}"><summary><span class="p p${r.priority}">P${r.priority}</span><span class="t">${esc(r.title)} <small>${esc(list.key)}</small></span><span class="mark"></span></summary>
-<div class="body">${r.assumption ? `<p class="recline"><b>Angenommen:</b> ${linkify(list.path, r.assumption)}</p>` : ""}<p>${linkify(list.path, r.context)}</p>${r.detail ? `<p class="note">${linkify(list.path, r.detail)}</p>` : ""}${
+  return `<details class="item" data-k="${hubEscape(k)}" data-who="${hubEscape(rowOwner(r))}" data-kind="${kind}"><summary><span class="p p${r.priority}">P${r.priority}</span><span class="t">${hubEscape(r.title)} <small>${hubEscape(list.key)}</small></span><span class="mark"></span></summary>
+<div class="body">${r.assumption ? `<p class="recline"><b>Angenommen:</b> ${linkPaths(list.path, r.assumption)}</p>` : ""}<p>${linkPaths(list.path, r.context)}</p>${r.detail ? `<p class="note">${linkPaths(list.path, r.detail)}</p>` : ""}${
     opts.length
       ? `<div class="opts${Object.keys(r.images ?? {}).length ? " pics" : ""}">${opts.map(choice).join("")}</div>`
       : ""
-  }<label class="lbl" for="n-${esc(k)}">${opts.length ? "Notiz oder eigene Antwort" : "Antwort, etwa „passt“ oder was zu ändern ist"}</label><textarea id="n-${esc(k)}"></textarea>
-<p class="row-foot">${r.recommended ? `<button type="button" class="ghost pick" data-v="${esc(r.recommended)}">Empfehlung wählen</button> ` : ""}<button type="button" class="ghost clear">Zurücksetzen</button> <span class="saved" aria-live="polite"></span></p></div></details>`;
+  }<label class="lbl" for="n-${hubEscape(k)}">${opts.length ? "Notiz oder eigene Antwort" : "Antwort, etwa „passt“ oder was zu ändern ist"}</label><textarea id="n-${hubEscape(k)}"></textarea>
+<p class="row-foot">${r.recommended ? `<button type="button" class="ghost pick" data-v="${hubEscape(r.recommended)}">Empfehlung wählen</button> ` : ""}<button type="button" class="ghost clear">Zurücksetzen</button> <span class="saved" aria-live="polite"></span></p></div></details>`;
 }
-function taskItem(t: Task) {
+function taskHtml(t: Task) {
   const k = `${t.list.key}:GOAL ${t.point.replace(/\s+/g, " ").slice(0, 60)}`;
-  return `<details class="item" data-k="${esc(k)}" data-who="${esc(t.who)}" data-kind="task"><summary><span class="p p${Math.min(t.prio, 3)}">${t.prio < 4 ? `P${t.prio}` : "–"}</span><span class="t">${esc(t.point.replace(/\s+/g, " ").slice(0, 160))}${t.point.length > 160 ? " …" : ""} <small>${esc(t.list.key)}</small></span>${t.due ? `<span class="due">bis ${dateDe(t.due)}</span>` : ""}<span class="mark"></span></summary>
-<div class="body"><p>${linkify(t.list.path, t.point)}</p><p><b>Wer:</b> ${esc(t.actor)}</p>${t.evidence ? `<p class="note"><b>Beleg:</b> ${linkify(t.list.path, t.evidence)}</p>` : ""}<label class="choice"><input type="checkbox" value="erledigt"> erledigt</label><label class="lbl" for="n-${esc(k)}">Notiz</label><textarea id="n-${esc(k)}"></textarea><p class="row-foot"><button type="button" class="ghost clear">Zurücksetzen</button> <span class="saved" aria-live="polite"></span></p></div></details>`;
+  return `<details class="item" data-k="${hubEscape(k)}" data-who="${hubEscape(t.who)}" data-kind="task"><summary><span class="p p${Math.min(t.prio, 3)}">${t.prio < 4 ? `P${t.prio}` : "–"}</span><span class="t">${hubEscape(t.point.replace(/\s+/g, " ").slice(0, 160))}${t.point.length > 160 ? " …" : ""} <small>${hubEscape(t.list.key)}</small></span>${t.due ? `<span class="due">bis ${hubDate(t.due)}</span>` : ""}<span class="mark"></span></summary>
+<div class="body"><p>${linkPaths(t.list.path, t.point)}</p><p><b>Wer:</b> ${hubEscape(t.actor)}</p>${t.evidence ? `<p class="note"><b>Beleg:</b> ${linkPaths(t.list.path, t.evidence)}</p>` : ""}<label class="choice"><input type="checkbox" value="erledigt"> erledigt</label><label class="lbl" for="n-${hubEscape(k)}">Notiz</label><textarea id="n-${hubEscape(k)}"></textarea><p class="row-foot"><button type="button" class="ghost clear">Zurücksetzen</button> <span class="saved" aria-live="polite"></span></p></div></details>`;
 }
 
 const all = lists.flatMap((list) => list.rows.map((r) => ({ list, r })));
-const byPrio = (a: { r: Row }, b: { r: Row }) =>
+const byPriority = (a: { r: Row }, b: { r: Row }) =>
   a.r.priority - b.r.priority || a.r.order - b.r.order;
-const decide = all.filter(({ r }) => r.status === "open" && r.options?.length).sort(byPrio);
-const check = all.filter(({ r }) => r.status === "open" && !r.options?.length).sort(byPrio);
+const decide = all.filter(({ r }) => r.status === "open" && r.options?.length).sort(byPriority);
+const check = all.filter(({ r }) => r.status === "open" && !r.options?.length).sort(byPriority);
 const assumed = all.filter(({ r }) => r.status === "assumed");
 tasks.sort((a, b) => a.prio - b.prio || (a.due ?? "9").localeCompare(b.due ?? "9"));
-const group = (title: string, inner: string, open: boolean) =>
+const groupHtml = (title: string, inner: string, open: boolean) =>
   inner
     ? `<details class="group"${open ? " open" : ""}><summary>${title}</summary>${inner}</details>`
     : "";
-const part = (id: string, title: string, note: string, inner: string) =>
+const partHtml = (id: string, title: string, note: string, inner: string) =>
   `<section class="part" id="${id}"><h2>${title} <span class="count" data-for="${id}"></span></h2><p class="note">${note}</p>${inner || '<p class="note empty">Nichts offen.</p>'}</section>`;
 const decideHtml = [1, 2, 3]
   .map((p) => {
     const g = decide.filter(({ r }) => r.priority === p);
-    return group(
+    return groupHtml(
       `Priorität ${p} <small>${g.length}</small>`,
-      g.map(({ list, r }) => rowItem(list, r, "decide")).join(""),
+      g.map(({ list, r }) => rowHtml(list, r, "decide")).join(""),
       p === 1,
     );
   })
   .join("");
 const assumedHtml = lists
   .map((list) => {
-    const g = assumed.filter((a) => a.list === list).sort(byPrio);
-    return group(
-      `${esc(list.key)} <small>${g.length}</small>`,
-      g.map(({ r }) => rowItem(list, r, "assumed")).join(""),
+    const g = assumed.filter((a) => a.list === list).sort(byPriority);
+    return groupHtml(
+      `${hubEscape(list.key)} <small>${g.length}</small>`,
+      g.map(({ r }) => rowHtml(list, r, "assumed")).join(""),
       false,
     );
   })
@@ -237,7 +237,7 @@ const stamp = new Date().toLocaleString("de-DE", {
   dateStyle: "medium",
   timeStyle: "short",
 });
-const age = (ms: number) => {
+const fetchAge = (ms: number) => {
   const h = Math.round((Date.now() - ms) / 3.6e6);
   return h < 1
     ? "vor unter einer Stunde"
@@ -248,8 +248,8 @@ const age = (ms: number) => {
 const sources = lists
   .map(({ path, key }) => {
     const fetched = join(path, ".git", "FETCH_HEAD");
-    const behind = Number(git(path, "rev-list", "--count", "HEAD..@{u}") || 0);
-    return `<li><b>${esc(key)}</b> <span class="note">${esc(path.replace(homedir(), "~"))} · geholt ${existsSync(fetched) ? age(statSync(fetched).mtimeMs) : "nie"}${behind ? ` · <span class="warn">${behind} Commits hinter origin</span>` : ""}</span></li>`;
+    const behind = Number(gitRead(path, "rev-list", "--count", "HEAD..@{u}") || 0);
+    return `<li><b>${hubEscape(key)}</b> <span class="note">${hubEscape(path.replace(homedir(), "~"))} · geholt ${existsSync(fetched) ? fetchAge(statSync(fetched).mtimeMs) : "nie"}${behind ? ` · <span class="warn">${behind} Commits hinter origin</span>` : ""}</span></li>`;
   })
   .join("");
 const ids = Object.fromEntries(
@@ -343,13 +343,13 @@ section.part,details.item{scroll-margin-top:120px}.opts.pics{grid-template-colum
 <div class="find"><input type="search" id="q" placeholder="Filtern" aria-label="Punkte filtern"><span id="hits" aria-live="polite"></span></div>
 <nav class="jump" aria-label="Abschnitte"><a href="#entscheiden">Entscheiden <span class="count" data-for="entscheiden"></span></a><a href="#pruefen">Prüfen <span class="count" data-for="pruefen"></span></a><a href="#erledigen">Erledigen <span class="count" data-for="erledigen"></span></a><a href="#annahmen">Annahmen <span class="count" data-for="annahmen"></span></a></nav>
 </div></header>
-<details class="sources"><summary>${lists.length} Entscheidungslisten unter ~/dev gefunden, gebaut ${esc(stamp)}. So kommt deine Antwort an</summary><ul>${sources}</ul>
+<details class="sources"><summary>${lists.length} Entscheidungslisten unter ~/dev gefunden, gebaut ${hubEscape(stamp)}. So kommt deine Antwort an</summary><ul>${sources}</ul>
 <p class="note">Wähle, schreib eine Notiz, oder hake ab: alles bleibt in diesem Browser. „Antworten kopieren“ legt alles als einen Block in die Zwischenablage; füg ihn in den Chat mit Ada ein. Ada trägt jede Zeile in ihr Repo ein, committet, baut die Seite neu und bestätigt jede id. Eine Antwort verschwindet hier, wenn ihre Zeile von der neuen Seite verschwindet. Fehlt ein Repo in der Liste, liegt es nicht unter ~/dev oder hat keine Entscheidungsliste.</p>
 <label class="lbl" for="block">Der Block zum Kopieren</label><textarea id="block" readonly></textarea></details>
-${part("entscheiden", "Entscheiden", "Eine Frage mit Optionen. Nichts ist vorausgewählt.", decideHtml)}
-${part("pruefen", "Prüfen", "Ansehen und antworten: „passt“ oder was zu ändern ist.", check.map(({ list, r }) => rowItem(list, r, "check")).join(""))}
-${part("erledigen", "Erledigen", "Deine Aufgaben aus GOAL.md. Abhaken, wenn erledigt.", tasks.map(taskItem).join(""))}
-${part("annahmen", "Annahmen", "Was Agenten selbst entschieden haben. Wähle eine andere Option, um eine zu kippen.", assumedHtml)}
+${partHtml("entscheiden", "Entscheiden", "Eine Frage mit Optionen. Nichts ist vorausgewählt.", decideHtml)}
+${partHtml("pruefen", "Prüfen", "Ansehen und antworten: „passt“ oder was zu ändern ist.", check.map(({ list, r }) => rowHtml(list, r, "check")).join(""))}
+${partHtml("erledigen", "Erledigen", "Deine Aufgaben aus GOAL.md. Abhaken, wenn erledigt.", tasks.map(taskHtml).join(""))}
+${partHtml("annahmen", "Annahmen", "Was Agenten selbst entschieden haben. Wähle eine andere Option, um eine zu kippen.", assumedHtml)}
 </main>
 <script>
 // Option labels per "repo:id", so the block names each choice.
