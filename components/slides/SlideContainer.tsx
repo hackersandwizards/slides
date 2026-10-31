@@ -103,7 +103,7 @@ export function SlideContainer({ children, logo, theme, scale, page, mark }: Pro
 
   const renderHW = (l: LogoConfig) => (
     <div
-      className="fixed right-(--slide-footer-side) bottom-(--slide-footer-inset) z-40 flex items-center gap-5"
+      className="slide-corner fixed right-(--slide-footer-side) bottom-(--slide-footer-inset) z-40 flex items-center gap-5"
       aria-hidden="true"
     >
       {page && <PageCounter label={page} />}

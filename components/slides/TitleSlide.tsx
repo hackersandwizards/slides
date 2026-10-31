@@ -5,14 +5,16 @@ import { Particles } from "../ui/particles";
 import { BRAND_HEX } from "../../lib/theme";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
+import { HwWordmark } from "./SlideContainer";
 
 interface Props {
   slide: TitleSlideType;
 }
 
-/** The title on the left half's gradient field, the subtitle on the ground beside it
- *  (`.slide-split` in `slides.css`). A delivered deck keeps its centred title with the glow,
- *  particles and rule (`.slide-classic`). */
+/** The title on the left half's gradient field, the subtitle on the ground beside it, level with
+ *  the title's first line, and the lockup under it on the title's last line (`.slide-split-lockup`
+ *  in `slides.css`). A delivered deck keeps its centred title with the glow, particles and rule
+ *  (`.slide-classic`) and the lockup in the corner. */
 export function TitleSlide({ slide }: Props) {
   return (
     <SlideShell direction="col" overflowHidden>
@@ -34,7 +36,7 @@ export function TitleSlide({ slide }: Props) {
         color={BRAND_HEX}
       />
 
-      <div className="slide-content slide-split relative z-10 flex flex-col items-center justify-center px-8">
+      <div className="slide-content slide-split slide-split-lockup relative z-10 flex flex-col items-center justify-center px-8">
         <BlurFade delay={0.1} duration={0.5} className="slide-split-lead">
           <div className="text-center font-heading text-7xl leading-[1.02] font-bold tracking-[-0.03em] text-balance whitespace-pre-line text-text md:text-8xl">
             {slide.title}
@@ -48,6 +50,10 @@ export function TitleSlide({ slide }: Props) {
             </p>
           </BlurFade>
         )}
+
+        <BlurFade delay={0.3} duration={0.4} className="slide-split-mark">
+          <HwWordmark />
+        </BlurFade>
 
         <BlurFade delay={0.3} duration={0.4} className="slide-classic">
           <div
