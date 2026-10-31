@@ -284,22 +284,27 @@ writeFileSync(
 <html lang="en"><head><meta charset="utf-8"><title>Decision review</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{font:16px/1.5 Inter,system-ui,sans-serif;color:#19283A;background:#F7F9FA;margin:0}
+/* Brand tokens of @hackersandwizards/brand, inlined because this page installs no package; each names its token.
+   Sizes are the expert layer's UI steps. */
+:root{--color-bg:#f7f9fa;--color-white:#ffffff;--color-ink:#19283a;--color-muted:#545861;--color-border:#d0d2d8;--color-tint:#eef1f4;--color-teal:#1a7285;--color-purple:#9333ea;
+--gradient-magic:linear-gradient(135deg,#1a7285 0%,#9333ea 100%);--radius-sm:5px;--radius-brand:20px 5px;--radius-pill:9999px;
+--text-page:1.5rem;--text-heading:1.25rem;--text-subheading:1rem;--text-ui:.875rem;--text-micro:.75rem}
+body{font:var(--text-subheading)/1.5 Inter,system-ui,sans-serif;color:var(--color-ink);background:var(--color-bg);margin:0}
 main{max-width:1040px;margin:0 auto;padding:0 24px 64px}
-header{position:sticky;top:0;background:#F7F9FA;border-top:3px solid;border-image:linear-gradient(90deg,#1A7285,#9333EA) 1;padding:16px 0 12px;display:flex;gap:16px;align-items:center;justify-content:space-between;z-index:1}
+header{position:sticky;top:0;background:var(--color-bg);border-top:3px solid;border-image:var(--gradient-magic) 1;padding:16px 0 12px;display:flex;gap:16px;align-items:center;justify-content:space-between;z-index:1}
 h1,h2,h3,summary{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:600;margin:0}
-h1{font-size:22px}h2,summary{font-size:17px;margin:32px 0 12px;color:#1A7285;cursor:pointer}h3{font-size:15px}
-small{color:#545861;font-weight:400;font-size:12px;margin-left:6px}
-article{display:grid;grid-template-columns:200px 1fr;gap:20px;background:#fff;border:1px solid #D0D2D8;border-radius:16px 4px;padding:16px;margin-bottom:12px}
-.thumb img{width:200px;max-height:150px;object-fit:contain;background:#EEF1F4;border-radius:4px}
-.thumb span{display:block;width:200px;padding:60px 0;text-align:center;background:#EEF1F4;color:#545861}
-p{margin:6px 0}ol{margin:6px 0;padding-left:22px}.links{font-size:14px;color:#545861}a{color:#1A7285}
+h1{font-size:var(--text-page)}h2,summary{font-size:var(--text-heading);margin:32px 0 12px;color:var(--color-teal);cursor:pointer}h3{font-size:var(--text-subheading)}
+small{color:var(--color-muted);font-weight:400;font-size:var(--text-micro);margin-left:6px}
+article{display:grid;grid-template-columns:200px 1fr;gap:20px;background:var(--color-white);border:1px solid var(--color-border);border-radius:var(--radius-brand);padding:16px;margin-bottom:12px}
+.thumb img{width:200px;max-height:150px;object-fit:contain;background:var(--color-tint);border-radius:var(--radius-brand)}
+.thumb span{display:block;width:200px;padding:60px 0;text-align:center;background:var(--color-tint);color:var(--color-muted);border-radius:var(--radius-brand)}
+p{margin:6px 0}ol{margin:6px 0;padding-left:22px}.links{font-size:var(--text-ui);color:var(--color-muted)}a{color:var(--color-teal)}
 .seen{margin-left:12px;white-space:nowrap}
-.score{font-family:"JetBrains Mono",monospace;font-size:13px;background:#EEF1F4;padding:1px 6px;border-radius:4px}
-textarea{width:100%;box-sizing:border-box;min-height:56px;margin-top:8px;font:inherit;border:1px solid #D0D2D8;border-radius:4px;padding:8px}
-button{font:600 14px "JetBrains Mono",monospace;background:#1A7285;color:#fff;border:0;border-radius:4px;padding:10px 14px;cursor:pointer}
-table{width:100%;border-collapse:collapse;background:#fff;font-size:14px;margin-bottom:12px}td{border-top:1px solid #D0D2D8;padding:6px 8px;vertical-align:top}td:nth-child(2){width:18%}td:nth-child(3){width:34%}
-.note{color:#545861;font-size:14px}.badge{font-size:12px;background:#1A7285;color:#fff;padding:1px 8px;border-radius:4px}#count{color:#9333EA}
+.score{font-family:"JetBrains Mono",monospace;font-size:var(--text-micro);background:var(--color-tint);padding:1px 6px;border-radius:var(--radius-pill)}
+textarea{width:100%;box-sizing:border-box;min-height:56px;margin-top:8px;font:inherit;border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:8px}
+button{font:600 var(--text-ui) "JetBrains Mono",monospace;background:var(--color-teal);color:var(--color-white);border:0;border-radius:var(--radius-sm);padding:10px 14px;cursor:pointer}
+table{width:100%;border-collapse:collapse;background:var(--color-white);font-size:var(--text-ui);margin-bottom:12px}td{border-top:1px solid var(--color-border);padding:6px 8px;vertical-align:top}td:nth-child(2){width:18%}td:nth-child(3){width:34%}
+.note{color:var(--color-muted);font-size:var(--text-ui)}.badge{font-size:var(--text-micro);background:var(--color-teal);color:var(--color-white);padding:1px 8px;border-radius:var(--radius-pill)}#count{color:var(--color-purple)}
 </style></head><body><main>
 <header><div><h1>Decision review: <span id="count"></span> open</h1><div class="note">Built ${htmlEscape(stamp)}. Newest first. Feedback and ticks stay saved in this browser.</div></div>
 <button id="export">Export feedback</button></header>

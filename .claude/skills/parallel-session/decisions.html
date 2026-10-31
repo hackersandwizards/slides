@@ -8,26 +8,48 @@
     />
     <title>Open decisions</title>
     <style>
+      /* Brand tokens of @hackersandwizards/brand, inlined because this page installs no package;
+         each value names its token. Status text clears 4.5:1 on its own 15 % wash. */
       :root {
-        --bg: #f7f9fa;
-        --surface: #ffffff;
-        --surface-2: #eef1f3;
-        --text: #19283a;
-        --muted: #545861;
-        --line: #d0d2d8;
-        --accent: #1a7285;
-        --accent-ink: #ffffff;
-        --accent-soft: color-mix(in srgb, #1a7285 12%, white);
-        --mark: #9333ea;
-        --ok: #15803d;
-        --ok-soft: color-mix(in srgb, #15803d 12%, white);
-        --p1: #a3402a;
-        --p1-soft: color-mix(in srgb, #a3402a 12%, white);
-        --p2: #b45309;
-        --p2-soft: color-mix(in srgb, #f59e0b 16%, white);
-        --p3: #545861;
-        --p3-soft: #eceef1;
-        --radius: 20px 5px;
+        --bg: #f7f9fa; /* --color-bg */
+        --surface: #ffffff; /* --color-white */
+        --surface-2: #eef1f4; /* --color-tint */
+        --text: #19283a; /* --color-ink */
+        --muted: #545861; /* --color-muted */
+        --line: #d0d2d8; /* --color-border */
+        --accent: #1a7285; /* --color-teal */
+        --accent-ink: #ffffff; /* --color-white */
+        --accent-soft: color-mix(in srgb, var(--accent) 7%, var(--surface));
+        --mark: #9333ea; /* --color-purple */
+        --ok: color-mix(
+          in srgb,
+          #15803d 70%,
+          #19283a
+        ); /* --success: green-dark 70 % on ink */
+        --p1: color-mix(
+          in srgb,
+          #dc2626 70%,
+          #19283a
+        ); /* --error: red 70 % on ink */
+        --p2: color-mix(
+          in srgb,
+          #b45309 70%,
+          #19283a
+        ); /* --warning: amber-dark 70 % on ink */
+        --p3: #545861; /* --color-muted */
+        --ok-soft: color-mix(in srgb, var(--ok) 15%, var(--surface));
+        --p1-soft: color-mix(in srgb, var(--p1) 15%, var(--surface));
+        --p2-soft: color-mix(in srgb, var(--p2) 15%, var(--surface));
+        --p3-soft: color-mix(in srgb, var(--p3) 15%, var(--surface));
+        --radius: 20px 5px; /* --radius-brand */
+        --radius-sm: 5px; /* --radius-sm */
+        --radius-pill: 9999px; /* --radius-pill */
+        /* The expert layer's UI steps: --text-page, -heading, -subheading (and --text-body), -ui, -micro. */
+        --text-page: 1.5rem;
+        --text-heading: 1.25rem;
+        --text-subheading: 1rem;
+        --text-ui: 0.875rem;
+        --text-micro: 0.75rem;
         --gutter: max(16px, env(safe-area-inset-left));
         --sans:
           "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI",
@@ -39,46 +61,68 @@
       }
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) {
-          --bg: #0b1118;
-          --surface: #111a24;
-          --surface-2: #18232f;
-          --text: color-mix(in srgb, white 92%, #0b1118);
-          --muted: color-mix(in srgb, white 70%, #0b1118);
-          --line: #25313e;
-          --accent: color-mix(in srgb, #1a7285 40%, white);
-          --accent-ink: #0b1118;
-          --accent-soft: color-mix(in srgb, #1a7285 30%, #111a24);
-          --mark: color-mix(in srgb, #9333ea 40%, white);
-          --ok: #4ade80;
-          --ok-soft: color-mix(in srgb, #15803d 30%, #111a24);
-          --p1: #f29a80;
-          --p1-soft: color-mix(in srgb, #a3402a 35%, #111a24);
-          --p2: #f59e0b;
-          --p2-soft: color-mix(in srgb, #b45309 35%, #111a24);
-          --p3: color-mix(in srgb, white 70%, #0b1118);
-          --p3-soft: #1c2733;
+          --bg: #0b1118; /* --color-night */
+          --surface: #111a24; /* --color-night-2 */
+          --surface-2: color-mix(
+            in srgb,
+            white 7%,
+            #111a24
+          ); /* white at 7 % on --color-night-2 */
+          --text: color-mix(
+            in srgb,
+            white 92%,
+            #0b1118
+          ); /* --color-night-ink */
+          --muted: color-mix(
+            in srgb,
+            white 80%,
+            #0b1118
+          ); /* --color-night-muted */
+          --line: color-mix(
+            in srgb,
+            white 18%,
+            #0b1118
+          ); /* the expert layer's dark --border */
+          --accent: #47aec6; /* --color-teal-night */
+          --accent-ink: #0b1118; /* --color-night */
+          --mark: #b97af1; /* --color-purple-night */
+          --ok: #4ade80; /* --color-green */
+          --p1: #f26969; /* --color-red-night */
+          --p2: #f59e0b; /* --color-amber */
+          --p3: color-mix(
+            in srgb,
+            white 80%,
+            #0b1118
+          ); /* --color-night-muted */
           color-scheme: dark;
         }
       }
       :root[data-theme="dark"] {
-        --bg: #0b1118;
-        --surface: #111a24;
-        --surface-2: #18232f;
-        --text: color-mix(in srgb, white 92%, #0b1118);
-        --muted: color-mix(in srgb, white 70%, #0b1118);
-        --line: #25313e;
-        --accent: color-mix(in srgb, #1a7285 40%, white);
-        --accent-ink: #0b1118;
-        --accent-soft: color-mix(in srgb, #1a7285 30%, #111a24);
-        --mark: color-mix(in srgb, #9333ea 40%, white);
-        --ok: #4ade80;
-        --ok-soft: color-mix(in srgb, #15803d 30%, #111a24);
-        --p1: #f29a80;
-        --p1-soft: color-mix(in srgb, #a3402a 35%, #111a24);
-        --p2: #f59e0b;
-        --p2-soft: color-mix(in srgb, #b45309 35%, #111a24);
-        --p3: color-mix(in srgb, white 70%, #0b1118);
-        --p3-soft: #1c2733;
+        --bg: #0b1118; /* --color-night */
+        --surface: #111a24; /* --color-night-2 */
+        --surface-2: color-mix(
+          in srgb,
+          white 7%,
+          #111a24
+        ); /* white at 7 % on --color-night-2 */
+        --text: color-mix(in srgb, white 92%, #0b1118); /* --color-night-ink */
+        --muted: color-mix(
+          in srgb,
+          white 80%,
+          #0b1118
+        ); /* --color-night-muted */
+        --line: color-mix(
+          in srgb,
+          white 18%,
+          #0b1118
+        ); /* the expert layer's dark --border */
+        --accent: #47aec6; /* --color-teal-night */
+        --accent-ink: #0b1118; /* --color-night */
+        --mark: #b97af1; /* --color-purple-night */
+        --ok: #4ade80; /* --color-green */
+        --p1: #f26969; /* --color-red-night */
+        --p2: #f59e0b; /* --color-amber */
+        --p3: color-mix(in srgb, white 80%, #0b1118); /* --color-night-muted */
         color-scheme: dark;
       }
       * {
@@ -92,7 +136,7 @@
         margin: 0;
         background: var(--bg);
         color: var(--text);
-        font: 15px/1.55 var(--sans);
+        font: var(--text-subheading)/1.55 var(--sans);
         overflow-wrap: break-word;
       }
       .wrap {
@@ -108,21 +152,21 @@
         letter-spacing: -0.02em;
       }
       h1 {
-        font-size: 24px;
+        font-size: var(--text-page);
         margin: 0 0 4px;
       }
       h2.repo {
-        font-size: 20px;
+        font-size: var(--text-heading);
         margin: 32px 0 4px;
         padding-top: 12px;
         border-top: 2px solid var(--line);
       }
       h3.group {
-        font-size: 15px;
+        font-size: var(--text-micro);
         margin: 26px 0 10px;
         color: var(--muted);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em; /* --tracking-label */
       }
       .sub {
         color: var(--muted);
@@ -131,19 +175,23 @@
       .progress {
         height: 8px;
         background: var(--surface-2);
-        border-radius: 99px;
+        border-radius: var(--radius-pill);
         overflow: hidden;
         margin: 10px 0 4px;
       }
       .progress > i {
         display: block;
         height: 100%;
-        background: linear-gradient(135deg, #1a7285, #9333ea);
+        background: linear-gradient(
+          135deg,
+          #1a7285,
+          #9333ea
+        ); /* --gradient-magic */
         width: 0;
         transition: width 0.3s;
       }
       .stats {
-        font-size: 13px;
+        font-size: var(--text-ui);
         color: var(--muted);
       }
       .bar {
@@ -163,10 +211,10 @@
         border: 1px solid var(--line);
         background: var(--surface);
         color: var(--text);
-        border-radius: 99px;
+        border-radius: var(--radius-pill);
         padding: 5px 12px;
         font: inherit;
-        font-size: 13px;
+        font-size: var(--text-ui);
         cursor: pointer;
       }
       .chip[aria-pressed="true"] {
@@ -177,11 +225,11 @@
       select,
       input[type="search"] {
         font: inherit;
-        font-size: 13px;
+        font-size: var(--text-ui);
         border: 1px solid var(--line);
         background: var(--surface);
         color: var(--text);
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
         padding: 6px 10px;
         max-width: 100%;
       }
@@ -206,16 +254,16 @@
         flex-wrap: wrap;
       }
       .card h2 {
-        font-size: 16px;
+        font-size: var(--text-subheading);
         margin: 0;
         flex: 1 1 260px;
         line-height: 1.35;
         min-width: 0;
       }
       .badge {
-        font-size: 11px;
+        font-size: var(--text-micro);
         font-weight: 600;
-        border-radius: 6px;
+        border-radius: var(--radius-pill);
         padding: 2px 7px;
         white-space: nowrap;
         text-transform: uppercase;
@@ -247,12 +295,12 @@
       }
       .ctx.muted {
         color: var(--muted);
-        font-size: 14px;
+        font-size: var(--text-ui);
       }
       details summary {
         cursor: pointer;
         color: var(--muted);
-        font-size: 13px;
+        font-size: var(--text-ui);
         margin-top: 8px;
       }
       .opts {
@@ -265,7 +313,7 @@
         gap: 10px;
         align-items: flex-start;
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: var(--radius);
         padding: 10px 12px;
         cursor: pointer;
       }
@@ -279,34 +327,34 @@
       }
       .opt b {
         display: block;
-        font-size: 14px;
+        font-size: var(--text-ui);
       }
       .opt span {
         display: block;
         color: var(--muted);
-        font-size: 13px;
+        font-size: var(--text-ui);
         white-space: pre-line;
       }
       .rec {
-        font-size: 11px;
+        font-size: var(--text-micro);
         font-weight: 600;
         color: var(--mark);
         margin-left: 6px;
       }
       label.f {
         display: block;
-        font-size: 13px;
+        font-size: var(--text-ui);
         color: var(--muted);
         margin: 10px 0 4px;
       }
       textarea {
         width: 100%;
         font: inherit;
-        font-size: 14px;
+        font-size: var(--text-ui);
         border: 1px solid var(--line);
         background: var(--surface);
         color: var(--text);
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
         padding: 8px 10px;
         min-height: 44px;
         resize: vertical;
@@ -320,8 +368,8 @@
       }
       .btn {
         font: inherit;
-        font-size: 14px;
-        border-radius: 8px;
+        font-size: var(--text-ui);
+        border-radius: var(--radius-sm);
         padding: 7px 14px;
         cursor: pointer;
         border: 1px solid var(--line);
@@ -335,7 +383,7 @@
         font-weight: 600;
       }
       .saved {
-        font-size: 12px;
+        font-size: var(--text-micro);
         color: var(--muted);
       }
       .empty {
@@ -348,13 +396,12 @@
       }
       .export textarea {
         font-family: var(--mono);
-        font-size: 12px;
+        font-size: var(--text-micro);
         min-height: 160px;
       }
       :focus-visible {
         outline: 3px solid var(--mark);
         outline-offset: 2px;
-        border-radius: 4px;
       }
     </style>
   </head>
