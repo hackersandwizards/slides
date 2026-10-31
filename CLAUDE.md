@@ -5,14 +5,13 @@ the deck types, the slide stylesheet and the PDF renderer. Three repos run it an
 decks: `talks` and `hycle-private/talks` on Next.js, `trainer-hub` on Astro. The reasoning is in os
 `docs/tracking/2026-10-30-repo-coupling.md`.
 
-This repo stays private on GitHub (`github.com/hackersandwizards/slides`, team `trainers` read, as
-`brand`). Consumers install it as a Git dependency pinned to a tag,
+This repo is public on GitHub (`github.com/hackersandwizards/slides`). Consumers install it as a Git dependency pinned to a tag,
 `git+ssh://git@github.com/hackersandwizards/slides.git#v<version>`. `"private": true` stays:
 nothing is ever published. A release is a tag `v<version>` matching `package.json`. Nothing here
 writes into another repo.
 
-**External trainers can read this whole repo, its history included**, because the trainer hub
-installs it. Nothing goes in that a trainer may not see: no customer deck, price, rate, client
+**Anyone can read this whole repo, its history included.** Nothing goes in that the public may
+not see: no customer deck, price, rate, client
 term, personal data or secret. Decks live in the consumers, except the fictional specimen deck.
 
 ## Layout
