@@ -32,6 +32,23 @@ The command `slides-density [--serve "<command>"] <print-url> ...` belongs in ea
 it renders each deck's print route and fails on a slide the fit guard shrinks below 0.8, and lists
 those below 0.9. `--serve` starts the consumer's server for the run and stops it afterwards.
 
+The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]` writes a deck as a native
+PowerPoint file in the h&w design: text as text boxes, tables as tables, trend and bar charts as
+charts, diagrams as shapes, and only the deck's own images and the h&w logos as pictures. The deck
+is the `Presentation` as JSON, `-` reads it from stdin. `--assets` is the folder a deck's `/…`
+image paths resolve against, `./public` by default. In `talks`:
+
+```sh
+bun scripts/slides-json.ts <slug> > deck.json && bun run slides-pptx deck.json <slug>.pptx
+```
+
+The file names its fonts, Inter and JetBrains Mono, and embeds neither: the brand ships them as
+woff2, which PowerPoint cannot embed. Each carries its kind (sans, monospace), so a machine without
+them shows a font of the same kind. Install both fonts on the presenting machine for the h&w look.
+It shows a client's deck in the h&w design only; a deck on a client's template needs that
+consumer's own exporter. The PowerPoint parser pulls in `image-size`, whose old version carries
+advisories, so a consumer adds `"overrides": { "image-size": "2.0.4" }` as this package does.
+
 The package ships TypeScript source. Let the build transpile it: Next
 `transpilePackages: ["@hackersandwizards/slides"]`, Astro `vite.ssr.noExternal`, vitest
 `test.server.deps.inline`. A Next app wraps its root layout in `NextSlidesAdapter`, which puts

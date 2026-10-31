@@ -36,6 +36,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `scripts/density.ts`: the `slides-density` command each consumer runs in its gate: fails on a
   slide the fit guard shrinks below 0.8, lists those below 0.9. The engine's own regression decks
   are covered where talks runs it over the specimen deck.
+- `scripts/render-pptx.ts`: the `slides-pptx` command, a deck JSON to a native PowerPoint file in
+  the h&w design with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
+  Its lengths and sizes are measured off the print route at 1920x1080.
 - `specimen/`: `slide-catalogue.ts`, the specimen deck, every slide type and variant with fictional
   content, its images, and the specimen page `index.html` with its compiled `build/slides.css`, one slide per slide
   type in print mode, which the brand kit links. `bun run specimen` (`scripts/specimen.ts`)
@@ -44,7 +47,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
 consumer imports, `types/slide`, both stylesheets, `scripts/render-pdf`, the specimen deck and its
-images, and the `slides-density` command in `bin`. Moving or renaming one of them, or adding one, is
+images, and the `slides-density` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is
 a release. Consumers import by those names, `@hackersandwizards/slides/types/slide`, and ship the source: Next lists
 the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest config in
 `server.deps.inline`. React, motion, lucide-react, recharts, shiki, Tailwind and the brand package

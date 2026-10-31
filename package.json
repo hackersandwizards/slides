@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -10,7 +10,8 @@
     "bun": ">=1.3.0"
   },
   "bin": {
-    "slides-density": "scripts/density.ts"
+    "slides-density": "scripts/density.ts",
+    "slides-pptx": "scripts/render-pptx.ts"
   },
   "exports": {
     "./components/*": "./components/*.tsx",
@@ -39,6 +40,7 @@
     "styles",
     "scripts/render-pdf.ts",
     "scripts/density.ts",
+    "scripts/render-pptx.ts",
     "specimen"
   ],
   "scripts": {
@@ -75,7 +77,8 @@
     }
   },
   "overrides": {
-    "minimatch": "11.0.3"
+    "minimatch": "11.0.3",
+    "image-size": "2.0.4"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -107,5 +110,9 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
     "vitest": "5.0.5"
+  },
+  "dependencies": {
+    "jszip": "3.10.1",
+    "pptxgenjs": "4.0.1"
   }
 }
