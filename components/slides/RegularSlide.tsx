@@ -4,8 +4,8 @@ import type { RegularSlide as RegularSlideType, ContentSection } from "../../typ
 import Image from "../ui/image";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { Linkedin, User } from "lucide-react";
-import { iconMap } from "../../lib/icons";
+import { User } from "lucide-react";
+import { iconMap, Linkedin } from "../../lib/icons";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { useCarousel } from "../../lib/use-carousel";
 import { usePrintMode } from "../../lib/print-context";

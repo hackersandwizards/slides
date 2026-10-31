@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "../ui/image";
-import { Linkedin, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
+import { Linkedin } from "../../lib/icons";
 import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { Particles } from "../ui/particles";
 import { BRAND_HEX } from "../../lib/theme";

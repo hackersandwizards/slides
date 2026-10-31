@@ -5,7 +5,8 @@ import Image from "../ui/image";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { useCarousel } from "../../lib/use-carousel";
-import { Linkedin, User } from "lucide-react";
+import { User } from "lucide-react";
+import { Linkedin } from "../../lib/icons";
 import { TitledContent, SlideTitle, Wash } from "./primitives";
 
 interface Props {
