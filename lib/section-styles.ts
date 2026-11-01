@@ -10,10 +10,13 @@ export interface SectionStyle {
   pill: string;
 }
 
-// Every section sits on the brand page; its colour is the eyebrow's, so a deck does not change
-// background tint slide by slide. The deep-dive part keeps its own warm identity.
+// Every section sits on the brand page under one wash, teal top left to purple bottom right as the
+// brand's --gradient-magic runs, so a deck does not change background tint slide by slide; only
+// the eyebrow takes the section's colour. The deep-dive part keeps its own warm identity.
+export const SECTION_WASH = "bg-gradient-to-br from-primary/7 via-transparent to-secondary/7";
+
 export const DEFAULT_SECTION_STYLE: SectionStyle = {
-  gradient: "bg-gradient-to-br from-secondary/7 via-transparent to-primary/7",
+  gradient: SECTION_WASH,
   label: "text-secondary",
   border: "border-secondary/25",
   pill: ACCENT_PILL,
@@ -21,32 +24,32 @@ export const DEFAULT_SECTION_STYLE: SectionStyle = {
 
 export const SECTION_STYLES: Record<SectionTheme, SectionStyle> = {
   primary: {
-    gradient: "bg-gradient-to-br from-primary/7 via-transparent to-secondary/7",
+    gradient: SECTION_WASH,
     label: "text-primary",
     border: "border-border",
     pill: ACCENT_PILL,
   },
   secondary: DEFAULT_SECTION_STYLE,
   accent: {
-    gradient: "bg-gradient-to-br from-accent/7 via-transparent to-primary/7",
+    gradient: SECTION_WASH,
     label: "text-accent",
     border: "border-accent/25",
     pill: ACCENT_PILL,
   },
   warning: {
-    gradient: "bg-gradient-to-br from-accent/7 via-transparent to-brand/7",
+    gradient: SECTION_WASH,
     label: "text-accent",
     border: "border-accent/25",
     pill: ACCENT_PILL,
   },
   success: {
-    gradient: "bg-gradient-to-br from-success/7 via-transparent to-primary/7",
+    gradient: SECTION_WASH,
     label: "text-success",
     border: "border-success/25",
     pill: "slide-chip [--chip:var(--color-success)]",
   },
   deepdive: {
-    gradient: "bg-gradient-to-br from-secondary/7 via-transparent to-primary/7",
+    gradient: SECTION_WASH,
     label: "text-secondary",
     border: "border-secondary/25",
     pill: ACCENT_PILL,

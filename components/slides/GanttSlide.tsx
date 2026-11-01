@@ -4,6 +4,7 @@ import type { GanttSlide as GanttSlideType, SectionTheme } from "../../types/sli
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { SectionHeader } from "./SectionHeader";
+import { SECTION_WASH } from "../../lib/section-styles";
 import { TitledContent, SlideTitle } from "./primitives";
 
 interface Props {
@@ -47,7 +48,7 @@ export function GanttSlide({ slide }: Props) {
 
   return (
     <SlideShell background="bg-section-intro">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/7 via-transparent to-secondary/7" />
+      <div className={`absolute inset-0 ${SECTION_WASH}`} />
 
       <TitledContent>
         <SectionHeader

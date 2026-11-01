@@ -4,6 +4,7 @@ import type { LanesSlide as LanesSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { SectionHeader } from "./SectionHeader";
+import { SECTION_WASH } from "../../lib/section-styles";
 import { highlightCode } from "../../lib/code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
 import { TitledContent, SlideTitle, CodePanel } from "./primitives";
@@ -15,7 +16,7 @@ interface Props {
 export function LanesSlide({ slide }: Props) {
   return (
     <SlideShell>
-      <div className="absolute inset-0 bg-gradient-to-br from-secondary/7 via-transparent to-primary/7" />
+      <div className={`absolute inset-0 ${SECTION_WASH}`} />
 
       <TitledContent>
         <SectionHeader
