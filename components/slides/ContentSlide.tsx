@@ -25,16 +25,9 @@ import { renderMarkdown } from "../../lib/markdown";
 import { highlightCode } from "../../lib/code-highlight";
 import { getStageClasses } from "../../lib/stage-utils";
 import { getSectionStyle } from "../../lib/section-styles";
-import { isDeepDive, linkLabel, personAccent } from "../../lib/slide-utils";
+import { isDeepDive, keepHyphenatedWords, linkLabel, personAccent } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import {
-  TitledContent,
-  SlideTitle,
-  SlideCard,
-  CodePanel,
-  SlideSubtitle,
-  keepHyphenatedWords,
-} from "./primitives";
+import { TitledContent, SlideTitle, SlideCard, CodePanel, SlideSubtitle } from "./primitives";
 
 type LabeledGridBlockType = Extract<ContentBlock, { type: "labeled-grid" }>;
 

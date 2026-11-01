@@ -3,7 +3,7 @@
 import type { TransitionSlide as TransitionSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { keepHyphenatedWords } from "./primitives";
+import { keepHyphenatedWords } from "../../lib/slide-utils";
 
 interface Props {
   slide: TransitionSlideType;
