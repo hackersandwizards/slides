@@ -2,30 +2,30 @@ window.DECISION_REPOS = window.DECISION_REPOS || {};
 window.DECISION_REPOS["slides"] = [
   {
     id: "catalogue-grouping",
-    title: "Wie soll die Katalogseite Folien ordnen, damit man eine Folie für X findet?",
+    title: "How should the catalogue page order slides, so you can find a slide for X?",
     area: "slides",
     priority: 2,
     order: 350,
     status: "open",
     context:
-      "Die Specimen-Seite zeigt heute 26 Kacheln, je Typ die erste Folie, ohne Beschreibung, mit nur zwei der 26 Blöcke und ohne Varianten. Phase 3 baut sie neu, mit Suche, je Eintrag einer Detailansicht (Wann, Varianten, Do und Don't, Zahl der Deckfolien). Offen ist die Ordnung links. Mockup und Begründung: docs/tracking/2026-11-01-catalogue-program.md, Abschnitt Katalogseite.",
+      "Today the specimen page shows 26 tiles, the first slide of each type, with no description, only two of the 26 blocks and no variants. Phase 3 rebuilds it, with search and a detail view per entry (when to use, variants, do and don't, number of deck slides). Still open is the order in the left column. Mockup and reasoning: docs/tracking/2026-11-01-catalogue-program.md, section Katalogseite (catalogue page).",
     options: [
       {
         key: "job",
-        label: "Nach Kommunikationsaufgabe",
+        label: "By communication job",
         detail:
-          "13 Aufgaben wie Vergleichen, Ablauf, Zeitplan, Daten, Übung. Ein Eintrag darf in zwei Aufgaben stehen. Die Suche findet zusätzlich jeden Typnamen.",
+          "13 jobs such as compare, process, schedule, data, exercise. An entry may sit under two jobs. Search also finds every type name.",
       },
       {
         key: "shape",
-        label: "Nach Form",
+        label: "By shape",
         detail:
-          "Text, Karten, Diagramm, Daten, Bild, Code, Gerüst. Näher an der Engine, weiter weg von der Frage, die man beim Bauen hat.",
+          "Text, cards, diagram, data, image, code, scaffold. Closer to the engine, further from the question you have while building.",
       },
       {
         key: "alpha",
-        label: "Alphabetisch nach Typ, mit Suche",
-        detail: "Wie heute, nur mit allen Blöcken, Varianten und einer Suche.",
+        label: "Alphabetical by type, with search",
+        detail: "As today, but with every block, every variant and a search.",
       },
     ],
     recommended: "job",
@@ -34,23 +34,23 @@ window.DECISION_REPOS["slides"] = [
   {
     id: "merge-cards",
     title:
-      "Sollen fünf Kartenformen eine werden: grid pillars, labeled-grid, four-column und hooks in cards?",
+      "Should five card shapes become one: grid pillars, labeled-grid, four-column and hooks into cards?",
     area: "slides",
     priority: 3,
     order: 1002,
     status: "open",
     context:
-      "Fünf Einträge zeigen parallele Punkte als Karten: cards (100 Deckfolien), grid pillars (45), labeled-grid (16), four-column (11), hooks (5). Unterschiede: Nummernkacheln mit Farbe je Karte, eine hervorgehobene Zelle, eine Liste je Spalte, Name in Mono. cards bekäme Hervorhebung, Liste und Aufdecken, die Farbe je Karte fällt weg. Gilt erst, wenn cards auf echten Deckfolien im Blind-Panel mindestens gleichauf liegt. Phase 4 stellt 77 Folien um. Bericht, Gruppe 1.",
+      "Five entries show parallel points as cards: cards (100 deck slides), grid pillars (45), labeled-grid (16), four-column (11), hooks (5). Differences: number tiles with a colour per card, one highlighted cell, a list per column, the name in mono. cards would gain highlighting, a list and reveal; the colour per card goes. Applies only once cards scores at least level on real deck slides in the blind panel. Phase 4 converts 77 slides. Report, group 1.",
     options: [
       {
         key: "merge",
-        label: "Zusammenlegen in cards",
-        detail: "Nach Blind-Panel-Gleichstand. grid bleibt nur mit quotes (2 Folien).",
+        label: "Merge into cards",
+        detail: "After a tie in the blind panel. grid stays only with quotes (2 slides).",
       },
       {
         key: "keep",
-        label: "So lassen",
-        detail: "Alle fünf bleiben, Phase 2 optimiert jede Form für sich.",
+        label: "Leave it",
+        detail: "All five stay; phase 2 optimises each shape on its own.",
       },
     ],
     recommended: "merge",
@@ -58,63 +58,64 @@ window.DECISION_REPOS["slides"] = [
   },
   {
     id: "merge-comparison",
-    title: "Sollen transform, guidance und positions Varianten von comparison werden?",
+    title: "Should transform, guidance and positions become variants of comparison?",
     area: "slides",
     priority: 3,
     order: 1003,
     status: "open",
     context:
-      "Vier ganzseitige Vergleiche: comparison (21 Deckfolien), transform (6, Vorher und Nachher, dasselbe wie comparison before-after), guidance (2, schlecht und gut, Wertung 6,50), positions (1, zwei Haltungen und eine Auflösung). Der Block two-column (105) bleibt, weil er sich die Folie mit anderen Blöcken teilt. Gilt erst nach Blind-Panel-Gleichstand. Bericht, Gruppe 2.",
+      "Four full-page comparisons: comparison (21 deck slides), transform (6, before and after, the same as comparison before-after), guidance (2, bad and good, score 6.50), positions (1, two stances and a resolution). The two-column block (105) stays, because it shares the slide with other blocks. Applies only after a tie in the blind panel. Report, group 2.",
     options: [
       {
         key: "merge",
-        label: "Zusammenlegen in comparison",
-        detail: "transform wird before-after, guidance und positions werden eigene Varianten.",
+        label: "Merge into comparison",
+        detail:
+          "transform becomes before-after; guidance and positions become variants of their own.",
       },
-      { key: "keep", label: "So lassen", detail: "Alle vier bleiben." },
+      { key: "keep", label: "Leave it", detail: "All four stay." },
     ],
     recommended: "merge",
     images: { merge: "docs/tracking/2026-11-01-catalogue-program/merge-vergleich.jpg" },
   },
   {
     id: "merge-flow",
-    title: "Sollen evolution und pipeline in flow aufgehen?",
+    title: "Should evolution and pipeline merge into flow?",
     area: "slides",
     priority: 3,
     order: 1004,
     status: "open",
     context:
-      "Drei lineare Abläufe: flow (17 Deckfolien), evolution (24, Stufen mit Multiplikator und Badge), pipeline (37, Stufen mit Status, Logos, Schleifen und Rahmen). flow bekäme Badge je Schritt und einen optionalen Rahmen. process (Kreis, Wertung 7,75), lanes und layers bleiben als eigene Formen. Gilt erst nach Blind-Panel-Gleichstand. Phase 4 stellt 61 Folien um. Bericht, Gruppe 3.",
+      "Three linear processes: flow (17 deck slides), evolution (24, stages with multiplier and badge), pipeline (37, stages with status, logos, loops and frame). flow would gain a badge per step and an optional frame. process (circle, score 7.75), lanes and layers stay as shapes of their own. Applies only after a tie in the blind panel. Phase 4 converts 61 slides. Report, group 3.",
     options: [
       {
         key: "merge",
-        label: "Zusammenlegen in flow",
-        detail: "evolution und pipeline werden Optionen von flow.",
+        label: "Merge into flow",
+        detail: "evolution and pipeline become options of flow.",
       },
-      { key: "keep", label: "So lassen", detail: "Alle drei bleiben." },
+      { key: "keep", label: "Leave it", detail: "All three stay." },
     ],
     recommended: "merge",
     images: { merge: "docs/tracking/2026-11-01-catalogue-program/merge-ablauf.jpg" },
   },
   {
     id: "merge-phased-pills",
-    title: "Sollen dual-pill-overview und roadmap in phased-pills aufgehen?",
+    title: "Should dual-pill-overview and roadmap merge into phased-pills?",
     area: "slides",
     priority: 3,
     order: 1005,
     status: "open",
     context:
-      "Drei Deck-Übersichten, alle schwach im Typen-Panel von tm-: phased-pills 5,58 (43 Deckfolien), dual-pill-overview 4,92 (1), roadmap 6,50 (5). dual-pill-overview ist zwei phased-pills-Spalten, roadmap zwei Spalten mit Beschreibung. phased-pills bekäme eine optionale zweite Spalte. Wartet auf dd- (Deep-Dive-Look), das die Spaltenakzente entscheidet. overview bleibt vorerst und wird überarbeitet. Bericht, Gruppe 4.",
+      "Three deck overviews, all weak in the type panel of tm-: phased-pills 5.58 (43 deck slides), dual-pill-overview 4.92 (1), roadmap 6.50 (5). dual-pill-overview is two phased-pills columns, roadmap two columns with a description. phased-pills would gain an optional second column. Waits on dd- (deep-dive look), which decides the column accents. overview stays for now and gets reworked. Report, group 4.",
     options: [
       {
         key: "merge",
-        label: "Zusammenlegen in phased-pills",
-        detail: "Nach dd- und nach Blind-Panel-Gleichstand.",
+        label: "Merge into phased-pills",
+        detail: "After dd- and after a tie in the blind panel.",
       },
       {
         key: "keep",
-        label: "So lassen",
-        detail: "Alle drei bleiben, dd- und Phase 2 überarbeiten jede für sich.",
+        label: "Leave it",
+        detail: "All three stay; dd- and phase 2 rework each on its own.",
       },
     ],
     recommended: "merge",
@@ -122,76 +123,77 @@ window.DECISION_REPOS["slides"] = [
   },
   {
     id: "merge-numbers",
-    title: "Soll grid stats in numbers aufgehen?",
+    title: "Should grid stats merge into numbers?",
     area: "slides",
     priority: 3,
     order: 1006,
     status: "open",
     context:
-      "Zwei Zahlenformen: numbers (9 Deckfolien, Wert, Bezeichnung, Quelle) und grid stats (7, dieselben Werte in Karten mit Icon und Beschreibung, ohne Quelle). Gilt erst nach Blind-Panel-Gleichstand. Bericht, Gruppe 5.",
+      "Two number shapes: numbers (9 deck slides; value, label, source) and grid stats (7; the same values in cards with icon and description, without a source). Applies only after a tie in the blind panel. Report, group 5.",
     options: [
-      { key: "merge", label: "Zusammenlegen in numbers", detail: "grid stats fällt weg." },
-      { key: "keep", label: "So lassen", detail: "Beide Zahlenformen bleiben." },
+      { key: "merge", label: "Merge into numbers", detail: "grid stats goes." },
+      { key: "keep", label: "Leave it", detail: "Both number shapes stay." },
     ],
     recommended: "merge",
     images: { merge: "docs/tracking/2026-11-01-catalogue-program/merge-zahlen.jpg" },
   },
   {
     id: "merge-content",
-    title: "Soll regular in content aufgehen?",
+    title: "Should regular merge into content?",
     area: "slides",
     priority: 3,
     order: 1007,
     status: "open",
     context:
-      "regular (60 Deckfolien, 54 davon in talks) setzt Abschnitte mit Titel, Liste, Text, Link und Icon, optional eine Profil-Seitenleiste. content (1.033) setzt dasselbe aus Blöcken. Die Seitenleiste würde eine Option von content. Größte Umstellung in Phase 4, vor allem Pitch- und Kundendecks in talks. Gilt erst nach Blind-Panel-Gleichstand. Bericht, Gruppe 6.",
+      "regular (60 deck slides, 54 of them in talks) sets sections with title, list, text, link and icon, optionally a profile sidebar. content (1,033) builds the same from blocks. The sidebar would become an option of content. The biggest conversion in phase 4, mainly pitch and client decks in talks. Applies only after a tie in the blind panel. Report, group 6.",
     options: [
       {
         key: "merge",
-        label: "Zusammenlegen in content",
-        detail: "Ein Codemod stellt die 60 Folien um, verschickte PDFs bleiben, wie sie sind.",
+        label: "Merge into content",
+        detail: "A codemod converts the 60 slides; PDFs already sent stay as they are.",
       },
-      { key: "keep", label: "So lassen", detail: "regular bleibt als eigener Typ." },
+      { key: "keep", label: "Leave it", detail: "regular stays a type of its own." },
     ],
     recommended: "merge",
     images: { merge: "docs/tracking/2026-11-01-catalogue-program/merge-textfolie.jpg" },
   },
   {
     id: "merge-statement",
-    title: "Soll content centered in statement aufgehen?",
+    title: "Should content centered merge into statement?",
     area: "slides",
     priority: 3,
     order: 1008,
     status: "open",
     context:
-      "Zwei Formen für eine Einzelaussage: statement (96 Deckfolien, Wertung 5,75) und content mit layout centered (7). Vier der sieben centered-Folien tragen einen verlinkten QR-Code, dafür bekommt statement ein verlinktes Bild; die eine positions-Folie geht mit merge-comparison, die eine terminal-Folie bleibt content ohne Zentrierung. statement wird in Phase 2 ohnehin überarbeitet: die Reviewer rügten das Leuchten hinter dem Inhalt und das durchgestrichene Wort. Gilt erst nach Blind-Panel-Gleichstand. Bericht, Gruppe 7.",
+      "Two shapes for a single statement: statement (96 deck slides, score 5.75) and content with layout centered (7). Four of the seven centered slides carry a linked QR code, so statement gets a linked image; the one positions slide goes with merge-comparison, and the one terminal slide stays content without centring. statement gets reworked in phase 2 anyway: the reviewers faulted the glow behind the content and the struck-through word. Applies only after a tie in the blind panel. Report, group 7.",
     options: [
-      { key: "merge", label: "Zusammenlegen in statement", detail: "layout centered fällt weg." },
-      { key: "keep", label: "So lassen", detail: "Beide bleiben." },
+      { key: "merge", label: "Merge into statement", detail: "layout centered goes." },
+      { key: "keep", label: "Leave it", detail: "Both stay." },
     ],
     recommended: "merge",
     images: { merge: "docs/tracking/2026-11-01-catalogue-program/merge-aussage.jpg" },
   },
   {
     id: "catalogue-migration-scope",
-    title: "Phase 4 stellt alle Decks um, auch die schon ausgelieferten",
+    title: "Phase 4 converts every deck, including those already delivered",
     area: "slides",
     priority: 2,
     order: 9,
     status: "assumed",
     context:
-      "Ein Typ, der aus der Engine fällt, bricht den Typecheck jedes Decks, das ihn nutzt. Deshalb zieht Phase 4 alle 52 Decks in talks, trainer-hub und hycle um, Lieferungen und Kundendecks eingeschlossen, so wie seit slides v0.4.6 ausgelieferte Decks der Engine folgen. Verschickte PDFs bleiben, wie sie sind.",
-    assumption: "Alle Decks, per Codemod je Repo, nach den Entscheidungen der merge-Zeilen.",
+      "A type that drops out of the engine breaks the typecheck of every deck that uses it. So phase 4 moves all 52 decks in talks, trainer-hub and hycle, deliveries and client decks included, just as delivered decks have followed the engine since slides v0.4.6. PDFs already sent stay as they are.",
+    assumption: "Every deck, by a codemod per repo, following the decisions in the merge rows.",
   },
   {
     id: "team-topology-grammar",
-    title: "team-topology bekommt die Formen der Team Topologies, in Markenfarben",
+    title: "team-topology gets the shapes of Team Topologies, in brand colours",
     area: "slides",
     priority: 3,
     order: 10,
     status: "assumed",
     context:
-      "Ausgeliefert in v0.12.0: Stream-Teams waagerecht in Teal, Enabling senkrecht links in Purple, Subsystem als Achteck in Neutral, Plattform über die volle Breite mit gepunktetem Teal-Rand, kein Rot, kein Fußband. Blind-Panel: heute 5,90, neu 7,51, Rauschen je Bild 0,29; Runde 2 ohne Gewinner über dem Rauschen (Plateau). Abweichung von den Templates: die Plattform trägt die Markenecke statt eckiger Ecken (7,51 gegen 7,26). Vorher und nachher: docs/tracking/2026-11-01-catalogue-program/phase2-team-topology.jpg.",
-    assumption: "Formensprache der Templates, Farben aus der Marke, entschieden im Blind-Panel.",
+      "Shipped in v0.12.0: stream-aligned teams horizontal in teal, enabling vertical on the left in purple, subsystem as an octagon in neutral, platform across the full width with a dotted teal border, no red, no footer band. Blind panel: today 5.90, new 7.51, noise per image 0.29; round 2 had no winner above the noise (plateau). Departure from the templates: the platform carries the brand corner instead of square corners (7.51 against 7.26). Before and after: docs/tracking/2026-11-01-catalogue-program/phase2-team-topology.jpg.",
+    assumption:
+      "Shape language from the templates, colours from the brand, decided in the blind panel.",
   },
 ];
