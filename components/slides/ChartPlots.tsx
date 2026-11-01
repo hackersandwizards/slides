@@ -25,8 +25,6 @@ interface PlotProps {
   print: boolean;
   xLabel?: string;
   yLabel?: string;
-  /** Bars carry their value on top and drop the value axis and grid. */
-  labelled?: boolean;
 }
 
 const tick = { fill: "var(--color-text-muted)", fontSize: "var(--text-base)" };
@@ -98,7 +96,16 @@ export function TrendPlot({ data, print, xLabel, yLabel }: PlotProps) {
   );
 }
 
-export function BarPlot({ data, print, xLabel, yLabel, labelled }: PlotProps) {
+export function BarPlot({
+  data,
+  print,
+  xLabel,
+  yLabel,
+  labelled,
+}: PlotProps & {
+  /** Bars carry their value on top and drop the value axis and grid. */
+  labelled?: boolean;
+}) {
   return (
     <Axes xLabel={xLabel} yLabel={labelled ? undefined : yLabel}>
       <ResponsiveContainer width="100%" height="100%">
