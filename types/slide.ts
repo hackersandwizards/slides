@@ -568,6 +568,7 @@ export interface GanttBar {
   // 1-indexed column the bar starts in, and how many columns it spans.
   start: number;
   span: number;
+  /** No longer colours the bar: every bar takes the one data hue. Kept so existing decks type-check. */
   theme?: SectionTheme;
   // Continuous work (a cadence, a standing team) renders lighter than a block
   // of work that starts and finishes.

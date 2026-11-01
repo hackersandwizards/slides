@@ -1496,7 +1496,8 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
           y + (rh - bh) / 2,
           Math.max(0.02, (bar.value / max) * tw),
           bh,
-          bar.highlight ? c.teal : c.muted,
+          // As on the web slide: every bar teal, or with a highlight the rest in the context grey.
+          bar.highlight || !bars.some((x) => x.highlight) ? c.teal : mix(c.ink, c.bg, 0.4),
         );
         box(
           s,
@@ -3180,7 +3181,8 @@ const RENDER: {
       );
       rect(s, gx, ry, gw, rh - 0.1, c.card, c.border);
       for (const bar of r.bars) {
-        const tone = c[THEME[bar.theme ?? "primary"]] as string;
+        // One data hue, as on the web slide; continuous work at the ladder's 40 % with a 70 % edge.
+        const tone = c.teal;
         const bx = gx + (bar.start - 1) * colW;
         rect(
           s,
@@ -3188,8 +3190,8 @@ const RENDER: {
           ry,
           bar.span * colW,
           rh - 0.1,
-          bar.continuous ? mix(tone, c.bg, 0.2) : tone,
-          bar.continuous ? tone : undefined,
+          bar.continuous ? mix(tone, c.card, 0.4) : tone,
+          bar.continuous ? mix(tone, c.card, 0.7) : undefined,
         );
         box(s, c, bar.label, bx + 0.05, ry - 0.2, bar.span * colW, 0.2, {
           size: PT.label * 0.9,

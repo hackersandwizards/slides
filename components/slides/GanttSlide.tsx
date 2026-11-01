@@ -1,6 +1,6 @@
 "use client";
 
-import type { GanttSlide as GanttSlideType, SectionTheme } from "../../types/slide";
+import type { GanttSlide as GanttSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { isDeepDive } from "../../lib/slide-utils";
@@ -11,36 +11,11 @@ interface Props {
   slide: GanttSlideType;
 }
 
-// One bar style per section theme. Solid fill carries the phase colour, the
-// lighter variant is for work that runs continuously rather than as a block.
-const BAR_STYLE: Record<SectionTheme, { solid: string; soft: string; text: string }> = {
-  primary: {
-    solid: "bg-primary",
-    soft: "bg-primary/25 border border-primary/40",
-    text: "text-primary",
-  },
-  secondary: {
-    solid: "bg-secondary",
-    soft: "bg-secondary/25 border border-secondary/40",
-    text: "text-secondary",
-  },
-  accent: { solid: "bg-accent", soft: "bg-accent/25 border border-accent/70", text: "text-accent" },
-  success: {
-    solid: "bg-success",
-    soft: "bg-success/25 border border-success/70",
-    text: "text-success",
-  },
-  warning: {
-    solid: "bg-warning",
-    soft: "bg-warning/25 border border-warning/40",
-    text: "text-warning",
-  },
-  deepdive: {
-    solid: "bg-secondary",
-    soft: "bg-secondary/25 border border-secondary/70",
-    text: "text-secondary",
-  },
-};
+// Every bar takes the one data hue, teal, as every bar of the engine and the survey readout does
+// (os docs/tracking/2026-11-01-bar-colours.md): a bar's label names its work, so a hue per
+// workstream added colour without meaning. Work that runs continuously rather than as a block is
+// the same teal at the ladder's 40 % fill with a 70 % edge, which clears 3:1 on its white guide.
+const BAR = { solid: "bg-primary", soft: "bg-primary/40 border-2 border-primary/70" };
 
 export function GanttSlide({ slide }: Props) {
   const columnCount = slide.columns.length;
@@ -104,28 +79,22 @@ export function GanttSlide({ slide }: Props) {
 
                     {/* Every label sits above its bar, left-aligned with its start, so a row
                         never mixes labels inside a bar with labels beside one. */}
-                    {row.bars.map((bar, barIndex) => {
-                      const style = BAR_STYLE[bar.theme ?? "primary"];
-                      return (
-                        <span
-                          key={`label-${barIndex}`}
-                          className={`row-start-1 hidden self-end text-sm leading-tight font-bold md:block ${style.text}`}
-                          style={{ gridColumn: `${bar.start} / span ${bar.span}` }}
-                        >
-                          {bar.label}
-                        </span>
-                      );
-                    })}
-                    {row.bars.map((bar, barIndex) => {
-                      const style = BAR_STYLE[bar.theme ?? "primary"];
-                      return (
-                        <div
-                          key={barIndex}
-                          className={`row-start-2 min-h-9 rounded-brand-sm ${bar.continuous ? style.soft : style.solid}`}
-                          style={{ gridColumn: `${bar.start} / span ${bar.span}` }}
-                        />
-                      );
-                    })}
+                    {row.bars.map((bar, barIndex) => (
+                      <span
+                        key={`label-${barIndex}`}
+                        className="row-start-1 hidden self-end text-sm leading-tight font-bold text-primary md:block"
+                        style={{ gridColumn: `${bar.start} / span ${bar.span}` }}
+                      >
+                        {bar.label}
+                      </span>
+                    ))}
+                    {row.bars.map((bar, barIndex) => (
+                      <div
+                        key={barIndex}
+                        className={`row-start-2 min-h-9 rounded-brand-sm ${bar.continuous ? BAR.soft : BAR.solid}`}
+                        style={{ gridColumn: `${bar.start} / span ${bar.span}` }}
+                      />
+                    ))}
                   </div>
                 </div>
               </BlurFade>

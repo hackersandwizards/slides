@@ -22,9 +22,10 @@ const GREY = "var(--color-muted)";
 const LABEL = "font-sans text-4xl font-semibold leading-tight tracking-tight text-balance";
 // The smallest running text a visual sets: 36px at 1920, the checklist's floor.
 const CAPTION = "text-xl leading-snug";
-// Context marks (a bar that is not the point) in a lighter grey, 3:1 on the page: the brand ink
-// a little past its border-strong step, which reaches 2.9:1.
-const CONTEXT = "color-mix(in srgb, var(--color-ink) 52%, white)";
+// Context marks (a bar that is not the point): the ink at the ladder's 40 % on the page, 2.4:1 on
+// light and 3.4:1 on night, where the theme's ink and page turn. Its value stands beside it in ink.
+// Mixed with white, as before, it turned near-white on night and outshone the highlight.
+const CONTEXT = "color-mix(in srgb, var(--color-ink) 40%, var(--color-bg))";
 
 type Of<T extends VisualBlock["type"]> = Extract<VisualBlock, { type: T }>;
 
@@ -469,7 +470,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
                 take 16rem, which a callout on the same slide leaves free (ContentSlide). */}
             <div className="mt-3 grid grid-cols-[minmax(0,1fr)_14rem] items-center gap-8">
               <div
-                className={`relative ${tall ? "h-20" : "h-14"} ${block.max != null ? "border-r-4 border-text/25 bg-text/[0.1]" : ""} rounded-r-sm`}
+                className={`relative ${tall ? "h-20" : "h-14"} ${block.max != null ? "border-r-4 border-text/25 bg-text/[0.07]" : ""} rounded-r-sm`}
               >
                 <div
                   className="h-full rounded-r-sm"
