@@ -50,7 +50,9 @@ export type ColumnAccent = "ingredients" | "deepdive";
 // Shared card identity for the two staged-column slide types (RoadmapSlide,
 // DualPillOverview). The "deepdive" accent is the load-bearing Part-Two brand;
 // keeping it here prevents the two slides from drifting apart. Each slide
-// spreads this and adds its own extra fields.
+// spreads this and adds its own extra fields. The cards stay flat white: body
+// text never sits on a tint of the gradient (design guide); the accent is the bar
+// and the badge.
 export interface ColumnStyle {
   card: string;
   bar: string;
@@ -60,13 +62,13 @@ export interface ColumnStyle {
 
 export const COLUMN_STYLES: Record<ColumnAccent, ColumnStyle> = {
   ingredients: {
-    card: "border-border bg-gradient-to-br from-white via-primary/7 to-secondary/7",
+    card: "border-border bg-white",
     bar: "bg-gradient-to-r from-primary via-secondary to-accent",
     badge: "bg-primary/7 text-primary border-border",
     glow: "shadow-card",
   },
   deepdive: {
-    card: "border-border bg-gradient-to-br from-white to-secondary/7",
+    card: "border-border bg-white",
     bar: "bg-secondary",
     badge: "bg-secondary/7 text-secondary border-secondary/25",
     glow: "shadow-card",
