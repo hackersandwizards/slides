@@ -8,9 +8,9 @@ import markdown from "shiki/langs/markdown.mjs";
 import typescript from "shiki/langs/typescript.mjs";
 import yaml from "shiki/langs/yaml.mjs";
 
-// The website's code: Shiki's github-dark, Astro's default theme, with its comment grey lifted
-// (3.05:1 on the theme's background) to the theme's own description grey (5.34:1), as the website's
-// `comment-contrast` transformer does (website astro.config.mjs). Synchronous, with the JavaScript
+// The website's code: Shiki's github-dark, Astro's default theme, with its comment grey (3.05:1 on
+// the theme's background) lifted to the brand's night-subtle (5.58:1), as trainer-hub's
+// `comment-contrast` transformer does. Synchronous, with the JavaScript
 // regex engine, so a slide renders its code in the same pass on the server, in the browser and in
 // the print route. A language not loaded here renders as plain text.
 const THEME = "github-dark";
@@ -23,11 +23,12 @@ const LANGS = new Set(highlighter.getLoadedLanguages());
 // Plain text carries no token colour: it takes the theme's foreground.
 const FG = highlighter.getTheme(THEME).fg;
 
-// Both greys read from the theme, so its package owns them.
+// The theme's grey read from the theme, the lift from the brand token, so each package owns its own.
+// The lift is the token's CSS variable, which slides.css carries: a JavaScript import of the brand
+// tokens here would be a client dependency Vite discovers only on first render in trainer-hub.
 const COMMENT = githubDark.tokenColors
   ?.find((t) => [t.scope].flat().includes("comment"))
   ?.settings.foreground?.toUpperCase();
-const COMMENT_LIFT = githubDark.colors?.descriptionForeground;
 
 /** Each line's tokens, in their theme colours: one entry per line of `code`. */
 export function highlightLines(code: string, language?: string): ReactNode[] {
@@ -42,7 +43,11 @@ export function highlightLines(code: string, language?: string): ReactNode[] {
             <span
               key={j}
               style={{
-                color: (color === COMMENT ? COMMENT_LIFT : token.color) ?? FG,
+                // A comment reads --slide-code-comment where a container sets it.
+                color:
+                  (color === COMMENT
+                    ? "var(--slide-code-comment, var(--color-night-subtle))"
+                    : token.color) ?? FG,
                 fontStyle: (token.fontStyle ?? 0) & 1 ? "italic" : undefined,
               }}
             >

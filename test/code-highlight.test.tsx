@@ -12,8 +12,10 @@ describe("highlightCode", () => {
     expect(colours("name: reviewer", "yaml")).toContainEqual(["name", "rgb(133, 232, 157)"]);
   });
 
-  it("lifts the theme's comment grey as the website's comment-contrast transformer does", () => {
-    expect(colours("# a comment", "yaml")).toEqual([["# a comment", "rgb(149, 157, 165)"]]);
+  it("lifts the theme's comment grey to the brand's night-subtle", () => {
+    expect(colours("# a comment", "yaml")).toEqual([
+      ["# a comment", "var(--slide-code-comment, var(--color-night-subtle))"],
+    ]);
   });
 
   it("renders an unknown language as plain text in the theme's foreground", () => {

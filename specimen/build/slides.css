@@ -2592,7 +2592,7 @@
     color: #85e89d;
   }
   .text-code-comment {
-    color: #959da5;
+    color: var(--color-night-subtle);
   }
   .text-error {
     color: var(--color-error);
@@ -2869,6 +2869,12 @@
   }
   .\[--chip\:var\(--color-success\)\] {
     --chip: var(--color-success);
+  }
+  .\[--slide-code-comment\:color-mix\(in_srgb\,var\(--color-night-subtle\)\,var\(--color-night-muted\)\)\] {
+    --slide-code-comment: color-mix(in srgb,color-mix(in srgb, white 60%, var(--color-night)),color-mix(in srgb, white 80%, var(--color-night)));
+    @supports (color: color-mix(in lab, red, red)) {
+      --slide-code-comment: color-mix(in srgb,var(--color-night-subtle),var(--color-night-muted));
+    }
   }
   @media (hover: hover) {
     .group-hover\:bg-night-ink\/40:is(:where(.group):hover *) {

@@ -279,10 +279,10 @@
 
   /* Code blocks: the website's code, Shiki's github-dark, whose tokens lib/code-highlight.tsx
      colours. The terminal block takes the theme's background, its green for a command and the
-     website's lifted comment grey (5.34:1). */
+     comment grey lib/code-highlight.tsx lifts to, the brand's night-subtle (5.58:1). */
   --color-code-bg: #24292e;
   --color-code-command: #85e89d;
-  --color-code-comment: #959da5;
+  --color-code-comment: var(--color-night-subtle);
 
   /* Section backgrounds: the page colour tinted 7 % towards the section's hue, the first step of
      the opacity ladder, as the bg-section-* utilities below do. */
