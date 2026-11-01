@@ -309,6 +309,11 @@
   --slide-phone-kicker-gap: 1rem;
   --slide-phone-cell-padding: 0.5rem 0.625rem;
   --slide-phone-card-padding: 1.25rem;
+  /* The player's control bar below Tailwind's sm (SlideNavigation: 1rem from the bottom, 3rem
+     buttons) and a 1rem gap: the corner mark stands above it and the slide's bottom padding grows
+     by it, so the controls cover neither the mark nor the last line (blind panel 01.11.). */
+  --slide-phone-nav-band: 5rem;
+  --slide-phone-padding-nav: 4rem 1.25rem 11rem;
 
   /* ── Derived colours ── set again under the dark theme below, since a colour mixed from a token
      resolves where it is declared. */
