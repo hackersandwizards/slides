@@ -41,6 +41,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   components without importing `slides.css`.
 - `scripts/render-pdf.ts`: prints a deck's print route to a PDF; each consumer's `export-pdf.ts`
   resolves deck, URL and file name and calls it.
+- `scripts/pins.ts`: the `slides-pins` command each consumer runs first in its gate: fails when
+  `node_modules` holds another version of an `@hackersandwizards/*` package than `package.json` pins.
 - `scripts/density.ts`: the `slides-density` command each consumer runs in its gate: fails on a
   slide the fit guard shrinks below 0.8, lists those below 0.9. The engine's own regression decks
   are covered where talks runs it over the specimen deck.
@@ -56,7 +58,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
 consumer imports, `types/slide`, both stylesheets, `scripts/render-pdf`, the specimen deck and its
-images, and the `slides-density` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is
+images, and the `slides-density`, `slides-pins` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is
 a release. Consumers import by those names, `@hackersandwizards/slides/types/slide`, and ship the source: Next lists
 the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest config in
 `server.deps.inline`. React, motion, lucide-react, recharts, shiki, Tailwind and the brand package

@@ -118,4 +118,13 @@ describe("inline code", () => {
     const cls = container.querySelector("code")?.className.split(" ") ?? [];
     expect(cls).not.toContain("whitespace-nowrap");
   });
+
+  const chip = (text: string) =>
+    render(<p>{renderMarkdown(`\`${text}\``)}</p>).container.querySelector("code")?.className ?? "";
+
+  it("keeps a short name on one line and lets a path break", () => {
+    expect(chip("pr-diff-summarizer")).toContain("md:whitespace-nowrap");
+    for (const path of ["settings.json", ".claude/settings.json", ".vscode/mcp.json"])
+      expect(chip(path), path).toContain("[overflow-wrap:anywhere]");
+  });
 });

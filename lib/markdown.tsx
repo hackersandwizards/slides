@@ -42,12 +42,13 @@ export function renderMarkdown(text: string): React.ReactNode {
     }
     const text = part.slice(1, -1);
     // A short chip stays on one line, so a name such as `pr-diff-summarizer` never splits at its
-    // hyphen; a long one, such as a whole command or a path, may break inside itself, since a long
-    // one ran past the slide's edge or into the next column.
+    // hyphen; a long one, such as a whole command, and a path (a `/` or `.` in it) may break inside
+    // themselves, since they ran past the slide's edge or into the next column: a table of paths
+    // ran its last column off the slide (slides v0.19.0 to v0.21.1).
     return (
       <code
         key={i}
-        className={`rounded-brand-sm bg-primary/7 px-2 font-code text-primary ${text.length <= 24 || (text.includes(" ") && text.length <= 40) ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
+        className={`rounded-brand-sm bg-primary/7 px-2 font-code text-primary ${(text.length <= 24 && !/[/.]/.test(text)) || (text.includes(" ") && text.length <= 40) ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
       >
         {text}
       </code>
