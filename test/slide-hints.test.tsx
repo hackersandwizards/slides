@@ -1,5 +1,5 @@
 import { act, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SlideHints } from "../components/slides/SlideHints";
 import { slideComponents } from "../lib/slide-components";
 import type { GridSlide, Slide } from "../types/slide";
@@ -44,5 +44,22 @@ describe("SlideHints", () => {
     // The last step: nothing pending, and the card it revealed is lit like the ones before it.
     expect(queryByText("to reveal")).toBeNull();
     expect(lit()).toBe(1);
+  });
+
+  it("shows the first-slide hints for the opening seconds only, and not again on a return", () => {
+    vi.useFakeTimers();
+    try {
+      const first = render(<SlideHints slideIndex={0} />);
+      expect(first.queryByText("to go to next slide")).not.toBeNull();
+      act(() => vi.advanceTimersByTime(5000));
+      // The title slide in front of the audience carries no key hints.
+      expect(first.queryByText("to go to next slide")).toBeNull();
+      first.unmount();
+      // A slide change remounts the hints: back on the first slide they stay away.
+      const back = render(<SlideHints slideIndex={0} />);
+      expect(back.queryByText("to go to next slide")).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -13,6 +13,13 @@ interface Props {
 
 const HINTS_STORAGE_KEY = "slide-hints-visible";
 
+/** How long the first-slide hints stay after the deck opens: long enough for the presenter at the
+ *  keyboard to read them, gone before the title slide sits in front of an audience. */
+const INTRO_MS = 5000;
+/** When this page's intro closes, set by the first mount: a slide change remounts the hints, and
+ *  coming back to the first slide later shows no intro again. */
+let introEndsAt: number | undefined;
+
 export function SlideHints({ slideIndex }: Props) {
   const mounted = useMounted();
   const pending = usePendingReveal();
@@ -20,6 +27,13 @@ export function SlideHints({ slideIndex }: Props) {
   const [visible, setVisible] = useState(
     () => typeof window === "undefined" || readStored("local", HINTS_STORAGE_KEY) !== "false",
   );
+  const [intro, setIntro] = useState(() => introEndsAt === undefined || introEndsAt > Date.now());
+
+  useEffect(() => {
+    introEndsAt ??= Date.now() + INTRO_MS;
+    const timer = setTimeout(() => setIntro(false), introEndsAt - Date.now());
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -42,7 +56,7 @@ export function SlideHints({ slideIndex }: Props) {
 
   const hints: { icon: React.ReactNode; text: string }[] = [];
 
-  if (slideIndex === 0) {
+  if (slideIndex === 0 && intro) {
     hints.push({
       icon: <ArrowRight className="h-4 w-4" />,
       text: "to go to next slide",
