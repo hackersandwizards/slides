@@ -94,10 +94,18 @@ const MEDIA_BLOCKS = new Set(["image", "video", "linked-image"]);
 
 /** An image, video or linked image: centred, and on a titled slide as large as the body's free
  *  height allows, never larger than its own file. */
-function MediaFrame({ children, below }: { children: ReactNode; below?: ReactNode }) {
+function MediaFrame({
+  children,
+  below,
+  boxClassName = "",
+}: {
+  children: ReactNode;
+  below?: ReactNode;
+  boxClassName?: string;
+}) {
   return (
     <figure className="slide-media">
-      <div className="slide-media-box">{children}</div>
+      <div className={`slide-media-box ${boxClassName}`}>{children}</div>
       {below}
     </figure>
   );
@@ -144,11 +152,12 @@ function VideoBlock({ block }: { block: Extract<ContentBlock, { type: "video" }>
   };
   return (
     <MediaFrame
+      boxClassName="pb-10"
       below={
         block.caption && <figcaption className="slide-media-caption">{block.caption}</figcaption>
       }
     >
-      <div className="slide-media-item relative overflow-hidden rounded-brand border border-border bg-night">
+      <div className="slide-media-item relative rounded-brand border border-border bg-night">
         <video
           ref={ref}
           src={block.src}
@@ -164,16 +173,18 @@ function VideoBlock({ block }: { block: Extract<ContentBlock, { type: "video" }>
           onTimeUpdate={(e) =>
             setProgress(e.currentTarget.currentTime / (e.currentTarget.duration || 1))
           }
-          className="slide-media-item block cursor-pointer"
+          className="slide-media-item block cursor-pointer rounded-[inherit]"
         />
         {/* Round and teal, as every control that holds only an icon (brand tokens, radius-pill;
-            unprimed blind panel 2026-11-01). Playing, it stays as the pause control, shown only
-            to the keyboard that holds focus on it. */}
+            unprimed blind panel 2026-11-01). It straddles the recording's bottom edge, centred,
+            as on the website, so it covers no corner of the picture (os decision
+            play-button-position); the frame's bottom padding holds its lower half. Playing, it
+            stays as the pause control, shown only to the keyboard that holds focus on it. */}
         <button
           type="button"
           onClick={toggle}
           aria-label={`${playing ? "Pause" : "Play"} ${block.alt ?? "video"}`}
-          className={`absolute bottom-6 left-6 flex size-20 items-center justify-center rounded-full bg-primary text-white ${playing ? "opacity-0 focus-visible:opacity-100" : ""}`}
+          className={`absolute -bottom-10 left-1/2 z-10 flex size-20 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-white ${playing ? "opacity-0 focus-visible:opacity-100" : ""}`}
         >
           {playing ? (
             <Pause className="size-10 fill-current" strokeWidth={0} />
@@ -182,7 +193,7 @@ function VideoBlock({ block }: { block: Extract<ContentBlock, { type: "video" }>
           )}
         </button>
         {progress > 0 && (
-          <div className="absolute inset-x-0 bottom-0 h-1.5 bg-white/15">
+          <div className="absolute inset-x-0 bottom-0 h-1.5 overflow-hidden rounded-b-[inherit] bg-white/15">
             <div className="h-full bg-primary" style={{ width: `${progress * 100}%` }} />
           </div>
         )}
