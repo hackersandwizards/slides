@@ -2560,7 +2560,7 @@ const RENDER: {
         d.highlightPhase === n.title ||
         (d.highlightPhase === undefined && i === d.nodes.length - 1);
       card(s, r.x, r.y, r.w, r.h, c.card, hi ? c.teal : c.border);
-      s.addShape("ellipse", {
+      s.addShape("rect", {
         x: r.x + r.w / 2 - 0.17,
         y: r.y + 0.2,
         w: 0.34,

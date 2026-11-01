@@ -103,7 +103,7 @@ export function ProcessSlide({ slide }: Props) {
                         }`}
                       >
                         <span
-                          className={`flex h-14 w-14 items-center justify-center rounded-full ${highlighted ? "bg-gradient-to-r from-brand to-brand-accent text-white" : "bg-brand/7 text-brand"}`}
+                          className={`flex h-14 w-14 items-center justify-center rounded-brand-sm ${highlighted ? "bg-gradient-to-r from-brand to-brand-accent text-white" : "bg-brand/7 text-brand"}`}
                         >
                           <Icon className="h-7 w-7" aria-hidden />
                         </span>
@@ -267,9 +267,9 @@ export function ProcessSlide({ slide }: Props) {
                         }`}
                       />
 
-                      <div className="relative z-10 h-12 w-12 overflow-hidden rounded-full">
+                      <div className="relative z-10 h-12 w-12 overflow-hidden rounded-brand-sm">
                         <div
-                          className={`absolute inset-0 rounded-full transition-opacity duration-500 ${
+                          className={`absolute inset-0 transition-opacity duration-500 ${
                             highlighted
                               ? "opacity-0"
                               : isRevealed
@@ -278,7 +278,7 @@ export function ProcessSlide({ slide }: Props) {
                           }`}
                         />
                         <div
-                          className={`absolute inset-0 rounded-full bg-gradient-to-r from-brand to-brand-accent transition-opacity duration-500 ${
+                          className={`absolute inset-0 bg-gradient-to-r from-brand to-brand-accent transition-opacity duration-500 ${
                             highlighted ? "opacity-100" : "opacity-0"
                           }`}
                         />
