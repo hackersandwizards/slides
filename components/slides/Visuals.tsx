@@ -4,6 +4,7 @@ import type { VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { highlightLines } from "../../lib/code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
+import { CodePanel } from "./primitives";
 
 // The diagram vocabulary of a content slide: one relationship per block, drawn so the eye reads
 // the structure before the words. Shared rules, from the deck checklist:
@@ -562,14 +563,12 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
   const tokens = highlightLines(lines.map((l) => l.slice(indent)).join("\n"), block.language);
   return (
     <div className="flex w-full items-center gap-12">
-      <pre
-        className={`min-w-0 flex-[1.4] overflow-hidden border-4 border-text bg-code-bg py-6 ${CARD}`}
-      >
+      <CodePanel as="pre" className="min-w-0 flex-[1.4] overflow-hidden py-6">
         <code className="block font-code text-xl leading-snug">
           {lines.map((line, i) => {
             const n = marked.get(i + 1);
-            // Under a marked line's teal a comment in night-subtle falls to 3.6:1 (dark theme):
-            // there it takes the grey halfway to night-muted, 4.7:1, still below the code's.
+            // Under a marked line's teal a comment in night-subtle falls to 4.3:1 (dark theme):
+            // there it takes the grey halfway to night-muted, 5.6:1, still below the code's.
             return (
               <div
                 key={i}
@@ -594,7 +593,7 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
             );
           })}
         </code>
-      </pre>
+      </CodePanel>
       {block.notes.length > 0 && (
         <ol className="flex flex-1 flex-col gap-9">
           {block.notes.map((n, i) => (

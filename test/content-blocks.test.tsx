@@ -41,6 +41,16 @@ describe("content blocks", () => {
     );
     expect(grid?.style.gridTemplateColumns.startsWith("auto")).toBe(false);
   });
+
+  // Annotated code takes the code panel's faint frame, as every code block does; its own ink
+  // frame turned near-white on the night ground, the loudest element on the slide.
+  it("frames annotated code as the code panel", () => {
+    const c = content([{ type: "annotated-code", code: "a", notes: [] }]);
+    expect(c.querySelector("pre")?.className.split(" ")).toEqual(
+      expect.arrayContaining(["border-white/7", "bg-code-bg"]),
+    );
+    expect(c.querySelector("pre")?.className).not.toMatch(/border-(text|4)\b/);
+  });
 });
 
 describe("inline code", () => {

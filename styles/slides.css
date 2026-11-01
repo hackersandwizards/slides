@@ -214,6 +214,9 @@
   /* Badge colors: opaque teal tints, for overlapping card borders */
   --color-badge-bg: color-mix(in srgb, var(--color-teal) 15%, white);
   --color-badge-border: color-mix(in srgb, var(--color-teal) 25%, white);
+  /* Code ground: Shiki's github-dark background, as on the website; the brand-dark theme sets
+     night-2, as the PPTX export does. Not inline, so a theme sets it again. */
+  --color-code-bg: #24292e;
   --text-xs: calc(var(--type-label-size) * var(--slide-stage));
   --text-xs--line-height: 1.4;
   --text-sm: 1.25rem;
@@ -278,9 +281,9 @@
   --color-insight: var(--color-amber);
 
   /* Code blocks: the website's code, Shiki's github-dark, whose tokens lib/code-highlight.tsx
-     colours. The terminal block takes the theme's background, its green for a command and the
-     comment grey lib/code-highlight.tsx lifts to, the brand's night-subtle (5.58:1). */
-  --color-code-bg: #24292e;
+     colours. The terminal block takes the theme's background (--color-code-bg above), its green
+     for a command and the comment grey lib/code-highlight.tsx lifts to, the brand's night-subtle
+     (5.58:1). */
   --color-code-command: #85e89d;
   --color-code-comment: var(--color-night-subtle);
 
