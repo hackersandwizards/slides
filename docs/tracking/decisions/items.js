@@ -202,7 +202,7 @@ window.DECISION_REPOS["slides"] = [
     order: 11,
     status: "open",
     context:
-      "Jede Inhaltsfolie liegt auf der 7-%-Fläche Teal nach Purple (v0.10.1, Richtung von Benedikt am 01.11. per Panel entschieden). Der Design Guide sagt: «The gradient is a bounded field with a job, never wallpaper behind content.» In allen Phase-2-Panels werten Reviewer die Fläche danach ab, vor allem die Brand-Designerin (Bericht, Abschnitt Phase 2). Der Panel-Prompt zitiert den Satz, die Abwertung ist also teils vom Prompt erzeugt. Gemessen, was flach statt Verlauf bringt, ist nicht.",
+      "Dieselbe Frage wie os br-gradient-behind-content (Priorität 1): ob der 7-%-Wash hinter dem Folieninhalt als Verlaufsfeld zählt, das der Design Guide hinter Inhalt verbietet. Entschieden wird dort, die Antwort gilt hier mit. Was diese Zeile gemessen hatte, steht jetzt dort.",
     options: [
       {
         key: "guide",
