@@ -647,12 +647,19 @@ html:has(.print-slide) {
     --marker: calc(var(--slide-marker) * 0.75);
     background: color-mix(in srgb, var(--color-teal) 40%, var(--color-bg));
   }
-  /* Beside text that may wrap, on the middle of the first line's x-height, where Inter centres its
-     own bullet glyph: for Inter the line box's middle is the cap height's middle at every line
-     height, and the x-height's middle sits 0.091em below it. A marker beside caps (a label, a
-     badge) stays on the line's middle. Measured at 2x on every list size (2026-11-01). */
-  .items-start > .slide-marker {
-    margin-top: calc((1lh - var(--marker)) / 2 + 0.091em);
+  /* In a row aligned on the baseline (items-baseline), the marker's bottom sits on the first line's
+     baseline and is lifted until its middle is on the x-height's middle, 0.273em above the
+     baseline for Inter (JetBrains Mono 0.275em), or beside capitals (a label-caps row) on the
+     caps' middle, 0.365em for both. The row carries the text's size, so em is the text's. The lift
+     is whole pixels, so Chrome rounds the marker together with the text; a centred or top-offset
+     marker drifted up to 0.95 px from row to row. test/marker-position.test.ts measures every
+     marker in the specimen (2026-11-01). */
+  .items-baseline > .slide-marker {
+    position: relative;
+    top: calc(-1 * round(calc(0.273em - var(--marker) / 2), 1px));
+  }
+  .label-caps.items-baseline > .slide-marker {
+    top: calc(-1 * round(calc(0.365em - var(--marker) / 2), 1px));
   }
 
   /* The website's label-caps (typography.css): metadata, chips and table heads in the label

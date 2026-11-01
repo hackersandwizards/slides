@@ -40,7 +40,7 @@ export function GuidanceSlide({ slide }: Props) {
             <BlurFade delay={0.2} duration={0.6}>
               <ul className="mb-8 space-y-2">
                 {points.map((point, i) => (
-                  <li key={i} className="flex items-start gap-3 text-lg text-text-muted">
+                  <li key={i} className="flex items-baseline gap-3 text-lg text-text-muted">
                     <span className="slide-marker" />
                     {point}
                   </li>

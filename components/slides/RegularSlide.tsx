@@ -222,7 +222,7 @@ export function RegularSlide({ slide }: Props) {
                               {section.items.map((item, itemIndex) => (
                                 <li
                                   key={itemIndex}
-                                  className="flex items-start gap-3 text-base text-text-muted sm:text-lg md:gap-4 md:text-xl lg:text-2xl"
+                                  className="flex items-baseline gap-3 text-base text-text-muted sm:text-lg md:gap-4 md:text-xl lg:text-2xl"
                                 >
                                   <span className="slide-marker" />
                                   {item}

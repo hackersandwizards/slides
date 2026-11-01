@@ -282,7 +282,7 @@ function renderColumnContent(text: string) {
       return (
         <ul key={i} className="space-y-3">
           {items.map((item, j) => (
-            <li key={j} className="flex items-start gap-3 text-xl text-text-muted">
+            <li key={j} className="flex items-baseline gap-3 text-xl text-text-muted">
               <span className="slide-marker" />
               {renderMarkdown(item.slice(2))}
             </li>
@@ -468,7 +468,7 @@ function ContentBlockRenderer({
             const text = isNested ? item.text : item;
             return (
               <li key={i}>
-                <div className="flex items-start gap-4 text-2xl text-text-muted">
+                <div className="flex items-baseline gap-4 text-2xl text-text-muted">
                   {block.ordered ? (
                     <span className="w-8 shrink-0 font-semibold text-primary tabular-nums">
                       {i + 1}.
@@ -481,7 +481,7 @@ function ContentBlockRenderer({
                 {isNested && item.children.length > 0 && (
                   <ul className="mt-3 ml-10 space-y-3">
                     {item.children.map((child, j) => (
-                      <li key={j} className="flex items-start gap-3 text-xl text-text-muted">
+                      <li key={j} className="flex items-baseline gap-3 text-xl text-text-muted">
                         <span className="slide-marker slide-marker-nested" />
                         <span>{renderMarkdown(child)}</span>
                       </li>
@@ -567,7 +567,7 @@ function ContentBlockRenderer({
               {data.items && (
                 <ul className="space-y-4">
                   {data.items.map((item, j) => (
-                    <li key={j} className="flex items-start gap-3 text-xl text-text-muted">
+                    <li key={j} className="flex items-baseline gap-3 text-xl text-text-muted">
                       <span className={`slide-marker ${style.dot}`} />
                       <span>{renderMarkdown(item)}</span>
                     </li>
@@ -629,9 +629,9 @@ function ContentBlockRenderer({
           className={`rounded-brand border-2 border-dashed p-6 ${block.containerLabel ? "border-secondary bg-secondary/7" : "border-secondary-border bg-white"}`}
         >
           {block.containerLabel && (
-            <div className="mb-4 flex items-center gap-2">
+            <div className="label-caps mb-4 flex items-baseline gap-2 text-sm">
               <div className="slide-marker bg-secondary" />
-              <span className="label-caps text-sm text-secondary">{block.containerLabel}</span>
+              <span className="text-secondary">{block.containerLabel}</span>
               {block.containerLogos &&
                 block.containerLogos.map((logo, li) => (
                   <Image
@@ -640,7 +640,7 @@ function ContentBlockRenderer({
                     alt={logo.alt}
                     width={28}
                     height={28}
-                    className="ml-1 h-7 w-auto"
+                    className="ml-1 h-7 w-auto self-center"
                   />
                 ))}
             </div>
@@ -654,7 +654,7 @@ function ContentBlockRenderer({
                 <div className="h-16 w-px bg-secondary/25" />
                 <ul className="space-y-1.5">
                   {block.containerSideNotes.map((note, ni) => (
-                    <li key={ni} className="flex items-start gap-2 text-base text-text-muted">
+                    <li key={ni} className="flex items-baseline gap-2 text-base text-text-muted">
                       <span className="slide-marker slide-marker-nested bg-secondary" />
                       <span>{renderMarkdown(note)}</span>
                     </li>
@@ -763,7 +763,7 @@ function ContentBlockRenderer({
               </h3>
               <ul className="space-y-2">
                 {col.items.map((item, j) => (
-                  <li key={j} className="card-text-base flex items-start gap-2 text-text-muted">
+                  <li key={j} className="card-text-base flex items-baseline gap-2 text-text-muted">
                     <span className="slide-marker" />
                     {renderMarkdown(item)}
                   </li>
@@ -860,7 +860,7 @@ function ContentBlockRenderer({
           <div
             className={`relative flex flex-col gap-8 ${alignRight ? "items-end text-right" : "items-start text-left"}`}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-baseline gap-3">
               {!alignRight && (
                 <span
                   className={`text-xs font-bold tracking-[0.25em] tabular-nums ${a.text} opacity-70`}
@@ -868,9 +868,9 @@ function ContentBlockRenderer({
                   {numeral}
                 </span>
               )}
-              {!alignRight && <span className={`h-px w-10 ${a.rule}`} />}
+              {!alignRight && <span className={`h-px w-10 self-center ${a.rule}`} />}
               <span className={`label-caps text-sm ${a.text}`}>{side.name}</span>
-              {alignRight && <span className={`h-px w-10 ${a.rule}`} />}
+              {alignRight && <span className={`h-px w-10 self-center ${a.rule}`} />}
               {alignRight && (
                 <span
                   className={`text-xs font-bold tracking-[0.25em] tabular-nums ${a.text} opacity-70`}
@@ -1004,7 +1004,7 @@ function StandardContentSlide({ slide }: Props) {
             stagePrefix={slide.stagePrefix}
           />
           {slide.badge && (
-            <div className="label-caps flex shrink-0 items-center gap-2.5 rounded-full border border-primary/40 bg-white px-5 py-2 text-sm text-primary">
+            <div className="label-caps flex shrink-0 items-baseline gap-2.5 rounded-full border border-primary/40 bg-white px-5 py-2 text-sm text-primary">
               <span className="slide-marker" />
               {slide.badge}
             </div>

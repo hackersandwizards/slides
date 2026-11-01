@@ -74,9 +74,9 @@ export function OverviewSlide({ slide }: Props) {
             </div>
 
             <div className={foundationsContainerClasses}>
-              <div className="mb-4 flex items-center gap-2">
+              <div className="label-caps mb-4 flex items-baseline gap-2 text-base">
                 <div className="slide-marker bg-primary" />
-                <span className="label-caps text-base text-primary">Foundations</span>
+                <span className="text-primary">Foundations</span>
               </div>
               <div
                 className="grid gap-3"
@@ -112,9 +112,9 @@ export function OverviewSlide({ slide }: Props) {
                         key={laneIndex}
                         className={`flex flex-col gap-3 md:flex-row md:items-center md:gap-5 ${pipelineContainerClasses} md:py-4`}
                       >
-                        <div className="flex shrink-0 items-center gap-2">
+                        <div className="label-caps flex shrink-0 items-baseline gap-2 text-base">
                           <div className="slide-marker bg-secondary" />
-                          <span className="label-caps text-base whitespace-nowrap text-secondary tabular-nums">
+                          <span className="whitespace-nowrap text-secondary tabular-nums">
                             Pipeline {laneIndex + 1}
                           </span>
                         </div>
@@ -137,9 +137,9 @@ export function OverviewSlide({ slide }: Props) {
                   </div>
                 ) : (
                   <div className={`flex-1 ${pipelineContainerClasses}`}>
-                    <div className="mb-3 flex items-center gap-2">
+                    <div className="label-caps mb-3 flex items-baseline gap-2 text-base">
                       <div className="slide-marker bg-secondary" />
-                      <span className="label-caps text-base text-secondary">Pipeline</span>
+                      <span className="text-secondary">Pipeline</span>
                     </div>
                     <div className="flex flex-col gap-3 md:flex-row">
                       {pipeline.slice(1).map((stage: Stage, index: number) => (
@@ -160,9 +160,9 @@ export function OverviewSlide({ slide }: Props) {
               </div>
             ) : (
               <div className={`mt-6 ${pipelineContainerClasses}`}>
-                <div className="mb-4 flex items-center gap-2">
+                <div className="label-caps mb-4 flex items-baseline gap-2 text-base">
                   <div className="slide-marker bg-secondary" />
-                  <span className="label-caps text-base text-secondary">Pipeline</span>
+                  <span className="text-secondary">Pipeline</span>
                 </div>
                 <div
                   className="grid gap-3"

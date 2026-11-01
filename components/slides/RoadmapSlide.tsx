@@ -49,7 +49,7 @@ function ColumnCard({ column, delay }: { column: RoadmapColumn; delay: number })
           <ul className="mt-6 space-y-4">
             {column.items.map((item, i) => (
               <BlurFade key={i} delay={delay + 0.05 + i * 0.04} duration={0.35}>
-                <li className="flex items-start gap-4">
+                <li className="flex items-baseline gap-4 text-xl leading-snug">
                   <span className={`slide-marker ${item.dotColor ?? style.defaultDot}`} />
                   <div className="flex-1">
                     <p className="font-heading text-xl leading-snug font-bold text-text">

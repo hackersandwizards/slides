@@ -3685,8 +3685,12 @@ html:has(.print-slide) {
       background: color-mix(in srgb, var(--color-teal) 40%, var(--color-bg));
     }
   }
-  .items-start > .slide-marker {
-    margin-top: calc((1lh - var(--marker)) / 2 + 0.091em);
+  .items-baseline > .slide-marker {
+    position: relative;
+    top: calc(-1 * round(calc(0.273em - var(--marker) / 2), 1px));
+  }
+  .label-caps.items-baseline > .slide-marker {
+    top: calc(-1 * round(calc(0.365em - var(--marker) / 2), 1px));
   }
   .label-caps {
     font-family: var(--type-label-family);

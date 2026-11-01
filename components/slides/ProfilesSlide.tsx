@@ -96,7 +96,7 @@ export function ProfilesSlide({ slide }: Props) {
 
                     <ul className="mt-8 space-y-3">
                       {profile.bullets?.map((bullet, i) => (
-                        <li key={i} className="flex items-start gap-3 text-lg text-text-muted">
+                        <li key={i} className="flex items-baseline gap-3 text-lg text-text-muted">
                           <span className={`slide-marker bg-gradient-to-r ${a.dot}`} />
                           {bullet}
                         </li>

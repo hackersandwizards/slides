@@ -95,13 +95,11 @@ function PhaseColumn({
               return (
                 <div key={phaseIndex}>
                   <BlurFade delay={phaseDelay} duration={0.3}>
-                    <div className="mb-2 flex items-center gap-2">
+                    <div className="label-caps mb-2 flex items-baseline gap-2 text-xs">
                       <div
                         className={`slide-marker slide-marker-nested ${themeDotColor[theme] ?? "bg-secondary"}`}
                       />
-                      <span
-                        className={`label-caps text-xs ${themeLabelColor[theme] ?? "text-secondary"}`}
-                      >
+                      <span className={themeLabelColor[theme] ?? "text-secondary"}>
                         {phase.label}
                       </span>
                     </div>
