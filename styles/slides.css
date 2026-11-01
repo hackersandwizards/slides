@@ -198,27 +198,12 @@
    two of them), so they stay steps of the slide body. Not inline, so the utilities read the
    variables. */
 @theme {
-  /* Deep dive: the brand purple and its tints on the opacity ladder (7, 15, 25, 40, 70 %), its
-     text and headline in purple, body text in ink. The dark theme sets them again on the night
-     ground. */
-  --color-deep-50: color-mix(in srgb, var(--color-purple) 7%, var(--color-bg));
-  --color-deep-100: color-mix(in srgb, var(--color-purple) 15%, var(--color-bg));
-  --color-deep-200: color-mix(in srgb, var(--color-purple) 25%, var(--color-bg));
-  --color-deep-300: color-mix(in srgb, var(--color-purple) 40%, var(--color-bg));
-  --color-deep-400: color-mix(in srgb, var(--color-purple) 70%, var(--color-bg));
-  --color-deep-500: var(--color-purple);
-  --color-deep-600: var(--color-purple);
-  --color-deep-700: var(--color-purple);
-  --color-deep-800: var(--color-purple);
-  --color-deep-900: var(--color-ink);
-  --color-deep-950: var(--color-purple);
   /* The brand corner on the slide scale (see :root below): cards and code blocks take the full
      corner; number and icon tiles, inline code and the hint bar are square. A text chip stays the
      website's pill (TrainingList.astro .tl-chip). */
   --radius-brand: var(--slide-radius);
   --radius-brand-sm: var(--slide-radius-sm);
   /* Not inline, so a theme sets them again. */
-  --color-section-deepdive: color-mix(in srgb, var(--color-amber) 7%, var(--color-bg));
   /* Status: an error or a constraint is the brand's signal red, a warning its dark amber, as on
      every surface. Not inline, so a theme sets them again. */
   --color-warning: var(--color-amber-dark);
@@ -300,8 +285,7 @@
   --color-code-comment: #959da5;
 
   /* Section backgrounds: the page colour tinted 7 % towards the section's hue, the first step of
-     the opacity ladder, as the bg-section-* utilities below do. Only deepdive is read as a colour
-     (a gradient stop), so it sits in the @theme block above with the badges. */
+     the opacity ladder, as the bg-section-* utilities below do. */
   --color-section-intro: var(--color-bg);
   --color-section-primary: color-mix(in srgb, var(--color-teal) 7%, var(--color-bg));
   --color-section-secondary: color-mix(in srgb, var(--color-purple) 7%, var(--color-bg));
@@ -747,10 +731,12 @@ html:has(.print-slide) {
     );
   }
 
-  /* Brand dark: a proposal, on no deck by default (decision row in docs/tracking/decisions).
-     The website's night tokens for page, cards and text, teal and purple in their night cuts
-     (teal-night, purple-night), and dark text on those fills. */
-  .theme-brand-dark {
+  /* Brand dark: the website's night tokens for page, cards and text, teal and purple in their
+     night cuts (teal-night, purple-night), and dark text on those fills. A whole deck takes it
+     as `theme-brand-dark`, a proposal on no deck by default (decision row in os
+     docs/tracking/decisions); a deep-dive slide always takes it (`SlideShell` `night`), on itself
+     and on the frame holding it, so the corner mark turns with it. */
+  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night)) {
     /* The engine's semantic colours are inlined from these tokens at build time, so the theme
        sets the tokens themselves; a token derived from another is set again, since it resolved
        on the root. */
@@ -771,7 +757,6 @@ html:has(.print-slide) {
     --color-constraint: var(--color-red);
     --color-constraint-bg: color-mix(in srgb, var(--color-red) 7%, transparent);
     --color-code-bg: var(--color-night-2);
-    --color-section-deepdive: color-mix(in srgb, var(--color-amber) 7%, var(--color-bg));
     --color-text: var(--color-ink);
     --color-text-muted: var(--color-muted);
     --color-text-subtle: var(--color-muted);
@@ -783,51 +768,51 @@ html:has(.print-slide) {
     --color-accent: var(--color-amber);
     /* Dark text steps used on light tints turn light. */
     --color-teal-dark: color-mix(in srgb, var(--color-teal) 70%, white);
-    --color-deep-50: color-mix(in srgb, var(--color-purple) 7%, var(--color-bg));
-    --color-deep-100: color-mix(in srgb, var(--color-purple) 15%, var(--color-bg));
-    --color-deep-200: color-mix(in srgb, var(--color-purple) 25%, var(--color-bg));
-    --color-deep-300: color-mix(in srgb, var(--color-purple) 40%, var(--color-bg));
-    --color-deep-400: color-mix(in srgb, var(--color-purple) 70%, var(--color-bg));
-    --color-deep-500: var(--color-purple);
-    --color-deep-600: var(--color-purple);
-    --color-deep-700: var(--color-purple);
-    --color-deep-800: var(--color-purple);
-    --color-deep-900: var(--color-ink);
-    --color-deep-950: var(--color-purple);
     color-scheme: dark;
   }
 
   /* The Night wordmark on a dark theme, the light one everywhere else. */
   .hw-wordmark-night,
-  .theme-brand-dark .hw-wordmark {
+  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
+    .hw-wordmark {
     display: none;
   }
-  .theme-brand-dark .hw-wordmark-night {
+  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
+    .hw-wordmark-night {
     display: block;
   }
 
-  .theme-brand-dark .slide-chip {
+  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
+    .slide-chip {
     background: color-mix(in srgb, var(--chip, var(--color-teal)) 25%, var(--color-night));
     color: color-mix(in srgb, var(--chip, var(--color-teal)) 35%, white);
   }
 
-  .theme-brand-dark .bg-white,
-  .theme-brand-dark .bg-white\/90,
-  .theme-brand-dark .bg-white\/95,
-  .theme-brand-dark .bg-background {
+  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
+    .bg-white,
+  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
+    .bg-white\/90,
+  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
+    .bg-white\/95,
+  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
+    .bg-background {
     background-color: var(--color-night-2) !important;
   }
 
-  .theme-brand-dark .text-white {
+  /* White type on the gradient stays white, as the design guide sets it on every ground. */
+  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
+    .text-white:not([class*="bg-gradient"]) {
     color: var(--color-night);
   }
 
   /* A card's white gradient stop turns the card ground too. */
-  .theme-brand-dark .from-white {
+  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
+    .from-white {
     --tw-gradient-from: var(--color-night-2);
   }
 
-  .theme-brand-dark .to-white {
+  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
+    .to-white {
     --tw-gradient-to: var(--color-night-2);
   }
 }

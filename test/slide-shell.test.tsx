@@ -25,8 +25,8 @@ describe("SlideShell", () => {
   });
 
   it("uses the provided background instead of the default", () => {
-    const cls = shellClass({ children: "x", background: "bg-section-deepdive" });
-    expect(cls).toContain("bg-section-deepdive");
+    const cls = shellClass({ children: "x", background: "bg-section-primary" });
+    expect(cls).toContain("bg-section-primary");
     expect(cls).not.toContain("bg-section-intro");
   });
 

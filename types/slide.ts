@@ -506,7 +506,6 @@ export interface RoadmapSlide {
 export interface DeepDiveDividerSlide {
   type: "deep-dive-divider";
   partLabel?: string;
-  partNumber?: string;
   kicker?: string;
   headline: string;
   subtitle?: string;

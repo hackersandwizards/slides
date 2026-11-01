@@ -7,12 +7,16 @@ export function SlideShell({
   background = "bg-section-intro",
   direction = "row",
   overflowHidden = false,
+  night = false,
   className,
 }: {
   children: ReactNode;
   background?: string;
   direction?: "row" | "col";
   overflowHidden?: boolean;
+  /** The slide stands on night: `slides.css` sets the night tokens on it and on the frame holding
+   *  it, the corner mark included. */
+  night?: boolean;
   className?: string;
 }) {
   const ref = useFitToSlide();
@@ -21,6 +25,7 @@ export function SlideShell({
     direction === "col" && "flex-col",
     overflowHidden && "overflow-hidden",
     background,
+    night && "slide-night",
     className,
   ]
     .filter(Boolean)

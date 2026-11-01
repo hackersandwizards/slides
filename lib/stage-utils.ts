@@ -1,6 +1,6 @@
 import type { StageState } from "../types/slide";
 
-export type StageCategory = "primary" | "secondary" | "accent" | "success" | "deepdive";
+export type StageCategory = "primary" | "secondary" | "accent" | "success";
 
 // The new stage stands out by an outline, which takes no layout: a 3px border and a 6% scale made
 // it taller than its row and pushed its left edge out of line.
@@ -25,11 +25,6 @@ const categoryStyles = {
     active: "border border-success bg-success/15 text-text",
     default: "border border-success/40 bg-white text-text-muted",
   },
-  deepdive: {
-    new: "border border-deep-400 outline-2 outline-deep-400 bg-deep-100/70 text-deep-900",
-    active: "border border-deep-400 bg-deep-50 text-deep-900",
-    default: "border border-deep-200/70 bg-white text-deep-900/70",
-  },
 } as const;
 
 export function getStageClasses(
@@ -47,7 +42,7 @@ export const themeToCategory: Record<string, StageCategory> = {
   primary: "primary",
   secondary: "secondary",
   success: "success",
-  deepdive: "deepdive",
+  deepdive: "secondary",
 };
 
 export const themeDotColor: Record<string, string> = {
@@ -55,7 +50,7 @@ export const themeDotColor: Record<string, string> = {
   primary: "bg-primary",
   secondary: "bg-secondary",
   success: "bg-success",
-  deepdive: "bg-deep-500",
+  deepdive: "bg-secondary",
 };
 
 export const themeLabelColor: Record<string, string> = {
@@ -63,5 +58,5 @@ export const themeLabelColor: Record<string, string> = {
   primary: "text-primary",
   secondary: "text-secondary",
   success: "text-success",
-  deepdive: "text-deep-700",
+  deepdive: "text-secondary",
 };

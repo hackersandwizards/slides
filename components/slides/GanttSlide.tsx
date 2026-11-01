@@ -3,6 +3,7 @@
 import type { GanttSlide as GanttSlideType, SectionTheme } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
+import { isDeepDive } from "../../lib/slide-utils";
 import { SectionHeader } from "./SectionHeader";
 import { SECTION_WASH } from "../../lib/section-styles";
 import { TitledContent, SlideTitle } from "./primitives";
@@ -36,9 +37,9 @@ const BAR_STYLE: Record<SectionTheme, { solid: string; soft: string; text: strin
     text: "text-warning",
   },
   deepdive: {
-    solid: "bg-deep-500",
-    soft: "bg-deep-200 border border-deep-400",
-    text: "text-deep-600",
+    solid: "bg-secondary",
+    soft: "bg-secondary/25 border border-secondary/70",
+    text: "text-secondary",
   },
 };
 
@@ -47,7 +48,7 @@ export function GanttSlide({ slide }: Props) {
   const track = { gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` };
 
   return (
-    <SlideShell background="bg-section-intro">
+    <SlideShell background="bg-section-intro" night={isDeepDive(slide)}>
       <div className={`absolute inset-0 ${SECTION_WASH}`} />
 
       <TitledContent>

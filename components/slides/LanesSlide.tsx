@@ -3,6 +3,7 @@
 import type { LanesSlide as LanesSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
+import { isDeepDive } from "../../lib/slide-utils";
 import { SectionHeader } from "./SectionHeader";
 import { SECTION_WASH } from "../../lib/section-styles";
 import { highlightCode } from "../../lib/code-highlight";
@@ -15,7 +16,7 @@ interface Props {
 
 export function LanesSlide({ slide }: Props) {
   return (
-    <SlideShell>
+    <SlideShell night={isDeepDive(slide)}>
       <div className={`absolute inset-0 ${SECTION_WASH}`} />
 
       <TitledContent>

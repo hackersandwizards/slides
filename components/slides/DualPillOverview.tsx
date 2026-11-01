@@ -9,7 +9,6 @@ import {
   type StageCategory,
 } from "../../lib/stage-utils";
 import { COLUMN_STYLES, type ColumnAccent } from "../../lib/section-styles";
-import { DeepDiveBackdrop } from "./DeepDiveBackdrop";
 import { SlideShell } from "./SlideShell";
 import { TitledContent, SlideTitle } from "./primitives";
 
@@ -22,7 +21,7 @@ const accentToColumnStyle: Record<
   { card: string; bar: string; badge: string; glow: string; titleColor: string }
 > = {
   ingredients: { ...COLUMN_STYLES.ingredients, titleColor: "text-text" },
-  deepdive: { ...COLUMN_STYLES.deepdive, titleColor: "text-deep-950" },
+  deepdive: { ...COLUMN_STYLES.deepdive, titleColor: "text-text" },
 };
 
 const compactCategoryStyle: Record<StageCategory, string> = {
@@ -30,7 +29,6 @@ const compactCategoryStyle: Record<StageCategory, string> = {
   secondary: "border border-secondary/40 bg-secondary/7 text-text",
   accent: "border border-accent/40 bg-accent/7 text-text",
   success: "border border-success/40 bg-success/7 text-text",
-  deepdive: "border border-deep-300 bg-deep-50 text-deep-900",
 };
 
 function CompactPill({
@@ -135,25 +133,23 @@ function PhaseColumn({
 
 export function DualPillOverview({ slide }: Props) {
   return (
-    <SlideShell overflowHidden background="bg-section-deepdive">
-      <DeepDiveBackdrop intensity="soft" />
-
+    <SlideShell>
       <TitledContent>
         {slide.preText && (
           <BlurFade delay={0.1} duration={0.5}>
-            <span className="slide-kicker label-caps block text-sm text-deep-700/100">
+            <span className="slide-kicker label-caps block text-sm text-secondary">
               {slide.preText}
             </span>
           </BlurFade>
         )}
 
-        <SlideTitle className="text-deep-950" delay={0.2} duration={0.6}>
+        <SlideTitle delay={0.2} duration={0.6}>
           {slide.headline}
         </SlideTitle>
 
         {slide.subtitle && (
           <BlurFade delay={0.3} duration={0.5}>
-            <p className="mt-3 max-w-5xl text-xl whitespace-pre-line text-deep-900/70 italic">
+            <p className="mt-3 max-w-5xl text-xl whitespace-pre-line text-text-muted">
               {slide.subtitle}
             </p>
           </BlurFade>

@@ -16,7 +16,7 @@ import { renderMarkdown } from "../../lib/markdown";
 import { highlightCode } from "../../lib/code-highlight";
 import { getStageClasses } from "../../lib/stage-utils";
 import { getSectionStyle } from "../../lib/section-styles";
-import { personAccent } from "../../lib/slide-utils";
+import { isDeepDive, personAccent } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { TitledContent, SlideTitle, SlideCard, CodePanel, SlideSubtitle } from "./primitives";
 
@@ -612,12 +612,15 @@ function ContentBlockRenderer({
           )}
           <div className="flex flex-col gap-4">
             {block.gridTitle && (
-              <h3 className="label-caps mb-2 text-base text-deep-700">
+              <h3 className="label-caps mb-2 text-base text-secondary">
                 {renderMarkdown(block.gridTitle)}
               </h3>
             )}
             {block.items.map((item, i) => (
-              <div key={i} className="rounded-brand border-2 border-deep-200/40 bg-white px-6 py-4">
+              <div
+                key={i}
+                className="rounded-brand border-2 border-secondary/15 bg-white px-6 py-4"
+              >
                 <p className="mb-1 text-xl font-bold text-text">{renderMarkdown(item.title)}</p>
                 <p className="card-text-lg text-text">{renderMarkdown(item.subtitle)}</p>
               </div>
@@ -844,7 +847,7 @@ function ContentBlockRenderer({
 
 function CenteredContentSlide({ slide }: Props) {
   return (
-    <SlideShell direction="col" overflowHidden>
+    <SlideShell direction="col" overflowHidden night={isDeepDive(slide)}>
       <div className="slide-content relative z-10 flex flex-col items-center justify-center space-y-6 px-8 text-center md:space-y-8">
         {slide.sectionLabel && (
           <BlurFade delay={0.1} duration={0.4}>
@@ -889,7 +892,7 @@ function StandardContentSlide({ slide }: Props) {
   const hasBars = slide.content.some((b) => b.type === "bars");
 
   return (
-    <SlideShell>
+    <SlideShell night={isDeepDive(slide)}>
       <div className={`absolute inset-0 ${styles.gradient}`} />
 
       <TitledContent>
@@ -903,7 +906,6 @@ function StandardContentSlide({ slide }: Props) {
             pillColor={styles.pill}
             stageMarker={slide.stageMarker}
             stagePrefix={slide.stagePrefix}
-            stageMarkerTheme={slide.sectionTheme === "deepdive" ? "deepdive" : "default"}
           />
           {slide.badge && (
             <div className="label-caps flex shrink-0 items-center gap-2.5 rounded-full border border-primary/40 bg-white px-5 py-2 text-sm text-primary">

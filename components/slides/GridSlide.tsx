@@ -4,6 +4,7 @@ import Image from "../ui/image";
 import type { GridSlide as GridSlideType, GridCard } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
+import { isDeepDive } from "../../lib/slide-utils";
 import { iconMap, type LucideIcon } from "../../lib/icons";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { getSectionStyle } from "../../lib/section-styles";
@@ -224,7 +225,7 @@ export function GridSlide({ slide }: Props) {
           : "";
 
   return (
-    <SlideShell background={slide.background ?? "bg-section-intro"}>
+    <SlideShell background={slide.background ?? "bg-section-intro"} night={isDeepDive(slide)}>
       <Wash strength={5} />
 
       <TitledContent>

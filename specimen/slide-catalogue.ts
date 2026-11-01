@@ -1140,7 +1140,6 @@ const slides: Slide[] = [
   {
     type: "deep-dive-divider",
     partLabel: "Part two",
-    partNumber: "2",
     kicker: "Going deeper",
     headline: "The operational\ntactics",
     subtitle: "Where each tactic sits in the pipeline.",

@@ -93,7 +93,9 @@ export function TeamTopologySlide({ slide }: Props) {
                   key={team.name}
                   className="flex flex-col gap-2 rounded-brand border border-secondary bg-secondary/7 px-5 py-5 md:w-64"
                 >
-                  <span className="text-xl leading-tight font-bold text-deep-800">{team.name}</span>
+                  <span className="text-xl leading-tight font-bold text-secondary">
+                    {team.name}
+                  </span>
                   {team.experts.map((expert) => (
                     <span key={expert} className="text-lg leading-tight text-text">
                       {expert}

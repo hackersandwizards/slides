@@ -12,7 +12,7 @@ import PptxGenJS from "pptxgenjs";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import type { ContentBlock, Presentation, Slide, SectionTheme } from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
-import { pageLabel, personAccent } from "../lib/slide-utils";
+import { isDeepDive, pageLabel, personAccent } from "../lib/slide-utils";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
 type PSlide = ReturnType<Pptx["addSlide"]>;
@@ -2996,36 +2996,23 @@ const RENDER: {
   },
 
   "deep-dive-divider"(s, ctx, d) {
+    // The transition slide's centred headline, its label in purple; the night ground comes from
+    // the slide's palette.
     const { c } = ctx;
-    s.background = { color: mix(c.purple, c.bg, 0.06) };
-    if (d.partLabel || d.partNumber)
-      box(
-        s,
-        c,
-        {
-          runs: [
-            { text: `• ${[d.partLabel, d.partNumber].filter(Boolean).join(" ").toUpperCase()}` },
-          ],
-        },
-        SIDE,
-        TOP - 0.2,
-        4,
-        0.25,
-        { size: PT.label, mono: true, bold: true, color: c.purple },
-      );
+    const label = [d.partLabel, d.kicker].filter(Boolean).join(" · ");
     const paras: Para[] = [
-      ...(d.kicker
+      ...(label
         ? [
             {
-              runs: [{ text: `—  ${d.kicker.toUpperCase()}  —`, options: { color: c.amber } }],
+              runs: [{ text: label.toUpperCase(), options: { color: c.purple } }],
               mono: true,
               bold: true,
-              rel: PT.label / PT.display,
+              rel: PT.lead / PT.display,
               after: 14,
             },
           ]
         : []),
-      { runs: md(d.headline, c, { color: c.purple }), mono: true, bold: true, after: 14 },
+      { runs: md(d.headline, c), mono: true, bold: true, after: 14 },
       ...(d.subtitle ? [{ runs: md(d.subtitle, c), rel: PT.lead / PT.display }] : []),
     ];
     box(s, c, paras, SIDE + 0.5, TOP, CW - 1, BOTTOM - TOP, {
@@ -3520,9 +3507,12 @@ export async function renderPptx(
   if (deck.speakers?.length) pptx.author = deck.speakers.join(", ");
   pptx.theme = { headFontFace: MONO, bodyFontFace: SANS };
   const dark = deck.theme === "brand-dark";
-  const ctx: Ctx = { pptx, c: palette(dark), assets, dark, warnings: [] };
+  const deckCtx: Ctx = { pptx, c: palette(dark), assets, dark, warnings: [] };
   deck.slides.forEach((slide, i) => {
     const s = pptx.addSlide();
+    // A deep-dive slide stands on night, as on the web (`isDeepDive`).
+    const ctx: Ctx =
+      dark || !isDeepDive(slide) ? deckCtx : { ...deckCtx, c: palette(true), dark: true };
     frame(s, ctx, deck, i);
     const render = RENDER[slide.type] as Render | undefined;
     if (!render)
@@ -3552,12 +3542,12 @@ export async function renderPptx(
         // pptxgenjs writes no bullet colour.
         .replace(
           /<a:buSzPct val="100000"\/><a:buChar/g,
-          `<a:buClr><a:srgbClr val="${ctx.c.teal}"/></a:buClr><a:buSzPct val="80000"/><a:buChar`,
+          `<a:buClr><a:srgbClr val="${deckCtx.c.teal}"/></a:buClr><a:buSzPct val="80000"/><a:buChar`,
         ),
     );
   }
   writeFileSync(out, await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
-  return ctx.warnings;
+  return deckCtx.warnings;
 }
 
 if (import.meta.main) {

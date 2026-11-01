@@ -62,7 +62,9 @@ first chapter, listing the chapters in order. Each chapter opens with a `transit
 `headline` is the chapter's agenda item, its `preText` the chapter's position in the agenda, such
 as `"3 / 9"`. A break, lunch, a live demo or the thanks is not a chapter. A deck whose agenda is a
 timetable, or a map that returns before each part (`overview`, `phased-pills`), keeps that instead.
-A chapter divider is a `transition`; `deep-dive-divider` marks a deep-dive part only.
+A chapter divider is a `transition`; `deep-dive-divider` marks a deep-dive part only. Every slide of a
+deep-dive part, the `deep-dive-divider`, a slide whose `sectionTheme` is `deepdive` and a pill map whose
+phases are, stands on night (`isDeepDive` in `lib/slide-utils`); nothing else marks the part.
 
 A concept slide whose words claim a mechanism or a relationship in up to four short cards, and
 which has no diagram of the engine, may carry a generated marker sketch beside them: the

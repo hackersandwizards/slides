@@ -6,6 +6,7 @@ import { SectionHeader } from "./SectionHeader";
 import { renderMarkdown } from "../../lib/markdown";
 import { getSectionStyle } from "../../lib/section-styles";
 import { SlideShell } from "./SlideShell";
+import { isDeepDive } from "../../lib/slide-utils";
 import Image from "../ui/image";
 import { SlideTitle } from "./primitives";
 
@@ -68,7 +69,7 @@ export function MediaSlide({ slide }: Props) {
     slide.layout === "row" ? "row" : slide.sources.length > 1 ? "grid" : "single";
 
   return (
-    <SlideShell>
+    <SlideShell night={isDeepDive(slide)}>
       <div className={`absolute inset-0 ${theme.gradient}`} />
 
       <div

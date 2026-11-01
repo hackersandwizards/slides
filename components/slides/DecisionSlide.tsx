@@ -16,7 +16,7 @@ interface Props {
 // The team-topology slide's colours, so a branch reads as the team type it hands the need to.
 const TEAM: Record<DecisionTeam, string> = {
   platform: "border-primary bg-primary/15 text-teal-dark",
-  enabling: "border-secondary bg-secondary/15 text-deep-800",
+  enabling: "border-secondary bg-secondary/15 text-secondary",
   "complicated-subsystem": "border-factory bg-factory/15 text-factory",
 };
 

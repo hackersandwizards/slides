@@ -1,4 +1,5 @@
 import { ROLE_NAMES } from "./presenter-sync";
+import type { SectionTheme } from "../types/slide";
 
 /** The sessionStorage key carrying the direction a navigation arrives from. The frames inside the
  *  speaker window share that window's sessionStorage, so each role keeps a key of its own; the
@@ -60,4 +61,21 @@ export function pageLabel(slides: ReadonlyArray<{ type: string }>, index: number
  *  purple, alternating, in the order of the logo ("hackers" teal, "wizards" purple). */
 export function personAccent(index: number): "primary" | "secondary" {
   return index % 2 === 0 ? "primary" : "secondary";
+}
+
+/** A slide of a deep-dive part stands on night, the brand's ground for a whole section (os design
+ *  guide), so the part reads as one from the back row: the deep-dive divider, a slide whose
+ *  `sectionTheme` is `deepdive` and a pill map whose phases are. Blind-scored against the part
+ *  marked by its label alone and against the old rose and amber backdrop (os
+ *  docs/tracking/2026-11-01-deep-dive-brand.md). */
+export function isDeepDive(slide: {
+  type: string;
+  sectionTheme?: SectionTheme;
+  phases?: { theme?: SectionTheme }[];
+}): boolean {
+  return (
+    slide.type === "deep-dive-divider" ||
+    slide.sectionTheme === "deepdive" ||
+    (slide.phases?.some((p) => p.theme === "deepdive") ?? false)
+  );
 }

@@ -16,7 +16,7 @@ const ACCENT_STYLES: Record<
   { card: string; bar: string; badge: string; glow: string; defaultDot: string; iconBg: string }
 > = {
   ingredients: { ...COLUMN_STYLES.ingredients, defaultDot: "bg-primary", iconBg: "bg-primary/15" },
-  deepdive: { ...COLUMN_STYLES.deepdive, defaultDot: "bg-deep-400", iconBg: "bg-deep-100" },
+  deepdive: { ...COLUMN_STYLES.deepdive, defaultDot: "bg-secondary", iconBg: "bg-secondary/15" },
 };
 
 function ColumnCard({ column, delay }: { column: RoadmapColumn; delay: number }) {
@@ -79,7 +79,7 @@ export function RoadmapSlide({ slide }: Props) {
         aria-hidden="true"
       />
       <div
-        className="absolute right-1/4 bottom-1/4 h-[31.25rem] w-[31.25rem] rounded-full bg-deep-300/15 blur-[100px]"
+        className="absolute right-1/4 bottom-1/4 h-[31.25rem] w-[31.25rem] rounded-full bg-secondary/15 blur-[100px]"
         aria-hidden="true"
       />
 

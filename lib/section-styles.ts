@@ -12,7 +12,7 @@ export interface SectionStyle {
 
 // Every section sits on the brand page under one wash, teal top left to purple bottom right as the
 // brand's --gradient-magic runs, so a deck does not change background tint slide by slide; only
-// the eyebrow takes the section's colour. The deep-dive part keeps its own warm identity.
+// the eyebrow takes the section's colour.
 export const SECTION_WASH = "bg-gradient-to-br from-primary/7 via-transparent to-secondary/7";
 
 export const DEFAULT_SECTION_STYLE: SectionStyle = {
@@ -82,9 +82,9 @@ export const COLUMN_STYLES: Record<ColumnAccent, ColumnStyle> = {
     glow: "shadow-card",
   },
   deepdive: {
-    card: "border-deep-300/40 bg-gradient-to-br from-white via-deep-50 to-amber/7",
-    bar: "bg-gradient-to-r from-deep-400 via-amber to-factory-light",
-    badge: "bg-deep-50 text-deep-700 border-deep-200",
+    card: "border-border bg-gradient-to-br from-white to-secondary/7",
+    bar: "bg-secondary",
+    badge: "bg-secondary/7 text-secondary border-secondary/25",
     glow: "shadow-card",
   },
 };

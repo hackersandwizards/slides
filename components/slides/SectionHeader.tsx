@@ -8,7 +8,6 @@ interface Props {
   pillColor?: string;
   stageMarker?: string[];
   stagePrefix?: string;
-  stageMarkerTheme?: "deepdive" | "default";
 }
 
 const PIPELINE_STAGES = ["Refine", "Challenge", "Implement", "Review", "Rework", "QA", "Codify"];
@@ -20,31 +19,19 @@ export function SectionHeader({
   pillColor,
   stageMarker,
   stagePrefix,
-  stageMarkerTheme = "default",
 }: Props) {
   const hasStageStrip = (stageMarker && stageMarker.length > 0) || !!stagePrefix;
   if (!label && !principle && !hasStageStrip) return null;
 
-  const themeStyles =
-    stageMarkerTheme === "deepdive"
-      ? {
-          container: "border-deep-300/40 bg-deep-50/70",
-          label: "text-deep-700",
-          active: "bg-deep-500 text-white",
-          idle: "text-deep-900/70",
-          sep: "text-deep-300/70",
-          prefix: "bg-deep-500 text-white",
-          bigSep: "text-deep-500/100",
-        }
-      : {
-          container: "border-border bg-white",
-          label: "text-text-subtle",
-          active: "bg-secondary text-white",
-          idle: "text-text-subtle/70",
-          sep: "text-text-subtle/40",
-          prefix: "bg-text text-white",
-          bigSep: "text-text-subtle",
-        };
+  const themeStyles = {
+    container: "border-border bg-white",
+    label: "text-text-subtle",
+    active: "bg-secondary text-white",
+    idle: "text-text-subtle/70",
+    sep: "text-text-subtle/40",
+    prefix: "bg-text text-white",
+    bigSep: "text-text-subtle",
+  };
 
   return (
     <BlurFade delay={0.1} duration={0.5}>
