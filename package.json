@@ -82,7 +82,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v0.10.1",
+    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v0.17.0",
     "@tailwindcss/node": "4.3.3",
     "@tailwindcss/oxide": "4.3.3",
     "@testing-library/jest-dom": "7.0.1",
