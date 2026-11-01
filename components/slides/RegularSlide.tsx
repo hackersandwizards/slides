@@ -9,7 +9,7 @@ import { iconMap, Linkedin } from "../../lib/icons";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { useCarousel } from "../../lib/use-carousel";
 import { usePrintMode } from "../../lib/print-context";
-import { TitledContent, Wash } from "./primitives";
+import { TitledContent } from "./primitives";
 
 interface Props {
   slide: RegularSlideType;
@@ -152,8 +152,6 @@ export function RegularSlide({ slide }: Props) {
 
   return (
     <SlideShell className="text-text">
-      <Wash strength={4} />
-
       <TitledContent>
         <BlurFade delay={0.1} duration={0.6}>
           <h1 className={isCentered ? "slide-title text-center" : "slide-title"}>

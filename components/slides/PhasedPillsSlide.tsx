@@ -12,7 +12,6 @@ import {
 import { GradientTitlePill, PulseDot } from "./SlideChrome";
 import { SlideShell } from "./SlideShell";
 import { isDeepDive } from "../../lib/slide-utils";
-import { Wash } from "./primitives";
 
 interface Props {
   slide: PhasedPillsSlideType;
@@ -56,8 +55,6 @@ export function PhasedPillsSlide({ slide }: Props) {
 
   return (
     <SlideShell night={isDeepDive(slide)}>
-      <Wash strength={3} />
-
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-6">
         {/* The top margin holds the title pill, which hangs over the edge, inside what the fit guard
             measures, so a shrunk slide never pushes it under the brand strip. */}

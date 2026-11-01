@@ -491,9 +491,6 @@
   .top-1\/2 {
     top: calc(1 / 2 * 100%);
   }
-  .top-1\/4 {
-    top: calc(1 / 4 * 100%);
-  }
   .top-6 {
     top: calc(var(--spacing) * 6);
   }
@@ -514,9 +511,6 @@
   }
   .right-0 {
     right: 0px;
-  }
-  .right-1\/4 {
-    right: calc(1 / 4 * 100%);
   }
   .right-8 {
     right: calc(var(--spacing) * 8);
@@ -542,9 +536,6 @@
   .bottom-1\/2 {
     bottom: calc(1 / 2 * 100%);
   }
-  .bottom-1\/4 {
-    bottom: calc(1 / 4 * 100%);
-  }
   .bottom-4 {
     bottom: calc(var(--spacing) * 4);
   }
@@ -562,9 +553,6 @@
   }
   .left-1\/2 {
     left: calc(1 / 2 * 100%);
-  }
-  .left-1\/4 {
-    left: calc(1 / 4 * 100%);
   }
   .left-3 {
     left: calc(var(--spacing) * 3);
@@ -911,12 +899,6 @@
   .h-96 {
     height: calc(var(--spacing) * 96);
   }
-  .h-\[31\.25rem\] {
-    height: 31.25rem;
-  }
-  .h-\[37\.5rem\] {
-    height: 37.5rem;
-  }
   .h-auto {
     height: auto;
   }
@@ -1030,12 +1012,6 @@
   }
   .w-\[24rem\] {
     width: 24rem;
-  }
-  .w-\[31\.25rem\] {
-    width: 31.25rem;
-  }
-  .w-\[37\.5rem\] {
-    width: 37.5rem;
   }
   .w-\[min\(100cqw\,calc\(100cqh\*16\/9\)\)\] {
     width: min(100cqw, calc(100cqh * 16 / 9));
@@ -2135,11 +2111,6 @@
     --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);
     --tw-gradient-stops: var(--tw-gradient-via-stops);
   }
-  .via-transparent {
-    --tw-gradient-via: transparent;
-    --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);
-    --tw-gradient-stops: var(--tw-gradient-via-stops);
-  }
   .to-accent {
     --tw-gradient-to: var(--color-amber-dark);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
@@ -2831,14 +2802,6 @@
   }
   .blur {
     --tw-blur: blur(8px);
-    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
-  }
-  .blur-\[100px\] {
-    --tw-blur: blur(100px);
-    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
-  }
-  .blur-\[120px\] {
-    --tw-blur: blur(120px);
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
   .filter {
@@ -3979,9 +3942,6 @@ html:has(.print-slide) {
   * {
     box-shadow: none !important;
     text-shadow: none !important;
-  }
-  .absolute.inset-0.bg-gradient-to-br {
-    display: none !important;
   }
   *, *::before, *::after {
     animation: none !important;

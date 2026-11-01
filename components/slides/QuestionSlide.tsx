@@ -13,7 +13,6 @@ import {
   readStored,
   writeStored,
 } from "../../lib/slide-utils";
-import { Wash } from "./primitives";
 
 interface Props {
   slide: QuestionSlideType;
@@ -112,8 +111,6 @@ export function QuestionSlide({ slide }: Props) {
 
   return (
     <SlideShell direction="col">
-      <Wash strength={3} />
-
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-12">
         <BlurFade delay={0.1} duration={0.6}>
           <h2 className="mb-14 text-center font-heading text-5xl font-bold tracking-[-0.03em] text-text md:text-6xl">

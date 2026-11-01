@@ -13,7 +13,7 @@ import {
   directionKey,
   writeStored,
 } from "../../lib/slide-utils";
-import { SlideTitle, SlideCard, Wash } from "./primitives";
+import { SlideTitle, SlideCard } from "./primitives";
 
 /** A list item behind its mark: plus, minus or bullet, in the tone of its side. */
 function MarkedItem({ mark, tone, children }: { mark: string; tone: string; children: ReactNode }) {
@@ -288,8 +288,6 @@ export function ComparisonSlide({ slide }: Props) {
 
   return (
     <SlideShell>
-      <Wash strength={5} />
-
       <div
         className={`slide-content relative z-10 flex flex-col items-center justify-center px-16 ${slide.headline ? "slide-titled" : ""}`}
       >

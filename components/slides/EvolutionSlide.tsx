@@ -5,7 +5,7 @@ import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { ArrowRight } from "lucide-react";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { TitledContent, SlideTitle, Wash } from "./primitives";
+import { TitledContent, SlideTitle } from "./primitives";
 
 interface Props {
   slide: EvolutionSlideType;
@@ -28,8 +28,6 @@ export function EvolutionSlide({ slide }: Props) {
 
   return (
     <SlideShell background={slide.background ?? "bg-section-intro"}>
-      <Wash strength={3} />
-
       <TitledContent>
         <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
 

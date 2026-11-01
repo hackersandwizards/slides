@@ -9,7 +9,7 @@ interface Props {
 }
 
 /** The section divider of a deep-dive part: the transition slide's centred headline on the plain
- *  ground, its label in the deep dive's purple, "Part Two · Deep Dive". No field, no decoration. */
+ *  ground, its label in teal, on night teal-night, "Part Two · Deep Dive". No field, no decoration. */
 export function DeepDiveDivider({ slide }: Props) {
   const label = [slide.partLabel, slide.kicker].filter(Boolean).join(" · ");
   return (
@@ -17,7 +17,7 @@ export function DeepDiveDivider({ slide }: Props) {
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-4 text-center">
         {label && (
           <BlurFade delay={0.05} duration={0.4}>
-            <p className="label-caps mb-8 text-3xl text-secondary">{label}</p>
+            <p className="label-caps mb-8 text-3xl text-primary">{label}</p>
           </BlurFade>
         )}
 

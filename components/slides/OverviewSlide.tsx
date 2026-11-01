@@ -5,7 +5,6 @@ import { BlurFade } from "../ui/blur-fade";
 import { getStageClasses, type StageCategory } from "../../lib/stage-utils";
 import { GradientTitlePill, PulseDot } from "./SlideChrome";
 import { SlideShell } from "./SlideShell";
-import { Wash } from "./primitives";
 
 interface Props {
   slide: OverviewSlideType;
@@ -65,8 +64,6 @@ export function OverviewSlide({ slide }: Props) {
 
   return (
     <SlideShell>
-      <Wash strength={3} />
-
       {/* The vertical padding keeps the fit guard's shrink inside the safe margins, and clear of
  the label that sits above the frame. */}
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-6 py-16">

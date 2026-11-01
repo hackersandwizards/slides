@@ -8,16 +8,10 @@ interface Props {
   slide: TransitionSlideType;
 }
 
-const PRETEXT_COLORS: Record<string, string> = {
-  "Stepping Back": "text-success",
-  "The Bigger Picture": "text-success",
-};
-
 /** The headline centred on the ground, the label above it, the subtitle and speaker below. A section
  *  divider carries no gradient field and no decoration: blind-scored against the headline on the left
  *  half's gradient field, which read as pushed into the corner beside an empty half (2026-10-31). */
 export function TransitionSlide({ slide }: Props) {
-  const preTextColor = slide.preText ? (PRETEXT_COLORS[slide.preText] ?? "text-text-muted") : "";
   const isLiveDemo = slide.headline.includes("LIVE DEMO");
 
   return (
@@ -25,9 +19,7 @@ export function TransitionSlide({ slide }: Props) {
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-4 text-center">
         {slide.preText && (
           <BlurFade delay={0.05} duration={0.4}>
-            <p
-              className={`text-xl sm:text-2xl md:text-3xl ${preTextColor} label-caps mb-6 sm:mb-8`}
-            >
+            <p className="label-caps mb-6 text-xl text-primary sm:mb-8 sm:text-2xl md:text-3xl">
               {slide.preText}
             </p>
           </BlurFade>
