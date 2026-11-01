@@ -2,7 +2,6 @@ import { TitleSlide } from "../components/slides/TitleSlide";
 import { ContentSlide } from "../components/slides/ContentSlide";
 import { RegularSlide } from "../components/slides/RegularSlide";
 import { StatementSlide } from "../components/slides/StatementSlide";
-import { EvolutionSlide } from "../components/slides/EvolutionSlide";
 import { GridSlide } from "../components/slides/GridSlide";
 import { ComparisonSlide } from "../components/slides/ComparisonSlide";
 import { GuidanceSlide } from "../components/slides/GuidanceSlide";
@@ -18,22 +17,32 @@ import { TransitionSlide } from "../components/slides/TransitionSlide";
 import { ClosingSlide } from "../components/slides/ClosingSlide";
 import { RoadmapSlide } from "../components/slides/RoadmapSlide";
 import { DeepDiveDivider } from "../components/slides/DeepDiveDivider";
-import { DualPillOverview } from "../components/slides/DualPillOverview";
 import { GanttSlide } from "../components/slides/GanttSlide";
 import { TeamTopologySlide } from "../components/slides/TeamTopologySlide";
 import { AgendaSlide } from "../components/slides/AgendaSlide";
 import { WheelSlide } from "../components/slides/WheelSlide";
 import { DecisionSlide } from "../components/slides/DecisionSlide";
-import type { Slide } from "../types/slide";
+import { ActivitySlide } from "../components/slides/ActivitySlide";
+import { createElement } from "react";
+import type { DualPillOverviewSlide, EvolutionSlide, Slide } from "../types/slide";
+import { dualPillAsRoadmap, evolutionAsProcess } from "./slide-utils";
 
 type SlideComponent = React.ComponentType<{ slide: Slide }>;
+
+/** Types that another type replaced and that still render, through it, until every deck has moved:
+ *  the specimen shows the type that replaced them. */
+export const aliasTypes: Partial<Record<Slide["type"], Slide["type"]>> = {
+  evolution: "process",
+  "dual-pill-overview": "roadmap",
+};
 
 export const slideComponents: Record<Slide["type"], SlideComponent> = {
   title: TitleSlide as SlideComponent,
   content: ContentSlide as SlideComponent,
   regular: RegularSlide as SlideComponent,
   statement: StatementSlide as SlideComponent,
-  evolution: EvolutionSlide as SlideComponent,
+  evolution: (({ slide }: { slide: EvolutionSlide }) =>
+    createElement(ProcessSlide, { slide: evolutionAsProcess(slide) })) as SlideComponent,
   grid: GridSlide as SlideComponent,
   comparison: ComparisonSlide as SlideComponent,
   guidance: GuidanceSlide as SlideComponent,
@@ -49,10 +58,12 @@ export const slideComponents: Record<Slide["type"], SlideComponent> = {
   closing: ClosingSlide as SlideComponent,
   roadmap: RoadmapSlide as SlideComponent,
   "deep-dive-divider": DeepDiveDivider as SlideComponent,
-  "dual-pill-overview": DualPillOverview as SlideComponent,
+  "dual-pill-overview": (({ slide }: { slide: DualPillOverviewSlide }) =>
+    createElement(RoadmapSlide, { slide: dualPillAsRoadmap(slide) })) as SlideComponent,
   gantt: GanttSlide as SlideComponent,
   "team-topology": TeamTopologySlide as SlideComponent,
   agenda: AgendaSlide as SlideComponent,
   wheel: WheelSlide as SlideComponent,
   decision: DecisionSlide as SlideComponent,
+  activity: ActivitySlide as SlideComponent,
 };

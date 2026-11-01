@@ -1,9 +1,10 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { DualPillOverview } from "../components/slides/DualPillOverview";
+import { slideComponents } from "../lib/slide-components";
 import { RoadmapSlide } from "../components/slides/RoadmapSlide";
 import { PrintProvider } from "../lib/print-context";
 
+const DualPillOverview = slideComponents["dual-pill-overview"];
 const printed = (node: React.ReactNode) => render(<PrintProvider>{node}</PrintProvider>);
 
 describe("roadmap and dual-pill-overview", () => {

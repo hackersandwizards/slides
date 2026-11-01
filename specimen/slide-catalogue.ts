@@ -51,6 +51,35 @@ const slides: Slide[] = [
     ],
     notes: "agenda: seven items, the most it holds.",
   },
+  {
+    type: "agenda",
+    headline: "Day one",
+    items: [
+      { when: "09:00", title: "Where the team stands", text: "Survey results, one page" },
+      { when: "10:30", title: "Hands-on: the first execution plan" },
+      { when: "12:30", title: "Lunch" },
+      { when: "13:30", title: "Review that starts from green" },
+      { when: "15:30", title: "Debrief and what changes on Monday" },
+    ],
+    notes: "agenda as a schedule: times in place of the numbers, a line under a title.",
+  },
+  {
+    type: "agenda",
+    headline: "Next steps",
+    items: [
+      { when: "This week", title: "Name the pilot team", text: "Engineering lead, Lumen Freight" },
+      { when: "This week", title: "Share the architecture overview", text: "Platform team" },
+      {
+        when: "by 15 Nov",
+        title: "Assessment interviews with five teams",
+        text: "hackers&wizards",
+      },
+      { when: "by 1 Dec", title: "Pilot starts on one service", text: "Pilot team" },
+    ],
+    footer: "Needed today: the go for the assessment.",
+    notes:
+      "agenda as next steps: due dates in place of the numbers, a repeated date printed once, owners under the titles, the decision as footer.",
+  },
 
   // ─── content: section themes and header furniture ───────────────────────
   {
@@ -648,66 +677,65 @@ const slides: Slide[] = [
   },
 
   {
-    type: "evolution",
+    type: "process",
     headline: "From autocomplete to delivery harness",
-    stages: [
+    loop: false,
+    highlightPhase: "Harness",
+    nodes: [
       {
-        multiplier: "1x",
+        label: "1x",
         title: "Autocomplete",
         subtitle: "Line by line",
         description: "Faster typing.",
-        isDimmed: true,
+        dimmed: true,
       },
-      { multiplier: "3x", title: "Chat", subtitle: "Task by task", description: "Copy and paste." },
+      { label: "3x", title: "Chat", subtitle: "Task by task", description: "Copy and paste." },
       {
-        multiplier: "10x",
+        label: "10x",
         title: "Harness",
         subtitle: "Ticket by ticket",
         description: "Plans, checks, review.",
-        isHighlighted: true,
         badge: "You are here",
       },
     ],
     footer: "Each stage changes what a person reviews.",
-    notes: "evolution: three stages, dimmed, highlighted with badge, footer.",
+    notes:
+      "process, loop false: stages that run once, a label in each tile, dimmed, highlighted with badge, footer. Replaces the evolution type.",
   },
   {
-    type: "evolution",
+    type: "process",
     background: "bg-section-accent",
     headline: "Six stages, static",
+    loop: false,
     static: true,
-    stages: [
-      { multiplier: "1x", title: "Manual", subtitle: "", description: "Hand work." },
-      { multiplier: "2x", title: "Scripts", subtitle: "", description: "Some automation." },
-      { multiplier: "3x", title: "CI", subtitle: "", description: "Checks on push." },
-      { multiplier: "5x", title: "CD", subtitle: "", description: "Release on merge." },
-      { multiplier: "8x", title: "Agents", subtitle: "", description: "Code from plans." },
-      { multiplier: "12x", title: "Harness", subtitle: "", description: "Plans reviewed." },
+    nodes: [
+      { label: "1x", title: "Manual", description: "Hand work." },
+      { label: "2x", title: "Scripts", description: "Some automation." },
+      { label: "3x", title: "CI", description: "Checks on push." },
+      { label: "5x", title: "CD", description: "Release on merge." },
+      { label: "8x", title: "Agents", description: "Code from plans." },
+      { label: "12x", title: "Harness", description: "Plans reviewed." },
     ],
-    notes: "evolution: six stages (dense), static, accent background.",
+    notes: "process, loop false: six stages (dense), static, accent background.",
   },
   {
-    type: "evolution",
+    type: "process",
     headline: "Stage names above the titles",
+    loop: false,
     static: true,
-    stages: [
+    highlightPhase: "Rollout",
+    nodes: [
+      { label: "Stage 1", title: "Pilot", subtitle: "One team", description: "Learn the loop." },
       {
-        multiplier: "Stage 1",
-        title: "Pilot",
-        subtitle: "One team",
-        description: "Learn the loop.",
-      },
-      {
-        multiplier: "Stage 2",
+        label: "Stage 2",
         title: "Rollout",
         subtitle: "Every team",
         description: "Same checks everywhere.",
-        isHighlighted: true,
       },
-      { multiplier: "Stage 3", title: "Continuous", subtitle: "", description: "Teams own it." },
+      { label: "Stage 3", title: "Continuous", description: "Teams own it." },
     ],
     notes:
-      "evolution: labels longer than four characters sit above the titles, numbers in the tiles.",
+      "process, loop false: labels longer than four characters sit above the titles, the tiles stay empty where a label carries a number.",
   },
 
   {
@@ -1017,44 +1045,6 @@ const slides: Slide[] = [
   },
 
   {
-    type: "dual-pill-overview",
-    preText: "Programme",
-    headline: "Two parts side by side",
-    subtitle: "Ingredients on the left, deep dive on the right.",
-    left: {
-      label: "Part one",
-      title: "Ingredients",
-      accent: "ingredients",
-      phases: [
-        {
-          label: "Mindset",
-          theme: "accent",
-          items: [
-            { number: 1, title: "Long-term thinking" },
-            { number: 2, title: "Know the limits" },
-          ],
-        },
-      ],
-    },
-    right: {
-      label: "Part two",
-      title: "Tactics",
-      accent: "deepdive",
-      phases: [
-        {
-          label: "Operational",
-          theme: "deepdive",
-          items: [
-            { number: 1, title: "Execution plans" },
-            { number: 2, title: "Determinism", state: "active" },
-          ],
-        },
-      ],
-    },
-    notes: "dual-pill-overview: ingredients and deepdive accents.",
-  },
-
-  {
     type: "roadmap",
     preText: "Roadmap",
     headline: "Two staged columns",
@@ -1081,6 +1071,46 @@ const slides: Slide[] = [
       },
     ],
     notes: "roadmap: two columns, with and without descriptions.",
+  },
+  {
+    type: "roadmap",
+    preText: "Programme",
+    headline: "Two parts side by side",
+    subtitle: "Ingredients on the left, deep dive on the right.",
+    columns: [
+      {
+        label: "Part one",
+        title: "Ingredients",
+        accent: "ingredients",
+        phases: [
+          {
+            label: "Mindset",
+            theme: "accent",
+            items: [
+              { number: 1, title: "Long-term thinking" },
+              { number: 2, title: "Know the limits" },
+            ],
+          },
+        ],
+      },
+      {
+        label: "Part two",
+        title: "Tactics",
+        accent: "deepdive",
+        phases: [
+          {
+            label: "Operational",
+            theme: "deepdive",
+            items: [
+              { number: 1, title: "Execution plans" },
+              { number: 2, title: "Determinism", state: "active" },
+            ],
+          },
+        ],
+      },
+    ],
+    notes:
+      "roadmap with phased columns (replaces dual-pill-overview): groups of numbered rows, ingredients and deepdive accents.",
   },
 
   {
@@ -1162,6 +1192,48 @@ const slides: Slide[] = [
     notes: "chart: bar.",
   },
 
+  {
+    type: "activity",
+    kind: "exercise",
+    headline: "Write your first execution plan",
+    task: "Pick a ticket from your own backlog and let the agent plan it before it writes any code.",
+    items: [
+      "Open the ticket and paste it into a fresh session",
+      "Ask for a plan: files, steps, checks, open questions",
+      "Mark every step you would not sign off",
+      "Let the agent revise the plan until you would",
+    ],
+    duration: "25 min",
+    mode: "In pairs",
+    outcome: "A plan you would hand to a colleague",
+    notes: "activity, exercise: numbered steps, the frame card with time, mode and outcome.",
+  },
+  {
+    type: "activity",
+    kind: "demo",
+    headline: "A bare agent on a failing test",
+    task: "No CLAUDE.md, no skills. The task:",
+    prompt: "A test fails. Find out why, and tell me before you change anything.",
+    items: [
+      "Which file does it read first, and why that one?",
+      "Does it open .env, which the task does not need?",
+      "When does it stop, and who decided that?",
+    ],
+    duration: "10 min",
+    notes: "activity, demo: watch points with markers, only a timebox in the card.",
+  },
+  {
+    type: "activity",
+    kind: "debrief",
+    headline: "What the agent did with your plan",
+    items: [
+      "What did it look at first?",
+      "Where did it leave your plan, and was it right to?",
+      "Which check would have caught that earlier?",
+    ],
+    mode: "Whole group",
+    notes: "activity, debrief: numbered questions, no timebox.",
+  },
   {
     type: "question",
     headline: "Where does your team review today?",

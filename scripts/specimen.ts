@@ -11,7 +11,7 @@ import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { compile } from "@tailwindcss/node";
 import { Scanner } from "@tailwindcss/oxide";
-import { slideComponents } from "../lib/slide-components";
+import { aliasTypes, slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import { PrintSlide } from "../components/slides/PrintSlide";
 import { slideCatalogue } from "../specimen/slide-catalogue";
@@ -23,11 +23,14 @@ const brand = join(root, "node_modules", "@hackersandwizards", "brand");
 const brandHref = relative(join(root, "specimen"), brand).split(sep).join("/");
 
 const deck = slideCatalogue.slides;
-const picks = (Object.keys(slideComponents) as (keyof typeof slideComponents)[]).map((type) => {
-  const index = deck.findIndex((s) => s.type === type);
-  if (index < 0) throw new Error(`specimen deck has no slide of type ${type}`);
-  return index;
-});
+// A type another one replaced (`aliasTypes`) still renders, but the page shows only its successor.
+const picks = (Object.keys(slideComponents) as (keyof typeof slideComponents)[])
+  .filter((type) => !aliasTypes[type])
+  .map((type) => {
+    const index = deck.findIndex((s) => s.type === type);
+    if (index < 0) throw new Error(`specimen deck has no slide of type ${type}`);
+    return index;
+  });
 
 const blockLabel = /^(Block|Visual): /;
 // A code block's Shiki colours are inline hex, which the brand colour scan allows in

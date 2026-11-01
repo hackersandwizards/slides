@@ -46,7 +46,7 @@ const TONES = {
 
 // ─── flow: steps in order on one line, an optional loop back ────────────────
 
-/** A flow step as the process and evolution slides pass it: the block's step plus a `label` (a
+/** A flow step as the process slide passes it: the block's step plus a `label` (a
  *  multiplier or stage name: in the tile while every label fits it, else above the title), a
  *  teal `subtitle`, a closing `badge` and `dim` for a stage outside the story. */
 export type FlowStep = Of<"flow">["steps"][number] & {
@@ -60,7 +60,7 @@ export type FlowStep = Of<"flow">["steps"][number] & {
 // every step of the row, so the tiles stay one kind.
 const TILE_LABEL = 4;
 
-/** Steps on one line with a tile each, as the flow block draws them; the process and evolution
+/** Steps on one line with a tile each, as the flow block draws them; the process
  *  slides draw theirs with it too. `loop` draws the arrow from the last step back to the first,
  *  labelled when non-empty. `revealed` shows the first n steps, the line to each and the loop
  *  once all show. */

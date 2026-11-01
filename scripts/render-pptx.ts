@@ -2087,16 +2087,17 @@ const RENDER: {
     row(d.stages, a, gap, (st, r, i) => {
       const hi = st.isHighlighted;
       card(s, r.x, r.y, r.w, r.h, hi ? c.tealTint : c.card, hi ? c.teal : c.border);
-      chip(
-        s,
-        c,
-        st.multiplier,
-        r.x + r.w / 2 - 0.25,
-        r.y - 0.15,
-        PT.label,
-        hi ? c.teal : c.ink,
-        c.card,
-      );
+      if (st.multiplier)
+        chip(
+          s,
+          c,
+          st.multiplier,
+          r.x + r.w / 2 - 0.25,
+          r.y - 0.15,
+          PT.label,
+          hi ? c.teal : c.ink,
+          c.card,
+        );
       const tone = st.isDimmed ? c.muted : c.ink;
       box(
         s,
@@ -2537,7 +2538,28 @@ const RENDER: {
     lane("PIPELINE", d.pipeline, d.pipelineActive, a.y + 0.45 + half);
   },
 
-  process(s, ctx, d) {
+  process(s, ctx, d, deck) {
+    // Stages that run once draw as the row of stage cards; a cycle as the loop below.
+    if (d.loop === false)
+      return RENDER.evolution(
+        s,
+        ctx,
+        {
+          type: "evolution",
+          headline: d.headline,
+          footer: d.footer,
+          stages: d.nodes.map((n) => ({
+            multiplier: n.label ?? "",
+            title: n.title,
+            subtitle: n.subtitle ?? "",
+            description: n.description,
+            badge: n.badge,
+            isDimmed: n.dimmed,
+            isHighlighted: n.title === d.highlightPhase,
+          })),
+        },
+        deck,
+      );
     const { c } = ctx;
     const y = header(s, ctx, d);
     const footH = d.footer ? 0.6 : 0;
@@ -3014,7 +3036,22 @@ const RENDER: {
       });
   },
 
-  roadmap(s, ctx, d) {
+  roadmap(s, ctx, d, deck) {
+    // Columns of phases draw as the pill groups below.
+    if (d.columns.some((col) => col.phases))
+      return RENDER["dual-pill-overview"](
+        s,
+        ctx,
+        {
+          type: "dual-pill-overview",
+          preText: d.preText,
+          headline: d.headline,
+          subtitle: d.subtitle,
+          left: { ...d.columns[0], phases: d.columns[0].phases ?? [] },
+          right: { ...d.columns[1], phases: d.columns[1].phases ?? [] },
+        },
+        deck,
+      );
     const { c } = ctx;
     const y = header(s, ctx, d);
     row(d.columns, BODY(y), 0.35, (col, r) => {
@@ -3028,7 +3065,7 @@ const RENDER: {
         [
           { runs: md(col.title, c), mono: true, bold: true, rel: PT.h3 / PT.base, after: 4 },
           ...(col.subtitle ? [{ runs: md(col.subtitle, c, { color: c.muted }), after: 10 }] : []),
-          ...col.items.flatMap((it) => [
+          ...(col.items ?? []).flatMap((it) => [
             {
               runs: [
                 { text: "•  ", options: { color: it.dotColor?.replace("#", "") ?? tone } },
@@ -3289,17 +3326,85 @@ const RENDER: {
   agenda(s, ctx, d) {
     const { c } = ctx;
     const y = header(s, ctx, d);
-    const paras: Para[] = d.items.map((it, i) => ({
-      runs: [
-        { text: `${i + 1}.  `, options: { color: c.teal, bold: true, fontFace: MONO } },
-        ...md(it, c),
-      ],
-      after: 10,
-    }));
-    box(s, c, paras, SIDE, y + 0.2, CW * 0.8, BOTTOM - y - 0.2, {
+    const items = d.items.map((it) => (typeof it === "string" ? { title: it } : it));
+    const timed = items.some((it) => it.when);
+    const paras: Para[] = items.flatMap((it, i) => [
+      {
+        runs: [
+          {
+            text: timed
+              ? `${it.when !== items[i - 1]?.when ? (it.when ?? "") : ""}\t`
+              : `${i + 1}.  `,
+            options: { color: c.teal, bold: true, fontFace: MONO },
+          },
+          ...md(it.title, c),
+        ],
+        after: it.text ? 2 : 10,
+      },
+      ...(it.text
+        ? [{ runs: [{ text: "\t" }, ...md(it.text, c, { color: c.muted })], rel: 0.75, after: 10 }]
+        : []),
+    ]);
+    const footH = d.footer ? 0.7 : 0;
+    box(s, c, paras, SIDE, y + 0.2, CW * 0.8, BOTTOM - y - 0.2 - footH, {
       size: PT.h3,
       color: c.ink,
     });
+    if (d.footer)
+      box(s, c, d.footer, SIDE, BOTTOM - footH, CW, footH, { size: PT.lead, color: c.ink });
+  },
+
+  activity(s, ctx, d) {
+    const { c } = ctx;
+    const label =
+      d.label ?? { exercise: "Hands-on", demo: "Live demo", debrief: "Debrief" }[d.kind];
+    const y = header(s, ctx, { sectionLabel: label, headline: d.headline, subtitle: d.task });
+    const frame = [d.duration, d.mode, d.outcome].filter((t): t is string => !!t);
+    const fw = frame.length ? CW * 0.34 : 0;
+    let top = y + 0.3;
+    if (d.prompt) {
+      const ph = need(d.prompt, c, CW - 0.6, { size: PT.lead, color: c.ink }) + 0.3;
+      card(s, SIDE, top, CW, ph, c.tealTint, c.teal);
+      box(s, c, d.prompt, SIDE + 0.3, top + 0.15, CW - 0.6, ph - 0.3, {
+        size: PT.lead,
+        color: c.ink,
+      });
+      top += ph + 0.3;
+    }
+    const paras: Para[] = d.items.map((it, i) => ({
+      runs: [
+        ...(d.kind === "demo"
+          ? []
+          : [{ text: `${i + 1}.  `, options: { color: c.teal, bold: true, fontFace: MONO } }]),
+        ...md(it, c),
+      ],
+      bullet: d.kind === "demo",
+      after: 10,
+    }));
+    box(s, c, paras, SIDE, top, CW - fw - (fw ? 0.5 : 0), BOTTOM - top, {
+      size: PT.lead,
+      color: c.ink,
+    });
+    if (!frame.length) return;
+    const fx = SIDE + CW - fw;
+    const fh = 0.5 + frame.length * 0.55;
+    card(s, fx, top, fw, fh, c.card, c.border);
+    box(
+      s,
+      c,
+      frame.map((t, i) => ({
+        runs: md(t, c, i === 0 && d.duration ? {} : { color: c.muted }),
+        mono: i === 0 && !!d.duration,
+        bold: i === 0 && !!d.duration,
+        rel: i === 0 && d.duration ? 1.4 : 1,
+        after: 8,
+      })),
+      fx + 0.3,
+      top + 0.25,
+      fw - 0.6,
+      fh - 0.5,
+      { size: PT.base, color: c.ink },
+    );
   },
 
   wheel(s, ctx, d) {

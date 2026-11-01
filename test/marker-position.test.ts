@@ -29,9 +29,9 @@ function collect(): Probe[] {
     while (next && !next.textContent!.trim()) next = next.nextSibling;
     return next && firstText(next);
   };
-  const rectOf = (node: Node, end?: number) => {
+  const rectOf = (node: Node, end?: number, start = 0) => {
     const range = document.createRange();
-    range.setStart(node, 0);
+    range.setStart(node, start);
     range.setEnd(node, end ?? node.textContent!.length);
     return range.getClientRects()[0]!;
   };
@@ -60,8 +60,18 @@ function collect(): Probe[] {
   return marked.map(({ mark, text, edge }) => ({
     label: `${mark.className.toString().split(" ")[0] || mark.tagName} "${mark.parentElement!.textContent!.trim().slice(0, 30)}"`,
     edge,
+    // A step number's line is read off its full stop where it has one: the half-ink rule puts the
+    // bottom of a 4 at its crossbar, about 5 px above the line (the ordered list's "4." read -4.75).
     marker:
-      edge === "middle" ? box(mark.getBoundingClientRect(), 1) : box(rectOf(mark.firstChild!)),
+      edge === "middle"
+        ? box(mark.getBoundingClientRect(), 1)
+        : box(
+            rectOf(
+              mark.firstChild!,
+              undefined,
+              mark.textContent!.trim().endsWith(".") ? mark.firstChild!.textContent!.length - 1 : 0,
+            ),
+          ),
     text: box(rectOf(text, 4)),
   }));
 }

@@ -257,6 +257,9 @@ export interface EvolutionStage {
   badge?: string;
 }
 
+/** @deprecated A `process` slide with `loop: false`, which draws it the same way: `multiplier`
+ *  is a node's `label`, `isDimmed` its `dimmed`, `isHighlighted` names `highlightPhase`. The
+ *  engine still renders it, through `evolutionAsProcess` in `lib/slide-utils.ts`. */
 export interface EvolutionSlide {
   type: "evolution";
   background?: string;
@@ -392,15 +395,30 @@ export interface ProcessNode {
   title: string;
   description: string;
   icon?: string;
+  /** Text in the step's tile instead of its icon or number, such as "10x"; where one label is
+   *  longer than four characters, every label stands above its title. */
+  label?: string;
+  /** A line between title and description, in the accent. */
+  subtitle?: string;
+  /** A line under the description, such as "You are here". */
+  badge?: string;
+  /** Greys the step out, for a stage left behind. */
+  dimmed?: boolean;
 }
 
+/** Steps on one line. A cycle by default, drawn with the loop back from the last step to the
+ *  first; `loop: false` for stages that run once, such as a progression from 1x to 10x. */
 export interface ProcessSlide {
   type: "process";
   background?: string;
   headline: string;
   nodes: ProcessNode[];
+  /** The title of the step that stays lit. */
   highlightPhase?: string;
   footer?: string;
+  loop?: boolean;
+  /** Opens with every step showing instead of revealing them one by one. */
+  static?: boolean;
 }
 
 export interface PipelineLane {
@@ -494,12 +512,15 @@ export interface RoadmapItem {
   dotColor?: string;
 }
 
+/** One of a roadmap's two parts: a list of `items`, or `phases`, groups of numbered rows under a
+ *  caps label (the former dual-pill-overview). */
 export interface RoadmapColumn {
   label: string;
   title: string;
   subtitle?: string;
   accent: "ingredients" | "deepdive";
-  items: RoadmapItem[];
+  items?: RoadmapItem[];
+  phases?: PillPhase[];
 }
 
 export interface RoadmapSlide {
@@ -518,6 +539,9 @@ export interface DeepDiveDividerSlide {
   subtitle?: string;
 }
 
+/** @deprecated A `roadmap` slide whose columns carry `phases`, which draws it the same way:
+ *  `left` and `right` are its two `columns`. The engine still renders it, through
+ *  `dualPillAsRoadmap` in `lib/slide-utils.ts`. */
 export interface DualPillOverviewSlide {
   type: "dual-pill-overview";
   preText?: string;
@@ -585,10 +609,23 @@ export interface TeamTopologySlide {
   caption?: string;
 }
 
+/** One row of an agenda: a time, day or due date in the left column instead of the number, a
+ *  title and an optional line under it, such as who owns a next step. Rows that share a `when`
+ *  print it once. */
+export interface AgendaItem {
+  when?: string;
+  title: string;
+  text?: string;
+}
+
+/** The route through a talk as numbered items; with `when` on its items a schedule ("09:00",
+ *  "Tag 2") or the next steps that close a pitch ("bis 15.11.", the owner as `text`). */
 export interface AgendaSlide {
   type: "agenda";
   headline: string;
-  items: string[];
+  items: (string | AgendaItem)[];
+  /** The one line under the list, such as the decision the next steps need. */
+  footer?: string;
 }
 
 // Areas around a central disc: six in practice, four or five still lay out.
@@ -624,6 +661,27 @@ export interface DecisionSlide {
   caption?: string;
 }
 
+/** The room works instead of the slides: an exercise, a live demo or a debrief. */
+export interface ActivitySlide {
+  type: "activity";
+  kind: "exercise" | "demo" | "debrief";
+  /** The label above the headline; by kind "Hands-on", "Live demo" or "Debrief". */
+  label?: string;
+  headline: string;
+  /** The setup in one or two sentences, under the headline. */
+  task?: string;
+  /** The exact instruction the room or the agent gets, set apart above the items. */
+  prompt?: string;
+  /** An exercise's steps, a demo's watch points, a debrief's questions. */
+  items: string[];
+  /** The timebox, such as "20 min". */
+  duration?: string;
+  /** Who works with whom, such as "In pairs". */
+  mode?: string;
+  /** What comes out, such as "A SKILL.md the agent picks up". */
+  outcome?: string;
+}
+
 export type SlideBase = {
   notes?: string;
 };
@@ -656,6 +714,7 @@ export type Slide = SlideBase &
     | AgendaSlide
     | WheelSlide
     | DecisionSlide
+    | ActivitySlide
   );
 
 export interface Presentation {

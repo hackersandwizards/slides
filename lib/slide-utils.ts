@@ -1,5 +1,11 @@
 import { ROLE_NAMES } from "./presenter-sync";
-import type { SectionTheme } from "../types/slide";
+import type {
+  DualPillOverviewSlide,
+  EvolutionSlide,
+  ProcessSlide,
+  RoadmapSlide,
+  SectionTheme,
+} from "../types/slide";
 
 /** The sessionStorage key carrying the direction a navigation arrives from. The frames inside the
  *  speaker window share that window's sessionStorage, so each role keeps a key of its own; the
@@ -95,4 +101,36 @@ export function keepHyphenatedWords(text: string): string {
       i % 2 ? part : part.replace(/([\p{L}\p{N}])-(?=[\p{L}\p{N}])/gu, "$1\u2011"),
     )
     .join("");
+}
+
+/** An `evolution` slide as the `process` slide with `loop: false` that replaces it. */
+export function evolutionAsProcess({ stages, ...slide }: EvolutionSlide): ProcessSlide {
+  return {
+    type: "process",
+    background: slide.background,
+    headline: slide.headline,
+    footer: slide.footer,
+    static: slide.static,
+    loop: false,
+    highlightPhase: stages.find((s) => s.isHighlighted)?.title,
+    nodes: stages.map((s) => ({
+      title: s.title,
+      description: s.description,
+      label: s.multiplier,
+      subtitle: s.subtitle || undefined,
+      badge: s.badge,
+      dimmed: s.isDimmed,
+    })),
+  };
+}
+
+/** A `dual-pill-overview` slide as the `roadmap` slide with phased columns that replaces it. */
+export function dualPillAsRoadmap({ left, right, ...slide }: DualPillOverviewSlide): RoadmapSlide {
+  return {
+    type: "roadmap",
+    preText: slide.preText,
+    headline: slide.headline,
+    subtitle: slide.subtitle,
+    columns: [left, right],
+  };
 }

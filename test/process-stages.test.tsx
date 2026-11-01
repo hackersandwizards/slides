@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { EvolutionSlide } from "../components/slides/EvolutionSlide";
+import { ProcessSlide } from "../components/slides/ProcessSlide";
+import { slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import type { EvolutionSlide as EvolutionSlideType } from "../types/slide";
 
@@ -12,15 +13,18 @@ const stage = (multiplier: string, title: string, isHighlighted = false) => ({
   isHighlighted,
 });
 
+const Evolution = slideComponents.evolution;
+
 function printed(stages: EvolutionSlideType["stages"]) {
   return render(
     <PrintProvider>
-      <EvolutionSlide slide={{ type: "evolution", headline: "Stages", stages }} />
+      <Evolution slide={{ type: "evolution", headline: "Stages", stages }} />
     </PrintProvider>,
   );
 }
 
-describe("EvolutionSlide", () => {
+// The deprecated evolution type renders as a process slide with `loop: false`.
+describe("evolution, through the process slide", () => {
   it("sets short multipliers in the tiles", () => {
     const { getByText } = printed([stage("1x", "Chat"), stage("10x", "Harness")]);
     expect(getByText("10x").tagName).toBe("SPAN");
@@ -47,5 +51,28 @@ describe("EvolutionSlide", () => {
     const { getByText } = printed([stage("1x", "Chat"), stage("10x", "Harness", true)]);
     expect(getByText("Harness").className).toContain("text-primary");
     expect(getByText("Chat").className).not.toContain("text-primary");
+  });
+});
+
+describe("ProcessSlide, loop false", () => {
+  // Stages that run once have no loop back and no phone circle; a cycle keeps both.
+  it("draws no loop and no circle", () => {
+    const nodes = [
+      { title: "Chat", description: "a", label: "1x" },
+      { title: "Harness", description: "b", label: "10x" },
+    ];
+    const { container: once } = render(
+      <PrintProvider>
+        <ProcessSlide slide={{ type: "process", headline: "S", loop: false, nodes }} />
+      </PrintProvider>,
+    );
+    const { container: cycle } = render(
+      <PrintProvider>
+        <ProcessSlide slide={{ type: "process", headline: "S", nodes }} />
+      </PrintProvider>,
+    );
+    expect(once.querySelector(".process-canvas")).toBeNull();
+    expect(cycle.querySelector(".process-canvas")).not.toBeNull();
+    expect(once.textContent).toContain("10x");
   });
 });

@@ -15,29 +15,15 @@ interface Props {
   slide: RegularSlideType;
 }
 
-const AGENDA_STYLES = [
-  {
-    bg: "bg-section-intro",
-    activeBg: "bg-primary/7",
-    border: "border-border",
-    activeBorder: "border-primary/40",
-    iconBg: "bg-primary/15 text-primary",
-  },
-  {
-    bg: "bg-section-primary",
-    activeBg: "bg-primary/15",
-    border: "border-border",
-    activeBorder: "border-primary/40",
-    iconBg: "bg-primary/15 text-primary",
-  },
-  {
-    bg: "bg-section-accent",
-    activeBg: "bg-accent/15",
-    border: "border-accent/25",
-    activeBorder: "border-accent/40",
-    iconBg: "bg-accent/15 text-accent",
-  },
-];
+// One look for every card, the active one in the primary accent: colour comes from the role, never
+// from a card's position (the third card used to take the amber section tint).
+const AGENDA_STYLE = {
+  bg: "bg-section-intro",
+  activeBg: "bg-primary/7",
+  border: "border-border",
+  activeBorder: "border-primary/40",
+  iconBg: "bg-primary/15 text-primary",
+};
 
 function AgendaCard({
   section,
@@ -49,7 +35,7 @@ function AgendaCard({
   isActive: boolean;
 }) {
   const IconComponent = section.icon ? iconMap[section.icon] : null;
-  const style = AGENDA_STYLES[index % AGENDA_STYLES.length];
+  const style = AGENDA_STYLE;
 
   return (
     <BlurFade delay={0.2 + index * 0.15} duration={0.5}>

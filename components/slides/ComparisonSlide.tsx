@@ -15,13 +15,26 @@ import {
 } from "../../lib/slide-utils";
 import { SlideTitle, SlideCard } from "./primitives";
 
-/** A list item behind its mark: plus, minus or bullet, in the tone of its side. */
-function MarkedItem({ mark, tone, children }: { mark: string; tone: string; children: ReactNode }) {
+/** A list item behind its mark: plus or minus in the tone of its side, or without a `mark` the
+ *  square list marker every other list uses. */
+function MarkedItem({
+  mark,
+  tone = "",
+  children,
+}: {
+  mark?: string;
+  tone?: string;
+  children: ReactNode;
+}) {
   return (
     <li className="flex items-baseline gap-3 text-xl text-text">
-      <span className={`w-5 shrink-0 text-center text-2xl leading-none font-bold ${tone}`}>
-        {mark}
-      </span>
+      {mark ? (
+        <span className={`w-5 shrink-0 text-center text-2xl leading-none font-bold ${tone}`}>
+          {mark}
+        </span>
+      ) : (
+        <span className="slide-marker" />
+      )}
       {children}
     </li>
   );
@@ -248,9 +261,7 @@ function SplitVariant({ slide }: { slide: ComparisonSlideType }) {
             <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.left.label}</h3>
             <ul className="space-y-3">
               {slide.left.items.map((item, i) => (
-                <MarkedItem key={i} mark={"\u2022"} tone="text-primary">
-                  {item}
-                </MarkedItem>
+                <MarkedItem key={i}>{item}</MarkedItem>
               ))}
             </ul>
           </SlideCard>
@@ -261,9 +272,7 @@ function SplitVariant({ slide }: { slide: ComparisonSlideType }) {
             <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.right.label}</h3>
             <ul className="space-y-3">
               {slide.right.items.map((item, i) => (
-                <MarkedItem key={i} mark={"\u2022"} tone="text-primary">
-                  {item}
-                </MarkedItem>
+                <MarkedItem key={i}>{item}</MarkedItem>
               ))}
             </ul>
           </SlideCard>

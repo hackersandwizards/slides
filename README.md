@@ -63,8 +63,17 @@ The package ships TypeScript source. Let the build transpile it: Next
 A deck that runs an hour or longer with three or more chapters shows an `agenda` slide before its
 first chapter, listing the chapters in order. Each chapter opens with a `transition` slide: its
 `headline` is the chapter's agenda item, its `preText` the chapter's position in the agenda, such
-as `"3 / 9"`. A break, lunch, a live demo or the thanks is not a chapter. A deck whose agenda is a
-timetable, or a map that returns before each part (`overview`, `phased-pills`), keeps that instead.
+as `"3 / 9"`. A break, lunch, a live demo or the thanks is not a chapter. A timetable is an `agenda`
+whose items carry a `when` ("09:00"), and so are a pitch's next steps (a due date as `when`, the
+owner as `text`, the decision needed as `footer`). A deck whose agenda is a map that returns before
+each part (`overview`, `phased-pills`) keeps that instead.
+
+An exercise, a live demo and a debrief are an `activity` slide (`kind`): the steps, watch points or
+questions, the exact instruction as `prompt`, and the timebox, mode and outcome in one card.
+
+`evolution` and `dual-pill-overview` still render, as a `process` slide with `loop: false` and a
+`roadmap` whose columns carry `phases`; new slides use those (`aliasTypes` in
+`lib/slide-components.ts`).
 A chapter divider is a `transition`; `deep-dive-divider` marks a deep-dive part only. Every slide of a
 deep-dive part, the `deep-dive-divider`, a slide whose `sectionTheme` is `deepdive` and a pill map whose
 phases are, stands on night (`isDeepDive` in `lib/slide-utils`); nothing else marks the part.

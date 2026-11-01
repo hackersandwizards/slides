@@ -1,9 +1,6 @@
 "use client";
 
-import type {
-  DualPillOverviewSlide as DualPillOverviewType,
-  RoadmapSlide as RoadmapSlideType,
-} from "../../types/slide";
+import type { RoadmapSlide as RoadmapSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { renderMarkdown } from "../../lib/markdown";
 import { COLUMN_STYLES, type ColumnAccent } from "../../lib/section-styles";
@@ -15,7 +12,7 @@ import { TitledContent, SlideTitle, SlideSubtitle } from "./primitives";
 // decision roadmap-dual-pill-slides): a roadmap column is one group of rows, a dual-pill column
 // one group per phase, its pills numbered rows. A pill's `state` draws nothing, as before.
 interface Props {
-  slide: RoadmapSlideType | DualPillOverviewType;
+  slide: RoadmapSlideType;
 }
 
 interface PartItem {
@@ -124,13 +121,12 @@ function PartCard({
 }
 
 export function RoadmapSlide({ slide }: Props) {
-  const parts =
-    slide.type === "roadmap"
-      ? slide.columns.map((c) => ({ ...c, groups: [{ items: c.items }] }))
-      : [slide.left, slide.right].map((c) => ({
-          ...c,
-          groups: c.phases.map((p) => ({ ...p, theme: p.theme ?? "secondary" })),
-        }));
+  const parts = slide.columns.map((c) => ({
+    ...c,
+    groups: c.phases
+      ? c.phases.map((p) => ({ ...p, theme: p.theme ?? "secondary" }))
+      : [{ items: c.items ?? [] }],
+  }));
 
   return (
     <SlideShell overflowHidden>
