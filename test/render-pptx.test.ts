@@ -11,6 +11,7 @@ import type { Slide } from "../types/slide";
 const NOT_TEXT = new Set([
   "type",
   "src",
+  "poster",
   "imageSrc",
   "logo",
   "href",
@@ -157,10 +158,58 @@ describe("slides-pptx on the specimen deck", () => {
     });
   });
 
+  // As on the slide: a linked image's link spelled out under it, a video's poster as its cover.
+  it("spells out a linked image's link and covers a video with its poster", async () => {
+    const at = (type: string) =>
+      slideCatalogue.slides.findIndex(
+        (s) => s.type === "content" && s.content.some((b) => b.type === type),
+      );
+    expect(slideText[at("linked-image")]).toContain("forge.example.com/acme/payments/pull/128");
+    const rels = await zip
+      .file(`ppt/slides/_rels/slide${at("video") + 1}.xml.rels`)!
+      .async("string");
+    const poster = readFileSync(
+      join(import.meta.dirname, "..", "specimen", "slide-catalogue", "agent-session-poster.png"),
+    );
+    const pictures = await Promise.all(
+      [...rels.matchAll(/Target="\.\.\/media\/([^"]+\.png)"/g)].map(async (m) =>
+        Buffer.from(await zip.file(`ppt/media/${m[1]}`)!.async("uint8array")),
+      ),
+    );
+    expect(pictures.some((p) => p.equals(poster))).toBe(true);
+  });
+
   it("names the brand fonts with their pitch, so a machine without them substitutes in kind", () => {
     const all = slideXml.join("");
     expect(all).toContain('typeface="Inter" pitchFamily="34" charset="0"');
     expect(all).toContain('typeface="JetBrains Mono" pitchFamily="49" charset="0"');
     expect(all).not.toMatch(/typeface="JetBrains Mono" pitchFamily="34"/);
   });
+});
+
+// The specimen deck has no deep-dive slide with bullets: two content slides that differ only there.
+it("colours a deep-dive slide's bullets in the night teal, every other slide's in the day teal", async () => {
+  const slide = {
+    type: "content",
+    headline: "H",
+    content: [{ type: "bullets", items: ["a", "b"] }],
+  };
+  const out = join(dir, "bullets.pptx");
+  await renderPptx(
+    { ...slideCatalogue, slides: [slide, { ...slide, sectionTheme: "deepdive" }] as Slide[] },
+    out,
+    join(import.meta.dirname, "..", "specimen"),
+  );
+  const pptx = await JSZip.loadAsync(readFileSync(out));
+  const colour = async (n: number) =>
+    [
+      ...(await pptx.file(`ppt/slides/slide${n}.xml`)!.async("string")).matchAll(
+        /<a:buClr><a:srgbClr val="(\w+)"/g,
+      ),
+    ].map((m) => m[1]);
+  const [day, night] = [await colour(1), await colour(2)];
+  expect(day.length).toBeGreaterThan(0);
+  expect(night).toHaveLength(day.length);
+  expect(new Set(night).size).toBe(1);
+  expect(night[0]).not.toBe(day[0]);
 });

@@ -51,6 +51,37 @@ describe("content blocks", () => {
     );
     expect(c.querySelector("pre")?.className).not.toMatch(/border-(text|4)\b/);
   });
+
+  // A video carries the engine's play button and no browser controls: their grey bar, spinner and
+  // timestamp read as a broken embed on a projected slide. Its poster stands before it plays.
+  it("plays a video from its own button, without browser controls", () => {
+    const c = content([{ type: "video", src: "/a.mp4", alt: "Demo", poster: "/a.png" }]);
+    const video = c.querySelector("video");
+    expect(video?.hasAttribute("controls")).toBe(false);
+    expect(video?.getAttribute("poster")).toBe("/a.png");
+    expect(c.querySelector('button[aria-label="Play Demo"]')).not.toBeNull();
+  });
+
+  // The link of a linked image is spelled out under it: projected or printed, the link is invisible.
+  it("spells out a linked image's link under it", () => {
+    const c = content([
+      { type: "linked-image", src: "/a.png", href: "https://www.example.com/pull/7/" },
+    ]);
+    expect(c.querySelector("figure > a")?.textContent).toBe("example.com/pull/7");
+  });
+
+  // Image, video and linked image stand centred in the body's free height (slides.css).
+  it("sets every picture block in the media frame", () => {
+    for (const block of [
+      { type: "image", src: "/a.png" },
+      { type: "video", src: "/a.mp4" },
+      { type: "linked-image", src: "/a.png" },
+    ])
+      expect(
+        content([block]).querySelector(".slide-media .slide-media-item"),
+        block.type,
+      ).not.toBeNull();
+  });
 });
 
 describe("inline code", () => {

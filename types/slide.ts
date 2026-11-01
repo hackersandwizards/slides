@@ -57,7 +57,14 @@ export type ContentBlock =
       containerSideNotes?: string[];
     }
   | { type: "image"; src: string; alt?: string }
-  | { type: "video"; src: string; alt?: string; caption?: string }
+  | {
+      type: "video";
+      src: string;
+      alt?: string;
+      caption?: string;
+      /** The frame shown before the video plays and in the PDF and PPTX export. */
+      poster?: string;
+    }
   | {
       type: "four-column";
       columns: { title: string; subtitle?: string; items: string[] }[];

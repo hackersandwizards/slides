@@ -41,7 +41,7 @@ function PillBox({
   );
 }
 
-function DefaultPhasedPills({ slide }: Props) {
+export function PhasedPillsSlide({ slide }: Props) {
   const { phases, title } = slide;
   // Up to three pills share a row; a longer phase splits into two even rows.
   const columns = Math.max(
@@ -133,8 +133,4 @@ function DefaultPhasedPills({ slide }: Props) {
       </div>
     </SlideShell>
   );
-}
-
-export function PhasedPillsSlide({ slide }: Props) {
-  return <DefaultPhasedPills slide={slide} />;
 }

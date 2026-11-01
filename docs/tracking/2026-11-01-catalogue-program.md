@@ -1,7 +1,8 @@
 # Slide-Katalog: Duplikate, Lücken und Programm
 
 Stand 2026-11-01, Phase 1 (Analyse und Plan) und Phase 2 ohne offene Entscheidung (Basis-Runde,
-vier Typen bis zum Plateau, Sketch-Variante, v0.12.0). Ziel und
+vier Typen bis zum Plateau, Sketch-Variante, v0.12.0), dazu Phase 2b mit `video`, `image` und
+`linked-image` (v0.14.0). Ziel und
 Zeilen je Phase: [GOAL.md](../../GOAL.md). Entscheidungen: `docs/tracking/decisions/items.js`.
 
 Benedikt am 01.11. (von Ada weitergegeben): «Wir scheinen da auch bei den Folien gerade ziemlich
@@ -29,6 +30,8 @@ Datendiagrammen bei Bedarf bis 47. Die Agenda als Zeitplan ist eine Variante und
 - **Phase 2:** `statement`, `team-topology`, `chart` und `wheel` stehen jetzt zwischen 6,84 und
   7,75 statt zwischen 5,36 und 5,96 (Panel-Mittel, Rauschen je Bild 0,29 bis 0,63). Details im
   Abschnitt Phase 2.
+- **Phase 2b:** `video` steht bei 8,50 statt 2,71, `image` bei 7,74 statt 4,51 und
+  `linked-image` bei 7,35 statt 4,46 (Rauschen je Bild 0,28). Details im Abschnitt Phase 2b.
 - **Die Seite selbst** zeigt je Typ eine Kachel und seit v0.12.0 jeden Inhaltsblock außer den drei
   Code-Blöcken, aber keine Variante und keine Suche.
 
@@ -142,7 +145,8 @@ beides da ist:
 
 Wiederkehrend über alle Blöcke: Rollenfarben (Grün, Amber) als Dekoration, Leerflächen, die den
 Inhalt schweben lassen, und die Abschnittsfläche, die mehrere Reviewer nach dem Satz "never a
-background behind content" abwerten (Zeile `section-wash-vs-guide`).
+background behind content" abwerten (Zeile `section-wash-vs-guide`). `video`, `image` und
+`linked-image` hebt Phase 2b an; die Zeilen oben sind ihr Stand davor.
 
 ### Ein Reviewer-Prompt, wörtlich
 
@@ -191,6 +195,97 @@ Answer with JSON objects only, one per line, nothing else.
 - Ein hervorgehobener Einzelbalken bräuchte ein neues Feld; ausgelassen, bis ein Deck es braucht.
 - Teal liegt unter der Chroma-Untergrenze des Dataviz-Validators. Das ist ein Markenwert und bleibt.
 - `Particles` ist exportiert, aber von keiner Folie mehr genutzt (GOAL.md).
+
+## Phase 2b: Video, Bild und verlinktes Bild
+
+Ausgeliefert als slides v0.14.0. In os heißt die Zeile "Folienkatalog Phase 3"; hier ist es der
+Rest von Phase 2, denn Phase 3 bleibt die Katalogseite.
+
+Panel und Kriterien wie in Phase 2: drei Personas (Teilnehmerin bei 1000 px, vortragender Trainer
+bei 1280 px, Brand-Designerin bei 1920 px), Claude (Opus) und Codex (gpt-6.1-sol, high), je zwei
+Läufe, 12 Wertungen je Bild, Reihenfolge und Buchstaben je Wertung gemischt. Neu im Prompt: jede
+Wertung zitiert einen Text, den sie im Bild liest. Alle Zitate passten zum Bild, also kamen die
+Bilder an. Gerendert wurde hydriert im Browser bei 1920 x 1080, so dass der Fit-Guard lief.
+
+Bilderset: je Typ die Specimen-Folie, dazu echte Deckfolien aus trainer-hub (vier mit `image`, eine
+mit `linked-image`) und eine aus hycle-private (der QR-Code zu hycle.org). Ein `video` nutzt kein
+Deck; an seiner Stelle lief eine zweite Folie mit derselben fiktiven Aufnahme unter einem
+Deck-Titel. Die echten Folien lagen nur im Scratchpad und in den Prompts.
+
+| Typ            | heute (Phase 2) | heute (Runde 2) | nachher | Rauschen je Bild | Runden |
+| -------------- | --------------: | --------------: | ------: | ---------------: | -----: |
+| `video`        |            4,00 |            2,71 |    8,50 |             0,28 |      2 |
+| `image`        |            4,96 |            4,51 |    7,74 |             0,28 |      3 |
+| `linked-image` |            5,00 |            4,46 |    7,35 |             0,28 |      2 |
+
+Typwert wie in der Basis-Runde: Mittel aus Specimen und Deckfolien. "Heute (Runde 2)" ist v0.13
+im selben Panel und Bilderset wie "nachher". Der Abstand zu Phase 2 kommt vom anderen Bilderset.
+
+**Was sich ändert, für alle drei.** Das Bild steht zentriert unter dem Titel. Auf einer Folie mit
+Titel nimmt es die freie Höhe des Rumpfs ein, höchstens bis zur doppelten Pixelbreite seiner Datei
+auf der 1920-px-Bühne. Vorher stand es links in seiner Dateigröße, höchstens 60vh hoch. Zwei
+Bilder übereinander behalten ihre Höhe und teilen linke Kante und Breite. Auf einer zentrierten
+Folie bleibt die Obergrenze 60vh.
+
+**`video`.** Keine Browser-Steuerung mehr: Grauband, Spinner und Zeitstempel lasen Reviewer als
+kaputtes Embed. Stattdessen ein Teal-Feld mit Markenecke und Play-Zeichen unten links. Ein Klick
+spielt, ein zweiter hält an, beim Abspielen läuft unten ein Teal-Fortschritt. Neues Feld `poster`:
+dieses Bild steht vor dem Start, im PDF und im PPTX als Cover. Das Specimen zeigt eine fiktive
+Agenten-Sitzung als echte Bildschirmaufnahme, keine generierte Szene. Runde 1: heute 2,54, neue
+Aufnahme in alter Engine 4,21, neu 8,25 (Rauschen 0,48). Runde 2: Play unten links 8,50 gegen Play
+in der Mitte 6,92, das in der Mitte verdeckte die Ausgabe.
+
+![video vorher und nachher](2026-11-01-catalogue-program/phase2b-video.jpg)
+
+**`image`.** Runde 1: zentriert in Dateigröße 7,44 gegen heute 4,75, aber kleine Dateien blieben
+klein (ein Diagramm mit 767 px stand bei 40 % der Breite). Runde 2: mit Wachsen bis zur doppelten
+Dateibreite 7,74 gegen 4,51. Zwei gestapelte Bilder verloren in beiden Runden gegen heute, weil
+jedes nur die halbe Höhe bekam und sie verschieden breit wurden. Runde 3 nur dieser Folie: heute
+7,33, gleiche Breite 7,00, Rauschen 0,56, also gleichauf. Plateau.
+
+![image vorher und nachher](2026-11-01-catalogue-program/phase2b-image.jpg)
+
+**`linked-image`.** Unter dem Bild steht der Link als Text, ohne `https://` und `www.`, mit
+Pfeil, in Mono und Teal. Projiziert oder gedruckt ist ein Link sonst unsichtbar. Runde 2: 7,35
+gegen 4,46. Ein weißer Rand im Rahmen, damit die Markenecke keinen QR-Code anschneidet, verlor
+(6,96). Die QR-Folie aus hycle verliert als einzige gegen heute (6,00 gegen 6,67): ihre Fußzeile
+sagt schon "hycle.org", jetzt steht die Adresse zweimal da. Ohne die Fußzeile kommt sie auf 7,50
+und gewinnt in 11 von 12 Wertungen.
+
+![linked-image vorher und nachher](2026-11-01-catalogue-program/phase2b-linked-image.jpg)
+
+**PPTX.** Bild und verlinktes Bild wachsen dort nicht über ihre Dateigröße bei 144 px je Zoll.
+Unter dem verlinkten Bild steht der Link als verlinkter Text, und ein Video nimmt sein `poster` als
+Cover. `test/render-pptx.test.ts` prüft beides, `test/content-blocks.test.tsx` die Folie. Beide
+Tests werden rot, wenn man die Änderung zurücknimmt.
+
+Was bleibt, ist vor allem Inhalt: Screenshots mit kleiner Schrift, angeschnittene Zuschnitte,
+Amber als Hervorhebung im Deck und die Abschnittsfläche (`section-wash-vs-guide`).
+
+Runde 2, Teilnehmerin, Claude, Lauf 1, wörtlich bis auf die Bildpfade:
+
+```text
+You are a participant in a hands-on workshop of hackers&wizards, an engineering manager or developer sitting in row 8 of a training room. The slide is projected on a screen; the images below are shown at 1000 pixels wide, the size the slide appears to you from your seat.
+
+The medium: slides of hackers&wizards, a consultancy for agentic software engineering, from workshop decks, client decks and conference talks (German and English), 16:9, projected in a training room or shared on a screen. Every slide below places a picture under the slide's title: an image (a screenshot, diagram or chart), a video (a screen recording, shown here as it stands before the presenter clicks it to play, as in the PDF of the deck) or a linked image (a picture that links to its source, such as a pull request or a QR code). Judge how the slide presents the picture; the picture's own content comes from the deck.
+
+The hackers&wizards brand: […] wie in Phase 2, dazu: Photos and screenshots are shown at full resolution, never as generated scenes.
+
+Below are 10 slides, numbered s01 to s10. Each slide comes in several renderings of the same content, letters A, B and so on. Read every image file listed.
+
+s01 A: …/s01-A-vo70.png
+[…]
+s10 C: …/s10-C-p0qd.png
+
+Criteria, each scored 0 to 10 for your role: glance (the one key point is clear within 3 seconds), clarity (structure and relationships are understood without explanation), legibility (every text readable at your display size), breathing (room, not cramped, nothing touching the edges or the footer), calm (nothing competes for attention, no clutter), brand (fits the brand described above), human (looks deliberately designed, not like generic AI-generated slideware: 10 means it does not look generated), overall.
+
+For each rendering answer with one JSON object on its own line: {"slide":"s01","letter":"A","seen":"one short text you can read in this rendering other than the title, quoted exactly","glance":0,"clarity":0,"legibility":0,"breathing":0,"calm":0,"brand":0,"human":0,"overall":0,"below10":"what keeps overall below 10, concrete: which element, what is wrong"}. Then for each slide one line {"slide":"s01","best":"A","decided":"the one difference that decided it, in a few concrete words"}.
+Answer with JSON objects only, one per line, nothing else.
+```
+
+**Ausgelassen.** Der Typ `media` mit `kind: "video"` behält die Browser-Steuerung: kein Panel hat
+ihn bewertet, und kein Deck nutzt ihn. Er übernimmt den Player, sobald ein Deck ihn braucht.
+Hervorhebungen in Screenshots bleiben beim Block `annotated`.
 
 ## Duplikate: was überlebt
 
@@ -426,6 +521,12 @@ Abweichungen sind Stellschrauben und Behelfe:
   "Aufgabe" im Titel, gebaut aus Absatz, Liste, Code und Hinweis, jede anders.
 - **Demo von Hand:** Demo-Momente sind `content` `centered` oder ein Trenner mit "Demo" im Titel.
 - **hycle** pinnt v0.8.0 und hat damit weder rahmenlose Sketches noch die neue Abschnittsfläche.
+  Zwei QR-Folien in `talks/2026-09-working-products` tragen die Fußzeile "hycle.org": ab v0.14.0
+  schreibt das verlinkte Bild die Adresse selbst darunter, die Fußzeile fällt beim Heben weg.
+- **Bilder im trainer-hub:** `Global-Intelligence-Crisis-1.png` (767 px) und
+  `llm-game-claude.png` (825 px) wachsen ab v0.14.0 auf das Doppelte und bleiben damit kleiner als
+  der Rumpf. Die Agent-Loop-SVGs eines Trainingsdecks zeichnen Schritt 1 bis 6 in denselben Rahmen, so dass
+  die frühen Schritte unten leer stehen.
 
 ### Was die Specimen-Seite heute zeigt
 

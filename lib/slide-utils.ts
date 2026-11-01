@@ -79,3 +79,9 @@ export function isDeepDive(slide: {
     (slide.phases?.some((p) => p.theme === "deepdive") ?? false)
   );
 }
+
+/** A link as a slide spells it out under a linked image, where a projected or printed slide hides
+ *  the link itself: without its scheme, `www.` and a closing slash. */
+export function linkLabel(href: string): string {
+  return href.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+}

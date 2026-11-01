@@ -1,6 +1,15 @@
 "use client";
 
-import { Fragment, useLayoutEffect, useRef } from "react";
+import {
+  Fragment,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import { ArrowUpRight, Play } from "lucide-react";
+import { usePrintMode } from "../../lib/print-context";
 import Image from "../ui/image";
 import type {
   ContentSlide as ContentSlideType,
@@ -16,7 +25,7 @@ import { renderMarkdown } from "../../lib/markdown";
 import { highlightCode } from "../../lib/code-highlight";
 import { getStageClasses } from "../../lib/stage-utils";
 import { getSectionStyle } from "../../lib/section-styles";
-import { isDeepDive, personAccent } from "../../lib/slide-utils";
+import { isDeepDive, linkLabel, personAccent } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { TitledContent, SlideTitle, SlideCard, CodePanel, SlideSubtitle } from "./primitives";
 
@@ -82,12 +91,110 @@ function LabeledGridBlock({
 function keepHyphenatedWords(text: string): string {
   return text
     .split(/(`[^`]*`|\]\([^)]*\))/)
-    .map((part, i) => (i % 2 ? part : part.replace(/(\w)-(?=\w)/g, "$1\u2011")))
+    .map((part, i) =>
+      i % 2 ? part : part.replace(/([\p{L}\p{N}])-(?=[\p{L}\p{N}])/gu, "$1\u2011"),
+    )
     .join("");
 }
 
 interface Props {
   slide: ContentSlideType;
+}
+
+const MEDIA_BLOCKS = new Set(["image", "video", "linked-image"]);
+
+/** An image, video or linked image: centred, and on a titled slide as large as the body's free
+ *  height allows, never larger than its own file. */
+function MediaFrame({ children, below }: { children: ReactNode; below?: ReactNode }) {
+  return (
+    <figure className="slide-media">
+      <div className="slide-media-box">{children}</div>
+      {below}
+    </figure>
+  );
+}
+
+/** A picture in the media frame. Once its file has loaded, it may grow to fill the frame, up to
+ *  twice its own pixel width on the 1920 px stage (90rem): a screenshot left at its file's size
+ *  stood small in an empty body, and its text was unreadable in the room (blind panel 2026-11-01). */
+function MediaPicture({ src, alt, className }: { src: string; alt?: string; className: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [fill, setFill] = useState<string>();
+  useLayoutEffect(() => {
+    const img = ref.current?.querySelector("img");
+    if (!img) return;
+    const measure = () => {
+      const { naturalWidth: w, naturalHeight: h } = img;
+      if (w && h) setFill(`min(100cqw, ${w / h} * 100cqh, ${(w * 2 * 90) / 1920}rem)`);
+    };
+    measure();
+    img.addEventListener("load", measure);
+    return () => img.removeEventListener("load", measure);
+  }, [src]);
+  return (
+    <span
+      ref={ref}
+      className="contents"
+      style={fill ? ({ "--media-fill": fill } as CSSProperties) : undefined}
+    >
+      <Image src={src} alt={alt || ""} width={1920} height={1080} className={className} />
+    </span>
+  );
+}
+
+function VideoBlock({ block }: { block: Extract<ContentBlock, { type: "video" }> }) {
+  const printMode = usePrintMode();
+  const ref = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const toggle = () => {
+    const v = ref.current;
+    if (!v) return;
+    if (v.paused) void v.play();
+    else v.pause();
+  };
+  return (
+    <MediaFrame
+      below={
+        block.caption && <figcaption className="slide-media-caption">{block.caption}</figcaption>
+      }
+    >
+      <div className="slide-media-item relative overflow-hidden rounded-brand border border-border bg-night">
+        <video
+          ref={ref}
+          src={block.src}
+          poster={block.poster}
+          aria-label={block.alt}
+          muted
+          playsInline
+          preload={printMode ? "auto" : "metadata"}
+          onClick={toggle}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={() => setPlaying(false)}
+          onTimeUpdate={(e) =>
+            setProgress(e.currentTarget.currentTime / (e.currentTarget.duration || 1))
+          }
+          className="slide-media-item block cursor-pointer"
+        />
+        {!playing && (
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={`Play ${block.alt ?? "video"}`}
+            className="absolute bottom-6 left-6 flex size-20 items-center justify-center rounded-brand bg-primary text-white"
+          >
+            <Play className="size-10 fill-current" strokeWidth={0} />
+          </button>
+        )}
+        {progress > 0 && (
+          <div className="absolute inset-x-0 bottom-0 h-1.5 bg-white/15">
+            <div className="h-full bg-primary" style={{ width: `${progress * 100}%` }} />
+          </div>
+        )}
+      </div>
+    </MediaFrame>
+  );
 }
 
 const TWO_COL_VARIANTS = {
@@ -575,13 +682,13 @@ function ContentBlockRenderer({
 
     case "image":
       return (
-        <Image
-          src={block.src}
-          alt={block.alt || ""}
-          width={1920}
-          height={1080}
-          className="h-auto max-h-[60vh] w-auto max-w-full rounded-brand border border-border"
-        />
+        <MediaFrame>
+          <MediaPicture
+            src={block.src}
+            alt={block.alt}
+            className="slide-media-item rounded-brand border border-border"
+          />
+        </MediaFrame>
       );
 
     case "image-and-grid":
@@ -630,22 +737,7 @@ function ContentBlockRenderer({
       );
 
     case "video":
-      // As tall as an image may be, so a 16:9 clip under a headline fits without shrinking the body.
-      return (
-        <div className="w-fit max-w-full">
-          <video
-            src={block.src}
-            controls
-            aria-label={block.alt}
-            muted
-            playsInline
-            className="h-auto max-h-[60vh] w-auto max-w-full rounded-brand border border-border"
-          />
-          {block.caption && (
-            <p className="mt-3 text-center text-sm text-text-muted">{block.caption}</p>
-          )}
-        </div>
-      );
+      return <VideoBlock block={block} />;
 
     case "callout":
       if (centered) {
@@ -724,23 +816,38 @@ function ContentBlockRenderer({
       );
 
     case "linked-image": {
-      const img = (
-        <Image
+      const picture = (
+        <MediaPicture
           src={block.src}
-          alt={block.alt || ""}
-          width={1920}
-          height={1080}
-          className="mx-auto h-auto max-h-[60vh] w-auto max-w-[85%] rounded-brand border border-border"
+          alt={block.alt}
+          className="slide-media-item rounded-brand border border-border"
         />
       );
-      if (block.href) {
-        return (
-          <a href={block.href} target="_blank" rel="noopener noreferrer">
-            {img}
-          </a>
-        );
-      }
-      return img;
+      return (
+        <MediaFrame
+          below={
+            block.href && (
+              <a
+                href={block.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="slide-media-caption slide-media-link"
+              >
+                <ArrowUpRight className="size-[1.1em] shrink-0" strokeWidth={2.25} />
+                {linkLabel(block.href)}
+              </a>
+            )
+          }
+        >
+          {block.href ? (
+            <a href={block.href} target="_blank" rel="noopener noreferrer" className="contents">
+              {picture}
+            </a>
+          ) : (
+            picture
+          )}
+        </MediaFrame>
+      );
     }
 
     case "positions": {
@@ -890,6 +997,7 @@ function CenteredContentSlide({ slide }: Props) {
 function StandardContentSlide({ slide }: Props) {
   const styles = getSectionStyle(slide.sectionTheme);
   const hasBars = slide.content.some((b) => b.type === "bars");
+  const pictures = slide.content.filter((b) => MEDIA_BLOCKS.has(b.type)).length;
 
   return (
     <SlideShell night={isDeepDive(slide)}>
@@ -922,7 +1030,7 @@ function StandardContentSlide({ slide }: Props) {
         )}
 
         <div className="slide-body">
-          <div className="space-y-6">
+          <div className={`slide-blocks space-y-6 ${pictures > 1 ? "slide-media-stack" : ""}`}>
             {slide.content.map((block, index) => (
               <BlurFade key={index} delay={0.2 + index * 0.1} duration={0.5}>
                 <ContentBlockRenderer
