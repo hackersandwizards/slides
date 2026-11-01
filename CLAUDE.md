@@ -41,7 +41,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   Its lengths and sizes are measured off the print route at 1920x1080.
 - `specimen/`: `slide-catalogue.ts`, the specimen deck, every slide type and variant with fictional
   content, its images, and the specimen page `index.html` with its compiled `build/slides.css`, one slide per slide
-  type in print mode, which the brand kit links. `bun run specimen` (`scripts/specimen.ts`)
+  type and one per content block in print mode, which the brand kit links. `bun run specimen` (`scripts/specimen.ts`)
   writes the page, and `bun run check` fails while it differs from a fresh build.
 - `test/`: the engine's unit tests.
 

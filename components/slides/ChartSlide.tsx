@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useMemo, useSyncExternalStore } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { usePrintMode } from "../../lib/print-context";
 import type { ChartSlide as ChartSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
@@ -21,7 +21,9 @@ interface Props {
 }
 
 function Annotation({ text }: { text: string }) {
-  return <p className="mt-6 text-center text-2xl font-medium text-secondary">{text}</p>;
+  return (
+    <p className="mt-6 text-center text-2xl font-medium text-balance text-secondary">{text}</p>
+  );
 }
 
 function CycleVariant({ slide }: { slide: ChartSlideType }) {
@@ -57,19 +59,13 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
 
   return (
     <BlurFade delay={0.2} duration={0.8} className="w-full max-w-[56.25rem]">
-      {/* The percentage labels sit on the top edge of the box; overflow keeps their tops. */}
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full overflow-visible">
-        <defs>
-          <linearGradient id="bell-gradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--color-brand)" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="var(--color-brand)" stopOpacity="0.05" />
-          </linearGradient>
-        </defs>
-
+      {/* The segment labels sit on the top edge of the box; overflow keeps their tops. The box is
+          12 units taller than the curve, so the percentages under it stay inside. */}
+      <svg viewBox={`0 0 ${width} ${height + 12}`} className="w-full overflow-visible">
         <path
           d={`${pathD} L ${padding + graphWidth},${height - 40} L ${padding},${height - 40} Z`}
-          fill="url(#bell-gradient)"
-          opacity={0.3}
+          fill="var(--color-brand)"
+          fillOpacity={0.07}
         />
 
         <path d={pathD} fill="none" stroke="var(--color-brand)" strokeWidth="2.5" />
@@ -101,10 +97,10 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
             <g key={i}>
               <text
                 x={x}
-                y={height - 22}
+                y={height - 18}
                 textAnchor="middle"
                 className="font-sans"
-                fontSize="16"
+                fontSize="21"
                 fill={isActive ? "var(--color-brand)" : "var(--color-text-muted)"}
                 fontWeight={isActive ? 600 : 400}
               >
@@ -112,11 +108,11 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
               </text>
               <text
                 x={x}
-                y={height - 2}
+                y={height + 8}
                 textAnchor="middle"
                 className="font-sans"
-                fontSize="15"
-                fill="var(--color-text-subtle)"
+                fontSize="19"
+                fill="var(--color-text-muted)"
               >
                 {seg.percentage}%
               </text>
@@ -134,7 +130,7 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
                     y={height - 40 - bellCurve(mid) * graphHeight - 14}
                     textAnchor={mid < 0.5 ? "end" : "start"}
                     className="font-heading"
-                    fontSize="17"
+                    fontSize="22"
                     fill="var(--color-brand)"
                     fontWeight={600}
                   >
@@ -151,18 +147,8 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
   );
 }
 
-const noSubscription = () => () => {};
-
 function GraphVariant({ slide }: { slide: ChartSlideType }) {
   const { xLabel, yLabel, currentMarker, futureNote } = slide;
-  // SVG animation ignores the stylesheet's reduced-motion rule, so the pulse checks it here, after
-  // hydration, since the server cannot see the preference.
-  const still = useSyncExternalStore(
-    noSubscription,
-    () => matchMedia("(prefers-reduced-motion: reduce)").matches,
-    () => false,
-  );
-
   const width = 800;
   const height = 400;
   const padding = 70;
@@ -184,13 +170,6 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
   return (
     <BlurFade delay={0.2} duration={0.8} className="w-full max-w-[50rem]">
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
-        <defs>
-          <linearGradient id="perf-gradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--color-brand)" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="var(--color-brand)" stopOpacity="0.02" />
-          </linearGradient>
-        </defs>
-
         {[0.2, 0.4, 0.6, 0.8].map((t) => (
           <line
             key={t}
@@ -204,34 +183,18 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
           />
         ))}
 
-        <path d={areaD} fill="url(#perf-gradient)" />
+        <path d={areaD} fill="var(--color-brand)" fillOpacity={0.07} />
         <path d={pathD} fill="none" stroke="var(--color-brand)" strokeWidth="2.5" />
 
         {currentMarker && markerPoint && (
           <g>
-            <circle
-              cx={markerPoint.x}
-              cy={markerPoint.y}
-              r="8"
-              fill="var(--color-brand)"
-              opacity="0.3"
-            >
-              {/* Three pulses on arrival, then still: a loop that never ends pulls the eye off
-                  the speaker for the whole slide. */}
-              {!still && (
-                <>
-                  <animate attributeName="r" values="6;10;6" dur="2s" repeatCount="3" />
-                  <animate attributeName="opacity" values="0.4;0.1;0.4" dur="2s" repeatCount="3" />
-                </>
-              )}
-            </circle>
             <circle cx={markerPoint.x} cy={markerPoint.y} r="5" fill="var(--color-brand)" />
             <text
               x={markerPoint.x}
               y={markerPoint.y - 18}
               textAnchor="middle"
               className="font-heading"
-              fontSize="18"
+              fontSize="22"
               fill="var(--color-brand)"
               fontWeight={600}
             >
@@ -242,13 +205,12 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
 
         {futureNote && (
           <text
-            x={padding + graphWidth - 20}
-            y={padding + 30}
-            textAnchor="end"
+            x={padding + 10}
+            y={padding + 10}
+            textAnchor="start"
             className="font-sans"
-            fontSize="16"
-            fill="var(--color-brand-accent)"
-            opacity="0.8"
+            fontSize="20"
+            fill="var(--color-text-muted)"
           >
             {futureNote}
           </text>
@@ -260,7 +222,7 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
             y={height - 10}
             textAnchor="middle"
             className="font-sans"
-            fontSize="18"
+            fontSize="21"
             fill="var(--color-text-muted)"
           >
             {xLabel}
@@ -273,7 +235,7 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
             y={height / 2}
             textAnchor="middle"
             className="font-sans"
-            fontSize="18"
+            fontSize="21"
             fill="var(--color-text-muted)"
             transform={`rotate(-90, 20, ${height / 2})`}
           >
@@ -304,7 +266,7 @@ function TrendVariant({ slide }: { slide: ChartSlideType }) {
             )}
             {series2Label && (
               <span className="flex items-center gap-2 text-base font-semibold text-text">
-                <span className="h-1 w-8 rounded-full bg-warning" />
+                <span className="h-1 w-8 rounded-full bg-secondary" />
                 {series2Label}
               </span>
             )}
@@ -315,7 +277,7 @@ function TrendVariant({ slide }: { slide: ChartSlideType }) {
         <ChartFrame>
           {mounted && (
             <Suspense fallback={null}>
-              <TrendPlot data={data} print={print} />
+              <TrendPlot data={data} print={print} xLabel={slide.xLabel} yLabel={slide.yLabel} />
             </Suspense>
           )}
         </ChartFrame>
@@ -341,7 +303,13 @@ function BarVariant({ slide }: { slide: ChartSlideType }) {
         <ChartFrame>
           {mounted && (
             <Suspense fallback={null}>
-              <BarPlot data={data} print={print} />
+              <BarPlot
+                data={data}
+                print={print}
+                xLabel={slide.xLabel}
+                yLabel={slide.yLabel}
+                labelled
+              />
             </Suspense>
           )}
         </ChartFrame>

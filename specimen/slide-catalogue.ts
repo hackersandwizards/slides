@@ -392,6 +392,30 @@ const slides: Slide[] = [
   },
   {
     type: "content",
+    sectionLabel: "Block: image and grid, sketch",
+    headline: "LLMs complete text",
+    content: [
+      {
+        type: "image-and-grid",
+        // A copy of the brand repository's slide sketch example,
+        // applications/slide-visuals/sketch-example-next-token.png at brand v0.20.0: the package
+        // does not export it, and a consumer serves the specimen images from its own public/.
+        image: {
+          src: `${IMG}/sketch-next-token.png`,
+          alt: "Marker sketch: next token",
+          sketch: true,
+        },
+        items: [
+          { title: "The line so far", subtitle: "The model reads everything before the gap." },
+          { title: "Candidate words", subtitle: "Each next word gets a probability." },
+          { title: "Next token", subtitle: "The likeliest word is written, then it repeats." },
+        ],
+      },
+    ],
+    notes: "content blocks: image-and-grid with a painted sketch (sketch: true), no frame.",
+  },
+  {
+    type: "content",
     sectionLabel: "Block: positions",
     headline: "Two positions and a resolution",
     content: [
@@ -597,11 +621,11 @@ const slides: Slide[] = [
 
   {
     type: "statement",
-    lines: ["Ship plans", "before code"],
-    highlighted: "plans",
-    crossedOut: "code",
-    subtitle: "A statement with highlight and a crossed-out word.",
-    points: ["Plans are reviewed", "Code follows the plan", "Review reads both"],
+    lines: ["Plans before code"],
+    highlighted: "Plans",
+    crossedOut: "Code first, plan later",
+    subtitle: "Review reads the plan before anyone writes a line.",
+    points: ["The plan is reviewed", "Code follows the plan", "Review reads both"],
     closing: "That is the whole method.",
     notes: "statement: highlight, crossed-out, points, plain closing.",
   },
@@ -1081,30 +1105,31 @@ const slides: Slide[] = [
   {
     type: "chart",
     variant: "trend",
-    headline: "Lead time against rework",
+    headline: "Lead time fell, review wait did not",
     data: [
-      { name: "Jan", value: 9, value2: 30 },
-      { name: "Mar", value: 7, value2: 26 },
-      { name: "May", value: 5, value2: 21 },
-      { name: "Jul", value: 3, value2: 18 },
-      { name: "Sep", value: 2, value2: 16 },
+      { name: "Jan", value: 9, value2: 3 },
+      { name: "Mar", value: 7, value2: 3 },
+      { name: "May", value: 5, value2: 2.5 },
+      { name: "Jul", value: 3, value2: 2.5 },
+      { name: "Sep", value: 2, value2: 2 },
     ],
-    seriesLabel: "Lead time (days)",
-    series2Label: "Rework (%)",
-    annotation: "Fictional figures.",
+    seriesLabel: "Lead time",
+    series2Label: "Review wait",
+    yLabel: "Days",
+    annotation: "By September, review wait is the whole lead time. Fictional figures.",
     notes: "chart: trend with two series.",
   },
   {
     type: "chart",
     variant: "bar",
-    headline: "Tickets per stage",
+    headline: "Build holds the most tickets",
     data: [
       { name: "Plan", value: 12 },
       { name: "Build", value: 30 },
       { name: "Review", value: 18 },
       { name: "QA", value: 9 },
     ],
-    annotation: "Build holds the most tickets.",
+    annotation: "Two in five tickets sit in Build. Fictional figures.",
     notes: "chart: bar.",
   },
 
@@ -1205,7 +1230,7 @@ const slides: Slide[] = [
   {
     type: "wheel",
     headline: "Six areas of autonomy",
-    subtitle: "Around one team.",
+    subtitle: "Each area is a decision the team makes itself.",
     center: "Autonomous team",
     segments: [
       { title: "Business model", text: "How it earns" },
@@ -1215,12 +1240,12 @@ const slides: Slide[] = [
       { title: "Architecture", text: "Readable systems" },
       { title: "Steering", text: "Goals and approvals" },
     ],
-    caption: "Six segments.",
+    caption: "Fictional operating model.",
     notes: "wheel: six segments, subtitle, caption.",
   },
   {
     type: "wheel",
-    headline: "Four areas",
+    headline: "Four areas the team owns",
     center: "Team",
     segments: [
       { title: "Plan", text: "Before code" },

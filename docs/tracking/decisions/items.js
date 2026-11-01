@@ -191,7 +191,36 @@ window.DECISION_REPOS["slides"] = [
     order: 10,
     status: "assumed",
     context:
-      "Heute vier gleiche Kästen, das Subsystem-Team rot, Kästen laufen ins Fußband (Wertung 5,83). Die Team Shape Templates zeichnen Stream-Teams waagerecht, Enabling senkrecht, Subsystem als Achteck, Plattform mit gepunktetem Rand. Phase 2 baut das in Teal, Purple und Neutral ohne Rot und prüft es blind gegen heute. Bild von heute: docs/tracking/2026-11-01-catalogue-program/team-topology-heute.jpg.",
+      "Ausgeliefert in v0.12.0: Stream-Teams waagerecht in Teal, Enabling senkrecht links in Purple, Subsystem als Achteck in Neutral, Plattform über die volle Breite mit gepunktetem Teal-Rand, kein Rot, kein Fußband. Blind-Panel: heute 5,90, neu 7,51, Rauschen je Bild 0,29; Runde 2 ohne Gewinner über dem Rauschen (Plateau). Abweichung von den Templates: die Plattform trägt die Markenecke statt eckiger Ecken (7,51 gegen 7,26). Vorher und nachher: docs/tracking/2026-11-01-catalogue-program/phase2-team-topology.jpg.",
     assumption: "Formensprache der Templates, Farben aus der Marke, entschieden im Blind-Panel.",
+  },
+  {
+    id: "section-wash-vs-guide",
+    title: "Abschnittsfläche hinter dem Inhalt: Design Guide anpassen oder Fläche flach machen?",
+    area: "slides",
+    priority: 3,
+    order: 11,
+    status: "open",
+    context:
+      "Jede Inhaltsfolie liegt auf der 7-%-Fläche Teal nach Purple (v0.10.1, Richtung von Benedikt am 01.11. per Panel entschieden). Der Design Guide sagt: «The gradient is a bounded field with a job, never wallpaper behind content.» In allen Phase-2-Panels werten Reviewer die Fläche danach ab, vor allem die Brand-Designerin (Bericht, Abschnitt Phase 2). Der Panel-Prompt zitiert den Satz, die Abwertung ist also teils vom Prompt erzeugt. Gemessen, was flach statt Verlauf bringt, ist nicht.",
+    options: [
+      {
+        key: "guide",
+        label: "Fläche bleibt, Design Guide nennt sie als Ausnahme",
+        detail:
+          "Ein Satz im Design Guide (os) und im Brand-Repo; Panels bekommen ihn in den Prompt.",
+      },
+      {
+        key: "flat",
+        label: "Fläche wird flach",
+        detail:
+          "Abschnittsfarbe als einfarbige 7-%-Tönung ohne Verlauf; vorher blind gegen heute, Release in slides.",
+      },
+      {
+        key: "test",
+        label: "Erst blind messen",
+        detail: "Verlauf gegen flach gegen ohne Fläche auf echten Deckfolien, dann entscheiden.",
+      },
+    ],
   },
 ];

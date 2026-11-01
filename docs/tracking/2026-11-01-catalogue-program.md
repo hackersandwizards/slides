@@ -1,6 +1,7 @@
 # Slide-Katalog: Duplikate, Lücken und Programm
 
-Stand 2026-11-01, Phase 1 von 4 (Analyse und Plan, keine Änderung an Engine oder Decks). Ziel und
+Stand 2026-11-01, Phase 1 (Analyse und Plan) und Phase 2 ohne offene Entscheidung (Basis-Runde,
+vier Typen bis zum Plateau, Sketch-Variante, v0.12.0). Ziel und
 Zeilen je Phase: [GOAL.md](../../GOAL.md). Entscheidungen: `docs/tracking/decisions/items.js`.
 
 Benedikt am 01.11. (von Ada weitergegeben): «Wir scheinen da auch bei den Folien gerade ziemlich
@@ -23,17 +24,173 @@ Datendiagrammen bei Bedarf bis 47. Die Agenda als Zeitplan ist eine Variante und
 - **Kein Deck umgeht die Engine.** Alle 2.157 Folien in 52 Decks laufen über die 26 registrierten
   Typen. Was abweicht, sind Stellschrauben (Abschnittsfläche, Kartenfarbe) und Behelfe für die
   fehlenden Typen.
-- **Gemaltes Bild:** Die Engine kann es (`image-and-grid` mit `sketch: true`), die Specimen-Seite
-  zeigt es nicht. Bei sechs Sketches im trainer-hub fehlt das Flag, sie stehen gerahmt.
-- **Team Topology** liegt mit 5,83 von 10 unter den schwächsten Typen. Sie zeichnet alle vier
-  Teamarten als gleiche Kästen, das Subsystem-Team rot, und läuft ins Fußband.
-- **Die Seite selbst** zeigt je Typ eine Kachel, zwei der 26 Blöcke und keine Variante. Wer eine
-  Folie für einen Vergleich sucht, findet dort `comparison` `vs`, aber weder `two-column` noch
-  `transform`, und keine Suche.
+- **Gemaltes Bild:** Seit v0.12.0 zeigt die Specimen-Seite es, mit einem echten Sketch aus dem
+  Brand-Repo. Bei sechs Sketches im trainer-hub fehlt das Flag, sie stehen gerahmt.
+- **Phase 2:** `statement`, `team-topology`, `chart` und `wheel` stehen jetzt zwischen 6,84 und
+  7,75 statt zwischen 5,36 und 5,96 (Panel-Mittel, Rauschen je Bild 0,29 bis 0,63). Details im
+  Abschnitt Phase 2.
+- **Die Seite selbst** zeigt je Typ eine Kachel und seit v0.12.0 jeden Inhaltsblock außer den drei
+  Code-Blöcken, aber keine Variante und keine Suche.
 
 Plan: Phase 2 legt die Duplikate zusammen und optimiert die schwächsten und meistgenutzten
 Einträge bis zum Plateau, Phase 3 baut die Katalogseite nach Kommunikationsaufgabe, Phase 4 stellt
 jede Deckfolie um. Geschätzt 4 bis 6 Tage Wanduhr mit drei parallelen Sessions.
+
+## Phase 2: Ergebnis
+
+Ausgeliefert als slides v0.12.0. Panel je Runde: drei Personas aus dem Publikum (Teilnehmerin im
+Workshop bei 1000 px, vortragender Trainer bei 1280 px, Brand-Designerin bei 1920 px), je Claude
+(Opus) und Codex (gpt-6.1-sol, high), je zwei Läufe, also 12 Wertungen je Bild. Kriterien vor der
+ersten Wertung fest: Glance, Klarheit, Lesbarkeit, Platz, Ruhe, Marke, Menschlich, Gesamt, je 0
+bis 10. Reihenfolge und Buchstaben je Wertung gemischt, Dateinamen neutral, der heutige Stand läuft
+mit. Rauschen: mittlerer Abstand Lauf 1 zu Lauf 2 desselben Reviewers je Bild. Ausgeliefert nur,
+was über dem Rauschen führt; ein Gleichstand geht an die Form mit weniger Ausnahmen.
+
+Je Typ zwei Specimen-Folien und bis zu vier echte Deckfolien aus talks und trainer-hub. Die echten
+Folien lagen nur im Scratchpad und in den Prompts, hier stehen nur Specimen-Bilder.
+
+| Typ             | vorher (tm-) | vorher (Panel) | nachher | Rauschen je Bild | Runden |
+| --------------- | -----------: | -------------: | ------: | ---------------: | -----: |
+| `statement`     |         5,75 |           5,39 |    7,75 |             0,49 |      3 |
+| `team-topology` |         5,83 |           5,90 |    7,51 |             0,29 |      2 |
+| `chart`         |         6,33 |           5,96 |    6,84 |             0,43 |      2 |
+| `wheel`         |         6,42 |           5,36 |    7,64 |             0,38 |      2 |
+
+"Nachher" ist der Wert der ausgelieferten Form in ihrer letzten Runde, "vorher (Panel)" der
+heutige Stand in Runde 1 mit demselben Panel. Werte verschiedener Runden sind nicht direkt
+vergleichbar, weil sich das Bilderset ändert.
+
+**`statement`.** Glow-Flächen und Partikel entfernt, die durchgestrichene Aussage steht als
+Kicker über der Aussage statt darunter, und ein Absatz mit `text-balance` behält ausgeglichene
+Zeilen (die globale Regel `text-wrap: pretty` hatte sie überschrieben). Runde 1: heute 5,39, ohne
+Deko 7,33, plus Kicker 7,43 (Rauschen 0,53). Runde 2: Kicker 7,64 gegen Spaltenvariante 7,42, ein
+Gleichstand. Runde 3: plus `balance` 7,75 gegen 7,51 (Rauschen je Bild 0,49, je Variante 0,02);
+eine echte Folie mit einzelnem Wort in der letzten Zeile gewann in beiden Läufen +1,25.
+
+![statement vorher und nachher](2026-11-01-catalogue-program/phase2-statement.jpg)
+
+**`team-topology`.** Gebaut nach den Team Shape Templates: Stream-Teams waagerecht in Teal,
+Enabling senkrecht links in Purple, Subsystem als Achteck in Neutral, Plattform über die volle
+Breite mit gepunktetem Teal-Rand und Markenecke, kein Rot, kein Fußband. Runde 1: heute 5,90,
+Plattform mit eckigem Rand 7,26, mit Markenecke 7,51 (Rauschen 0,29). Runde 2: zwei weitere
+Varianten (7,07 und 6,86) lagen im Rauschen (0,63), Plateau, die Markenecke bleibt.
+
+![team-topology vorher und nachher](2026-11-01-catalogue-program/phase2-team-topology.jpg)
+
+**`chart`.** Zweite Reihe Purple statt einer zweiten Teal-Stufe, flache Füllung 7 % statt
+Verlauf, Achsentitel über und unter dem Plot, horizontales Raster, Balken mit Wert direkt darüber
+und ohne Y-Achse, beim Graphen kein pulsierender Halo. Runde 1: heute 5,96, neue Farben und Achsen
+6,72, plus beschriftete Balken 7,07 (Rauschen 0,33). Runde 2: Feinschliff 6,84 gegen 6,56
+(Rauschen 0,43), knapp, ausgeliefert, weil die Kritik der Runde 1 (Achsentitel fehlen,
+Verlaufsfläche) damit wegfällt. Was bleibt, ist vor allem Inhalt und die Abschnittsfläche.
+
+![chart vorher und nachher](2026-11-01-catalogue-program/phase2-chart.jpg)
+
+**`wheel`.** Segmente in Teal bei 40 % statt Vollfarbe, Ringzahlen in Tinte, quadratische
+Nummernfelder, größere Titel. Runde 1: Vollfarbe 7,42 gegen Teal-Rand 15 % 7,42, beide weit über
+heute 5,36 (Rauschen 0,33). Runde 2: 40 % 7,64 gegen 7,18 und 7,08 (Rauschen 0,38).
+
+![wheel vorher und nachher](2026-11-01-catalogue-program/phase2-wheel.jpg)
+
+**Sketch-Variante.** Das Specimen-Deck hat eine Folie `image-and-grid` mit `sketch: true` und dem
+Sketch `sketch-example-next-token.png` aus dem Brand-Repo (`applications/slide-visuals/`, v0.20.0,
+dort nicht exportiert, deshalb als Kopie mit Herkunft im Kommentar). Kein Panel: die Engine
+ändert sich nicht, die rahmenlose Darstellung beruht auf den Panels vom 31.10.
+
+![Specimen-Seite mit Sketch-Variante](2026-11-01-catalogue-program/phase2-specimen-sketch.jpg)
+
+**Specimen-Seite.** Nach den 26 Typen folgt der Abschnitt "Content blocks": jede Inhaltsfolie des
+Specimen-Decks mit Bereichsbeschriftung `Block:` oder `Visual:`, außer `code`, `code-and-text` und
+`annotated-code`. Deren Shiki-Farben stünden sonst als Hex im HTML, und die Marken-Ratsche lässt die
+Ausnahmeliste nur schrumpfen.
+
+### Basis-Runde der Blöcke
+
+Gleiches Panel, je Block eine Specimen-Folie (30 Folien, Mittel 6,70, Rauschen je Bild 0,47) und
+bis zu drei echte Deckfolien (24 Folien, Mittel 6,96, Rauschen 0,39). Die 26 Typen hatte tm-
+bewertet (os `docs/tracking/2026-11-01-title-closing-max.md`). Mittel aus Specimen und Deck, wo
+beides da ist:
+
+| Block            | Mittel | Specimen | Deck | Hauptkritik                                                 |
+| ---------------- | -----: | -------: | ---: | ----------------------------------------------------------- |
+| `video`          |   4,00 |     4,00 |    – | Platzhalter ohne Inhalt, Browser-Steuerung ohne Marke       |
+| `image`          |   4,96 |     4,50 | 5,42 | Platzhalterbild in Fremdfarben, rechte Hälfte leer          |
+| `linked-image`   |   5,00 |     5,17 | 4,83 | Screenshot zu klein zum Lesen, nichts hervorgehoben         |
+| `paragraph`      |   6,21 |     6,58 | 5,83 | Kicker wiederholt Titel, Text schwebt zwischen Leerflächen  |
+| `two-column`     |   6,29 |     6,42 | 6,17 | Kartenwand, Rot als Themenfarbe statt nur für Fehler        |
+| `pipeline`       |   6,33 |     6,42 | 6,25 | zu viele Rahmenstile, Inhalt schwebt oben                   |
+| `labeled-grid`   |   6,42 |     7,25 | 5,58 | Erfolgsgrün als Hervorhebung ohne Erfolg                    |
+| `four-column`    |   6,54 |     7,17 | 5,92 | Leerfläche über und unter der Kartenreihe                   |
+| `annotated`      |   6,58 |     6,58 |    – | schmale Beschriftungsspalte bricht unruhig                  |
+| `image-and-grid` |   6,79 |     6,58 | 7,00 | Bild ohne Beschriftung, breite Karten mit zwei Wörtern      |
+| `code`           |   6,79 |     6,58 | 7,00 | Editor-Syntaxfarben statt Palette                           |
+| `bullets`        |   6,80 |     6,53 | 7,08 | Textwand, rechte Seite ohne Zweck leer                      |
+| `callout`        |   6,86 |     6,04 | 7,67 | zu viele Farbsignale ohne Hierarchie                        |
+| `code-and-text`  |   6,88 |     6,58 | 7,17 | Amber und Rust als Dekoration                               |
+| `cards`          |   7,08 |     6,67 | 7,50 | Icon-Kartenraster wirkt generiert                           |
+| `timeline`       |   7,25 |     7,67 | 6,83 | Zellen brechen ungleich                                     |
+| `hooks`          |   7,38 |     7,00 | 7,75 | Terminal und Zeilen teilen keine Kante                      |
+| `bars`           |   7,46 |     7,42 | 7,50 | Titel zu nah am ersten Balken                               |
+| `numbers`        |   7,50 |     7,58 | 7,42 | keine Leitzahl, zusammengehörige Zahlen weit auseinander    |
+| `positions`      |   7,54 |     7,00 | 8,08 | drei Elemente konkurrieren                                  |
+| `layers`         |   7,54 |     7,92 | 7,17 | Zeilen gestreckt, Grün als Dekoration                       |
+| `annotated-code` |   7,58 |     8,00 | 7,17 | Codefläche grau statt Night                                 |
+| `terminal`       |   7,58 |     7,00 | 8,17 | Grün und Amber als Dekoration                               |
+| `table`          |   7,71 |     7,33 | 8,08 | keine Kernaussage markiert, Waisenwörter                    |
+| `transform`      |   7,79 |     7,92 | 7,67 | heller Text auf gestricheltem Rahmen verschwindet im Beamer |
+| `flow`           |   8,04 |     8,33 | 7,75 | Farblogik der Schritte wechselt                             |
+
+Wiederkehrend über alle Blöcke: Rollenfarben (Grün, Amber) als Dekoration, Leerflächen, die den
+Inhalt schweben lassen, und die Abschnittsfläche, die mehrere Reviewer nach dem Satz "never a
+background behind content" abwerten (Zeile `section-wash-vs-guide`).
+
+### Ein Reviewer-Prompt, wörtlich
+
+Runde 2 `team-topology`, Teilnehmerin, Claude, Lauf 1; Bildpfade gekürzt:
+
+```text
+You are a participant in a hands-on workshop of hackers&wizards, an engineering manager or developer sitting in row 8 of a training room. The slide is projected on a screen; the images below are shown at 1000 pixels wide, the size the slide appears to you from your seat.
+
+The medium: slides of hackers&wizards, a consultancy for agentic software engineering, from workshop decks, client decks and conference talks (German and English), 16:9, projected in a training room or shared on a screen. Every slide below is a team-topology slide: an organisation drawn in the four team types of the book Team Topologies (stream-aligned, enabling, complicated-subsystem and platform teams), which the audience knows from the book and from the Team Topologies shape templates.
+
+The hackers&wizards brand: a light off-white ground (#f7f9fa) with dark ink text (#19283a), and night (#0b1118, near-black) as a second ground that is part of the system. Accent colours with fixed roles: teal (#1a7285, the primary accent) and purple (#9333ea, the secondary accent); green (dark #15803d) for success; amber (dark #b45309) for warnings; red (#dc2626) only for errors and anti-patterns; a rust hue (#a3402a) only for the Software Factory product area; a grey-blue (#7c849c) for neutral marks. Tints come from one opacity ladder: 7, 15, 25, 40, 70 and 100 %. Cards, fields and frames take the brand corner (large radius top-left and bottom-right, small radius elsewhere); small marks such as swatches and list markers are square. JetBrains Mono for headings and labels, Inter for text. A thin teal-to-purple strip runs along the top edge of every slide and the pixel wordmark "hackers&wizards" sits bottom right. The brand forbids decoration such as glow, particles or ornaments, and allows a gradient only as one bounded field with a job (a band, a panel, a pill), never as a background behind content.
+
+Below are 6 slides, numbered s01 to s06. Each slide comes in several renderings of the same content, letters A, B and so on. Read every image file listed.
+
+s01 A: …/s01-A-amfd.png
+s01 B: …/s01-B-dpre.png
+s01 C: …/s01-C-6crp.png
+s02 A: …/s02-A-j5cu.png
+s02 B: …/s02-B-i5fg.png
+s02 C: …/s02-C-b8qu.png
+s03 A: …/s03-A-khrm.png
+s03 B: …/s03-B-eyx2.png
+s03 C: …/s03-C-4qlx.png
+s04 A: …/s04-A-8zxw.png
+s04 B: …/s04-B-bd9q.png
+s04 C: …/s04-C-1jxj.png
+s05 A: …/s05-A-43z5.png
+s05 B: …/s05-B-9zdj.png
+s05 C: …/s05-C-9p9d.png
+s06 A: …/s06-A-byoq.png
+s06 B: …/s06-B-7h6i.png
+s06 C: …/s06-C-hgya.png
+
+Criteria, each scored 0 to 10 for your role: glance (the one key point is clear within 3 seconds), clarity (structure and relationships are understood without explanation), legibility (every text readable at your display size), breathing (room, not cramped, nothing touching the edges or the footer), calm (nothing competes for attention, no clutter), brand (fits the brand described above), human (looks deliberately designed, not like generic AI-generated slideware: 10 means it does not look generated), overall.
+
+For each rendering answer with one JSON object on its own line: {"slide":"s01","letter":"A","glance":0,"clarity":0,"legibility":0,"breathing":0,"calm":0,"brand":0,"human":0,"overall":0,"below10":"what keeps overall below 10, concrete: which element, what is wrong"}. Then for each slide one line {"slide":"s01","best":"A","decided":"the one difference that decided it, in a few concrete words"}.
+Answer with JSON objects only, one per line, nothing else.
+```
+
+### Was Phase 2 ausgelassen hat
+
+- Merge-Migrationen, Katalog-Gruppierung, Titel und Abschluss und der Deep-Dive: offene Zeilen
+  oder gerade ausgeliefert.
+- `chart` `trend` und `bar` zeichnet Recharts erst im Browser. Die statische Specimen-Seite zeigt
+  deshalb weiter nur `cycle`, die Panels liefen auf hydrierten Renderings.
+- Ein hervorgehobener Einzelbalken bräuchte ein neues Feld; ausgelassen, bis ein Deck es braucht.
+- Teal liegt unter der Chroma-Untergrenze des Dataviz-Validators. Das ist ein Markenwert und bleibt.
+- `Particles` ist exportiert, aber von keiner Folie mehr genutzt (GOAL.md).
 
 ## Duplikate: was überlebt
 
@@ -275,21 +432,16 @@ Abweichungen sind Stellschrauben und Behelfe:
 ![Specimen-Seite heute](2026-11-01-catalogue-program/specimen-page-heute.jpg)
 
 `scripts/specimen.ts` rendert je registriertem Typ die erste Folie des Specimen-Decks: 26 Kacheln,
-alphabetisch nach Registrierung, ohne Beschreibung. Daraus folgt:
+alphabetisch nach Registrierung, ohne Beschreibung, darunter die Blöcke. Daraus folgt:
 
-- Von 26 Inhaltsblöcken zeigt die Seite zwei (Absatz und Liste auf der ersten `content`-Folie).
-  Diagramme (`flow`, `timeline`, `bars`, `cards` und die übrigen), Code, Tabellen und
-  `image-and-grid` sind nicht zu sehen.
+- Seit v0.12.0 folgt den Typen der Abschnitt "Content blocks" mit jedem Block außer den drei
+  Code-Blöcken (Abschnitt Phase 2).
 - Keine Variante ist zu sehen: `grid` zeigt nur `pillars`, `chart` nur `cycle`, der in keinem Deck
   vorkommt, `closing` nur `contact`.
-- Das gemalte Bild fehlt doppelt. Die Seite zeigt den Block nicht, und das Specimen-Deck füllt ihn
-  mit einem gezeichneten Screenshot ohne `sketch: true`:
+- Das Specimen-Deck füllt `image-and-grid` mit einem gezeichneten Screenshot ohne `sketch: true`;
+  seit v0.12.0 steht die Sketch-Variante als eigene Folie daneben:
 
 ![image-and-grid im Specimen-Deck](2026-11-01-catalogue-program/image-and-grid-im-specimen.jpg)
-
-- `team-topology` heute: vier gleiche Kästen, das Subsystem-Team in Rot.
-
-![team-topology heute](2026-11-01-catalogue-program/team-topology-heute.jpg)
 
 ## Recherche
 

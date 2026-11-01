@@ -77,6 +77,7 @@ function palette(dark: boolean) {
     amber: dark ? hex("--color-amber") : hex("--color-amber-dark"),
     green: dark ? hex("--color-green") : hex("--color-green-dark"),
     red: dark ? hex("--color-red-night") : hex("--color-red"),
+    neutral: dark ? mix(hex("--color-ampersand"), "FFFFFF", 0.6) : hex("--color-ampersand"),
     code: dark ? hex("--color-night-2") : "24292E",
     codeInk: "E1E4E8",
     codeGreen: "85E89D",
@@ -1960,9 +1961,11 @@ const RENDER: {
       align: "center",
       after: 0,
     }));
-    if (d.crossedOut && !d.lines.some((l) => l.includes(d.crossedOut!))) {
-      paras.push({
-        runs: [{ text: d.crossedOut, options: { strike: "sngStrike", color: c.muted } }],
+    // The crossed-out claim stands above the statement, as the kicker of the web slide.
+    const crossed = d.crossedOut && !d.lines.some((l) => l.includes(d.crossedOut!)) ? 1 : 0;
+    if (crossed) {
+      paras.unshift({
+        runs: [{ text: d.crossedOut!, options: { strike: "sngStrike", color: c.muted } }],
         mono: true,
         bold: true,
         rel: PT.h3 / PT.base,
@@ -1970,12 +1973,12 @@ const RENDER: {
       });
     }
     if (d.subtitle)
-      paras.splice(d.lines.length, 0, {
+      paras.splice(crossed + d.lines.length, 0, {
         runs: md(d.subtitle, c, { color: c.muted }),
         rel: PT.lead / PT.base,
         align: "center",
       });
-    paras.forEach((p, i) => (p.after = i < d.lines.length - 1 ? 0 : 16));
+    paras.forEach((p, i) => (p.after = i >= crossed && i < crossed + d.lines.length - 1 ? 0 : 16));
     for (const [i, pt] of (d.points ?? []).entries()) {
       paras.push({
         runs: [
@@ -2650,6 +2653,18 @@ const RENDER: {
         catAxisTitleFontSize: PT.sm,
         valAxisTitleFontSize: PT.sm,
         ...axis,
+        // Bars carry their value on top instead of a value axis, as on the web slide.
+        ...(d.variant === "bar" && {
+          showValue: true,
+          dataLabelPosition: "outEnd",
+          dataLabelFontFace: MONO,
+          dataLabelFontSize: PT.base,
+          dataLabelFontBold: true,
+          dataLabelColor: c.ink,
+          valAxisHidden: true,
+          valGridLine: { style: "none" },
+          showValAxisTitle: false,
+        }),
       });
     } else if (d.variant === "cycle") {
       // The adoption curve as the web draws it: a bell curve, its area split into the segments'
@@ -3126,53 +3141,93 @@ const RENDER: {
   },
 
   "team-topology"(s, ctx, d) {
+    // The Team Shape Templates as on the web slide: enabling teams vertical on the left, stream
+    // teams in teal, complicated subsystems as neutral octagons, the platform under a dotted line.
     const { c } = ctx;
     const y = header(s, ctx, d);
     const capH = d.caption ? 0.35 : 0;
     const enW = d.enabling.length ? 2.2 : 0;
+    const mainX = SIDE + enW + (enW ? 0.2 : 0);
     const mainW = CW - enW - (enW ? 0.2 : 0);
+    type Shape = "stream" | "subsystem" | "platform";
     const groups = [
-      ...d.streamAligned.map((t) => ({ name: t.name, sub: "", roles: t.roles, tone: c.green })),
+      ...d.streamAligned.map((t) => ({
+        name: t.name,
+        sub: "",
+        roles: t.roles,
+        shape: "stream" as Shape,
+      })),
       ...(d.complicatedSubsystem ?? []).map((t) => ({
         name: t.name,
         sub: t.description ?? "",
         roles: [] as string[],
-        tone: c.red,
+        shape: "subsystem" as Shape,
       })),
       ...d.platform.map((t) => ({
         name: t.name,
         sub: t.description ?? "",
         roles: t.roles ?? [],
-        tone: c.teal,
+        shape: "platform" as Shape,
       })),
     ];
+    // With no stream or subsystem row beside them, the enabling teams take a row of their own
+    // above the platform, side by side, as on the web slide.
+    const enRow = d.enabling.length > 0 && groups.every((g) => g.shape === "platform") ? 1 : 0;
     const total = BOTTOM - y - capH;
-    const gh = Math.min(0.85, total / groups.length - 0.1);
+    const gh = Math.min(0.85, total / (groups.length + enRow) - 0.1);
     groups.forEach((g, i) => {
-      const gy = y + i * (gh + 0.1);
-      card(s, SIDE, gy, mainW, gh, mix(g.tone, c.bg, 0.08), g.tone, 0.08);
+      const gy = y + (i + enRow) * (gh + 0.1);
+      const x = g.shape === "platform" ? SIDE : mainX;
+      const w = g.shape === "platform" ? CW : mainW;
+      if (g.shape === "stream") card(s, x, gy, w, gh, mix(c.teal, c.bg, 0.08), c.teal, 0.08);
+      else if (g.shape === "subsystem")
+        s.addShape("octagon", {
+          x,
+          y: gy,
+          w,
+          h: gh,
+          fill: { color: mix(c.neutral, c.bg, 0.08) },
+          line: { color: c.neutral, width: 1 },
+        });
+      else
+        s.addShape("roundRect", {
+          x,
+          y: gy,
+          w,
+          h: gh,
+          rectRadius: 0.08,
+          fill: { type: "none" },
+          line: { color: c.teal, width: 2, dashType: "sysDot" },
+        });
       box(
         s,
         c,
         [
-          { runs: [{ text: g.name }], bold: true, after: 2 },
+          {
+            runs: [{ text: g.name, options: g.shape === "platform" ? { color: c.teal } : {} }],
+            bold: true,
+            after: 2,
+          },
           ...(g.sub ? [{ runs: md(g.sub, c, { color: c.muted }), rel: 0.85 }] : []),
         ],
-        SIDE + 0.15,
+        x + 0.15,
         gy + 0.05,
-        mainW * 0.45,
+        w * 0.45,
         gh - 0.1,
         { size: PT.sm, color: c.ink, valign: "middle" },
       );
-      let x = SIDE + mainW * 0.47;
+      let cx = x + w * 0.47;
       for (const role of g.roles)
-        x += chip(s, c, role, x, gy + gh / 2 - 0.12, PT.label, c.card, c.ink, false) + 0.08;
+        cx += chip(s, c, role, cx, gy + gh / 2 - 0.12, PT.label, c.card, c.ink, false) + 0.08;
     });
+    const enRows = groups.filter((g) => g.shape !== "platform").length;
     d.enabling.forEach((e, i) => {
-      const eh =
-        (groups.length * (gh + 0.1) - 0.1 - (d.enabling.length - 1) * 0.1) / d.enabling.length;
-      const ey = y + i * (eh + 0.1);
-      card(s, SIDE + mainW + 0.2, ey, enW, eh, c.purpleTint, c.purple, 0.08);
+      const eh = enRow
+        ? gh
+        : (enRows * (gh + 0.1) - 0.1 - (d.enabling.length - 1) * 0.1) / d.enabling.length;
+      const ey = enRow ? y : y + i * (eh + 0.1);
+      const ex = enRow ? SIDE + i * (enW + 0.2) : SIDE;
+      card(s, ex, ey, enW, eh, c.purpleTint, c.purple, 0.08);
       box(
         s,
         c,
@@ -3180,7 +3235,7 @@ const RENDER: {
           { runs: [{ text: e.name, options: { color: c.purple } }], bold: true, after: 4 },
           ...e.experts.map((x) => ({ runs: md(x, c), rel: 0.9 })),
         ],
-        SIDE + mainW + 0.35,
+        ex + 0.15,
         ey + 0.12,
         enW - 0.3,
         eh - 0.2,
@@ -3216,7 +3271,7 @@ const RENDER: {
     const cx = W / 2;
     const cy = a.y + a.h / 2;
     const n = d.segments.length;
-    // The ring as a green disc under a disc of the ground, cut into segments by lines of the
+    // The ring as a teal disc at 40 % under a disc of the ground, cut into segments by lines of the
     // ground, numbered like the web wheel, which starts at the top and runs clockwise.
     const ring = 0.55;
     s.addShape("ellipse", {
@@ -3224,7 +3279,7 @@ const RENDER: {
       y: cy - dia / 2,
       w: dia,
       h: dia,
-      fill: { color: c.green },
+      fill: { color: mix(c.teal, c.bg, 0.4) },
       line: { type: "none" },
     });
     s.addShape("ellipse", {
@@ -3263,7 +3318,7 @@ const RENDER: {
         cy + r * Math.sin(mid) - 0.15,
         0.3,
         0.3,
-        { size: PT.sm, mono: true, bold: true, color: c.card, align: "center", valign: "middle" },
+        { size: PT.sm, mono: true, bold: true, color: c.ink, align: "center", valign: "middle" },
       );
     }
     box(s, c, d.center, cx - dia / 2 + ring + 0.1, cy - 0.5, dia - 2 * ring - 0.2, 1, {
@@ -3282,7 +3337,7 @@ const RENDER: {
       const lh = Math.min(0.75, a.h / Math.max(list.length, 1));
       const top = cy - (list.length * lh) / 2;
       list.forEach(({ sg, i }, j) => {
-        rect(s, x, top + j * lh + 0.05, 0.22, 0.22, c.green);
+        rect(s, x, top + j * lh + 0.05, 0.22, 0.22, c.teal);
         box(s, c, { runs: [{ text: String(i + 1) }] }, x, top + j * lh + 0.05, 0.22, 0.22, {
           size: PT.label,
           mono: true,

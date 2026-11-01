@@ -45,12 +45,12 @@ export function WheelSlide({ slide }: Props) {
 
   const label = (k: number) => (
     <div key={k} className="flex gap-3">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-brand-sm bg-success text-sm font-bold text-white">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-primary text-base font-bold text-white">
         {k + 1}
       </span>
       <div>
-        <p className="text-lg leading-tight font-bold text-text">{slide.segments[k].title}</p>
-        <p className="text-sm leading-snug text-text-muted">{slide.segments[k].text}</p>
+        <p className="text-xl leading-tight font-bold text-text">{slide.segments[k].title}</p>
+        <p className="mt-1 text-base leading-snug text-text-muted">{slide.segments[k].text}</p>
       </div>
     </div>
   );
@@ -63,8 +63,8 @@ export function WheelSlide({ slide }: Props) {
         <div className="slide-body">
           <BlurFade delay={0.2} duration={0.5}>
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-8">
-              <div className="flex flex-col gap-6">{left.map(label)}</div>
-              <div className="relative h-80 w-80">
+              <div className="flex flex-col gap-7">{left.map(label)}</div>
+              <div className="relative h-96 w-96">
                 <svg viewBox="0 0 200 200" className="h-full w-full" aria-hidden>
                   {slide.segments.map((segment, k) => {
                     const from = -90 + (360 * k) / n + GAP;
@@ -72,7 +72,7 @@ export function WheelSlide({ slide }: Props) {
                     const [x, y] = point((R_OUT + R_IN) / 2, centres[k]).split(" ");
                     return (
                       <g key={segment.title}>
-                        <path d={arc(from, to)} className="fill-success" />
+                        <path d={arc(from, to)} className="fill-primary/40" />
                         <text
                           x={x}
                           y={y}
@@ -86,11 +86,11 @@ export function WheelSlide({ slide }: Props) {
                     );
                   })}
                 </svg>
-                <div className="absolute inset-[22%] flex items-center justify-center rounded-full bg-ink/7 p-3 text-center text-base leading-tight font-bold text-text">
+                <div className="absolute inset-[22%] flex items-center justify-center rounded-full bg-ink/7 p-4 text-center text-base leading-tight font-bold text-text">
                   {slide.center}
                 </div>
               </div>
-              <div className="flex flex-col gap-6">{right.map(label)}</div>
+              <div className="flex flex-col gap-7">{right.map(label)}</div>
             </div>
           </BlurFade>
 

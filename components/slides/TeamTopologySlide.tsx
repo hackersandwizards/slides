@@ -15,7 +15,7 @@ function Chips({ labels, className }: { labels: string[]; className: string }) {
       {labels.map((label, i) => (
         <span
           key={`${label}-${i}`}
-          className={`rounded-full bg-white px-4 py-1 text-base font-semibold ${className}`}
+          className={`rounded-full bg-white px-3 py-0.5 text-base font-semibold ${className}`}
         >
           {label}
         </span>
@@ -24,11 +24,12 @@ function Chips({ labels, className }: { labels: string[]; className: string }) {
   );
 }
 
-// Team Topologies' shapes: stream-aligned teams run horizontally, the complicated-subsystem
-// teams they consume sit under them as blocks, platform teams lie underneath as a service, and
-// each enabling team stands vertically beside the whole flow. A team's name sits above its
-// roles: beside them, three enabling columns left the roles a column too narrow for one chip. A
-// platform team's roles follow its description on the same line where they fit.
+// The Team Shape Templates of Team Topologies, in brand colours: stream-aligned teams are
+// horizontal bars with rounded corners (teal), enabling teams vertical bars with rounded corners
+// (purple), complicated-subsystem teams octagons (neutral), and the platform a grouping with a dotted
+// border (teal) under everything; it keeps the brand corner, the template's square corners lost the
+// blind panel. Change flows left to right, so no team
+// stands between a stream team and its users on the right: the enabling teams stand on the left.
 export function TeamTopologySlide({ slide }: Props) {
   const subsystems = slide.complicatedSubsystem ?? [];
   return (
@@ -37,75 +38,79 @@ export function TeamTopologySlide({ slide }: Props) {
         <SlideTitle>{slide.headline}</SlideTitle>
         {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
         <div className="slide-body">
-          <BlurFade delay={0.2} duration={0.5} className="flex flex-col">
-            <div className="flex flex-col gap-4 md:flex-row">
-              <div className="flex flex-1 flex-col gap-3">
-                {slide.streamAligned.map((team) => (
+          <BlurFade delay={0.2} duration={0.5} className="flex flex-col gap-3">
+            {(slide.enabling.length > 0 ||
+              slide.streamAligned.length > 0 ||
+              subsystems.length > 0) && (
+              <div className="flex flex-col gap-3 md:flex-row">
+                {slide.enabling.map((team) => (
                   <div
                     key={team.name}
-                    className="flex flex-col items-start gap-3 rounded-brand border border-success bg-success/7 px-6 py-5"
+                    className="flex shrink-0 flex-col gap-1 rounded-brand border-[3px] border-secondary bg-secondary/7 px-4 py-3 md:w-52"
                   >
-                    <span className="text-xl leading-tight font-bold text-text">{team.name}</span>
-                    <Chips labels={team.roles} className="text-text" />
+                    <span className="text-lg leading-tight font-bold text-secondary">
+                      {team.name}
+                    </span>
+                    {team.experts.map((expert) => (
+                      <span key={expert} className="text-base leading-snug text-text">
+                        {expert}
+                      </span>
+                    ))}
                   </div>
                 ))}
 
-                {subsystems.length > 0 && (
-                  <div className="flex flex-col gap-3 md:flex-row">
-                    {subsystems.map((team) => (
-                      <div
-                        key={team.name}
-                        className="flex flex-1 flex-col gap-1 rounded-brand border border-factory bg-factory/7 px-6 py-4"
-                      >
-                        <span className="text-xl leading-tight font-bold text-factory">
-                          {team.name}
-                        </span>
-                        {team.description && (
-                          <span className="text-lg leading-tight text-text-muted">
-                            {team.description}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div className="flex flex-1 flex-col gap-3">
+                  {slide.streamAligned.map((team) => (
+                    <div
+                      key={team.name}
+                      className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-brand border-[3px] border-primary bg-primary/7 px-5 py-3"
+                    >
+                      <span className="text-lg leading-tight font-bold text-text">{team.name}</span>
+                      <Chips labels={team.roles} className="text-teal-dark" />
+                    </div>
+                  ))}
 
+                  {subsystems.length > 0 && (
+                    <div className="flex flex-col gap-3 md:flex-row">
+                      {subsystems.map((team) => (
+                        <div key={team.name} className="team-octagon flex-1 bg-ampersand">
+                          <div className="team-octagon flex h-full flex-col justify-center gap-0.5 bg-[color-mix(in_srgb,var(--color-ampersand)_7%,var(--background))] px-7 py-3">
+                            <span className="text-lg leading-tight font-bold text-text">
+                              {team.name}
+                            </span>
+                            {team.description && (
+                              <span className="text-base leading-snug text-text-muted">
+                                {team.description}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {slide.platform.length > 0 && (
+              <div className="flex flex-col gap-3 rounded-brand border-[3px] border-dotted border-primary p-3 md:flex-row">
                 {slide.platform.map((team) => (
-                  <div
-                    key={team.name}
-                    className="flex flex-col items-start gap-2 rounded-brand border border-primary bg-primary/7 px-6 py-4"
-                  >
-                    <span className="text-xl leading-tight font-bold text-teal-dark">
+                  <div key={team.name} className="flex flex-1 flex-col gap-1.5 px-2 py-1">
+                    <span className="text-lg leading-tight font-bold text-teal-dark">
                       {team.name}
                     </span>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                      {team.description && (
-                        <span className="text-lg text-text-muted">{team.description}</span>
-                      )}
-                      {team.roles && <Chips labels={team.roles} className="text-teal-dark" />}
-                    </div>
+                    {team.description && (
+                      <span className="text-base leading-snug text-text-muted">
+                        {team.description}
+                      </span>
+                    )}
+                    {team.roles && <Chips labels={team.roles} className="text-teal-dark" />}
                   </div>
                 ))}
               </div>
+            )}
 
-              {slide.enabling.map((team) => (
-                <div
-                  key={team.name}
-                  className="flex flex-col gap-2 rounded-brand border border-secondary bg-secondary/7 px-5 py-5 md:w-64"
-                >
-                  <span className="text-xl leading-tight font-bold text-secondary">
-                    {team.name}
-                  </span>
-                  {team.experts.map((expert) => (
-                    <span key={expert} className="text-lg leading-tight text-text">
-                      {expert}
-                    </span>
-                  ))}
-                </div>
-              ))}
-            </div>
-
-            {slide.caption && <p className="mt-5 text-xl text-text-muted">{slide.caption}</p>}
+            {slide.caption && <p className="mt-2 text-xl text-text-muted">{slide.caption}</p>}
           </BlurFade>
         </div>
       </TitledContent>

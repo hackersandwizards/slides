@@ -2,7 +2,6 @@
 
 import Image from "../ui/image";
 import type { StatementSlide as StatementSlideType } from "../../types/slide";
-import { Particles } from "../ui/particles";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
@@ -36,23 +35,6 @@ export function StatementSlide({ slide }: Props) {
 
   return (
     <SlideShell direction="col" overflowHidden background={slide.background ?? "bg-section-intro"}>
-      <div
-        className="absolute top-1/4 left-1/4 h-[37.5rem] w-[37.5rem] rounded-full bg-primary/7 blur-[120px]"
-        aria-hidden="true"
-      />
-      <div
-        className="absolute right-1/4 bottom-1/4 h-[31.25rem] w-[31.25rem] rounded-full bg-secondary/7 blur-[100px]"
-        aria-hidden="true"
-      />
-
-      <Particles
-        className="absolute inset-0"
-        quantity={80}
-        size={1.0}
-        staticity={25}
-        color="--color-teal"
-      />
-
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-16">
         {slide.imageSrc && (
           <BlurFade delay={0.05} duration={0.4}>
@@ -67,6 +49,15 @@ export function StatementSlide({ slide }: Props) {
         )}
 
         <div className={`text-center ${hasSupporting ? "mb-2" : ""}`}>
+          {slide.crossedOut && (
+            <BlurFade delay={0.05} duration={0.4}>
+              <p className="mb-6 font-heading text-3xl text-text-subtle md:text-4xl">
+                <s className="line-through decoration-text-subtle decoration-[3px]">
+                  {slide.crossedOut}
+                </s>
+              </p>
+            </BlurFade>
+          )}
           {slide.lines.map((line, index) => (
             <BlurFade key={index} delay={0.1 + index * 0.08} duration={0.4}>
               <div
@@ -85,14 +76,6 @@ export function StatementSlide({ slide }: Props) {
                   teal mono was the hardest text in a deck to read at a distance. */}
               <p className="mx-auto mt-8 max-w-5xl font-sans text-2xl leading-snug font-medium text-balance whitespace-pre-line text-text-muted sm:text-3xl md:text-4xl md:leading-snug">
                 {renderMarkdown(slide.subtitle)}
-              </p>
-            </BlurFade>
-          )}
-
-          {slide.crossedOut && (
-            <BlurFade delay={0.15 + slide.lines.length * 0.08} duration={0.4}>
-              <p className="mt-10 text-3xl text-text-subtle line-through decoration-warning decoration-[6px] sm:text-4xl md:text-5xl">
-                {slide.crossedOut}
               </p>
             </BlurFade>
           )}

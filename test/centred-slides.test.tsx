@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
 import type { Slide } from "../types/slide";
 
-// Title, section divider, closing and centred content slide centre their headline on the ground, with no gradient
+// Title, section divider, closing, statement and centred content slide centre their headline on the ground, with no gradient
 // field and no decoration: no particle canvas, no gradient, no glow.
 const cases: { slide: Slide; headline: string }[] = [
   {
@@ -26,6 +26,15 @@ const cases: { slide: Slide; headline: string }[] = [
   {
     slide: { type: "closing", variant: "discussion", headline: "Questions?" },
     headline: "Questions?",
+  },
+  {
+    slide: {
+      type: "statement",
+      lines: ["Plans before code"],
+      crossedOut: "Code first",
+      points: ["The plan is reviewed"],
+    },
+    headline: "Plans before code",
   },
   {
     slide: {

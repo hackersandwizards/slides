@@ -652,6 +652,12 @@ html:has(.print-slide) {
   text-wrap: pretty;
 }
 
+/* A paragraph that asks for balanced lines keeps them: the rule above is unlayered and would
+   otherwise override the utility, leaving a one-word last line under a centred headline. */
+.slide-content :is(p, li).text-balance {
+  text-wrap: balance;
+}
+
 /* A slide is laid out for a projector. Below Tailwind's `md` it becomes one column that scrolls
  * instead of clipping, with headings and card padding cut to fit 390px. Unlayered, so it wins over
  * the utilities it overrides (`overflow-hidden`, `px-16`, `grid-cols-*`, `text-5xl`). Screen only:
@@ -925,4 +931,26 @@ html:has(.print-slide) {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* A complicated-subsystem team's octagon (Team Shape Templates): an outer octagon in the line
+   colour holds an inner one 3px smaller in the fill, since a clipped box draws no border. The
+   inner cut is smaller by (2 - sqrt 2) x 3px, so the diagonal edges are 3px thick as well. */
+.team-octagon {
+  --cut: 0.9rem;
+  clip-path: polygon(
+    var(--cut) 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut)),
+    0 var(--cut)
+  );
+}
+.team-octagon > .team-octagon {
+  --cut: calc(0.9rem - 1.76px);
+  margin: 3px;
+  height: calc(100% - 6px);
 }
