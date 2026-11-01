@@ -1,20 +1,24 @@
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
 // Every list marker and step number on the specimen page's slides, measured on the pixels Chrome
-// paints at 1920x1080: a square's middle on the middle of the x-height of the first line beside it
-// (on the caps' middle beside capitals), a step number's baseline on that line's baseline. Markers
-// drifted 1.2 to 3.4 px off for months while every check passed, since only a render shows where
-// they land. The line's first words become "xxxx", so its ink is the x-height band itself.
-const TOLERANCE = 0.6; // CSS px at 1920x1080; the fix measured within it at 2x (2026-11-01)
+// paints at 1920x1080. Markers drifted 1.2 to 3.4 px off for months while every check passed,
+// since only a render shows where they land. The squares are the brand's .hw-marker, measured by
+// the brand's own `brand-markers` command on each slide frame written to a file of its own. A step
+// number's baseline on its line's baseline, which brand-markers does not measure, is measured
+// here.
+const TOLERANCE = 0.6; // CSS px at 1920x1080; step numbers measured within it at 4x (2026-11-01)
 const SCALE = 4;
 const SPECIMEN = join(import.meta.dirname, "..", "specimen");
 
 type Box = { x: number; y: number; width: number; height: number };
-type Probe = { label: string; edge: "middle" | "bottom"; marker: Box; text: Box };
+type Probe = { label: string; number: Box; text: Box };
 
-/** Runs in the page: rewrites the line beside each marker and returns the boxes to read. */
+/** Runs in the page: the bare step numbers left of their line, with the boxes to read. */
 function collect(): Probe[] {
   const firstText = (el: Node) => {
     if (el instanceof Text) return el.data.trim() ? el : null;
@@ -35,42 +39,34 @@ function collect(): Probe[] {
     range.setEnd(node, end ?? node.textContent!.length);
     return range.getClientRects()[0]!;
   };
-  const marked: { mark: Element; text: Text; edge: Probe["edge"] }[] = [];
-  for (const mark of document.querySelectorAll(".slide-marker")) {
-    const text = after(mark);
-    if (text) marked.push({ mark, text, edge: "middle" });
-  }
   // A step number is a bare numeral left of its line; one in a badge, or above its text, is not.
   const bare = (el: Element) => getComputedStyle(el).backgroundColor === "rgba(0, 0, 0, 0)";
+  const box = (r: { left: number; right: number; top: number; bottom: number }): Box => ({
+    x: r.left + scrollX,
+    y: r.top + scrollY,
+    width: r.right - r.left,
+    height: r.bottom - r.top,
+  });
+  const found: [Element, Text][] = [];
   for (const mark of document.querySelectorAll("li *, .flex > *")) {
     if (mark.children.length || !/^\d{1,2}\.?$/.test(mark.textContent!.trim())) continue;
     const text = after(mark);
     if (!text || !bare(mark) || !bare(mark.parentElement!)) continue;
     const [m, t] = [mark.getBoundingClientRect(), rectOf(text)];
-    if (t.left >= m.right && t.top < m.bottom && t.bottom > m.top)
-      marked.push({ mark, text, edge: "bottom" });
+    if (t.left >= m.right && t.top < m.bottom && t.bottom > m.top) found.push([mark, text]);
   }
-  for (const m of marked) m.text.data = "xxxx " + m.text.data.trimStart();
-  const box = (r: { left: number; right: number; top: number; bottom: number }, pad = 0): Box => ({
-    x: r.left - pad + scrollX,
-    y: r.top - pad + scrollY,
-    width: r.right - r.left + 2 * pad,
-    height: r.bottom - r.top + 2 * pad,
-  });
-  return marked.map(({ mark, text, edge }) => ({
-    label: `${mark.className.toString().split(" ")[0] || mark.tagName} "${mark.parentElement!.textContent!.trim().slice(0, 30)}"`,
-    edge,
-    marker:
-      edge === "middle" ? box(mark.getBoundingClientRect(), 1) : box(rectOf(mark.firstChild!)),
+  // The line's first words become "xxxx", so its ink's bottom is the baseline.
+  for (const [, text] of found) text.data = "xxxx " + text.data.trimStart();
+  return found.map(([mark, text]) => ({
+    label: `"${mark.parentElement!.textContent!.trim().slice(0, 30)}"`,
+    number: box(rectOf(mark.firstChild!)),
     text: box(rectOf(text, 4)),
   }));
 }
 
-/**
- * Runs in the page: the y in CSS px, from the top of the shot, of its ink's middle or of its ink's bottom edge (the last row holding at
- * least half the fullest row's ink).
- */
-async function inkEdge(png: string, scale: number, edge: Probe["edge"]): Promise<number> {
+/** Runs in the page: the y in CSS px, from the top of the shot, of its ink's bottom edge (the
+ * last row holding at least half the fullest row's ink). */
+async function inkBottom(png: string, scale: number): Promise<number> {
   const img = new Image();
   img.src = `data:image/png;base64,${png}`;
   await img.decode();
@@ -78,21 +74,16 @@ async function inkEdge(png: string, scale: number, edge: Probe["edge"]): Promise
   ctx.drawImage(img, 0, 0);
   const { data, width, height } = ctx.getImageData(0, 0, img.width, img.height);
   // The background is the commonest colour on the shot's edge; a pixel's ink is its distance
-  // from it, full from half the largest distance on, so a gradient marker weighs evenly.
+  // from it, full from half the largest distance on.
   const at = (x: number, y: number) => (y * width + x) * 4;
   const counts = new Map<number, number>();
-  for (let x = 0; x < width; x++)
-    for (const y of [0, height - 1]) {
-      const i = at(x, y);
-      const key = (data[i]! << 16) | (data[i + 1]! << 8) | data[i + 2]!;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-  for (let y = 0; y < height; y++)
-    for (const x of [0, width - 1]) {
-      const i = at(x, y);
-      const key = (data[i]! << 16) | (data[i + 1]! << 8) | data[i + 2]!;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
+  const count = (x: number, y: number) => {
+    const i = at(x, y);
+    const key = (data[i]! << 16) | (data[i + 1]! << 8) | data[i + 2]!;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  };
+  for (let x = 0; x < width; x++) for (const y of [0, height - 1]) count(x, y);
+  for (let y = 0; y < height; y++) for (const x of [0, width - 1]) count(x, y);
   const bg = [...counts].sort((a, b) => b[1] - a[1])[0]![0];
   const dist = new Float64Array(width * height);
   for (let p = 0; p < dist.length; p++)
@@ -107,15 +98,14 @@ async function inkEdge(png: string, scale: number, edge: Probe["edge"]): Promise
     for (let x = 0; x < width; x++) ink += Math.min(1, dist[y * width + x]! / full);
     return ink;
   });
-  const total = rows.reduce((a, b) => a + b, 0);
-  if (!total) throw new Error("no ink in the probed box");
-  if (edge === "middle") return rows.reduce((a, ink, y) => a + ink * (y + 0.5), 0) / total / scale;
+  if (!rows.some(Boolean)) throw new Error("no ink in the probed box");
   const fullest = Math.max(...rows);
   return (rows.findLastIndex((ink) => ink >= fullest / 2) + 1) / scale;
 }
 
 let browser: Browser;
 let frames: { title: string; doc: string }[];
+let dir: string;
 beforeAll(async () => {
   browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
@@ -124,54 +114,70 @@ beforeAll(async () => {
     all.map((f) => ({ title: f.title, doc: f.srcdoc })),
   );
   await page.close();
+  dir = mkdtempSync(join(tmpdir(), "slides-markers-"));
 });
-afterAll(() => browser?.close());
+afterAll(async () => {
+  await browser?.close();
+  if (dir) rmSync(dir, { recursive: true });
+});
 
-/** Each marker on every specimen slide and how far it sits off its line in CSS px, after `css`. */
-async function measure(css = "") {
+/** The frames drawing a square marker, each as a file whose relative links resolve in specimen/,
+ * with `css` added. */
+function frameFiles(css = "") {
+  return frames
+    .filter(({ doc }) => doc.includes("hw-marker"))
+    .map(({ title, doc }, i) => {
+      const file = join(dir, `${i}-${title.replace(/[^a-z0-9]+/gi, "-")}.html`);
+      writeFileSync(
+        file,
+        doc.replace("<head>", `<head><base href="file://${SPECIMEN}/"><style>${css}</style>`),
+      );
+      return file;
+    });
+}
+
+const brandMarkers = (files: string[]) =>
+  spawnSync("bun", ["run", "brand-markers", "--width", "1920", ...files], { encoding: "utf8" });
+
+it("every square marker on the specimen slides sits on its line", () => {
+  const files = frameFiles();
+  expect(files.length).toBeGreaterThan(10);
+  const run = brandMarkers(files);
+  expect(run.status, run.stderr + run.stdout).toBe(0);
+}, 600_000);
+
+// The control: the same command over the squares moved half a pixel down must fail.
+it("brand-markers fails on squares moved by half a pixel", () => {
+  const run = brandMarkers(frameFiles(".hw-marker { translate: 0 0.5px }").slice(0, 3));
+  expect(run.status).toBe(1);
+}, 300_000);
+
+it("every step number on the specimen slides sits on its line", async () => {
   const page = await browser.newPage();
-  const offsets: { label: string; offset: number }[] = [];
+  const off: string[] = [];
+  let found = 0;
   try {
     await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: SCALE });
     for (const { title, doc } of frames) {
       await page.goto(`file://${join(SPECIMEN, "index.html")}`);
-      await page.setContent(doc.replace("<head>", `<head><style>${css}</style>`), {
-        waitUntil: "load",
-      });
+      await page.setContent(doc, { waitUntil: "load" });
       await page.evaluate(() => document.fonts.ready.then(() => undefined));
-      const read = async (clip: Box, edge: Probe["edge"]) =>
+      const read = async (clip: Box) =>
         clip.y +
         (await page.evaluate(
-          inkEdge,
+          inkBottom,
           await page.screenshot({ clip, encoding: "base64", captureBeyondViewport: true }),
           SCALE,
-          edge,
         ));
-      for (const p of await page.evaluate(collect))
-        offsets.push({
-          label: `${title}: ${p.label}`,
-          offset: (await read(p.marker, p.edge)) - (await read(p.text, p.edge)),
-        });
+      for (const p of await page.evaluate(collect)) {
+        found++;
+        const offset = (await read(p.number)) - (await read(p.text));
+        if (Math.abs(offset) > TOLERANCE) off.push(`${title}: ${p.label}: ${offset.toFixed(2)} px`);
+      }
     }
-    return offsets;
   } finally {
     await page.close();
   }
-}
-
-it("every marker on the specimen slides sits on its line", async () => {
-  const all = await measure();
-  expect(all.length).toBeGreaterThan(40);
-  const off = all.filter((m) => Math.abs(m.offset) > TOLERANCE);
-  expect(off.map((m) => `${m.label}: ${m.offset.toFixed(2)} px`)).toEqual([]);
-}, 120_000);
-
-// The control: Chrome paints a marker on whole CSS pixels, so a misplaced one sits a pixel or
-// more off. Every square marker moved one pixel down must fail.
-it("every square marker moved by 1 px fails", async () => {
-  const squares = (await measure(".slide-marker { translate: 0 1px }")).filter((m) =>
-    m.label.includes("slide-marker"),
-  );
-  expect(squares.length).toBeGreaterThan(40);
-  for (const m of squares) expect(Math.abs(m.offset), m.label).toBeGreaterThan(TOLERANCE);
+  expect(found).toBeGreaterThan(5);
+  expect(off).toEqual([]);
 }, 120_000);

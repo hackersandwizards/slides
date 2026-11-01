@@ -286,8 +286,8 @@ function renderColumnContent(text: string) {
         <ul key={i} className="space-y-3">
           {items.map((item, j) => (
             <li key={j} className="flex items-baseline gap-3 text-xl text-text-muted">
-              <span className="slide-marker" />
-              {renderMarkdown(item.slice(2))}
+              <span className="hw-marker" />
+              <span>{renderMarkdown(item.slice(2))}</span>
             </li>
           ))}
         </ul>
@@ -477,7 +477,7 @@ function ContentBlockRenderer({
                       {i + 1}.
                     </span>
                   ) : (
-                    <span className="slide-marker" />
+                    <span className="hw-marker" />
                   )}
                   <span>{renderMarkdown(text)}</span>
                 </div>
@@ -485,7 +485,7 @@ function ContentBlockRenderer({
                   <ul className="mt-3 ml-10 space-y-3">
                     {item.children.map((child, j) => (
                       <li key={j} className="flex items-baseline gap-3 text-xl text-text-muted">
-                        <span className="slide-marker slide-marker-nested" />
+                        <span className="hw-marker slide-marker-nested" />
                         <span>{renderMarkdown(child)}</span>
                       </li>
                     ))}
@@ -571,7 +571,7 @@ function ContentBlockRenderer({
                 <ul className="space-y-4">
                   {data.items.map((item, j) => (
                     <li key={j} className="flex items-baseline gap-3 text-xl text-text-muted">
-                      <span className={`slide-marker ${style.dot}`} />
+                      <span className={`hw-marker ${style.dot}`} />
                       <span>{renderMarkdown(item)}</span>
                     </li>
                   ))}
@@ -633,7 +633,7 @@ function ContentBlockRenderer({
         >
           {block.containerLabel && (
             <div className="label-caps mb-4 flex items-baseline gap-2 text-sm">
-              <div className="slide-marker bg-secondary" />
+              <div className="hw-marker bg-secondary" />
               <span className="text-secondary">{block.containerLabel}</span>
               {block.containerLogos &&
                 block.containerLogos.map((logo, li) => (
@@ -658,7 +658,7 @@ function ContentBlockRenderer({
                 <ul className="space-y-1.5">
                   {block.containerSideNotes.map((note, ni) => (
                     <li key={ni} className="flex items-baseline gap-2 text-base text-text-muted">
-                      <span className="slide-marker slide-marker-nested bg-secondary" />
+                      <span className="hw-marker slide-marker-nested bg-secondary" />
                       <span>{renderMarkdown(note)}</span>
                     </li>
                   ))}
@@ -767,8 +767,8 @@ function ContentBlockRenderer({
               <ul className="space-y-2">
                 {col.items.map((item, j) => (
                   <li key={j} className="card-text-base flex items-baseline gap-2 text-text-muted">
-                    <span className="slide-marker" />
-                    {renderMarkdown(item)}
+                    <span className="hw-marker" />
+                    <span>{renderMarkdown(item)}</span>
                   </li>
                 ))}
               </ul>
@@ -1008,8 +1008,8 @@ function StandardContentSlide({ slide }: Props) {
           />
           {slide.badge && (
             <div className="label-caps flex shrink-0 items-baseline gap-2.5 rounded-full border border-primary/40 bg-white px-5 py-2 text-sm text-primary">
-              <span className="slide-marker" />
-              {slide.badge}
+              <span className="hw-marker" />
+              <span>{slide.badge}</span>
             </div>
           )}
         </div>

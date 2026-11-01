@@ -224,8 +224,8 @@ export function RegularSlide({ slide }: Props) {
                                   key={itemIndex}
                                   className="flex items-baseline gap-3 text-base text-text-muted sm:text-lg md:gap-4 md:text-xl lg:text-2xl"
                                 >
-                                  <span className="slide-marker" />
-                                  {item}
+                                  <span className="hw-marker" />
+                                  <span>{item}</span>
                                 </li>
                               ))}
                             </ul>

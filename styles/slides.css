@@ -4,6 +4,8 @@
    keeps only those a scanned file names; resolved through the package, it reads the pinned brand
    in this checkout and in a consumer's node_modules alike. */
 @import "@hackersandwizards/brand/tokens.css" theme(static);
+/* The brand's list marker, in the components layer so a marker's colour utility still wins. */
+@import "@hackersandwizards/brand/marker.css" layer(components);
 /* Tailwind never scans node_modules, so a consumer's build sees the engine's classes only because
    this file names them, relative to itself. */
 @source "../components";
@@ -633,33 +635,19 @@ html:has(.print-slide) {
     font-weight: 500;
   }
 
-  /* The list marker: the website's small teal square, centred on the first line of its item.
-     A second level steps down in size and tone and stays square. A marker's own colour utility
-     (bg-success, bg-warning) wins, since this sits in the components layer. */
-  .slide-marker {
-    --marker: var(--slide-marker);
-    flex-shrink: 0;
-    width: var(--marker);
-    height: var(--marker);
-    background: var(--color-teal);
+  /* The list marker is the brand's .hw-marker (marker.css, imported above), which centres the
+     square on the first line's x-height in its baseline row. The slide sets its size, a second
+     level a step smaller and lighter, and the caps' middle beside capitals. A marker's own colour
+     utility (bg-success, bg-warning) wins, since this sits in the components layer. */
+  .hw-marker {
+    --hw-marker-size: var(--slide-marker);
   }
   .slide-marker-nested {
-    --marker: calc(var(--slide-marker) * 0.75);
-    background: color-mix(in srgb, var(--color-teal) 40%, var(--color-bg));
+    --hw-marker-size: calc(var(--slide-marker) * 0.75);
+    --hw-marker-color: color-mix(in srgb, var(--color-teal) 40%, var(--color-bg));
   }
-  /* In a row aligned on the baseline (items-baseline), the marker's bottom sits on the first line's
-     baseline and is lifted until its middle is on the x-height's middle, 0.273em above the
-     baseline for Inter (JetBrains Mono 0.275em), or beside capitals (a label-caps row) on the
-     caps' middle, 0.365em for both. The row carries the text's size, so em is the text's. The lift
-     is whole pixels, so Chrome rounds the marker together with the text; a centred or top-offset
-     marker drifted up to 0.95 px from row to row. test/marker-position.test.ts measures every
-     marker in the specimen (2026-11-01). */
-  .items-baseline > .slide-marker {
-    position: relative;
-    top: calc(-1 * round(calc(0.273em - var(--marker) / 2), 1px));
-  }
-  .label-caps.items-baseline > .slide-marker {
-    top: calc(-1 * round(calc(0.365em - var(--marker) / 2), 1px));
+  .label-caps > .hw-marker {
+    --hw-marker-mid: 0.5cap;
   }
 
   /* The website's label-caps (typography.css): metadata, chips and table heads in the label

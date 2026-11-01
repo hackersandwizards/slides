@@ -75,7 +75,7 @@ export function OverviewSlide({ slide }: Props) {
 
             <div className={foundationsContainerClasses}>
               <div className="label-caps mb-4 flex items-baseline gap-2 text-base">
-                <div className="slide-marker bg-primary" />
+                <div className="hw-marker bg-primary" />
                 <span className="text-primary">Foundations</span>
               </div>
               <div
@@ -113,7 +113,7 @@ export function OverviewSlide({ slide }: Props) {
                         className={`flex flex-col gap-3 md:flex-row md:items-center md:gap-5 ${pipelineContainerClasses} md:py-4`}
                       >
                         <div className="label-caps flex shrink-0 items-baseline gap-2 text-base">
-                          <div className="slide-marker bg-secondary" />
+                          <div className="hw-marker bg-secondary" />
                           <span className="whitespace-nowrap text-secondary tabular-nums">
                             Pipeline {laneIndex + 1}
                           </span>
@@ -138,7 +138,7 @@ export function OverviewSlide({ slide }: Props) {
                 ) : (
                   <div className={`flex-1 ${pipelineContainerClasses}`}>
                     <div className="label-caps mb-3 flex items-baseline gap-2 text-base">
-                      <div className="slide-marker bg-secondary" />
+                      <div className="hw-marker bg-secondary" />
                       <span className="text-secondary">Pipeline</span>
                     </div>
                     <div className="flex flex-col gap-3 md:flex-row">
@@ -161,7 +161,7 @@ export function OverviewSlide({ slide }: Props) {
             ) : (
               <div className={`mt-6 ${pipelineContainerClasses}`}>
                 <div className="label-caps mb-4 flex items-baseline gap-2 text-base">
-                  <div className="slide-marker bg-secondary" />
+                  <div className="hw-marker bg-secondary" />
                   <span className="text-secondary">Pipeline</span>
                 </div>
                 <div

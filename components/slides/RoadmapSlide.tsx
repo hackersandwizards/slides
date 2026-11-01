@@ -91,7 +91,7 @@ function PartCard({
                       <BlurFade key={i} delay={delay + 0.05 + row++ * 0.04} duration={0.35}>
                         <li className="flex items-baseline gap-4 text-xl leading-snug">
                           {item.number === undefined ? (
-                            <span className={`slide-marker ${item.dotColor ?? dot}`} />
+                            <span className={`hw-marker ${item.dotColor ?? dot}`} />
                           ) : (
                             <span
                               className={`w-10 shrink-0 font-heading text-xl font-bold tabular-nums ${text}`}

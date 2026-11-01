@@ -41,7 +41,7 @@ describe("roadmap and dual-pill-overview", () => {
       />,
     );
     const marker = roadmap.getByText("Item").closest("li")!.firstElementChild!;
-    expect(marker.className).toContain("slide-marker");
+    expect(marker.className).toContain("hw-marker");
     const label = (r: typeof dual) => r.container.querySelector(".label-caps.border")?.className;
     expect(label(dual)).toBe(label(roadmap));
   });
