@@ -27,7 +27,14 @@ import { getStageClasses } from "../../lib/stage-utils";
 import { getSectionStyle } from "../../lib/section-styles";
 import { isDeepDive, linkLabel, personAccent } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { TitledContent, SlideTitle, SlideCard, CodePanel, SlideSubtitle } from "./primitives";
+import {
+  TitledContent,
+  SlideTitle,
+  SlideCard,
+  CodePanel,
+  SlideSubtitle,
+  keepHyphenatedWords,
+} from "./primitives";
 
 type LabeledGridBlockType = Extract<ContentBlock, { type: "labeled-grid" }>;
 
@@ -84,17 +91,6 @@ function LabeledGridBlock({
       })}
     </div>
   );
-}
-
-/** Joins a hyphenated word with a non-breaking hyphen, outside code spans and link targets, so a
- *  table cell breaks only at a space. */
-function keepHyphenatedWords(text: string): string {
-  return text
-    .split(/(`[^`]*`|\]\([^)]*\))/)
-    .map((part, i) =>
-      i % 2 ? part : part.replace(/([\p{L}\p{N}])-(?=[\p{L}\p{N}])/gu, "$1\u2011"),
-    )
-    .join("");
 }
 
 interface Props {

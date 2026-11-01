@@ -3,6 +3,7 @@
 import type { TransitionSlide as TransitionSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
+import { keepHyphenatedWords } from "./primitives";
 
 interface Props {
   slide: TransitionSlideType;
@@ -31,7 +32,7 @@ export function TransitionSlide({ slide }: Props) {
               box, such as the one BlurFade's filter draws on while it runs, then cannot clip the g
               and p of a large headline, as on talk-factory-dev/51 during load. */}
           <div className="-my-[0.2em] py-[0.2em] font-heading text-4xl leading-[0.95] font-bold tracking-[-0.04em] whitespace-pre-line text-text sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
-            {slide.headline}
+            {keepHyphenatedWords(slide.headline)}
           </div>
         </BlurFade>
 
