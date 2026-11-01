@@ -61,6 +61,9 @@ are peer dependencies, so each consumer holds one copy of each.
   `prettier --check` and `eslint` on the staged files. `bun install` points `core.hooksPath` at `.githooks/`.
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
+- `bun run dev`: serve the checkout on port 4327 for `http://slides.localhost` (Caddy, as for
+  `os.localhost`); the specimen's header links the brand catalogue and the document specimen at
+  `brand.localhost` and `documents.localhost`.
 
 ## Releasing a change
 
