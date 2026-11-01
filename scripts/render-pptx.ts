@@ -3563,11 +3563,13 @@ export async function renderPptx(
   pptx.theme = { headFontFace: MONO, bodyFontFace: SANS };
   const dark = deck.theme === "brand-dark";
   const deckCtx: Ctx = { pptx, c: palette(dark), assets, dark, warnings: [] };
+  // A deep-dive slide stands on night, as on the web (`isDeepDive`).
+  const nightCtx: Ctx = { ...deckCtx, c: palette(true), dark: true };
+  const ctxOf = (slide: Slide | undefined) =>
+    dark || !slide || !isDeepDive(slide) ? deckCtx : nightCtx;
   deck.slides.forEach((slide, i) => {
     const s = pptx.addSlide();
-    // A deep-dive slide stands on night, as on the web (`isDeepDive`).
-    const ctx: Ctx =
-      dark || !isDeepDive(slide) ? deckCtx : { ...deckCtx, c: palette(true), dark: true };
+    const ctx = ctxOf(slide);
     frame(s, ctx, deck, i);
     const render = RENDER[slide.type] as Render | undefined;
     if (!render)
@@ -3585,6 +3587,8 @@ export async function renderPptx(
     /^ppt\/(slides|theme)\/[^/]+\.xml$/.test(f),
   )) {
     const xml = await zip.file(name)!.async("string");
+    const n = /^ppt\/slides\/slide(\d+)\.xml$/.exec(name);
+    const teal = ctxOf(n ? deck.slides[Number(n[1]) - 1] : undefined).c.teal;
     zip.file(
       name,
       xml
@@ -3597,7 +3601,7 @@ export async function renderPptx(
         // pptxgenjs writes no bullet colour.
         .replace(
           /<a:buSzPct val="100000"\/><a:buChar/g,
-          `<a:buClr><a:srgbClr val="${deckCtx.c.teal}"/></a:buClr><a:buSzPct val="80000"/><a:buChar`,
+          `<a:buClr><a:srgbClr val="${teal}"/></a:buClr><a:buSzPct val="80000"/><a:buChar`,
         ),
     );
   }

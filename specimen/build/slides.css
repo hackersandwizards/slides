@@ -3748,9 +3748,6 @@ html:has(.print-slide) {
       background: color-mix(in srgb, var(--color-success) 7%, var(--background));
     }
   }
-  .spotlight-radial {
-    background: radial-gradient( ellipse 60% 50% at center, rgba(255, 255, 255, 0.6) 0%, transparent 70% );
-  }
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night)) {
     --background: var(--color-night);
     --color-bg: var(--color-night);
@@ -3871,9 +3868,6 @@ html:has(.print-slide) {
   }
   .print-slide {
     page-break-inside: avoid;
-  }
-  .spotlight-radial {
-    background: none !important;
   }
   canvas {
     display: none !important;

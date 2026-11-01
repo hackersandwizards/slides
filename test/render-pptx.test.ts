@@ -164,3 +164,30 @@ describe("slides-pptx on the specimen deck", () => {
     expect(all).not.toMatch(/typeface="JetBrains Mono" pitchFamily="34"/);
   });
 });
+
+// The specimen deck has no deep-dive slide with bullets: two content slides that differ only there.
+it("colours a deep-dive slide's bullets in the night teal, every other slide's in the day teal", async () => {
+  const slide = {
+    type: "content",
+    headline: "H",
+    content: [{ type: "bullets", items: ["a", "b"] }],
+  };
+  const out = join(dir, "bullets.pptx");
+  await renderPptx(
+    { ...slideCatalogue, slides: [slide, { ...slide, sectionTheme: "deepdive" }] as Slide[] },
+    out,
+    join(import.meta.dirname, "..", "specimen"),
+  );
+  const pptx = await JSZip.loadAsync(readFileSync(out));
+  const colour = async (n: number) =>
+    [
+      ...(await pptx.file(`ppt/slides/slide${n}.xml`)!.async("string")).matchAll(
+        /<a:buClr><a:srgbClr val="(\w+)"/g,
+      ),
+    ].map((m) => m[1]);
+  const [day, night] = [await colour(1), await colour(2)];
+  expect(day.length).toBeGreaterThan(0);
+  expect(night).toHaveLength(day.length);
+  expect(new Set(night).size).toBe(1);
+  expect(night[0]).not.toBe(day[0]);
+});

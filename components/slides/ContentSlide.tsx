@@ -82,7 +82,9 @@ function LabeledGridBlock({
 function keepHyphenatedWords(text: string): string {
   return text
     .split(/(`[^`]*`|\]\([^)]*\))/)
-    .map((part, i) => (i % 2 ? part : part.replace(/(\w)-(?=\w)/g, "$1\u2011")))
+    .map((part, i) =>
+      i % 2 ? part : part.replace(/([\p{L}\p{N}])-(?=[\p{L}\p{N}])/gu, "$1\u2011"),
+    )
     .join("");
 }
 

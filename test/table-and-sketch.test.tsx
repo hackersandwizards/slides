@@ -16,12 +16,16 @@ describe("table", () => {
           type: "table",
           widths: [2, 1],
           headers: ["Deliverable", "W1"],
-          rows: [["Survey", "Self-serve rollout"]],
+          rows: [
+            ["Survey", "Self-serve rollout"],
+            ["Übergabe", "Schlüssel-Übergabe"],
+          ],
         })}
       />,
     );
     expect(container.querySelector("table")!.className).not.toContain("table-fixed");
     expect(getByText("Self‑serve rollout")).not.toBeNull();
+    expect(getByText("Schlüssel\u2011Übergabe")).not.toBeNull();
   });
 });
 
