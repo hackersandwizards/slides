@@ -168,9 +168,7 @@ export function FlowSteps({
                   )}
                 </span>
                 {step.label && !inTile && (
-                  <span
-                    className={`mt-5 -mb-4 font-heading text-xl font-bold text-balance ${accent}`}
-                  >
+                  <span className={`label-caps mt-5 -mb-4 text-xl text-balance ${accent}`}>
                     {step.label}
                   </span>
                 )}
