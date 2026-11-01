@@ -190,20 +190,20 @@ const slides: Slide[] = [
         left: { title: "Text left", text: "A column can hold text instead of items." },
         right: { title: "Text right", text: "Neutral columns carry no judgement." },
       },
-    ],
-    notes: "content blocks: two-column success-error and neutral.",
-  },
-  {
-    type: "content",
-    sectionLabel: "Block: two-column",
-    headline: "Two columns: the other variants",
-    content: [
       {
         type: "two-column",
         variant: "error-success",
         left: { title: "Before", items: ["Manual release"] },
         right: { title: "After", items: ["Release on merge"] },
       },
+    ],
+    notes: "content blocks: two-column success-error, neutral and error-success.",
+  },
+  {
+    type: "content",
+    sectionLabel: "Block: two-column",
+    headline: "Two columns: the other variants",
+    content: [
       {
         type: "two-column",
         variant: "error-neutral",
@@ -223,7 +223,7 @@ const slides: Slide[] = [
         right: { title: "Habit", items: ["Read the diff"] },
       },
     ],
-    notes: "content blocks: two-column error-success, error-neutral, error, success.",
+    notes: "content blocks: two-column error-neutral, error, success.",
   },
   {
     type: "content",
@@ -438,7 +438,7 @@ const slides: Slide[] = [
           quote: "Every team knows its own work best.",
         },
         middle: "Both",
-        resolution: "One harness, team-owned conventions on top.",
+        resolution: "One harness, team rules on top.",
       },
     ],
     notes: "content blocks: positions with middle and resolution. Fictional people.",
