@@ -1,9 +1,5 @@
 @import "tailwindcss";
-/* The brand tokens from @hackersandwizards/brand: colours, both families and the type roles.
-   Every colour and size below reads from them. theme(static) keeps every token, where Tailwind
-   keeps only those a scanned file names; resolved through the package, it reads the pinned brand
-   in this checkout and in a consumer's node_modules alike. */
-@import "@hackersandwizards/brand/tokens.css" theme(static);
+@import "./tokens.css";
 /* The brand's list marker, in the components layer so a marker's colour utility still wins. */
 @import "@hackersandwizards/brand/marker.css" layer(components);
 /* Tailwind never scans node_modules, so a consumer's build sees the engine's classes only because
@@ -172,211 +168,6 @@
   src: url("@hackersandwizards/brand/fonts/jetbrains-mono-latin-700-normal.woff2") format("woff2");
 }
 
-/* The slide scale: the website's type roles at stage size. A slide is designed at 1440x810, where
-   running text is 24px against the website's 16px body, so every role is its website size times
-   --slide-stage (1.5), read from the role tokens, never copied. A fluid role resolves to its largest
-   step on a slide: the slide's rem is 1.1111vw, so each clamp's preferred value lands above its
-   maximum at any stage size. At 1920 a rem is 21.333px, so body reaches 32px and card text 36px,
-   the Meet floor (18pt on the slide, half that in a 960px Meet window). Line heights stay the slide's own,
-   tighter than the website's reading rhythm, so a projected card holds its text.
-
-   Tailwind step  role                    size with the tokens of 2026-10-28
-   text-xs        label                   0.75 x 1.5 = 1.125rem
-   text-sm        between label and code  1.25rem, see below
-   text-base      body                    1 x 1.5 = 1.5rem
-   text-lg        between body and h4     1.625rem, see below
-   text-xl, -2xl  h4 (title)              1.125 x 1.5 = 1.6875rem
-   text-3xl       lead                    1.25 x 1.5 = 1.875rem
-   text-4xl       h3                      1.5 x 1.5 = 2.25rem
-   text-7xl       h1                      3 x 1.5 = 4.5rem
-   .slide-title   h1, slide size          3.375rem, see .slide-title
-   text-5xl, -6xl, -8xl  statement steps  2, 2.5 and 4 x the slide body
-
-   text-sm and text-lg keep their sizes from before the roles: the code role at stage size
-   (1.3125rem) and h4 (1.6875rem) push 27 hub slides under the fit guard or deeper into it
-   (audit of 2026-10-28), and a guard that shrinks the whole body loses more than the step gains.
-   The statement steps carry the title, statement, closing and big-number slides. The website
-   has no role for type that fills a stage (its display role at stage size, 5.25rem, sits between
-   two of them), so they stay steps of the slide body. Not inline, so the utilities read the
-   variables. */
-@theme {
-  /* The brand corner on the slide scale (see :root below): cards and code blocks take the full
-     corner; number and icon tiles, inline code and the hint bar are square. A text chip stays the
-     website's pill (TrainingList.astro .tl-chip). */
-  --radius-brand: var(--slide-radius);
-  --radius-brand-sm: var(--slide-radius-sm);
-  /* Not inline, so a theme sets them again. */
-  /* Status: an error or a constraint is the brand's signal red, a warning its dark amber, as on
-     every surface. Not inline, so a theme sets them again. */
-  --color-warning: var(--color-amber-dark);
-  --color-error: var(--color-red);
-  --color-insight-bg: color-mix(in srgb, var(--color-amber) 7%, transparent);
-  --color-constraint: var(--color-red);
-  --color-constraint-bg: color-mix(in srgb, var(--color-red) 7%, transparent);
-  /* Badge colors: opaque teal tints, for overlapping card borders */
-  --color-badge-bg: color-mix(in srgb, var(--color-teal) 15%, white);
-  --color-badge-border: color-mix(in srgb, var(--color-teal) 25%, white);
-  /* Code ground: Shiki's github-dark background, as on the website; the brand-dark theme sets
-     night-2, as the PPTX export does. Not inline, so a theme sets it again. */
-  --color-code-bg: #24292e;
-  --text-xs: calc(var(--type-label-size) * var(--slide-stage));
-  --text-xs--line-height: 1.4;
-  --text-sm: 1.25rem;
-  --text-sm--line-height: 1.4;
-  --text-base: calc(var(--type-body-size) * var(--slide-stage));
-  --text-base--line-height: 1.45;
-  --text-lg: 1.625rem;
-  --text-lg--line-height: 1.4;
-  --text-xl: calc(var(--type-h4-size) * var(--slide-stage));
-  --text-xl--line-height: 1.4;
-  --text-2xl: calc(var(--type-h4-size) * var(--slide-stage));
-  --text-2xl--line-height: 1.35;
-  --text-3xl: calc(var(--type-lead-size) * var(--slide-stage));
-  --text-3xl--line-height: 1.2;
-  --text-4xl: calc(var(--type-h3-size) * var(--slide-stage));
-  --text-4xl--line-height: calc(2.5 / 2.25);
-  --text-5xl: calc(var(--text-base) * 2);
-  --text-5xl--line-height: 1;
-  --text-6xl: calc(var(--text-base) * 2.5);
-  --text-6xl--line-height: 1;
-  --text-7xl: calc(var(--type-h1-size) * var(--slide-stage));
-  --text-7xl--line-height: 1;
-  --text-8xl: calc(var(--text-base) * 4);
-  --text-8xl--line-height: 1;
-
-  /* The brand tokens reset Tailwind's tracking and leading steps; the slides keep the ones they
-     use, at Tailwind's values. */
-  --tracking-tighter: -0.05em;
-  --tracking-tight: -0.025em;
-  --tracking-normal: 0em;
-  --tracking-wide: 0.025em;
-  --tracking-wider: 0.05em;
-  --tracking-widest: 0.1em;
-  --leading-tight: 1.25;
-  --leading-snug: 1.375;
-  --leading-normal: 1.5;
-  --leading-relaxed: 1.625;
-  --leading-loose: 2;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  /* Families by role, so a change to a role's family in the brand tokens reaches every slide:
-     headings and stats take the heading role's, labels the label role's, code keeps font-mono. */
-  --font-heading: var(--type-h1-family);
-  --font-label: var(--type-label-family);
-
-  --color-brand: var(--color-teal);
-  --color-brand-accent: var(--color-purple);
-  /* The website's dark green and amber: both carry text at 4.5:1 or better on white and on the
-     page background, where its light green and amber reach 1.6:1 and 2.1:1. */
-  --color-success: var(--color-green-dark);
-  --color-accent: var(--color-amber-dark);
-
-  --color-primary: var(--color-teal);
-  --color-primary-bg: color-mix(in srgb, var(--color-teal) 7%, transparent);
-  --color-primary-border: color-mix(in srgb, var(--color-teal) 25%, transparent);
-  --color-secondary: var(--color-purple);
-  --color-secondary-bg: color-mix(in srgb, var(--color-purple) 7%, transparent);
-  --color-secondary-border: color-mix(in srgb, var(--color-purple) 25%, transparent);
-  --color-insight: var(--color-amber);
-
-  /* Code blocks: the website's code, Shiki's github-dark, whose tokens lib/code-highlight.tsx
-     colours. The terminal block takes the theme's background (--color-code-bg above), its green
-     for a command and the comment grey lib/code-highlight.tsx lifts to, the brand's night-subtle
-     (5.58:1). */
-  --color-code-command: #85e89d;
-  --color-code-comment: var(--color-night-subtle);
-
-  /* Section backgrounds: the page colour tinted 7 % towards the section's hue, the first step of
-     the opacity ladder, as the bg-section-* utilities below do. */
-  --color-section-intro: var(--color-bg);
-  --color-section-primary: color-mix(in srgb, var(--color-teal) 7%, var(--color-bg));
-  --color-section-secondary: color-mix(in srgb, var(--color-purple) 7%, var(--color-bg));
-  --color-section-accent: color-mix(in srgb, var(--color-amber-dark) 7%, var(--color-bg));
-  --color-section-success: color-mix(in srgb, var(--color-green-dark) 7%, var(--color-bg));
-
-  /* Text hierarchy: the brand's two text steps, ink and muted, and the engine's third,
-     --slide-text-subtle (see :root below). */
-  --color-text: var(--color-ink);
-  --color-text-muted: var(--color-muted);
-  --color-text-subtle: var(--slide-text-subtle);
-}
-
-/* The slide scale: the website's shapes sized for a room. A slide is a 1920x1080 page seen on a
-   projector from the back row, in a shared screen at half size, or as a thumbnail at a quarter.
-   Viewing distance sets the factor: a laptop at 60 cm shows a website px at about 0.35 mrad, a
-   3 m projector image seen from 8 m shows a slide px at 0.2 mrad, so a website px needs about 1.8
-   slide px at 1920 to look the same. The type roles take 2 (--slide-stage, 1.5 rem on the 1440
-   stage, see the type table above), and the shapes follow that factor, except where the quarter
-   size thumbnail sets a floor for the header strip: under 4px at 1920 it drops below one pixel
-   there and vanishes.
-   All lengths in rem, so they grow with the stage (a rem is 21.333px at 1920).
-
-   --slide-strip     the header strip: website 3px x 2 = 6px fails the thumbnail floor and reads
-                     thin across a room; 0.75rem = 16px at 1920, 8px at half size, 4px at a quarter
-   --slide-hairline  every border and rule: website 1px x 2 = 2px at 1920, 1px at half size. The
-                     thumbnail floor of 4px drew cards with a heavy grey frame, where the attendee
-                     survey readout's 1.5px hairline read as the website's card. Painted as an
-                     overlay, so the box keeps its 1px layout: a real wide border shrank 22 talks and
-                     37 hub slides under the fit guard (measured 2026-10-28)
-   --slide-radius    the brand corner: website 20px 5px x 2 = 40px 10px at 1920
-   --slide-radius-sm a tile, badge, stage pill or inline code, which stands a line tall: square,
-                     as every mark too small for the brand corner at its full value
-   --slide-marker    the list marker, the website's teal square (EventRow.astro .event-facts):
-                     0.375rem x 2 = 12px at 1920. Square, as every mark too small for the brand
-                     corner at its full value, on the website and on paper alike
-
-   --slide-footer-inset  the corner row's distance from the slide's bottom edge: 1.5rem, 32px at
-                     1920
-   --slide-footer-side   the corner row's distance from the slide's right edge: the content's 4.5rem
-                     side margin (.slide-titled), so the row ends where the text ends, inside the
-                     graphics-safe margin. At 1.5rem blind reviewers read the mark as tight to the
-                     edge and off the grid (2026-10-31)
-   --slide-footer-mark   the corner row's height: 2.25rem, 48px
-   --slide-corner-wordmark the wordmark's box, 1.956rem, 42px at 1920, 1.3 times the 1.5rem typed
-                     name it replaced. The corner shows the wordmark alone, in its two colours, on
-                     every slide but the title and the closing slide, which carry the lockup: the
-                     wizard on every slide read as busy, and the wordmark in one muted colour or
-                     smaller lost attribution in photos and phone feeds (blind panels 2026-10-30
-                     and 2026-10-31)
-   --slide-corner-lockup the corner lockup's box, sized so its letters keep the wordmark's size: the
-                     wordmark is 952 of the day lockup's 1489 units and of the night cut's 1640.612,
-                     whose box grows round the wizard's edge, so each cut takes its own height
-   --slide-closing-lockup the closing slide's lockup, wizard and wordmark: 4.3rem, 92px at 1920
-                     (both blind-scored, 2026-10-29); the night cut scales by 1640.612 / 1489 so its
-                     letters keep that size
-   --slide-footer-band   the band above the bottom edge that a slide's content never enters: the
-                     corner row plus a 2rem gap, 43px at 1920. The bottom padding of 4.25rem it
-                     replaces left 11px between content and the page counter, and timelines, card
-                     grids and closing lines read as crowded against it (Benedikt, 2026-10-29)
-
-   Card padding stays each component's own (2rem, 43px at 1920, for most cards): the website's
-   32px x 2 would take a fifth of a card's width at four columns and push bodies under the fit
-   guard. */
-:root {
-  --slide-footer-inset: 1.5rem;
-  --slide-footer-mark: 2.25rem;
-  --slide-footer-side: 4.5rem;
-  --slide-corner-wordmark: 1.956rem;
-  --slide-corner-lockup: calc(var(--slide-corner-wordmark) * 1489 / 952);
-  --slide-corner-lockup-night: calc(var(--slide-corner-wordmark) * 1640.612 / 952);
-  --slide-closing-lockup: 4.3rem;
-  --slide-closing-lockup-night: calc(var(--slide-closing-lockup) * 1640.612 / 1489);
-  --slide-footer-band: calc(var(--slide-footer-inset) + var(--slide-footer-mark) + 2rem);
-  --slide-strip: 0.75rem;
-  --slide-hairline: 0.09375rem;
-  --slide-radius: 1.875rem 0.46875rem;
-  --slide-radius-sm: 0;
-  --slide-marker: 0.5625rem;
-  --slide-stage: 1.5;
-  /* The third text step: muted, since brand v0.8 folds subtle into muted. */
-  --slide-text-subtle: var(--color-muted);
-  --background: var(--color-bg);
-  --foreground: var(--color-ink);
-}
-
 @layer base {
   * {
     @apply border-border;
@@ -411,7 +202,7 @@
 
 ::selection {
   background-color: var(--color-brand) !important;
-  color: white !important;
+  color: var(--color-white) !important;
 }
 
 /* A slide is a 16:9 stage designed at 1440x810: every rem-sized length (Tailwind's type, spacing
@@ -421,18 +212,18 @@
    lays out every slide at 1920x1080, whatever window opens it. */
 @media screen and (width >= 48rem) {
   html:has(.slide-viewport, .slide-story) {
-    font-size: min(1.1111vw, 1.9753vh);
+    font-size: var(--slide-root);
   }
 }
 
 html:has(.print-slide) {
-  font-size: 21.333px;
+  font-size: var(--slide-root-print);
 }
 
 .slide-content {
   height: 100vh;
   width: 100%;
-  max-width: 1920px;
+  max-width: var(--slide-page-width);
 }
 
 /* A content slide's title sits on one line at the same height on every slide, whatever the slide
@@ -442,8 +233,7 @@ html:has(.print-slide) {
 .slide-titled {
   justify-content: flex-start;
   align-items: stretch;
-  /* Sides 4.5rem, 96px at 1920: the 5% graphics-safe margin a projector or a Meet crop leaves. */
-  padding: 5.5rem 4.5rem 0;
+  padding: var(--slide-top) var(--slide-side) 0;
 }
 
 /* No slide's content enters the footer band: the bottom padding is the band, on every slide type,
@@ -465,7 +255,7 @@ html:has(.print-slide) {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding-top: 1.5rem;
+  padding-top: var(--slide-body-gap);
 }
 
 /* The body sits a little above the centre of the free space, closer to its title: two spacers
@@ -494,13 +284,13 @@ html:has(.print-slide) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--slide-media-gap);
 }
 .slide-media-item {
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: 60vh;
+  max-height: var(--slide-media-max);
 }
 .slide-media-caption {
   font-size: var(--text-lg);
@@ -509,7 +299,7 @@ html:has(.print-slide) {
 .slide-media-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.4em;
+  gap: var(--slide-link-gap);
   font-family: var(--font-heading);
   color: var(--color-primary);
 }
@@ -518,7 +308,7 @@ html:has(.print-slide) {
   flex-grow: 0;
 }
 .slide-titled > .slide-body:has(.slide-media) > .slide-blocks {
-  padding-block: 1rem 0.75rem;
+  padding-block: var(--slide-media-pad);
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
@@ -579,10 +369,8 @@ html:has(.print-slide) {
 /* The kicker (section label, principle, stage strip) hangs above the title line instead of
    pushing the title down. */
 .slide-titled .slide-kicker {
-  /* Tall enough for the principle pill at the type scale, so the pill clears the title. */
-  height: 2.5rem;
-  /* Its top stays 53px down, inside the 5% safe area; the net height is zero. */
-  margin: -3rem 0 0.5rem;
+  height: var(--slide-kicker-height);
+  margin: var(--slide-kicker-margin);
 }
 
 /* Borders and rules on a slide take the hairline of the slide scale: the one-class specificity
@@ -603,7 +391,7 @@ html:has(.print-slide) {
     :is(.border, .border-t, .border-b, .border-l, .border-r, .border-x, .border-y)::after {
     content: "";
     position: absolute;
-    inset: -1px;
+    inset: calc(var(--slide-layout-border) * -1);
     border-width: 0;
     border-style: inherit;
     border-color: inherit;
@@ -630,7 +418,7 @@ html:has(.print-slide) {
      from the hue and the ink, no outline. --chip names the hue, teal by default. */
   .slide-chip {
     border-color: transparent;
-    background: color-mix(in srgb, var(--chip, var(--color-teal)) 15%, white);
+    background: color-mix(in srgb, var(--chip, var(--color-teal)) 15%, var(--color-white));
     color: color-mix(in srgb, var(--chip, var(--color-teal)) 40%, var(--color-ink));
     font-weight: 500;
   }
@@ -660,12 +448,11 @@ html:has(.print-slide) {
     text-transform: var(--type-label-case);
   }
 
-  /* The h1 role at a slide's own size: 72px at 1920, 36pt on the slide, the floor for a title
-     watched in a Meet window. The h1 role at stage size (5.25rem) fits three words on a line. */
+  /* The h1 role at the slide's title size (tokens.css). */
   .slide-title {
     font-family: var(--type-h1-family);
-    font-size: 3.375rem;
-    line-height: 1.1;
+    font-size: var(--slide-title-size);
+    line-height: var(--slide-title-leading);
     font-weight: var(--type-h1-weight);
     letter-spacing: var(--type-h1-tracking);
     color: var(--color-text);
@@ -689,20 +476,26 @@ html:has(.print-slide) {
 
 .pipeline-row[data-step="1"],
 .pipeline-row[data-step="1"] > div {
-  gap: calc(1rem - 0.5rem * var(--tighten));
+  gap: calc(
+    var(--slide-pipeline-gap) - (var(--slide-pipeline-gap) - var(--slide-pipeline-gap-tight)) *
+      var(--tighten)
+  );
 }
 
 .pipeline-row[data-step="1"] .pipeline-stage {
-  padding-inline: calc(1.25rem - 0.5rem * var(--tighten));
+  padding-inline: calc(
+    var(--slide-pipeline-pad) - (var(--slide-pipeline-pad) - var(--slide-pipeline-pad-tight)) *
+      var(--tighten)
+  );
 }
 
 .pipeline-row[data-step="2"],
 .pipeline-row[data-step="2"] > div {
-  gap: 0.5rem;
+  gap: var(--slide-pipeline-gap-tight);
 }
 
 .pipeline-row[data-step="2"] .pipeline-stage {
-  padding-inline: 0.75rem;
+  padding-inline: var(--slide-pipeline-pad-tight);
   font-size: var(--text-base);
   line-height: var(--text-base--line-height);
 }
@@ -713,7 +506,7 @@ html:has(.print-slide) {
 
 /* The break takes a line of its own between the two rows, so each row gap is half. */
 .pipeline-row[data-step="3"] {
-  row-gap: 0.5rem;
+  row-gap: var(--slide-pipeline-gap-tight);
 }
 
 .pipeline-row[data-step="3"] .pipeline-break {
@@ -758,14 +551,14 @@ html:has(.print-slide) {
   .slide-content {
     height: auto;
     min-height: 100vh;
-    padding: 4rem 1.25rem 6rem;
+    padding: var(--slide-phone-padding);
   }
   .slide-content > * {
     max-width: 100%;
   }
   .slide-titled .slide-kicker {
     height: auto;
-    margin: 0 0 1rem;
+    margin: 0 0 var(--slide-phone-kicker-gap);
   }
   .slide-content .grid {
     grid-template-columns: minmax(0, 1fr);
@@ -777,14 +570,14 @@ html:has(.print-slide) {
     overflow-wrap: anywhere;
   }
   .slide-content :is(th, td) {
-    padding: 0.5rem 0.625rem;
+    padding: var(--slide-phone-cell-padding);
     font-size: var(--type-small-size);
   }
   .slide-content :is(.p-8, .p-10) {
-    padding: 1.25rem;
+    padding: var(--slide-phone-card-padding);
   }
   /* On a phone the root is 16px, so the website's roles apply at their own size. */
-  .slide-content :is(.slide-title, .text-5xl, .text-6xl, .text-7xl, .text-8xl, .text-\[5rem\]) {
+  .slide-content :is(.slide-title, .text-5xl, .text-6xl, .text-7xl, .text-8xl) {
     font-size: var(--type-display-size);
     line-height: var(--type-display-line-height);
   }
@@ -818,46 +611,6 @@ html:has(.print-slide) {
     background: color-mix(in srgb, var(--color-success) 7%, var(--background));
   }
 
-  /* Brand dark: the website's night tokens for page, cards and text, teal and purple in their
-     night cuts (teal-night, purple-night), and dark text on those fills. A whole deck takes it
-     as `theme-brand-dark`, a proposal on no deck by default (decision row in os
-     docs/tracking/decisions); a deep-dive slide always takes it (`SlideShell` `night`), on itself
-     and on the frame holding it, so the corner mark turns with it. */
-  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night)) {
-    /* The engine's semantic colours are inlined from these tokens at build time, so the theme
-       sets the tokens themselves; a token derived from another is set again, since it resolved
-       on the root. */
-    --background: var(--color-night);
-    --color-bg: var(--color-night);
-    --color-ink: var(--color-night-ink);
-    --color-muted: var(--color-night-muted);
-    --slide-text-subtle: var(--color-muted);
-    --color-border: color-mix(in srgb, var(--color-night-ink) 15%, var(--color-night));
-    --color-teal: var(--color-teal-night);
-    --color-purple: var(--color-purple-night);
-    --color-green-dark: var(--color-green);
-    --color-amber-dark: var(--color-amber);
-    --color-factory: var(--color-factory-light);
-    --color-red: var(--color-red-night);
-    --color-warning: var(--color-amber);
-    --color-error: var(--color-red);
-    --color-constraint: var(--color-red);
-    --color-constraint-bg: color-mix(in srgb, var(--color-red) 7%, transparent);
-    --color-code-bg: var(--color-night-2);
-    --color-text: var(--color-ink);
-    --color-text-muted: var(--color-muted);
-    --color-text-subtle: var(--color-muted);
-    --color-brand: var(--color-teal);
-    --color-brand-accent: var(--color-purple);
-    --color-primary: var(--color-teal);
-    --color-secondary: var(--color-purple);
-    --color-success: var(--color-green);
-    --color-accent: var(--color-amber);
-    /* Dark text steps used on light tints turn light. */
-    --color-teal-dark: color-mix(in srgb, var(--color-teal) 70%, white);
-    color-scheme: dark;
-  }
-
   /* The Night wordmark on a dark theme, the light one everywhere else. */
   .hw-wordmark-night,
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
@@ -872,7 +625,7 @@ html:has(.print-slide) {
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
     .slide-chip {
     background: color-mix(in srgb, var(--chip, var(--color-teal)) 25%, var(--color-night));
-    color: color-mix(in srgb, var(--chip, var(--color-teal)) 35%, white);
+    color: color-mix(in srgb, var(--chip, var(--color-teal)) 35%, var(--color-white));
   }
 
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
@@ -904,35 +657,10 @@ html:has(.print-slide) {
   }
 }
 
-/* Homepage card hover effects */
-.talk-card {
-  transition:
-    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.3s ease;
-}
-
-.talk-card:hover {
-  transform: translateY(-3px) scale(1.008);
-  border-color: color-mix(in srgb, var(--card-accent, var(--color-teal)) 25%, transparent);
-  box-shadow: var(--shadow-overlay);
-}
-
-.hero-card {
-  transition:
-    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.5s ease;
-}
-
-.hero-card:hover {
-  transform: translateY(-4px);
-}
-
 .print-slide {
   position: relative;
-  width: 1920px;
-  height: 1080px;
+  width: var(--slide-page-width);
+  height: var(--slide-page-height);
   overflow: hidden;
   page-break-after: always;
   break-after: page;
@@ -946,9 +674,9 @@ html:has(.print-slide) {
 }
 
 .print-slide > :first-child {
-  min-height: 1080px !important;
-  max-height: 1080px !important;
-  height: 1080px !important;
+  min-height: var(--slide-page-height) !important;
+  max-height: var(--slide-page-height) !important;
+  height: var(--slide-page-height) !important;
 }
 
 .print-watermark {
@@ -966,7 +694,7 @@ html:has(.print-slide) {
 
   html,
   body {
-    width: 1920px;
+    width: var(--slide-page-width);
     margin: 0;
     padding: 0;
   }
@@ -1005,11 +733,9 @@ html:has(.print-slide) {
   }
 }
 
-/* A complicated-subsystem team's octagon (Team Shape Templates): an outer octagon in the line
-   colour holds an inner one 3px smaller in the fill, since a clipped box draws no border. The
-   inner cut is smaller by (2 - sqrt 2) x 3px, so the diagonal edges are 3px thick as well. */
+/* A complicated-subsystem team's octagon (tokens.css). */
 .team-octagon {
-  --cut: 0.9rem;
+  --cut: var(--slide-octagon-cut);
   clip-path: polygon(
     var(--cut) 0,
     calc(100% - var(--cut)) 0,
@@ -1022,7 +748,7 @@ html:has(.print-slide) {
   );
 }
 .team-octagon > .team-octagon {
-  --cut: calc(0.9rem - 1.76px);
-  margin: 3px;
-  height: calc(100% - 6px);
+  --cut: calc(var(--slide-octagon-cut) - var(--slide-octagon-diagonal));
+  margin: var(--slide-octagon-line);
+  height: calc(100% - 2 * var(--slide-octagon-line));
 }

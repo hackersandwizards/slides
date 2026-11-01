@@ -43,7 +43,7 @@ const SPLIT_STEP = 0.05;
 const MIN_SLIDES_PX = 120;
 const MIN_NOTES_PX = 176;
 /** 16:9 at the largest size its box allows, so a shorter box narrows the slide. */
-const FRAME_SIZE = "aspect-video w-[min(100cqw,calc(100cqh*16/9))]";
+const FRAME_SIZE = "aspect-video w-(--slide-presenter-frame)";
 /** Editing notes writes the deck file through the edit mode's endpoint, which only the dev server
  *  serves; the condition folds to false in a build, which drops the button with it. */
 const EDITABLE = import.meta.env.DEV;
@@ -298,7 +298,11 @@ function Frame({ name, src, title }: { name: string; src: string; title: string 
         title={title}
         tabIndex={-1}
         className="pointer-events-none absolute top-0 left-0 origin-top-left border-0"
-        style={{ width: 1920, height: 1080, transform: `scale(${scale})` }}
+        style={{
+          width: "var(--slide-page-width)",
+          height: "var(--slide-page-height)",
+          transform: `scale(${scale})`,
+        }}
       />
     </div>
   );

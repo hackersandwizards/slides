@@ -107,6 +107,7 @@ export function keepHyphenatedWords(text: string): string {
 export function evolutionAsProcess({ stages, ...slide }: EvolutionSlide): ProcessSlide {
   return {
     type: "process",
+    ground: slide.ground,
     background: slide.background,
     headline: slide.headline,
     footer: slide.footer,

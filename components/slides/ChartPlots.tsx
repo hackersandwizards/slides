@@ -31,7 +31,7 @@ const tick = { fill: "var(--color-text-muted)", fontSize: "var(--text-base)" };
 const tooltip = {
   contentStyle: {
     backgroundColor: "var(--color-white)",
-    border: "2px solid var(--color-primary-border)",
+    border: "var(--slide-chart-tooltip-border)",
     borderRadius: "var(--radius-brand)",
     fontSize: "var(--text-xs)",
     boxShadow: "var(--shadow-overlay)",

@@ -6,7 +6,7 @@ import githubDark from "shiki/themes/github-dark.mjs";
 import { describe, expect, it } from "vitest";
 import { highlightCode } from "../lib/code-highlight";
 
-const css = readFileSync(join(__dirname, "../styles/slides.css"), "utf8");
+const css = readFileSync(join(__dirname, "../styles/tokens.css"), "utf8");
 const built = readFileSync(join(__dirname, "../specimen/build/slides.css"), "utf8");
 const brand = (name: keyof typeof tokens) => tokens[name];
 /** `color-mix(in srgb, a p%, b)` of two hex colours. */
@@ -33,7 +33,7 @@ const contrast = (a: string, b: string) => {
 const night = brand("--color-night");
 const subtle = mix("#ffffff", night, 0.6);
 const muted = mix("#ffffff", night, 0.8);
-// The code ground per theme as slides.css sets it: github-dark's on light decks, the brand-dark
+// The code ground per theme as tokens.css sets it: github-dark's on light decks, the brand-dark
 // theme's token on dark ones.
 const lightGround = css.match(/--color-code-bg: (#[0-9a-f]{6});/)?.[1] ?? "";
 const darkToken = css.match(/--color-code-bg: var\((--color-[a-z0-9-]+)\);/)?.[1];

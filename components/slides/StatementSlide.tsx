@@ -3,8 +3,9 @@
 import Image from "../ui/image";
 import type { StatementSlide as StatementSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
-import { SlideShell } from "./SlideShell";
+import { SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
+import { DisplayHeading } from "./primitives";
 
 interface Props {
   slide: StatementSlideType;
@@ -34,7 +35,7 @@ export function StatementSlide({ slide }: Props) {
   const pointBaseDelay = 0.1 + slide.lines.length * 0.08;
 
   return (
-    <SlideShell direction="col" overflowHidden background={slide.background ?? "bg-section-intro"}>
+    <SlideShell direction="col" overflowHidden ground={groundOf(slide)}>
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-16">
         {slide.imageSrc && (
           <BlurFade delay={0.05} duration={0.4}>
@@ -52,23 +53,23 @@ export function StatementSlide({ slide }: Props) {
           {slide.crossedOut && (
             <BlurFade delay={0.05} duration={0.4}>
               <p className="mb-6 font-heading text-3xl text-text-subtle md:text-4xl">
-                <s className="line-through decoration-text-subtle decoration-[3px]">
+                <s className="line-through decoration-text-subtle decoration-(length:--slide-rule-strong)">
                   {slide.crossedOut}
                 </s>
               </p>
             </BlurFade>
           )}
-          {slide.lines.map((line, index) => (
-            <BlurFade key={index} delay={0.1 + index * 0.08} duration={0.4}>
-              <div
-                className={`font-heading leading-[1.05] font-bold tracking-[-0.03em] text-balance text-text ${
-                  isSimple ? "text-7xl md:text-8xl" : "text-6xl md:text-7xl"
-                }`}
-              >
-                <HighlightedLine line={line} highlighted={slide.highlighted} />
-              </div>
-            </BlurFade>
-          ))}
+          {/* A column of flex items, so one line's descender bleed never collapses into the next
+              line's and opens a gap between them. */}
+          <div className="flex flex-col">
+            {slide.lines.map((line, index) => (
+              <BlurFade key={index} delay={0.1 + index * 0.08} duration={0.4}>
+                <DisplayHeading as="div" size={isSimple ? "xl" : "lg"}>
+                  <HighlightedLine line={line} highlighted={slide.highlighted} />
+                </DisplayHeading>
+              </BlurFade>
+            ))}
+          </div>
 
           {slide.subtitle && (
             <BlurFade delay={0.1 + slide.lines.length * 0.08} duration={0.4}>

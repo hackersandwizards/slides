@@ -7,7 +7,7 @@ import { SlideShell } from "./SlideShell";
 import { useCarousel } from "../../lib/use-carousel";
 import { User } from "lucide-react";
 import { Linkedin } from "../../lib/icons";
-import { TitledContent, SlideTitle } from "./primitives";
+import { TitledContent, SlideTitle, SlideCard } from "./primitives";
 import { personAccent } from "../../lib/slide-utils";
 
 interface Props {
@@ -20,8 +20,7 @@ const ACCENT = {
   primary: {
     ring: "ring-primary/25",
     text: "text-primary",
-    border: "border-primary",
-    cardBg: "bg-primary/7",
+    tone: "primary" as const,
     pillIdle: "bg-primary/7 text-primary hover:bg-primary/15",
     dot: "from-primary to-primary/70",
     avatarFrame: "from-primary/25 to-primary/7",
@@ -29,8 +28,7 @@ const ACCENT = {
   secondary: {
     ring: "ring-secondary/25",
     text: "text-secondary",
-    border: "border-secondary",
-    cardBg: "bg-secondary/7",
+    tone: "secondary" as const,
     pillIdle: "bg-secondary/7 text-secondary hover:bg-secondary/15",
     dot: "from-secondary to-secondary/70",
     avatarFrame: "from-secondary/25 to-secondary/7",
@@ -50,7 +48,7 @@ export function ProfilesSlide({ slide }: Props) {
           {/* Each card runs as wide as its share of the row, the portrait beside the name, so the
               bullets get full lines instead of a narrow column that outgrows the slide. */}
           <div
-            className={`flex w-full flex-col justify-center gap-10 md:flex-row ${slide.profiles.length === 1 ? "max-w-[64rem]" : ""}`}
+            className={`flex w-full flex-col justify-center gap-10 md:flex-row ${slide.profiles.length === 1 ? "max-w-5xl" : ""}`}
           >
             {slide.profiles.map((profile, index) => {
               const isHighlighted = index === highlightIndex;
@@ -63,10 +61,9 @@ export function ProfilesSlide({ slide }: Props) {
                   duration={0.5}
                   className="flex md:min-w-0 md:flex-1"
                 >
-                  <div
-                    className={`flex w-full flex-col rounded-brand border p-10 transition-all duration-300 ${
-                      isHighlighted ? `${a.border} ${a.cardBg}` : "border-border bg-white"
-                    }`}
+                  <SlideCard
+                    tone={isHighlighted ? a.tone : "neutral"}
+                    className="flex w-full flex-col p-10 transition-all duration-300"
                   >
                     <div className="flex items-center gap-8">
                       <div
@@ -114,7 +111,7 @@ export function ProfilesSlide({ slide }: Props) {
                         LinkedIn
                       </a>
                     )}
-                  </div>
+                  </SlideCard>
                 </BlurFade>
               );
             })}

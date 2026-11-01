@@ -17,7 +17,7 @@ export function AgendaSlide({ slide }: Props) {
   const timed = items.some((item) => item.when);
   const whenWidth = `${Math.max(...items.map((item) => item.when?.length ?? 0))}ch`;
   return (
-    <SlideShell background="bg-section-intro">
+    <SlideShell>
       <TitledContent>
         <SlideTitle>{slide.headline}</SlideTitle>
         <div className="slide-body">

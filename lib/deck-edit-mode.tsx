@@ -34,15 +34,17 @@ async function ask(body: object): Promise<Answer> {
 
 const STYLE = `
 html[data-deck-edit] body :is(h1,h2,h3,h4,h5,h6,p,li,blockquote,figcaption,td,th,dt,dd):hover,
-html[data-deck-edit] body *:not(:has(*)):hover { outline: 2px dashed ${LEAD}; outline-offset: 2px; cursor: text; }`;
+html[data-deck-edit] body *:not(:has(*)):hover { outline: var(--slide-edit-outline) dashed ${LEAD}; outline-offset: var(--slide-edit-outline); cursor: text; }`;
 
-// The field is its own document, where the deck's custom properties do not reach: the ink is read
-// off the deck when the field opens.
-const fieldDoc = (
-  ink: string,
-) => `<!doctype html><style>html,body{margin:0;height:100%}textarea{box-sizing:border-box;
-width:100%;height:100%;border:0;padding:8px;font:18px/1.4 system-ui,sans-serif;color:${ink};
-background:white;resize:none;outline:none}</style><textarea spellcheck="false"></textarea>`;
+// The field is its own document, where the deck's custom properties do not reach: its tokens are
+// read off the deck when the field opens.
+const fieldDoc = () => {
+  const token = (name: string) =>
+    getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return `<!doctype html><style>html,body{margin:0;height:100%}textarea{box-sizing:border-box;
+width:100%;height:100%;border:0;padding:${token("--slide-edit-field-padding")};font:${token("--slide-edit-field-font")};
+color:${token("--color-ink")};background:${token("--color-white")};resize:none;outline:none}</style><textarea spellcheck="false"></textarea>`;
+};
 
 export function DeckEdit({ deck }: { deck: string }) {
   // Stays on across the reload a save causes: read after hydration, so the server render agrees.
@@ -101,7 +103,7 @@ export function DeckEdit({ deck }: { deck: string }) {
       if (!(element instanceof HTMLElement)) return;
       const outline = refused.get(element)?.outline ?? element.style.outline;
       clearTimeout(refused.get(element)?.timer);
-      element.style.outline = "3px solid var(--color-error)";
+      element.style.outline = "var(--slide-rule-strong) solid var(--color-error)";
       refused.set(element, { outline, timer: setTimeout(() => restore(element), 2500) });
     };
     const close = () => {
@@ -122,16 +124,14 @@ export function DeckEdit({ deck }: { deck: string }) {
         left: `${left}px`,
         top: `${top}px`,
         width: `${width}px`,
-        height: "60px",
+        height: "var(--slide-edit-field)",
         zIndex: "90",
-        border: `2px solid ${LEAD}`,
+        border: `var(--slide-edit-outline) solid ${LEAD}`,
         borderRadius: "var(--radius-sm)",
-        background: "white",
+        background: "var(--color-white)",
         boxShadow: "var(--shadow-overlay)",
       });
-      frame.srcdoc = fieldDoc(
-        getComputedStyle(document.documentElement).getPropertyValue("--color-ink"),
-      );
+      frame.srcdoc = fieldDoc();
       frame.addEventListener("load", () => {
         const area = frame.contentDocument?.querySelector("textarea");
         if (!area) return;

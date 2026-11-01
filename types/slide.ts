@@ -1,5 +1,16 @@
 export type SectionTheme = "primary" | "secondary" | "accent" | "warning" | "success" | "deepdive";
 
+/** A slide's ground: the brand page, or the page tinted 7% towards a section's hue. */
+export type SlideGround = "intro" | "primary" | "secondary" | "accent" | "success";
+
+/** The ground of a slide type that may stand on a section's tint. */
+export interface Grounded {
+  ground?: SlideGround;
+  /** @deprecated `ground`: `bg-section-accent` is `ground: "accent"`. Read until every deck has
+   *  moved; any other class draws the plain page. */
+  background?: `bg-section-${SlideGround}`;
+}
+
 export type StageState = "default" | "active" | "new";
 
 export interface Stage {
@@ -230,9 +241,8 @@ export interface RegularSlide {
   align?: "left" | "center";
 }
 
-export interface StatementSlide {
+export interface StatementSlide extends Grounded {
   type: "statement";
-  background?: string;
   lines: string[];
   subtitle?: string;
   crossedOut?: string;
@@ -260,14 +270,15 @@ export interface EvolutionStage {
 /** @deprecated A `process` slide with `loop: false`, which draws it the same way: `multiplier`
  *  is a node's `label`, `isDimmed` its `dimmed`, `isHighlighted` names `highlightPhase`. The
  *  engine still renders it, through `evolutionAsProcess` in `lib/slide-utils.ts`. */
-export interface EvolutionSlide {
+export interface EvolutionSlide extends Grounded {
   type: "evolution";
-  background?: string;
   headline: string;
   stages: EvolutionStage[];
   static?: boolean;
   footer?: string;
 }
+
+export type GridTone = "neutral" | "primary" | "secondary" | "accent" | "success";
 
 export interface GridCard {
   title: string;
@@ -276,16 +287,19 @@ export interface GridCard {
   value?: string;
   label?: string;
   highlight?: boolean;
-  accentColor?: "neutral" | "primary" | "secondary" | "accent" | "success";
+  /** The card's tone, a SlideCard tone: its border, tint, badge and icon on a pillar, its tint and
+   *  figure on a stat. `accent` also marks a stat as the one that matters. */
+  tone?: GridTone;
+  /** @deprecated `tone`, under its old name; read until every deck has moved. */
+  accentColor?: GridTone;
   imageSrc?: string;
   author?: string;
 }
 
-export interface GridSlide {
+export interface GridSlide extends Grounded {
   type: "grid";
   sectionLabel?: string;
   sectionTheme?: SectionTheme;
-  background?: string;
   headline: string;
   cards: GridCard[];
   variant?: "pillars" | "stats" | "quotes";
@@ -408,9 +422,8 @@ export interface ProcessNode {
 
 /** Steps on one line. A cycle by default, drawn with the loop back from the last step to the
  *  first; `loop: false` for stages that run once, such as a progression from 1x to 10x. */
-export interface ProcessSlide {
+export interface ProcessSlide extends Grounded {
   type: "process";
-  background?: string;
   headline: string;
   nodes: ProcessNode[];
   /** The title of the step that stays lit. */
@@ -479,17 +492,16 @@ export interface QuestionSlide {
   options: QuestionOption[];
 }
 
-export interface TransitionSlide {
+export interface TransitionSlide extends Grounded {
   type: "transition";
   preText?: string;
-  background?: string;
   headline: string;
   subtitle?: string;
   speakerName?: string;
   speakerCompany?: string;
 }
 
-export interface ClosingSlide {
+export interface ClosingSlide extends Grounded {
   type: "closing";
   variant?: "contact" | "discussion";
   line1?: string;
@@ -503,13 +515,18 @@ export interface ClosingSlide {
   closingQuote?: string;
   seedQuestions?: string[];
   headline?: string;
-  background?: string;
 }
+
+export type MarkerTone = "primary" | "secondary" | "accent" | "success";
 
 export interface RoadmapItem {
   title: string;
   description?: string;
-  dotColor?: string;
+  /** The marker's colour, where one row stands apart from its group's. */
+  tone?: MarkerTone;
+  /** @deprecated `tone`: `bg-accent` is `tone: "accent"`. Read until every deck has moved; any
+   *  other class draws the group's colour. */
+  dotColor?: `bg-${MarkerTone}`;
 }
 
 /** One of a roadmap's two parts: a list of `items`, or `phases`, groups of numbered rows under a

@@ -1,12 +1,12 @@
 "use client";
 
-import type { RoadmapSlide as RoadmapSlideType } from "../../types/slide";
+import type { MarkerTone, RoadmapSlide as RoadmapSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { renderMarkdown } from "../../lib/markdown";
 import { COLUMN_STYLES, type ColumnAccent } from "../../lib/section-styles";
 import { themeDotColor, themeLabelColor } from "../../lib/stage-utils";
 import { SlideShell } from "./SlideShell";
-import { TitledContent, SlideTitle, SlideSubtitle } from "./primitives";
+import { TitledContent, SlideTitle, SlideSubtitle, DisplayHeading, SlideCard } from "./primitives";
 
 // Draws both two-part slide types, roadmap and dual-pill-overview, so they stay one layout (os
 // decision roadmap-dual-pill-slides): a roadmap column is one group of rows, a dual-pill column
@@ -20,7 +20,8 @@ interface PartItem {
   description?: string;
   /** Stands in place of the marker, in the group's colour. */
   number?: number;
-  dotColor?: string;
+  tone?: MarkerTone;
+  dotColor?: `bg-${MarkerTone}`;
 }
 
 interface PartGroup {
@@ -28,6 +29,12 @@ interface PartGroup {
   label?: string;
   theme?: string;
   items: PartItem[];
+}
+
+/** A row's own marker colour, from `tone` or the class its deprecated `dotColor` names. */
+function markerColour(item: PartItem): string | undefined {
+  const tone = item.tone ?? item.dotColor?.slice(3);
+  return tone ? themeDotColor[tone] : undefined;
 }
 
 /** One part: the accent bar, a square label, title and subtitle, then groups of rows, each a
@@ -54,9 +61,7 @@ function PartCard({
 
   return (
     <BlurFade delay={delay} duration={0.5}>
-      <div
-        className={`relative h-full overflow-hidden rounded-brand border ${style.card} ${style.glow}`}
-      >
+      <SlideCard className={`relative h-full overflow-hidden ${style.glow}`}>
         <div className={`absolute inset-x-0 top-0 h-2 ${style.bar}`} />
 
         <div className="px-10 pt-12 pb-10">
@@ -66,9 +71,12 @@ function PartCard({
             {label}
           </div>
 
-          <h3 className="mt-6 font-heading text-4xl leading-[1.05] font-bold tracking-[-0.02em] text-text md:text-5xl">
-            {title}
-          </h3>
+          {/* The heading's own margin is its descender bleed, so the gap above sits outside it. */}
+          <div className="mt-6">
+            <DisplayHeading as="h3" size="sm">
+              {title}
+            </DisplayHeading>
+          </div>
 
           {subtitle && (
             <p className="mt-4 text-lg leading-snug text-text-muted">{renderMarkdown(subtitle)}</p>
@@ -88,7 +96,7 @@ function PartCard({
                       <BlurFade key={i} delay={delay + 0.05 + row++ * 0.04} duration={0.35}>
                         <li className="flex items-baseline gap-4 text-xl leading-snug">
                           {item.number === undefined ? (
-                            <span className={`hw-marker ${item.dotColor ?? dot}`} />
+                            <span className={`hw-marker ${markerColour(item) ?? dot}`} />
                           ) : (
                             <span
                               className={`w-10 shrink-0 font-heading text-xl font-bold tabular-nums ${text}`}
@@ -115,7 +123,7 @@ function PartCard({
             })}
           </div>
         </div>
-      </div>
+      </SlideCard>
     </BlurFade>
   );
 }

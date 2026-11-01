@@ -7,6 +7,7 @@ import { useSlideKeyboard } from "../../lib/use-slide-keyboard";
 import { BlurFade } from "../ui/blur-fade";
 import { NumberTicker } from "../ui/number-ticker";
 import { SlideShell } from "./SlideShell";
+import { DisplayHeading } from "./primitives";
 import {
   arrivedBackwards as readArrivedBackwards,
   directionKey,
@@ -112,10 +113,10 @@ export function QuestionSlide({ slide }: Props) {
   return (
     <SlideShell direction="col">
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-12">
-        <BlurFade delay={0.1} duration={0.6}>
-          <h2 className="mb-14 text-center font-heading text-5xl font-bold tracking-[-0.03em] text-text md:text-6xl">
+        <BlurFade delay={0.1} duration={0.6} className="mb-14">
+          <DisplayHeading as="h2" size="md" className="text-center">
             {headline}
-          </h2>
+          </DisplayHeading>
         </BlurFade>
 
         <div className="w-full max-w-4xl space-y-4" role="group" aria-label={headline}>
@@ -147,7 +148,7 @@ export function QuestionSlide({ slide }: Props) {
                     <span className="text-lg text-text">{option.text}</span>
                   </div>
                   <div
-                    className="min-w-[3ch] text-right font-mono text-xl font-bold text-primary"
+                    className="min-w-(--slide-measure-vote) text-right font-mono text-xl font-bold text-primary"
                     aria-live="polite"
                   >
                     <NumberTicker value={counts[i]} />

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ProcessSlide as ProcessSlideType } from "../../types/slide";
-import { SlideShell } from "./SlideShell";
+import { SlideShell, groundOf } from "./SlideShell";
 import { iconMap, type LucideIcon } from "../../lib/icons";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { TitledContent, SlideTitle, SlideCaption } from "./primitives";
@@ -68,7 +68,7 @@ export function ProcessSlide({ slide }: Props) {
   }));
 
   return (
-    <SlideShell background={slide.background ?? "bg-section-intro"}>
+    <SlideShell ground={groundOf(slide)}>
       <TitledContent>
         <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
 

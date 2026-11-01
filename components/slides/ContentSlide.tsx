@@ -8,8 +8,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { ArrowUpRight, Pause, Play } from "lucide-react";
-import { usePrintMode } from "../../lib/print-context";
+import { ArrowUpRight } from "lucide-react";
 import Image from "../ui/image";
 import type {
   ContentSlide as ContentSlideType,
@@ -27,7 +26,17 @@ import { getStageClasses } from "../../lib/stage-utils";
 import { getSectionStyle } from "../../lib/section-styles";
 import { isDeepDive, keepHyphenatedWords, linkLabel, personAccent } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { TitledContent, SlideTitle, SlideCard, CodePanel, SlideSubtitle } from "./primitives";
+import {
+  TitledContent,
+  SlideTitle,
+  SlideCard,
+  CodePanel,
+  SlideSubtitle,
+  DisplayHeading,
+  type CardTone,
+  VideoPlayer,
+  DashedFrame,
+} from "./primitives";
 
 type LabeledGridBlockType = Extract<ContentBlock, { type: "labeled-grid" }>;
 
@@ -64,22 +73,19 @@ function LabeledGridBlock({
       {block.items.map((item, i) => {
         const revealed = i < revealedCount;
         return (
-          <div
+          <SlideCard
             key={i}
             inert={!revealed}
-            className={`rounded-brand p-6 transition-all duration-500 ${
+            tone={item.highlighted ? "success" : "neutral"}
+            className={`p-6 transition-all duration-500 ${
               revealed ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
-            } ${
-              item.highlighted
-                ? "border border-success bg-success/7"
-                : "border border-border bg-white"
             }`}
           >
             <p className={`text-xl font-bold ${item.highlighted ? "text-success" : "text-text"}`}>
               {item.title}
             </p>
             <p className="card-text-lg mt-1 text-text-muted">{renderMarkdown(item.subtitle)}</p>
-          </div>
+          </SlideCard>
         );
       })}
     </div>
@@ -140,16 +146,6 @@ function MediaPicture({ src, alt, className }: { src: string; alt?: string; clas
 }
 
 function VideoBlock({ block }: { block: Extract<ContentBlock, { type: "video" }> }) {
-  const printMode = usePrintMode();
-  const ref = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const toggle = () => {
-    const v = ref.current;
-    if (!v) return;
-    if (v.paused) void v.play();
-    else v.pause();
-  };
   return (
     <MediaFrame
       boxClassName="pb-10"
@@ -157,120 +153,88 @@ function VideoBlock({ block }: { block: Extract<ContentBlock, { type: "video" }>
         block.caption && <figcaption className="slide-media-caption">{block.caption}</figcaption>
       }
     >
-      <div className="slide-media-item relative rounded-brand border border-border bg-night">
-        <video
-          ref={ref}
-          src={block.src}
-          poster={block.poster}
-          aria-label={block.alt}
-          muted
-          playsInline
-          preload={printMode ? "auto" : "metadata"}
-          onClick={toggle}
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onEnded={() => setPlaying(false)}
-          onTimeUpdate={(e) =>
-            setProgress(e.currentTarget.currentTime / (e.currentTarget.duration || 1))
-          }
-          className="slide-media-item block cursor-pointer rounded-[inherit]"
-        />
-        {/* Round and teal, as every control that holds only an icon (brand tokens, radius-pill;
-            unprimed blind panel 2026-11-01). It straddles the recording's bottom edge, centred,
-            as on the website, so it covers no corner of the picture (os decision
-            play-button-position); the frame's bottom padding holds its lower half. Playing, it
-            stays as the pause control, shown only to the keyboard that holds focus on it. */}
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={`${playing ? "Pause" : "Play"} ${block.alt ?? "video"}`}
-          className={`absolute -bottom-10 left-1/2 z-10 flex size-20 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-white ${playing ? "opacity-0 focus-visible:opacity-100" : ""}`}
-        >
-          {playing ? (
-            <Pause className="size-10 fill-current" strokeWidth={0} />
-          ) : (
-            <Play className="size-10 fill-current" strokeWidth={0} />
-          )}
-        </button>
-        {progress > 0 && (
-          <div className="absolute inset-x-0 bottom-0 h-1.5 overflow-hidden rounded-b-[inherit] bg-white/15">
-            <div className="h-full bg-primary" style={{ width: `${progress * 100}%` }} />
-          </div>
-        )}
-      </div>
+      <VideoPlayer
+        src={block.src}
+        poster={block.poster}
+        alt={block.alt}
+        className="slide-media-item"
+      />
     </MediaFrame>
   );
 }
 
-const TWO_COL_VARIANTS = {
+const TWO_COL_VARIANTS: Record<
+  string,
+  Record<"left" | "right", { card: CardTone; title: string; dot: string }>
+> = {
   "success-error": {
     left: {
-      card: "border-success/25 bg-white",
+      card: "success",
       title: "text-success",
       dot: "bg-success",
     },
     right: {
-      card: "border-error/25 bg-white",
+      card: "error",
       title: "text-error",
       dot: "bg-error",
     },
   },
   "error-success": {
     left: {
-      card: "border-error/25 bg-white",
+      card: "error",
       title: "text-error",
       dot: "bg-error",
     },
     right: {
-      card: "border-success/25 bg-white",
+      card: "success",
       title: "text-success",
       dot: "bg-success",
     },
   },
   error: {
     left: {
-      card: "border-error/25 bg-white",
+      card: "error",
       title: "text-error",
       dot: "bg-error",
     },
     right: {
-      card: "border-error/25 bg-white",
+      card: "error",
       title: "text-error",
       dot: "bg-error",
     },
   },
   "error-neutral": {
     left: {
-      card: "border-error/25 bg-white",
+      card: "error",
       title: "text-error",
       dot: "bg-error",
     },
     right: {
-      card: "border-border bg-white",
+      card: "neutral",
       title: "text-text",
       dot: "",
     },
   },
   success: {
     left: {
-      card: "border-success/25 bg-white",
+      card: "success",
       title: "text-success",
       dot: "bg-success",
     },
     right: {
-      card: "border-success/25 bg-white",
+      card: "success",
       title: "text-success",
       dot: "bg-success",
     },
   },
   neutral: {
     left: {
-      card: "border-border bg-white",
+      card: "neutral",
       title: "text-text",
       dot: "",
     },
     right: {
-      card: "border-border bg-white",
+      card: "neutral",
       title: "text-text",
       dot: "",
     },
@@ -420,10 +384,8 @@ const CALLOUT_VARIANTS = {
   info: "border-secondary/25 bg-secondary/7 text-text",
   // On their tint the brand amber and green drop under 4.5:1 (4.29 and 4.27), so the text mixes
   // them 40% with ink, as the website's chips do.
-  warning:
-    "border-accent/25 bg-accent/7 text-[color-mix(in_srgb,var(--color-amber-dark)_60%,var(--color-ink))]",
-  success:
-    "border-success/25 bg-success/7 text-[color-mix(in_srgb,var(--color-green-dark)_60%,var(--color-ink))]",
+  warning: "border-accent/25 bg-accent/7 text-(--slide-insight-ink)",
+  success: "border-success/25 bg-success/7 text-(--slide-success-ink)",
 };
 
 function ContentBlockRenderer({
@@ -468,7 +430,7 @@ function ContentBlockRenderer({
         );
       }
       return (
-        <p className="max-w-[72rem] text-xl leading-snug text-text-muted">
+        <p className="max-w-6xl text-xl leading-snug text-text-muted">
           {renderMarkdown(block.text)}
         </p>
       );
@@ -476,7 +438,7 @@ function ContentBlockRenderer({
     case "bullets": {
       const List = block.ordered ? "ol" : "ul";
       return (
-        <List className="max-w-[60rem] space-y-4">
+        <List className="max-w-(--slide-measure-list) space-y-4">
           {block.items.map((item, i) => {
             const isNested = typeof item === "object";
             const text = isNested ? item.text : item;
@@ -571,7 +533,7 @@ function ContentBlockRenderer({
       return (
         <div className="grid grid-cols-2 gap-10">
           {sides.map(({ data, style }, i) => (
-            <div key={i} className={`rounded-brand border p-7 ${style.card}`}>
+            <SlideCard key={i} tone={style.card} look="line" className="p-7">
               {data.title && (
                 <h3 className={`mb-5 font-heading text-2xl font-bold ${style.title}`}>
                   {renderMarkdown(data.title)}
@@ -588,7 +550,7 @@ function ContentBlockRenderer({
                   ))}
                 </ul>
               )}
-            </div>
+            </SlideCard>
           ))}
         </div>
       );
@@ -639,9 +601,7 @@ function ContentBlockRenderer({
 
     case "pipeline":
       return (
-        <div
-          className={`rounded-brand border-2 border-dashed p-6 ${block.containerLabel ? "border-secondary bg-secondary/7" : "border-secondary-border bg-white"}`}
-        >
+        <DashedFrame tone="secondary" active={!!block.containerLabel} className="p-6">
           {block.containerLabel && (
             <div className="label-caps mb-4 flex items-baseline gap-2 text-sm">
               <div className="hw-marker bg-secondary" />
@@ -682,7 +642,7 @@ function ContentBlockRenderer({
               {renderMarkdown(block.containerFooter)}
             </p>
           )}
-        </div>
+        </DashedFrame>
       );
 
     case "image":
@@ -702,7 +662,7 @@ function ContentBlockRenderer({
           {block.image.sketch ? (
             // A sketch stands on the ground without a frame and fills the height of the cards
             // beside it, centred, never less than a framed image's height.
-            <div className="relative min-h-[45vh] self-stretch">
+            <div className="relative min-h-(--slide-picture-max) self-stretch">
               <Image
                 src={block.image.src}
                 alt={block.image.alt || ""}
@@ -718,7 +678,7 @@ function ContentBlockRenderer({
                 alt={block.image.alt || ""}
                 width={1200}
                 height={1500}
-                className="h-auto max-h-[45vh] w-auto rounded-brand border border-border"
+                className="h-auto max-h-(--slide-picture-max) w-auto rounded-brand border border-border"
               />
             </div>
           )}
@@ -729,13 +689,10 @@ function ContentBlockRenderer({
               </h3>
             )}
             {block.items.map((item, i) => (
-              <div
-                key={i}
-                className="rounded-brand border-2 border-secondary/15 bg-white px-6 py-4"
-              >
+              <SlideCard key={i} tone="secondary" look="line" className="px-6 py-4">
                 <p className="mb-1 text-xl font-bold text-text">{renderMarkdown(item.title)}</p>
                 <p className="card-text-lg text-text">{renderMarkdown(item.subtitle)}</p>
-              </div>
+              </SlideCard>
             ))}
           </div>
         </div>
@@ -756,7 +713,7 @@ function ContentBlockRenderer({
       }
       return (
         <div
-          className={`max-w-full rounded-brand border-2 px-8 py-6 ${block.fullWidth ? "w-full" : "w-fit"} ${besideBars ? "md:w-[calc(100%-16rem)]" : ""} ${CALLOUT_VARIANTS[block.variant ?? "info"]}`}
+          className={`max-w-full rounded-brand border-2 px-8 py-6 ${block.fullWidth ? "w-full" : "w-fit"} ${besideBars ? "md:w-[calc(100%-var(--slide-callout-beside-bars))]" : ""} ${CALLOUT_VARIANTS[block.variant ?? "info"]}`}
         >
           <p className="text-xl leading-snug font-medium">{renderMarkdown(block.text)}</p>
         </div>
@@ -797,7 +754,7 @@ function ContentBlockRenderer({
           <div className="border-b border-white/15 px-6 py-3 font-mono text-xs text-code-comment">
             terminal
           </div>
-          <div className="space-y-2 px-6 py-5 font-mono text-lg leading-[2] sm:text-xl">
+          <div className="space-y-2 px-6 py-5 font-mono text-lg leading-loose sm:text-xl">
             {block.commands.map((cmd, i) => (
               <BlurFade key={i} delay={0.3 + i * 0.15} duration={0.4}>
                 <div>
@@ -838,7 +795,7 @@ function ContentBlockRenderer({
                 rel="noopener noreferrer"
                 className="slide-media-caption slide-media-link"
               >
-                <ArrowUpRight className="size-[1.1em] shrink-0" strokeWidth={2.25} />
+                <ArrowUpRight className="size-(--slide-link-icon) shrink-0" strokeWidth={2.25} />
                 {linkLabel(block.href)}
               </a>
             )
@@ -877,7 +834,7 @@ function ContentBlockRenderer({
             <div className="flex items-baseline gap-3">
               {!alignRight && (
                 <span
-                  className={`text-xs font-bold tracking-[0.25em] tabular-nums ${a.text} opacity-70`}
+                  className={`text-xs font-bold tracking-(--slide-index-tracking) tabular-nums ${a.text} opacity-70`}
                 >
                   {numeral}
                 </span>
@@ -887,7 +844,7 @@ function ContentBlockRenderer({
               {alignRight && <span className={`h-px w-10 self-center ${a.rule}`} />}
               {alignRight && (
                 <span
-                  className={`text-xs font-bold tracking-[0.25em] tabular-nums ${a.text} opacity-70`}
+                  className={`text-xs font-bold tracking-(--slide-index-tracking) tabular-nums ${a.text} opacity-70`}
                 >
                   {numeral}
                 </span>
@@ -895,7 +852,7 @@ function ContentBlockRenderer({
             </div>
 
             <h3
-              className={`font-heading text-8xl leading-[0.85] font-bold tracking-[-0.045em] lg:text-[8rem] ${a.text}`}
+              className={`font-heading text-8xl leading-(--slide-figure-leading) font-bold tracking-(--slide-figure-tracking) lg:text-(length:--slide-figure-size) ${a.text}`}
             >
               {/* A line breaks only between words: "All-in" never splits at its hyphen. */}
               {side.stance.split(" ").map((word, i) => (
@@ -944,9 +901,9 @@ function ContentBlockRenderer({
               <span className="label-caps text-xs text-text-subtle">The verdict</span>
               <div className="h-px w-16 bg-text-subtle/25" />
             </div>
-            <h2 className="max-w-4xl text-center text-4xl leading-[1.05] text-balance text-text md:text-5xl">
+            <DisplayHeading as="h2" size="sm" className="max-w-4xl text-center">
               {renderMarkdown(block.resolution)}
-            </h2>
+            </DisplayHeading>
           </div>
         </div>
       );
@@ -968,9 +925,9 @@ function CenteredContentSlide({ slide }: Props) {
         )}
 
         <BlurFade delay={0.2} duration={0.6}>
-          <h1 className="max-w-5xl text-4xl text-text sm:text-5xl md:text-6xl">
+          <DisplayHeading size="md" className="max-w-5xl">
             {renderMarkdown(slide.headline)}
-          </h1>
+          </DisplayHeading>
         </BlurFade>
 
         {slide.subtitle && (

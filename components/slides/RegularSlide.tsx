@@ -9,7 +9,7 @@ import { iconMap, Linkedin } from "../../lib/icons";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { useCarousel } from "../../lib/use-carousel";
 import { usePrintMode } from "../../lib/print-context";
-import { TitledContent } from "./primitives";
+import { TitledContent, NumberTile } from "./primitives";
 
 interface Props {
   slide: RegularSlideType;
@@ -45,13 +45,13 @@ function AgendaCard({
         }`}
       >
         {IconComponent && (
-          <div
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-brand-sm sm:h-12 sm:w-12 md:h-16 md:w-16 ${
-              isActive ? style.iconBg : "bg-primary/7 text-text-subtle"
-            }`}
+          <NumberTile
+            size="lg"
+            tone="none"
+            className={isActive ? style.iconBg : "bg-primary/7 text-text-subtle"}
           >
             <IconComponent className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8" />
-          </div>
+          </NumberTile>
         )}
         <div className="flex flex-col gap-1 sm:gap-2">
           {section.title && (

@@ -20,8 +20,10 @@ describe("content blocks", () => {
       { type: "callout", text: "Note" },
     ]);
     const box = c.querySelector("p.text-xl")?.parentElement;
-    expect(box?.className).toContain("md:w-[calc(100%-16rem)]");
-    expect(box?.className.split(" ")).not.toContain("w-[calc(100%-16rem)]");
+    expect(box?.className).toContain("md:w-[calc(100%-var(--slide-callout-beside-bars))]");
+    expect(box?.className.split(" ")).not.toContain(
+      "w-[calc(100%-var(--slide-callout-beside-bars))]",
+    );
   });
 
   // An empty labels object adds no label column.

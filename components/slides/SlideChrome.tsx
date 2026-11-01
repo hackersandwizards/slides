@@ -6,6 +6,7 @@ import { themeDotColor, type StageCategory } from "../../lib/stage-utils";
 // Kept here so the two slides cannot drift apart. The dot does not pulse: a loop
 // that never ends pulls the eye off the speaker for the whole slide.
 
+/** The factory frame's title, a caps label on the brand gradient pill over the frame's edge. */
 export function GradientTitlePill({ children }: { children: ReactNode }) {
   return (
     <span className="label-caps inline-block rounded-full bg-gradient-to-r from-primary via-brand-accent/70 to-secondary px-8 py-2.5 text-base whitespace-nowrap text-white">
@@ -14,6 +15,7 @@ export function GradientTitlePill({ children }: { children: ReactNode }) {
   );
 }
 
+/** The dot on a stage that is new or active, in its category's colour, ringed white. */
 export function PulseDot({
   category,
   offset = "-top-1 -right-1",

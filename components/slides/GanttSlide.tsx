@@ -22,7 +22,7 @@ export function GanttSlide({ slide }: Props) {
   const track = { gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` };
 
   return (
-    <SlideShell background="bg-section-intro" night={isDeepDive(slide)}>
+    <SlideShell night={isDeepDive(slide)}>
       <TitledContent>
         <SectionHeader label={slide.sectionLabel} principle={slide.principle} />
 

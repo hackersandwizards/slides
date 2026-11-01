@@ -7,7 +7,7 @@ import { renderMarkdown } from "../../lib/markdown";
 import { SlideShell } from "./SlideShell";
 import { isDeepDive } from "../../lib/slide-utils";
 import Image from "../ui/image";
-import { SlideTitle } from "./primitives";
+import { SlideTitle, VideoPlayer } from "./primitives";
 
 interface Props {
   slide: MediaSlideType;
@@ -25,13 +25,15 @@ function MediaItem({
   height?: number;
 }) {
   if (kind === "video") {
+    // The bottom padding holds the lower half of the player's play button.
     return (
-      <video
-        src={src}
-        controls
-        aria-label={alt}
-        className="h-auto max-h-[62vh] w-full rounded-brand border border-border bg-code-bg object-contain"
-      />
+      <div className="pb-10">
+        <VideoPlayer
+          src={src}
+          alt={alt}
+          className="h-auto max-h-(--slide-picture-max-media) w-full object-contain"
+        />
+      </div>
     );
   }
 
@@ -56,7 +58,7 @@ function MediaItem({
       alt={alt ?? ""}
       width={1920}
       height={1080}
-      className="mx-auto h-auto max-h-[62vh] w-auto max-w-full rounded-brand border border-border"
+      className="mx-auto h-auto max-h-(--slide-picture-max-media) w-auto max-w-full rounded-brand border border-border"
       priority
     />
   );

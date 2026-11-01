@@ -14,9 +14,13 @@ interface Stroke {
 }
 
 const FADE_DURATION = 2000;
-const LASER_RGB = "26, 114, 133";
-const LASER_COLOR = `rgba(${LASER_RGB}, 1)`;
-const LASER_GLOW_COLOR = `rgba(${LASER_RGB}, 0.6)`;
+/** The brand teal at an opacity, as an 8-digit hex: a canvas reads no custom property, so the
+ *  colour is read off the page's tokens once. */
+const withAlpha = (hex: string, alpha: number) =>
+  hex +
+  Math.round(alpha * 255)
+    .toString(16)
+    .padStart(2, "0");
 const LINE_WIDTH = 4;
 const HIGHLIGHT_NAME = "slide-marker";
 
@@ -41,6 +45,9 @@ export function LaserPointer() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const laser = getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-teal")
+      .trim();
 
     const getCanvasPoint = (e: MouseEvent): Point => {
       const rect = canvas.getBoundingClientRect();
@@ -74,11 +81,11 @@ export function LaserPointer() {
 
         if (stroke.points.length > 1) {
           ctx.beginPath();
-          ctx.strokeStyle = `rgba(${LASER_RGB}, ${opacity})`;
+          ctx.strokeStyle = withAlpha(laser, opacity);
           ctx.lineWidth = LINE_WIDTH;
           ctx.lineCap = "round";
           ctx.lineJoin = "round";
-          ctx.shadowColor = `rgba(${LASER_RGB}, ${opacity * 0.6})`;
+          ctx.shadowColor = withAlpha(laser, opacity * 0.6);
           ctx.shadowBlur = 10;
 
           ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
@@ -92,11 +99,11 @@ export function LaserPointer() {
 
       if (currentStrokeRef.current.length > 1) {
         ctx.beginPath();
-        ctx.strokeStyle = LASER_COLOR;
+        ctx.strokeStyle = laser;
         ctx.lineWidth = LINE_WIDTH;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
-        ctx.shadowColor = LASER_GLOW_COLOR;
+        ctx.shadowColor = withAlpha(laser, 0.6);
         ctx.shadowBlur = 10;
 
         ctx.moveTo(currentStrokeRef.current[0].x, currentStrokeRef.current[0].y);

@@ -105,10 +105,9 @@ function VsVariant({ slide }: { slide: ComparisonSlideType }) {
 
           return (
             <BlurFade key={i} delay={0.2 + i * 0.1} duration={0.6}>
-              <div
-                className={`h-full rounded-brand border p-8 transition-all duration-300 ${
-                  isActive ? "border-primary bg-primary/7" : "border-border bg-white"
-                }`}
+              <SlideCard
+                tone={isActive ? "primary" : "neutral"}
+                className="h-full p-8 transition-all duration-300"
               >
                 <h3 className="mb-6 font-heading text-2xl font-bold text-text">{side.label}</h3>
 
@@ -147,7 +146,7 @@ function VsVariant({ slide }: { slide: ComparisonSlideType }) {
                     </ul>
                   </div>
                 )}
-              </div>
+              </SlideCard>
             </BlurFade>
           );
         })}
@@ -214,12 +213,12 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSlideType }) {
           <span className="rotate-90 text-3xl font-bold text-primary md:rotate-0">&rarr;</span>
         </div>
 
-        <div
+        <SlideCard
           inert={phase < 2}
-          className={`rounded-brand border p-8 transition-all duration-500 ${
-            phase >= 2
-              ? "translate-y-0 border-primary/40 bg-primary/7 opacity-100"
-              : "translate-y-4 opacity-0"
+          tone="primary"
+          look="soft"
+          className={`p-8 transition-all duration-500 ${
+            phase >= 2 ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
           }`}
         >
           <div className="mb-6 flex items-center gap-3">
@@ -233,7 +232,7 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSlideType }) {
               </li>
             ))}
           </ul>
-        </div>
+        </SlideCard>
       </div>
 
       {slide.punchline && (

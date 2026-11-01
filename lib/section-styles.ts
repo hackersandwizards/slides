@@ -48,11 +48,10 @@ export function getSectionStyle(theme?: SectionTheme): SectionStyle {
 export type ColumnAccent = "ingredients" | "deepdive";
 
 // The card identity of the two-part slides (roadmap and dual-pill-overview, both
-// drawn by RoadmapSlide). The "deepdive" accent is the load-bearing Part-Two
+// drawn by RoadmapSlide on a neutral SlideCard). The "deepdive" accent is the load-bearing Part-Two
 // brand. The cards stay flat white: body text never sits on a tint of the
 // gradient (design guide); the accent is the bar and the badge.
 export interface ColumnStyle {
-  card: string;
   bar: string;
   badge: string;
   glow: string;
@@ -60,13 +59,11 @@ export interface ColumnStyle {
 
 export const COLUMN_STYLES: Record<ColumnAccent, ColumnStyle> = {
   ingredients: {
-    card: "border-border bg-white",
     bar: "bg-gradient-to-r from-primary via-secondary to-accent",
     badge: "bg-primary/7 text-primary border-border",
     glow: "shadow-card",
   },
   deepdive: {
-    card: "border-border bg-white",
     bar: "bg-secondary",
     badge: "bg-secondary/7 text-secondary border-secondary/25",
     glow: "shadow-card",

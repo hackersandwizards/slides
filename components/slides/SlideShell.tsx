@@ -1,17 +1,33 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
+import type { Grounded, SlideGround } from "../../types/slide";
+
+/** Tailwind sees each class whole. */
+const GROUNDS: Record<SlideGround, string> = {
+  intro: "bg-section-intro",
+  primary: "bg-section-primary",
+  secondary: "bg-section-secondary",
+  accent: "bg-section-accent",
+  success: "bg-section-success",
+};
+
+/** A slide's ground from `ground`, or from the class its deprecated `background` names. */
+export function groundOf(slide: Grounded): SlideGround {
+  const named = slide.ground ?? slide.background?.slice("bg-section-".length);
+  return named && named in GROUNDS ? (named as SlideGround) : "intro";
+}
 
 // The full-viewport frame every slide sits in, owned here so it changes in one place. A slide's
 // decoration stays its own children.
 export function SlideShell({
   children,
-  background = "bg-section-intro",
+  ground = "intro",
   direction = "row",
   overflowHidden = false,
   night = false,
   className,
 }: {
   children: ReactNode;
-  background?: string;
+  ground?: SlideGround;
   direction?: "row" | "col";
   overflowHidden?: boolean;
   /** The slide stands on night: `slides.css` sets the night tokens on it and on the frame holding
@@ -24,7 +40,7 @@ export function SlideShell({
     "relative flex min-h-screen items-center justify-center",
     direction === "col" && "flex-col",
     overflowHidden && "overflow-hidden",
-    background,
+    GROUNDS[ground],
     night && "slide-night",
     className,
   ]

@@ -1,13 +1,14 @@
-// Writes the specimen page, specimen/index.html and specimen/build/slides.css: one slide per
-// registered slide type, the first of its type in the specimen deck, then every specimen slide
-// labelled "Block: …" or "Visual: …", one per content block and variant, rendered by the engine's
-// own components in print mode, with slides.css compiled by Tailwind. `--check` fails when either
-// committed file differs from a fresh build.
+// Writes the specimen page, specimen/index.html and specimen/build/slides.css: the three layers
+// (tokens, parts, types) with every part its variants and the slide types that compose it, then one
+// slide per registered slide type, the first of its type in the specimen deck, then every specimen
+// slide labelled "Block: …" or "Visual: …", one per content block and variant, rendered by the
+// engine's own components in print mode, with slides.css compiled by Tailwind. `--check` fails when
+// either committed file differs from a fresh build, and on a part with no entry below.
 // Usage: bun scripts/specimen.ts [--check]
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createElement as h } from "react";
+import { createElement as h, Fragment, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { compile } from "@tailwindcss/node";
 import { Scanner } from "@tailwindcss/oxide";
@@ -15,6 +16,8 @@ import { aliasTypes, slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import { PrintSlide } from "../components/slides/PrintSlide";
 import { slideCatalogue } from "../specimen/slide-catalogue";
+import * as primitives from "../components/slides/primitives";
+import * as chrome from "../components/slides/SlideChrome";
 
 const root = join(import.meta.dirname, "..");
 const out = join(root, "specimen", "index.html");
@@ -76,6 +79,178 @@ const blockFrames = blockPicks.map((index) => {
   );
 });
 
+// ─── Parts: the components every slide type composes ─────────────────────────────────────────
+const {
+  CodePanel,
+  DashedFrame,
+  DisplayHeading,
+  NumberTile,
+  SlideCaption,
+  SlideCard,
+  SlideSubtitle,
+  SlideTitle,
+  VideoPlayer,
+} = primitives;
+const { GradientTitlePill, PulseDot } = chrome;
+const label = (text: string) =>
+  h("p", { className: "label-caps mb-3 text-xs text-text-muted" }, text);
+const inRow = (...children: ReactNode[]) =>
+  h("div", { className: "flex flex-wrap items-start gap-8" }, ...children);
+const cell = (name: string, child: ReactNode) => h("div", null, label(name), child);
+const tones = ["neutral", "primary", "secondary", "accent", "success", "error"] as const;
+const looks = ["tint", "soft", "outline", "line"] as const;
+
+/** Each part with a sheet of its variants; a part missing here fails the build. */
+const PARTS: Record<string, () => ReactNode> = {
+  DisplayHeading: () =>
+    h(
+      "div",
+      { className: "space-y-10" },
+      ...(["xl", "lg", "md", "sm"] as const).map((size) =>
+        cell(`size ${size}`, h(DisplayHeading, { size, as: "div", children: "Ship the loop" })),
+      ),
+    ),
+  SlideCard: () =>
+    h(
+      "div",
+      { className: "grid grid-cols-4 gap-6" },
+      h(SlideCard, { className: "px-6 py-4 text-lg" }, "neutral"),
+      h(SlideCard, { tone: "quiet", className: "col-span-3 w-1/3 px-6 py-4 text-lg" }, "quiet"),
+      ...tones
+        .filter((tone) => tone !== "neutral")
+        .flatMap((tone) =>
+          looks.map((look) =>
+            h(
+              SlideCard,
+              { tone, look, key: `${tone}-${look}`, className: "px-6 py-4 text-lg" },
+              `${tone} · ${look}`,
+            ),
+          ),
+        ),
+    ),
+  NumberTile: () =>
+    h(
+      "div",
+      { className: "space-y-8" },
+      ...(["solid", "soft", "badge", "ink"] as const).map((tone) =>
+        cell(
+          `tone ${tone}`,
+          inRow(
+            ...(["sm", "md", "lg", "xl"] as const).map((size) =>
+              h(NumberTile, { size, tone, key: size, children: size === "xl" ? "10x" : "3" }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  DashedFrame: () =>
+    inRow(
+      cell("neutral", h(DashedFrame, { className: "w-96 p-6 text-lg" }, "A group")),
+      ...(["primary", "secondary"] as const).flatMap((tone) =>
+        [false, true].map((active) =>
+          cell(
+            `${tone}${active ? ", active" : ""}`,
+            h(
+              DashedFrame,
+              { tone, active, key: `${tone}${active}`, className: "w-96 p-6 text-lg" },
+              "A group",
+            ),
+          ),
+        ),
+      ),
+    ),
+  VideoPlayer: () =>
+    h(
+      "div",
+      { className: "w-1/2 pb-10" },
+      h(VideoPlayer, {
+        src: "/slide-catalogue/agent-session.mp4",
+        poster: "/slide-catalogue/agent-session-poster.png",
+        alt: "An agent session",
+      }),
+    ),
+  SlideTitle: () => h(SlideTitle, null, "A slide's headline on one line"),
+  SlideSubtitle: () => h(SlideSubtitle, null, "The line under a headline, in muted ink."),
+  SlideCaption: () => h(SlideCaption, null, "The caption under a diagram, its last step."),
+  CodePanel: () =>
+    h(CodePanel, { as: "pre", className: "p-8 font-code text-xl text-white" }, "$ claude --print"),
+  TitledContent: () =>
+    label("The column of a titled slide: headline, then the body under the fit guard."),
+  ChartFrame: () => label("A chart's plot area: a SlideCard of fixed height the chart fills."),
+  GradientTitlePill: () => h(GradientTitlePill, null, "The Factory"),
+  PulseDot: () =>
+    h(
+      "span",
+      { className: "relative inline-block rounded-brand bg-primary/7 px-6 py-3 text-xl" },
+      "New stage",
+      h(PulseDot, { category: "primary" }),
+    ),
+};
+
+const partSources: Record<string, string> = {
+  primitives: readFileSync(join(root, "components", "slides", "primitives.tsx"), "utf8"),
+  SlideChrome: readFileSync(join(root, "components", "slides", "SlideChrome.tsx"), "utf8"),
+};
+const partNames = Object.entries({ primitives, SlideChrome: chrome }).flatMap(([file, mod]) =>
+  Object.entries(mod)
+    .filter(([, v]) => typeof v === "function")
+    .map(([name]) => ({ name, file })),
+);
+const unlisted = partNames.filter(({ name }) => !PARTS[name]).map(({ name }) => name);
+if (unlisted.length) throw new Error(`parts without a catalogue entry: ${unlisted.join(", ")}`);
+
+/** A part's purpose: the first sentence of the comment over its export. */
+function purpose(name: string, file: string): string {
+  const before = partSources[file].slice(0, partSources[file].indexOf(`export function ${name}(`));
+  const end = before.lastIndexOf("*/");
+  if (end < 0 || before.slice(end + 2).trim()) return "";
+  const text = before
+    .slice(before.lastIndexOf("/**", end) + 3, end)
+    .replace(/^\s*\* ?/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text.split(/(?<=\.)\s/)[0] ?? "";
+}
+
+// The slide types that compose each part: a type's component and every local component it imports.
+const registry = readFileSync(join(root, "lib", "slide-components.ts"), "utf8");
+const typeFiles = [...registry.matchAll(/^\s*"?([\w-]+)"?: (\w+) as SlideComponent/gm)]
+  .filter(([, type]) => !aliasTypes[type as keyof typeof aliasTypes])
+  .map(([, type, component]) => ({ type, component }));
+const sourceOf = (component: string) =>
+  readFileSync(join(root, "components", "slides", `${component}.tsx`), "utf8");
+const reach = (component: string, seen = new Set<string>()): string => {
+  if (seen.has(component) || component === "primitives" || component === "SlideChrome") return "";
+  seen.add(component);
+  const source = sourceOf(component);
+  return [source, ...[...source.matchAll(/from "\.\/(\w+)"/g)].map(([, c]) => reach(c, seen))].join(
+    "\n",
+  );
+};
+const typeSources = typeFiles.map(({ type, component }) => ({ type, source: reach(component) }));
+const usedBy = (name: string) =>
+  typeSources
+    .filter(({ source }) => new RegExp(`<${name}[\\s/>]`).test(source))
+    .map(({ type }) => type);
+
+const partFrames = partNames.map(({ name, file }) => ({
+  name,
+  file,
+  purpose: purpose(name, file),
+  users: usedBy(name),
+  markup: renderToStaticMarkup(
+    h(
+      PrintProvider,
+      null,
+      h(
+        "div",
+        { className: "print-slide bg-section-intro" },
+        h("div", { className: "p-24" }, h(Fragment, null, PARTS[name]())),
+      ),
+    ),
+  ).replace(/(src|href|poster)="\/slide-catalogue\//g, '$1="slide-catalogue/'),
+}));
+
 const stylesheet = join(root, "styles", "slides.css");
 const compiler = await compile(readFileSync(stylesheet, "utf8"), {
   base: dirname(stylesheet),
@@ -83,7 +258,7 @@ const compiler = await compile(readFileSync(stylesheet, "utf8"), {
   onDependency: () => {},
 });
 const candidates = new Scanner({ sources: compiler.sources }).scan();
-for (const { markup } of [...frames, ...markerFrames, ...blockFrames])
+for (const { markup } of [...frames, ...markerFrames, ...blockFrames, ...partFrames])
   candidates.push(...new Scanner({}).scanFiles([{ content: markup, extension: "html" }]));
 const css = compiler
   .build(candidates)
@@ -142,6 +317,9 @@ iframe { width: 1920px; height: 1080px; border: 0; transform: scale(0.25); trans
 figure:target { grid-column: 1 / -1; }
 figure:target .frame { width: 1440px; height: 810px; }
 figure:target iframe { transform: scale(0.75); }
+.layers { max-width: 60rem; font-size: 1rem; margin: 0 0 1rem; }
+table.parts { border-collapse: collapse; margin: 0 0 2rem; max-width: 80rem; font-size: 0.875rem; }
+table.parts th, table.parts td { text-align: left; vertical-align: top; padding: 0.375rem 1rem 0.375rem 0; border-bottom: 1px solid var(--color-border); }
 </style>
 </head>
 <body>
@@ -162,6 +340,14 @@ figure:target iframe { transform: scale(0.75); }
 <p>Every slide type of the h&amp;w slide engine, one example each, then the content blocks a content slide is built from, as they look in a printed deck. All content is made up. Click a name to see its slide at 1440 px.</p>
 <p class="setup">Opens from a checkout of the <code>slides</code> repository after <code>bun install</code>, or at <code>http://slides.localhost</code> with <code>bun run dev</code>: fonts and logos load from <code>node_modules/@hackersandwizards/brand</code>. Built by <code>bun run specimen</code> from <code>specimen/slide-catalogue.ts</code>.</p>
 </div>
+<h2 id="parts">Parts</h2>
+<p class="layers">Three layers, as in the document engine. <strong>Tokens</strong>: <code>styles/tokens.css</code> names every value a slide draws (colour, type step, tracking, leading, measure, rule) from <code>@hackersandwizards/brand</code>; <code>test/tokens.test.ts</code> fails on a raw length or colour anywhere else. <strong>Parts</strong> below are built from tokens only, each with its variants. <strong>Slide types</strong> compose parts; a difference between two types is a part's variant.</p>
+<table class="parts"><thead><tr><th>Part</th><th>What it is</th><th>Used by</th></tr></thead><tbody>
+${partFrames.map((p) => `<tr><td><a href="#part-${p.name.toLowerCase()}"><code>${p.name}</code></a></td><td>${attr(p.purpose)}</td><td>${p.users.map((t) => `<a href="#${t}">${t}</a>`).join(", ") || "&ndash;"}</td></tr>`).join("\n")}
+</tbody></table>
+<main>
+${partFrames.map((p) => tile(p, "part-")).join("\n")}
+</main>
 <h2>Slide types</h2>
 <main>
 ${[...frames, ...markerFrames].map((f) => tile(f)).join("\n")}

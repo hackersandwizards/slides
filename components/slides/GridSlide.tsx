@@ -3,11 +3,11 @@
 import Image from "../ui/image";
 import type { GridSlide as GridSlideType, GridCard } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
-import { SlideShell } from "./SlideShell";
+import { SlideShell, groundOf } from "./SlideShell";
 import { isDeepDive } from "../../lib/slide-utils";
 import { iconMap, type LucideIcon } from "../../lib/icons";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { TitledContent, SlideTitle } from "./primitives";
+import { TitledContent, SlideTitle, NumberTile, SlideCard } from "./primitives";
 
 interface Props {
   slide: GridSlideType;
@@ -71,9 +71,9 @@ function PillarCard({
 }) {
   const Icon = (card.icon ? iconMap[card.icon] : null) ?? defaultIcons[index] ?? iconMap.brain;
   const isPast = isRevealed && !isActive;
-  const hasExplicitColor = !!card.accentColor;
+  const hasExplicitColor = !!(card.tone ?? card.accentColor);
   const retainPastColor = isPast && hasExplicitColor;
-  const accent = ACCENT_STYLES[card.accentColor ?? "primary"];
+  const accent = ACCENT_STYLES[card.tone ?? card.accentColor ?? "primary"];
 
   return (
     <div
@@ -98,17 +98,18 @@ function PillarCard({
         }`}
       />
 
-      <div
-        className={`absolute -top-6 left-1/2 z-20 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-brand-sm text-xl font-bold transition-all duration-500 ${
+      <NumberTile
+        tone={isActive || retainPastColor ? "none" : "badge"}
+        className={`absolute -top-6 left-1/2 z-20 -translate-x-1/2 transition-all duration-500 ${
           isActive
             ? `${accent.gradient} scale-110 text-white`
             : retainPastColor
               ? `${accent.badgeBg} text-white`
-              : "border border-badge-border bg-badge-bg text-primary"
+              : ""
         }`}
       >
         {index + 1}
-      </div>
+      </NumberTile>
 
       <div className="relative z-10 mt-4 mb-4">
         <Icon
@@ -148,8 +149,9 @@ function StatCard({
   isRevealed: boolean;
   columns?: number;
 }) {
-  const accent = ACCENT_STYLES[card.accentColor ?? "primary"];
-  const isHighlight = card.highlight || card.accentColor === "accent";
+  const tone = card.tone ?? card.accentColor ?? "primary";
+  const accent = ACCENT_STYLES[tone];
+  const isHighlight = card.highlight || tone === "accent";
   // A value is one token: "+220 %" never breaks before its unit.
   const valueSize = (columns ?? 2) >= 4 ? "text-5xl" : "text-6xl";
 
@@ -160,10 +162,9 @@ function StatCard({
         isRevealed ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
-      <div
-        className={`flex h-full flex-col rounded-brand border p-8 transition-all ${
-          isHighlight ? `${accent.border} ${accent.bg}` : "border-border bg-white"
-        }`}
+      <SlideCard
+        tone={isHighlight ? tone : "neutral"}
+        className="flex h-full flex-col p-8 transition-all"
       >
         <div
           className={`font-heading font-bold tracking-tight whitespace-nowrap tabular-nums ${valueSize} ${accent.text}`}
@@ -174,7 +175,7 @@ function StatCard({
         {card.description && (
           <p className="card-text-lg mt-2 leading-relaxed text-text-muted">{card.description}</p>
         )}
-      </div>
+      </SlideCard>
     </div>
   );
 }
@@ -187,7 +188,7 @@ function QuoteCard({ card, isRevealed }: { card: GridCard; isRevealed: boolean }
         isRevealed ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
-      <div className="flex h-full flex-col items-center rounded-brand border-2 border-border bg-white p-8 text-center">
+      <SlideCard className="flex h-full flex-col items-center p-8 text-center">
         {card.imageSrc && (
           <Image
             src={card.imageSrc}
@@ -201,7 +202,7 @@ function QuoteCard({ card, isRevealed }: { card: GridCard; isRevealed: boolean }
           &ldquo;{card.description ?? card.title}&rdquo;
         </p>
         {card.author && <p className="mt-auto text-base font-bold text-primary">{card.author}</p>}
-      </div>
+      </SlideCard>
     </div>
   );
 }
@@ -224,7 +225,7 @@ export function GridSlide({ slide }: Props) {
           : "";
 
   return (
-    <SlideShell background={slide.background ?? "bg-section-intro"} night={isDeepDive(slide)}>
+    <SlideShell ground={groundOf(slide)} night={isDeepDive(slide)}>
       <TitledContent>
         {slide.sectionLabel && (
           <BlurFade delay={0.05} duration={0.5}>
@@ -255,7 +256,7 @@ export function GridSlide({ slide }: Props) {
                   <div
                     key={index}
                     inert={!isRevealed}
-                    className={`flex w-full transition-all duration-500 ${slide.cards.length > 5 ? "md:w-[calc((100%-3rem)/3)]" : "md:w-auto md:min-w-0 md:flex-1"} ${
+                    className={`flex w-full transition-all duration-500 ${slide.cards.length > 5 ? "md:w-[calc((100%-var(--spacing)*12)/3)]" : "md:w-auto md:min-w-0 md:flex-1"} ${
                       isRevealed
                         ? "translate-y-0 opacity-100"
                         : "pointer-events-none translate-y-8 opacity-0"

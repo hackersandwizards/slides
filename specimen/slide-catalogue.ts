@@ -666,7 +666,7 @@ const slides: Slide[] = [
   },
   {
     type: "statement",
-    background: "bg-section-secondary",
+    ground: "secondary",
     lines: ["We stopped asking how fast the agent types", "and started asking what it reads."],
     closing: "The best harness is the one nobody notices.",
     closingStyle: "quote",
@@ -704,7 +704,7 @@ const slides: Slide[] = [
   },
   {
     type: "process",
-    background: "bg-section-accent",
+    ground: "accent",
     headline: "Six stages, static",
     loop: false,
     static: true,
@@ -750,15 +750,15 @@ const slides: Slide[] = [
         title: "Tools",
         description: "What the agent uses.",
         icon: "wrench",
-        accentColor: "primary",
+        tone: "primary",
       },
-      { title: "Knowledge", description: "What it reads.", icon: "book", accentColor: "secondary" },
-      { title: "Checks", description: "What is enforced.", icon: "shield", accentColor: "accent" },
+      { title: "Knowledge", description: "What it reads.", icon: "book", tone: "secondary" },
+      { title: "Checks", description: "What is enforced.", icon: "shield", tone: "accent" },
       {
         title: "Metrics",
         description: "What we learn.",
         icon: "bar-chart",
-        accentColor: "success",
+        tone: "success",
       },
     ],
     notes: "grid: pillars, four columns, four accents.",
@@ -772,14 +772,14 @@ const slides: Slide[] = [
     numberFrom: 5,
     cards: [
       { title: "Ownership", description: "One team per service.", highlight: true },
-      { title: "Cadence", description: "A weekly review.", accentColor: "neutral" },
+      { title: "Cadence", description: "A weekly review.", tone: "neutral" },
     ],
     notes: "grid: pillars, two columns, allActive, numberFrom 5, highlight.",
   },
   {
     type: "grid",
     variant: "stats",
-    background: "bg-section-primary",
+    ground: "primary",
     headline: "Numbers after six months",
     columns: 3,
     cards: [
@@ -1003,7 +1003,7 @@ const slides: Slide[] = [
   },
   {
     type: "process",
-    background: "bg-section-success",
+    ground: "success",
     headline: "Six-step loop",
     nodes: ["Ideate", "Refine", "Implement", "Review", "QA", "Codify"].map((title) => ({
       title,
@@ -1258,7 +1258,7 @@ const slides: Slide[] = [
   },
   {
     type: "transition",
-    background: "bg-section-secondary",
+    ground: "secondary",
     headline: "Break",
     notes: "transition: headline only, secondary background.",
   },
@@ -1427,7 +1427,7 @@ const slides: Slide[] = [
     type: "closing",
     variant: "discussion",
     headline: "Let's discuss",
-    background: "bg-section-primary",
+    ground: "primary",
     seedQuestions: [
       "Which check would you add first?",
       "Who reads the plans in your team?",

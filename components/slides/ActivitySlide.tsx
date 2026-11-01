@@ -31,7 +31,7 @@ export function ActivitySlide({ slide }: Props) {
   ].filter((line) => line.text);
 
   return (
-    <SlideShell background="bg-section-intro">
+    <SlideShell>
       <TitledContent>
         <SectionHeader label={slide.label ?? LABELS[slide.kind]} />
         <SlideTitle delay={0.15}>{renderMarkdown(slide.headline)}</SlideTitle>
@@ -40,9 +40,13 @@ export function ActivitySlide({ slide }: Props) {
         <div className="slide-body">
           {slide.prompt && (
             <BlurFade delay={0.24} duration={0.4}>
-              <p className="mb-10 rounded-brand border border-primary/40 bg-primary/7 px-9 py-6 text-3xl font-medium text-text">
+              <SlideCard
+                tone="primary"
+                look="soft"
+                className="mb-10 px-9 py-6 text-3xl font-medium text-text"
+              >
                 {renderMarkdown(slide.prompt)}
-              </p>
+              </SlideCard>
             </BlurFade>
           )}
           <div className="flex flex-col gap-10 md:flex-row md:items-start md:gap-16">
@@ -63,7 +67,11 @@ export function ActivitySlide({ slide }: Props) {
               ))}
             </ol>
             {frame.length > 0 && (
-              <BlurFade delay={0.3} duration={0.4} className="md:w-[34%] md:shrink-0">
+              <BlurFade
+                delay={0.3}
+                duration={0.4}
+                className="md:w-(--slide-activity-frame) md:shrink-0"
+              >
                 <SlideCard className="flex flex-col gap-6 px-9 py-8">
                   {frame.map(({ icon: Icon, text, lead }, i) => (
                     <div key={i} className="flex items-baseline gap-4">

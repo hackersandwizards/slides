@@ -4,7 +4,7 @@ import type { VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { highlightLines } from "../../lib/code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
-import { CodePanel } from "./primitives";
+import { CodePanel, NumberTile, SlideCard } from "./primitives";
 
 // The diagram vocabulary of a content slide: one relationship per block, drawn so the eye reads
 // the structure before the words. Shared rules, from the deck checklist:
@@ -22,10 +22,8 @@ const GREY = "var(--color-muted)";
 const LABEL = "font-sans text-4xl font-semibold leading-tight tracking-tight text-balance";
 // The smallest running text a visual sets: 36px at 1920, the checklist's floor.
 const CAPTION = "text-xl leading-snug";
-// Context marks (a bar that is not the point): the ink at the ladder's 40 % on the page, 2.4:1 on
-// light and 3.4:1 on night, where the theme's ink and page turn. Its value stands beside it in ink.
-// Mixed with white, as before, it turned near-white on night and outshone the highlight.
-const CONTEXT = "color-mix(in srgb, var(--color-ink) 40%, var(--color-bg))";
+// Context marks (a bar that is not the point): tokens.css `--slide-context`.
+const CONTEXT = "var(--slide-context)";
 
 type Of<T extends VisualBlock["type"]> = Extract<VisualBlock, { type: T }>;
 
@@ -97,7 +95,7 @@ export function FlowSteps({
           aria-hidden
         >
           <div
-            className={`absolute ${loop ? "top-6" : "top-2"} bottom-0 rounded-t-[1.25rem] border-x-4 border-t-4`}
+            className={`absolute ${loop ? "top-6" : "top-2"} bottom-0 rounded-t-(--slide-loop-bend) border-x-4 border-t-4`}
             style={{ left: edge, right: edge, borderColor: GREY }}
           />
           <svg
@@ -131,7 +129,7 @@ export function FlowSteps({
             />
             <svg
               className="absolute top-12 h-7 w-6 -translate-x-full -translate-y-1/2"
-              style={{ left: `calc(${centre(i + 1)} - 4rem)` }}
+              style={{ left: `calc(${centre(i + 1)} - var(--slide-arrow-inset))` }}
               viewBox="0 0 24 28"
             >
               <path d="M0 0 L24 14 L0 28 Z" fill={GREY} />
@@ -154,11 +152,12 @@ export function FlowSteps({
                 inert={i >= revealed}
                 className={`flex flex-col items-center ${dense ? "px-2" : "px-5"} text-center ${show(i < revealed)}`}
               >
-                <span
-                  className={`relative flex h-24 min-w-24 items-center justify-center rounded-brand-sm px-3 font-heading text-4xl font-bold ${
-                    on ? "bg-primary text-white" : `border-4 bg-background ${ink}`
-                  }`}
-                  style={on ? undefined : { borderColor: GREY }}
+                <NumberTile
+                  size="xl"
+                  tone={on ? "solid" : "none"}
+                  className={
+                    on ? "relative" : `relative border-4 border-text-muted bg-background ${ink}`
+                  }
                 >
                   {step.icon && iconMap[step.icon] ? (
                     <Icon name={step.icon} className="h-12 w-12" />
@@ -167,7 +166,7 @@ export function FlowSteps({
                   ) : (
                     counted && i + 1
                   )}
-                </span>
+                </NumberTile>
                 {step.label && !inTile && (
                   <span className={`label-caps mt-5 -mb-4 text-xl text-balance ${accent}`}>
                     {step.label}
@@ -222,15 +221,11 @@ function Layers({ block }: { block: Of<"layers"> }) {
             className={`flex items-center gap-10 border-4 bg-white px-10 py-7 ${CARD} ${on ? "border-primary" : "border-border"}`}
           >
             {block.ordered && (
-              <span
-                className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-brand-sm font-heading text-3xl font-bold text-white ${
-                  on ? "bg-primary" : "bg-text"
-                }`}
-              >
+              <NumberTile size="lg" tone={on ? "solid" : "ink"}>
                 {i + 1}
-              </span>
+              </NumberTile>
             )}
-            <h3 className={`w-[24rem] shrink-0 ${LABEL} ${on ? "text-primary" : "text-text"}`}>
+            <h3 className={`w-96 shrink-0 ${LABEL} ${on ? "text-primary" : "text-text"}`}>
               {renderMarkdown(layer.title)}
             </h3>
             {layer.text && (
@@ -314,8 +309,10 @@ function Timeline({ block }: { block: Of<"timeline"> }) {
             <div className="relative flex h-12 items-center">
               {i < n - 1 && (
                 <div
-                  className="absolute top-1/2 right-[-2rem] left-6 -translate-y-1/2"
-                  style={{ borderTop: `4px ${i >= now ? "dashed" : "solid"} ${GREY}` }}
+                  className="absolute top-1/2 -right-8 left-6 -translate-y-1/2"
+                  style={{
+                    borderTop: `var(--slide-rule-heavy) ${i >= now ? "dashed" : "solid"} ${GREY}`,
+                  }}
                 />
               )}
               <Dot on={block.highlight === i} future={i > now} />
@@ -439,7 +436,7 @@ function Transform({ block }: { block: Of<"transform"> }) {
         {block.after.items.map((item, i) => (
           <li
             key={i}
-            className={`border-y-2 border-r-2 border-l-[6px] border-y-border border-r-border border-l-primary bg-white px-6 py-3.5 ${CAPTION} font-semibold text-text`}
+            className={`border-y-2 border-r-2 border-l-(length:--slide-rule-accent) border-y-border border-r-border border-l-primary bg-white px-6 py-3.5 ${CAPTION} font-semibold text-text`}
           >
             {renderMarkdown(item)}
           </li>
@@ -506,7 +503,7 @@ function Figure({ value }: { value: string }) {
   if (!m) return <>{minus(value)}</>;
   return (
     <>
-      <span className="mr-[0.2em] text-[0.55em]">{m[1]}</span>
+      <span className="mr-(--slide-figure-unit-gap) text-(length:--slide-figure-unit)">{m[1]}</span>
       {minus(m[2])}
     </>
   );
@@ -520,11 +517,11 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
       <div className="w-full">
         <div className="flex items-center gap-16">
           <span
-            className={`font-heading text-[13rem] leading-none font-bold tracking-tight text-primary`}
+            className={`font-heading text-(length:--slide-figure-hero) leading-none font-bold tracking-tight text-primary`}
           >
             <Figure value={item.value} />
           </span>
-          <span className="max-w-[38rem] text-5xl leading-tight font-semibold text-balance text-text">
+          <span className="max-w-(--slide-measure-figure-label) text-5xl leading-tight font-semibold text-balance text-text">
             {renderMarkdown(item.label)}
           </span>
         </div>
@@ -596,27 +593,21 @@ function Annotated({ block }: { block: Of<"annotated"> }) {
           {block.notes.map((n, i) => (
             <div
               key={i}
-              className="absolute inset-x-0 -translate-y-1/2 border-y-[3px] border-primary bg-primary/25"
+              className="absolute inset-x-0 -translate-y-1/2 border-y-(length:--slide-rule-strong) border-primary bg-primary/25"
               style={{ top: at(n.y), height: `${((n.h ?? 0.03) / span) * 100}%` }}
             />
           ))}
         </div>
         {block.notes.map((n, i) => (
-          <span
-            key={i}
-            className="absolute left-0 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-brand-sm bg-primary font-heading text-xl font-bold text-white"
-            style={{ top: at(n.y) }}
-          >
-            {i + 1}
+          <span key={i} className="absolute left-0 -translate-y-1/2" style={{ top: at(n.y) }}>
+            <NumberTile>{i + 1}</NumberTile>
           </span>
         ))}
       </div>
       <ol className="flex flex-1 flex-col gap-9">
         {block.notes.map((n, i) => (
           <li key={i} className="flex items-start gap-5">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-brand-sm bg-primary font-heading text-2xl font-bold text-white">
-              {i + 1}
-            </span>
+            <NumberTile size="lg">{i + 1}</NumberTile>
             <p className="pt-1 text-3xl leading-snug text-text [&_strong]:block [&_strong]:text-4xl">
               {renderMarkdown(n.text)}
             </p>
@@ -654,15 +645,11 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
             return (
               <div
                 key={i}
-                className={`flex items-start gap-4 pr-6 pl-4 ${n ? "border-l-[6px] border-primary bg-primary/25 [--slide-code-comment:color-mix(in_srgb,var(--color-night-subtle),var(--color-night-muted))]" : "border-l-[6px] border-transparent"}`}
+                className={`flex items-start gap-4 pr-6 pl-4 ${n ? "border-l-(length:--slide-rule-accent) border-primary bg-primary/25 [--slide-code-comment:var(--slide-code-comment-lit)]" : "border-l-(length:--slide-rule-accent) border-transparent"}`}
               >
                 {marked.size > 0 && (
                   <span className="flex w-10 shrink-0 justify-center pt-1">
-                    {n && (
-                      <span className="flex h-9 w-9 items-center justify-center rounded-brand-sm bg-primary font-heading text-lg font-bold text-white">
-                        {n}
-                      </span>
-                    )}
+                    {n && <NumberTile size="sm">{n}</NumberTile>}
                   </span>
                 )}
                 <span
@@ -680,9 +667,7 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
         <ol className="flex flex-1 flex-col gap-9">
           {block.notes.map((n, i) => (
             <li key={i} className="flex items-start gap-5">
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-brand-sm bg-primary font-heading text-2xl font-bold text-white">
-                {i + 1}
-              </span>
+              <NumberTile size="lg">{i + 1}</NumberTile>
               <p className="pt-1 text-3xl leading-snug text-text [&_strong]:block [&_strong]:text-4xl">
                 {renderMarkdown(n.text)}
               </p>
@@ -704,24 +689,19 @@ function Cards({ block }: { block: Of<"cards"> }) {
       style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
     >
       {block.items.map((item, i) => (
-        <div
-          key={i}
-          className={`flex flex-col gap-5 border border-border bg-white px-9 py-8 ${CARD}`}
-        >
+        <SlideCard key={i} className="flex flex-col gap-5 px-9 py-8">
           {block.numbered ? (
-            <span className="flex h-16 w-16 items-center justify-center rounded-brand-sm bg-primary font-heading text-3xl font-bold text-white">
-              {i + 1}
-            </span>
+            <NumberTile size="lg">{i + 1}</NumberTile>
           ) : item.icon ? (
-            <span className="flex h-16 w-16 items-center justify-center rounded-brand-sm bg-primary/7 text-primary">
+            <NumberTile size="lg" tone="soft">
               <Icon name={item.icon} className="h-9 w-9" />
-            </span>
+            </NumberTile>
           ) : (
             <span className="h-1.5 w-16 bg-primary" aria-hidden />
           )}
           {item.title && <h3 className={`${LABEL} text-text`}>{renderMarkdown(item.title)}</h3>}
           <p className={`${CAPTION} text-text [&_strong]:text-text`}>{renderMarkdown(item.text)}</p>
-        </div>
+        </SlideCard>
       ))}
     </div>
   );

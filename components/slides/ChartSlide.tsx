@@ -58,7 +58,7 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
   }, []);
 
   return (
-    <BlurFade delay={0.2} duration={0.8} className="w-full max-w-[56.25rem]">
+    <BlurFade delay={0.2} duration={0.8} className="w-full max-w-(--slide-measure-chart)">
       {/* The segment labels sit on the top edge of the box; overflow keeps their tops. The box is
           12 units taller than the curve, so the percentages under it stay inside. */}
       <svg viewBox={`0 0 ${width} ${height + 12}`} className="w-full overflow-visible">
@@ -168,7 +168,7 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
   }, [padding, graphWidth, graphHeight]);
 
   return (
-    <BlurFade delay={0.2} duration={0.8} className="w-full max-w-[50rem]">
+    <BlurFade delay={0.2} duration={0.8} className="w-full max-w-(--slide-measure-chart-narrow)">
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
         {[0.2, 0.4, 0.6, 0.8].map((t) => (
           <line

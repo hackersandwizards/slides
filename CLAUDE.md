@@ -16,10 +16,12 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 
 ## Layout
 
-- `components/slides/`: one component per slide type, plus the shared parts in `primitives.tsx`.
-  A part used by a second slide type moves there. `PrintSlide.tsx` is the printed page, strip and
-  corner included, and `PrintDeck` the whole deck a consumer's print route renders, which the
-  specimen renders too.
+- `components/slides/`: one component per slide type, composed only from the parts in
+  `primitives.tsx` and `SlideChrome.tsx` (`SlideCard`, `DisplayHeading`, `NumberTile`,
+  `DashedFrame`, `VideoPlayer` and the rest). A part used by a second slide type moves there; a real
+  difference is a variant of the part, never a class string of the type's own. `PrintSlide.tsx` is
+  the printed page, strip and corner included, and `PrintDeck` the whole deck a consumer's print
+  route renders, which the specimen renders too.
 - `components/ui/`: effects and `image.tsx`, the engine's image.
 - `lib/`: hooks, navigation, presenter sync, the edit mode, themes and section styles.
   `lib/adapter.tsx` is the one seam to a consumer's framework: `SlidesAdapterProvider` takes an
@@ -27,9 +29,13 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `<img>` and moves with `history` inside one island (the trainer hub). `lib/next-adapter.tsx` is that
   provider for the Next consumers, `next/image` and the router, and each wraps its root layout in it.
 - `types/slide.ts`: the slide types and content blocks a deck may use.
-- `styles/slides.css`: the slide scale, the type table and every slide length, read by the
-  components by name, never as a literal size. It imports Tailwind and the brand tokens, fonts and list marker (`marker.css`, so a consumer pins brand v0.24.4 or later)
-  from `@hackersandwizards/brand` through the package, never a sibling path, and names its own
+- `styles/tokens.css`: every value a slide draws, built on the brand tokens: the slide scale, the
+  type table, measures, spacing, rules, marks and the colours derived from the brand's.
+  `styles/slides.css` imports Tailwind and `tokens.css` and names tokens only, as do the components;
+  `test/tokens.test.ts` fails on a raw length or colour anywhere else. `tokens.css` imports the
+  brand tokens and `slides.css` the brand list marker (`marker.css`, so a consumer pins brand
+  v0.24.4 or later) from `@hackersandwizards/brand` through the package, never a sibling path.
+  `slides.css` names its own
   `components/` and `lib/` as Tailwind sources, since Tailwind never scans `node_modules`.
   `styles/sources.css` names the same sources for a consumer stylesheet that renders the
   components without importing `slides.css`.
@@ -42,8 +48,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   the h&w design with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
   Its lengths and sizes are measured off the print route at 1920x1080.
 - `specimen/`: `slide-catalogue.ts`, the specimen deck, every slide type and variant with fictional
-  content, its images, and the specimen page `index.html` with its compiled `build/slides.css`, one slide per slide
-  type and one per content block in print mode, which the brand kit links. `bun run specimen` (`scripts/specimen.ts`)
+  content, its images, and the specimen page `index.html` with its compiled `build/slides.css`, a Parts section (every part of
+  `primitives.tsx` and `SlideChrome.tsx` in each variant, with the slide types using it), then one
+  slide per slide type and one per content block in print mode, which the brand kit links. `bun run specimen` (`scripts/specimen.ts`)
   writes the page, and `bun run check` fails while it differs from a fresh build.
 - `test/`: the engine's unit tests.
 

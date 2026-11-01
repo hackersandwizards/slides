@@ -33,7 +33,7 @@ function Chips({ labels, className }: { labels: string[]; className: string }) {
 export function TeamTopologySlide({ slide }: Props) {
   const subsystems = slide.complicatedSubsystem ?? [];
   return (
-    <SlideShell background="bg-section-intro">
+    <SlideShell>
       <TitledContent>
         <SlideTitle>{slide.headline}</SlideTitle>
         {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
@@ -46,7 +46,7 @@ export function TeamTopologySlide({ slide }: Props) {
                 {slide.enabling.map((team) => (
                   <div
                     key={team.name}
-                    className="flex shrink-0 flex-col gap-1 rounded-brand border-[3px] border-secondary bg-secondary/7 px-4 py-3 md:w-52"
+                    className="flex shrink-0 flex-col gap-1 rounded-brand border-(length:--slide-rule-strong) border-secondary bg-secondary/7 px-4 py-3 md:w-52"
                   >
                     <span className="text-lg leading-tight font-bold text-secondary">
                       {team.name}
@@ -63,7 +63,7 @@ export function TeamTopologySlide({ slide }: Props) {
                   {slide.streamAligned.map((team) => (
                     <div
                       key={team.name}
-                      className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-brand border-[3px] border-primary bg-primary/7 px-5 py-3"
+                      className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-brand border-(length:--slide-rule-strong) border-primary bg-primary/7 px-5 py-3"
                     >
                       <span className="text-lg leading-tight font-bold text-text">{team.name}</span>
                       <Chips labels={team.roles} className="text-teal-dark" />
@@ -74,7 +74,7 @@ export function TeamTopologySlide({ slide }: Props) {
                     <div className="flex flex-col gap-3 md:flex-row">
                       {subsystems.map((team) => (
                         <div key={team.name} className="team-octagon flex-1 bg-ampersand">
-                          <div className="team-octagon flex h-full flex-col justify-center gap-0.5 bg-[color-mix(in_srgb,var(--color-ampersand)_7%,var(--background))] px-7 py-3">
+                          <div className="team-octagon flex h-full flex-col justify-center gap-0.5 bg-(--slide-ampersand-ground) px-7 py-3">
                             <span className="text-lg leading-tight font-bold text-text">
                               {team.name}
                             </span>
@@ -93,7 +93,7 @@ export function TeamTopologySlide({ slide }: Props) {
             )}
 
             {slide.platform.length > 0 && (
-              <div className="flex flex-col gap-3 rounded-brand border-[3px] border-dotted border-primary p-3 md:flex-row">
+              <div className="flex flex-col gap-3 rounded-brand border-(length:--slide-rule-strong) border-dotted border-primary p-3 md:flex-row">
                 {slide.platform.map((team) => (
                   <div key={team.name} className="flex flex-1 flex-col gap-1.5 px-2 py-1">
                     <span className="text-lg leading-tight font-bold text-teal-dark">

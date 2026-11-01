@@ -1,18 +1,10 @@
 {
-  "styles/slides.css": {
+  "styles/tokens.css": {
     "hex": 2,
     "tokenHex": 0,
     "font": 0,
     "palette": 0,
     "radius": 1,
     "reason": "Code colours: the code block takes Shiki's github-dark, the theme the website's code also takes, not a brand palette: its background and its command green, declared once in the code-block group of :root with its comment. Radius: --slide-radius is the brand corner (--radius-brand, 20px 5px) times the slide scale, 1.875rem 0.46875rem, which --radius-brand reads on a slide."
-  },
-  "components/slides/Visuals.tsx": {
-    "radius": 1,
-    "reason": "The process loop's bend (rounded-t-[1.25rem]) is the curve of a drawn arrow above the nodes, not a box corner."
-  },
-  "specimen/index.html": {
-    "radius": 2,
-    "reason": "The specimen page is rendered from the components: its two rounded-t-[1.25rem] are the process loop's bend from components/slides/Visuals.tsx."
   }
 }

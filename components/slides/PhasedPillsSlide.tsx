@@ -11,6 +11,7 @@ import {
 } from "../../lib/stage-utils";
 import { GradientTitlePill, PulseDot } from "./SlideChrome";
 import { SlideShell } from "./SlideShell";
+import { DashedFrame } from "./primitives";
 import { isDeepDive } from "../../lib/slide-utils";
 
 interface Props {
@@ -58,8 +59,8 @@ export function PhasedPillsSlide({ slide }: Props) {
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-6">
         {/* The top margin holds the title pill, which hangs over the edge, inside what the fit guard
             measures, so a shrunk slide never pushes it under the brand strip. */}
-        <div
-          className={`relative mt-6 ${wrap ? "w-full" : "w-fit"} max-w-[100rem] rounded-brand border-2 border-dashed border-border bg-white px-6 pt-10 pb-8 md:px-12`}
+        <DashedFrame
+          className={`relative mt-6 ${wrap ? "w-full" : "w-fit"} max-w-(--slide-measure-phases) px-6 pt-10 pb-8 md:px-12`}
         >
           {title && (
             // The fade itself is placed: a transform on a wrapper anchors an absolute child to
@@ -124,7 +125,7 @@ export function PhasedPillsSlide({ slide }: Props) {
               );
             })}
           </div>
-        </div>
+        </DashedFrame>
       </div>
     </SlideShell>
   );

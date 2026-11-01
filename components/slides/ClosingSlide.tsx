@@ -5,8 +5,8 @@ import { Mail } from "lucide-react";
 import { Linkedin } from "../../lib/icons";
 import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
-import { SlideShell } from "./SlideShell";
-import { SlideCard } from "./primitives";
+import { SlideShell, groundOf } from "./SlideShell";
+import { DisplayHeading, SlideCard } from "./primitives";
 import { personAccent } from "../../lib/slide-utils";
 
 interface Props {
@@ -43,12 +43,12 @@ const partnersOf = (slide: ClosingSlideType) =>
 
 function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
   return (
-    <SlideShell background={slide.background ?? "bg-section-intro"}>
+    <SlideShell ground={groundOf(slide)}>
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-16">
-        <BlurFade delay={0.1} duration={0.5}>
-          <h1 className="mb-16 text-center font-heading text-7xl font-bold tracking-tighter text-text md:text-8xl">
+        <BlurFade delay={0.1} duration={0.5} className="mb-16">
+          <DisplayHeading className="text-center">
             {slide.headline ?? slide.line1 ?? "Discussion"}
-          </h1>
+          </DisplayHeading>
         </BlurFade>
 
         {slide.seedQuestions && slide.seedQuestions.length > 0 && (
@@ -85,14 +85,12 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
   const hasSpeakerImages = slide.speakers?.some((s) => s.imageSrc);
 
   return (
-    <SlideShell direction="col" overflowHidden background={slide.background ?? "bg-section-intro"}>
+    <SlideShell direction="col" overflowHidden ground={groundOf(slide)}>
       <div className="w-full">
         <div className="slide-content relative z-10 flex flex-col items-center justify-center space-y-12 px-4 text-center md:space-y-14 md:pt-(--slide-footer-band)">
           {slide.line1 && (
             <BlurFade delay={0.1} duration={0.5}>
-              <p className="font-heading text-5xl font-bold tracking-tighter text-text sm:text-6xl md:text-7xl lg:text-8xl">
-                {slide.line1}
-              </p>
+              <DisplayHeading as="p">{slide.line1}</DisplayHeading>
             </BlurFade>
           )}
 
@@ -239,7 +237,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
 
           {slide.closingQuote && (
             <BlurFade delay={0.35} duration={0.4}>
-              <p className="mx-auto max-w-[80rem] px-[5vw] text-center font-heading text-3xl leading-tight font-bold tracking-tight text-balance text-text-muted">
+              <p className="mx-auto max-w-7xl px-(--slide-closing-side) text-center font-heading text-3xl leading-tight font-bold tracking-tight text-balance text-text-muted">
                 <span className="text-primary/70">&ldquo;</span>
                 {slide.closingQuote}
                 <span className="text-primary/70">&rdquo;</span>

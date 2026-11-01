@@ -5,6 +5,7 @@ import { BlurFade } from "../ui/blur-fade";
 import { getStageClasses, type StageCategory } from "../../lib/stage-utils";
 import { GradientTitlePill, PulseDot } from "./SlideChrome";
 import { SlideShell } from "./SlideShell";
+import { DashedFrame } from "./primitives";
 
 interface Props {
   slide: OverviewSlideType;
@@ -54,26 +55,22 @@ export function OverviewSlide({ slide }: Props) {
     parallelLanes,
   } = slide;
 
-  const foundationsContainerClasses = `rounded-brand border-2 border-dashed p-5 transition-all duration-300  ${
-    foundationsActive ? "border-primary bg-primary/7" : "border-primary-border/70 bg-white"
-  }`;
-
-  const pipelineContainerClasses = `rounded-brand border-2 border-dashed p-7 transition-all duration-300  ${
-    pipelineActive ? "border-secondary bg-secondary/7" : "border-secondary-border/70 bg-white"
-  }`;
-
   return (
     <SlideShell>
       {/* The vertical padding keeps the fit guard's shrink inside the safe margins, and clear of
  the label that sits above the frame. */}
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-6 py-16">
         <BlurFade delay={0.1} duration={0.5}>
-          <div className="relative w-full max-w-[81rem] rounded-brand border-2 border-dashed border-border bg-white px-6 pt-12 pb-10">
+          <DashedFrame className="relative w-full max-w-(--slide-measure-overview) px-6 pt-12 pb-10">
             <div className="absolute -top-5 left-1/2 -translate-x-1/2">
               <GradientTitlePill>The Factory</GradientTitlePill>
             </div>
 
-            <div className={foundationsContainerClasses}>
+            <DashedFrame
+              tone="primary"
+              active={foundationsActive}
+              className="p-5 transition-all duration-300"
+            >
               <div className="label-caps mb-4 flex items-baseline gap-2 text-base">
                 <div className="hw-marker bg-primary" />
                 <span className="text-primary">Foundations</span>
@@ -92,7 +89,7 @@ export function OverviewSlide({ slide }: Props) {
                   />
                 ))}
               </div>
-            </div>
+            </DashedFrame>
 
             {ideateExternal ? (
               <div className="mt-6 flex flex-col items-stretch gap-4 md:flex-row">
@@ -108,9 +105,11 @@ export function OverviewSlide({ slide }: Props) {
                   <div className="flex flex-1 flex-col gap-3">
                     {Array.from({ length: parallelLanes }).map((_, laneIndex) => (
                       // Each lane's label sits left of its row, so three lanes cost three rows.
-                      <div
+                      <DashedFrame
                         key={laneIndex}
-                        className={`flex flex-col gap-3 md:flex-row md:items-center md:gap-5 ${pipelineContainerClasses} md:py-4`}
+                        tone="secondary"
+                        active={pipelineActive}
+                        className="flex flex-col gap-3 p-7 transition-all duration-300 md:flex-row md:items-center md:gap-5 md:py-4"
                       >
                         <div className="label-caps flex shrink-0 items-baseline gap-2 text-base">
                           <div className="hw-marker bg-secondary" />
@@ -132,11 +131,15 @@ export function OverviewSlide({ slide }: Props) {
                             </div>
                           ))}
                         </div>
-                      </div>
+                      </DashedFrame>
                     ))}
                   </div>
                 ) : (
-                  <div className={`flex-1 ${pipelineContainerClasses}`}>
+                  <DashedFrame
+                    tone="secondary"
+                    active={pipelineActive}
+                    className="flex-1 p-7 transition-all duration-300"
+                  >
                     <div className="label-caps mb-3 flex items-baseline gap-2 text-base">
                       <div className="hw-marker bg-secondary" />
                       <span className="text-secondary">Pipeline</span>
@@ -155,11 +158,15 @@ export function OverviewSlide({ slide }: Props) {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </DashedFrame>
                 )}
               </div>
             ) : (
-              <div className={`mt-6 ${pipelineContainerClasses}`}>
+              <DashedFrame
+                tone="secondary"
+                active={pipelineActive}
+                className="mt-6 p-7 transition-all duration-300"
+              >
                 <div className="label-caps mb-4 flex items-baseline gap-2 text-base">
                   <div className="hw-marker bg-secondary" />
                   <span className="text-secondary">Pipeline</span>
@@ -178,9 +185,9 @@ export function OverviewSlide({ slide }: Props) {
                     />
                   ))}
                 </div>
-              </div>
+              </DashedFrame>
             )}
-          </div>
+          </DashedFrame>
         </BlurFade>
       </div>
     </SlideShell>

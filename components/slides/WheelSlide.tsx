@@ -3,7 +3,7 @@
 import type { WheelSlide as WheelSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { TitledContent, SlideTitle, SlideSubtitle } from "./primitives";
+import { TitledContent, SlideTitle, SlideSubtitle, NumberTile } from "./primitives";
 
 interface Props {
   slide: WheelSlideType;
@@ -45,9 +45,7 @@ export function WheelSlide({ slide }: Props) {
 
   const label = (k: number) => (
     <div key={k} className="flex gap-3">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-primary text-base font-bold text-white">
-        {k + 1}
-      </span>
+      <NumberTile size="sm">{k + 1}</NumberTile>
       <div>
         <p className="text-xl leading-tight font-bold text-text">{slide.segments[k].title}</p>
         <p className="mt-1 text-base leading-snug text-text-muted">{slide.segments[k].text}</p>
@@ -56,7 +54,7 @@ export function WheelSlide({ slide }: Props) {
   );
 
   return (
-    <SlideShell background="bg-section-intro">
+    <SlideShell>
       <TitledContent>
         <SlideTitle>{slide.headline}</SlideTitle>
         {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
@@ -79,7 +77,7 @@ export function WheelSlide({ slide }: Props) {
                           y={y}
                           textAnchor="middle"
                           dominantBaseline="central"
-                          className="fill-text text-[14px] font-bold"
+                          className="fill-text text-(length:--slide-wheel-label) font-bold"
                         >
                           {k + 1}
                         </text>
@@ -87,7 +85,7 @@ export function WheelSlide({ slide }: Props) {
                     );
                   })}
                 </svg>
-                <div className="absolute inset-[22%] flex items-center justify-center rounded-full bg-ink/7 p-4 text-center text-base leading-tight font-bold text-text">
+                <div className="absolute inset-(--slide-wheel-hub) flex items-center justify-center rounded-full bg-ink/7 p-4 text-center text-base leading-tight font-bold text-text">
                   {slide.center}
                 </div>
               </div>

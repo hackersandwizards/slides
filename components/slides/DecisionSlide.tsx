@@ -7,7 +7,7 @@ import type {
 } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { TitledContent, SlideTitle, SlideSubtitle } from "./primitives";
+import { TitledContent, SlideTitle, SlideSubtitle, SlideCard } from "./primitives";
 
 interface Props {
   slide: DecisionSlideType;
@@ -23,7 +23,7 @@ const TEAM: Record<DecisionTeam, string> = {
 // An arrowhead at the right end of a 4px connector.
 function Head() {
   return (
-    <span className="absolute top-1/2 -right-1 h-0 w-0 -translate-y-1/2 border-y-[0.6rem] border-l-[0.9rem] border-y-transparent border-l-primary" />
+    <span className="absolute top-1/2 -right-1 h-0 w-0 -translate-y-1/2 border-y-(length:--slide-arrowhead-half) border-l-(length:--slide-arrowhead-length) border-y-transparent border-l-primary" />
   );
 }
 
@@ -47,7 +47,7 @@ function Elbow({
       <div className={`absolute border-primary ${vertical} ${edge}`}>
         {side === "in" && (
           <span
-            className={`absolute -right-1 ${half === "top" ? "-top-[0.2rem]" : "-bottom-[0.2rem]"} block h-0 w-0 ${half === "top" ? "-translate-y-1/2" : "translate-y-1/2"} border-y-[0.6rem] border-l-[0.9rem] border-y-transparent border-l-primary`}
+            className={`absolute -right-1 ${half === "top" ? "-top-(--slide-arrowhead-offset)" : "-bottom-(--slide-arrowhead-offset)"} block h-0 w-0 ${half === "top" ? "-translate-y-1/2" : "translate-y-1/2"} border-y-(length:--slide-arrowhead-half) border-l-(length:--slide-arrowhead-length) border-y-transparent border-l-primary`}
           />
         )}
         {label && (
@@ -76,7 +76,7 @@ function GridBranch({ branch, row }: { branch: DecisionBranch; row: 1 | 2 }) {
 // A need, a question, two branches (yes up, no down) that join again on the outcome.
 export function DecisionSlide({ slide }: Props) {
   return (
-    <SlideShell background="bg-section-intro">
+    <SlideShell>
       <TitledContent>
         <SlideTitle>{slide.headline}</SlideTitle>
         {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
@@ -84,12 +84,19 @@ export function DecisionSlide({ slide }: Props) {
           <BlurFade delay={0.2} duration={0.5} className="w-full">
             {/* Below md the 1120px canvas would overflow, so the same flow runs top to bottom. */}
             <div className="flex flex-col gap-3 md:hidden">
-              <div className="rounded-brand border border-success bg-success/15 px-4 py-3 text-base leading-tight font-bold text-text">
+              <SlideCard
+                tone="primary"
+                className="px-4 py-3 text-base leading-tight font-bold text-text"
+              >
                 {slide.need}
-              </div>
-              <div className="rounded-brand border border-success bg-white px-4 py-3 text-center text-sm leading-tight font-bold text-text">
+              </SlideCard>
+              <SlideCard
+                tone="primary"
+                look="outline"
+                className="px-4 py-3 text-center text-sm leading-tight font-bold text-text"
+              >
                 {slide.question}
-              </div>
+              </SlideCard>
               {[slide.yes, slide.no].map((branch) => (
                 <div
                   key={branch.label}
@@ -100,23 +107,23 @@ export function DecisionSlide({ slide }: Props) {
                   <p className="text-sm leading-snug text-text">{branch.text}</p>
                 </div>
               ))}
-              <div className="rounded-brand bg-ink/7 px-4 py-3 text-base leading-tight font-bold text-text">
+              <SlideCard
+                tone="quiet"
+                className="px-4 py-3 text-base leading-tight font-bold text-text"
+              >
                 {slide.outcome}
-              </div>
+              </SlideCard>
             </div>
             {/* Desktop: the same flow left to right in a grid, so every box grows with its text.
                 The branches are the grid's two rows; the need, the question and the outcome span
                 both, so the elbows meet them at the grid's middle. */}
-            <div
-              className="decision-grid hidden w-full grid-rows-2 items-stretch gap-y-14 md:grid"
-              style={{
-                gridTemplateColumns:
-                  "minmax(0,15rem) 4rem minmax(0,14rem) 7.5rem minmax(0,1fr) 3.5rem minmax(0,17rem)",
-              }}
-            >
-              <div className="col-start-1 row-span-2 row-start-1 self-center rounded-brand border border-primary bg-primary/7 px-5 py-4 text-2xl leading-tight font-bold text-text">
+            <div className="decision-grid hidden w-full grid-cols-(--slide-decision-columns) grid-rows-2 items-stretch gap-y-14 md:grid">
+              <SlideCard
+                tone="primary"
+                className="col-start-1 row-span-2 row-start-1 self-center px-5 py-4 text-2xl leading-tight font-bold text-text"
+              >
                 {slide.need}
-              </div>
+              </SlideCard>
               <div className="relative col-start-2 row-span-2 row-start-1 h-1 self-center bg-primary">
                 <Head />
               </div>

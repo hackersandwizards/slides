@@ -10,7 +10,14 @@ import { createRequire } from "node:module";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { tokens } from "@hackersandwizards/brand/tokens";
-import type { ContentBlock, Presentation, Slide, SectionTheme } from "../types/slide";
+import type {
+  ContentBlock,
+  MarkerTone,
+  Presentation,
+  RoadmapItem,
+  Slide,
+  SectionTheme,
+} from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { isDeepDive, linkLabel, pageLabel, personAccent } from "../lib/slide-utils";
 
@@ -2186,9 +2193,10 @@ const RENDER: {
     d.cards.forEach((cd, i) => {
       const x = a.x + (i % cols) * (cw + 0.25);
       const yy = top + Math.floor(i / cols) * (ch + 0.25);
+      const cardTone = cd.tone ?? cd.accentColor;
       const tone =
-        cd.accentColor && cd.accentColor !== "neutral"
-          ? (c[THEME[cd.accentColor === "accent" ? "accent" : cd.accentColor]] as string)
+        cardTone && cardTone !== "neutral"
+          ? (c[THEME[cardTone]] as string)
           : [c.teal, c.purple, c.amber, c.green][i % 4];
       const active = d.allActive || cd.highlight || d.variant !== "pillars";
       card(
@@ -3054,6 +3062,11 @@ const RENDER: {
         deck,
       );
     const { c } = ctx;
+    // A row's own marker colour: `tone`, or the class its deprecated `dotColor` names.
+    const marker = (it: RoadmapItem) => {
+      const t = it.tone ?? it.dotColor?.slice(3);
+      return t ? (c[THEME[t as MarkerTone]] as string) : undefined;
+    };
     const y = header(s, ctx, d);
     row(d.columns, BODY(y), 0.35, (col, r) => {
       const tone = col.accent === "deepdive" ? c.purple : c.teal;
@@ -3069,7 +3082,7 @@ const RENDER: {
           ...(col.items ?? []).flatMap((it) => [
             {
               runs: [
-                { text: "•  ", options: { color: it.dotColor?.replace("#", "") ?? tone } },
+                { text: "•  ", options: { color: marker(it) ?? tone } },
                 { text: it.title, options: { bold: true, fontFace: MONO } },
               ],
               after: 2,

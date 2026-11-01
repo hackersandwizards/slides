@@ -5,7 +5,7 @@ import { usePrintMode } from "../../lib/print-context";
 import { useCarousel } from "../../lib/use-carousel";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { SlideTitle } from "./primitives";
+import { SlideTitle, SlideCard } from "./primitives";
 
 interface Props {
   slide: GuidanceSlideType;
@@ -62,21 +62,19 @@ export function GuidanceSlide({ slide }: Props) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="rounded-brand border-2 border-error/25 bg-error/7 p-6">
+                  <SlideCard tone="error" look="soft" className="p-6">
                     <p className="label-caps mb-3 text-sm text-error">Bad</p>
                     <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
                       {example.bad}
                     </pre>
-                  </div>
+                  </SlideCard>
 
-                  <div className="rounded-brand border-2 border-success/40 bg-success/7 p-6">
-                    <p className="label-caps mb-3 text-sm text-[color-mix(in_srgb,var(--color-green-dark)_60%,var(--color-ink))]">
-                      Good
-                    </p>
+                  <SlideCard tone="success" look="soft" className="p-6">
+                    <p className="label-caps mb-3 text-sm text-(--slide-success-ink)">Good</p>
                     <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
                       {example.good}
                     </pre>
-                  </div>
+                  </SlideCard>
                 </div>
               </div>
             </BlurFade>

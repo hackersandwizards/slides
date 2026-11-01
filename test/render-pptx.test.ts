@@ -35,6 +35,7 @@ const NOT_TEXT = new Set([
   "language",
   "closingStyle",
   "background",
+  "ground",
   "alt",
   "imageAlt",
   "highlight",

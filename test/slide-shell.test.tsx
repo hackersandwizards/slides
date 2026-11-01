@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { SlideShell } from "../components/slides/SlideShell";
+import { SlideShell, groundOf } from "../components/slides/SlideShell";
 
 function shellClass(props: Parameters<typeof SlideShell>[0]): string {
   const { container } = render(<SlideShell {...props} />);
@@ -24,10 +24,17 @@ describe("SlideShell", () => {
     expect(shellClass({ children: "x", overflowHidden: true })).toContain("overflow-hidden");
   });
 
-  it("uses the provided background instead of the default", () => {
-    const cls = shellClass({ children: "x", background: "bg-section-primary" });
+  it("draws the named ground instead of the default", () => {
+    const cls = shellClass({ children: "x", ground: "primary" });
     expect(cls).toContain("bg-section-primary");
     expect(cls).not.toContain("bg-section-intro");
+  });
+
+  it("reads the deprecated background class as its ground, and no other class", () => {
+    expect(groundOf({ background: "bg-section-accent" })).toBe("accent");
+    expect(groundOf({ ground: "success", background: "bg-section-accent" })).toBe("success");
+    expect(groundOf({ background: "bg-section-growth" as never })).toBe("intro");
+    expect(groundOf({})).toBe("intro");
   });
 
   it("appends className extras (e.g. text-text)", () => {
