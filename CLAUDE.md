@@ -28,7 +28,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   provider for the Next consumers, `next/image` and the router, and each wraps its root layout in it.
 - `types/slide.ts`: the slide types and content blocks a deck may use.
 - `styles/slides.css`: the slide scale, the type table and every slide length, read by the
-  components by name, never as a literal size. It imports Tailwind and the brand tokens and fonts
+  components by name, never as a literal size. It imports Tailwind and the brand tokens, fonts and list marker (`marker.css`, so a consumer pins brand v0.24.4 or later)
   from `@hackersandwizards/brand` through the package, never a sibling path, and names its own
   `components/` and `lib/` as Tailwind sources, since Tailwind never scans `node_modules`.
   `styles/sources.css` names the same sources for a consumer stylesheet that renders the

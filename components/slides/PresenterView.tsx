@@ -321,8 +321,9 @@ function StepButton({
   );
 }
 
-/** Space keeps stepping the deck while a button has focus, rather than pressing the button too;
- *  Enter presses it. */
+/** Round, as every control that holds only an icon (brand tokens, radius-pill). Space keeps
+ *  stepping the deck while a button has focus, rather than pressing the button too; Enter presses
+ *  it. */
 function IconButton({
   label,
   onClick,
@@ -341,7 +342,7 @@ function IconButton({
       onKeyUp={(event) => {
         if (event.key === " ") event.preventDefault();
       }}
-      className="flex h-9 min-w-9 items-center justify-center gap-2 rounded-sm bg-night-ink/15 px-2 text-night-ink hover:bg-night-ink/25"
+      className="flex h-9 min-w-9 items-center justify-center gap-2 rounded-full bg-night-ink/15 px-2 text-night-ink hover:bg-night-ink/25"
     >
       {children}
     </button>
