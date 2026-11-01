@@ -6,7 +6,7 @@ import type { ChartSlide as ChartSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { useMounted } from "../../lib/use-mounted";
-import { ChartFrame, SlideTitle, Wash } from "./primitives";
+import { ChartFrame, SlideTitle } from "./primitives";
 // recharts is most of a deck page's script and only the trend and bar charts use it, after mount:
 // it loads with the first of them.
 const TrendPlot = lazy(() => import("./ChartPlots").then((m) => ({ default: m.TrendPlot })));
@@ -327,8 +327,6 @@ function BarVariant({ slide }: { slide: ChartSlideType }) {
 export function ChartSlide({ slide }: Props) {
   return (
     <SlideShell direction="col">
-      <Wash strength={3} />
-
       <div
         className={`slide-content relative z-10 flex flex-col items-center justify-center px-12 ${slide.headline ? "slide-titled" : ""}`}
       >

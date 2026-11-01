@@ -5,7 +5,6 @@ import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { isDeepDive } from "../../lib/slide-utils";
 import { SectionHeader } from "./SectionHeader";
-import { SECTION_WASH } from "../../lib/section-styles";
 import { highlightCode } from "../../lib/code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
 import { TitledContent, SlideTitle, CodePanel } from "./primitives";
@@ -17,14 +16,8 @@ interface Props {
 export function LanesSlide({ slide }: Props) {
   return (
     <SlideShell night={isDeepDive(slide)}>
-      <div className={`absolute inset-0 ${SECTION_WASH}`} />
-
       <TitledContent>
-        <SectionHeader
-          label={slide.sectionLabel}
-          labelColor="text-secondary"
-          principle={slide.principle}
-        />
+        <SectionHeader label={slide.sectionLabel} principle={slide.principle} />
 
         <SlideTitle delay={0.15}>{slide.headline}</SlideTitle>
         <div className="slide-body">

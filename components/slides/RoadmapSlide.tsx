@@ -74,21 +74,12 @@ function ColumnCard({ column, delay }: { column: RoadmapColumn; delay: number })
 export function RoadmapSlide({ slide }: Props) {
   return (
     <SlideShell overflowHidden>
-      <div
-        className="absolute top-1/4 left-1/4 h-[37.5rem] w-[37.5rem] rounded-full bg-primary/7 blur-[120px]"
-        aria-hidden="true"
-      />
-      <div
-        className="absolute right-1/4 bottom-1/4 h-[31.25rem] w-[31.25rem] rounded-full bg-secondary/15 blur-[100px]"
-        aria-hidden="true"
-      />
-
       <TitledContent>
         {slide.preText && (
           <BlurFade delay={0.05} duration={0.4}>
             {/* The kicker every titled slide carries (SectionHeader): a grey caps line here read as
                 a fourth eyebrow style. */}
-            <p className="slide-kicker mb-4 text-xl leading-tight font-medium text-primary">
+            <p className="slide-kicker label-caps mb-4 text-xl leading-tight text-primary">
               {slide.preText}
             </p>
           </BlurFade>

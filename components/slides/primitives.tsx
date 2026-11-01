@@ -66,16 +66,3 @@ export function ChartFrame({ children }: { children: ReactNode }) {
     </SlideCard>
   );
 }
-
-// Full class strings, so Tailwind finds them in this file.
-const WASH = {
-  3: "from-primary/7 via-transparent to-secondary/7",
-  4: "from-primary/7 via-transparent to-secondary/7",
-  5: "from-primary/7 via-transparent to-secondary/7",
-  6: "from-primary/7 via-transparent to-secondary/7",
-} as const;
-
-/** The diagonal teal-to-purple tint behind a slide, at a strength in percent. */
-export function Wash({ strength }: { strength: keyof typeof WASH }) {
-  return <div className={`absolute inset-0 bg-gradient-to-br ${WASH[strength]}`} />;
-}

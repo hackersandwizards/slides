@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 
 // The full-viewport frame every slide sits in, owned here so it changes in one place. A slide's
-// gradient wash and decoration stay its own children.
+// decoration stays its own children.
 export function SlideShell({
   children,
   background = "bg-section-intro",

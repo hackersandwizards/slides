@@ -4,7 +4,6 @@ import type { MediaSlide as MediaSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SectionHeader } from "./SectionHeader";
 import { renderMarkdown } from "../../lib/markdown";
-import { getSectionStyle } from "../../lib/section-styles";
 import { SlideShell } from "./SlideShell";
 import { isDeepDive } from "../../lib/slide-utils";
 import Image from "../ui/image";
@@ -64,22 +63,15 @@ function MediaItem({
 }
 
 export function MediaSlide({ slide }: Props) {
-  const theme = getSectionStyle(slide.sectionTheme ?? "primary");
   const layout: "row" | "grid" | "single" =
     slide.layout === "row" ? "row" : slide.sources.length > 1 ? "grid" : "single";
 
   return (
     <SlideShell night={isDeepDive(slide)}>
-      <div className={`absolute inset-0 ${theme.gradient}`} />
-
       <div
         className={`slide-content relative z-10 flex flex-col justify-center px-16 py-12 ${slide.headline ? "slide-titled" : ""}`}
       >
-        <SectionHeader
-          label={slide.sectionLabel}
-          labelColor={theme.label}
-          principle={slide.principle}
-        />
+        <SectionHeader label={slide.sectionLabel} principle={slide.principle} />
 
         {slide.headline && <SlideTitle delay={0.15}>{renderMarkdown(slide.headline)}</SlideTitle>}
 

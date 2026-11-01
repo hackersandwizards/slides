@@ -578,14 +578,16 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
   const kicker = h.sectionLabel ?? h.preText;
   if (kicker || h.principle) {
     let x = SIDE;
+    // Teal in every section, the website's mono caps (os br-slide-kicker-colour, br-label-style).
     if (kicker) {
-      const color = c[THEME[h.sectionTheme ?? "primary"]] as string;
-      box(s, c, { runs: [{ text: kicker }] }, x, y, 6, 45 / 144, {
+      box(s, c, { runs: [{ text: kicker.toUpperCase() }] }, x, y, 6, 45 / 144, {
         size: PT.base,
-        color,
+        mono: true,
+        color: c.teal,
+        tracking: 0.06,
         valign: "middle",
       });
-      x += (kicker.length * PT.base * ADVANCE.sans) / 72 + 0.2;
+      x += (kicker.length * PT.base * (ADVANCE.mono + 0.06)) / 72 + 0.2;
     }
     if (h.principle) chip(s, c, h.principle, x, y + 0.02, PT.sm, c.tint, c.ink, false);
   }
@@ -2823,7 +2825,7 @@ const RENDER: {
     const paras: Para[] = [];
     if (d.preText)
       paras.push({
-        runs: [{ text: d.preText.toUpperCase(), options: { color: c.muted } }],
+        runs: [{ text: d.preText.toUpperCase(), options: { color: c.teal } }],
         mono: true,
         bold: true,
         rel: PT.lead / PT.display,
@@ -3047,15 +3049,15 @@ const RENDER: {
   },
 
   "deep-dive-divider"(s, ctx, d) {
-    // The transition slide's centred headline, its label in purple; the night ground comes from
-    // the slide's palette.
+    // The transition slide's centred headline, its label in teal; the night ground and its teal come
+    // from the slide's palette.
     const { c } = ctx;
     const label = [d.partLabel, d.kicker].filter(Boolean).join(" · ");
     const paras: Para[] = [
       ...(label
         ? [
             {
-              runs: [{ text: label.toUpperCase(), options: { color: c.purple } }],
+              runs: [{ text: label.toUpperCase(), options: { color: c.teal } }],
               mono: true,
               bold: true,
               rel: PT.lead / PT.display,

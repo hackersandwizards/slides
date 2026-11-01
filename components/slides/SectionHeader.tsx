@@ -3,7 +3,6 @@ import { ACCENT_PILL } from "../../lib/section-styles";
 
 interface Props {
   label?: string;
-  labelColor?: string;
   principle?: string;
   pillColor?: string;
   stageMarker?: string[];
@@ -12,14 +11,7 @@ interface Props {
 
 const PIPELINE_STAGES = ["Refine", "Challenge", "Implement", "Review", "Rework", "QA", "Codify"];
 
-export function SectionHeader({
-  label,
-  labelColor,
-  principle,
-  pillColor,
-  stageMarker,
-  stagePrefix,
-}: Props) {
+export function SectionHeader({ label, principle, pillColor, stageMarker, stagePrefix }: Props) {
   const hasStageStrip = (stageMarker && stageMarker.length > 0) || !!stagePrefix;
   if (!label && !principle && !hasStageStrip) return null;
 
@@ -42,9 +34,7 @@ export function SectionHeader({
       <div
         className={`slide-kicker mb-4 flex h-auto! min-h-10 flex-wrap items-center gap-5 max-md:min-h-0`}
       >
-        {label && (
-          <span className={`text-xl leading-tight font-medium ${labelColor ?? ""}`}>{label}</span>
-        )}
+        {label && <span className="label-caps text-xl leading-tight text-primary">{label}</span>}
         {principle && (
           <span
             className={`rounded-full border px-5 py-0.5 text-xl leading-tight ${pillColor ?? ACCENT_PILL}`}

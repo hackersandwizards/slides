@@ -7,8 +7,7 @@ import { SlideShell } from "./SlideShell";
 import { isDeepDive } from "../../lib/slide-utils";
 import { iconMap, type LucideIcon } from "../../lib/icons";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { getSectionStyle } from "../../lib/section-styles";
-import { TitledContent, SlideTitle, Wash } from "./primitives";
+import { TitledContent, SlideTitle } from "./primitives";
 
 interface Props {
   slide: GridSlideType;
@@ -226,14 +225,10 @@ export function GridSlide({ slide }: Props) {
 
   return (
     <SlideShell background={slide.background ?? "bg-section-intro"} night={isDeepDive(slide)}>
-      <Wash strength={5} />
-
       <TitledContent>
         {slide.sectionLabel && (
           <BlurFade delay={0.05} duration={0.5}>
-            <span
-              className={`slide-kicker label-caps block text-base ${getSectionStyle(slide.sectionTheme ?? "primary").label}`}
-            >
+            <span className={`slide-kicker label-caps block text-base text-primary`}>
               {slide.sectionLabel}
             </span>
           </BlurFade>

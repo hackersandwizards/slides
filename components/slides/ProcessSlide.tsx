@@ -6,7 +6,7 @@ import type { ProcessSlide as ProcessSlideType } from "../../types/slide";
 import { SlideShell } from "./SlideShell";
 import { iconMap, type LucideIcon } from "../../lib/icons";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { TitledContent, SlideTitle, Wash } from "./primitives";
+import { TitledContent, SlideTitle } from "./primitives";
 
 interface Props {
   slide: ProcessSlideType;
@@ -64,7 +64,6 @@ export function ProcessSlide({ slide }: Props) {
 
   return (
     <SlideShell background={slide.background ?? "bg-section-intro"}>
-      <Wash strength={5} />
       <TitledContent>
         <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
 

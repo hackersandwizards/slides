@@ -5,7 +5,7 @@ import { usePrintMode } from "../../lib/print-context";
 import { useCarousel } from "../../lib/use-carousel";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { SlideTitle, Wash } from "./primitives";
+import { SlideTitle } from "./primitives";
 
 interface Props {
   slide: GuidanceSlideType;
@@ -20,8 +20,6 @@ export function GuidanceSlide({ slide }: Props) {
 
   return (
     <SlideShell>
-      <Wash strength={5} />
-
       <div
         className={`slide-content relative z-10 flex flex-col items-center justify-center px-16 ${headline ? "slide-titled" : ""}`}
       >

@@ -7,7 +7,7 @@ import { SlideShell } from "./SlideShell";
 import { useCarousel } from "../../lib/use-carousel";
 import { User } from "lucide-react";
 import { Linkedin } from "../../lib/icons";
-import { TitledContent, SlideTitle, Wash } from "./primitives";
+import { TitledContent, SlideTitle } from "./primitives";
 import { personAccent } from "../../lib/slide-utils";
 
 interface Props {
@@ -44,8 +44,6 @@ export function ProfilesSlide({ slide }: Props) {
 
   return (
     <SlideShell>
-      <Wash strength={3} />
-
       <TitledContent>
         <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
         <div className="slide-body items-center">

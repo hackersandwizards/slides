@@ -983,15 +983,10 @@ html:has(.print-slide) {
     display: none !important;
   }
 
-  /* A blurred shadow and a translucent full-slide gradient each print as a bitmap, together more
-     than half of a deck's PDF and most of its render time. The tint they add is a few percent. */
+  /* A blurred shadow prints as a bitmap, much of a deck's PDF and its render time. */
   * {
     box-shadow: none !important;
     text-shadow: none !important;
-  }
-
-  .absolute.inset-0.bg-gradient-to-br {
-    display: none !important;
   }
 
   /* A page is captured the moment it is printed: every element shows its final state. */

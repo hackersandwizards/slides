@@ -1001,15 +1001,12 @@ function StandardContentSlide({ slide }: Props) {
 
   return (
     <SlideShell night={isDeepDive(slide)}>
-      <div className={`absolute inset-0 ${styles.gradient}`} />
-
       <TitledContent>
         {/* The badge shares the section label's row, in the flow: placed absolutely in the corner,
             a long headline ran underneath it. */}
         <div className="flex items-start justify-between gap-8">
           <SectionHeader
             label={slide.sectionLabel}
-            labelColor={styles.label}
             principle={slide.principle}
             pillColor={styles.pill}
             stageMarker={slide.stageMarker}

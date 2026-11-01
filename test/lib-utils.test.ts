@@ -37,8 +37,8 @@ describe("getSectionStyle", () => {
   });
 
   it("maps a known theme to its own style", () => {
-    expect(getSectionStyle("primary").label).toBe("text-primary");
-    expect(getSectionStyle("deepdive").label).toBe("text-secondary");
+    expect(getSectionStyle("primary").border).toBe("border-border");
+    expect(getSectionStyle("success").border).toBe("border-success/25");
   });
 });
 

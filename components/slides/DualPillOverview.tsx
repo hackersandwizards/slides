@@ -137,7 +137,7 @@ export function DualPillOverview({ slide }: Props) {
       <TitledContent>
         {slide.preText && (
           <BlurFade delay={0.1} duration={0.5}>
-            <span className="slide-kicker label-caps block text-sm text-secondary">
+            <span className="slide-kicker label-caps block text-sm text-primary">
               {slide.preText}
             </span>
           </BlurFade>
