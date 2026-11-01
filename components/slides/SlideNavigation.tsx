@@ -196,7 +196,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
           </dl>
         </div>
       )}
-      <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 sm:hidden">
+      <div className="fixed bottom-4 left-1/2 z-50 flex w-max -translate-x-1/2 items-center gap-3 sm:hidden">
         <button
           onClick={stepBack}
           disabled={atStart}
@@ -208,7 +208,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
           <ChevronLeft className="h-6 w-6 text-white" />
         </button>
 
-        <div className="rounded-full border border-night-ink/15 bg-night-2 px-3 py-1.5 text-xs text-night-muted backdrop-blur-sm">
+        <div className="rounded-full border border-night-ink/15 bg-night-2 px-3 py-1.5 text-xs whitespace-nowrap text-night-muted backdrop-blur-sm">
           {currentIndex + 1} / {totalSlides}
         </div>
 
