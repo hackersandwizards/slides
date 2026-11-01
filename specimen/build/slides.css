@@ -184,6 +184,12 @@
   );
     --spacing-section: clamp(3rem, 1.8261rem + 5.2174vw, 6rem);
     --spacing-header: calc(3px + 4.75rem + 1px + env(safe-area-inset-top));
+    --spacing-strip: 3px;
+    --spacing-header-row: 3.5rem;
+    --spacing-logo: 2rem;
+    --spacing-app-header: calc(
+    var(--spacing-strip) + var(--spacing-header-row) + 1px + env(safe-area-inset-top)
+  );
     --spacing-hero: clamp(2.5rem, 2.1087rem + 1.7391vw, 3.5rem);
     --spacing-section-head: clamp(2rem, 1.6087rem + 1.7391vw, 3rem);
     --spacing-stack: clamp(1.5rem, 0.913rem + 2.6087vw, 3rem);
