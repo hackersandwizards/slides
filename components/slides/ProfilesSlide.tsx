@@ -8,6 +8,7 @@ import { useCarousel } from "../../lib/use-carousel";
 import { User } from "lucide-react";
 import { Linkedin } from "../../lib/icons";
 import { TitledContent, SlideTitle, Wash } from "./primitives";
+import { personAccent } from "../../lib/slide-utils";
 
 interface Props {
   slide: ProfilesSlideType;
@@ -55,8 +56,7 @@ export function ProfilesSlide({ slide }: Props) {
           >
             {slide.profiles.map((profile, index) => {
               const isHighlighted = index === highlightIndex;
-              const accent: Accent = profile.accent ?? (index === 0 ? "primary" : "secondary");
-              const a = ACCENT[accent];
+              const a = ACCENT[personAccent(index)];
 
               return (
                 <BlurFade

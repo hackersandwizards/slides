@@ -59,10 +59,14 @@ function DefaultPhasedPills({ slide }: Props) {
             measures, so a shrunk slide never pushes it under the brand strip. */}
         <div className="relative mt-6 w-fit max-w-[100rem] rounded-brand border-2 border-dashed border-border bg-white px-6 pt-10 pb-8 md:px-12">
           {title && (
-            <BlurFade delay={0.05} duration={0.35}>
-              <div className="absolute -top-5 left-1/2 -translate-x-1/2">
-                <GradientTitlePill>{title}</GradientTitlePill>
-              </div>
+            // The fade itself is placed: a transform on a wrapper anchors an absolute child to
+            // the wrapper until the fade ends, and the pill jumped 53 px up when it did.
+            <BlurFade
+              delay={0.05}
+              duration={0.35}
+              className="absolute -top-5 left-1/2 -translate-x-1/2"
+            >
+              <GradientTitlePill>{title}</GradientTitlePill>
             </BlurFade>
           )}
 

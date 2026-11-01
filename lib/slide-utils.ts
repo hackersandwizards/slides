@@ -55,3 +55,9 @@ export function pageLabel(slides: ReadonlyArray<{ type: string }>, index: number
   const pad = (n: number) => String(n).padStart(width, "0");
   return `${pad(index + 1)} / ${pad(slides.length)}`;
 }
+
+/** The accent of the nth person on a slide, by position and never by who it is: teal first, then
+ *  purple, alternating, in the order of the logo ("hackers" teal, "wizards" purple). */
+export function personAccent(index: number): "primary" | "secondary" {
+  return index % 2 === 0 ? "primary" : "secondary";
+}

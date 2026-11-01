@@ -12,7 +12,7 @@ import PptxGenJS from "pptxgenjs";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import type { ContentBlock, Presentation, Slide, SectionTheme } from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
-import { pageLabel } from "../lib/slide-utils";
+import { pageLabel, personAccent } from "../lib/slide-utils";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
 type PSlide = ReturnType<Pptx["addSlide"]>;
@@ -1104,11 +1104,11 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
     case "positions": {
       const half = a.w / 2 - 0.15;
       const ch = a.h - 0.6;
-      for (const [side, x] of [
-        [b.left, a.x],
-        [b.right, a.x + half + 0.3],
+      for (const [side, x, i] of [
+        [b.left, a.x, 0],
+        [b.right, a.x + half + 0.3, 1],
       ] as const) {
-        const tone = c[THEME[side.accent ?? "primary"]] as string;
+        const tone = c[THEME[personAccent(i)]] as string;
         card(s, x, a.y, half, ch, c.card, tone);
         box(
           s,
@@ -2403,8 +2403,8 @@ const RENDER: {
           ),
         ),
     );
-    row(d.profiles, { ...a, h: ch }, 0.3, (p, r) => {
-      const tone = p.accent === "secondary" ? c.purple : c.teal;
+    row(d.profiles, { ...a, h: ch }, 0.3, (p, r, i) => {
+      const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
       card(s, r.x, r.y, r.w, r.h, c.card, c.border);
       portrait(s, ctx, p.imageSrc, p.name, r.x + 0.25, r.y + 0.25, 0.9, tone);
       box(
@@ -2899,7 +2899,7 @@ const RENDER: {
       const sx = (W - sw * speakers.length) / 2;
       speakers.forEach((sp, i) => {
         const x = sx + i * sw;
-        const tone = sp.accent === "secondary" ? c.purple : c.teal;
+        const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
         portrait(s, ctx, sp.imageSrc, sp.name, x + sw / 2 - 0.55, y, 1.1, tone);
         box(
           s,

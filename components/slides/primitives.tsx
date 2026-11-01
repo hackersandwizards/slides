@@ -41,18 +41,6 @@ export function SlideSubtitle({ children, delay = 0.15 }: { children: ReactNode;
   );
 }
 
-/** Two short rules around a diamond, under a closing line or over a centred statement. `dot` is
- *  the diamond's background class. */
-export function Ornament({ dot }: { dot: string }) {
-  return (
-    <div className="flex items-center gap-3" aria-hidden="true">
-      <div className="h-px w-16 bg-text-subtle/40" />
-      <div className={`h-2 w-2 rotate-45 ${dot}`} />
-      <div className="h-px w-16 bg-text-subtle/40" />
-    </div>
-  );
-}
-
 /** The website's card: brand radius, hairline border, white, no shadow. */
 export function SlideCard({ className = "", ...props }: ComponentPropsWithoutRef<"div">) {
   return <div className={`rounded-brand border border-border bg-white ${className}`} {...props} />;

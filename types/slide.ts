@@ -79,7 +79,9 @@ export type ContentBlock =
   | { type: "linked-image"; src: string; alt?: string; href?: string }
   | {
       type: "image-and-grid";
-      image: { src: string; alt?: string };
+      /** `sketch`: a drawing on a transparent or plain ground, such as a marker sketch, which
+       *  stands without a frame. A screenshot or photo, which needs an edge, leaves it out. */
+      image: { src: string; alt?: string; sketch?: boolean };
       gridTitle?: string;
       items: { title: string; subtitle: string }[];
     }
@@ -88,13 +90,11 @@ export type ContentBlock =
       left: {
         name: string;
         stance: string;
-        accent?: "primary" | "secondary" | "accent" | "success" | "warning";
         quote: string;
       };
       right: {
         name: string;
         stance: string;
-        accent?: "primary" | "secondary" | "accent" | "success" | "warning";
         quote: string;
       };
       middle?: string;
@@ -343,7 +343,6 @@ export interface Profile {
   imageSrc?: string;
   linkedIn?: string;
   bullets: string[];
-  accent?: "primary" | "secondary";
 }
 
 export interface ProfilesSlide {
@@ -475,7 +474,6 @@ export interface ClosingSlide {
     company: string;
     imageSrc?: string;
     linkedIn?: string;
-    accent?: "primary" | "secondary";
   }[];
   closingQuote?: string;
   seedQuestions?: string[];

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
 import type { Slide } from "../types/slide";
 
-// Title, section divider and closing slide centre their headline on the ground, with no gradient
+// Title, section divider, closing and centred content slide centre their headline on the ground, with no gradient
 // field and no decoration: no particle canvas, no gradient, no glow.
 const cases: { slide: Slide; headline: string }[] = [
   {
@@ -22,6 +22,26 @@ const cases: { slide: Slide; headline: string }[] = [
       speakers: [{ name: "Mara Lindqvist", company: "Lumen Freight" }],
     },
     headline: "Thank you.",
+  },
+  {
+    slide: { type: "closing", variant: "discussion", headline: "Questions?" },
+    headline: "Questions?",
+  },
+  {
+    slide: {
+      type: "content",
+      layout: "centered",
+      headline: "Two starting points.",
+      content: [
+        {
+          type: "positions",
+          left: { name: "Mara", stance: "Shared", quote: "One harness." },
+          right: { name: "Jonas", stance: "Owned", quote: "Own conventions." },
+          resolution: "Both.",
+        },
+      ],
+    },
+    headline: "Two starting points.",
   },
 ];
 

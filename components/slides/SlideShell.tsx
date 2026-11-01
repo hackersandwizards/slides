@@ -108,7 +108,11 @@ function useFitToSlide() {
         if (needs(mid) >= mid) best = lo = mid;
         else hi = mid;
       }
-      box.style.width = best > ratio ? `${100 / best}%` : "";
+      // Shrunk, the body is laid out wider by the same factor wherever that still fits, so it spans
+      // the slide's full width even where the wider layout gains no height, as a table whose rows
+      // keep their lines does; left at full width it ended at the scale's share of the slide.
+      const wide = best > ratio || needs(ratio) >= ratio;
+      box.style.width = wide ? `${100 / best}%` : "";
       return best;
     };
     // Below `md` a slide is one column that scrolls (slides.css), so nothing shrinks there.

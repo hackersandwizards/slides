@@ -8,7 +8,6 @@ import type {
   SectionTheme,
   StageState,
 } from "../../types/slide";
-import { Particles } from "../ui/particles";
 import { BlurFade } from "../ui/blur-fade";
 import { SectionHeader } from "./SectionHeader";
 import { Visual } from "./Visuals";
@@ -17,15 +16,9 @@ import { renderMarkdown } from "../../lib/markdown";
 import { highlightCode } from "../../lib/code-highlight";
 import { getStageClasses } from "../../lib/stage-utils";
 import { getSectionStyle } from "../../lib/section-styles";
+import { personAccent } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import {
-  TitledContent,
-  SlideTitle,
-  SlideCard,
-  CodePanel,
-  SlideSubtitle,
-  Ornament,
-} from "./primitives";
+import { TitledContent, SlideTitle, SlideCard, CodePanel, SlideSubtitle } from "./primitives";
 
 type LabeledGridBlockType = Extract<ContentBlock, { type: "labeled-grid" }>;
 
@@ -84,14 +77,14 @@ function LabeledGridBlock({
   );
 }
 
-const KICKER_DOT_COLOR: Record<SectionTheme, string> = {
-  primary: "bg-primary",
-  secondary: "bg-secondary",
-  accent: "bg-accent",
-  warning: "bg-accent",
-  success: "bg-success",
-  deepdive: "bg-deep-500",
-};
+/** Joins a hyphenated word with a non-breaking hyphen, outside code spans and link targets, so a
+ *  table cell breaks only at a space. */
+function keepHyphenatedWords(text: string): string {
+  return text
+    .split(/(`[^`]*`|\]\([^)]*\))/)
+    .map((part, i) => (i % 2 ? part : part.replace(/(\w)-(?=\w)/g, "$1\u2011")))
+    .join("");
+}
 
 interface Props {
   slide: ContentSlideType;
@@ -353,11 +346,10 @@ function ContentBlockRenderer({
         );
       }
       if (block.centered) {
-        const dotColor = sectionTheme ? KICKER_DOT_COLOR[sectionTheme] : "bg-text-subtle";
+        // Set off by the same rule as the slide's footer, the one separator a slide carries.
         return (
-          <div className="mt-8 flex flex-col items-center gap-6">
-            <Ornament dot={dotColor} />
-            <p className="max-w-4xl text-center text-2xl leading-snug font-semibold tracking-tight text-balance text-text md:text-3xl">
+          <div className={`mt-8 border-t-2 pt-6 ${getSectionStyle(sectionTheme).border}`}>
+            <p className="mx-auto max-w-4xl text-center text-2xl leading-snug font-semibold tracking-tight text-balance text-text md:text-3xl">
               {renderMarkdown(block.text)}
             </p>
           </div>
@@ -408,9 +400,9 @@ function ContentBlockRenderer({
     case "table":
       return (
         <div className="overflow-x-auto rounded-brand border-2 border-border bg-white">
-          <table
-            className={`w-full border-collapse ${block.widths ? "table-fixed" : ""} ${block.compact ? "text-lg" : "text-xl"}`}
-          >
+          {/* Automatic layout: `widths` are the columns' preferred shares, and no column ever gets
+              narrower than its longest word. A fixed layout let a word run into the next cell. */}
+          <table className={`w-full border-collapse ${block.compact ? "text-lg" : "text-xl"}`}>
             {block.widths && (
               <colgroup>
                 {block.widths.map((w, i) => (
@@ -427,7 +419,7 @@ function ContentBlockRenderer({
                   {block.headers.map((header, i) => (
                     <th
                       key={i}
-                      className="label-caps border-b-2 border-border px-6 py-4 text-left text-base text-text"
+                      className={`label-caps border-b-2 border-border py-4 text-left text-base text-text ${block.compact ? "px-4" : "px-6"}`}
                     >
                       {header}
                     </th>
@@ -444,9 +436,10 @@ function ContentBlockRenderer({
                   {row.map((cell, cellIndex) => (
                     <td
                       key={cellIndex}
-                      className={`border-b border-border px-6 py-4 text-left ${cellIndex === 0 ? "font-bold text-text" : "text-text-muted"}`}
+                      className={`border-b border-border py-4 text-left ${block.compact ? "px-4" : "px-6"} ${cellIndex === 0 ? "font-bold text-text" : "text-text-muted"}`}
                     >
-                      {renderMarkdown(cell)}
+                      {/* A word breaks only at a space: "Self-serve" never splits at its hyphen. */}
+                      {renderMarkdown(keepHyphenatedWords(cell))}
                     </td>
                   ))}
                 </tr>
@@ -594,15 +587,29 @@ function ContentBlockRenderer({
     case "image-and-grid":
       return (
         <div className="grid grid-cols-[2fr_3fr] items-center gap-10">
-          <div className="flex justify-center">
-            <Image
-              src={block.image.src}
-              alt={block.image.alt || ""}
-              width={1200}
-              height={1500}
-              className="h-auto max-h-[45vh] w-auto rounded-brand border border-border"
-            />
-          </div>
+          {block.image.sketch ? (
+            // A sketch stands on the ground without a frame and fills the height of the cards
+            // beside it, centred, never less than a framed image's height.
+            <div className="relative min-h-[45vh] self-stretch">
+              <Image
+                src={block.image.src}
+                alt={block.image.alt || ""}
+                width={1200}
+                height={1200}
+                className="absolute inset-0 h-full w-full object-contain"
+              />
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <Image
+                src={block.image.src}
+                alt={block.image.alt || ""}
+                width={1200}
+                height={1500}
+                className="h-auto max-h-[45vh] w-auto rounded-brand border border-border"
+              />
+            </div>
+          )}
           <div className="flex flex-col gap-4">
             {block.gridTitle && (
               <h3 className="label-caps mb-2 text-base text-deep-700">
@@ -734,99 +741,82 @@ function ContentBlockRenderer({
     }
 
     case "positions": {
-      type PositionAccent = "primary" | "secondary" | "accent" | "success" | "warning";
-      const accentClass = (c?: PositionAccent) =>
-        c === "primary"
-          ? "text-primary"
-          : c === "secondary"
-            ? "text-secondary"
-            : c === "accent" || c === "warning"
-              ? "text-accent"
-              : c === "success"
-                ? "text-success"
-                : "text-text";
-      const ruleClass = (c?: PositionAccent) =>
-        c === "primary"
-          ? "bg-primary/40"
-          : c === "secondary"
-            ? "bg-secondary/40"
-            : c === "accent" || c === "warning"
-              ? "bg-accent/70"
-              : c === "success"
-                ? "bg-success/40"
-                : "bg-text-subtle/25";
-      const borderClass = (c?: PositionAccent) =>
-        c === "primary"
-          ? "border-primary/40"
-          : c === "secondary"
-            ? "border-secondary/40"
-            : c === "accent" || c === "warning"
-              ? "border-accent/40"
-              : c === "success"
-                ? "border-success/40"
-                : "border-border";
+      // The two sides are people or their stances: coloured by position, teal first, purple
+      // second, like every person on a slide (`personAccent`).
+      const POSITION_ACCENT = {
+        primary: { text: "text-primary", rule: "bg-primary/40", border: "border-primary/40" },
+        secondary: {
+          text: "text-secondary",
+          rule: "bg-secondary/40",
+          border: "border-secondary/40",
+        },
+      };
 
-      const renderSide = (side: typeof block.left, numeral: string, alignRight = false) => (
-        <div
-          className={`relative flex flex-col gap-8 ${alignRight ? "items-end text-right" : "items-start text-left"}`}
-        >
-          <div className="flex items-center gap-3">
-            {!alignRight && (
-              <span
-                className={`text-xs font-bold tracking-[0.25em] tabular-nums ${accentClass(side.accent)} opacity-70`}
-              >
-                {numeral}
-              </span>
-            )}
-            {!alignRight && <span className={`h-px w-10 ${ruleClass(side.accent)}`} />}
-            <span className={`label-caps text-sm ${accentClass(side.accent)}`}>{side.name}</span>
-            {alignRight && <span className={`h-px w-10 ${ruleClass(side.accent)}`} />}
-            {alignRight && (
-              <span
-                className={`text-xs font-bold tracking-[0.25em] tabular-nums ${accentClass(side.accent)} opacity-70`}
-              >
-                {numeral}
-              </span>
-            )}
+      const renderSide = (side: typeof block.left, index: number, alignRight = false) => {
+        const a = POSITION_ACCENT[personAccent(index)];
+        const numeral = String(index + 1).padStart(2, "0");
+        return (
+          <div
+            className={`relative flex flex-col gap-8 ${alignRight ? "items-end text-right" : "items-start text-left"}`}
+          >
+            <div className="flex items-center gap-3">
+              {!alignRight && (
+                <span
+                  className={`text-xs font-bold tracking-[0.25em] tabular-nums ${a.text} opacity-70`}
+                >
+                  {numeral}
+                </span>
+              )}
+              {!alignRight && <span className={`h-px w-10 ${a.rule}`} />}
+              <span className={`label-caps text-sm ${a.text}`}>{side.name}</span>
+              {alignRight && <span className={`h-px w-10 ${a.rule}`} />}
+              {alignRight && (
+                <span
+                  className={`text-xs font-bold tracking-[0.25em] tabular-nums ${a.text} opacity-70`}
+                >
+                  {numeral}
+                </span>
+              )}
+            </div>
+
+            <h3
+              className={`font-heading text-8xl leading-[0.85] font-bold tracking-[-0.045em] lg:text-[8rem] ${a.text}`}
+            >
+              {/* A line breaks only between words: "All-in" never splits at its hyphen. */}
+              {side.stance.split(" ").map((word, i) => (
+                <Fragment key={i}>
+                  {i > 0 && " "}
+                  <span className="whitespace-nowrap">{word}</span>
+                </Fragment>
+              ))}
+            </h3>
+
+            <p
+              className={`mt-2 font-heading text-2xl leading-snug font-medium text-text-muted italic md:text-3xl ${alignRight ? "border-r-2 pr-5" : "border-l-2 pl-5"} ${a.border}`}
+            >
+              {`“${side.quote}”`}
+            </p>
           </div>
-
-          <h3
-            className={`font-heading text-8xl leading-[0.85] font-bold tracking-[-0.045em] lg:text-[8rem] ${accentClass(side.accent)}`}
-          >
-            {/* A line breaks only between words: "All-in" never splits at its hyphen. */}
-            {side.stance.split(" ").map((word, i) => (
-              <Fragment key={i}>
-                {i > 0 && " "}
-                <span className="whitespace-nowrap">{word}</span>
-              </Fragment>
-            ))}
-          </h3>
-
-          <p
-            className={`mt-2 font-heading text-2xl leading-snug font-medium text-text-muted italic md:text-3xl ${alignRight ? "border-r-2 pr-5" : "border-l-2 pl-5"} ${borderClass(side.accent)}`}
-          >
-            {`“${side.quote}”`}
-          </p>
-        </div>
-      );
+        );
+      };
 
       return (
         <div className="mx-auto flex w-full max-w-7xl flex-col items-stretch gap-20">
-          <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-14 pt-4">
-            {renderSide(block.left, "01", true)}
+          <div className="relative grid grid-cols-[1fr_auto_1fr] items-start gap-14 pt-4">
+            {renderSide(block.left, 0, true)}
 
             <div
               aria-hidden="true"
               className="relative flex flex-col items-center self-stretch px-2"
             >
-              <div className="w-px flex-1 bg-gradient-to-b from-transparent to-text-subtle/25" />
+              <div className="w-px flex-1 bg-text-subtle/25" />
               <span className="my-4 text-6xl leading-none text-text-subtle/40 md:text-7xl">
                 &amp;
               </span>
-              <div className="w-px flex-1 bg-gradient-to-b from-text-subtle/25 to-transparent" />
+              <div className="w-px flex-1 bg-text-subtle/25" />
             </div>
 
-            {renderSide(block.right, "02", false)}
+            {renderSide(block.right, 1, false)}
           </div>
 
           {block.middle && (
@@ -855,17 +845,6 @@ function ContentBlockRenderer({
 function CenteredContentSlide({ slide }: Props) {
   return (
     <SlideShell direction="col" overflowHidden>
-      <div className="absolute top-1/3 left-1/3 h-[31.25rem] w-[31.25rem] rounded-full bg-brand/7 blur-[120px]" />
-      <div className="absolute right-1/3 bottom-1/3 h-[25rem] w-[25rem] rounded-full bg-brand-accent/7 blur-[100px]" />
-      <div className="spotlight-radial absolute inset-0 z-[1]" />
-      <Particles
-        className="absolute inset-0"
-        quantity={60}
-        size={1.0}
-        staticity={25}
-        color="--color-teal"
-      />
-
       <div className="slide-content relative z-10 flex flex-col items-center justify-center space-y-6 px-8 text-center md:space-y-8">
         {slide.sectionLabel && (
           <BlurFade delay={0.1} duration={0.4}>

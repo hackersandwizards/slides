@@ -4,10 +4,10 @@ import Image from "../ui/image";
 import { Mail } from "lucide-react";
 import { Linkedin } from "../../lib/icons";
 import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
-import { Particles } from "../ui/particles";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { SlideCard, Wash } from "./primitives";
+import { SlideCard } from "./primitives";
+import { personAccent } from "../../lib/slide-utils";
 
 interface Props {
   slide: ClosingSlideType;
@@ -44,14 +44,6 @@ const partnersOf = (slide: ClosingSlideType) =>
 function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
   return (
     <SlideShell background={slide.background ?? "bg-section-intro"}>
-      <Wash strength={6} />
-      <Particles
-        className="absolute inset-0"
-        quantity={50}
-        size={0.8}
-        staticity={30}
-        color="--color-teal"
-      />
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-16">
         <BlurFade delay={0.1} duration={0.5}>
           <h1 className="mb-16 text-center font-heading text-7xl font-bold tracking-tighter text-text md:text-8xl">
@@ -77,25 +69,20 @@ function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
   );
 }
 
+/** A speaker's colours, picked by position (`personAccent`). */
+const ACCENT = {
+  primary: { ring: "ring-primary/40", text: "text-primary", bg: "bg-primary/15 text-primary" },
+  secondary: {
+    ring: "ring-secondary/40",
+    text: "text-secondary",
+    bg: "bg-secondary/15 text-secondary",
+  },
+};
+
 /** The closing line centred on the ground, the speakers and the lockup under it, no gradient field and
  *  no decoration, as on the title slide. */
 function ContactVariant({ slide }: { slide: ClosingSlideType }) {
   const hasSpeakerImages = slide.speakers?.some((s) => s.imageSrc);
-
-  const accentRing = (a?: "primary" | "secondary") =>
-    a === "primary"
-      ? "ring-primary/40"
-      : a === "secondary"
-        ? "ring-secondary/40"
-        : "ring-primary/40";
-  const accentText = (a?: "primary" | "secondary") =>
-    a === "primary" ? "text-primary" : a === "secondary" ? "text-secondary" : "text-primary";
-  const accentBg = (a?: "primary" | "secondary") =>
-    a === "primary"
-      ? "bg-primary/15 hover:bg-primary/15 text-primary"
-      : a === "secondary"
-        ? "bg-secondary/15 hover:bg-secondary/15 text-secondary"
-        : "bg-primary/15 hover:bg-primary/15 text-primary";
 
   return (
     <SlideShell direction="col" overflowHidden background={slide.background ?? "bg-section-intro"}>
@@ -114,6 +101,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
               <div className="mx-auto flex max-w-5xl flex-col items-stretch gap-10 md:flex-row md:gap-14">
                 {slide.speakers!.map((speaker, index) => {
                   const isLast = index === slide.speakers!.length - 1;
+                  const a = ACCENT[personAccent(index)];
                   return (
                     <div
                       key={index}
@@ -122,7 +110,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                       <div className="flex flex-col items-center text-center">
                         {speaker.imageSrc && (
                           <div
-                            className={`relative mb-8 rounded-full ring-2 ring-offset-4 ring-offset-transparent ${accentRing(speaker.accent)}`}
+                            className={`relative mb-8 rounded-full ring-2 ring-offset-4 ring-offset-transparent ${a.ring}`}
                           >
                             <Image
                               src={speaker.imageSrc}
@@ -137,9 +125,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                           {speaker.name}
                         </p>
                         {speaker.company && (
-                          <p
-                            className={`label-caps mt-3 text-xs md:text-sm ${accentText(speaker.accent)}`}
-                          >
+                          <p className={`label-caps mt-3 text-xs md:text-sm ${a.text}`}>
                             {speaker.company}
                           </p>
                         )}
@@ -147,7 +133,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                           {speaker.contact && (
                             <a
                               href={`mailto:${speaker.contact}`}
-                              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-base font-medium transition-colors md:text-lg ${accentBg(speaker.accent)}`}
+                              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-base font-medium transition-colors md:text-lg ${a.bg}`}
                             >
                               <Mail className="h-4 w-4 md:h-5 md:w-5" />
                               <span>{speaker.contact}</span>
@@ -159,7 +145,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                               target="_blank"
                               rel="noopener noreferrer"
                               aria-label={`${speaker.name} on LinkedIn`}
-                              className={`flex items-center justify-center rounded-full p-3 transition-colors ${accentBg(speaker.accent)}`}
+                              className={`flex items-center justify-center rounded-full p-3 transition-colors ${a.bg}`}
                             >
                               <Linkedin className="h-4 w-4 md:h-5 md:w-5" />
                             </a>
