@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "0.16.2",
+  "version": "0.16.3",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -59,9 +59,11 @@
   },
   "peerDependencies": {
     "@hackersandwizards/brand": "*",
+    "jszip": "^3.10.1",
     "lucide-react": "^1.66.0",
     "motion": "^14.9.0",
     "next": "^16.4.3",
+    "pptxgenjs": "^4.0.1",
     "puppeteer": "^25.16.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
@@ -74,6 +76,12 @@
       "optional": true
     },
     "next": {
+      "optional": true
+    },
+    "jszip": {
+      "optional": true
+    },
+    "pptxgenjs": {
       "optional": true
     }
   },
@@ -97,9 +105,11 @@
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
     "jsdom": "30.1.3",
+    "jszip": "3.10.1",
     "lucide-react": "1.66.0",
     "motion": "14.9.0",
     "next": "16.4.3",
+    "pptxgenjs": "4.0.1",
     "prettier": "3.9.10",
     "prettier-plugin-tailwindcss": "0.8.1",
     "puppeteer": "25.16.0",
@@ -111,9 +121,5 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
     "vitest": "5.0.5"
-  },
-  "dependencies": {
-    "jszip": "3.10.1",
-    "pptxgenjs": "4.0.1"
   }
 }

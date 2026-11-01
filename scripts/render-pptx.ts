@@ -1580,7 +1580,12 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const h = a.h - (b.caption ? 0.35 : 0);
       if (existsSync(path)) {
         const w = Math.min(a.w, (h * 16) / 9);
+        // pptxgenjs stores the cover as a PNG part whatever its bytes: anything else stays out.
         const poster = b.poster && join(ctx.assets, b.poster.replace(/^\//, ""));
+        const cover = poster && existsSync(poster) ? readFileSync(poster) : undefined;
+        const png = cover?.toString("latin1", 1, 4) === "PNG";
+        if (b.poster && !png)
+          ctx.warnings.push(`video ${b.src}: poster ${b.poster} is no PNG under ${ctx.assets}`);
         s.addMedia({
           type: "video",
           path,
@@ -1588,9 +1593,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
           y: a.y,
           w,
           h,
-          ...(poster && existsSync(poster)
-            ? { cover: `data:image/png;base64,${readFileSync(poster).toString("base64")}` }
-            : {}),
+          ...(png ? { cover: `data:image/png;base64,${cover!.toString("base64")}` } : {}),
         });
       } else {
         ctx.warnings.push(`video ${b.src}: not found under ${ctx.assets}`);

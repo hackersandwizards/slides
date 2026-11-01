@@ -51,7 +51,8 @@ images, and the `slides-density` and `slides-pptx` commands in `bin`. Moving or 
 a release. Consumers import by those names, `@hackersandwizards/slides/types/slide`, and ship the source: Next lists
 the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest config in
 `server.deps.inline`. React, motion, lucide-react, recharts, shiki, Tailwind and the brand package
-are peer dependencies, so each consumer holds one copy of each.
+are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and `jszip`, which only
+`slides-pptx` imports, are optional peers like `puppeteer`: a consumer installs them to run it.
 
 ## Commands
 

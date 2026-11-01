@@ -485,8 +485,8 @@ html:has(.print-slide) {
 }
 
 /* An image, video or linked image stands centred under its title. On a titled slide it takes the
-   body's free height, shared with any other picture there, and is never drawn larger than its own
-   file, since a raster scaled up blurs. On a centred slide it keeps to 60vh. */
+   body's free height, shared with any other picture there, and grows to at most twice its file's
+   pixel width on the 1920 px stage (`MediaPicture`). On a centred slide it keeps to 60vh. */
 .slide-media {
   margin: 0;
   display: flex;

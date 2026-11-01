@@ -8,7 +8,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { ArrowUpRight, Play } from "lucide-react";
+import { ArrowUpRight, Pause, Play } from "lucide-react";
 import { usePrintMode } from "../../lib/print-context";
 import Image from "../ui/image";
 import type {
@@ -167,17 +167,20 @@ function VideoBlock({ block }: { block: Extract<ContentBlock, { type: "video" }>
           className="slide-media-item block cursor-pointer"
         />
         {/* Square: the tile behind an icon, too small for the brand corner at its full value
-            (os design guide; blind panel 2026-11-01). */}
-        {!playing && (
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={`Play ${block.alt ?? "video"}`}
-            className="absolute bottom-6 left-6 flex size-20 items-center justify-center rounded-brand-sm bg-primary text-white"
-          >
+            (os design guide; blind panel 2026-11-01). Playing, it stays as the pause control,
+            shown only to the keyboard that holds focus on it. */}
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={`${playing ? "Pause" : "Play"} ${block.alt ?? "video"}`}
+          className={`absolute bottom-6 left-6 flex size-20 items-center justify-center rounded-brand-sm bg-primary text-white ${playing ? "opacity-0 focus-visible:opacity-100" : ""}`}
+        >
+          {playing ? (
+            <Pause className="size-10 fill-current" strokeWidth={0} />
+          ) : (
             <Play className="size-10 fill-current" strokeWidth={0} />
-          </button>
-        )}
+          )}
+        </button>
         {progress > 0 && (
           <div className="absolute inset-x-0 bottom-0 h-1.5 bg-white/15">
             <div className="h-full bg-primary" style={{ width: `${progress * 100}%` }} />

@@ -159,7 +159,7 @@ export function FlowSteps({
                   }`}
                   style={on ? undefined : { borderColor: GREY }}
                 >
-                  {step.icon ? (
+                  {step.icon && iconMap[step.icon] ? (
                     <Icon name={step.icon} className="h-12 w-12" />
                   ) : step.label && inTile ? (
                     step.label

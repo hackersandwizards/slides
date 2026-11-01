@@ -36,9 +36,11 @@ The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]` writes a dec
 PowerPoint file in the h&w design: text as text boxes, tables as tables, trend and bar charts as
 charts, diagrams as shapes, and only the deck's own images and the h&w logos as pictures. The deck
 is the `Presentation` as JSON, `-` reads it from stdin. `--assets` is the folder a deck's `/…`
-image paths resolve against, `./public` by default. In `talks`:
+image paths resolve against, `./public` by default. It needs `pptxgenjs` and `jszip`, optional
+peer dependencies a consumer installs only to run it. In `talks`:
 
 ```sh
+bun add -d pptxgenjs jszip
 bun scripts/slides-json.ts <slug> > deck.json && bun run slides-pptx deck.json <slug>.pptx
 ```
 

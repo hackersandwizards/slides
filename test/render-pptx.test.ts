@@ -213,3 +213,29 @@ it("colours a deep-dive slide's bullets in the night teal, every other slide's i
   expect(new Set(night).size).toBe(1);
   expect(night[0]).not.toBe(day[0]);
 });
+
+// pptxgenjs stores every video cover as a PNG part: another format would sit there mislabelled.
+it("warns on a video poster that is no PNG and sets no cover", async () => {
+  const out = join(dir, "poster.pptx");
+  const warnings = await renderPptx(
+    {
+      ...slideCatalogue,
+      slides: [
+        {
+          type: "content",
+          headline: "Video",
+          content: [
+            {
+              type: "video",
+              src: "/slide-catalogue/demo.mp4",
+              poster: "/slide-catalogue/demo.mp4",
+            },
+          ],
+        },
+      ],
+    },
+    out,
+    join(import.meta.dirname, "..", "specimen"),
+  );
+  expect(warnings).toEqual([expect.stringContaining("poster")]);
+});

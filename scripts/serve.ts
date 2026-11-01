@@ -2,7 +2,7 @@
 // proxies here as it proxies os.localhost to its dev server. Node's API, since this repo's
 // typecheck has no Bun types.
 import { createReadStream, statSync } from "node:fs";
-import { createServer } from "node:http";
+import { createServer, type RequestListener } from "node:http";
 import { extname, join, resolve, sep } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
@@ -19,14 +19,25 @@ const types: Record<string, string> = {
   ".woff2": "font/woff2",
 };
 
-createServer((request, response) => {
-  const path = decodeURIComponent(new URL(request.url ?? "/", "http://localhost").pathname);
-  if (path === "/") return response.writeHead(302, { Location: home }).end();
-  const file = join(root, path.endsWith("/") ? `${path}index.html` : path);
-  if (!file.startsWith(root + sep) || !statSync(file, { throwIfNoEntry: false })?.isFile()) {
-    return response.writeHead(404).end("Not found");
+export const handle: RequestListener = (request, response) => {
+  let path: string, file: string, found: boolean | undefined;
+  try {
+    path = decodeURIComponent(new URL(request.url ?? "/", "http://localhost").pathname);
+    file = join(root, path.endsWith("/") ? `${path}index.html` : path);
+    found = file.startsWith(root + sep) && statSync(file, { throwIfNoEntry: false })?.isFile();
+  } catch {
+    // A malformed escape (`%E0%A4%A`) or a NUL byte threw out of the handler and ended the server.
+    return response.writeHead(400).end("Bad request");
   }
+  if (path === "/") return response.writeHead(302, { Location: home }).end();
+  if (!found) return response.writeHead(404).end("Not found");
   response.writeHead(200, { "Content-Type": types[extname(file)] ?? "application/octet-stream" });
-  createReadStream(file).pipe(response);
-}).listen(4327, "127.0.0.1");
-console.log("Caddy: http://slides.localhost, direct: http://localhost:4327");
+  createReadStream(file)
+    .on("error", () => response.destroy())
+    .pipe(response);
+};
+
+if (import.meta.main) {
+  createServer(handle).listen(4327, "127.0.0.1");
+  console.log("Caddy: http://slides.localhost, direct: http://localhost:4327");
+}

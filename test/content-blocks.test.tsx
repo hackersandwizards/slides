@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
 import { renderMarkdown } from "../lib/markdown";
@@ -60,6 +60,23 @@ describe("content blocks", () => {
     expect(video?.hasAttribute("controls")).toBe(false);
     expect(video?.getAttribute("poster")).toBe("/a.png");
     expect(c.querySelector('button[aria-label="Play Demo"]')).not.toBeNull();
+  });
+
+  // Playing, the button stays as the pause control: a keyboard user who started the clip with it
+  // can stop it again, and focus stays where it was.
+  it("keeps the button as a pause control while the video plays", () => {
+    const c = content([{ type: "video", src: "/a.mp4", alt: "Demo" }]);
+    fireEvent.play(c.querySelector("video")!);
+    expect(c.querySelector('button[aria-label="Pause Demo"]')).not.toBeNull();
+  });
+
+  // A step naming an icon the engine lacks keeps its number, never an empty tile.
+  it("numbers a flow step whose icon is unknown", () => {
+    const c = content([
+      { type: "flow", steps: [{ title: "a", icon: "no-such-icon" }, { title: "b" }] },
+    ]);
+    const tiles = [...c.querySelectorAll("span.min-w-24")].map((t) => t.textContent);
+    expect(tiles).toEqual(["1", "2"]);
   });
 
   // The play button is the tile behind an icon: square, never the brand corner scaled down.
