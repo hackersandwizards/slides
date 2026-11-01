@@ -5,6 +5,7 @@
 // Usage: bun scripts/specimen.ts [--check]
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { compile } from "@tailwindcss/node";
@@ -72,7 +73,14 @@ for (const { markup } of frames)
   candidates.push(...new Scanner({}).scanFiles([{ content: markup, extension: "html" }]));
 const css = compiler
   .build(candidates)
-  .replace(/url\("@hackersandwizards\/brand\//g, `url("../${brandHref}/`);
+  // Resolved through the package's exports: `fonts/*` maps to `tokens/fonts/*` on disk.
+  .replace(
+    /url\("(@hackersandwizards\/brand\/[^"]+)"\)/g,
+    (_, id: string) =>
+      `url("${relative(join(root, "specimen", "build"), fileURLToPath(import.meta.resolve(id)))
+        .split(sep)
+        .join("/")}")`,
+  );
 
 const attr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 const frameDoc = (markup: string) =>
