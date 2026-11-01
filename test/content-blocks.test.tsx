@@ -62,6 +62,14 @@ describe("content blocks", () => {
     expect(c.querySelector('button[aria-label="Play Demo"]')).not.toBeNull();
   });
 
+  // The play button is the tile behind an icon: square, never the brand corner scaled down.
+  it("squares the play button", () => {
+    const c = content([{ type: "video", src: "/a.mp4", alt: "Demo" }]);
+    const classes = c.querySelector('button[aria-label="Play Demo"]')?.classList;
+    expect(classes?.contains("rounded-brand-sm")).toBe(true);
+    expect(classes?.contains("rounded-brand")).toBe(false);
+  });
+
   // The link of a linked image is spelled out under it: projected or printed, the link is invisible.
   it("spells out a linked image's link under it", () => {
     const c = content([

@@ -166,12 +166,14 @@ function VideoBlock({ block }: { block: Extract<ContentBlock, { type: "video" }>
           }
           className="slide-media-item block cursor-pointer"
         />
+        {/* Square: the tile behind an icon, too small for the brand corner at its full value
+            (os design guide; blind panel 2026-11-01). */}
         {!playing && (
           <button
             type="button"
             onClick={toggle}
             aria-label={`Play ${block.alt ?? "video"}`}
-            className="absolute bottom-6 left-6 flex size-20 items-center justify-center rounded-brand bg-primary text-white"
+            className="absolute bottom-6 left-6 flex size-20 items-center justify-center rounded-brand-sm bg-primary text-white"
           >
             <Play className="size-10 fill-current" strokeWidth={0} />
           </button>
