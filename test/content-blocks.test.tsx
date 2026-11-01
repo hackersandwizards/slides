@@ -79,12 +79,12 @@ describe("content blocks", () => {
     expect(tiles).toEqual(["1", "2"]);
   });
 
-  // The play button is the tile behind an icon: square, never the brand corner scaled down.
-  it("squares the play button", () => {
+  // The play button holds only an icon: round and teal, as on the website and in the apps.
+  it("rounds the play button", () => {
     const c = content([{ type: "video", src: "/a.mp4", alt: "Demo" }]);
     const classes = c.querySelector('button[aria-label="Play Demo"]')?.classList;
-    expect(classes?.contains("rounded-brand-sm")).toBe(true);
-    expect(classes?.contains("rounded-brand")).toBe(false);
+    expect(classes?.contains("rounded-full")).toBe(true);
+    expect(classes?.contains("bg-primary")).toBe(true);
   });
 
   // The link of a linked image is spelled out under it: projected or printed, the link is invisible.

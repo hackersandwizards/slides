@@ -166,14 +166,14 @@ function VideoBlock({ block }: { block: Extract<ContentBlock, { type: "video" }>
           }
           className="slide-media-item block cursor-pointer"
         />
-        {/* Square: the tile behind an icon, too small for the brand corner at its full value
-            (os design guide; blind panel 2026-11-01). Playing, it stays as the pause control,
-            shown only to the keyboard that holds focus on it. */}
+        {/* Round and teal, as every control that holds only an icon (brand tokens, radius-pill;
+            unprimed blind panel 2026-11-01). Playing, it stays as the pause control, shown only
+            to the keyboard that holds focus on it. */}
         <button
           type="button"
           onClick={toggle}
           aria-label={`${playing ? "Pause" : "Play"} ${block.alt ?? "video"}`}
-          className={`absolute bottom-6 left-6 flex size-20 items-center justify-center rounded-brand-sm bg-primary text-white ${playing ? "opacity-0 focus-visible:opacity-100" : ""}`}
+          className={`absolute bottom-6 left-6 flex size-20 items-center justify-center rounded-full bg-primary text-white ${playing ? "opacity-0 focus-visible:opacity-100" : ""}`}
         >
           {playing ? (
             <Pause className="size-10 fill-current" strokeWidth={0} />
