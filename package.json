@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "0.16.8",
+  "version": "0.16.9",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -45,7 +45,6 @@
     "specimen"
   ],
   "scripts": {
-    "preinstall": "node .claude/skills/engineering/only-bun.cjs",
     "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks || true",
     "check": "bun run format:check && bun run lint && bun run typecheck && bun .claude/skills/engineering/check-unique-names.ts && bun run test && bun scripts/specimen.ts --check && brand-colours",
     "lint": "bun --bun eslint --cache --concurrency=auto .",
