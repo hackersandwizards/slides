@@ -36,7 +36,7 @@ window.DECISION_REPOS["slides"] = [
     title:
       "Sollen fünf Kartenformen eine werden: grid pillars, labeled-grid, four-column und hooks in cards?",
     area: "slides",
-    priority: 2,
+    priority: 3,
     order: 2,
     status: "open",
     context:
@@ -60,7 +60,7 @@ window.DECISION_REPOS["slides"] = [
     id: "merge-comparison",
     title: "Sollen transform, guidance und positions Varianten von comparison werden?",
     area: "slides",
-    priority: 2,
+    priority: 3,
     order: 3,
     status: "open",
     context:
@@ -80,7 +80,7 @@ window.DECISION_REPOS["slides"] = [
     id: "merge-flow",
     title: "Sollen evolution und pipeline in flow aufgehen?",
     area: "slides",
-    priority: 2,
+    priority: 3,
     order: 4,
     status: "open",
     context:
@@ -100,7 +100,7 @@ window.DECISION_REPOS["slides"] = [
     id: "merge-phased-pills",
     title: "Sollen dual-pill-overview und roadmap in phased-pills aufgehen?",
     area: "slides",
-    priority: 2,
+    priority: 3,
     order: 5,
     status: "open",
     context:
@@ -140,7 +140,7 @@ window.DECISION_REPOS["slides"] = [
     id: "merge-content",
     title: "Soll regular in content aufgehen?",
     area: "slides",
-    priority: 2,
+    priority: 3,
     order: 7,
     status: "open",
     context:
