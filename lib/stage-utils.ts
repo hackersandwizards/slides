@@ -34,9 +34,9 @@ export function getStageClasses(
   return `transition-all duration-300 ${categoryStyles[category][state]}`;
 }
 
-// Section theme → stage category / Tailwind color token. Shared by the
-// phased-pill slide types (PhasedPillsSlide, DualPillOverview); callers fall
-// back to 'secondary' for unknown themes.
+// Section theme → stage category / Tailwind color token. Shared by the slides
+// that group items by phase (PhasedPillsSlide, RoadmapSlide for
+// dual-pill-overview); callers fall back to 'secondary' for unknown themes.
 export const themeToCategory: Record<string, StageCategory> = {
   accent: "accent",
   primary: "primary",

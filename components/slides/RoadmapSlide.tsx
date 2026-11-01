@@ -1,70 +1,122 @@
 "use client";
 
-import type { RoadmapSlide as RoadmapSlideType, RoadmapColumn } from "../../types/slide";
+import type {
+  DualPillOverviewSlide as DualPillOverviewType,
+  RoadmapSlide as RoadmapSlideType,
+} from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { renderMarkdown } from "../../lib/markdown";
-import { COLUMN_STYLES } from "../../lib/section-styles";
+import { COLUMN_STYLES, type ColumnAccent } from "../../lib/section-styles";
+import { themeDotColor, themeLabelColor } from "../../lib/stage-utils";
 import { SlideShell } from "./SlideShell";
 import { TitledContent, SlideTitle, SlideSubtitle } from "./primitives";
 
+// Draws both two-part slide types, roadmap and dual-pill-overview, so they stay one layout (os
+// decision roadmap-dual-pill-slides): a roadmap column is one group of rows, a dual-pill column
+// one group per phase, its pills numbered rows. A pill's `state` draws nothing, as before.
 interface Props {
-  slide: RoadmapSlideType;
+  slide: RoadmapSlideType | DualPillOverviewType;
 }
 
-const ACCENT_STYLES: Record<
-  RoadmapColumn["accent"],
-  { card: string; bar: string; badge: string; glow: string; defaultDot: string; iconBg: string }
-> = {
-  ingredients: { ...COLUMN_STYLES.ingredients, defaultDot: "bg-primary", iconBg: "bg-primary/15" },
-  deepdive: { ...COLUMN_STYLES.deepdive, defaultDot: "bg-secondary", iconBg: "bg-secondary/15" },
-};
+interface PartItem {
+  title: string;
+  description?: string;
+  /** Stands in place of the marker, in the group's colour. */
+  number?: number;
+  dotColor?: string;
+}
 
-function ColumnCard({ column, delay }: { column: RoadmapColumn; delay: number }) {
-  const style = ACCENT_STYLES[column.accent];
+interface PartGroup {
+  /** A caps label over the group, in its theme's colour. */
+  label?: string;
+  theme?: string;
+  items: PartItem[];
+}
+
+/** One part: the accent bar, a square label, title and subtitle, then groups of rows, each a
+ *  marker or a number, a bold title and a grey line. */
+function PartCard({
+  label,
+  title,
+  subtitle,
+  accent,
+  groups,
+  delay,
+}: {
+  label: string;
+  title: string;
+  subtitle?: string;
+  accent: ColumnAccent;
+  groups: PartGroup[];
+  delay: number;
+}) {
+  const style = COLUMN_STYLES[accent];
+  const [defaultDot, defaultText] =
+    accent === "ingredients" ? ["bg-primary", "text-primary"] : ["bg-secondary", "text-secondary"];
+  let row = 0;
 
   return (
     <BlurFade delay={delay} duration={0.5}>
       <div
-        className={`relative h-full rounded-brand border ${style.card} ${style.glow} overflow-hidden`}
+        className={`relative h-full overflow-hidden rounded-brand border ${style.card} ${style.glow}`}
       >
         <div className={`absolute inset-x-0 top-0 h-2 ${style.bar}`} />
 
         <div className="px-10 pt-12 pb-10">
           <div
-            className={`label-caps inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs ${style.badge}`}
+            className={`label-caps inline-flex items-center rounded-brand-sm border px-4 py-1.5 text-xs ${style.badge}`}
           >
-            {column.label}
+            {label}
           </div>
 
           <h3 className="mt-6 font-heading text-4xl leading-[1.05] font-bold tracking-[-0.02em] text-text md:text-5xl">
-            {column.title}
+            {title}
           </h3>
 
-          {column.subtitle && (
-            <p className="mt-4 text-lg leading-snug text-text-muted">
-              {renderMarkdown(column.subtitle)}
-            </p>
+          {subtitle && (
+            <p className="mt-4 text-lg leading-snug text-text-muted">{renderMarkdown(subtitle)}</p>
           )}
 
-          <ul className="mt-6 space-y-4">
-            {column.items.map((item, i) => (
-              <BlurFade key={i} delay={delay + 0.05 + i * 0.04} duration={0.35}>
-                <li className="flex items-baseline gap-4 text-xl leading-snug">
-                  <span className={`slide-marker ${item.dotColor ?? style.defaultDot}`} />
-                  <div className="flex-1">
-                    <p className="font-heading text-xl leading-snug font-bold text-text">
-                      {renderMarkdown(item.title)}
-                    </p>
-                    {item.description && (
-                      <p className="card-text-base mt-1 leading-snug text-text-muted">
-                        {renderMarkdown(item.description)}
-                      </p>
-                    )}
-                  </div>
-                </li>
-              </BlurFade>
-            ))}
-          </ul>
+          <div className="mt-6 space-y-6">
+            {groups.map((group, g) => {
+              const dot = (group.theme && themeDotColor[group.theme]) || defaultDot;
+              const text = (group.theme && themeLabelColor[group.theme]) || defaultText;
+              return (
+                <div key={g}>
+                  {group.label && (
+                    <p className={`label-caps mb-3 text-base ${text}`}>{group.label}</p>
+                  )}
+                  <ul className="space-y-4">
+                    {group.items.map((item, i) => (
+                      <BlurFade key={i} delay={delay + 0.05 + row++ * 0.04} duration={0.35}>
+                        <li className="flex items-baseline gap-4 text-xl leading-snug">
+                          {item.number === undefined ? (
+                            <span className={`slide-marker ${item.dotColor ?? dot}`} />
+                          ) : (
+                            <span
+                              className={`w-10 shrink-0 font-heading text-xl font-bold tabular-nums ${text}`}
+                            >
+                              {item.number}
+                            </span>
+                          )}
+                          <div className="flex-1">
+                            <p className="font-heading text-xl leading-snug font-bold text-text">
+                              {renderMarkdown(item.title)}
+                            </p>
+                            {item.description && (
+                              <p className="card-text-base mt-1 leading-snug text-text-muted">
+                                {renderMarkdown(item.description)}
+                              </p>
+                            )}
+                          </div>
+                        </li>
+                      </BlurFade>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </BlurFade>
@@ -72,6 +124,14 @@ function ColumnCard({ column, delay }: { column: RoadmapColumn; delay: number })
 }
 
 export function RoadmapSlide({ slide }: Props) {
+  const parts =
+    slide.type === "roadmap"
+      ? slide.columns.map((c) => ({ ...c, groups: [{ items: c.items }] }))
+      : [slide.left, slide.right].map((c) => ({
+          ...c,
+          groups: c.phases.map((p) => ({ ...p, theme: p.theme ?? "secondary" })),
+        }));
+
   return (
     <SlideShell overflowHidden>
       <TitledContent>
@@ -94,8 +154,9 @@ export function RoadmapSlide({ slide }: Props) {
         )}
         <div className="slide-body">
           <div className="grid w-full grid-cols-2 gap-8">
-            <ColumnCard column={slide.columns[0]} delay={0.15} />
-            <ColumnCard column={slide.columns[1]} delay={0.2} />
+            {parts.map((part, i) => (
+              <PartCard key={i} {...part} delay={0.15 + i * 0.05} />
+            ))}
           </div>
         </div>
       </TitledContent>
