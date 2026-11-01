@@ -1,4 +1,5 @@
 import { act, render } from "@testing-library/react";
+import { useInsertionEffect } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SlideHints } from "../components/slides/SlideHints";
 import { slideComponents } from "../lib/slide-components";
@@ -8,6 +9,11 @@ function pressRight() {
   act(() => {
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", cancelable: true }));
   });
+}
+
+function MoveTo({ path }: { path: string }) {
+  useInsertionEffect(() => history.pushState(null, "", path), [path]);
+  return null;
 }
 
 const grid: GridSlide = {
@@ -63,16 +69,27 @@ describe("SlideHints", () => {
     }
   });
 
-  it("shows the first-slide hints again when the page moves on to another deck", () => {
+  it("shows the first-slide hints again when the page moves on to another deck", async () => {
     vi.useFakeTimers();
     try {
-      history.pushState(null, "", "/deck-a/0");
-      const first = render(<SlideHints slideIndex={0} />);
+      // From the deck list to deck A, past its intro, back to the list, on to deck B. Next's router
+      // moves the URL in an insertion effect after the new page renders, as `MoveTo` does here.
+      const first = render(
+        <>
+          <MoveTo path="/deck-a/0" />
+          <SlideHints slideIndex={0} />
+        </>,
+      );
       act(() => vi.advanceTimersByTime(5000));
       first.unmount();
-      // A client-side move to a second deck keeps this module loaded: its opening gets the intro.
-      history.pushState(null, "", "/deck-b/0");
-      const second = render(<SlideHints slideIndex={0} />);
+      history.pushState(null, "", "/");
+      const second = render(
+        <>
+          <MoveTo path="/deck-b/0" />
+          <SlideHints slideIndex={0} />
+        </>,
+      );
+      await act(async () => {});
       expect(second.queryByText("to go to next slide")).not.toBeNull();
     } finally {
       vi.useRealTimers();

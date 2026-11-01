@@ -32,15 +32,22 @@ export function SlideHints({ slideIndex }: Props) {
   const [visible, setVisible] = useState(
     () => typeof window === "undefined" || readStored("local", HINTS_STORAGE_KEY) !== "false",
   );
-  const [deck] = useState(deckPath);
-  const [intro, setIntro] = useState(() => (introEndsAt.get(deck) ?? Infinity) > Date.now());
+  const [intro, setIntro] = useState(() => (introEndsAt.get(deckPath()) ?? Infinity) > Date.now());
 
+  // The deck is read again here: Next's router moves the URL in an insertion effect after the new
+  // page renders, so coming from the deck list the render above still saw the list's path.
   useEffect(() => {
+    const deck = deckPath();
     const endsAt = introEndsAt.get(deck) ?? Date.now() + INTRO_MS;
     introEndsAt.set(deck, endsAt);
+    let live = true;
+    queueMicrotask(() => live && setIntro(endsAt > Date.now()));
     const timer = setTimeout(() => setIntro(false), endsAt - Date.now());
-    return () => clearTimeout(timer);
-  }, [deck]);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
