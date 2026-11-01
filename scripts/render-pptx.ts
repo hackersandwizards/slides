@@ -12,7 +12,7 @@ import PptxGenJS from "pptxgenjs";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import type { ContentBlock, Presentation, Slide, SectionTheme } from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
-import { isDeepDive, pageLabel, personAccent } from "../lib/slide-utils";
+import { isDeepDive, linkLabel, pageLabel, personAccent } from "../lib/slide-utils";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
 type PSlide = ReturnType<Pptx["addSlide"]>;
@@ -434,7 +434,14 @@ function picture(
   y: number,
   w: number,
   h: number,
-  o: { alt?: string; href?: string; round?: boolean; align?: "center" | "left" } = {},
+  o: {
+    alt?: string;
+    href?: string;
+    round?: boolean;
+    align?: "center" | "left";
+    /** Never drawn larger than the file at 144 px to the inch, as the slide never scales one up. */
+    native?: boolean;
+  } = {},
 ) {
   const logo = BRAND_LOGOS.exec(src);
   const path = logo
@@ -469,7 +476,7 @@ function picture(
     });
     return { x: x + (w - d) / 2, y, w: d, h: d };
   }
-  const k = Math.min(w / iw, h / ih);
+  const k = Math.min(w / iw, h / ih, o.native ? 1 / 144 : Infinity);
   const pw = iw * k;
   const ph = ih * k;
   const px = o.align === "left" ? x : x + (w - pw) / 2;
@@ -1543,17 +1550,46 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "image":
-      picture(s, ctx, b.src, a.x, a.y, a.w, a.h, { alt: b.alt });
+      picture(s, ctx, b.src, a.x, a.y, a.w, a.h, { alt: b.alt, native: true });
       return;
-    case "linked-image":
-      picture(s, ctx, b.src, a.x, a.y, a.w, a.h, { alt: b.alt, href: b.href });
+    case "linked-image": {
+      // The link spelled out under the picture, as on the slide.
+      const line = b.href ? 0.42 : 0;
+      const p = picture(s, ctx, b.src, a.x, a.y, a.w, a.h - line, {
+        alt: b.alt,
+        href: b.href,
+        native: true,
+      });
+      if (b.href)
+        box(
+          s,
+          c,
+          { runs: [{ text: `↗ ${linkLabel(b.href)}`, options: { hyperlink: { url: b.href } } }] },
+          a.x,
+          p.y + p.h + 0.08,
+          a.w,
+          0.32,
+          { ...o, size: PT.base, mono: true, color: c.teal, align: "center" },
+        );
       return;
+    }
     case "video": {
       const path = join(ctx.assets, b.src.replace(/^\//, ""));
       const h = a.h - (b.caption ? 0.35 : 0);
       if (existsSync(path)) {
         const w = Math.min(a.w, (h * 16) / 9);
-        s.addMedia({ type: "video", path, x: a.x + (a.w - w) / 2, y: a.y, w, h });
+        const poster = b.poster && join(ctx.assets, b.poster.replace(/^\//, ""));
+        s.addMedia({
+          type: "video",
+          path,
+          x: a.x + (a.w - w) / 2,
+          y: a.y,
+          w,
+          h,
+          ...(poster && existsSync(poster)
+            ? { cover: `data:image/png;base64,${readFileSync(poster).toString("base64")}` }
+            : {}),
+        });
       } else {
         ctx.warnings.push(`video ${b.src}: not found under ${ctx.assets}`);
         card(s, a.x, a.y, a.w, h, c.tint, c.border);

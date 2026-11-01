@@ -11,6 +11,7 @@ import type { Slide } from "../types/slide";
 const NOT_TEXT = new Set([
   "type",
   "src",
+  "poster",
   "imageSrc",
   "logo",
   "href",
@@ -155,6 +156,27 @@ describe("slides-pptx on the specimen deck", () => {
         expect(slideXml[i], `slide ${i + 1}`).toContain("drawingml/2006/chart");
       }
     });
+  });
+
+  // As on the slide: a linked image's link spelled out under it, a video's poster as its cover.
+  it("spells out a linked image's link and covers a video with its poster", async () => {
+    const at = (type: string) =>
+      slideCatalogue.slides.findIndex(
+        (s) => s.type === "content" && s.content.some((b) => b.type === type),
+      );
+    expect(slideText[at("linked-image")]).toContain("forge.example.com/acme/payments/pull/128");
+    const rels = await zip
+      .file(`ppt/slides/_rels/slide${at("video") + 1}.xml.rels`)!
+      .async("string");
+    const poster = readFileSync(
+      join(import.meta.dirname, "..", "specimen", "slide-catalogue", "agent-session-poster.png"),
+    );
+    const pictures = await Promise.all(
+      [...rels.matchAll(/Target="\.\.\/media\/([^"]+\.png)"/g)].map(async (m) =>
+        Buffer.from(await zip.file(`ppt/media/${m[1]}`)!.async("uint8array")),
+      ),
+    );
+    expect(pictures.some((p) => p.equals(poster))).toBe(true);
   });
 
   it("names the brand fonts with their pitch, so a machine without them substitutes in kind", () => {

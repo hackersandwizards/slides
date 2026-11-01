@@ -72,7 +72,7 @@ const renderFrame = (index: number, name: string) => {
       /(src|href)="\/hw-(wordmark|lockup)(-night)?\.svg"/g,
       `$1="${brandHref}/logos/$2$3.svg"`,
     )
-    .replace(/(src|href)="\/slide-catalogue\//g, '$1="slide-catalogue/');
+    .replace(/(src|href|poster)="\/slide-catalogue\//g, '$1="slide-catalogue/');
   return { name, markup };
 };
 const frames = picks.map((index) => renderFrame(index, deck[index].type));
