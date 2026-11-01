@@ -1425,6 +1425,9 @@
   .self-stretch {
     align-self: stretch;
   }
+  .justify-self-end {
+    justify-self: flex-end;
+  }
   .overflow-hidden {
     overflow: hidden;
   }

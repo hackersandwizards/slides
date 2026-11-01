@@ -63,7 +63,8 @@ export function WheelSlide({ slide }: Props) {
         <div className="slide-body">
           <BlurFade delay={0.2} duration={0.5}>
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-8">
-              <div className="flex flex-col gap-7">{left.map(label)}</div>
+              {/* Both columns sit against the ring, so the left one keeps the right one's gap. */}
+              <div className="flex flex-col gap-7 justify-self-end">{left.map(label)}</div>
               <div className="relative h-96 w-96">
                 <svg viewBox="0 0 200 200" className="h-full w-full" aria-hidden>
                   {slide.segments.map((segment, k) => {
