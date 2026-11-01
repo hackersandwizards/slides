@@ -3683,7 +3683,7 @@ html:has(.print-slide) {
     }
   }
   .items-start > .slide-marker {
-    margin-top: calc((1lh - var(--marker)) / 2);
+    margin-top: calc((1lh - var(--marker)) / 2 + 0.091em);
   }
   .label-caps {
     font-family: var(--type-label-family);

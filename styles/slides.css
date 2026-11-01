@@ -647,11 +647,12 @@ html:has(.print-slide) {
     --marker: calc(var(--slide-marker) * 0.75);
     background: color-mix(in srgb, var(--color-teal) 40%, var(--color-bg));
   }
-  /* Beside text that may wrap, on the middle of the first line's cap height, as on the website: for
-     Inter the line box's middle is the cap height's middle at every line height. Measured at 4x
-     within 0.7px at 100% and 50%, wrapped items included. */
+  /* Beside text that may wrap, on the middle of the first line's x-height, where Inter centres its
+     own bullet glyph: for Inter the line box's middle is the cap height's middle at every line
+     height, and the x-height's middle sits 0.091em below it. A marker beside caps (a label, a
+     badge) stays on the line's middle. Measured at 2x on every list size (2026-11-01). */
   .items-start > .slide-marker {
-    margin-top: calc((1lh - var(--marker)) / 2);
+    margin-top: calc((1lh - var(--marker)) / 2 + 0.091em);
   }
 
   /* The website's label-caps (typography.css): metadata, chips and table heads in the label
