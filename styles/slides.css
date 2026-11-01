@@ -583,6 +583,16 @@ html:has(.print-slide) {
   }
 }
 
+/* Below `sm` the player's control bar takes the bottom band: the corner row stands above it. */
+@media screen and (width < 40rem) {
+  .slide-viewport > .slide-corner {
+    bottom: var(--slide-phone-nav-band);
+  }
+  .slide-content {
+    padding: var(--slide-phone-padding-nav);
+  }
+}
+
 @layer utilities {
   /* The website keeps its gradient to the header strip: emphasised words take the brand colour. */
   .text-gradient-brand {

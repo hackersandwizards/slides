@@ -355,12 +355,12 @@ function PipelineRow({ block }: { block: PipelineBlock }) {
           {i === half && <span className="pipeline-break" />}
           <div className="flex items-center gap-4">
             {i > 0 && block.showArrows !== false && (
-              <span className="text-2xl text-secondary">
+              <span className="text-2xl text-primary">
                 {getPipelineArrow(i - 1, block.stages, block.showLoops)}
               </span>
             )}
             <div
-              className={`pipeline-stage flex items-center gap-3 rounded-brand px-5 py-3 text-lg font-semibold ${getStageClasses(stage.state as StageState)}`}
+              className={`pipeline-stage flex items-center gap-3 rounded-brand px-5 py-3 text-lg font-semibold ${getStageClasses(stage.state as StageState, !stage.state || stage.state === "default" ? "primary" : "secondary")}`}
             >
               {stage.logo && (
                 <Image
@@ -600,12 +600,14 @@ function ContentBlockRenderer({
       );
 
     case "pipeline":
+      // Teal frame, label, arrows and plain steps, as every other accent; purple marks only an
+      // active or new step (blind panel 01.11.: 8.48 against 6.85 for the purple block).
       return (
-        <DashedFrame tone="secondary" active={!!block.containerLabel} className="p-6">
+        <DashedFrame tone="primary" active={!!block.containerLabel} className="p-6">
           {block.containerLabel && (
             <div className="label-caps mb-4 flex items-baseline gap-2 text-sm">
-              <div className="hw-marker bg-secondary" />
-              <span className="text-secondary">{block.containerLabel}</span>
+              <div className="hw-marker bg-primary" />
+              <span className="text-primary">{block.containerLabel}</span>
               {block.containerLogos &&
                 block.containerLogos.map((logo, li) => (
                   <Image
@@ -625,11 +627,11 @@ function ContentBlockRenderer({
             <PipelineRow block={block} />
             {block.containerSideNotes && (
               <>
-                <div className="h-16 w-px bg-secondary/25" />
+                <div className="h-16 w-px bg-primary/25" />
                 <ul className="space-y-1.5">
                   {block.containerSideNotes.map((note, ni) => (
                     <li key={ni} className="flex items-baseline gap-2 text-base text-text-muted">
-                      <span className="hw-marker slide-marker-nested bg-secondary" />
+                      <span className="hw-marker slide-marker-nested bg-primary" />
                       <span>{renderMarkdown(note)}</span>
                     </li>
                   ))}
@@ -638,7 +640,7 @@ function ContentBlockRenderer({
             )}
           </div>
           {block.containerFooter && (
-            <p className="mt-4 border-t border-secondary/25 pt-3 text-base text-text-muted">
+            <p className="mt-4 border-t border-primary/25 pt-3 text-base text-text-muted">
               {renderMarkdown(block.containerFooter)}
             </p>
           )}

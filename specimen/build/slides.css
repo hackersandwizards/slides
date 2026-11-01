@@ -1867,12 +1867,6 @@
       background-color: color-mix(in oklab, var(--color-purple) 15%, transparent);
     }
   }
-  .bg-secondary\/25 {
-    background-color: color-mix(in srgb, #9333ea 25%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-purple) 25%, transparent);
-    }
-  }
   .bg-secondary\/40 {
     background-color: color-mix(in srgb, #9333ea 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -3240,6 +3234,8 @@
   --slide-phone-kicker-gap: 1rem;
   --slide-phone-cell-padding: 0.5rem 0.625rem;
   --slide-phone-card-padding: 1.25rem;
+  --slide-phone-nav-band: 5rem;
+  --slide-phone-padding-nav: 4rem 1.25rem 11rem;
   --slide-context: color-mix(in srgb, #19283a 40%, #f7f9fa);
   @supports (color: color-mix(in lab, red, red)) {
     --slide-context: color-mix(in srgb, var(--color-ink) 40%, var(--color-bg));
@@ -3810,6 +3806,14 @@ html:has(.print-slide) {
   .slide-content :is(.slide-title, .text-5xl, .text-6xl, .text-7xl, .text-8xl) {
     font-size: var(--type-display-size);
     line-height: var(--type-display-line-height);
+  }
+}
+@media screen and (width < 40rem) {
+  .slide-viewport > .slide-corner {
+    bottom: var(--slide-phone-nav-band);
+  }
+  .slide-content {
+    padding: var(--slide-phone-padding-nav);
   }
 }
 @layer utilities {
