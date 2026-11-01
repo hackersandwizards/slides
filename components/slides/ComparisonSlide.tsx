@@ -33,9 +33,9 @@ function MarkedItem({
           {mark}
         </span>
       ) : (
-        <span className="slide-marker" />
+        <span className="hw-marker" />
       )}
-      {children}
+      <span>{children}</span>
     </li>
   );
 }

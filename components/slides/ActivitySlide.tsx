@@ -55,7 +55,7 @@ export function ActivitySlide({ slide }: Props) {
                         {i + 1}.
                       </span>
                     ) : (
-                      <span className="slide-marker" />
+                      <span className="hw-marker" />
                     )}
                     <span>{renderMarkdown(item)}</span>
                   </li>

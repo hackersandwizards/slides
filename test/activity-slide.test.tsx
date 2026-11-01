@@ -40,7 +40,7 @@ describe("ActivitySlide", () => {
     });
     expect(getByText("Live-Demo")).toBeTruthy();
     expect(queryByText("1.")).toBeNull();
-    expect(container.querySelector(".slide-marker")).not.toBeNull();
+    expect(container.querySelector(".hw-marker")).not.toBeNull();
     expect(container.querySelector(".rounded-brand")).toBeNull();
   });
 });

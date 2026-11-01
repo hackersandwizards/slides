@@ -1,7 +1,8 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { globSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
@@ -153,6 +154,25 @@ it("every square marker on the specimen slides sits on its line", () => {
   const run = brandMarkers(files);
   expect(run.status, run.stderr + run.stdout).toBe(0);
 }, 600_000);
+
+// A marker class no stylesheet defines draws nothing, and brand-markers cannot see what is not
+// drawn: comparison's split and activity's demo kept `slide-marker` after v0.18.0 removed it.
+it("every marker class in the components is defined", () => {
+  const css = [
+    join(import.meta.dirname, "..", "styles", "slides.css"),
+    fileURLToPath(import.meta.resolve("@hackersandwizards/brand/marker.css")),
+  ]
+    .map((file) => readFileSync(file, "utf8"))
+    .join("\n");
+  const root = join(import.meta.dirname, "..");
+  const undefinedClasses = globSync("components/**/*.tsx", { cwd: root }).flatMap((file) =>
+    [...readFileSync(join(root, file), "utf8").matchAll(/className=(?:"([^"]*)"|\{`([^`]*)`\})/g)]
+      .flatMap(([, plain, template]) => (plain ?? template).split(/\s+/))
+      .filter((name) => /^[\w-]*marker[\w-]*$/.test(name) && !css.includes(`.${name} `))
+      .map((name) => `${file}: ${name}`),
+  );
+  expect(undefinedClasses).toEqual([]);
+});
 
 // The control: the same command over the squares moved half a pixel down must fail.
 it("brand-markers fails on squares moved by half a pixel", () => {

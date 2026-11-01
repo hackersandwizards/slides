@@ -59,6 +59,15 @@ const renderFrame = (index: number, name: string) => {
   return { name, markup };
 };
 const frames = picks.map((index) => renderFrame(index, deck[index].type));
+// A type whose first slide draws no list marker adds its first slide that does, since the marker
+// check (test/marker-position.test.ts) measures only this page: comparison's split and activity's
+// demo drew nothing for a release while it passed.
+const marked = (index: number) => renderFrame(index, "").markup.includes("hw-marker");
+const markerFrames = picks.flatMap((first) => {
+  if (marked(first)) return [];
+  const index = deck.findIndex((s, i) => s.type === deck[first].type && marked(i));
+  return index < 0 ? [] : [renderFrame(index, deck[index].type)];
+});
 const blockFrames = blockPicks.map((index) => {
   const slide = deck[index];
   return renderFrame(
@@ -74,7 +83,7 @@ const compiler = await compile(readFileSync(stylesheet, "utf8"), {
   onDependency: () => {},
 });
 const candidates = new Scanner({ sources: compiler.sources }).scan();
-for (const { markup } of [...frames, ...blockFrames])
+for (const { markup } of [...frames, ...markerFrames, ...blockFrames])
   candidates.push(...new Scanner({}).scanFiles([{ content: markup, extension: "html" }]));
 const css = compiler
   .build(candidates)
@@ -155,7 +164,7 @@ figure:target iframe { transform: scale(0.75); }
 </div>
 <h2>Slide types</h2>
 <main>
-${frames.map((f) => tile(f)).join("\n")}
+${[...frames, ...markerFrames].map((f) => tile(f)).join("\n")}
 </main>
 <h2>Content blocks</h2>
 <main>
