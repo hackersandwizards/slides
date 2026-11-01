@@ -14,7 +14,7 @@ describe("highlightCode", () => {
 
   it("lifts the theme's comment grey to the brand's night-subtle", () => {
     expect(colours("# a comment", "yaml")).toEqual([
-      ["# a comment", "var(--slide-code-comment, #9da0a3)"],
+      ["# a comment", "var(--slide-code-comment, var(--color-night-subtle))"],
     ]);
   });
 

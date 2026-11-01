@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { createHighlighterCoreSync } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import githubDark from "shiki/themes/github-dark.mjs";
-import { colors } from "@hackersandwizards/brand/tokens";
 import bash from "shiki/langs/bash.mjs";
 import json from "shiki/langs/json.mjs";
 import markdown from "shiki/langs/markdown.mjs";
@@ -24,11 +23,12 @@ const LANGS = new Set(highlighter.getLoadedLanguages());
 // Plain text carries no token colour: it takes the theme's foreground.
 const FG = highlighter.getTheme(THEME).fg;
 
-// The theme's grey read from the theme, the lift from the brand tokens, so each package owns its own.
+// The theme's grey read from the theme, the lift from the brand token, so each package owns its own.
+// The lift is the token's CSS variable, which slides.css carries: a JavaScript import of the brand
+// tokens here would be a client dependency Vite discovers only on first render in trainer-hub.
 const COMMENT = githubDark.tokenColors
   ?.find((t) => [t.scope].flat().includes("comment"))
   ?.settings.foreground?.toUpperCase();
-const COMMENT_LIFT = colors["--color-night-subtle"];
 
 /** Each line's tokens, in their theme colours: one entry per line of `code`. */
 export function highlightLines(code: string, language?: string): ReactNode[] {
@@ -46,7 +46,7 @@ export function highlightLines(code: string, language?: string): ReactNode[] {
                 // A comment reads --slide-code-comment where a container sets it.
                 color:
                   (color === COMMENT
-                    ? `var(--slide-code-comment, ${COMMENT_LIFT})`
+                    ? "var(--slide-code-comment, var(--color-night-subtle))"
                     : token.color) ?? FG,
                 fontStyle: (token.fontStyle ?? 0) & 1 ? "italic" : undefined,
               }}
