@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "../ui/image";
-import { Mail } from "lucide-react";
+import Mail from "lucide-react/icons/mail";
 import { Linkedin } from "../../lib/icons";
 import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";

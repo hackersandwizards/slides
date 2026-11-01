@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useInView } from "motion/react";
 import type { MotionProps, Variants } from "motion/react";
 import { usePrintMode } from "../../lib/print-context";
+import { useMounted } from "../../lib/use-mounted";
 
 const MAX_DELAY = 0.3;
 const MAX_DURATION = 0.45;
@@ -32,6 +33,10 @@ export function BlurFade({
   const ref = useRef(null);
   // Starting "in view" skips the observer, which only an `inView` fade needs.
   const isInView = useInView(ref, { once: true, margin: "-50px", initial: !inView });
+  // The slide a page load opens on shows at once, from the server's markup (Benedikt 01.11.2026:
+  // „Erste ohne Animation“). A fade that mounts after hydration, on every later slide, enters.
+  // motion reads `initial` on mount only.
+  const hydrating = !useMounted();
 
   if (printMode) {
     return <div className={className}>{children}</div>;
@@ -58,7 +63,7 @@ export function BlurFade({
   return (
     <motion.div
       ref={ref}
-      initial="hidden"
+      initial={hydrating ? false : "hidden"}
       animate={isInView ? "visible" : "hidden"}
       variants={variants}
       // A slide's text is fully in within 0.8s, whatever its stagger: a later delay or a longer

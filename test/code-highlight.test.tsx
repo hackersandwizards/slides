@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tokens } from "@hackersandwizards/brand/tokens";
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import githubDark from "shiki/themes/github-dark.mjs";
-import { describe, expect, it } from "vitest";
-import { highlightCode } from "../lib/code-highlight";
+import { describe, expect, it, vi } from "vitest";
+import { CodeLines } from "../lib/use-code-highlight";
 
 const css = readFileSync(join(__dirname, "../styles/tokens.css"), "utf8");
 const built = readFileSync(join(__dirname, "../specimen/build/slides.css"), "utf8");
@@ -42,33 +42,52 @@ const grounds = [
   ["dark", brand(darkToken as keyof typeof tokens), brand("--color-teal-night")],
 ] as const;
 
-const colours = (code: string, language?: string) =>
-  [...render(<>{highlightCode(code, language)}</>).container.querySelectorAll("span")].map(
-    (span) => [span.textContent, span.style.color],
-  );
+/** Renders a code block and waits for Shiki's chunk, as a slide does after mount. */
+const block = async (code: string, language?: string) => {
+  const view = render(<CodeLines code={code} language={language} />);
+  await act(() => vi.dynamicImportSettled());
+  return view.container;
+};
+const colours = async (code: string, language?: string) =>
+  [...(await block(code, language)).querySelectorAll("span")].map((span) => [
+    span.textContent,
+    span.style.color,
+  ]);
 
-describe("highlightCode", () => {
-  it("colours tokens as the website's github-dark does", () => {
-    expect(colours("name: reviewer", "yaml")).toContainEqual(["name", "rgb(133, 232, 157)"]);
+describe("CodeLines", () => {
+  // First in the file: the highlighter loads once per module.
+  it("shows the lines in night-muted until Shiki has loaded", () => {
+    const { container } = render(<CodeLines code={"name: reviewer\n\nb"} language="yaml" />);
+    expect([...container.children].map((line) => line.textContent)).toEqual([
+      "name: reviewer",
+      "\u00a0",
+      "b",
+    ]);
+    expect(container.querySelector("span")?.className).toBe("text-night-muted");
+    expect(contrast(muted, lightGround)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("lifts the theme's comment grey to the brand's night-subtle", () => {
-    expect(colours("# a comment", "yaml")).toEqual([
+  it("colours tokens as the website's github-dark does", async () => {
+    expect(await colours("name: reviewer", "yaml")).toContainEqual(["name", "rgb(133, 232, 157)"]);
+  });
+
+  it("lifts the theme's comment grey to the brand's night-subtle", async () => {
+    expect(await colours("# a comment", "yaml")).toEqual([
       ["# a comment", "var(--slide-code-comment, var(--color-night-subtle))"],
     ]);
   });
 
-  it("renders an unknown language as plain text in the theme's foreground", () => {
-    expect(colours("plain text", "cobol")).toEqual([["plain text", "rgb(225, 228, 232)"]]);
+  it("renders an unknown language as plain text in the theme's foreground", async () => {
+    expect(await colours("plain text", "cobol")).toEqual([["plain text", "rgb(225, 228, 232)"]]);
   });
 
-  it("renders one line per source line, a blank one at full height", () => {
-    const { container } = render(<>{highlightCode("a\n\nb")}</>);
+  it("renders one line per source line, a blank one at full height", async () => {
+    const container = await block("a\n\nb");
     expect([...container.children].map((line) => line.textContent)).toEqual(["a", " ", "b"]);
   });
 
-  it("renders angle-bracket content as escaped text, not elements", () => {
-    const { container } = render(<>{highlightCode("<script>alert(1)</script>", "typescript")}</>);
+  it("renders angle-bracket content as escaped text, not elements", async () => {
+    const container = await block("<script>alert(1)</script>", "typescript");
     expect(container.querySelector("script")).toBeNull();
     expect(container.textContent).toContain("<script>alert(1)</script>");
   });

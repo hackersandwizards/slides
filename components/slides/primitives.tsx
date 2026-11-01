@@ -6,7 +6,8 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
-import { Pause, Play } from "lucide-react";
+import Pause from "lucide-react/icons/pause";
+import Play from "lucide-react/icons/play";
 import { usePrintMode } from "../../lib/print-context";
 import { BlurFade } from "../ui/blur-fade";
 

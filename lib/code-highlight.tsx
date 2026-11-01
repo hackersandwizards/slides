@@ -57,8 +57,3 @@ export function highlightLines(code: string, language?: string): ReactNode[] {
         }),
   );
 }
-
-/** A code block's lines, one element each. */
-export function highlightCode(code: string, language?: string): ReactNode[] {
-  return highlightLines(code, language).map((line, i) => <div key={i}>{line}</div>);
-}

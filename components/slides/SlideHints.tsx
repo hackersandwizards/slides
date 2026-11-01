@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useSyncExternalStore } from "react";
-import { ArrowRight, Highlighter } from "lucide-react";
+import ArrowRight from "lucide-react/icons/arrow-right";
+import Highlighter from "lucide-react/icons/highlighter";
 import { useMounted } from "../../lib/use-mounted";
 import { usePendingReveal } from "../../lib/use-progressive-reveal";
 import { deckSync } from "../../lib/presenter-sync";

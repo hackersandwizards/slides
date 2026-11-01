@@ -7,7 +7,8 @@ import { useSlideKeyboard } from "../../lib/use-slide-keyboard";
 import { useCarousel } from "../../lib/use-carousel";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { XCircle, CheckCircle } from "lucide-react";
+import XCircle from "lucide-react/icons/circle-x";
+import CheckCircle from "lucide-react/icons/circle-check-big";
 import {
   arrivedBackwards as readArrivedBackwards,
   directionKey,

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import ChevronLeft from "lucide-react/icons/chevron-left";
+import ChevronRight from "lucide-react/icons/chevron-right";
 import { MotionGlobalConfig } from "motion/react";
 import { useGoToSlide } from "../../lib/navigate";
 import { usePendingReveal } from "../../lib/use-progressive-reveal";

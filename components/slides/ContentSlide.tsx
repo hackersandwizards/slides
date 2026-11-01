@@ -8,7 +8,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { ArrowUpRight } from "lucide-react";
+import ArrowUpRight from "lucide-react/icons/arrow-up-right";
 import Image from "../ui/image";
 import type {
   ContentSlide as ContentSlideType,
@@ -21,7 +21,7 @@ import { SectionHeader } from "./SectionHeader";
 import { Visual } from "./Visuals";
 import { SlideShell } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
-import { highlightCode } from "../../lib/code-highlight";
+import { CodeLines } from "../../lib/use-code-highlight";
 import { getStageClasses } from "../../lib/stage-utils";
 import { getSectionStyle } from "../../lib/section-styles";
 import { isDeepDive, keepHyphenatedWords, linkLabel, personAccent } from "../../lib/slide-utils";
@@ -250,7 +250,9 @@ function renderColumnContent(text: string) {
         as="pre"
         className="p-5 text-base leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap"
       >
-        <code className="font-code">{highlightCode(codeContent.replace(/\n$/, ""), language)}</code>
+        <code className="font-code">
+          <CodeLines code={codeContent.replace(/\n$/, "")} language={language} />
+        </code>
       </CodePanel>
     );
   }
@@ -559,7 +561,9 @@ function ContentBlockRenderer({
     case "code":
       return (
         <CodePanel as="pre" className="p-6 [overflow-wrap:anywhere] whitespace-pre-wrap">
-          <code className="font-code text-lg">{highlightCode(block.code, block.language)}</code>
+          <code className="font-code text-lg">
+            <CodeLines code={block.code} language={block.language} />
+          </code>
         </CodePanel>
       );
 
@@ -568,7 +572,9 @@ function ContentBlockRenderer({
         <div className="grid grid-cols-2 gap-8">
           <CodePanel className="overflow-hidden">
             <pre className="p-6 text-base leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap">
-              <code className="font-code">{highlightCode(block.code, block.language)}</code>
+              <code className="font-code">
+                <CodeLines code={block.code} language={block.language} />
+              </code>
             </pre>
           </CodePanel>
 

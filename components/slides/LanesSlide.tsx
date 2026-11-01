@@ -5,7 +5,7 @@ import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { isDeepDive } from "../../lib/slide-utils";
 import { SectionHeader } from "./SectionHeader";
-import { highlightCode } from "../../lib/code-highlight";
+import { CodeLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
 import { TitledContent, SlideTitle, CodePanel } from "./primitives";
 
@@ -25,7 +25,7 @@ export function LanesSlide({ slide }: Props) {
             <BlurFade delay={0.2} duration={0.5}>
               <CodePanel as="pre" className="mb-8 p-6 [overflow-wrap:anywhere] whitespace-pre-wrap">
                 <code className="font-code text-lg">
-                  {highlightCode(slide.codeSnippet.code, slide.codeSnippet.language)}
+                  <CodeLines code={slide.codeSnippet.code} language={slide.codeSnippet.language} />
                 </code>
               </CodePanel>
             </BlurFade>

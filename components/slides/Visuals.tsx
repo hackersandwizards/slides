@@ -1,8 +1,8 @@
-import { ArrowRight } from "lucide-react";
+import ArrowRight from "lucide-react/icons/arrow-right";
 import Image from "../ui/image";
 import type { VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
-import { highlightLines } from "../../lib/code-highlight";
+import { useHighlightLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
 import { CodePanel, NumberTile, SlideCard } from "./primitives";
 
@@ -633,6 +633,7 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
   const indent = Math.min(
     ...lines.filter((l) => l.trim()).map((l) => l.length - l.trimStart().length),
   );
+  const highlightLines = useHighlightLines();
   const tokens = highlightLines(lines.map((l) => l.slice(indent)).join("\n"), block.language);
   return (
     <div className="flex w-full items-center gap-12">

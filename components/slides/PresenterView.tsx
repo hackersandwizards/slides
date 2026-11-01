@@ -1,18 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import {
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Minus,
-  Pause,
-  Pencil,
-  Play,
-  Plus,
-  RotateCcw,
-  X,
-} from "lucide-react";
+import Check from "lucide-react/icons/check";
+import ChevronLeft from "lucide-react/icons/chevron-left";
+import ChevronRight from "lucide-react/icons/chevron-right";
+import Minus from "lucide-react/icons/minus";
+import Pause from "lucide-react/icons/pause";
+import Pencil from "lucide-react/icons/pencil";
+import Play from "lucide-react/icons/play";
+import Plus from "lucide-react/icons/plus";
+import RotateCcw from "lucide-react/icons/rotate-ccw";
+import X from "lucide-react/icons/x";
 import { useMounted } from "../../lib/use-mounted";
 import { usePendingReveal } from "../../lib/use-progressive-reveal";
 import {
