@@ -686,6 +686,29 @@ const slides: Slide[] = [
     ],
     notes: "evolution: six stages (dense), static, accent background.",
   },
+  {
+    type: "evolution",
+    headline: "Stage names above the titles",
+    static: true,
+    stages: [
+      {
+        multiplier: "Stage 1",
+        title: "Pilot",
+        subtitle: "One team",
+        description: "Learn the loop.",
+      },
+      {
+        multiplier: "Stage 2",
+        title: "Rollout",
+        subtitle: "Every team",
+        description: "Same checks everywhere.",
+        isHighlighted: true,
+      },
+      { multiplier: "Stage 3", title: "Continuous", subtitle: "", description: "Teams own it." },
+    ],
+    notes:
+      "evolution: labels longer than four characters sit above the titles, numbers in the tiles.",
+  },
 
   {
     type: "grid",

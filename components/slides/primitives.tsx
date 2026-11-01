@@ -41,6 +41,27 @@ export function SlideSubtitle({ children, delay = 0.15 }: { children: ReactNode;
   );
 }
 
+/** The purple caption under a slide's diagram, fading in when `visible`: the last step of a
+ *  reveal. */
+export function SlideCaption({
+  children,
+  visible = true,
+}: {
+  children: ReactNode;
+  visible?: boolean;
+}) {
+  return (
+    <div
+      inert={!visible}
+      className={`w-full max-w-5xl rounded-brand border border-secondary/25 bg-secondary/7 px-10 py-5 text-center transition-all duration-500 ${
+        visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
+      }`}
+    >
+      <p className="text-xl font-medium text-secondary">{children}</p>
+    </div>
+  );
+}
+
 /** The website's card: brand radius, hairline border, white, no shadow. */
 export function SlideCard({ className = "", ...props }: ComponentPropsWithoutRef<"div">) {
   return <div className={`rounded-brand border border-border bg-white ${className}`} {...props} />;
