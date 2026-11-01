@@ -1,9 +1,9 @@
 {
   "styles/slides.css": {
-    "hex": 3,
+    "hex": 2,
     "tokenHex": 0,
     "font": 0,
     "palette": 0,
-    "reason": "Code colours: the code block takes Shiki's github-dark, the theme the website's code also takes, not a brand palette: its background, its command green and the comment grey lifted to 5.34:1, declared once in the code-block group of :root with its comment."
+    "reason": "Code colours: the code block takes Shiki's github-dark, the theme the website's code also takes, not a brand palette: its background and its command green, declared once in the code-block group of :root with its comment."
   }
 }

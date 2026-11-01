@@ -568,10 +568,12 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
         <code className="block font-code text-xl leading-snug">
           {lines.map((line, i) => {
             const n = marked.get(i + 1);
+            // Under a marked line's teal a comment in night-subtle falls to 3.6:1 (dark theme):
+            // there it takes the grey halfway to night-muted, 4.7:1, still below the code's.
             return (
               <div
                 key={i}
-                className={`flex items-start gap-4 pr-6 pl-4 ${n ? "border-l-[6px] border-primary bg-primary/25" : "border-l-[6px] border-transparent"}`}
+                className={`flex items-start gap-4 pr-6 pl-4 ${n ? "border-l-[6px] border-primary bg-primary/25 [--slide-code-comment:color-mix(in_srgb,var(--color-night-subtle),var(--color-night-muted))]" : "border-l-[6px] border-transparent"}`}
               >
                 {marked.size > 0 && (
                   <span className="flex w-10 shrink-0 justify-center pt-1">

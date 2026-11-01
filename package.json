@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
