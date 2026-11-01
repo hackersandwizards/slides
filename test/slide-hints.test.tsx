@@ -62,4 +62,21 @@ describe("SlideHints", () => {
       vi.useRealTimers();
     }
   });
+
+  it("shows the first-slide hints again when the page moves on to another deck", () => {
+    vi.useFakeTimers();
+    try {
+      history.pushState(null, "", "/deck-a/0");
+      const first = render(<SlideHints slideIndex={0} />);
+      act(() => vi.advanceTimersByTime(5000));
+      first.unmount();
+      // A client-side move to a second deck keeps this module loaded: its opening gets the intro.
+      history.pushState(null, "", "/deck-b/0");
+      const second = render(<SlideHints slideIndex={0} />);
+      expect(second.queryByText("to go to next slide")).not.toBeNull();
+    } finally {
+      vi.useRealTimers();
+      history.pushState(null, "", "/");
+    }
+  });
 });

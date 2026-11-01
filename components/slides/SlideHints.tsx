@@ -16,9 +16,14 @@ const HINTS_STORAGE_KEY = "slide-hints-visible";
 /** How long the first-slide hints stay after the deck opens: long enough for the presenter at the
  *  keyboard to read them, gone before the title slide sits in front of an audience. */
 const INTRO_MS = 5000;
-/** When this page's intro closes, set by the first mount: a slide change remounts the hints, and
- *  coming back to the first slide later shows no intro again. */
-let introEndsAt: number | undefined;
+/** When each deck's intro closes, set by its first mount: a slide change remounts the hints, and
+ *  coming back to the first slide later shows no intro again. Keyed by the deck's path, the slide
+ *  path without its index, since a client-side move to another deck keeps this module loaded. */
+const introEndsAt = new Map<string, number>();
+
+function deckPath(): string {
+  return typeof window === "undefined" ? "" : location.pathname.replace(/\/[^/]*\/?$/, "");
+}
 
 export function SlideHints({ slideIndex }: Props) {
   const mounted = useMounted();
@@ -27,13 +32,15 @@ export function SlideHints({ slideIndex }: Props) {
   const [visible, setVisible] = useState(
     () => typeof window === "undefined" || readStored("local", HINTS_STORAGE_KEY) !== "false",
   );
-  const [intro, setIntro] = useState(() => introEndsAt === undefined || introEndsAt > Date.now());
+  const [deck] = useState(deckPath);
+  const [intro, setIntro] = useState(() => (introEndsAt.get(deck) ?? Infinity) > Date.now());
 
   useEffect(() => {
-    introEndsAt ??= Date.now() + INTRO_MS;
-    const timer = setTimeout(() => setIntro(false), introEndsAt - Date.now());
+    const endsAt = introEndsAt.get(deck) ?? Date.now() + INTRO_MS;
+    introEndsAt.set(deck, endsAt);
+    const timer = setTimeout(() => setIntro(false), endsAt - Date.now());
     return () => clearTimeout(timer);
-  }, []);
+  }, [deck]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {

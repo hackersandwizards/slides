@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "0.16.3",
+  "version": "0.16.4",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -91,7 +91,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v0.21.3",
+    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v0.21.5",
     "@tailwindcss/node": "4.3.3",
     "@tailwindcss/oxide": "4.3.3",
     "@testing-library/jest-dom": "7.0.1",

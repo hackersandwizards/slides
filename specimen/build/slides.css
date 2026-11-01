@@ -2445,6 +2445,10 @@
     --tw-font-weight: var(--font-weight-semibold);
     font-weight: var(--font-weight-semibold);
   }
+  .tracking-\(--type-display-tracking\) {
+    --tw-tracking: var(--type-display-tracking);
+    letter-spacing: var(--type-display-tracking);
+  }
   .tracking-\[-0\.02em\] {
     --tw-tracking: -0.02em;
     letter-spacing: -0.02em;
@@ -2452,10 +2456,6 @@
   .tracking-\[-0\.03em\] {
     --tw-tracking: -0.03em;
     letter-spacing: -0.03em;
-  }
-  .tracking-\[-0\.04em\] {
-    --tw-tracking: -0.04em;
-    letter-spacing: -0.04em;
   }
   .tracking-\[-0\.045em\] {
     --tw-tracking: -0.045em;

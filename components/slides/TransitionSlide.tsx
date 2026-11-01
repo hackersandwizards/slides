@@ -31,7 +31,7 @@ export function TransitionSlide({ slide }: Props) {
               outside of, and the negative margin takes it back out of the layout. A layer cut to the
               box, such as the one BlurFade's filter draws on while it runs, then cannot clip the g
               and p of a large headline, as on talk-factory-dev/51 during load. */}
-          <div className="-my-[0.2em] py-[0.2em] font-heading text-4xl leading-[0.95] font-bold tracking-[-0.04em] whitespace-pre-line text-text sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
+          <div className="-my-[0.2em] py-[0.2em] font-heading text-4xl leading-[0.95] font-bold tracking-(--type-display-tracking) whitespace-pre-line text-text sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
             {keepHyphenatedWords(slide.headline)}
           </div>
         </BlurFade>

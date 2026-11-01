@@ -239,3 +239,36 @@ it("warns on a video poster that is no PNG and sets no cover", async () => {
   );
   expect(warnings).toEqual([expect.stringContaining("poster")]);
 });
+
+// The web lights the phase whose title matches `highlightPhase` in any case, and no phase without one.
+it("lights a process slide's phase by the web's rule", async () => {
+  const slide = (highlightPhase?: string) => ({
+    type: "process",
+    headline: "H",
+    nodes: ["One", "Two", "Three"].map((title) => ({ title, description: "d" })),
+    ...(highlightPhase === undefined ? {} : { highlightPhase }),
+  });
+  const phases = ["Two", "two", undefined, "Nope", "Three"];
+  const out = join(dir, "process.pptx");
+  await renderPptx(
+    { ...slideCatalogue, slides: phases.map(slide) as Slide[] },
+    out,
+    join(import.meta.dirname, "..", "specimen"),
+  );
+  const pptx = await JSZip.loadAsync(readFileSync(out));
+  // Each slide's colours in drawing order: the slides differ in nothing else but name and page.
+  const [exact, lower, none, unknown, last] = await Promise.all(
+    phases.map(async (_, i) =>
+      [
+        ...(await pptx.file(`ppt/slides/slide${i + 1}.xml`)!.async("string")).matchAll(
+          /srgbClr val="(\w+)"/g,
+        ),
+      ]
+        .map((m) => m[1])
+        .join(),
+    ),
+  );
+  expect(lower).toBe(exact);
+  expect(none).toBe(unknown);
+  expect(none).not.toBe(last);
+});

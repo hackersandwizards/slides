@@ -2558,10 +2558,9 @@ const RENDER: {
     );
     const gap = 0.45;
     const ny = a.y + 0.3;
+    // As the web's last reveal step: the phase named in any case is lit, none without a name.
     row(d.nodes, { ...a, y: ny, h: ch }, gap, (n, r, i) => {
-      const hi =
-        d.highlightPhase === n.title ||
-        (d.highlightPhase === undefined && i === d.nodes.length - 1);
+      const hi = n.title.toLowerCase() === d.highlightPhase?.toLowerCase();
       card(s, r.x, r.y, r.w, r.h, c.card, hi ? c.teal : c.border);
       s.addShape("rect", {
         x: r.x + r.w / 2 - 0.17,
