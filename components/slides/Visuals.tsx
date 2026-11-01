@@ -46,17 +46,54 @@ const TONES = {
 
 // ─── flow: steps in order on one line, an optional loop back ────────────────
 
-function Flow({ block }: { block: Of<"flow"> }) {
-  const n = block.steps.length;
+/** A flow step as the process and evolution slides pass it: the block's step plus a `label` (a
+ *  multiplier or stage name: in the tile while every label fits it, else above the title), a
+ *  teal `subtitle`, a closing `badge` and `dim` for a stage outside the story. */
+export type FlowStep = Of<"flow">["steps"][number] & {
+  label?: string;
+  subtitle?: string;
+  badge?: string;
+  dim?: boolean;
+};
+
+// A label of up to four characters ("10x") fits the tile; one longer moves above the title, for
+// every step of the row, so the tiles stay one kind.
+const TILE_LABEL = 4;
+
+/** Steps on one line with a tile each, as the flow block draws them; the process and evolution
+ *  slides draw theirs with it too. `loop` draws the arrow from the last step back to the first,
+ *  labelled when non-empty. `revealed` shows the first n steps, the line to each and the loop
+ *  once all show. */
+export function FlowSteps({
+  steps,
+  highlight,
+  loop,
+  revealed = steps.length,
+}: {
+  steps: FlowStep[];
+  highlight?: number;
+  loop?: string;
+  revealed?: number;
+}) {
+  const n = steps.length;
+  // Six and more steps leave a column about a sixth of the slide: a size down keeps the labels
+  // whole words.
+  const dense = n >= 6;
   const centre = (i: number) => `${((i + 0.5) / n) * 100}%`;
   const edge = `${(0.5 / n) * 100}%`;
+  const inTile = steps.every((step) => (step.label?.length ?? 0) <= TILE_LABEL);
+  const show = (on: boolean) =>
+    `transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`;
   return (
     <div className="relative w-full">
       {/* The loop runs above the nodes, out of the last one and down into the first. */}
-      {block.loop && (
-        <div className="relative mb-2 h-24" aria-hidden>
+      {loop !== undefined && (
+        <div
+          className={`relative mb-2 ${loop ? "h-24" : "h-16"} ${show(revealed >= n)}`}
+          aria-hidden
+        >
           <div
-            className="absolute top-6 bottom-0 rounded-t-[1.25rem] border-x-4 border-t-4"
+            className={`absolute ${loop ? "top-6" : "top-2"} bottom-0 rounded-t-[1.25rem] border-x-4 border-t-4`}
             style={{ left: edge, right: edge, borderColor: GREY }}
           />
           <svg
@@ -66,55 +103,94 @@ function Flow({ block }: { block: Of<"flow"> }) {
           >
             <path d="M0 0 H28 L14 24 Z" fill={GREY} />
           </svg>
-          <span
-            className={`absolute top-6 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-6 font-sans text-xl font-semibold text-text`}
-          >
-            {block.loop}
-          </span>
+          {loop && (
+            <span
+              className={`absolute top-6 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-6 font-sans text-xl font-semibold text-text`}
+            >
+              {loop}
+            </span>
+          )}
         </div>
       )}
       <div className="relative">
-        {/* The line the steps sit on, from the first node's centre to the last one's. */}
-        <div
-          className="absolute top-12 h-1 -translate-y-1/2"
-          style={{ left: edge, right: edge, background: GREY }}
-        />
-        {/* Arrowheads where the line meets the next node. */}
-        {block.steps.slice(1).map((_, i) => (
-          <svg
-            key={i}
-            className="absolute top-12 h-7 w-6 -translate-x-full -translate-y-1/2"
-            style={{ left: `calc(${centre(i + 1)} - 4rem)` }}
-            viewBox="0 0 24 28"
-            aria-hidden
-          >
-            <path d="M0 0 L24 14 L0 28 Z" fill={GREY} />
-          </svg>
+        {/* The line from each node's centre to the next one's, with its arrowhead, shown with
+            the step it leads to. */}
+        {steps.slice(1).map((_, i) => (
+          <div key={i} className={show(i + 1 < revealed)} aria-hidden>
+            <div
+              className="absolute top-12 h-1 -translate-y-1/2"
+              style={{
+                left: centre(i),
+                right: `${100 - ((i + 1.5) / n) * 100}%`,
+                background: GREY,
+              }}
+            />
+            <svg
+              className="absolute top-12 h-7 w-6 -translate-x-full -translate-y-1/2"
+              style={{ left: `calc(${centre(i + 1)} - 4rem)` }}
+              viewBox="0 0 24 28"
+            >
+              <path d="M0 0 L24 14 L0 28 Z" fill={GREY} />
+            </svg>
+          </div>
         ))}
         <div
           className="relative grid"
           style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}
         >
-          {block.steps.map((step, i) => {
-            const on = block.highlight === i;
+          {steps.map((step, i) => {
+            const on = highlight === i;
             // A tone (red, green) colours the step's words only, so the nodes stay one family.
             const tone = step.tone ? TONES[step.tone] : undefined;
+            const ink = step.dim ? "text-text-muted" : (tone ?? "text-text");
+            const accent = step.dim ? "text-text-muted" : "text-primary";
             return (
-              <div key={i} className="flex flex-col items-center px-5 text-center">
+              <div
+                key={i}
+                inert={i >= revealed}
+                className={`flex flex-col items-center ${dense ? "px-2" : "px-5"} text-center ${show(i < revealed)}`}
+              >
                 <span
-                  className={`relative flex h-24 w-24 items-center justify-center rounded-brand-sm font-heading text-4xl font-bold ${
-                    on ? "bg-primary text-white" : `border-4 bg-background ${tone ?? "text-text"}`
+                  className={`relative flex h-24 min-w-24 items-center justify-center rounded-brand-sm px-3 font-heading text-4xl font-bold ${
+                    on ? "bg-primary text-white" : `border-4 bg-background ${ink}`
                   }`}
                   style={on ? undefined : { borderColor: GREY }}
                 >
-                  {step.icon ? <Icon name={step.icon} className="h-12 w-12" /> : i + 1}
+                  {step.icon ? (
+                    <Icon name={step.icon} className="h-12 w-12" />
+                  ) : step.label && inTile ? (
+                    step.label
+                  ) : (
+                    i + 1
+                  )}
                 </span>
-                <h3 className={`mt-7 ${LABEL} ${tone ?? (on ? "text-primary" : "text-text")}`}>
+                {step.label && !inTile && (
+                  <span
+                    className={`mt-5 -mb-4 font-heading text-xl font-bold text-balance ${accent}`}
+                  >
+                    {step.label}
+                  </span>
+                )}
+                <h3
+                  className={`mt-7 ${dense ? LABEL.replace("text-4xl", "text-2xl") : LABEL} ${on ? "text-primary" : ink}`}
+                >
                   {renderMarkdown(step.title)}
                 </h3>
+                {step.subtitle && (
+                  <p className={`mt-2 text-xl font-semibold text-balance ${accent}`}>
+                    {renderMarkdown(step.subtitle)}
+                  </p>
+                )}
                 {step.text && (
-                  <p className={`mt-3 ${CAPTION} text-balance text-text`}>
+                  <p
+                    className={`mt-3 ${CAPTION} text-balance ${step.dim ? "text-text-muted" : "text-text"}`}
+                  >
                     {renderMarkdown(step.text)}
+                  </p>
+                )}
+                {step.badge && (
+                  <p className={`mt-3 text-xl font-semibold ${accent}`}>
+                    {renderMarkdown(step.badge)}
                   </p>
                 )}
               </div>
@@ -124,6 +200,10 @@ function Flow({ block }: { block: Of<"flow"> }) {
       </div>
     </div>
   );
+}
+
+function Flow({ block }: { block: Of<"flow"> }) {
+  return <FlowSteps steps={block.steps} highlight={block.highlight} loop={block.loop} />;
 }
 
 // ─── layers: a stack, each layer resting on the one below ───────────────────

@@ -1,12 +1,11 @@
 "use client";
 
-import { Fragment, type CSSProperties } from "react";
-import { ArrowRight } from "lucide-react";
 import type { ProcessSlide as ProcessSlideType } from "../../types/slide";
 import { SlideShell } from "./SlideShell";
 import { iconMap, type LucideIcon } from "../../lib/icons";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { TitledContent, SlideTitle } from "./primitives";
+import { TitledContent, SlideTitle, SlideCaption } from "./primitives";
+import { FlowSteps } from "./Visuals";
 
 interface Props {
   slide: ProcessSlideType;
@@ -53,6 +52,10 @@ export function ProcessSlide({ slide }: Props) {
     hasFooter: !!slide.footer,
   });
 
+  // The named phase stays lit once every step shows; while stepping, the step just revealed is.
+  const named = slide.nodes.findIndex(
+    (node) => node.title.toLowerCase() === slide.highlightPhase?.toLowerCase(),
+  );
   const positions = nodePositions(slide.nodes.length);
   const canvasH = canvasHeight(slide.nodes.length);
 
@@ -68,70 +71,20 @@ export function ProcessSlide({ slide }: Props) {
         <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
 
         <div className="slide-body items-center">
-          <div className="flex w-full flex-col items-center gap-4">
-            {/* Desktop: the steps in one row with a return line under it, so each card is wide
-                enough for its text at the type scale. Delivered decks keep the circle (slides.css). */}
-            <div className="process-row hidden w-full flex-col md:flex">
-              <div className="flex items-stretch">
-                {slide.nodes.map((node, index) => {
-                  // Six and more cards leave a mono heading about ten characters a line: a size down
-                  // and a narrower padding keep "Repository" and "Validation" off the card edges.
-                  const dense = slide.nodes.length >= 6;
-                  const isRevealed = index < revealedCount;
-                  // The step being revealed, or the named phase; once every step shows, none stands
-                  // out unless a phase is named.
-                  const highlighted =
-                    (index === revealedCount - 1 && revealedCount < slide.nodes.length) ||
-                    node.title.toLowerCase() === slide.highlightPhase?.toLowerCase();
-                  const Icon =
-                    (node.icon ? iconMap[node.icon] : null) ?? defaultIcons[index] ?? iconMap.bot;
-                  return (
-                    <Fragment key={index}>
-                      {index > 0 && (
-                        <ArrowRight
-                          className={`mx-2 h-10 w-10 shrink-0 self-center transition-colors duration-500 ${index < revealedCount ? "text-brand" : "text-primary-border"}`}
-                          aria-hidden
-                        />
-                      )}
-                      <div
-                        className={`flex min-w-0 flex-1 flex-col items-center rounded-brand border bg-white ${dense ? "px-3" : "px-4"} py-6 text-center transition-all duration-500 ${
-                          highlighted
-                            ? "border-brand bg-brand/7"
-                            : isRevealed
-                              ? "border-border"
-                              : "border-primary-border/40 opacity-40"
-                        }`}
-                      >
-                        <span
-                          className={`flex h-14 w-14 items-center justify-center rounded-brand-sm ${highlighted ? "bg-gradient-to-r from-brand to-brand-accent text-white" : "bg-brand/7 text-brand"}`}
-                        >
-                          <Icon className="h-7 w-7" aria-hidden />
-                        </span>
-                        <h3
-                          className={`mt-3 font-heading ${dense ? "text-base" : "text-xl"} font-bold text-balance text-text`}
-                        >
-                          {node.title}
-                        </h3>
-                        <p className="card-text-base mt-2 leading-snug text-text-muted">
-                          {node.description}
-                        </p>
-                      </div>
-                    </Fragment>
-                  );
-                })}
-              </div>
-              {/* The return line: from under the last card's centre back to under the first's. A
-                  card is the row less its arrows (3.5rem each: w-10 plus mx-2) over n, so its
-                  centre sits half a card in; the line's 4px edges are centred on that point. */}
-              <div
-                className={`relative mx-[calc((100%-(var(--n)-1)*3.5rem)/(2*var(--n))-2px)] h-10 rounded-b-2xl border-x-4 border-b-4 transition-colors duration-500 ${revealedCount >= slide.nodes.length ? "border-brand" : "border-border"}`}
-                style={{ "--n": slide.nodes.length } as CSSProperties}
-                aria-hidden
-              >
-                <span
-                  className={`absolute -top-3 left-[calc(-2px-0.6rem)] h-0 w-0 border-x-[0.6rem] border-b-[0.9rem] border-x-transparent transition-colors duration-500 ${revealedCount >= slide.nodes.length ? "border-b-brand" : "border-b-primary-border"}`}
-                />
-              </div>
+          <div className="flex w-full flex-col items-center gap-10">
+            {/* Desktop and print: the steps on one line as the flow block draws them, the loop
+                back above. Phones keep the circle (slides.css). */}
+            <div className="hidden w-full md:block">
+              <FlowSteps
+                steps={slide.nodes.map((node) => ({
+                  title: node.title,
+                  text: node.description,
+                  icon: node.icon ?? undefined,
+                }))}
+                highlight={revealedCount < slide.nodes.length ? revealedCount - 1 : named}
+                loop=""
+                revealed={revealedCount}
+              />
             </div>
             <div
               className="process-canvas relative max-md:[zoom:0.44]"
@@ -314,20 +267,7 @@ export function ProcessSlide({ slide }: Props) {
               })}
             </div>
 
-            {slide.footer && (
-              <div
-                inert={!footerVisible}
-                className={`w-full max-w-4xl transition-all duration-500 ${
-                  footerVisible
-                    ? "translate-y-0 opacity-100"
-                    : "pointer-events-none translate-y-4 opacity-0"
-                }`}
-              >
-                <div className="rounded-brand border border-border bg-brand-accent/7 px-8 py-4 text-center">
-                  <p className="text-lg font-medium text-brand-accent">{slide.footer}</p>
-                </div>
-              </div>
-            )}
+            {slide.footer && <SlideCaption visible={footerVisible}>{slide.footer}</SlideCaption>}
           </div>
         </div>
       </TitledContent>
