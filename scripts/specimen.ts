@@ -179,6 +179,10 @@ ${frames.map((f) => tile(f)).join("\n")}
 ${blockFrames.map((f) => tile(f, "block-")).join("\n")}
 </main>
 </div>
+<script>
+// On GitHub Pages, links to the other two catalogues leave their local addresses for their public pages.
+if (location.hostname.endsWith(".github.io")) for (const a of document.querySelectorAll("a[href]")) { const name = a.hostname.slice(0, -".localhost".length); if (a.hostname.endsWith(".localhost") && ["brand", "slides", "documents"].includes(name)) a.href = "https://hackersandwizards.github.io/" + name + a.pathname + a.hash; }
+</script>
 </body>
 </html>
 `;
