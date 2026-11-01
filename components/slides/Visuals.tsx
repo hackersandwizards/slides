@@ -82,6 +82,9 @@ export function FlowSteps({
   const centre = (i: number) => `${((i + 0.5) / n) * 100}%`;
   const edge = `${(0.5 / n) * 100}%`;
   const inTile = steps.every((step) => (step.label?.length ?? 0) <= TILE_LABEL);
+  // A label carrying a number ("Stage 1", "Monat 2 und 3") already counts: the tiles stay empty
+  // rather than repeat or contradict it.
+  const counted = !steps.some((step) => /\d/.test(step.label ?? ""));
   const show = (on: boolean) =>
     `transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`;
   return (
@@ -161,7 +164,7 @@ export function FlowSteps({
                   ) : step.label && inTile ? (
                     step.label
                   ) : (
-                    i + 1
+                    counted && i + 1
                   )}
                 </span>
                 {step.label && !inTile && (

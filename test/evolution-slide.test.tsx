@@ -29,9 +29,17 @@ describe("EvolutionSlide", () => {
 
   // One label too long for a tile moves every label above its title, and the tiles count.
   it("moves every label above the title when one is too long for a tile", () => {
-    const { getByText } = printed([stage("1x", "Chat"), stage("Stage 2", "Harness")]);
-    expect(getByText("1x").nextElementSibling?.tagName).toBe("H3");
-    expect(getByText("1x").previousElementSibling?.textContent).toBe("1");
+    const { getByText } = printed([stage("Basis", "Chat"), stage("Harness", "Harness")]);
+    expect(getByText("Basis").nextElementSibling?.tagName).toBe("H3");
+    expect(getByText("Basis").previousElementSibling?.textContent).toBe("1");
+  });
+
+  // "Stage 1" over a tile reading 1 says the number twice: a label carrying a number leaves the
+  // tiles empty.
+  it("leaves the tiles empty when a label carries a number", () => {
+    const { getByText } = printed([stage("Stage 1", "Chat"), stage("Monat 2 und 3", "Harness")]);
+    expect(getByText("Stage 1").previousElementSibling?.textContent).toBe("");
+    expect(getByText("Monat 2 und 3").previousElementSibling?.textContent).toBe("");
   });
 
   // Print opens with every stage showing: the named stage is the one lit, as on process.
