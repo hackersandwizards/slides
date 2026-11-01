@@ -36,7 +36,7 @@ window.DECISION_REPOS["slides"] = [
     title:
       "Should five card shapes become one: grid pillars, labeled-grid, four-column and hooks into cards?",
     area: "slides",
-    priority: 3,
+    priority: 2,
     order: 1002,
     status: "open",
     context:
@@ -60,7 +60,7 @@ window.DECISION_REPOS["slides"] = [
     id: "merge-comparison",
     title: "Should transform, guidance and positions become variants of comparison?",
     area: "slides",
-    priority: 3,
+    priority: 2,
     order: 1003,
     status: "open",
     context:
@@ -125,7 +125,7 @@ window.DECISION_REPOS["slides"] = [
     id: "merge-numbers",
     title: "Should grid stats merge into numbers?",
     area: "slides",
-    priority: 3,
+    priority: 2,
     order: 1006,
     status: "open",
     context:
@@ -141,7 +141,7 @@ window.DECISION_REPOS["slides"] = [
     id: "merge-content",
     title: "Should regular merge into content?",
     area: "slides",
-    priority: 3,
+    priority: 2,
     order: 1007,
     status: "open",
     context:
@@ -161,7 +161,7 @@ window.DECISION_REPOS["slides"] = [
     id: "merge-statement",
     title: "Should content centered merge into statement?",
     area: "slides",
-    priority: 3,
+    priority: 2,
     order: 1008,
     status: "open",
     context:
