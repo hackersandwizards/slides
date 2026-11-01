@@ -18,15 +18,16 @@ Add the dependency in exactly this form, pinned to the newest tag
 "@hackersandwizards/slides": "git+https://github.com/hackersandwizards/slides.git#v<version>"
 ```
 
-| Import                                               | What                                       |
-| ---------------------------------------------------- | ------------------------------------------ |
-| `@hackersandwizards/slides/styles/slides.css`        | the slide stylesheet, Tailwind 4           |
-| `@hackersandwizards/slides/types/slide`              | `Presentation`, `Slide` and the blocks     |
-| `@hackersandwizards/slides/components/slides/<Name>` | a slide component                          |
-| `@hackersandwizards/slides/lib/<module>`             | a module `exports` in `package.json` names |
-| `@hackersandwizards/slides/lib/next-adapter`         | `NextSlidesAdapter`                        |
-| `@hackersandwizards/slides/scripts/render-pdf`       | `renderPdf` for an export script           |
-| `@hackersandwizards/slides/specimen/slide-catalogue` | the fictional specimen deck                |
+| Import                                                   | What                                                                  |
+| -------------------------------------------------------- | --------------------------------------------------------------------- |
+| `@hackersandwizards/slides/styles/slides.css`            | the slide stylesheet, Tailwind 4                                      |
+| `@hackersandwizards/slides/types/slide`                  | `Presentation`, `Slide` and the blocks                                |
+| `@hackersandwizards/slides/components/slides/<Name>`     | a slide component                                                     |
+| `@hackersandwizards/slides/lib/<module>`                 | a module `exports` in `package.json` names                            |
+| `@hackersandwizards/slides/lib/next-adapter`             | `NextSlidesAdapter`                                                   |
+| `@hackersandwizards/slides/components/slides/PrintSlide` | `PrintDeck`, a deck's print route, and `PrintSlide`, one printed page |
+| `@hackersandwizards/slides/scripts/render-pdf`           | `renderPdf` for an export script                                      |
+| `@hackersandwizards/slides/specimen/slide-catalogue`     | the fictional specimen deck                                           |
 
 The command `slides-density [--serve "<command>"] <print-url> ...` belongs in each consumer's gate:
 it renders each deck's print route and fails on a slide the fit guard shrinks below 0.8, and lists

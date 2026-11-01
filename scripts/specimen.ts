@@ -13,9 +13,7 @@ import { compile } from "@tailwindcss/node";
 import { Scanner } from "@tailwindcss/oxide";
 import { slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
-import { cornerMark } from "../lib/logo";
-import { pageLabel } from "../lib/slide-utils";
-import { BrandStrip, HwWordmark, PageCounter } from "../components/slides/SlideContainer";
+import { PrintSlide } from "../components/slides/PrintSlide";
 import { slideCatalogue } from "../specimen/slide-catalogue";
 
 const root = join(import.meta.dirname, "..");
@@ -47,26 +45,8 @@ const blockPicks = deck.flatMap((s, index) =>
 // Each slide renders in its own 1920x1080 frame, as scripts/render-pdf.ts sets its viewport: a
 // slide's lengths in `vh` (`.slide-content`, image heights) read the window that holds them.
 const renderFrame = (index: number, name: string) => {
-  const slide = deck[index];
-  const Slide = slideComponents[slide.type];
-  const page = pageLabel(deck, index);
   const markup = renderToStaticMarkup(
-    h(
-      PrintProvider,
-      null,
-      h(
-        "div",
-        { className: "print-slide" },
-        h(Slide, { slide }),
-        h(BrandStrip),
-        h(
-          "div",
-          { className: "print-watermark flex items-center gap-2" },
-          page && h("span", { className: "mr-3" }, h(PageCounter, { label: page })),
-          h(HwWordmark, { mark: cornerMark(slideCatalogue, index) }),
-        ),
-      ),
-    ),
+    h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalogue, index })),
   )
     .replace(
       /(src|href)="\/hw-(wordmark|lockup)(-night)?\.svg"/g,

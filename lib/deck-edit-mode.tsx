@@ -125,9 +125,9 @@ export function DeckEdit({ deck }: { deck: string }) {
         height: "60px",
         zIndex: "90",
         border: `2px solid ${LEAD}`,
-        borderRadius: "6px",
+        borderRadius: "var(--radius-sm)",
         background: "white",
-        boxShadow: "0 8px 24px rgb(0 0 0 / 0.4)",
+        boxShadow: "var(--shadow-overlay)",
       });
       frame.srcdoc = fieldDoc(
         getComputedStyle(document.documentElement).getPropertyValue("--color-ink"),

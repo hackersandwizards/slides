@@ -17,7 +17,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 ## Layout
 
 - `components/slides/`: one component per slide type, plus the shared parts in `primitives.tsx`.
-  A part used by a second slide type moves there.
+  A part used by a second slide type moves there. `PrintSlide.tsx` is the printed page, strip and
+  corner included, and `PrintDeck` the whole deck a consumer's print route renders, which the
+  specimen renders too.
 - `components/ui/`: effects and `image.tsx`, the engine's image.
 - `lib/`: hooks, navigation, presenter sync, the edit mode, themes and section styles.
   `lib/adapter.tsx` is the one seam to a consumer's framework: `SlidesAdapterProvider` takes an

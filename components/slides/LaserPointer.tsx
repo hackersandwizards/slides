@@ -198,7 +198,7 @@ export function LaserPointer() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-50" aria-hidden="true">
-      <style>{`::highlight(${HIGHLIGHT_NAME}) { background-color: rgba(255, 214, 0, 0.5); }`}</style>
+      <style>{`::highlight(${HIGHLIGHT_NAME}) { background-color: color-mix(in srgb, var(--color-amber) 40%, transparent); }`}</style>
       <canvas ref={canvasRef} className="pointer-events-none h-full w-full" />
     </div>
   );
