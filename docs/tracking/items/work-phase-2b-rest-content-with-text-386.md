@@ -1,7 +1,8 @@
 ---
 kind: work
 status: open
-priority: 2
+priority: 3
+order: 50
 owner: Agent (slides session)
 evidence: "base round in the report, section Phase 2; video and image in section Phase 2b"
 ---

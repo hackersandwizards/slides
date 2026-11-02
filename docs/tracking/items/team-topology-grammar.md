@@ -2,7 +2,7 @@
 kind: decision
 status: assumed
 priority: 3
-order: 10
+order: 70
 area: slides
 owner: Benedikt
 assumption: "Shape language from the templates, colours from the brand, decided in the blind panel."

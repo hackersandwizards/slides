@@ -1,7 +1,8 @@
 ---
 kind: work
 status: open
-priority: 2
+priority: 3
+order: 60
 owner: Agent (slides session)
 evidence: "trainer-hub `docs/tracking/2026-11-01-performance.md`, section on the engine"
 ---

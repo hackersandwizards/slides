@@ -2,7 +2,9 @@
 
 Stand 2026-11-01, Phase 1 (Analyse und Plan) und Phase 2 ohne offene Entscheidung (Basis-Runde,
 vier Typen bis zum Plateau, Sketch-Variante, v0.12.0), dazu Phase 2b mit `video`, `image` und
-`linked-image` (v0.14.0). Ziel und
+`linked-image` (v0.14.0). Seit v0.27.0 (02.11.) sind sechs der sieben Duplikat-Gruppen
+zusammengelegt (Gruppe 4 bleibt nach Blind-Review), und die Specimen-Seite ordnet jeden Eintrag nach
+den 13 Kommunikationsaufgaben, mit Suche. Ziel und
 Arbeit je Phase: die `work-phase-*`-Items in [items/](items/), Entscheidungen ebenda.
 
 Benedikt am 01.11. (von Ada weitergegeben): «Wir scheinen da auch bei den Folien gerade ziemlich
@@ -18,7 +20,7 @@ Datendiagrammen bei Bedarf bis 47. Die Agenda als Zeitplan ist eine Variante und
 
 - **Duplikate:** Karten gibt es in fünf Formen, Vergleiche in vier, Abläufe in drei, die
   Deck-Übersicht in drei, Zahlen in zwei, die Textfolie in zwei, die Einzelaussage in zwei. Je
-  Gruppe eine Zeile in `items.js` mit dem Ziel, das überlebt.
+  Gruppe ein `merge-*`-Item mit dem Ziel, das überlebt.
 - **Fehlt:** eine Übungsfolie (56 Folien bauen sie von Hand), eine Agenda als Zeitplan (19), eine
   Demo-Folie, "Nächste Schritte" für Pitches und, nur bei Bedarf, ein Vollbild mit Text sowie ein
   Anteils- und ein Abweichungsdiagramm.
@@ -32,8 +34,9 @@ Datendiagrammen bei Bedarf bis 47. Die Agenda als Zeitplan ist eine Variante und
   Abschnitt Phase 2.
 - **Phase 2b:** `video` steht bei 8,50 statt 2,71, `image` bei 7,74 statt 4,51 und
   `linked-image` bei 7,35 statt 4,46 (Rauschen je Bild 0,28). Details im Abschnitt Phase 2b.
-- **Die Seite selbst** zeigt je Typ eine Kachel und seit v0.12.0 jeden Inhaltsblock außer den drei
-  Code-Blöcken, aber keine Variante und keine Suche.
+- **Die Seite selbst** zeigte am 01.11. je Typ eine Kachel und seit v0.12.0 jeden Inhaltsblock außer
+  den drei Code-Blöcken, aber keine Variante und keine Suche. Seit v0.27.0 zeigt sie jeden Typ, jede
+  Variante und jeden Block nach Kommunikationsaufgabe, mit Suche.
 
 Plan: Phase 2 legt die Duplikate zusammen und optimiert die schwächsten und meistgenutzten
 Einträge bis zum Plateau, Phase 3 baut die Katalogseite nach Kommunikationsaufgabe, Phase 4 stellt
@@ -194,7 +197,6 @@ Answer with JSON objects only, one per line, nothing else.
   deshalb weiter nur `cycle`, die Panels liefen auf hydrierten Renderings.
 - Ein hervorgehobener Einzelbalken bräuchte ein neues Feld; ausgelassen, bis ein Deck es braucht.
 - Teal liegt unter der Chroma-Untergrenze des Dataviz-Validators. Das ist ein Markenwert und bleibt.
-- `Particles` ist exportiert, aber von keiner Folie mehr genutzt (GOAL.md).
 
 ## Phase 2b: Video, Bild und verlinktes Bild
 
@@ -356,8 +358,9 @@ Zeile `merge-flow`.
 | `overview`            |         17 |    6,17 | bleibt vorerst: Doppelspur der Factory-Talks, wird überarbeitet  |
 
 Alle vier liegen unter 6,6. Das Ziel bekommt eine optionale zweite Spalte. Die Akzentfarbe der
-Spalten entscheidet dd- (Deep-Dive-Look), deshalb wartet diese Gruppe auf dd-. Zeile
-`merge-phased-pills`.
+Spalten entscheidet dd- (Deep-Dive-Look), deshalb wartete diese Gruppe auf dd-. Zeile
+`merge-phased-pills`: Das Blind-Review vom 02.11. behält die Formen (`roadmap` als `phased-pills`
+6,17 gegen 7,68).
 
 ### 5. Zahlen: zwei Formen, Ziel `numbers`
 
@@ -613,8 +616,8 @@ Ein Eintrag ist ein Typ, ein Block oder eine Variante. Ein Eintrag kann in zwei 
 
 ![Mockup der Katalogseite](2026-11-01-catalogue-program/katalog-mockup.jpg)
 
-Die Seite bleibt `specimen/index.html`, aus dem Specimen-Deck generiert und vom Gate auf Frische
-geprüft. Neu:
+Die Seite bleibt `specimen/index.html`, aus dem Specimen-Deck generiert. Seit v0.26.1 ist sie nicht
+mehr eingecheckt: `bun run check`, `bun run dev` und der Pages-Workflow schreiben sie. Neu:
 
 - **Navigation nach Aufgabe.** Links die 13 Aufgaben aus der Tabelle oben, mit Zahl der Einträge
   und einer markierten Lücke. Ein Eintrag darf in zwei Aufgaben stehen.

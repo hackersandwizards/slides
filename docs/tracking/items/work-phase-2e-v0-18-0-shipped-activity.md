@@ -2,10 +2,11 @@
 kind: work
 status: open
 priority: 2
+order: 40
 owner: Agent (slides session)
-evidence: "os `docs/tracking/2026-11-01-slide-system.md`"
+evidence: "os `docs/tracking/2026-11-01-slide-system.md`; `regular`, grid stats and transform merged in slides v0.27.0 (`work-phase-2c-merge-duplicates-each-group-by`)"
 ---
 
-# Phase 2e (v0.18.0 shipped `activity` for exercise, demo and debrief, `agenda` with `when` for schedules and next steps, `evolution` into …
+# Phase 2e: four merges of the overlap matrix and seven parts still open
 
-Phase 2e (v0.18.0 shipped `activity` for exercise, demo and debrief, `agenda` with `when` for schedules and next steps, `evolution` into `process` and `dual-pill-overview` into `roadmap` as aliases): the merges of the overlap matrix still open: `deep-dive-divider` into `transition`, `regular` into `content`, `overview` into `phased-pills`, `grid` stats into `numbers`, chart `bar` into `bars`, comparison into `two-column` and `transform`, `media` into a gallery block; then the parts still open (`Kicker`, `Takeaway`, `Chip`, `Connector`, `Avatar`, `Quote`, one `MediaFrame`). v0.21.0 shipped the three layers: `styles/tokens.css` with `test/tokens.test.ts`, the parts `SlideCard` with tones, `DisplayHeading`, `NumberTile`, `DashedFrame` and `VideoPlayer`, `ground`, `tone` on grid cards and roadmap rows in place of `background`, `accentColor` and `dotColor` (aliases until the consumers move), and the specimen page's Parts section
+Merges still open: `deep-dive-divider` into `transition`, `overview` into `phased-pills`, chart `bar` into `bars`, `media` into a gallery block. Parts still open: `Kicker`, `Takeaway`, `Chip`, `Connector`, `Avatar`, `Quote`, and one `MediaFrame` (today a local function in `ContentSlide.tsx`). `regular` into `content`, grid stats into `numbers` and transform into comparison shipped in v0.27.0; the three layers (tokens, parts, Parts section) in v0.21.0.

@@ -2,7 +2,7 @@
 kind: decision
 status: assumed
 priority: 3
-order: 11
+order: 80
 area: slides
 owner: Benedikt
 assumption: "Tie goes to brand; what the brand card, label and callout have no hue for (purple, amber, green, red cards and labels, status callouts) stays the slide's own until brand adds a hue setting."
