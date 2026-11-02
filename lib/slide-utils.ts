@@ -1,5 +1,7 @@
 import { ROLE_NAMES } from "./presenter-sync";
 import type {
+  AgendaSlide,
+  ContentSection,
   ComparisonGuidanceSlide,
   ContentBlock,
   ContentSlide,
@@ -8,7 +10,9 @@ import type {
   GridSlide,
   GuidanceSlide,
   ProcessSlide,
+  RegularSlide,
   RoadmapSlide,
+  StatementSlide,
   SectionTheme,
 } from "../types/slide";
 
@@ -230,4 +234,108 @@ export function pipelineAsFlow(block: Block<"pipeline">): Block<"flow"> | undefi
         }
       : undefined,
   };
+}
+
+/** A centered content slide as the statement slide that replaces it, or undefined where its
+ *  blocks do not fit one: more than a subtitle and a closing of text, a block other than a
+ *  paragraph, callout or linked image, a footer, markdown in the headline, or a deep-dive part. */
+export function centeredAsStatement(slide: ContentSlide): StatementSlide | undefined {
+  if (slide.footer || slide.sectionTheme === "deepdive" || /[`*[]/.test(slide.headline)) return;
+  const texts: string[] = [];
+  let closing: string | undefined;
+  let linkedImage: StatementSlide["linkedImage"];
+  for (const block of slide.content) {
+    if (block.type === "paragraph") texts.push(block.text);
+    else if (block.type === "callout" && closing === undefined) closing = block.text;
+    else if (block.type === "linked-image" && !linkedImage)
+      linkedImage = { src: block.src, alt: block.alt, href: block.href };
+    else return;
+  }
+  const subtitle = slide.subtitle ?? texts.shift();
+  if (closing === undefined) closing = texts.pop();
+  if (texts.length) return;
+  return {
+    type: "statement",
+    ground: slide.ground,
+    background: slide.background,
+    kicker: slide.sectionLabel,
+    lines: [slide.headline],
+    subtitle,
+    closing,
+    linkedImage,
+  };
+}
+
+/** A section's text with its link set as a markdown link after it. */
+const sectionText = (s: ContentSection) =>
+  [s.text, s.link && `[${s.link.label}](${s.link.url})`].filter(Boolean).join(" ") || undefined;
+
+/** A `regular` slide as the slide that replaces it (decision merge-content), or undefined for one
+ *  with a profile, which keeps its own drawing (the sidebar was not panelled). The cards layout is an agenda; otherwise two
+ *  titled sections become a two-column block, one a lead line over its list, three and more a
+ *  cards block with a list per card; an untitled section is a list, a paragraph, or the closing
+ *  callout where it comes last. */
+export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlide | undefined {
+  if (slide.layout === "cards")
+    return {
+      type: "agenda",
+      headline: slide.headline,
+      items: slide.sections.map((s) => ({
+        title: s.title ?? sectionText(s) ?? "",
+        text: s.title ? (sectionText(s) ?? s.items?.join(", ")) : undefined,
+      })),
+    };
+  if (slide.profile) return;
+  const titled = slide.sections.filter((s) => s.title);
+  const grouped: ContentBlock[] =
+    titled.length >= 3
+      ? [
+          {
+            type: "cards",
+            items: titled.map((s) => ({
+              title: s.title,
+              text: sectionText(s),
+              icon: s.icon,
+              items: s.items,
+            })),
+            columns: Math.min(titled.length, 4) as 3 | 4,
+          },
+        ]
+      : titled.length === 2
+        ? [
+            {
+              type: "two-column",
+              variant: "neutral",
+              left: {
+                title: titled[0].title,
+                items: titled[0].items,
+                text: sectionText(titled[0]),
+              },
+              right: {
+                title: titled[1].title,
+                items: titled[1].items,
+                text: sectionText(titled[1]),
+              },
+            },
+          ]
+        : titled.flatMap((s): ContentBlock[] => [
+            { type: "paragraph", text: `**${s.title}**${s.text ? ` ${sectionText(s)}` : ""}` },
+            ...(s.items ? [{ type: "bullets" as const, items: s.items }] : []),
+          ]);
+  const content: ContentBlock[] = [];
+  slide.sections.forEach((s, i) => {
+    if (s.title) {
+      if (s === titled[0]) content.push(...grouped);
+      return;
+    }
+    const text = sectionText(s);
+    if (text)
+      content.push(
+        i === slide.sections.length - 1 && i > 0
+          ? { type: "callout", text }
+          : { type: "paragraph", text },
+      );
+    if (s.items) content.push({ type: "bullets", items: s.items });
+  });
+  return { type: "content", headline: slide.headline, content };
 }

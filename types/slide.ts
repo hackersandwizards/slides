@@ -234,6 +234,10 @@ export interface ContentSlide extends Grounded {
   principle?: string;
   headline: string;
   subtitle?: string;
+  /** `centered` renders as a statement slide where its blocks fit one (`centeredAsStatement` in
+   *  `lib/slide-utils.ts`, decision merge-statement): the section label as its kicker, up to two
+   *  paragraphs or a paragraph and a callout as subtitle and closing, one linked image. Decks move
+   *  in phase 4 (work-phase-4-every-deck-slide-onto-a). */
   layout?: "default" | "centered";
   content: ContentBlock[];
   footer?: string;
@@ -257,6 +261,10 @@ export interface ProfileInfo {
   linkedIn?: string;
 }
 
+/** Renders through the content blocks (`regularAsContent` in `lib/slide-utils.ts`, decision
+ *  merge-content): two titled sections as a two-column block, three and more as cards, an
+ *  untitled last section as the callout, the cards layout as an agenda. With a `profile` it keeps
+ *  its own drawing. Decks move in phase 4 (work-phase-4-every-deck-slide-onto-a). */
 export interface RegularSlide {
   type: "regular";
   headline: string;
@@ -281,6 +289,11 @@ export interface StatementSlide extends Grounded {
   imageSrc?: string;
   imageAlt?: string;
   attribution?: string;
+  /** The label above the lines, such as "Live demo". */
+  kicker?: string;
+  /** A screenshot or QR code under the lines, about half the slide wide, its link spelled out
+   *  under it. */
+  linkedImage?: { src: string; alt?: string; href?: string };
 }
 
 export interface EvolutionStage {

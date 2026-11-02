@@ -4,13 +4,13 @@ import { slideComponents } from "../lib/slide-components";
 import type { Slide } from "../types/slide";
 
 describe("regular slide", () => {
-  // A centred slide centres its headline and keeps the headline style.
-  it("keeps the title class when centred", () => {
+  // A regular slide renders as a content slide (merge-content), `align` included: the headline
+  // keeps the title style.
+  it("keeps the title class when it renders as content", () => {
     const SlideComponent = slideComponents.regular;
     const slide = { type: "regular", headline: "Headline", align: "center", sections: [] };
     const { getByText } = render(<SlideComponent slide={slide as Slide} />);
-    expect(getByText("Headline").classList).toContain("slide-title");
-    expect(getByText("Headline").classList).toContain("text-center");
+    expect(getByText("Headline").closest(".slide-title")).not.toBeNull();
   });
 
   // Arriving backwards opens every section at once; with no step taken, none stands back.

@@ -1,6 +1,7 @@
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
+import { PrintProvider } from "../lib/print-context";
 import { renderMarkdown } from "../lib/markdown";
 import type { Slide } from "../types/slide";
 
@@ -255,5 +256,82 @@ describe("pipeline into flow (merge-flow)", () => {
   it("sets a flow step's badge under it", () => {
     const c = content([{ type: "flow", steps: [{ title: "A", badge: "You are here" }] }]);
     expect(c.textContent).toContain("You are here");
+  });
+});
+
+describe("statement and content merges (merge-statement, merge-content)", () => {
+  const one = (slide: object) =>
+    render(
+      <PrintProvider>
+        {(() => {
+          const C = slideComponents[(slide as Slide).type];
+          return <C slide={slide as Slide} />;
+        })()}
+      </PrintProvider>,
+    ).container;
+
+  // A centered content slide whose blocks fit renders as a statement: its label the kicker, a
+  // callout the closing, a linked image under the lines with its link spelled out.
+  it("renders a centered content slide as a statement", () => {
+    const c = one({
+      type: "content",
+      layout: "centered",
+      sectionLabel: "Live demo",
+      headline: "It merged itself",
+      content: [
+        { type: "linked-image", src: "/pr.png", href: "https://example.com/pr/1" },
+        { type: "callout", text: "Closing line" },
+      ],
+    });
+    expect(c.querySelector(".hw-label")?.textContent).toBe("Live demo");
+    expect(c.querySelector("figure.w-11\\/24 img")).not.toBeNull();
+    expect(c.textContent).toContain("example.com/pr/1");
+    expect(c.textContent).toContain("Closing line");
+    expect(c.querySelector(".hw-card")).toBeNull();
+  });
+
+  // A block a statement cannot hold keeps the centered content slide.
+  it("keeps a centered slide with a terminal as content", () => {
+    const c = one({
+      type: "content",
+      layout: "centered",
+      headline: "H",
+      content: [{ type: "terminal", commands: [{ prefix: "$", text: "ls" }] }],
+    });
+    expect(c.textContent).toContain("terminal");
+  });
+
+  // Regular: two titled sections are a two-column block, three cards, a last untitled section the
+  // callout; the cards layout is an agenda; a profile keeps the regular slide.
+  it("renders regular slides through content blocks", () => {
+    const two = one({
+      type: "regular",
+      headline: "H",
+      sections: [{ title: "A", items: ["a"] }, { title: "B", items: ["b"] }, { text: "Closing" }],
+    });
+    expect(two.querySelectorAll(".grid-cols-2 > *")).toHaveLength(2);
+    expect(two.querySelector(".hw-callout")?.textContent).toBe("Closing");
+    const three = one({
+      type: "regular",
+      headline: "H",
+      sections: ["A", "B", "C"].map((title) => ({ title, items: ["x"] })),
+    });
+    expect(three.querySelectorAll(".hw-card")).toHaveLength(3);
+    const agenda = one({
+      type: "regular",
+      headline: "H",
+      layout: "cards",
+      sections: [{ title: "One", text: "t" }],
+    });
+    expect(agenda.textContent).toContain("One");
+    expect(agenda.querySelector("ol, ul")).not.toBeNull();
+    const profile = one({
+      type: "regular",
+      headline: "H",
+      profile: { name: "N", title: "T" },
+      sections: [{ title: "A", items: ["a"] }],
+    });
+    expect(profile.textContent).toContain("N");
+    expect(profile.querySelector(".text-teal")).not.toBeNull();
   });
 });

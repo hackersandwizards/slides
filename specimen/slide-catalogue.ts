@@ -739,6 +739,17 @@ const slides: Slide[] = [
     attribution: "Jonas Okafor, Lumen Freight (fictional)",
     notes: "statement: secondary background, image, quote closing, attribution.",
   },
+  {
+    type: "statement",
+    kicker: "Live demo",
+    lines: ["The agent opened its own pull request"],
+    linkedImage: {
+      src: `${IMG}/screen-pull-request.png`,
+      alt: "Fictional pull request",
+      href: "https://example.com/pull/42",
+    },
+    notes: "statement: kicker and a linked image.",
+  },
 
   {
     type: "process",

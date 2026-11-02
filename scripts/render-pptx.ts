@@ -1996,7 +1996,9 @@ const RENDER: {
 
   statement(s, ctx, d) {
     const { c } = ctx;
-    const imgW = d.imageSrc ? CW * 0.38 : 0;
+    // A linked image stands beside the statement, as a portrait does, its link on the picture.
+    const side = d.imageSrc ?? d.linkedImage?.src;
+    const imgW = side ? CW * 0.38 : 0;
     const w = CW - imgW - (imgW ? 0.4 : 0);
     const lineRuns = (line: string): Run[] => {
       const out: Run[] = [];
@@ -2048,6 +2050,15 @@ const RENDER: {
         align: "center",
       });
     paras.forEach((p, i) => (p.after = i >= crossed && i < crossed + d.lines.length - 1 ? 0 : 16));
+    if (d.kicker)
+      paras.unshift({
+        runs: [{ text: d.kicker.toUpperCase(), options: { color: c.teal } }],
+        mono: true,
+        bold: true,
+        rel: PT.label / PT.base,
+        align: "center",
+        after: 16,
+      });
     for (const [i, pt] of (d.points ?? []).entries()) {
       paras.push({
         runs: [
@@ -2086,8 +2097,11 @@ const RENDER: {
       floor: 0.5,
     };
     box(s, c, paras, SIDE, TOP, w, BOTTOM - TOP, o);
-    if (d.imageSrc)
-      picture(s, ctx, d.imageSrc, SIDE + w + 0.4, TOP, imgW, BOTTOM - TOP, { alt: d.imageAlt });
+    if (side)
+      picture(s, ctx, side, SIDE + w + 0.4, TOP, imgW, BOTTOM - TOP, {
+        alt: d.imageSrc ? d.imageAlt : d.linkedImage?.alt,
+        href: d.imageSrc ? undefined : d.linkedImage?.href,
+      });
   },
 
   evolution(s, ctx, d) {

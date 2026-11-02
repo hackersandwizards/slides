@@ -1,77 +1,20 @@
 "use client";
 
-import type { RegularSlide as RegularSlideType, ContentSection } from "../../types/slide";
+import type { RegularSlide as RegularSlideType } from "../../types/slide";
 import Image from "../ui/image";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import User from "lucide-react/icons/user";
-import { iconMap, Linkedin } from "../../lib/icons";
+import { Linkedin } from "../../lib/icons";
+import { regularAsContent } from "../../lib/slide-utils";
+import { AgendaSlide } from "./AgendaSlide";
+import { ContentSlide } from "./ContentSlide";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { useCarousel } from "../../lib/use-carousel";
 import { usePrintMode } from "../../lib/print-context";
-import { TitledContent, NumberTile } from "./primitives";
+import { TitledContent } from "./primitives";
 
 interface Props {
   slide: RegularSlideType;
-}
-
-// One look for every card, the active one in the primary accent: colour comes from the role, never
-// from a card's position (the third card used to take the amber section tint).
-const AGENDA_STYLE = {
-  bg: "bg-section-intro",
-  activeBg: "bg-primary/7",
-  border: "border-border",
-  activeBorder: "border-primary/40",
-  iconBg: "bg-primary/15 text-primary",
-};
-
-function AgendaCard({
-  section,
-  index,
-  isActive,
-}: {
-  section: ContentSection;
-  index: number;
-  isActive: boolean;
-}) {
-  const IconComponent = section.icon ? iconMap[section.icon] : null;
-  const style = AGENDA_STYLE;
-
-  return (
-    <BlurFade delay={0.2 + index * 0.15} duration={0.5}>
-      <div
-        className={`flex h-full items-start gap-3 rounded-brand border p-4 transition-all duration-300 sm:gap-4 sm:rounded-brand sm:p-6 md:gap-6 md:p-8 ${
-          isActive ? `${style.activeBorder} ${style.activeBg}` : `${style.border} ${style.bg}`
-        }`}
-      >
-        {IconComponent && (
-          <NumberTile
-            size="lg"
-            tone="none"
-            className={isActive ? style.iconBg : "bg-primary/7 text-text-subtle"}
-          >
-            <IconComponent className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8" />
-          </NumberTile>
-        )}
-        <div className="flex flex-col gap-1 sm:gap-2">
-          {section.title && (
-            <h2
-              className={`font-heading text-lg font-bold sm:text-xl md:text-2xl lg:text-3xl ${isActive ? "text-text" : "text-text-muted"}`}
-            >
-              {section.title}
-            </h2>
-          )}
-          {section.text && (
-            <p
-              className={`text-sm leading-relaxed sm:text-base md:text-lg lg:text-xl ${isActive ? "text-text-muted" : "text-text-subtle"}`}
-            >
-              {section.text}
-            </p>
-          )}
-        </div>
-      </div>
-    </BlurFade>
-  );
 }
 
 function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profile"]> }) {
@@ -118,122 +61,97 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
   );
 }
 
-/** `align: "center"` centres the headline with the sections, so the body does not read as an
- *  indent under a left-aligned title. The sections stay one column: every list shares its width
- *  and starts at the same left edge. */
+/** A regular slide renders through the content blocks (`regularAsContent`, decision
+ *  merge-content); the cards layout is an agenda. One with a profile keeps the sidebar drawing. */
 export function RegularSlide({ slide }: Props) {
-  const hasProfile = !!slide.profile;
-  const isCardsLayout = slide.layout === "cards";
-  const isCentered = slide.align === "center" && !hasProfile;
-  const { revealedCount, stepped } = useProgressiveReveal({
-    totalSteps: isCardsLayout ? 0 : slide.sections.length,
-  });
+  const replaced = regularAsContent(slide);
+  if (replaced?.type === "agenda") return <AgendaSlide slide={replaced} />;
+  if (replaced) return <ContentSlide slide={replaced} />;
+  return <ProfileRegularSlide slide={slide} />;
+}
+
+function ProfileRegularSlide({ slide }: Props) {
+  const { revealedCount, stepped } = useProgressiveReveal({ totalSteps: slide.sections.length });
   // Live, earlier sections step back so the room follows the newest one. A page shows them all.
   const printMode = usePrintMode();
-  const [activeSection] = useCarousel({
-    count: slide.sections.length,
-    initial: slide.activeSection ?? 0,
-    enabled: isCardsLayout,
-  });
 
   return (
     <SlideShell className="text-text">
       <TitledContent>
         <BlurFade delay={0.1} duration={0.6}>
-          <h1 className={isCentered ? "slide-title text-center" : "slide-title"}>
-            {slide.headline}
-          </h1>
+          <h1 className="slide-title">{slide.headline}</h1>
         </BlurFade>
 
         <div className="slide-body items-center">
-          {isCardsLayout ? (
-            <div className="flex w-full max-w-3xl flex-col gap-2 sm:gap-3 md:gap-4">
-              {slide.sections.map((section, index) => (
-                <AgendaCard
-                  key={index}
-                  section={section}
-                  index={index}
-                  isActive={activeSection === index}
-                />
-              ))}
-            </div>
-          ) : (
-            <div
-              className={`flex w-full ${hasProfile ? "max-w-6xl flex-col items-center gap-10 md:flex-row md:gap-16" : "flex-col gap-8"}`}
-            >
-              {slide.profile && (
-                <div className="w-56 flex-shrink-0 md:w-80">
-                  <ProfileCard profile={slide.profile} />
-                </div>
-              )}
+          <div className="flex w-full max-w-6xl flex-col items-center gap-10 md:flex-row md:gap-16">
+            {slide.profile && (
+              <div className="w-56 flex-shrink-0 md:w-80">
+                <ProfileCard profile={slide.profile} />
+              </div>
+            )}
 
-              <div
-                className={`flex flex-col ${hasProfile ? "min-w-0 flex-1" : isCentered ? "mx-auto w-fit max-w-5xl text-center" : ""}`}
-              >
-                <div className="flex flex-col gap-6 md:gap-8">
-                  {slide.sections.map((section, index) => {
-                    const isRevealed = index < revealedCount;
-                    // Opened fully revealed (a backward arrival), no step was taken: all are active.
-                    const isActive = stepped ? index === revealedCount - 1 : isRevealed;
+            <div className="flex min-w-0 flex-1 flex-col">
+              <div className="flex flex-col gap-6 md:gap-8">
+                {slide.sections.map((section, index) => {
+                  const isRevealed = index < revealedCount;
+                  // Opened fully revealed (a backward arrival), no step was taken: all are active.
+                  const isActive = stepped ? index === revealedCount - 1 : isRevealed;
 
-                    return (
+                  return (
+                    <div
+                      key={index}
+                      inert={!isRevealed}
+                      className={`transition-all duration-500 ${
+                        isRevealed
+                          ? "translate-y-0 opacity-100"
+                          : "pointer-events-none translate-y-6 opacity-0"
+                      }`}
+                    >
                       <div
-                        key={index}
-                        inert={!isRevealed}
-                        className={`transition-all duration-500 ${
-                          isRevealed
-                            ? "translate-y-0 opacity-100"
-                            : "pointer-events-none translate-y-6 opacity-0"
+                        className={`flex flex-col gap-3 transition-opacity duration-300 md:gap-4 ${
+                          isActive || printMode ? "opacity-100" : isRevealed ? "opacity-70" : ""
                         }`}
                       >
-                        <div
-                          className={`flex flex-col gap-3 transition-opacity duration-300 md:gap-4 ${
-                            isActive || printMode ? "opacity-100" : isRevealed ? "opacity-70" : ""
-                          }`}
-                        >
-                          {section.title && (
-                            <h2 className="font-heading text-xl font-bold text-teal sm:text-2xl md:text-3xl">
-                              {section.title}
-                            </h2>
-                          )}
-                          {section.text && (
-                            <p className="text-base leading-relaxed text-text-muted sm:text-lg md:text-xl lg:text-2xl">
-                              {section.text}
-                            </p>
-                          )}
-                          {section.items && (
-                            <ul
-                              className={`flex flex-col gap-2 md:gap-3 ${isCentered ? "text-left" : ""}`}
-                            >
-                              {section.items.map((item, itemIndex) => (
-                                <li
-                                  key={itemIndex}
-                                  className="flex items-baseline gap-3 text-base text-text-muted sm:text-lg md:gap-4 md:text-xl lg:text-2xl"
-                                >
-                                  <span className="hw-marker" />
-                                  <span>{item}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                          {section.link && (
-                            <a
-                              href={section.link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex w-fit items-center gap-2 rounded-brand-sm border border-border bg-teal/7 px-4 py-2.5 text-base text-teal transition-all hover:border-teal/25 hover:bg-teal/7 md:gap-3 md:px-5 md:py-3 md:text-lg"
-                            >
-                              {section.link.label}
-                            </a>
-                          )}
-                        </div>
+                        {section.title && (
+                          <h2 className="font-heading text-xl font-bold text-teal sm:text-2xl md:text-3xl">
+                            {section.title}
+                          </h2>
+                        )}
+                        {section.text && (
+                          <p className="text-base leading-relaxed text-text-muted sm:text-lg md:text-xl lg:text-2xl">
+                            {section.text}
+                          </p>
+                        )}
+                        {section.items && (
+                          <ul className="flex flex-col gap-2 md:gap-3">
+                            {section.items.map((item, itemIndex) => (
+                              <li
+                                key={itemIndex}
+                                className="flex items-baseline gap-3 text-base text-text-muted sm:text-lg md:gap-4 md:text-xl lg:text-2xl"
+                              >
+                                <span className="hw-marker" />
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {section.link && (
+                          <a
+                            href={section.link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex w-fit items-center gap-2 rounded-brand-sm border border-border bg-teal/7 px-4 py-2.5 text-base text-teal transition-all hover:border-teal/25 hover:bg-teal/7 md:gap-3 md:px-5 md:py-3 md:text-lg"
+                          >
+                            {section.link.label}
+                          </a>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          )}
+          </div>
         </div>
       </TitledContent>
     </SlideShell>

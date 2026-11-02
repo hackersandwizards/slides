@@ -6,6 +6,8 @@ import { BlurFade } from "../ui/blur-fade";
 import { SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
 import { DisplayHeading } from "./primitives";
+import { linkLabel } from "../../lib/slide-utils";
+import ArrowUpRight from "lucide-react/icons/arrow-up-right";
 
 interface Props {
   slide: StatementSlideType;
@@ -29,6 +31,42 @@ function HighlightedLine({ line, highlighted }: { line: string; highlighted?: st
   );
 }
 
+/** A linked screenshot or QR code under the statement, 11/24 (46%) of the slide wide (blind review
+ *  02.11.: wider, it pushed the headline under the top strip), its link spelled out under it. */
+function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linkedImage"]> }) {
+  const picture = (
+    <Image
+      src={image.src}
+      alt={image.alt ?? ""}
+      width={1920}
+      height={1080}
+      className="h-auto max-h-(--slide-picture-max) w-full rounded-brand border border-border object-contain"
+    />
+  );
+  return (
+    <figure className="mx-auto mt-10 flex w-11/24 flex-col items-center gap-4">
+      {image.href ? (
+        <a href={image.href} target="_blank" rel="noopener noreferrer" className="contents">
+          {picture}
+        </a>
+      ) : (
+        picture
+      )}
+      {image.href && (
+        <a
+          href={image.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="slide-media-caption slide-media-link"
+        >
+          <ArrowUpRight className="size-(--slide-link-icon) shrink-0" strokeWidth={2.25} />
+          {linkLabel(image.href)}
+        </a>
+      )}
+    </figure>
+  );
+}
+
 export function StatementSlide({ slide }: Props) {
   const hasSupporting = (slide.points && slide.points.length > 0) || slide.closing;
   const isSimple = !hasSupporting && !slide.subtitle && !slide.highlighted && !slide.crossedOut;
@@ -46,6 +84,12 @@ export function StatementSlide({ slide }: Props) {
               height={120}
               className="mb-8 h-28 w-28 rounded-full border-2 border-border object-cover"
             />
+          </BlurFade>
+        )}
+
+        {slide.kicker && (
+          <BlurFade delay={0.05} duration={0.4}>
+            <p className="hw-label mb-8 [--hw-label-size:var(--text-base)]">{slide.kicker}</p>
           </BlurFade>
         )}
 
@@ -87,6 +131,12 @@ export function StatementSlide({ slide }: Props) {
             </BlurFade>
           )}
         </div>
+
+        {slide.linkedImage && (
+          <BlurFade delay={0.1 + slide.lines.length * 0.08} duration={0.4} className="w-full">
+            <LinkedPicture image={slide.linkedImage} />
+          </BlurFade>
+        )}
 
         {hasSupporting && (
           <div className="mt-10 w-full max-w-4xl">
