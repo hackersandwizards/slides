@@ -2,7 +2,7 @@
 
 The hackers&wizards slide engine as one package, `@hackersandwizards/slides`: the slide components,
 the deck types, the slide stylesheet and the PDF renderer. Three repos run it and keep only their
-decks: `talks` and `hycle-private/talks` on Next.js, `trainer-hub` on Astro. The reasoning is in os
+decks, all on Astro: `talks`, `trainer-hub` and `hycle-private` (its decks in `talks/`). The reasoning is in os
 `docs/tracking/2026-10-30-repo-coupling.md`.
 
 This repo is public on GitHub (`github.com/hackersandwizards/slides`). Consumers install it as a Git dependency pinned to a tag,
@@ -26,8 +26,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `lib/`: hooks, navigation, presenter sync, the edit mode, themes and section styles.
   `lib/adapter.tsx` is the one seam to a consumer's framework: `SlidesAdapterProvider` takes an
   `Image` component and a `navigate(href, replace)`. Without a provider the engine renders a plain
-  `<img>` and moves with `history` inside one island (the trainer hub). `lib/next-adapter.tsx` is that
-  provider for the Next consumers, `next/image` and the router, and each wraps its root layout in it.
+  `<img>` and moves with `history` inside one island, as every consumer now does. `lib/next-adapter.tsx`
+  is that provider for a Next app, `next/image` and the router, wrapped round its root layout.
 - `types/slide.ts`: the slide types and content blocks a deck may use.
 - `styles/tokens.css`: the slide's roles, each a `var()` over brand: it imports the brand tokens,
   brand's `stage.css` (the slide scale, the type table, measures, spacing, rules and marks, every
@@ -97,7 +97,7 @@ are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and 
   (`brand-elements` over the print pages, `brand-elements.json`). No hook runs it:
   `.githooks/pre-commit` runs `bun run check:staged`, scaffolding's `check-staged` (`gitleaks`,
   coupling and confidential over the staged changes, `prettier --check` and `eslint` on the staged
-  files); `commit-msg` runs `check-confidential` on the message; the hooks are scaffolding's skeleton. `bun install` points `core.hooksPath` at `.githooks/`.
+  files, `admin-check` when an item is staged); `commit-msg` runs `check-confidential` on the message; the hooks are scaffolding's skeleton. `bun install` points `core.hooksPath` at `.githooks/`.
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
 - `bun run dev` (or `bun run catalog`, which opens it): the catalog at
