@@ -882,6 +882,45 @@ const slides: Slide[] = [
     right: { label: "Teams", items: longBullets.slice(2, 6) },
     notes: "comparison: split, no headline, long items.",
   },
+  {
+    type: "comparison",
+    variant: "before-after",
+    strike: false,
+    headline: "What stays, what needs building",
+    left: { label: "Stays", items: ["Stations and contracts", "Repository documents"] },
+    right: { label: "Needs building", items: ["Ticket intake", "Isolated environment", "Gates"] },
+    punchline: "The build is transport and environment.",
+    notes: "comparison: before-after without strike, for a before that stays.",
+  },
+  {
+    type: "comparison",
+    variant: "guidance",
+    headline: "Writing a check the agent can run",
+    intro: "One bad and one good version.",
+    points: ["Name the command", "Name what passes"],
+    examples: [
+      {
+        title: "Check",
+        bad: "Make sure it works.",
+        good: "Run bun run test search.\nPasses when every umlaut query returns a result.",
+      },
+    ],
+    notes: "comparison: guidance variant, intro, points, one example.",
+  },
+  {
+    type: "comparison",
+    variant: "positions",
+    headline: "Two positions and a resolution",
+    left: {
+      name: "Mara Lindqvist",
+      stance: "Shared",
+      quote: "Every team should use the same harness.",
+    },
+    right: { name: "Jonas Okafor", stance: "Owned", quote: "Every team knows its own work best." },
+    middle: "Both",
+    resolution: "One harness, team rules on top.",
+    notes: "comparison: positions variant with middle and resolution. Fictional people.",
+  },
 
   {
     type: "guidance",

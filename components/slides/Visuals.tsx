@@ -1,4 +1,3 @@
-import ArrowRight from "lucide-react/icons/arrow-right";
 import Image from "../ui/image";
 import type { VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
@@ -6,6 +5,7 @@ import { useHighlightLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { CodePanel, NumberTile, SlideCard } from "./primitives";
+import { BeforeAfterSides } from "./ComparisonSlide";
 
 // The diagram vocabulary of a content slide: one relationship per block, drawn so the eye reads
 // the structure before the words. Shared rules, from the deck checklist:
@@ -412,37 +412,12 @@ function Staggered({
 
 // ─── transform: what the before list becomes ────────────────────────────────
 
-// The two sides are separate lists, not rows: their items rarely pair one to one, and aligned
-// rows would claim that each old task turned into the new one beside it.
+// Drawn as a comparison's before-after without the strike: the before side stays (decision
+// merge-comparison, 7.94 against 7.29 for the transform's own drawing).
 function Transform({ block }: { block: Of<"transform"> }) {
   return (
-    <div className="grid w-full grid-cols-[minmax(0,0.85fr)_auto_minmax(0,1.15fr)] grid-rows-[auto_1fr] gap-x-12 gap-y-5 pt-4">
-      <span className="font-heading text-3xl font-bold text-text-muted">{block.before.label}</span>
-      <span />
-      <span className="font-heading text-3xl font-bold text-primary">{block.after.label}</span>
-      <ul className={`flex flex-col gap-4 border-4 border-dashed border-border px-9 py-7 ${CARD}`}>
-        {block.before.items.map((item, i) => (
-          <li key={i} className={`${CAPTION} text-text-muted`}>
-            {renderMarkdown(item)}
-          </li>
-        ))}
-      </ul>
-      <ArrowRight
-        className="h-16 w-16 self-center"
-        style={{ color: GREY }}
-        strokeWidth={3}
-        aria-hidden
-      />
-      <ul className="flex flex-col gap-3">
-        {block.after.items.map((item, i) => (
-          <li
-            key={i}
-            className={`border-y-2 border-r-2 border-l-(length:--slide-rule-accent) border-y-border border-r-border border-l-primary bg-white px-6 py-3.5 ${CAPTION} font-semibold text-text`}
-          >
-            {renderMarkdown(item)}
-          </li>
-        ))}
-      </ul>
+    <div className="flex w-full justify-center">
+      <BeforeAfterSides left={block.before} right={block.after} after strike={false} />
     </div>
   );
 }

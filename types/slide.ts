@@ -110,17 +110,11 @@ export type ContentBlock =
       items: { title: string; subtitle: string }[];
     }
   | {
+      /** @deprecated A `comparison` slide with `variant: "positions"`, which draws it the same
+       *  way (decision merge-comparison). Moves in phase 4 (work-phase-4-every-deck-slide-onto-a). */
       type: "positions";
-      left: {
-        name: string;
-        stance: string;
-        quote: string;
-      };
-      right: {
-        name: string;
-        stance: string;
-        quote: string;
-      };
+      left: PositionSide;
+      right: PositionSide;
       middle?: string;
       resolution: string;
     }
@@ -160,6 +154,8 @@ export type VisualBlock =
       labels?: { when?: string; title?: string; text?: string };
     }
   | {
+      /** @deprecated Drawn as a comparison's `before-after` with `strike: false` (decision
+       *  merge-comparison); moves in phase 4 (work-phase-4-every-deck-slide-onto-a). */
       type: "transform";
       before: { label: string; items: string[] };
       after: { label: string; items: string[] };
@@ -335,17 +331,50 @@ export interface ComparisonSide {
   highlight?: string;
 }
 
-export interface ComparisonSlide {
+interface ComparisonBase {
   type: "comparison";
   headline?: string;
-  variant?: "vs" | "before-after" | "split";
-  left: ComparisonSide;
-  right: ComparisonSide;
   punchline?: string;
   /** On a `vs` slide, the punchline waits for one more arrow key instead of showing on arrival. */
   revealPunchline?: boolean;
   footnotes?: string[];
 }
+
+/** Two sides: `vs` pros against cons, `before-after` the old against the new, `split` two lists. */
+export interface ComparisonSidesSlide extends ComparisonBase {
+  variant?: "vs" | "before-after" | "split";
+  left: ComparisonSide;
+  right: ComparisonSide;
+  /** `before-after` only: `false` keeps the before side unstruck and without its cross, for a
+   *  before that stays rather than goes ("Stays from stage 3"). */
+  strike?: boolean;
+}
+
+/** Examples, each a bad and a good version, with an optional intro and points above them. */
+export interface ComparisonGuidanceSlide extends ComparisonBase {
+  variant: "guidance";
+  intro?: string;
+  points?: string[];
+  examples: GuidanceExample[];
+}
+
+export interface PositionSide {
+  name: string;
+  stance: string;
+  quote: string;
+}
+
+/** Two named stances with a quote each, and the resolution under them. */
+export interface ComparisonPositionsSlide extends ComparisonBase {
+  variant: "positions";
+  left: PositionSide;
+  right: PositionSide;
+  middle?: string;
+  resolution: string;
+}
+
+export type ComparisonSlide =
+  ComparisonSidesSlide | ComparisonGuidanceSlide | ComparisonPositionsSlide;
 
 export interface GuidanceExample {
   title: string;
@@ -354,6 +383,9 @@ export interface GuidanceExample {
   language?: string;
 }
 
+/** @deprecated A `comparison` slide with `variant: "guidance"`, which draws it (decision
+ *  merge-comparison). The engine still renders it, through `guidanceAsComparison` in
+ *  `lib/slide-utils.ts`; decks move in phase 4 (work-phase-4-every-deck-slide-onto-a). */
 export interface GuidanceSlide {
   type: "guidance";
   headline?: string;

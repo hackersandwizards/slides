@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
+import { PrintProvider } from "../lib/print-context";
 import type { ComparisonSlide, Slide } from "../types/slide";
 
 const slide = (left: string[], right: string[]): ComparisonSlide => ({
@@ -47,5 +48,67 @@ describe("ComparisonSlide", () => {
     const SlideComponent = slideComponents.comparison;
     render(<SlideComponent slide={slide(["Fast"], ["Edits files"]) as Slide} />);
     expect(sessionStorage.getItem("slide-direction")).toBeNull();
+  });
+});
+
+describe("comparison variants (merge-comparison)", () => {
+  const draw = (s: object) =>
+    render(
+      <PrintProvider>
+        <slideComponents.comparison slide={{ type: "comparison", ...s } as Slide} />
+      </PrintProvider>,
+    ).container;
+  const sides = { left: { label: "Stays", items: ["a"] }, right: { label: "New", items: ["b"] } };
+
+  // Without strike the before side carries no line-through and no cross: it stays.
+  it("leaves the before side unstruck with strike off", () => {
+    const struck = draw({ variant: "before-after", ...sides });
+    const kept = draw({ variant: "before-after", strike: false, ...sides });
+    expect(struck.querySelector(".line-through")).not.toBeNull();
+    expect(struck.querySelector(".lucide-circle-x")).not.toBeNull();
+    expect(kept.querySelector(".line-through")).toBeNull();
+    expect(kept.querySelector(".lucide-circle-x")).toBeNull();
+  });
+
+  // The transform block draws the same before-after, strike off.
+  it("draws a transform block as before-after without strike", () => {
+    const c = render(
+      <slideComponents.content
+        slide={
+          {
+            type: "content",
+            headline: "H",
+            content: [
+              {
+                type: "transform",
+                before: { label: "Old", items: ["x"] },
+                after: { label: "New", items: ["y"] },
+              },
+            ],
+          } as Slide
+        }
+      />,
+    ).container;
+    expect(c.querySelector(".lucide-circle-check-big")).not.toBeNull();
+    expect(c.querySelector(".line-through")).toBeNull();
+  });
+
+  // A guidance slide renders as the comparison's guidance variant, the same markup.
+  it("renders a guidance slide through the comparison", () => {
+    const examples = [{ title: "T", bad: "b", good: "g" }];
+    const old = render(
+      <PrintProvider>
+        <slideComponents.guidance slide={{ type: "guidance", headline: "H", examples } as Slide} />
+      </PrintProvider>,
+    ).container.innerHTML;
+    expect(draw({ variant: "guidance", headline: "H", examples }).innerHTML).toBe(old);
+    expect(old).toContain("Bad");
+  });
+
+  it("draws the positions variant with its verdict", () => {
+    const side = { name: "A", stance: "S", quote: "q" };
+    const c = draw({ variant: "positions", left: side, right: side, resolution: "R" });
+    expect(c.textContent).toContain("The verdict");
+    expect(c.textContent).toContain("“q”");
   });
 });

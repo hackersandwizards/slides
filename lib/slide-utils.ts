@@ -1,10 +1,12 @@
 import { ROLE_NAMES } from "./presenter-sync";
 import type {
+  ComparisonGuidanceSlide,
   ContentBlock,
   ContentSlide,
   DualPillOverviewSlide,
   EvolutionSlide,
   GridSlide,
+  GuidanceSlide,
   ProcessSlide,
   RoadmapSlide,
   SectionTheme,
@@ -195,4 +197,12 @@ export function gridAsContent({ cards, ...slide }: GridSlide): ContentSlide {
     headline: slide.headline,
     content: [block],
   };
+}
+
+/** A `guidance` slide as the comparison slide's `guidance` variant that replaces it. */
+export function guidanceAsComparison({
+  type: _,
+  ...slide
+}: GuidanceSlide): ComparisonGuidanceSlide {
+  return { ...slide, type: "comparison", variant: "guidance" };
 }

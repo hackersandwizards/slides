@@ -2241,7 +2241,21 @@ const RENDER: {
     });
   },
 
-  comparison(s, ctx, d) {
+  comparison(s, ctx, d, deck) {
+    if (d.variant === "guidance") return RENDER.guidance(s, ctx, { ...d, type: "guidance" }, deck);
+    if (d.variant === "positions") {
+      const { left, right, middle, resolution } = d;
+      return RENDER.content(
+        s,
+        ctx,
+        {
+          type: "content",
+          headline: d.headline ?? "",
+          content: [{ type: "positions", left, right, middle, resolution }],
+        },
+        deck,
+      );
+    }
     const { c } = ctx;
     const y = header(s, ctx, d);
     const punchH = d.punchline ? 0.55 : 0;
