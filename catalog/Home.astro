@@ -1,29 +1,17 @@
 ---
-// The design system's home in brand's catalogue shape (AstrobookHome, decision catalogue-shape):
-// the header, the rail with the groups, a tile per slide type and part drawing its first state
-// whole at the 1440 stage.
-// The default slot holds the foundations: the three layers and the elements the slides take from
-// brand or keep, which brand-elements measures on the specimen page, the gate's fixture.
-import modules from "virtual:astrobook/story-modules.mjs";
-import config from "virtual:astrobook/global-config.mjs";
-import AstrobookHome from "@hackersandwizards/brand/expert/components/AstrobookHome.astro";
+// The catalog's home in scaffolding's shell: the rail with the groups, a tile per slide type and
+// part drawing its first state whole at the 1440 stage. The default slot holds the foundations: the
+// three layers and the elements the slides take from brand or keep, which brand-elements measures on
+// the print page.
+import Home from "@hackersandwizards/scaffolding/catalog/Home.astro";
 import "@hackersandwizards/brand/disclosure.css";
 import elements from "../brand-elements.json";
 
-const SPECIMEN = "http://slides.localhost/specimen/";
+const PRINT = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/catalog/print/`;
 const exceptions = Object.entries(elements.exceptions as Record<string, string>);
 ---
 
-<AstrobookHome
-  modules={modules}
-  config={config}
-  product="Slides"
-  title="Design system"
-  lead="Every slide type of the h&w slide engine, each state a slide of the specimen deck, and the parts the types are built from, each with its variants. All content is made up."
-  source="slides design-system/stories"
-  previewSize={[1440, 810]}
-  groupOrder={["Types", "Parts"]}
->
+<Home>
   <div class="ds-foundations">
     <p>
       Three layers. <strong>Tokens</strong>: <code>styles/tokens.css</code> names every value a slide
@@ -47,12 +35,12 @@ const exceptions = Object.entries(elements.exceptions as Record<string, string>)
       </ul>
     </details>
     <p>
-      <a href={`${SPECIMEN}#elements`}>The specimen page</a> shows each as a tile, where <code
+      <a href={`${PRINT}#elements`}>The print page</a> shows each as a tile, where <code
         >brand-elements</code
       > measures it in <code>bun run check</code>.
     </p>
   </div>
-</AstrobookHome>
+</Home>
 
 <style>
   .ds-foundations {

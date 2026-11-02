@@ -21,7 +21,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `DashedFrame`, `VideoPlayer` and the rest). A part used by a second slide type moves there; a real
   difference is a variant of the part, never a class string of the type's own. `PrintSlide.tsx` is
   the printed page, strip and corner included, and `PrintDeck` the whole deck a consumer's print
-  route renders, which the specimen renders too.
+  route renders, which the print page renders too.
 - `components/ui/`: effects and `image.tsx`, the engine's image.
 - `lib/`: hooks, navigation, presenter sync, the edit mode, themes and section styles.
   `lib/adapter.tsx` is the one seam to a consumer's framework: `SlidesAdapterProvider` takes an
@@ -56,23 +56,26 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   the h&w design with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
   Its lengths and sizes are measured off the print route at 1920x1080.
 - `specimen/`: `slide-catalogue.ts`, the specimen deck, every slide type and variant with fictional
-  content, its images, and the specimen page `index.html` with its compiled `build/slides.css`, a Parts section (every part of
-  `primitives.tsx` and `SlideChrome.tsx` in each variant, with the slide types using it), then the
-  catalogue in print mode: one slide per slide type (anchored by its name, which the brand kit links), per further variant
-  and per content block, each under one or two of the 13 communication jobs, with a search over all. `bun run specimen` (`scripts/specimen.ts`)
-  writes the page; it is never committed: `bun run check` writes it before the tests, `bun run dev`
-  on each request for a page, and the Pages workflow for the public page. The page's Shared
-  elements section shows each brand element the slides use as a tile and each exception with its
-  reason; `frames.html` holds every frame inline, since `brand-elements` reads no frame. The page
-  stays the gate's fixture beside the design system: `brand-elements`, the marker test and the
-  brand kit read it as a file, with no server, which an Astrobook build would need. talks reads
-  only the deck and its images.
-- `design-system/`: the design system in Astrobook (decision design-system-tool), its own Astro
-  config, never shipped: Astro, Astrobook and `@astrojs/react` are dev dependencies, outside
-  `files` and `exports`. `stories/Types/` holds a story file per slide type, each specimen slide of
-  the type a state (`state.ts`); `stories/Parts/` one per part, drawing its sheet of variants from
-  `parts.ts`, which the specimen page draws too. `test/design-system-stories.test.ts` fails on a
-  type, specimen slide or part without its story. `Home.astro` is brand's `AstrobookHome`.
+  content, and its images (`specimen/slide-catalogue/`, which talks copies into its `public/`).
+- `catalog/`: the catalog (decision repo-uniformity-plan, hub-max), one Astro app in scaffolding's
+  catalog shell (`catalog({...})` in `catalog/astro.config.ts`), never shipped: Astro, Astrobook,
+  `@astrojs/react` and scaffolding are dev dependencies, outside `files` and `exports`. Its base is
+  the Pages path `/slides`, so the gate reads the build that ships. It carries two kinds of page:
+  - The stories: `stories/Types/` a story file per slide type, each specimen slide of the type a
+    state (`state.ts`); `stories/Parts/` one per part, drawing its sheet of variants from
+    `parts.ts`. `test/catalog-stories.test.ts` fails on a type, specimen slide or part without its
+    story. `Home.astro` renders the shell's home with the foundations.
+  - The print pages, `pages/catalog/print/` over `print.ts`: `index.html`, a Parts section (every
+    part of `primitives.tsx` and `SlideChrome.tsx` in each variant, with the slide types using it),
+    the Shared elements section (each brand element the slides use as a tile, each exception with
+    its reason), then the catalogue in print mode: one slide per slide type (anchored by its name,
+    which the brand kit links), per further variant and per content block, each under one or two of
+    the 13 communication jobs, with a search over all; `frames.html`, every frame inline, since
+    `brand-elements` reads no frame; and `build/slides.css`, compiled by Tailwind. The build copies
+    brand's files to `dist/brand/` and the deck's images beside the pages, so `brand-elements` and
+    the page tests (`test/pages/`) read them from `dist/` as files, with no server.
+  - The routes `/slides/specimen/` and `/slides/design-system/` forward old links, anchor kept, to the
+    print page and the catalog.
 - `test/`: the engine's unit tests.
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
@@ -86,17 +89,21 @@ are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and 
 
 ## Commands
 
-- `bun run check`: format, lint, typecheck, unique function names, tests, the brand colour scan
-  (`brand-colours.json` holds the exceptions), then `brand-elements` over the specimen pages
-  (`brand-elements.json`). No hook runs it:
+- `bun run check`: `scaffolding check`, the shared steps side by side (install, format, lint,
+  stylelint over `stylelint.config.js`, typecheck, coupling, unique names, confidential, the unit
+  tests, the catalog build), then the `scaffolding.check` steps in `package.json`: `check:pins`,
+  `check:colours` (`brand-colours.json` holds the exceptions) and `check:admin`, then `check:pages`
+  (the tests in `test/pages/` over the built print pages), then `check:elements`
+  (`brand-elements` over the print pages, `brand-elements.json`). `structure` is skipped with its
+  reason until the scaffolding skeleton rolls out. No hook runs it:
   `.githooks/pre-commit` runs `bun run check:staged`: `gitleaks` over the staged changes,
   `prettier --check` and `eslint` on the staged files. `bun install` points `core.hooksPath` at `.githooks/`.
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
-- `bun run dev`: serve the checkout on port 4327 for `http://slides.localhost` (Caddy, as for
-  `os.localhost`), writing the specimen afresh on each page request; the specimen's header links the brand catalogue and the document specimen at
-  `brand.localhost` and `documents.localhost`.
-- `bun run design-system`: serve the design system at `http://127.0.0.1:4335/design-system/`.
+- `bun run dev` (or `bun run catalog`, which opens it): the catalog at
+  `http://127.0.0.1:4335/slides/catalog/`, the print page at `/slides/catalog/print/`.
+- `bun run build`: the catalog to `dist/`, which the Pages workflow (scaffolding's reusable one)
+  publishes at `https://hackersandwizards.github.io/slides/`.
 
 ## Releasing a change
 

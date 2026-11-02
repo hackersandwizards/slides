@@ -1,13 +1,16 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, it } from "vitest";
-import { slideComponents } from "../lib/slide-components";
-import { slideCatalogue } from "../specimen/slide-catalogue";
+import { slideComponents } from "../../lib/slide-components";
+import { slideCatalogue } from "../../specimen/slide-catalogue";
 
-// The specimen page's catalogue (decision catalogue-grouping), as scripts/specimen.ts writes it
-// before the tests run in `bun run check`: every entry under a communication job, and a search
+// The print page's catalogue (decision catalogue-grouping), as `bun run build` writes it into dist/
+// before `check:pages` runs: every entry under a communication job, and a search
 // that finds every slide type, deprecated ones included, and every content block.
-const html = readFileSync(join(import.meta.dirname, "..", "specimen", "index.html"), "utf8");
+const html = readFileSync(
+  join(import.meta.dirname, "..", "..", "dist", "catalog", "print", "index.html"),
+  "utf8",
+);
 const entries = [...html.matchAll(/<figure id="[^"]+" data-jobs="([^"]*)" data-search="([^"]*)"/g)];
 const jobs = new Set([...html.matchAll(/data-job="([a-z]+)"/g)].map(([, j]) => j));
 

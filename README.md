@@ -96,7 +96,9 @@ on a concept slide of paragraphs, the slide without one scored higher in blind p
 
 ```sh
 bun install      # also points the git hooks at .githooks/
-bun run check    # format, lint, typecheck, unique names, tests, brand colours, brand elements
+bun run dev      # the catalog at http://127.0.0.1:4335/slides/catalog/
+bun run build    # the catalog to dist/, as https://hackersandwizards.github.io/slides/ publishes it
+bun run check    # the gate: scaffolding check, then pins, colours, admin, the print pages, brand elements
 ```
 
 A release is a tag `v<version>` matching `version` in `package.json`; consumers then raise the tag

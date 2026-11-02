@@ -5,9 +5,11 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 
 // talks and trainer-hub set a dark theme on <html>. The brand's night rule reaches down to the
 // nearest light theme, so every day slide carries data-theme="light" (SlideShell, SlideContainer,
-// PrintSlide) and its cards stay white; a night slide's cards stay glass. Measured on the specimen's
+// PrintSlide) and its cards stay white; a night slide's cards stay glass. Measured on the print page's
 // slides, each told day or night by the engine's own night class, not by data-theme.
-const FRAMES = pathToFileURL(join(import.meta.dirname, "..", "specimen", "frames.html")).href;
+const FRAMES = pathToFileURL(
+  join(import.meta.dirname, "..", "..", "dist", "catalog", "print", "frames.html"),
+).href;
 
 let browser: Browser;
 beforeAll(async () => {

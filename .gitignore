@@ -6,8 +6,4 @@ coverage/
 .env.*
 **/.claude/settings.local.json
 .astro/
-design-system/dist/
-# Written by bun run specimen, run by bun run check and bun run dev.
-specimen/index.html
-specimen/frames.html
-specimen/build/
+dist/

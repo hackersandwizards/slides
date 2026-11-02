@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "0.27.2",
+  "version": "0.28.0",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -49,17 +49,22 @@
   ],
   "scripts": {
     "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks || true",
-    "check": "bun install --frozen-lockfile && bun scripts/pins.ts && bun run format:check && bun run lint && bun run typecheck && bun .claude/skills/engineering/check-unique-names.ts && bun scripts/specimen.ts && bun run test && brand-colours && brand-elements && admin-check",
+    "check": "scaffolding check",
     "lint": "bun --bun eslint --cache --concurrency=auto .",
     "typecheck": "bun --bun tsc --noEmit",
-    "test": "bun --bun vitest run",
+    "test": "bun --bun vitest run --exclude 'test/pages/**'",
+    "check:pages": "bun --bun vitest run test/pages",
+    "check:pins": "bun scripts/pins.ts",
+    "check:colours": "brand-colours",
+    "check:elements": "brand-elements",
+    "check:admin": "admin-check",
     "format": "bun --bun prettier --write .",
     "format:check": "bun --bun prettier --check .",
     "fix": "bun --bun eslint --cache --concurrency=auto . --fix && bun --bun prettier --write .",
     "check:staged": "bun .claude/skills/engineering/check-staged.ts",
-    "specimen": "bun scripts/specimen.ts",
-    "dev": "bun scripts/serve.ts",
-    "design-system": "astro dev --root design-system"
+    "dev": "astro dev --root catalog",
+    "catalog": "astro dev --root catalog --open /slides/catalog/",
+    "build": "astro build --root catalog"
   },
   "peerDependencies": {
     "@hackersandwizards/brand": "*",
@@ -98,6 +103,7 @@
     "@eslint/js": "10.0.1",
     "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v0.4.1",
     "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v0.30.0",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v0.3.2",
     "@tailwindcss/node": "4.3.3",
     "@tailwindcss/oxide": "4.3.3",
     "@tailwindcss/vite": "4.3.3",
@@ -126,6 +132,7 @@
     "react-dom": "19.3.1",
     "recharts": "3.10.1",
     "shiki": "4.5.0",
+    "stylelint": "17.16.0",
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
@@ -135,8 +142,33 @@
     "products": [
       {
         "label": "Slide types",
-        "href": "https://hackersandwizards.github.io/slides/specimen/"
+        "href": "https://hackersandwizards.github.io/slides/catalog/"
       }
+    ]
+  },
+  "scaffolding": {
+    "allow": [
+      {
+        "check": "coupling",
+        "path": "catalog/print.ts",
+        "reason": "the URL the print pages in dist/catalog/print/ link brand's files by, relative to the page, not a path in the checkout"
+      }
+    ],
+    "test": "test",
+    "uniqueNames": [
+      "GET"
+    ],
+    "skip": {
+      "structure": "the skeleton files (hooks, only-bun, .codex) roll out with os item scaffold-rollout, phase 3 of repo-uniformity-plan"
+    },
+    "check": [
+      [
+        "check:pins",
+        "check:colours",
+        "check:admin"
+      ],
+      "check:pages",
+      "check:elements"
     ]
   }
 }

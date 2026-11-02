@@ -1,5 +1,5 @@
 {
-  "pages": ["specimen/index.html", "specimen/frames.html"],
+  "pages": ["dist/catalog/print/index.html", "dist/catalog/print/frames.html"],
   "uses": [
     "card",
     "label",

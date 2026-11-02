@@ -1,0 +1,18 @@
+---
+// The site root: it moves on to the catalog.
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>The catalog, @hackersandwizards/slides</title>
+    <script is:inline define:vars={{ to: "catalog/" }}>
+      location.replace(to + location.hash);
+    </script>
+    <meta http-equiv="refresh" content="0; url=catalog/" />
+  </head>
+  <body>
+    <a href="catalog/">The catalog</a>
+  </body>
+</html>

@@ -11,8 +11,9 @@
     "isolatedModules": true,
     "erasableSyntaxOnly": true,
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
     "types": ["node", "vite/client"]
   },
-  "include": ["components", "lib", "types", "scripts", "specimen", "test", "design-system", "*.ts"],
-  "exclude": ["**/.astro"]
+  "include": ["components", "lib", "types", "scripts", "specimen", "test", "catalog", "*.ts"],
+  "exclude": ["**/.astro", "dist"]
 }

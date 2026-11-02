@@ -15,8 +15,8 @@ import { BlurFade } from "../ui/blur-fade";
 
 // The parts every slide type is built from, one owner each, on the tokens of styles/tokens.css. A
 // slide type composes these; a difference between two slide types is a variant here, never a class
-// of the type's own. Each export is listed in the specimen page's parts section
-// (scripts/specimen.ts), with the slide types that use it.
+// of the type's own. Each export is listed in the print page's parts section
+// (catalog/print.ts), with the slide types that use it.
 
 /** A titled slide's column: headline on top, `.slide-body` below, both under the fit guard. */
 export function TitledContent({ children }: { children: ReactNode }) {

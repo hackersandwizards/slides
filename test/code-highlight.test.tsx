@@ -6,7 +6,6 @@ import { describe, expect, it, vi } from "vitest";
 import { CodeLines } from "../lib/use-code-highlight";
 
 const css = readFileSync(join(__dirname, "../styles/tokens.css"), "utf8");
-const built = readFileSync(join(__dirname, "../specimen/build/slides.css"), "utf8");
 const brand = (name: keyof typeof tokens) => tokens[name];
 /** `color-mix(in srgb, a p%, b)` of two hex colours. */
 const mix = (a: string, b: string, p: number) =>
@@ -109,11 +108,10 @@ describe("CodeLines", () => {
     expect(container.textContent).toContain("<script>alert(1)</script>");
   });
 
-  it("sets the code ground to the brand's, night-2 on dark decks, and the utility reads it", () => {
+  it("sets the code ground to the brand's, night-2 on dark decks", () => {
     expect(lightToken).toBe("--code-bg");
     expect(brand("--code-bg")).toBe("var(--color-night)");
     expect(darkToken).toBe("--color-night-2");
-    expect(built).toMatch(/\.bg-code-bg \{\s*background-color: var\(--color-code-bg\);/);
   });
 
   it.each(grounds)(

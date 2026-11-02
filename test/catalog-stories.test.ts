@@ -3,12 +3,12 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { aliasTypes } from "../lib/slide-components";
 import { slideCatalogue } from "../specimen/slide-catalogue";
-import { PARTS } from "../design-system/parts";
+import { PARTS } from "../catalog/parts";
 
-// The design system (design-system/stories) shows every slide type with each of its specimen slides
+// The catalog (catalog/stories) shows every slide type with each of its specimen slides
 // as a state, and every part with its sheet of variants: a type, a specimen slide or a part
-// without a story fails here, as the specimen page fails on a part without an entry.
-const STORIES = join(import.meta.dirname, "..", "design-system", "stories");
+// without a story fails here, as the print page fails on a part without an entry.
+const STORIES = join(import.meta.dirname, "..", "catalog", "stories");
 const files = (group: string) =>
   readdirSync(join(STORIES, group)).map((f) => f.replace(/\.stories\.ts$/, ""));
 const registry = readFileSync(
@@ -19,7 +19,7 @@ const types = [...registry.matchAll(/^\s*"?([\w-]+)"?: (\w+) as SlideComponent/g
   .filter(([, type]) => !aliasTypes[type as keyof typeof aliasTypes])
   .map(([, type, component]) => ({ type, component }));
 
-describe("design-system stories", () => {
+describe("catalog stories", () => {
   it("has a story file per slide type and per part, and no other", () => {
     expect(files("Types").sort()).toEqual(types.map((t) => t.component).sort());
     expect(files("Parts").sort()).toEqual(Object.keys(PARTS).sort());

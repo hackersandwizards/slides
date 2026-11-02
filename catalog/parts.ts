@@ -1,6 +1,6 @@
-// The parts every slide type composes, each as a sheet of its variants: the specimen page
-// (scripts/specimen.ts) renders each sheet in a frame, the design system (design-system/stories)
-// as a part's story. A part missing here fails the specimen build.
+// The parts every slide type composes, each as a sheet of its variants: the print page
+// (print.ts) renders each sheet in a frame, the catalog (catalog/stories) as a part's story. A part
+// missing here fails the catalog build.
 import { createElement as h, type ReactNode } from "react";
 import * as primitives from "../components/slides/primitives";
 import * as chrome from "../components/slides/SlideChrome";

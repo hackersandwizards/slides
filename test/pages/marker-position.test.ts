@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
-// Every list marker and step number on the specimen page's slides, measured on the pixels Chrome
+// Every list marker and step number on the print page's slides, measured on the pixels Chrome
 // paints at 1920x1080. Markers drifted 1.2 to 3.4 px off for months while every check passed,
 // since only a render shows where they land. The squares are the brand's .hw-marker, measured by
 // the brand's own `brand-markers` command on each slide frame written to a file of its own. A step
@@ -14,7 +14,7 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 // here.
 const TOLERANCE = 0.6; // CSS px at 1920x1080; step numbers measured within it at 4x (2026-11-01)
 const SCALE = 4;
-const SPECIMEN = join(import.meta.dirname, "..", "specimen");
+const PRINT = join(import.meta.dirname, "..", "..", "dist", "catalog", "print");
 
 type Box = { x: number; y: number; width: number; height: number };
 type Probe = { label: string; number: Box; text: Box };
@@ -118,7 +118,7 @@ let dir: string;
 beforeAll(async () => {
   browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
-  await page.goto(`file://${join(SPECIMEN, "index.html")}`);
+  await page.goto(`file://${join(PRINT, "index.html")}`);
   frames = await page.$$eval("iframe", (all) =>
     all.map((f) => ({ title: f.title, doc: f.srcdoc })),
   );
@@ -130,7 +130,7 @@ afterAll(async () => {
   if (dir) rmSync(dir, { recursive: true });
 });
 
-/** The frames drawing a square marker, each as a file whose relative links resolve in specimen/,
+/** The frames drawing a square marker, each as a file whose relative links resolve in the print page's folder,
  * with `css` added. */
 function frameFiles(css = "") {
   return frames
@@ -139,7 +139,7 @@ function frameFiles(css = "") {
       const file = join(dir, `${i}-${title.replace(/[^a-z0-9]+/gi, "-")}.html`);
       writeFileSync(
         file,
-        doc.replace("<head>", `<head><base href="file://${SPECIMEN}/"><style>${css}</style>`),
+        doc.replace("<head>", `<head><base href="file://${PRINT}/"><style>${css}</style>`),
       );
       return file;
     });
@@ -159,12 +159,12 @@ it("every square marker on the specimen slides sits on its line", () => {
 // drawn: comparison's split and activity's demo kept `slide-marker` after v0.18.0 removed it.
 it("every marker class in the components is defined", () => {
   const css = [
-    join(import.meta.dirname, "..", "styles", "slides.css"),
+    join(import.meta.dirname, "..", "..", "styles", "slides.css"),
     fileURLToPath(import.meta.resolve("@hackersandwizards/brand/marker.css")),
   ]
     .map((file) => readFileSync(file, "utf8"))
     .join("\n");
-  const root = join(import.meta.dirname, "..");
+  const root = join(import.meta.dirname, "..", "..");
   const undefinedClasses = globSync("components/**/*.tsx", { cwd: root }).flatMap((file) =>
     [...readFileSync(join(root, file), "utf8").matchAll(/className=(?:"([^"]*)"|\{`([^`]*)`\})/g)]
       .flatMap(([, plain, template]) => (plain ?? template).split(/\s+/))
@@ -188,7 +188,7 @@ it("every step number on the specimen slides sits on its line", async () => {
     await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: SCALE });
     // One navigation sets the base every frame's relative links resolve against: setContent keeps
     // the URL, and reloading the page per frame outgrew the timeout once it showed every variant.
-    await page.goto(`file://${join(SPECIMEN, "index.html")}`);
+    await page.goto(`file://${join(PRINT, "index.html")}`);
     for (const { title, doc } of frames) {
       await page.setContent(doc, { waitUntil: "load" });
       await page.evaluate(() => document.fonts.ready.then(() => undefined));

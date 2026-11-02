@@ -1,0 +1,18 @@
+---
+// A former address, kept for its links: it moves on to the print page with the anchor it was given.
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>The print page, @hackersandwizards/slides</title>
+    <script is:inline define:vars={{ to: "../catalog/print/" }}>
+      location.replace(to + location.hash);
+    </script>
+    <meta http-equiv="refresh" content="0; url=../catalog/print/" />
+  </head>
+  <body>
+    <a href="../catalog/print/">The print page</a>
+  </body>
+</html>

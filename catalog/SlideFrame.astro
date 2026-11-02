@@ -1,7 +1,7 @@
 ---
 // A story's frame. A slide fills its window (fixed, vh type, the stage rem from the window's width),
 // so the dashboard shows the story's own preview page in a 16:9 iframe, and the preview page
-// (/design-system/stories/...) renders it full screen at the stage scale. A slide opens with every
+// (/catalog/stories/...) renders it full screen at the stage scale. A slide opens with every
 // progressive step shown, as arriving backwards does.
 interface Props {
   component: string;
@@ -9,8 +9,8 @@ interface Props {
 }
 const { component, part } = Astro.props;
 const path = Astro.url.pathname;
-const preview = path.includes("/design-system/stories/");
-const src = path.replace("/design-system/dashboard/", "/design-system/stories/");
+const preview = path.includes("/catalog/stories/");
+const src = path.replace("/catalog/dashboard/", "/catalog/stories/");
 ---
 
 {
