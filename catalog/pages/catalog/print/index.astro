@@ -75,9 +75,9 @@ table.parts th, table.parts td { text-align: left; vertical-align: top; padding:
 <div class="hw-header-row hw-container">
 <a class="hw-header-brand" href="#" aria-label="hackers&amp;wizards Slides"><img class="hw-header-logo" src={`${brandHref}/logos/lockup-screen.svg`} alt="" width="8042" height="1489"><img class="hw-header-logo-night" src={`${brandHref}/logos/lockup-screen-night.svg`} alt="" width="8196" height="1641"><span class="hw-header-product">Slides</span></a>
 <nav class="hw-header-nav" aria-label="Catalogues">
-<a class="hw-header-link" href="http://brand.localhost/">Brand</a>
+<a class="hw-header-link" href="https://hackersandwizards.github.io/brand/">Brand</a>
 <a class="hw-header-link" href="#" aria-current="page">Slides</a>
-<a class="hw-header-link" href="http://documents.localhost/">Dokumente</a>
+<a class="hw-header-link" href="https://hackersandwizards.github.io/documents/catalog/">Dokumente</a>
 </nav>
 </div>
 </header>
@@ -139,8 +139,6 @@ for (const b of document.querySelectorAll(".jobs button"))
     apply();
   });
 find.addEventListener("input", apply);
-// On GitHub Pages, links to the other two catalogues leave their local addresses for their public pages.
-if (location.hostname.endsWith(".github.io")) for (const a of document.querySelectorAll("a[href]")) { const name = a.hostname.slice(0, -".localhost".length); if (a.hostname.endsWith(".localhost") && ["brand", "slides", "documents"].includes(name)) a.href = "https://hackersandwizards.github.io/" + name + a.pathname + a.hash; }
 </script>
 </body>
 </html>

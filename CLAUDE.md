@@ -90,14 +90,14 @@ are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and 
 ## Commands
 
 - `bun run check`: `scaffolding check`, the shared steps side by side (install, format, lint,
-  stylelint over `stylelint.config.js`, typecheck, coupling, unique names, confidential, the unit
+  stylelint over `stylelint.config.js`, typecheck, structure, coupling, unique names, confidential, the unit
   tests, the catalog build), then the `scaffolding.check` steps in `package.json`: `check:pins`,
   `check:colours` (`brand-colours.json` holds the exceptions) and `check:admin`, then `check:pages`
   (the tests in `test/pages/` over the built print pages), then `check:elements`
-  (`brand-elements` over the print pages, `brand-elements.json`). `structure` is skipped with its
-  reason until the scaffolding skeleton rolls out. No hook runs it:
-  `.githooks/pre-commit` runs `bun run check:staged`: `gitleaks` over the staged changes,
-  `prettier --check` and `eslint` on the staged files. `bun install` points `core.hooksPath` at `.githooks/`.
+  (`brand-elements` over the print pages, `brand-elements.json`). No hook runs it:
+  `.githooks/pre-commit` runs `bun run check:staged`, scaffolding's `check-staged` (`gitleaks`,
+  coupling and confidential over the staged changes, `prettier --check` and `eslint` on the staged
+  files); `commit-msg` runs `check-confidential` on the message; the hooks are scaffolding's skeleton. `bun install` points `core.hooksPath` at `.githooks/`.
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
 - `bun run dev` (or `bun run catalog`, which opens it): the catalog at
