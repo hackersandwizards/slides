@@ -437,6 +437,9 @@ function ContentBlockRenderer({
         <div className="overflow-x-auto rounded-brand border-2 border-border bg-white">
           {/* Automatic layout: `widths` are the columns' preferred shares, and no column ever gets
               narrower than its longest word. A fixed layout let a word run into the next cell. */}
+          {/* Heads and cells take one step and the ink: in a lit hall and a 720p stream the label
+              step and the muted grey were the first to wash out (blind panel 02.11., 7.92 against
+              7.00, noise 0.22; os docs/tracking/2026-11-03-table-legibility.md). */}
           <table className={`w-full border-collapse ${block.compact ? "text-lg" : "text-xl"}`}>
             {block.widths && (
               <colgroup>
@@ -454,7 +457,7 @@ function ContentBlockRenderer({
                   {block.headers.map((header, i) => (
                     <th
                       key={i}
-                      className={`label-caps border-b-2 border-border py-4 text-left text-base text-text ${block.compact ? "px-4" : "px-6"}`}
+                      className={`label-caps border-b-2 border-border py-4 text-left text-text ${block.compact ? "px-4" : "px-6"}`}
                     >
                       {header}
                     </th>
@@ -471,7 +474,7 @@ function ContentBlockRenderer({
                   {row.map((cell, cellIndex) => (
                     <td
                       key={cellIndex}
-                      className={`border-b border-border py-4 text-left ${block.compact ? "px-4" : "px-6"} ${cellIndex === 0 ? "font-bold text-text" : "text-text-muted"}`}
+                      className={`border-b border-border py-4 text-left text-text ${block.compact ? "px-4" : "px-6"} ${cellIndex === 0 ? "font-bold" : ""}`}
                     >
                       {/* A word breaks only at a space: "Self-serve" never splits at its hyphen. */}
                       {renderMarkdown(keepHyphenatedWords(cell))}

@@ -506,10 +506,22 @@ function Bars({ block }: { block: Of<"bars"> }) {
               <div
                 className={`relative ${tall ? "h-20" : "h-14"} ${block.max != null ? "border-r-4 border-text/25 bg-text/[0.07]" : ""} rounded-r-sm`}
               >
+                {/* A named scale marks its quarters, so a bar's ends read against it (blind
+                    panel 02.11. on ranges: "no axis ticks" from every reviewer). */}
+                {block.max != null &&
+                  [25, 50, 75].map((q) => (
+                    <div
+                      key={q}
+                      className="absolute inset-y-0 border-l-2 border-bg"
+                      style={{ left: `${q}%` }}
+                    />
+                  ))}
+                {/* A range starts at its low end, rounded at both ends since neither is the axis. */}
                 <div
-                  className="h-full rounded-r-sm"
+                  className={`relative h-full ${bar.from != null ? "rounded-sm" : "rounded-r-sm"}`}
                   style={{
-                    width: `${Math.max((bar.value / max) * 100, 0.5)}%`,
+                    marginLeft: `${((bar.from ?? 0) / max) * 100}%`,
+                    width: `${Math.max(((bar.value - (bar.from ?? 0)) / max) * 100, 0.5)}%`,
                     // Grey is context for a highlighted bar; with none highlighted every bar is data.
                     background: bar.highlight || !anyHighlight ? "var(--color-primary)" : CONTEXT,
                   }}
@@ -518,7 +530,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
               <span
                 className={`font-heading text-5xl font-bold whitespace-nowrap ${bar.highlight ? "text-primary" : "text-text"}`}
               >
-                {bar.display ?? bar.value}
+                {bar.display ?? (bar.from != null ? `${bar.from}–${bar.value}` : bar.value)}
               </span>
             </div>
           </div>

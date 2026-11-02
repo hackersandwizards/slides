@@ -561,6 +561,27 @@ const slides: Slide[] = [
   },
   {
     type: "content",
+    sectionLabel: "Visual: bars as ranges",
+    headline: "Ranges on a track",
+    content: [
+      {
+        type: "bars",
+        max: 100,
+        bars: [
+          { label: "Weekly digest", from: 45, value: 60, display: "45 to 60%", highlight: true },
+          { label: "Chat summary", from: 55, value: 70, display: "55 to 70%", highlight: true },
+          { label: "Status answers", from: 30, value: 55, display: "30 to 55%", highlight: true },
+          { label: "Risk alerts", from: 50, value: 75, display: "50 to 75%", highlight: true },
+          { label: "Audio recap", from: 15, value: 40, display: "15 to 40%" },
+          { label: "Slide export", from: 20, value: 30, display: "20 to 30%" },
+        ],
+        source: "Fictional forecast: the chance to hit each option's success model",
+      },
+    ],
+    notes: "visual blocks: bars with from, a low and a high end per bar.",
+  },
+  {
+    type: "content",
     sectionLabel: "Visual: numbers",
     headline: "Numbers with a source",
     content: [

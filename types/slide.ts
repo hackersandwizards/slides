@@ -180,7 +180,15 @@ export type VisualBlock =
     }
   | {
       type: "bars";
-      bars: { label: string; value: number; display?: string; highlight?: boolean }[];
+      /** `from` makes a bar a range, drawn from `from` to `value` on the track: a forecast's low
+       *  and high end. Its default display is "from–value". */
+      bars: {
+        label: string;
+        value: number;
+        from?: number;
+        display?: string;
+        highlight?: boolean;
+      }[];
       /** The scale's full length, such as 100 for percentages: draws the track behind each bar. */
       max?: number;
       /** Bars sort largest first; "given" keeps the order they are listed in. */

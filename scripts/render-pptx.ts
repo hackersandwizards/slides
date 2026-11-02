@@ -953,15 +953,13 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const colW = Array.from({ length: cols }, (_, i) =>
         b.widths && total ? (b.widths[i] / total) * a.w : a.w / cols,
       );
-      // The web's table: body at the small step, headers as mono capitals at the label step.
+      // The web's table: body and headers at the small step, headers as mono capitals.
       const size = Math.max(7, Math.round(PT.base * 0.875 * k * 2) / 2);
       const cell = (t: string, head: boolean): PptxGenJS.TableCell => ({
         text: md(
           head ? t.toUpperCase() : t,
           c,
-          head
-            ? { bold: true, fontFace: MONO, color: c.ink, fontSize: Math.max(7, PT.label * k) }
-            : {},
+          head ? { bold: true, fontFace: MONO, color: c.ink, fontSize: size } : {},
         ) as PptxGenJS.TableCell[],
         options: { fill: { color: head ? c.tint : c.card } },
       });
@@ -1514,11 +1512,12 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         const bh = Math.min(0.32, rh * 0.6);
         box(s, c, bar.label, a.x, y, lw - 0.15, rh, { ...o, align: "right", valign: "middle" });
         if (b.max) rect(s, a.x + lw, y + (rh - bh) / 2, tw, bh, c.tint);
+        // A range starts at its low end, as on the web slide.
         rect(
           s,
-          a.x + lw,
+          a.x + lw + ((bar.from ?? 0) / max) * tw,
           y + (rh - bh) / 2,
-          Math.max(0.02, (bar.value / max) * tw),
+          Math.max(0.02, ((bar.value - (bar.from ?? 0)) / max) * tw),
           bh,
           // As on the web slide: every bar teal, or with a highlight the rest in the context grey.
           bar.highlight || !bars.some((x) => x.highlight) ? c.teal : mix(c.ink, c.bg, 0.4),
@@ -1526,7 +1525,15 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         box(
           s,
           c,
-          { runs: [{ text: bar.display ?? String(bar.value) }] },
+          {
+            runs: [
+              {
+                text:
+                  bar.display ??
+                  (bar.from != null ? `${bar.from}–${bar.value}` : String(bar.value)),
+              },
+            ],
+          },
           a.x + lw + tw + 0.1,
           y,
           0.9,
