@@ -1,5 +1,5 @@
 // The design system (decision design-system-tool): Astrobook over design-system/stories, served at
-// http://127.0.0.1:4329/design-system/ by `bun run design-system`. Astro is a dev dependency only,
+// http://127.0.0.1:4335/design-system/ by `bun run design-system`. Astro is a dev dependency only,
 // for this catalogue: the package ships no Astro, and its consumers render the components in Next
 // and in their own Astro.
 import { createReadStream, statSync } from "node:fs";
@@ -28,7 +28,7 @@ const types: Record<string, string> = {
 
 export default defineConfig({
   devToolbar: { enabled: false },
-  server: { host: "127.0.0.1", port: 4329 },
+  server: { host: "127.0.0.1", port: 4335 },
   integrations: [
     react(),
     astrobook({

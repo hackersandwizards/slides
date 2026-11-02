@@ -93,7 +93,7 @@ are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and 
 - `bun run dev`: serve the checkout on port 4327 for `http://slides.localhost` (Caddy, as for
   `os.localhost`); the specimen's header links the brand catalogue and the document specimen at
   `brand.localhost` and `documents.localhost`.
-- `bun run design-system`: serve the design system at `http://127.0.0.1:4329/design-system/`.
+- `bun run design-system`: serve the design system at `http://127.0.0.1:4335/design-system/`.
 
 ## Releasing a change
 
