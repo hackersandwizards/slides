@@ -1,4 +1,6 @@
+import { statSync, utimesSync } from "node:fs";
 import { createServer, type Server } from "node:http";
+import { join } from "node:path";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { handle } from "../scripts/serve";
@@ -25,4 +27,17 @@ it("answers a NUL byte with 400 and keeps serving", async () => {
 
 it("serves nothing outside the checkout", async () => {
   expect((await fetch(`${base}/${"..%2f".repeat(20)}etc%2fpasswd`)).status).toBe(404);
+});
+
+it("writes the specimen again only after a file in the checkout changed", async () => {
+  const page = join(import.meta.dirname, "../specimen/index.html");
+  await fetch(`${base}/specimen/`);
+  const written = statSync(page).mtimeMs;
+  await fetch(`${base}/specimen/`);
+  expect(statSync(page).mtimeMs).toBe(written);
+  const now = new Date();
+  utimesSync(import.meta.filename, now, now);
+  await new Promise((done) => setTimeout(done, 500));
+  await fetch(`${base}/specimen/`);
+  expect(statSync(page).mtimeMs).toBeGreaterThan(written);
 });
