@@ -5,3 +5,5 @@ coverage/
 .env
 .env.*
 **/.claude/settings.local.json
+.astro/
+design-system/dist/

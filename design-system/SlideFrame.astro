@@ -1,0 +1,59 @@
+---
+// A story's frame. A slide fills its window (fixed, vh type, the stage rem from the window's width),
+// so the dashboard shows the story's own preview page in a 16:9 iframe, and the preview page
+// (/design-system/stories/...) renders it full screen at the stage scale. A slide opens with every
+// progressive step shown, as arriving backwards does.
+interface Props {
+  component: string;
+  part?: boolean;
+}
+const { component, part } = Astro.props;
+const path = Astro.url.pathname;
+const preview = path.includes("/design-system/stories/");
+const src = path.replace("/design-system/dashboard/", "/design-system/stories/");
+---
+
+{
+  preview ? (
+    <div class="slide-story" data-story-of={component} data-hw-scale="stage">
+      {!part && (
+        <script is:inline>sessionStorage.setItem("slide-direction", "back");</script>
+      )}
+      <slot />
+    </div>
+  ) : (
+    <div class="story-embed" data-story-of={component}>
+      <iframe src={src} title={`${component} story`} loading="lazy" />
+      <a href={src} target="_blank" rel="noreferrer">
+        Open full screen
+      </a>
+    </div>
+  )
+}
+
+<style>
+  /* A deck's page stays light behind a light slide when the catalogue is dark. */
+  .slide-story {
+    position: fixed;
+    inset: 0;
+    overflow: auto;
+    background: var(--color-bg);
+    color-scheme: light;
+  }
+  .story-embed {
+    padding: 1rem;
+  }
+  .story-embed iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+  .story-embed a {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: var(--text-ui);
+    color: inherit;
+  }
+</style>

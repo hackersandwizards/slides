@@ -58,7 +58,8 @@
     "fix": "bun --bun eslint --cache --concurrency=auto . --fix && bun --bun prettier --write .",
     "check:staged": "bun .claude/skills/engineering/check-staged.ts",
     "specimen": "bun scripts/specimen.ts",
-    "dev": "bun scripts/serve.ts"
+    "dev": "bun scripts/serve.ts",
+    "design-system": "astro dev --root design-system"
   },
   "peerDependencies": {
     "@hackersandwizards/brand": "*",
@@ -93,16 +94,20 @@
     "image-size": "2.0.4"
   },
   "devDependencies": {
+    "@astrojs/react": "7.1.2",
     "@eslint/js": "10.0.1",
     "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v0.28.3",
     "@tailwindcss/node": "4.3.3",
     "@tailwindcss/oxide": "4.3.3",
+    "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@types/node": "26.6.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
+    "astro": "7.4.4",
+    "astrobook": "0.13.3",
     "eslint": "10.14.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-react-hooks": "7.1.1",

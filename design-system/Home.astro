@@ -1,0 +1,77 @@
+---
+// The design system's home in brand's catalogue shape (AstrobookHome, decision catalogue-shape):
+// the header, the rail with the groups, a tile per slide type and part drawing its first state.
+// The default slot holds the foundations: the three layers and the elements the slides take from
+// brand or keep, which brand-elements measures on the specimen page, the gate's fixture.
+import modules from "virtual:astrobook/story-modules.mjs";
+import config from "virtual:astrobook/global-config.mjs";
+import AstrobookHome from "@hackersandwizards/brand/expert/components/AstrobookHome.astro";
+import elements from "../brand-elements.json";
+
+const SPECIMEN = "http://slides.localhost/specimen/";
+const exceptions = Object.entries(elements.exceptions as Record<string, string>);
+---
+
+<AstrobookHome
+  modules={modules}
+  config={config}
+  product="Slides"
+  title="Design system"
+  lead="Every slide type of the h&w slide engine, each state a slide of the specimen deck, and the parts the types are built from, each with its variants. All content is made up."
+  source="slides design-system/stories"
+>
+  <div class="ds-foundations">
+    <p>
+      Three layers. <strong>Tokens</strong>: <code>styles/tokens.css</code> names every value a slide
+      draws from <code>@hackersandwizards/brand</code>. <strong>Parts</strong> are built from tokens
+      only, each with its variants. <strong>Slide types</strong> compose parts. Every story renders
+      at the stage scale (<code>data-hw-scale="stage"</code>), as every slide does.
+    </p>
+    <p>
+      From brand: {elements.uses.map((name) => <code>hw-{name}</code>)}. Kept as the slides' own, each
+      with its reason:
+    </p>
+    <ul>
+      {
+        exceptions.map(([name, reason]) => (
+          <li>
+            <code>{name}</code>: {reason}
+          </li>
+        ))
+      }
+    </ul>
+    <p>
+      <a href={`${SPECIMEN}#elements`}>The specimen page</a> shows each as a tile, where <code
+        >brand-elements</code
+      > measures it in <code>bun run check</code>.
+    </p>
+  </div>
+</AstrobookHome>
+
+<style>
+  /* Stopgap until brand's AstrobookHome draws a 16:9 stage: its preview shows a 360px wide window,
+     where a slide takes its phone layout. Each tile draws its slide whole, at the 1440 stage. */
+  :global(.hw-catalogue-preview) {
+    height: auto;
+    aspect-ratio: 16 / 9;
+    container-type: inline-size;
+  }
+  :global(.hw-catalogue-preview iframe) {
+    width: 1440px;
+    height: 810px;
+    transform: scale(calc(100cqw / 1440px));
+  }
+  .ds-foundations {
+    margin-top: 1.5rem;
+    max-width: 60rem;
+    font-size: var(--text-ui);
+    line-height: 1.6;
+  }
+  .ds-foundations p,
+  .ds-foundations ul {
+    margin: 0 0 0.75rem;
+  }
+  .ds-foundations code + code {
+    margin-left: 0.5rem;
+  }
+</style>

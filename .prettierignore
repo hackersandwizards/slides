@@ -7,3 +7,4 @@ bun.lock
 specimen/index.html
 specimen/frames.html
 specimen/build/
+.astro/

@@ -1,0 +1,38 @@
+import { ContentSlide } from "../../../components/slides/ContentSlide";
+import { state } from "../../state";
+
+export default { component: ContentSlide };
+
+export const PrimaryTheme = state("content", 0, "ContentSlide");
+export const SecondaryTheme = state("content", 1, "ContentSlide");
+export const AccentTheme = state("content", 2, "ContentSlide");
+export const WarningTheme = state("content", 3, "ContentSlide");
+export const SuccessTheme = state("content", 4, "ContentSlide");
+export const DeepDiveTheme = state("content", 5, "ContentSlide");
+export const CenteredLayout = state("content", 6, "ContentSlide");
+export const Density = state("content", 7, "ContentSlide");
+export const BlockTable = state("content", 8, "ContentSlide");
+export const BlockTwoColumn = state("content", 9, "ContentSlide");
+export const BlockTwoColumn2 = state("content", 10, "ContentSlide");
+export const BlockCode = state("content", 11, "ContentSlide");
+export const BlockTerminalAndHooks = state("content", 12, "ContentSlide");
+export const BlockAnnotatedCode = state("content", 13, "ContentSlide");
+export const BlockPipeline = state("content", 14, "ContentSlide");
+export const BlockFourColumn = state("content", 15, "ContentSlide");
+export const BlockLabeledGrid = state("content", 16, "ContentSlide");
+export const BlockImage = state("content", 17, "ContentSlide");
+export const BlockVideo = state("content", 18, "ContentSlide");
+export const BlockLinkedImage = state("content", 19, "ContentSlide");
+export const BlockImageAndGrid = state("content", 20, "ContentSlide");
+export const BlockImageAndGridSketch = state("content", 21, "ContentSlide");
+export const BlockPositions = state("content", 22, "ContentSlide");
+export const VisualFlow = state("content", 23, "ContentSlide");
+export const VisualLayers = state("content", 24, "ContentSlide");
+export const VisualTimeline = state("content", 25, "ContentSlide");
+export const VisualTransform = state("content", 26, "ContentSlide");
+export const VisualBars = state("content", 27, "ContentSlide");
+export const VisualNumbers = state("content", 28, "ContentSlide");
+export const VisualAnnotatedImage = state("content", 29, "ContentSlide");
+export const VisualCards = state("content", 30, "ContentSlide");
+export const Specimen = state("content", 31, "ContentSlide");
+export const Specimen2 = state("content", 32, "ContentSlide");

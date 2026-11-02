@@ -1,0 +1,10 @@
+import { ProcessSlide } from "../../../components/slides/ProcessSlide";
+import { state } from "../../state";
+
+export default { component: ProcessSlide };
+
+export const Specimen = state("process", 0, "ProcessSlide");
+export const Specimen2 = state("process", 1, "ProcessSlide");
+export const Specimen3 = state("process", 2, "ProcessSlide");
+export const Specimen4 = state("process", 3, "ProcessSlide");
+export const Specimen5 = state("process", 4, "ProcessSlide");

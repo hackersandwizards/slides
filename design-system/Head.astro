@@ -1,0 +1,20 @@
+---
+// Astrobook's <head> on every page of the design system: the brand favicons, and the catalogue's
+// chrome at the apps' dense scale with brand's focus ring. A slide sets its own stage scale inside.
+import faviconIco from "@hackersandwizards/brand/logos/favicon.ico?url&no-inline";
+import faviconSvg from "@hackersandwizards/brand/logos/favicon.svg?url&no-inline";
+---
+
+<link rel="icon" href={faviconIco} sizes="32x32" />
+<link rel="icon" href={faviconSvg} type="image/svg+xml" />
+{
+  /* The stylesheet bundle can open with a story's components layer, ahead of Tailwind's order, so
+    Tailwind's base would beat brand's elements: register the order first. */
+}
+<style is:inline>
+  @layer properties, theme, base, components, utilities;
+</style>
+<script is:inline>
+  document.documentElement.dataset.hwScale = "dense";
+  document.documentElement.classList.add("hw-focus-ring");
+</script>

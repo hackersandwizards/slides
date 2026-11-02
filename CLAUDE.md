@@ -60,7 +60,15 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   slide per slide type and one per content block in print mode, which the brand kit links. `bun run specimen` (`scripts/specimen.ts`)
   writes the page, and `bun run check` fails while it differs from a fresh build. The page's Shared
   elements section shows each brand element the slides use as a tile and each exception with its
-  reason; `frames.html` holds every frame inline, since `brand-elements` reads no frame.
+  reason; `frames.html` holds every frame inline, since `brand-elements` reads no frame. The page
+  stays the gate's fixture beside the design system: `brand-elements`, the marker test and the
+  brand kit read it as a file, with no server.
+- `design-system/`: the design system in Astrobook (decision design-system-tool), its own Astro
+  config, never shipped: Astro, Astrobook and `@astrojs/react` are dev dependencies, outside
+  `files` and `exports`. `stories/Types/` holds a story file per slide type, each specimen slide of
+  the type a state (`state.ts`); `stories/Parts/` one per part, drawing its sheet of variants from
+  `parts.ts`, which the specimen page draws too. `test/design-system-stories.test.ts` fails on a
+  type, specimen slide or part without its story. `Home.astro` is brand's `AstrobookHome`.
 - `test/`: the engine's unit tests.
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
@@ -84,6 +92,7 @@ are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and 
 - `bun run dev`: serve the checkout on port 4327 for `http://slides.localhost` (Caddy, as for
   `os.localhost`); the specimen's header links the brand catalogue and the document specimen at
   `brand.localhost` and `documents.localhost`.
+- `bun run design-system`: serve the design system at `http://127.0.0.1:4329/design-system/`.
 
 ## Releasing a change
 
