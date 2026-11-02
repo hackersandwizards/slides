@@ -44,7 +44,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   exception in `brand-elements.json` with its reason. `slides.css` names its own
   `components/` and `lib/` as Tailwind sources, since Tailwind never scans `node_modules`.
   `styles/sources.css` names the same sources for a consumer stylesheet that renders the
-  components without importing `slides.css`.
+  components without importing `slides.css`. `scaffolding.styles` in `package.json` lists both, so a
+  consumer's `check-coupling` lets them through.
 - `scripts/render-pdf.ts`: prints a deck's print route to a PDF; each consumer's `export-pdf.ts`
   resolves deck, URL and file name and calls it.
 - `scripts/pins.ts`: the `slides-pins` command each consumer runs first in its gate: fails when
