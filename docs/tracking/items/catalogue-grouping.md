@@ -1,11 +1,12 @@
 ---
 kind: decision
-status: open
+status: assumed
 priority: 2
 order: 350
 area: slides
 owner: Benedikt
 recommended: job
+assumption: "Triage 02.11. (Ada): Provisional, no blind review yet: decided in the repo's work item tri-decide-by-blind-review. Recommendation: by communication job; mockup docs/tracking/2026-11-01-catalogue-program/katalog-mockup.jpg."
 options:
   - key: job
     label: By communication job

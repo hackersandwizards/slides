@@ -1,11 +1,12 @@
 ---
 kind: decision
-status: open
+status: assumed
 priority: 3
 order: 1004
 area: slides
 owner: Benedikt
 recommended: merge
+assumption: "Triage 02.11. (Ada): Provisional, no blind review yet: decided in the repo's work item tri-decide-by-blind-review. Recommendation: merge, applied only after a tie in the blind panel, as the item states."
 options:
   - key: merge
     label: Merge into flow
