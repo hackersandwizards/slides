@@ -67,8 +67,6 @@
 /* The slide's roles on the stage scale (stage.css states each length's reason). */
 :root {
   --slide-footer-side: var(--slide-side);
-  --slide-corner-lockup: calc(var(--slide-corner-wordmark) * 1489 / 952);
-  --slide-corner-lockup-night: calc(var(--slide-corner-wordmark) * 1640.612 / 952);
   --slide-closing-lockup-night: calc(var(--slide-closing-lockup) * 1640.612 / 1489);
   --slide-footer-band: calc(var(--slide-footer-inset) + var(--slide-footer-mark) + 2rem);
   --background: var(--color-bg);
@@ -83,7 +81,7 @@
   --slide-context: color-mix(in srgb, var(--color-ink) 40%, var(--color-bg));
   --slide-insight-ink: color-mix(in srgb, var(--color-amber-dark) 60%, var(--color-ink));
   --slide-success-ink: color-mix(in srgb, var(--color-green-dark) 60%, var(--color-ink));
-  /* The subsystem octagon's grey, the day ampersand on night too (exception night-line). */
+  /* The subsystem octagon's grey, the day ampersand on night too: resolved here on the root. */
   --slide-ampersand: var(--color-ampersand);
   --slide-ampersand-ground: color-mix(in srgb, var(--slide-ampersand) 7%, var(--background));
   /* A highlighted code line's comment, on the teal tint of the night panel: AnnotatedCode sets it
@@ -99,10 +97,6 @@
      from a light token resolved on the root, so they are set again here, as is every role a
      component reads by name. */
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night)) {
-    /* Exception night-line (brand-elements.json): the slide's night line and teal-dark, where
-       night.css sets white at 18 % and teal-night, and the day ampersand (--slide-ampersand). */
-    --color-border: color-mix(in srgb, var(--color-night-ink) 15%, var(--color-night));
-    --color-teal-dark: color-mix(in srgb, var(--color-teal) 70%, white);
     --color-warning: var(--color-amber);
     --color-code-bg: var(--color-night-2);
     --color-text: var(--color-ink);

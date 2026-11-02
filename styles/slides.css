@@ -501,7 +501,7 @@ html:has(.print-slide) {
     --hw-marker-color: color-mix(in srgb, var(--color-teal) 40%, var(--color-bg));
   }
   .label-caps > .hw-marker {
-    --hw-marker-mid: 0.5cap;
+    --hw-marker-mid: var(--slide-marker-caps-mid);
   }
 
   /* The website's label-caps (typography.css): metadata, chips and table heads in the label

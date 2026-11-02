@@ -277,7 +277,6 @@ const exceptionLinks: Record<string, string[]> = {
   "header-bars": ["roadmap", "gantt"],
   "stage-status": ["frames.html"],
   "stance-quote": ["block-positions"],
-  "night-line": ["team-topology"],
 };
 const exceptionSections = Object.entries(exceptions.exceptions)
   .map(([name, e]) => {
