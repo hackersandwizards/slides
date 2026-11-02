@@ -437,9 +437,11 @@ function ContentBlockRenderer({
         <div className="overflow-x-auto rounded-brand border-2 border-border bg-white">
           {/* Automatic layout: `widths` are the columns' preferred shares, and no column ever gets
               narrower than its longest word. A fixed layout let a word run into the next cell. */}
-          {/* Heads and cells take one step and the ink: in a lit hall and a 720p stream the label
-              step and the muted grey were the first to wash out (blind panel 02.11., 7.92 against
-              7.00, noise 0.22; os docs/tracking/2026-11-03-table-legibility.md). */}
+          {/* The cells take the ink and the heads the step under the cells', set tight: in a lit
+              hall and a 720p stream the label step and the muted grey washed out first (blind
+              panel 02.11.; os docs/tracking/2026-11-03-table-legibility.md). The cells' own
+              step for the heads widened a two-column table's first column until its slide fell
+              to 0.79 in a consumer's deck; the step under it holds 0.80. */}
           <table className={`w-full border-collapse ${block.compact ? "text-lg" : "text-xl"}`}>
             {block.widths && (
               <colgroup>
@@ -457,7 +459,7 @@ function ContentBlockRenderer({
                   {block.headers.map((header, i) => (
                     <th
                       key={i}
-                      className={`label-caps border-b-2 border-border py-4 text-left text-text ${block.compact ? "px-4" : "px-6"}`}
+                      className={`label-caps border-b-2 border-border py-3 text-left leading-tight text-text ${block.compact ? "px-4 text-base" : "px-6 text-lg"}`}
                     >
                       {header}
                     </th>

@@ -491,50 +491,72 @@ function Bars({ block }: { block: Of<"bars"> }) {
     block.order === "given" ? block.bars : [...block.bars].sort((a, b) => b.value - a.value);
   const max = block.max ?? (Math.max(...bars.map((b) => b.value), 0) || 1);
   const tall = bars.length <= 3;
+  // Five bars and more set each label left of its track, one row per bar, so six ranges and a
+  // callout fit one slide above the fit guard's 0.8.
+  const inline = bars.length > 4;
+  const track = (bar: (typeof bars)[number]) => (
+    <div
+      className={`relative ${inline ? "h-12" : tall ? "h-20" : "h-14"} ${block.max != null ? "border-r-4 border-text/25 bg-text/[0.07]" : ""} rounded-r-sm`}
+    >
+      {/* A named scale marks its quarters, so a bar's ends read against it (blind panel 02.11.
+          on ranges: "no axis ticks" from every reviewer). */}
+      {block.max != null &&
+        [25, 50, 75].map((q) => (
+          <div
+            key={q}
+            className="absolute inset-y-0 border-l-2 border-bg"
+            style={{ left: `${q}%` }}
+          />
+        ))}
+      {/* A range starts at its low end, rounded at both ends since neither is the axis. */}
+      <div
+        className={`relative h-full ${bar.from != null ? "rounded-sm" : "rounded-r-sm"}`}
+        style={{
+          marginLeft: `${((bar.from ?? 0) / max) * 100}%`,
+          width: `${Math.max(((bar.value - (bar.from ?? 0)) / max) * 100, 0.5)}%`,
+          // Grey is context for a highlighted bar; with none highlighted every bar is data.
+          background: bar.highlight || !anyHighlight ? "var(--color-primary)" : CONTEXT,
+        }}
+      />
+    </div>
+  );
+  const value = (bar: (typeof bars)[number]) => (
+    <span
+      className={`font-heading ${inline ? "text-4xl" : "text-5xl"} font-bold whitespace-nowrap ${bar.highlight ? "text-primary" : "text-text"}`}
+    >
+      {bar.display ?? (bar.from != null ? `${bar.from}–${bar.value}` : bar.value)}
+    </span>
+  );
   return (
     <div className="w-full">
-      <div className={`flex flex-col ${tall ? "gap-12" : "gap-7"}`}>
-        {bars.map((bar, i) => (
-          <div key={i}>
-            <span className={`${LABEL} ${bar.highlight ? "text-primary" : "text-text"}`}>
-              {renderMarkdown(bar.label)}
-            </span>
-            {/* A track shows the scale's full length when the block names one; the value stands
-                in its own column right of the track, level with its bar. The column and its gap
-                take 16rem, which a callout on the same slide leaves free (ContentSlide). */}
-            <div className="mt-3 grid grid-cols-[minmax(0,1fr)_14rem] items-center gap-8">
-              <div
-                className={`relative ${tall ? "h-20" : "h-14"} ${block.max != null ? "border-r-4 border-text/25 bg-text/[0.07]" : ""} rounded-r-sm`}
-              >
-                {/* A named scale marks its quarters, so a bar's ends read against it (blind
-                    panel 02.11. on ranges: "no axis ticks" from every reviewer). */}
-                {block.max != null &&
-                  [25, 50, 75].map((q) => (
-                    <div
-                      key={q}
-                      className="absolute inset-y-0 border-l-2 border-bg"
-                      style={{ left: `${q}%` }}
-                    />
-                  ))}
-                {/* A range starts at its low end, rounded at both ends since neither is the axis. */}
-                <div
-                  className={`relative h-full ${bar.from != null ? "rounded-sm" : "rounded-r-sm"}`}
-                  style={{
-                    marginLeft: `${((bar.from ?? 0) / max) * 100}%`,
-                    width: `${Math.max(((bar.value - (bar.from ?? 0)) / max) * 100, 0.5)}%`,
-                    // Grey is context for a highlighted bar; with none highlighted every bar is data.
-                    background: bar.highlight || !anyHighlight ? "var(--color-primary)" : CONTEXT,
-                  }}
-                />
-              </div>
+      <div className={`flex flex-col ${inline ? "gap-5" : tall ? "gap-12" : "gap-7"}`}>
+        {bars.map((bar, i) =>
+          inline ? (
+            <div key={i} className="grid grid-cols-[18rem_minmax(0,1fr)_14rem] items-center gap-8">
               <span
-                className={`font-heading text-5xl font-bold whitespace-nowrap ${bar.highlight ? "text-primary" : "text-text"}`}
+                className={`font-sans text-3xl leading-tight font-semibold text-balance ${bar.highlight ? "text-primary" : "text-text"}`}
               >
-                {bar.display ?? (bar.from != null ? `${bar.from}–${bar.value}` : bar.value)}
+                {renderMarkdown(bar.label)}
               </span>
+              {track(bar)}
+              {value(bar)}
             </div>
-          </div>
-        ))}
+          ) : (
+            <div key={i}>
+              <span className={`${LABEL} ${bar.highlight ? "text-primary" : "text-text"}`}>
+                {renderMarkdown(bar.label)}
+              </span>
+              {/* A track shows the scale's full length when the block names one; the value
+                  stands in its own column right of the track, level with its bar. The column
+                  and its gap take 16rem, which a callout on the same slide leaves free
+                  (ContentSlide). */}
+              <div className="mt-3 grid grid-cols-[minmax(0,1fr)_14rem] items-center gap-8">
+                {track(bar)}
+                {value(bar)}
+              </div>
+            </div>
+          ),
+        )}
       </div>
       <Source text={block.source} />
     </div>
