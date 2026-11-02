@@ -53,9 +53,9 @@
   /* Badge colors: opaque teal tints, for overlapping card borders */
   --color-badge-bg: color-mix(in srgb, var(--color-teal) 15%, white);
   --color-badge-border: color-mix(in srgb, var(--color-teal) 25%, white);
-  /* Code ground: Shiki's github-dark background, as on the website; the brand-dark theme sets
-     night-2, as the PPTX export does. Not inline, so a theme sets it again. */
-  --color-code-bg: #24292e;
+  /* Code ground: the brand's code ground, night; the brand-dark theme sets night-2, as the brand's
+     code block and the PPTX export do. Not inline, so a theme sets it again. */
+  --color-code-bg: var(--code-bg);
   --text-xs: calc(var(--type-label-size) * var(--slide-stage));
   --text-xs--line-height: 1.4;
   --text-sm: 1.25rem;
@@ -119,12 +119,12 @@
   --color-secondary-border: color-mix(in srgb, var(--color-purple) 25%, transparent);
   --color-insight: var(--color-amber);
 
-  /* Code blocks: the website's code, Shiki's github-dark, whose tokens lib/code-highlight.tsx
-     colours. The terminal block takes the theme's background (--color-code-bg above), its green
-     for a command and the comment grey lib/code-highlight.tsx lifts to, the brand's night-subtle
-     (5.58:1). */
-  --color-code-command: #85e89d;
-  --color-code-comment: var(--color-night-subtle);
+  /* Code blocks: the brand's code palette (--code-*), whose role classes lib/code-highlight.tsx
+     sets on each token. The terminal block takes its text colour, its green for a command and its
+     comment grey. */
+  --color-code-fg: var(--code-fg);
+  --color-code-command: var(--code-inserted);
+  --color-code-comment: var(--code-comment);
 
   /* Section backgrounds: the page colour tinted 7 % towards the section's hue, the first step of
      the opacity ladder, as the bg-section-* utilities below do. */
@@ -324,7 +324,8 @@
   --slide-insight-ink: color-mix(in srgb, var(--color-amber-dark) 60%, var(--color-ink));
   --slide-success-ink: color-mix(in srgb, var(--color-green-dark) 60%, var(--color-ink));
   --slide-ampersand-ground: color-mix(in srgb, var(--color-ampersand) 7%, var(--background));
-  /* A highlighted code line's comment, on the teal tint of the night panel. */
+  /* A highlighted code line's comment, on the teal tint of the night panel: AnnotatedCode sets it
+     as the line's --code-comment. */
   --slide-code-comment-lit: color-mix(in srgb, var(--color-night-subtle), var(--color-night-muted));
 
   /* ── Speaker tools ── the speaker view's slide frame and the edit mode's marks and field, on the

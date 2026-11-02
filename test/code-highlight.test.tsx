@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { act, render } from "@testing-library/react";
-import githubDark from "shiki/themes/github-dark.mjs";
 import { describe, expect, it, vi } from "vitest";
 import { CodeLines } from "../lib/use-code-highlight";
 
@@ -33,10 +32,11 @@ const contrast = (a: string, b: string) => {
 const night = brand("--color-night");
 const subtle = mix("#ffffff", night, 0.6);
 const muted = mix("#ffffff", night, 0.8);
-// The code ground per theme as tokens.css sets it: github-dark's on light decks, the brand-dark
-// theme's token on dark ones.
-const lightGround = css.match(/--color-code-bg: (#[0-9a-f]{6});/)?.[1] ?? "";
-const darkToken = css.match(/--color-code-bg: var\((--color-[a-z0-9-]+)\);/)?.[1];
+// The code ground per theme as tokens.css sets it: the brand's code ground on light decks, the
+// brand-dark theme's token on dark ones.
+const lightToken = css.match(/--color-code-bg: var\((--code-bg)\);/)?.[1];
+const lightGround = night;
+const darkToken = css.match(/--color-code-bg: var\((--color-night-2)\);/)?.[1];
 const grounds = [
   ["light", lightGround, brand("--color-teal")],
   ["dark", brand(darkToken as keyof typeof tokens), brand("--color-teal-night")],
@@ -48,37 +48,54 @@ const block = async (code: string, language?: string) => {
   await act(() => vi.dynamicImportSettled());
   return view.container;
 };
-const colours = async (code: string, language?: string) =>
+const classes = async (code: string, language?: string) =>
   [...(await block(code, language)).querySelectorAll("span")].map((span) => [
     span.textContent,
-    span.style.color,
+    span.className,
   ]);
 
 describe("CodeLines", () => {
   // First in the file: the highlighter loads once per module.
-  it("shows the lines in night-muted until Shiki has loaded", () => {
+  it("shows the lines in the panel's text colour until Shiki has loaded", () => {
     const { container } = render(<CodeLines code={"name: reviewer\n\nb"} language="yaml" />);
     expect([...container.children].map((line) => line.textContent)).toEqual([
       "name: reviewer",
       "\u00a0",
       "b",
     ]);
-    expect(container.querySelector("span")?.className).toBe("text-night-muted");
-    expect(contrast(muted, lightGround)).toBeGreaterThanOrEqual(4.5);
+    const span = container.querySelector("span");
+    expect(span?.className).toBe("");
+    expect(span?.style.color).toBe("");
   });
 
-  it("colours tokens as the website's github-dark does", async () => {
-    expect(await colours("name: reviewer", "yaml")).toContainEqual(["name", "rgb(133, 232, 157)"]);
+  it("gives each token its brand code role's class, never an inline colour", async () => {
+    const container = await block('const a = "b"; // c', "typescript");
+    expect([...container.querySelectorAll("span")].every((s) => !s.style.color)).toBe(true);
+    expect(await classes('const a = "b"; // c', "typescript")).toEqual(
+      expect.arrayContaining([
+        ["const", "hw-code-keyword"],
+        ['"b"', "hw-code-string"],
+        ["// c", "hw-code-comment"],
+      ]),
+    );
+    expect(await classes("name: reviewer", "yaml")).toContainEqual(["name", "hw-code-inserted"]);
   });
 
-  it("lifts the theme's comment grey to the brand's night-subtle", async () => {
-    expect(await colours("# a comment", "yaml")).toEqual([
-      ["# a comment", "var(--slide-code-comment, var(--color-night-subtle))"],
-    ]);
+  it("maps every colour of the brand theme to a role", async () => {
+    const theme = (await import("@hackersandwizards/brand/code-theme.json")).default;
+    // Every token colour is one of the six highlightLines knows; a seventh would render unclassed.
+    const known = new Set(
+      ["comment", "keyword", "string", "markup.inserted", "markup.deleted"].map(
+        (scope) =>
+          theme.tokenColors.find((t) => [t.scope].flat().includes(scope))?.settings.foreground,
+      ),
+    );
+    known.add(theme.colors["editor.foreground"]);
+    for (const t of theme.tokenColors) expect(known).toContain(t.settings.foreground);
   });
 
-  it("renders an unknown language as plain text in the theme's foreground", async () => {
-    expect(await colours("plain text", "cobol")).toEqual([["plain text", "rgb(225, 228, 232)"]]);
+  it("renders an unknown language as plain text in the panel's text colour", async () => {
+    expect(await classes("plain text", "cobol")).toEqual([["plain text", ""]]);
   });
 
   it("renders one line per source line, a blank one at full height", async () => {
@@ -92,7 +109,9 @@ describe("CodeLines", () => {
     expect(container.textContent).toContain("<script>alert(1)</script>");
   });
 
-  it("sets the dark code ground to night-2, as the PPTX export does, and the utility reads it", () => {
+  it("sets the code ground to the brand's, night-2 on dark decks, and the utility reads it", () => {
+    expect(lightToken).toBe("--code-bg");
+    expect(brand("--code-bg")).toBe("var(--color-night)");
     expect(darkToken).toBe("--color-night-2");
     expect(built).toMatch(/\.bg-code-bg \{\s*background-color: var\(--color-code-bg\);/);
   });
@@ -100,7 +119,7 @@ describe("CodeLines", () => {
   it.each(grounds)(
     "keeps code text at 4.5:1 or better on the %s code ground",
     (_, ground, teal) => {
-      const fg = githubDark.colors?.["editor.foreground"] ?? "";
+      const fg = mix("#ffffff", night, 0.92);
       // A marked annotated-code line lies under 25 % of the theme's teal, its comment lifted
       // halfway to night-muted (components/slides/Visuals.tsx).
       const marked = mix(teal, ground, 0.25);

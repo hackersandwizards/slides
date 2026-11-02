@@ -778,12 +778,12 @@ function ContentBlockRenderer({
                         ? "text-code-command"
                         : cmd.prefix === "→"
                           ? "text-insight"
-                          : "text-white/40"
+                          : "text-code-comment"
                     }
                   >
                     {cmd.prefix}
                   </span>{" "}
-                  <code className="text-white">{cmd.text}</code>
+                  <code>{cmd.text}</code>
                 </div>
               </BlurFade>
             ))}

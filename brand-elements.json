@@ -5,7 +5,7 @@
     "card-tone": "A card in a meaning's hue (purple, amber, green, red) and in four weights (tint, soft, outline, line), and the quiet grey card: brand's card has white and the teal tint only.",
     "label-caps": "The label role as a mixin: labels in a meaning's or a column's hue (purple, amber, red, green), and the type of the stage strip, the gradient title pill and the gantt and table heads; brand's label has teal-dark, muted and ink only.",
     "callout-status": "Amber and green callouts for a risk and a result, their text mixed 40 % into ink for 4.5:1: brand's callout has teal and purple only.",
-    "code-panel": "The website's code, Shiki github-dark on its own ground (website astro.config.mjs), in the slide's full brand corner: brand's hw-code sets night and its own palette, which the website's code does not use.",
+    "code-panel": "The code panel in the slide's full brand corner with a hairline, its padding and type set per layout (a terminal's title bar, an annotated line's marker column): brand's hw-code sets the small corner, one padding and the code role's type. Its colours are hw-code's, the --code-* tokens and the hw-code-<role> classes.",
     "number-tile": "The KPI and number tile: a figure on a square tile, which no other system shows.",
     "chart-bars": "Chart bars: a slide's data in the slide engine's context and highlight marks.",
     "slide-table": "The slide table: projected rows at stage size with the slide's own column heads, kept per system.",

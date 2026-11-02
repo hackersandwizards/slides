@@ -259,7 +259,10 @@ export function CodePanel({
   ...props
 }: { as?: "div" | "pre" } & HTMLAttributes<HTMLElement>) {
   return (
-    <Tag className={`rounded-brand border border-white/7 bg-code-bg ${className}`} {...props} />
+    <Tag
+      className={`rounded-brand border border-white/7 bg-code-bg text-code-fg ${className}`}
+      {...props}
+    />
   );
 }
 

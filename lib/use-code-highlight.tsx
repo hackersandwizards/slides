@@ -6,8 +6,7 @@ type Highlighter = typeof import("./code-highlight");
 
 // Shiki is a large share of a deck's script and only code slides use it: it loads with the first
 // slide that shows code, as recharts does with the first chart. Until then, and in the server and
-// hydration render, a code block shows its lines unhighlighted in the brand's night-muted, the
-// grey closest to the theme's foreground.
+// hydration render, a code block shows its lines unhighlighted in the code panel's text colour.
 let loaded: Highlighter | undefined;
 let loading: Promise<void> | undefined;
 const listeners = new Set<() => void>();
@@ -23,11 +22,7 @@ const load = () => {
 };
 
 const plainLines = (code: string): ReactNode[] =>
-  code.split("\n").map((line, i) => (
-    <span key={i} className="text-night-muted">
-      {line || " "}
-    </span>
-  ));
+  code.split("\n").map((line, i) => <span key={i}>{line || " "}</span>);
 
 /** `highlightLines` from `code-highlight` once it has loaded, plain lines until then. */
 export function useHighlightLines(): (code: string, language?: string) => ReactNode[] {

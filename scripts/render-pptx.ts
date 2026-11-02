@@ -85,9 +85,10 @@ function palette(dark: boolean) {
     green: dark ? hex("--color-green") : hex("--color-green-dark"),
     red: dark ? hex("--color-red-night") : hex("--color-red"),
     neutral: dark ? mix(hex("--color-ampersand"), "FFFFFF", 0.6) : hex("--color-ampersand"),
-    code: dark ? hex("--color-night-2") : "24292E",
-    codeInk: "E1E4E8",
-    codeGreen: "85E89D",
+    // The brand's code palette: night (night-2 on a night deck), its text and its command green.
+    code: dark ? hex("--color-night-2") : night,
+    codeInk: mix("FFFFFF", night, 0.92),
+    codeGreen: hex("--color-green"),
     tealTint: mix(teal, bg, 0.12),
     purpleTint: mix(purple, bg, 0.12),
     greenTint: mix(dark ? hex("--color-green") : hex("--color-green-dark"), bg, 0.1),

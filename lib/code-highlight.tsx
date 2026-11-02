@@ -1,56 +1,61 @@
 import type { ReactNode } from "react";
-import { createHighlighterCoreSync } from "shiki/core";
+import { createHighlighterCoreSync, type ThemeRegistration } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-import githubDark from "shiki/themes/github-dark.mjs";
 import bash from "shiki/langs/bash.mjs";
 import json from "shiki/langs/json.mjs";
 import markdown from "shiki/langs/markdown.mjs";
 import typescript from "shiki/langs/typescript.mjs";
 import yaml from "shiki/langs/yaml.mjs";
+import codeTheme from "@hackersandwizards/brand/code-theme.json";
 
-// The website's code: Shiki's github-dark, Astro's default theme, with its comment grey (3.05:1 on
-// the theme's background) lifted to the brand's night-subtle (5.58:1), as trainer-hub's
-// `comment-contrast` transformer does. Synchronous, with the JavaScript
-// regex engine, so a slide renders its code in the same pass on the server, in the browser and in
-// the print route. A language not loaded here renders as plain text.
-const THEME = "github-dark";
+// The brand's code: Shiki with the brand theme hw-code, as every h&w surface highlights code.
+// Synchronous, with the JavaScript regex engine, so a slide renders its code in the same pass on the
+// server, in the browser and in the print route. A language not loaded here renders as plain text.
+// Each token takes the brand class of its colour's role (hw-code-<role>, elements/code.css), never
+// an inline colour, so the colours come from the --code-* tokens a container may set.
+const theme = codeTheme as ThemeRegistration;
 const highlighter = createHighlighterCoreSync({
-  themes: [githubDark],
+  themes: [theme],
   langs: [bash, json, markdown, typescript, yaml],
   engine: createJavaScriptRegexEngine(),
 });
 const LANGS = new Set(highlighter.getLoadedLanguages());
-// Plain text carries no token colour: it takes the theme's foreground.
-const FG = highlighter.getTheme(THEME).fg;
 
-// The theme's grey read from the theme, the lift from the brand token, so each package owns its own.
-// The lift is the token's CSS variable, which slides.css carries: a JavaScript import of the brand
-// tokens here would be a client dependency Vite discovers only on first render in trainer-hub.
-const COMMENT = githubDark.tokenColors
-  ?.find((t) => [t.scope].flat().includes("comment"))
-  ?.settings.foreground?.toUpperCase();
+// Each role's colour, read from the theme by the scope that names the role. The text colour takes
+// no class: the code panel sets it.
+const colourOf = (scope: string) =>
+  theme.tokenColors?.find((t) => [t.scope].flat().includes(scope))?.settings.foreground;
+const ROLES = new Map<string | undefined, string>([
+  [colourOf("comment"), "hw-code-comment"],
+  [colourOf("keyword"), "hw-code-keyword"],
+  [colourOf("string"), "hw-code-string"],
+  [colourOf("markup.inserted"), "hw-code-inserted"],
+  [colourOf("markup.deleted"), "hw-code-deleted"],
+  [theme.colors?.["editor.foreground"], ""],
+]);
+// Shiki's FontStyle flags.
+const STYLES = [
+  [1, "hw-code-italic"],
+  [2, "hw-code-bold"],
+  [4, "hw-code-underline"],
+] as const;
 
-/** Each line's tokens, in their theme colours: one entry per line of `code`. */
+/** Each line's tokens, in their role classes: one entry per line of `code`. */
 export function highlightLines(code: string, language?: string): ReactNode[] {
   const lang = language && LANGS.has(language) ? language : "text";
-  return highlighter.codeToTokensBase(code, { lang, theme: THEME }).map((line) =>
+  return highlighter.codeToTokensBase(code, { lang, theme: codeTheme.name }).map((line) =>
     // A non-breaking space keeps a blank line's height.
     line.every((token) => token.content === "")
-      ? "\u00a0"
+      ? " "
       : line.map((token, j) => {
-          const color = token.color?.toUpperCase();
+          const className = [
+            ROLES.get(token.color?.toLowerCase()),
+            ...STYLES.filter(([flag]) => (token.fontStyle ?? 0) & flag).map(([, c]) => c),
+          ]
+            .filter(Boolean)
+            .join(" ");
           return (
-            <span
-              key={j}
-              style={{
-                // A comment reads --slide-code-comment where a container sets it.
-                color:
-                  (color === COMMENT
-                    ? "var(--slide-code-comment, var(--color-night-subtle))"
-                    : token.color) ?? FG,
-                fontStyle: (token.fontStyle ?? 0) & 1 ? "italic" : undefined,
-              }}
-            >
+            <span key={j} className={className || undefined}>
               {token.content}
             </span>
           );

@@ -17,6 +17,7 @@ import { PrintProvider } from "../lib/print-context";
 import { PrintSlide } from "../components/slides/PrintSlide";
 import { slideCatalogue } from "../specimen/slide-catalogue";
 import * as primitives from "../components/slides/primitives";
+import { highlightLines } from "../lib/code-highlight";
 import * as chrome from "../components/slides/SlideChrome";
 
 const root = join(import.meta.dirname, "..");
@@ -173,7 +174,11 @@ const PARTS: Record<string, () => ReactNode> = {
   SlideSubtitle: () => h(SlideSubtitle, null, "The line under a headline, in muted ink."),
   SlideCaption: () => h(SlideCaption, null, "The caption under a diagram, its last step."),
   CodePanel: () =>
-    h(CodePanel, { as: "pre", className: "p-8 font-code text-xl text-white" }, "$ claude --print"),
+    h(
+      CodePanel,
+      { as: "pre", className: "p-8 font-code text-xl" },
+      highlightLines('claude --print "fix the failing test" # one run', "bash"),
+    ),
   TitledContent: () =>
     label("The column of a titled slide: headline, then the body under the fit guard."),
   ChartFrame: () => label("A chart's plot area: a SlideCard of fixed height the chart fills."),
@@ -328,7 +333,11 @@ const EXCEPTION_SHOWN: Record<string, () => ReactNode> = {
   "number-tile": () =>
     inRow(h(NumberTile, { children: "3" }), h(NumberTile, { tone: "soft", children: "3" })),
   "code-panel": () =>
-    h(CodePanel, { as: "pre", className: "p-8 font-code text-xl text-white" }, "$ claude --print"),
+    h(
+      CodePanel,
+      { as: "pre", className: "p-8 font-code text-xl" },
+      highlightLines('claude --print "fix the failing test" # one run', "bash"),
+    ),
   "header-bars": () => h(GradientTitlePill, null, "The Factory"),
 };
 const exceptionLinks: Record<string, string[]> = {
