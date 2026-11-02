@@ -1,6 +1,7 @@
 ---
 // The design system's home in brand's catalogue shape (AstrobookHome, decision catalogue-shape):
-// the header, the rail with the groups, a tile per slide type and part drawing its first state.
+// the header, the rail with the groups, a tile per slide type and part drawing its first state
+// whole at the 1440 stage.
 // The default slot holds the foundations: the three layers and the elements the slides take from
 // brand or keep, which brand-elements measures on the specimen page, the gate's fixture.
 import modules from "virtual:astrobook/story-modules.mjs";
@@ -20,6 +21,8 @@ const exceptions = Object.entries(elements.exceptions as Record<string, string>)
   title="Design system"
   lead="Every slide type of the h&w slide engine, each state a slide of the specimen deck, and the parts the types are built from, each with its variants. All content is made up."
   source="slides design-system/stories"
+  previewSize={[1440, 810]}
+  groupOrder={["Types", "Parts"]}
 >
   <div class="ds-foundations">
     <p>
@@ -52,18 +55,6 @@ const exceptions = Object.entries(elements.exceptions as Record<string, string>)
 </AstrobookHome>
 
 <style>
-  /* Stopgap until brand's AstrobookHome draws a 16:9 stage: its preview shows a 360px wide window,
-     where a slide takes its phone layout. Each tile draws its slide whole, at the 1440 stage. */
-  :global(.hw-catalogue-preview) {
-    height: auto;
-    aspect-ratio: 16 / 9;
-    container-type: inline-size;
-  }
-  :global(.hw-catalogue-preview iframe) {
-    width: 1440px;
-    height: 810px;
-    transform: scale(calc(100cqw / 1440px));
-  }
   .ds-foundations {
     margin-top: 1.5rem;
     max-width: 60rem;
