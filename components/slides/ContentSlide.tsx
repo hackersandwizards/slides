@@ -81,7 +81,9 @@ function LabeledGridBlock({
               revealed ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
             }`}
           >
-            <p className={`text-xl font-bold ${item.highlighted ? "text-success" : "text-text"}`}>
+            <p
+              className={`text-xl font-bold ${item.highlighted ? "text-green-dark" : "text-text"}`}
+            >
               {item.title}
             </p>
             <p className="card-text-lg mt-1 text-text-muted">{renderMarkdown(item.subtitle)}</p>
@@ -170,44 +172,44 @@ const TWO_COL_VARIANTS: Record<
   "success-error": {
     left: {
       card: "success",
-      title: "text-success",
-      dot: "bg-success",
+      title: "text-green-dark",
+      dot: "bg-green-dark",
     },
     right: {
       card: "error",
-      title: "text-error",
-      dot: "bg-error",
+      title: "text-red",
+      dot: "bg-red",
     },
   },
   "error-success": {
     left: {
       card: "error",
-      title: "text-error",
-      dot: "bg-error",
+      title: "text-red",
+      dot: "bg-red",
     },
     right: {
       card: "success",
-      title: "text-success",
-      dot: "bg-success",
+      title: "text-green-dark",
+      dot: "bg-green-dark",
     },
   },
   error: {
     left: {
       card: "error",
-      title: "text-error",
-      dot: "bg-error",
+      title: "text-red",
+      dot: "bg-red",
     },
     right: {
       card: "error",
-      title: "text-error",
-      dot: "bg-error",
+      title: "text-red",
+      dot: "bg-red",
     },
   },
   "error-neutral": {
     left: {
       card: "error",
-      title: "text-error",
-      dot: "bg-error",
+      title: "text-red",
+      dot: "bg-red",
     },
     right: {
       card: "neutral",
@@ -218,13 +220,13 @@ const TWO_COL_VARIANTS: Record<
   success: {
     left: {
       card: "success",
-      title: "text-success",
-      dot: "bg-success",
+      title: "text-green-dark",
+      dot: "bg-green-dark",
     },
     right: {
       card: "success",
-      title: "text-success",
-      dot: "bg-success",
+      title: "text-green-dark",
+      dot: "bg-green-dark",
     },
   },
   neutral: {
@@ -391,7 +393,7 @@ const CALLOUT_VARIANTS = {
   warning:
     "rounded-brand border-2 px-8 py-6 border-accent/25 bg-accent/7 text-(--slide-insight-ink)",
   success:
-    "rounded-brand border-2 px-8 py-6 border-success/25 bg-success/7 text-(--slide-success-ink)",
+    "rounded-brand border-2 px-8 py-6 border-green-dark/25 bg-green-dark/7 text-(--slide-success-ink)",
 };
 
 function ContentBlockRenderer({
@@ -765,7 +767,7 @@ function ContentBlockRenderer({
     case "terminal":
       return (
         <CodePanel className="mx-auto max-w-4xl overflow-hidden text-left">
-          <div className="border-b border-white/15 px-6 py-3 font-mono text-xs text-code-comment">
+          <div className="border-b border-white/15 px-6 py-3 font-mono text-xs text-(--code-comment)">
             terminal
           </div>
           <div className="space-y-2 px-6 py-5 font-mono text-lg leading-loose sm:text-xl">
@@ -775,10 +777,10 @@ function ContentBlockRenderer({
                   <span
                     className={
                       cmd.prefix === "$"
-                        ? "text-code-command"
+                        ? "text-(--code-inserted)"
                         : cmd.prefix === "→"
-                          ? "text-insight"
-                          : "text-code-comment"
+                          ? "text-amber"
+                          : "text-(--code-comment)"
                     }
                   >
                     {cmd.prefix}

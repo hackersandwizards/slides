@@ -40,7 +40,7 @@ function Icon({ name, className }: { name?: string; className?: string }) {
 // The colour a step's name states, never a status role: Red is the brand red, not the warning.
 const TONES = {
   red: "text-red",
-  green: "text-success",
+  green: "text-green-dark",
 } as const;
 
 // ─── flow: steps in order on one line, an optional loop back ────────────────

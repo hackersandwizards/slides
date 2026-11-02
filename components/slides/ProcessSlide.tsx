@@ -112,7 +112,7 @@ export function ProcessSlide({ slide }: Props) {
                       refY="4"
                       orient="auto"
                     >
-                      <polygon points="0 0, 10 4, 0 8" className="fill-brand" />
+                      <polygon points="0 0, 10 4, 0 8" className="fill-teal" />
                     </marker>
                     <marker
                       id="arrowhead-dim"
@@ -165,7 +165,7 @@ export function ProcessSlide({ slide }: Props) {
                       <path
                         key={index}
                         d={`M ${sx} ${sy} Q ${cx} ${cy} ${ex} ${ey}`}
-                        className={`transition-all duration-500 ${showArrow ? "stroke-brand" : "stroke-primary-border"}`}
+                        className={`transition-all duration-500 ${showArrow ? "stroke-teal" : "stroke-primary-border"}`}
                         strokeWidth={showArrow ? 2.5 : 1.5}
                         strokeDasharray={showArrow ? "none" : "6 4"}
                         markerEnd={showArrow ? "url(#arrowhead)" : "url(#arrowhead-dim)"}
@@ -205,7 +205,7 @@ export function ProcessSlide({ slide }: Props) {
                       <div
                         className={`relative flex w-56 flex-col items-center rounded-brand border p-5 text-center transition-all duration-500 ${
                           highlighted
-                            ? "scale-105 border-brand"
+                            ? "scale-105 border-teal"
                             : isRevealed
                               ? "border-border"
                               : "border-primary-border/40"
@@ -217,7 +217,7 @@ export function ProcessSlide({ slide }: Props) {
                           }`}
                         />
                         <div
-                          className={`absolute inset-0 rounded-brand bg-brand/7 transition-opacity duration-500 ${
+                          className={`absolute inset-0 rounded-brand bg-teal/7 transition-opacity duration-500 ${
                             highlighted ? "opacity-100" : "opacity-0"
                           }`}
                         />
@@ -233,12 +233,12 @@ export function ProcessSlide({ slide }: Props) {
                               highlighted
                                 ? "opacity-0"
                                 : isRevealed
-                                  ? "bg-brand/7 opacity-100"
+                                  ? "bg-teal/7 opacity-100"
                                   : "bg-primary/7 opacity-40"
                             }`}
                           />
                           <div
-                            className={`absolute inset-0 bg-gradient-to-r from-brand to-brand-accent transition-opacity duration-500 ${
+                            className={`absolute inset-0 bg-gradient-to-r from-teal to-purple transition-opacity duration-500 ${
                               highlighted ? "opacity-100" : "opacity-0"
                             }`}
                           />
@@ -248,7 +248,7 @@ export function ProcessSlide({ slide }: Props) {
                                 highlighted
                                   ? "text-white"
                                   : isRevealed
-                                    ? "text-brand"
+                                    ? "text-teal"
                                     : "text-text-subtle"
                               }`}
                             />

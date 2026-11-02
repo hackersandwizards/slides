@@ -44,7 +44,7 @@ export function TransitionSlide({ slide }: Props) {
               look="line"
               className="mt-12 card-pad-8/12 sm:mt-14 sm:card-pad-10/14 md:mt-18 md:card-pad-12/18"
             >
-              <p className="font-heading text-3xl font-bold text-brand sm:text-4xl md:text-5xl">
+              <p className="font-heading text-3xl font-bold text-teal sm:text-4xl md:text-5xl">
                 {slide.speakerName}
               </p>
               {slide.speakerCompany && (

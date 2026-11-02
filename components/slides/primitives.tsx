@@ -102,16 +102,16 @@ const CARD_TONES: Record<Exclude<CardTone, "neutral">, Partial<Record<CardLook, 
     line: "border border-accent/25 bg-white",
   },
   success: {
-    tint: "border border-success bg-success/7",
-    soft: "border border-success/25 bg-success/7",
-    outline: "border border-success bg-white",
-    line: "border border-success/25 bg-white",
+    tint: "border border-green-dark bg-green-dark/7",
+    soft: "border border-green-dark/25 bg-green-dark/7",
+    outline: "border border-green-dark bg-white",
+    line: "border border-green-dark/25 bg-white",
   },
   error: {
-    tint: "border border-error bg-error/7",
-    soft: "border border-error/25 bg-error/7",
-    outline: "border border-error bg-white",
-    line: "border border-error/25 bg-white",
+    tint: "border border-red bg-red/7",
+    soft: "border border-red/25 bg-red/7",
+    outline: "border border-red bg-white",
+    line: "border border-red/25 bg-white",
   },
 };
 
@@ -177,7 +177,7 @@ export function DisplayHeading({
 }) {
   return (
     <Tag
-      className={`-my-(--slide-display-bleed) py-(--slide-display-bleed) font-heading leading-(--slide-display-leading) font-bold tracking-(--slide-display-tracking) whitespace-pre-line text-text ${DISPLAY_SIZES[size]} ${className}`.trim()}
+      className={`-my-(--slide-display-bleed) py-(--slide-display-bleed) font-heading leading-(--slide-display-leading) font-bold tracking-(--type-display-tracking) whitespace-pre-line text-text ${DISPLAY_SIZES[size]} ${className}`.trim()}
       style={BALANCED}
     >
       {children}
@@ -260,7 +260,7 @@ export function CodePanel({
 }: { as?: "div" | "pre" } & HTMLAttributes<HTMLElement>) {
   return (
     <Tag
-      className={`rounded-brand border border-white/7 bg-code-bg text-code-fg ${className}`}
+      className={`rounded-brand border border-white/7 bg-code-bg text-(--code-fg) ${className}`}
       {...props}
     />
   );

@@ -75,9 +75,9 @@ export function TrendPlot({ data, print, xLabel, yLabel }: PlotProps) {
             isAnimationActive={print ? false : "auto"}
             type="monotone"
             dataKey="value"
-            stroke="var(--color-brand)"
+            stroke="var(--color-teal)"
             strokeWidth={4}
-            fill="var(--color-brand)"
+            fill="var(--color-teal)"
             fillOpacity={two ? 0 : 0.07}
           />
           {two && (
@@ -122,14 +122,14 @@ export function BarPlot({
           />
           <YAxis hide={labelled} tick={tick} axisLine={false} tickLine={false} width={64} />
           <Tooltip
-            cursor={{ fill: "var(--color-brand)", fillOpacity: 0.07 }}
+            cursor={{ fill: "var(--color-teal)", fillOpacity: 0.07 }}
             {...tooltip}
             itemStyle={{ color: "var(--color-text)" }}
           />
           <Bar
             isAnimationActive={print ? false : "auto"}
             dataKey="value"
-            fill="var(--color-brand)"
+            fill="var(--color-teal)"
             radius={[4, 4, 0, 0]}
           >
             {labelled && (

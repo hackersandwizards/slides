@@ -1,6 +1,6 @@
 {
   "pages": ["specimen/index.html", "specimen/frames.html"],
-  "uses": ["card", "label", "pill", "callout", "link", "strip", "icon-button"],
+  "uses": ["card", "label", "pill", "callout", "link", "strip", "icon-button", "focus-ring"],
   "exceptions": {
     "card-tone": "A card in a meaning's hue (purple, amber, green, red) and in four weights (tint, soft, outline, line), and the quiet grey card: brand's card has white and the teal tint only.",
     "label-caps": "The label role as a mixin: labels in a meaning's or a column's hue (purple, amber, red, green), and the type of the stage strip, the gradient title pill and the gantt and table heads; brand's label has teal-dark, muted and ink only.",

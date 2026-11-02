@@ -42,14 +42,9 @@
      website's pill (TrainingList.astro .tl-chip). */
   --radius-brand: var(--slide-radius);
   --radius-brand-sm: var(--slide-radius-sm);
-  /* Not inline, so a theme sets them again. */
-  /* Status: an error or a constraint is the brand's signal red, a warning its dark amber, as on
-     every surface. Not inline, so a theme sets them again. */
+  /* Status: a warning is the brand's dark amber, as on every surface (an error takes red itself).
+     Not inline, so a theme sets it again. */
   --color-warning: var(--color-amber-dark);
-  --color-error: var(--color-red);
-  --color-insight-bg: color-mix(in srgb, var(--color-amber) 7%, transparent);
-  --color-constraint: var(--color-red);
-  --color-constraint-bg: color-mix(in srgb, var(--color-red) 7%, transparent);
   /* Badge colors: opaque teal tints, for overlapping card borders */
   --color-badge-bg: color-mix(in srgb, var(--color-teal) 15%, white);
   --color-badge-border: color-mix(in srgb, var(--color-teal) 25%, white);
@@ -83,15 +78,10 @@
 
   /* The brand tokens reset Tailwind's tracking and leading steps; the slides keep the ones they
      use, at Tailwind's values. */
-  --tracking-tighter: -0.05em;
   --tracking-tight: -0.025em;
-  --tracking-normal: 0em;
   --tracking-wide: 0.025em;
-  --tracking-wider: 0.05em;
-  --tracking-widest: 0.1em;
   --leading-tight: 1.25;
   --leading-snug: 1.375;
-  --leading-normal: 1.5;
   --leading-relaxed: 1.625;
   --leading-loose: 2;
 }
@@ -100,45 +90,22 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   /* Families by role, so a change to a role's family in the brand tokens reaches every slide:
-     headings and stats take the heading role's, labels the label role's, code keeps font-mono. */
+     headings and stats take the heading role's, code keeps font-mono. */
   --font-heading: var(--type-h1-family);
-  --font-label: var(--type-label-family);
-
-  --color-brand: var(--color-teal);
-  --color-brand-accent: var(--color-purple);
-  /* The website's dark green and amber: both carry text at 4.5:1 or better on white and on the
-     page background, where its light green and amber reach 1.6:1 and 2.1:1. */
-  --color-success: var(--color-green-dark);
+  /* The website's dark amber, as success takes its dark green (green-dark): both carry text at
+     4.5:1 or better on white and on the page background, where the light cuts reach 1.6:1 and 2.1:1. */
   --color-accent: var(--color-amber-dark);
 
   --color-primary: var(--color-teal);
-  --color-primary-bg: color-mix(in srgb, var(--color-teal) 7%, transparent);
   --color-primary-border: color-mix(in srgb, var(--color-teal) 25%, transparent);
   --color-secondary: var(--color-purple);
-  --color-secondary-bg: color-mix(in srgb, var(--color-purple) 7%, transparent);
   --color-secondary-border: color-mix(in srgb, var(--color-purple) 25%, transparent);
-  --color-insight: var(--color-amber);
 
-  /* Code blocks: the brand's code palette (--code-*), whose role classes lib/code-highlight.tsx
-     sets on each token. The terminal block takes its text colour, its green for a command and its
-     comment grey. */
-  --color-code-fg: var(--code-fg);
-  --color-code-command: var(--code-inserted);
-  --color-code-comment: var(--code-comment);
-
-  /* Section backgrounds: the page colour tinted 7 % towards the section's hue, the first step of
-     the opacity ladder, as the bg-section-* utilities below do. */
-  --color-section-intro: var(--color-bg);
-  --color-section-primary: color-mix(in srgb, var(--color-teal) 7%, var(--color-bg));
-  --color-section-secondary: color-mix(in srgb, var(--color-purple) 7%, var(--color-bg));
-  --color-section-accent: color-mix(in srgb, var(--color-amber-dark) 7%, var(--color-bg));
-  --color-section-success: color-mix(in srgb, var(--color-green-dark) 7%, var(--color-bg));
-
-  /* Text hierarchy: the brand's two text steps, ink and muted, and the engine's third,
-     --slide-text-subtle (see :root below). */
+  /* Text hierarchy: the brand's two text steps, ink and muted, and its third, subtle,
+     which since brand v0.8 is muted too. */
   --color-text: var(--color-ink);
   --color-text-muted: var(--color-muted);
-  --color-text-subtle: var(--slide-text-subtle);
+  --color-text-subtle: var(--color-muted);
 }
 
 /* The slide scale: the website's shapes sized for a room. A slide is a 1920x1080 page seen on a
@@ -208,8 +175,6 @@
   --slide-radius-sm: 0;
   --slide-marker: 0.5625rem;
   --slide-stage: 1.5;
-  /* The third text step: muted, since brand v0.8 folds subtle into muted. */
-  --slide-text-subtle: var(--color-muted);
   --background: var(--color-bg);
   --foreground: var(--color-ink);
 
@@ -240,7 +205,6 @@
      The display heading (DisplayHeading): one tracking and one leading for every size, the
      brand's display tracking. The padding keeps the glyphs inside the box BlurFade's filter cuts
      while it runs; the negative margin takes it back out of the layout. */
-  --slide-display-tracking: var(--type-display-tracking);
   --slide-display-leading: 1.05;
   --slide-display-bleed: 0.2em;
 
@@ -351,7 +315,6 @@
     --color-bg: var(--color-night);
     --color-ink: var(--color-night-ink);
     --color-muted: var(--color-night-muted);
-    --slide-text-subtle: var(--color-muted);
     --color-border: color-mix(in srgb, var(--color-night-ink) 15%, var(--color-night));
     --color-teal: var(--color-teal-night);
     --color-purple: var(--color-purple-night);
@@ -360,18 +323,12 @@
     --color-factory: var(--color-factory-light);
     --color-red: var(--color-red-night);
     --color-warning: var(--color-amber);
-    --color-error: var(--color-red);
-    --color-constraint: var(--color-red);
-    --color-constraint-bg: color-mix(in srgb, var(--color-red) 7%, transparent);
     --color-code-bg: var(--color-night-2);
     --color-text: var(--color-ink);
     --color-text-muted: var(--color-muted);
     --color-text-subtle: var(--color-muted);
-    --color-brand: var(--color-teal);
-    --color-brand-accent: var(--color-purple);
     --color-primary: var(--color-teal);
     --color-secondary: var(--color-purple);
-    --color-success: var(--color-green);
     --color-accent: var(--color-amber);
     /* Dark text steps used on light tints turn light. */
     --color-teal-dark: color-mix(in srgb, var(--color-teal) 70%, white);

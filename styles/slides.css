@@ -205,7 +205,7 @@
 }
 
 ::selection {
-  background-color: var(--color-brand) !important;
+  background-color: var(--color-teal) !important;
   color: var(--color-white) !important;
 }
 
@@ -453,7 +453,7 @@ html:has(.print-slide) {
   /* The list marker is the brand's .hw-marker (marker.css, imported above), which centres the
      square on the first line's x-height in its baseline row. The slide sets its size, a second
      level a step smaller and lighter, and the caps' middle beside capitals. A marker's own colour
-     utility (bg-success, bg-warning) wins, since this sits in the components layer. */
+     utility (bg-green-dark, bg-warning) wins, since this sits in the components layer. */
   .hw-marker {
     --hw-marker-size: var(--slide-marker);
   }
@@ -626,7 +626,7 @@ html:has(.print-slide) {
 @layer utilities {
   /* The website keeps its gradient to the header strip: emphasised words take the brand colour. */
   .text-gradient-brand {
-    color: var(--color-brand);
+    color: var(--color-teal);
   }
 
   /* Section backgrounds: the brand page colour, tinted a few percent towards the section's hue.
@@ -648,7 +648,7 @@ html:has(.print-slide) {
   }
 
   .bg-section-success {
-    background: color-mix(in srgb, var(--color-success) 7%, var(--background));
+    background: color-mix(in srgb, var(--color-green-dark) 7%, var(--background));
   }
 
   /* The Night wordmark on a dark theme, the light one everywhere else. */

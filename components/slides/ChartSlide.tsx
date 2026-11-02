@@ -64,11 +64,11 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
       <svg viewBox={`0 0 ${width} ${height + 12}`} className="w-full overflow-visible">
         <path
           d={`${pathD} L ${padding + graphWidth},${height - 40} L ${padding},${height - 40} Z`}
-          fill="var(--color-brand)"
+          fill="var(--color-teal)"
           fillOpacity={0.07}
         />
 
-        <path d={pathD} fill="none" stroke="var(--color-brand)" strokeWidth="2.5" />
+        <path d={pathD} fill="none" stroke="var(--color-teal)" strokeWidth="2.5" />
 
         {dividers.map((pos, i) => {
           const x = padding + pos * graphWidth;
@@ -101,7 +101,7 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
                 textAnchor="middle"
                 className="font-sans"
                 fontSize="21"
-                fill={isActive ? "var(--color-brand)" : "var(--color-text-muted)"}
+                fill={isActive ? "var(--color-teal)" : "var(--color-text-muted)"}
                 fontWeight={isActive ? 600 : 400}
               >
                 {seg.label}
@@ -122,7 +122,7 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
                     cx={x}
                     cy={height - 40 - bellCurve(mid) * graphHeight}
                     r="6"
-                    fill="var(--color-brand)"
+                    fill="var(--color-teal)"
                   />
                   {/* On the side the curve falls away from, so the label never crosses it. */}
                   <text
@@ -131,7 +131,7 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
                     textAnchor={mid < 0.5 ? "end" : "start"}
                     className="font-heading"
                     fontSize="22"
-                    fill="var(--color-brand)"
+                    fill="var(--color-teal)"
                     fontWeight={600}
                   >
                     We are here
@@ -183,19 +183,19 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
           />
         ))}
 
-        <path d={areaD} fill="var(--color-brand)" fillOpacity={0.07} />
-        <path d={pathD} fill="none" stroke="var(--color-brand)" strokeWidth="2.5" />
+        <path d={areaD} fill="var(--color-teal)" fillOpacity={0.07} />
+        <path d={pathD} fill="none" stroke="var(--color-teal)" strokeWidth="2.5" />
 
         {currentMarker && markerPoint && (
           <g>
-            <circle cx={markerPoint.x} cy={markerPoint.y} r="5" fill="var(--color-brand)" />
+            <circle cx={markerPoint.x} cy={markerPoint.y} r="5" fill="var(--color-teal)" />
             <text
               x={markerPoint.x}
               y={markerPoint.y - 18}
               textAnchor="middle"
               className="font-heading"
               fontSize="22"
-              fill="var(--color-brand)"
+              fill="var(--color-teal)"
               fontWeight={600}
             >
               {currentMarker}
@@ -260,7 +260,7 @@ function TrendVariant({ slide }: { slide: ChartSlideType }) {
           <div className="mb-4 flex items-center justify-center gap-8">
             {seriesLabel && (
               <span className="flex items-center gap-2 text-base font-semibold text-text">
-                <span className="h-1 w-8 rounded-full bg-brand" />
+                <span className="h-1 w-8 rounded-full bg-teal" />
                 {seriesLabel}
               </span>
             )}

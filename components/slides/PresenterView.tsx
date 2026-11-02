@@ -83,7 +83,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
           {slide + 1} / {total}
         </span>
         <span
-          className={`rounded-full px-3 py-1 text-sm font-semibold ${pending ? "bg-insight text-night" : "bg-night-ink/15 text-night-muted"}`}
+          className={`rounded-full px-3 py-1 text-sm font-semibold ${pending ? "bg-amber text-night" : "bg-night-ink/15 text-night-muted"}`}
         >
           {pending ? "More on this slide" : last ? "Last slide" : "Next press: next slide"}
         </span>
@@ -148,7 +148,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
           {...dividerHandlers}
           className="group flex h-4 shrink-0 cursor-row-resize touch-none items-center justify-center outline-none"
         >
-          <span className="h-1 w-16 rounded-full bg-night-ink/25 group-hover:bg-night-ink/40 group-focus-visible:bg-insight" />
+          <span className="h-1 w-16 rounded-full bg-night-ink/25 group-hover:bg-night-ink/40 group-focus-visible:bg-amber" />
         </div>
 
         <section aria-label="Speaker notes" className="flex min-h-0 flex-1 flex-col gap-2">
@@ -197,7 +197,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
                 else if (event.key === "Enter" && (event.metaKey || event.ctrlKey))
                   void edit.save();
               }}
-              className="min-h-0 flex-1 resize-none rounded-sm bg-night-2 px-5 py-4 leading-relaxed text-night-ink outline-2 outline-insight"
+              className="min-h-0 flex-1 resize-none rounded-sm bg-night-2 px-5 py-4 leading-relaxed text-night-ink outline-2 outline-amber"
               style={{ fontSize: size }}
             />
           ) : (

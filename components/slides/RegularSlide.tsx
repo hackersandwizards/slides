@@ -88,8 +88,8 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
               className="h-36 w-36 rounded-full border-4 border-border object-cover md:h-44 md:w-44"
             />
           ) : (
-            <div className="flex h-36 w-36 items-center justify-center rounded-full border-4 border-border bg-gradient-to-br from-brand/7 to-white md:h-44 md:w-44">
-              <User className="h-16 w-16 text-brand/40 md:h-20 md:w-20" />
+            <div className="flex h-36 w-36 items-center justify-center rounded-full border-4 border-border bg-gradient-to-br from-teal/7 to-white md:h-44 md:w-44">
+              <User className="h-16 w-16 text-teal/40 md:h-20 md:w-20" />
             </div>
           )}
         </div>
@@ -100,13 +100,13 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
           <h2 className="font-heading text-xl font-bold tracking-tight text-text md:text-2xl">
             {profile.name}
           </h2>
-          <p className="mt-1 text-base font-medium text-brand md:text-lg">{profile.title}</p>
+          <p className="mt-1 text-base font-medium text-teal md:text-lg">{profile.title}</p>
           {profile.linkedIn && (
             <a
               href={profile.linkedIn}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-brand/7 px-4 py-1.5 text-sm text-brand transition-colors hover:bg-brand/7 md:text-base"
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-teal/7 px-4 py-1.5 text-sm text-teal transition-colors hover:bg-teal/7 md:text-base"
             >
               <Linkedin className="h-4 w-4" />
               LinkedIn
@@ -192,7 +192,7 @@ export function RegularSlide({ slide }: Props) {
                           }`}
                         >
                           {section.title && (
-                            <h2 className="font-heading text-xl font-bold text-brand sm:text-2xl md:text-3xl">
+                            <h2 className="font-heading text-xl font-bold text-teal sm:text-2xl md:text-3xl">
                               {section.title}
                             </h2>
                           )}
@@ -221,7 +221,7 @@ export function RegularSlide({ slide }: Props) {
                               href={section.link.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex w-fit items-center gap-2 rounded-brand-sm border border-border bg-brand/7 px-4 py-2.5 text-base text-brand transition-all hover:border-brand/25 hover:bg-brand/7 md:gap-3 md:px-5 md:py-3 md:text-lg"
+                              className="inline-flex w-fit items-center gap-2 rounded-brand-sm border border-border bg-teal/7 px-4 py-2.5 text-base text-teal transition-all hover:border-teal/25 hover:bg-teal/7 md:gap-3 md:px-5 md:py-3 md:text-lg"
                             >
                               {section.link.label}
                             </a>

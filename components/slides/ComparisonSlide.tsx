@@ -126,7 +126,7 @@ function VsVariant({ slide }: { slide: ComparisonSlideType }) {
                   <div className="mb-4">
                     <ul className="space-y-2.5">
                       {pros.map((pro, j) => (
-                        <MarkedItem key={j} mark="+" tone="text-success">
+                        <MarkedItem key={j} mark="+" tone="text-green-dark">
                           {pro.startsWith("+") ? pro.slice(1).trim() : pro}
                         </MarkedItem>
                       ))}
@@ -140,7 +140,7 @@ function VsVariant({ slide }: { slide: ComparisonSlideType }) {
                   <div className={pros.length > 0 ? "mt-4 border-t border-border pt-4" : ""}>
                     <ul className="space-y-2.5">
                       {cons.map((con, j) => (
-                        <MarkedItem key={j} mark={"\u2212"} tone="text-error">
+                        <MarkedItem key={j} mark={"\u2212"} tone="text-red">
                           {con.slice(1).trim()}
                         </MarkedItem>
                       ))}

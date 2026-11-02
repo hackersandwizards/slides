@@ -216,7 +216,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                           </p>
                         )}
                         {speaker.contact && (
-                          <p className="text-base font-medium text-brand sm:text-lg">
+                          <p className="text-base font-medium text-teal sm:text-lg">
                             {speaker.contact}
                           </p>
                         )}
@@ -225,7 +225,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                             href={speaker.linkedIn}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block text-base font-medium text-brand sm:text-lg"
+                            className="block text-base font-medium text-teal sm:text-lg"
                           >
                             {speaker.linkedIn.replace(/^https?:\/\/(www\.)?/, "")}
                           </a>

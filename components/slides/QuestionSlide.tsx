@@ -135,7 +135,7 @@ export function QuestionSlide({ slide }: Props) {
                   disabled={printMode}
                   aria-current={isActive ? "true" : undefined}
                   aria-label={`${option.label}: ${option.text}, ${counts[i]} votes`}
-                  className={`flex w-full items-center justify-between rounded-brand border px-6 py-5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none ${
+                  className={`hw-focus-ring flex w-full items-center justify-between rounded-brand border px-6 py-5 text-left transition-all duration-200 ${
                     isActive ? "scale-[1.01] border-primary bg-primary/7" : "border-border bg-white"
                   }`}
                 >

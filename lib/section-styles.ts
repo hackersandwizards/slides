@@ -32,8 +32,8 @@ export const SECTION_STYLES: Record<SectionTheme, SectionStyle> = {
     pill: ACCENT_PILL,
   },
   success: {
-    border: "border-success/25",
-    pill: "[--hw-pill-hue:var(--color-success)] [--hw-pill-hue-night:var(--color-success)]",
+    border: "border-green-dark/25",
+    pill: "[--hw-pill-hue:var(--color-green-dark)] [--hw-pill-hue-night:var(--color-green-dark)]",
   },
   deepdive: {
     border: "border-secondary/25",

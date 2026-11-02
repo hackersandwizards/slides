@@ -9,7 +9,7 @@ import { themeDotColor, type StageCategory } from "../../lib/stage-utils";
 /** The factory frame's title, a caps label on the brand gradient pill over the frame's edge. */
 export function GradientTitlePill({ children }: { children: ReactNode }) {
   return (
-    <span className="label-caps inline-block rounded-full bg-gradient-to-r from-primary via-brand-accent/70 to-secondary px-8 py-2.5 text-base whitespace-nowrap text-white">
+    <span className="label-caps inline-block rounded-full bg-gradient-to-r from-primary via-purple/70 to-secondary px-8 py-2.5 text-base whitespace-nowrap text-white">
       {children}
     </span>
   );

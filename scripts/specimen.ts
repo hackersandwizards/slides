@@ -19,6 +19,7 @@ import { slideCatalogue } from "../specimen/slide-catalogue";
 import * as primitives from "../components/slides/primitives";
 import { highlightLines } from "../lib/code-highlight";
 import * as chrome from "../components/slides/SlideChrome";
+import { PARTS, inRow } from "../design-system/parts";
 
 const root = join(import.meta.dirname, "..");
 const out = join(root, "specimen", "index.html");
@@ -80,117 +81,9 @@ const blockFrames = blockPicks.map((index) => {
   );
 });
 
-// ─── Parts: the components every slide type composes ─────────────────────────────────────────
-const {
-  CodePanel,
-  DashedFrame,
-  DisplayHeading,
-  NumberTile,
-  SlideCaption,
-  SlideCard,
-  SlideSubtitle,
-  SlideTitle,
-  VideoPlayer,
-} = primitives;
-const { GradientTitlePill, PulseDot } = chrome;
-const label = (text: string) =>
-  h("p", { className: "label-caps mb-3 text-xs text-text-muted" }, text);
-const inRow = (...children: ReactNode[]) =>
-  h("div", { className: "flex flex-wrap items-start gap-8" }, ...children);
-const cell = (name: string, child: ReactNode) => h("div", null, label(name), child);
-const tones = ["neutral", "primary", "secondary", "accent", "success", "error"] as const;
-const looks = ["tint", "soft", "outline", "line"] as const;
-
-/** Each part with a sheet of its variants; a part missing here fails the build. */
-const PARTS: Record<string, () => ReactNode> = {
-  DisplayHeading: () =>
-    h(
-      "div",
-      { className: "space-y-10" },
-      ...(["xl", "lg", "md", "sm"] as const).map((size) =>
-        cell(`size ${size}`, h(DisplayHeading, { size, as: "div", children: "Ship the loop" })),
-      ),
-    ),
-  SlideCard: () =>
-    h(
-      "div",
-      { className: "grid grid-cols-4 gap-6" },
-      h(SlideCard, { className: "card-pad-4/6 text-lg" }, "neutral"),
-      h(SlideCard, { tone: "quiet", className: "col-span-3 w-1/3 card-pad-4/6 text-lg" }, "quiet"),
-      ...tones
-        .filter((tone) => tone !== "neutral")
-        .flatMap((tone) =>
-          looks.map((look) =>
-            h(
-              SlideCard,
-              { tone, look, key: `${tone}-${look}`, className: "card-pad-4/6 text-lg" },
-              `${tone} · ${look}`,
-            ),
-          ),
-        ),
-    ),
-  NumberTile: () =>
-    h(
-      "div",
-      { className: "space-y-8" },
-      ...(["solid", "soft", "badge", "ink"] as const).map((tone) =>
-        cell(
-          `tone ${tone}`,
-          inRow(
-            ...(["sm", "md", "lg", "xl"] as const).map((size) =>
-              h(NumberTile, { size, tone, key: size, children: size === "xl" ? "10x" : "3" }),
-            ),
-          ),
-        ),
-      ),
-    ),
-  DashedFrame: () =>
-    inRow(
-      cell("neutral", h(DashedFrame, { className: "w-96 p-6 text-lg" }, "A group")),
-      ...(["primary", "secondary"] as const).flatMap((tone) =>
-        [false, true].map((active) =>
-          cell(
-            `${tone}${active ? ", active" : ""}`,
-            h(
-              DashedFrame,
-              { tone, active, key: `${tone}${active}`, className: "w-96 p-6 text-lg" },
-              "A group",
-            ),
-          ),
-        ),
-      ),
-    ),
-  VideoPlayer: () =>
-    h(
-      "div",
-      { className: "w-1/2 pb-10" },
-      h(VideoPlayer, {
-        src: "/slide-catalogue/agent-session.mp4",
-        poster: "/slide-catalogue/agent-session-poster.png",
-        alt: "An agent session",
-      }),
-    ),
-  SlideTitle: () => h(SlideTitle, null, "A slide's headline on one line"),
-  SlideSubtitle: () => h(SlideSubtitle, null, "The line under a headline, in muted ink."),
-  SlideCaption: () => h(SlideCaption, null, "The caption under a diagram, its last step."),
-  CodePanel: () =>
-    h(
-      CodePanel,
-      { as: "pre", className: "p-8 font-code text-xl" },
-      highlightLines('claude --print "fix the failing test" # one run', "bash"),
-    ),
-  TitledContent: () =>
-    label("The column of a titled slide: headline, then the body under the fit guard."),
-  ChartFrame: () => label("A chart's plot area: a SlideCard of fixed height the chart fills."),
-  GradientTitlePill: () => h(GradientTitlePill, null, "The Factory"),
-  PulseDot: () =>
-    h(
-      "span",
-      { className: "relative inline-block rounded-brand bg-primary/7 px-6 py-3 text-xl" },
-      "New stage",
-      h(PulseDot, { category: "primary" }),
-    ),
-};
+// ─── Parts: the components every slide type composes (design-system/parts.ts) ───────────────
+const { CodePanel, NumberTile, SlideCard } = primitives;
+const { GradientTitlePill } = chrome;
 
 const partSources: Record<string, string> = {
   primitives: readFileSync(join(root, "components", "slides", "primitives.tsx"), "utf8"),
@@ -289,7 +182,7 @@ const USES: Record<string, () => ReactNode> = {
         "span",
         {
           className:
-            "hw-pill [--hw-pill-hue:var(--color-success)] [--hw-pill-hue-night:var(--color-success)]",
+            "hw-pill [--hw-pill-hue:var(--color-green-dark)] [--hw-pill-hue-night:var(--color-green-dark)]",
         },
         "Success section",
       ),
@@ -314,6 +207,15 @@ const USES: Record<string, () => ReactNode> = {
       "button",
       { type: "button", className: "hw-icon-button", "data-on": "picture", "aria-label": "Play" },
       h("svg", { viewBox: "0 0 24 24", fill: "currentColor" }, h("path", { d: "M6 4l14 8-14 8z" })),
+    ),
+  "focus-ring": () =>
+    h(
+      "button",
+      {
+        type: "button",
+        className: "hw-focus-ring rounded-brand border border-border bg-white px-6 py-5 text-lg",
+      },
+      "A vote option",
     ),
 };
 const usesTiles = Object.entries(USES)

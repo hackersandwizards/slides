@@ -49,12 +49,12 @@ const ACCENT_STYLES = {
     text: "text-accent",
   },
   success: {
-    border: "border-success",
-    bg: "bg-success/7",
-    badgeBg: "bg-success",
-    gradient: "bg-success",
-    icon: "text-success",
-    text: "text-success",
+    border: "border-green-dark",
+    bg: "bg-green-dark/7",
+    badgeBg: "bg-green-dark",
+    gradient: "bg-green-dark",
+    icon: "text-green-dark",
+    text: "text-green-dark",
   },
 };
 

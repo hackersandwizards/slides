@@ -201,7 +201,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
         <button
           onClick={stepBack}
           disabled={atStart}
-          className={`flex h-12 w-12 items-center justify-center rounded-full border border-night-ink/15 bg-night-2 backdrop-blur-sm transition-all focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${
+          className={`hw-focus-ring flex h-12 w-12 items-center justify-center rounded-full border border-night-ink/15 bg-night-2 backdrop-blur-sm transition-all ${
             atStart ? "cursor-not-allowed opacity-25" : "opacity-100 active:scale-95"
           }`}
           aria-label="Previous slide"
@@ -216,7 +216,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
         <button
           onClick={stepForward}
           disabled={atEnd}
-          className={`flex h-12 w-12 items-center justify-center rounded-full border border-night-ink/15 bg-night-2 backdrop-blur-sm transition-all focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none ${
+          className={`hw-focus-ring flex h-12 w-12 items-center justify-center rounded-full border border-night-ink/15 bg-night-2 backdrop-blur-sm transition-all ${
             atEnd ? "cursor-not-allowed opacity-25" : "opacity-100 active:scale-95"
           }`}
           aria-label="Next slide"

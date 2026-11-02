@@ -21,9 +21,9 @@ const categoryStyles = {
     default: "border border-accent/40 bg-white text-text-muted",
   },
   success: {
-    new: "border border-success outline-2 outline-success bg-success/15 text-text",
-    active: "border border-success bg-success/15 text-text",
-    default: "border border-success/40 bg-white text-text-muted",
+    new: "border border-green-dark outline-2 outline-green-dark bg-green-dark/15 text-text",
+    active: "border border-green-dark bg-green-dark/15 text-text",
+    default: "border border-green-dark/40 bg-white text-text-muted",
   },
 } as const;
 
@@ -49,7 +49,7 @@ export const themeDotColor: Record<string, string> = {
   accent: "bg-accent",
   primary: "bg-primary",
   secondary: "bg-secondary",
-  success: "bg-success",
+  success: "bg-green-dark",
   deepdive: "bg-secondary",
 };
 
@@ -57,6 +57,6 @@ export const themeLabelColor: Record<string, string> = {
   accent: "text-accent",
   primary: "text-primary",
   secondary: "text-secondary",
-  success: "text-success",
+  success: "text-green-dark",
   deepdive: "text-secondary",
 };

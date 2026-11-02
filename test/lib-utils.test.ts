@@ -38,7 +38,7 @@ describe("getSectionStyle", () => {
 
   it("maps a known theme to its own style", () => {
     expect(getSectionStyle("primary").border).toBe("border-border");
-    expect(getSectionStyle("success").border).toBe("border-success/25");
+    expect(getSectionStyle("success").border).toBe("border-green-dark/25");
   });
 });
 
