@@ -82,7 +82,7 @@ const blockFrames = blockPicks.map((index) => {
 });
 
 // ─── Parts: the components every slide type composes (design-system/parts.ts) ───────────────
-const { CodePanel, NumberTile, SlideCard } = primitives;
+const { CodePanel, DashedFrame, NumberTile, SlideCard } = primitives;
 const { GradientTitlePill } = chrome;
 
 const partSources: Record<string, string> = {
@@ -162,7 +162,15 @@ const brandVersion = (
   JSON.parse(readFileSync(join(brand, "package.json"), "utf8")) as { version: string }
 ).version;
 const onNight = (child: ReactNode) =>
-  h("div", { className: "slide-night bg-background p-6 text-text", "data-theme": "dark" }, child);
+  h(
+    "div",
+    {
+      className: "slide-night bg-background p-6 text-text",
+      "data-theme": "dark",
+      "data-hw-night": "",
+    },
+    child,
+  );
 const onDay = (child: ReactNode) => h("div", { className: "bg-background p-6 text-text" }, child);
 const USES: Record<string, () => ReactNode> = {
   card: () =>
@@ -202,6 +210,12 @@ const USES: Record<string, () => ReactNode> = {
       ".",
     ),
   strip: () => h("div", { className: "hw-strip w-96" }),
+  status: () =>
+    inRow(
+      h(SlideCard, { tone: "accent", look: "soft", className: "card-pad-4/6 text-lg" }, "warning"),
+      h(SlideCard, { tone: "success", look: "soft", className: "card-pad-4/6 text-lg" }, "success"),
+    ),
+  frame: () => h("div", { className: "hw-frame w-96 p-6 text-lg" }, "A group"),
   "icon-button": () =>
     h(
       "button",
@@ -231,8 +245,10 @@ const exceptions = JSON.parse(readFileSync(join(root, "brand-elements.json"), "u
 const EXCEPTION_SHOWN: Record<string, () => ReactNode> = {
   "card-tone": () =>
     inRow(
-      ...(["secondary", "accent", "success", "error"] as const).map((tone) =>
-        h(SlideCard, { tone, key: tone, className: "card-pad-4/6 text-lg" }, tone),
+      h(SlideCard, { tone: "secondary", className: "card-pad-4/6 text-lg" }, "secondary"),
+      h(SlideCard, { tone: "accent", className: "card-pad-4/6 text-lg" }, "tint"),
+      ...(["outline", "line"] as const).map((look) =>
+        h(SlideCard, { tone: "accent", look, key: look, className: "card-pad-4/6 text-lg" }, look),
       ),
       h(SlideCard, { tone: "quiet", className: "card-pad-4/6 text-lg" }, "quiet"),
     ),
@@ -245,6 +261,12 @@ const EXCEPTION_SHOWN: Record<string, () => ReactNode> = {
       highlightLines('claude --print "fix the failing test" # one run', "bash"),
     ),
   "header-bars": () => h(GradientTitlePill, null, "The Factory"),
+  "frame-tone": () =>
+    inRow(
+      h(DashedFrame, { className: "w-64 p-6 text-lg" }, "neutral"),
+      h(DashedFrame, { tone: "primary", className: "w-64 p-6 text-lg" }, "primary"),
+      h(DashedFrame, { tone: "secondary", active: true, className: "w-64 p-6 text-lg" }, "active"),
+    ),
 };
 const exceptionLinks: Record<string, string[]> = {
   "label-caps": ["overview", "phased-pills", "guidance"],
@@ -254,6 +276,7 @@ const exceptionLinks: Record<string, string[]> = {
   "header-bars": ["roadmap", "gantt"],
   "stage-status": ["frames.html"],
   "stance-quote": ["block-positions"],
+  "night-line": ["team-topology"],
 };
 const exceptionSections = Object.entries(exceptions.exceptions)
   .map(([name, e]) => {

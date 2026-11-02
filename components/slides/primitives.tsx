@@ -115,6 +115,16 @@ const CARD_TONES: Record<Exclude<CardTone, "neutral">, Partial<Record<CardLook, 
   },
 };
 
+/** A soft card in a tone with a meaning is brand's status box (`hw-status`): its tone at 40 % as
+ *  the line and 7 % as the ground. Purple means no state and stays a slide card; a tinted card
+ *  keeps its full line (exception `card-tone`). */
+const STATUS_TONES: Partial<Record<CardTone, "info" | "warning" | "success" | "error">> = {
+  primary: "info",
+  accent: "warning",
+  success: "success",
+  error: "error",
+};
+
 /** The brand card (`hw-card`): a neutral card whatever its look, and the primary `tint`, the one
  *  that matters, as the brand's tinted card. `tone` names its colour and `look` how much of it:
  *  `tint` a full border on the 7% tint, `soft` a light border on the tint, `outline` a full border
@@ -138,6 +148,9 @@ export function SlideCard({
         {...props}
       />
     );
+  const status = tone !== "quiet" && look === "soft" && STATUS_TONES[tone];
+  if (status)
+    return <div className={`hw-status ${className}`.trim()} data-tone={status} {...props} />;
   const colour = tone === "quiet" ? "bg-ink/7" : CARD_TONES[tone][look];
   return (
     <div
@@ -232,8 +245,9 @@ const FRAME_TONES = {
   },
 };
 
-/** A dashed frame round a group of parts that belong together: the factory frame, a pipeline's
- *  group, a content slide's container. `active` fills it with its tone's tint. */
+/** A dashed frame round a group of parts that belong together, brand's `hw-frame` (line width and
+ *  corner): the factory frame, a pipeline's group, a content slide's container. Its tones and white
+ *  ground are the slide's own (exception `frame-tone`), `active` fills it with its tone's tint. */
 export function DashedFrame({
   tone = "neutral",
   active = false,
@@ -245,14 +259,16 @@ export function DashedFrame({
 } & ComponentPropsWithoutRef<"div">) {
   return (
     <div
-      className={`rounded-brand border-2 border-dashed ${FRAME_TONES[tone][active ? "active" : "idle"]} ${className}`.trim()}
+      className={`hw-frame ${FRAME_TONES[tone][active ? "active" : "idle"]} ${className}`.trim()}
+      data-hw-exception="frame-tone"
       {...props}
     />
   );
 }
 
-/** The website's run log: night background, faint border. A `pre` for code, a `div` for a
- *  panel with its own header. */
+/** The website's run log, brand's code panel (`hw-code` `panel`): its corner, hairline and
+ *  colours. A `pre` for code, a `div` for a panel with its own header; padding and type stay the
+ *  layout's (exception `code-panel`), and the ground is the slide's code ground, night-2 on night. */
 export function CodePanel({
   as: Tag = "div",
   className = "",
@@ -260,7 +276,9 @@ export function CodePanel({
 }: { as?: "div" | "pre" } & HTMLAttributes<HTMLElement>) {
   return (
     <Tag
-      className={`rounded-brand border border-white/7 bg-code-bg text-(--code-fg) ${className}`}
+      className={`hw-code bg-code-bg ${className}`}
+      data-variant="panel"
+      data-hw-exception="code-panel"
       {...props}
     />
   );

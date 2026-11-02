@@ -124,7 +124,11 @@ export function SlideContainer({ children, logo, theme, page, mark }: Props) {
 
   if (Array.isArray(logo)) {
     return (
-      <div className={viewportClassName} data-theme={theme ? "dark" : "light"}>
+      <div
+        className={viewportClassName}
+        data-theme={theme ? "dark" : "light"}
+        data-hw-night={theme ? "" : undefined}
+      >
         <BrandStrip />
         <MotionConfig reducedMotion="user">
           <DeckNight.Provider value={!!theme}>{children}</DeckNight.Provider>
@@ -147,7 +151,11 @@ export function SlideContainer({ children, logo, theme, page, mark }: Props) {
   const displayLogo = logo ?? HW_LOGO;
 
   return (
-    <div className={viewportClassName} data-theme={theme ? "dark" : "light"}>
+    <div
+      className={viewportClassName}
+      data-theme={theme ? "dark" : "light"}
+      data-hw-night={theme ? "" : undefined}
+    >
       <BrandStrip />
       <MotionConfig reducedMotion="user">
         <DeckNight.Provider value={!!theme}>{children}</DeckNight.Provider>

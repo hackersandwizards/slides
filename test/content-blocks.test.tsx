@@ -49,8 +49,9 @@ describe("content blocks", () => {
   it("frames annotated code as the code panel", () => {
     const c = content([{ type: "annotated-code", code: "a", notes: [] }]);
     expect(c.querySelector("pre")?.className.split(" ")).toEqual(
-      expect.arrayContaining(["border-white/7", "bg-code-bg"]),
+      expect.arrayContaining(["hw-code", "bg-code-bg"]),
     );
+    expect(c.querySelector("pre")?.dataset.variant).toBe("panel");
     expect(c.querySelector("pre")?.className).not.toMatch(/border-(text|4)\b/);
   });
 

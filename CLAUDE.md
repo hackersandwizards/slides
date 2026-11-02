@@ -29,13 +29,14 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `<img>` and moves with `history` inside one island (the trainer hub). `lib/next-adapter.tsx` is that
   provider for the Next consumers, `next/image` and the router, and each wraps its root layout in it.
 - `types/slide.ts`: the slide types and content blocks a deck may use.
-- `styles/tokens.css`: every value a slide draws, built on the brand tokens: the slide scale, the
-  type table, measures, spacing, rules, marks and the colours derived from the brand's.
+- `styles/tokens.css`: the slide's roles, each a `var()` over brand: it imports the brand tokens,
+  brand's `stage.css` (the slide scale, the type table, measures, spacing, rules and marks, every
+  literal a slide draws) and `night.css` (night on `data-hw-night`, which a night deck's frame and a
+  deep-dive slide's shell carry), and derives the type steps and colours from them, so a consumer
+  pins brand v0.29.1 or later.
   `styles/slides.css` imports Tailwind and `tokens.css` and names tokens only, as do the components;
-  `test/tokens.test.ts` fails on a raw length or colour anywhere else. `tokens.css` imports the
-  brand tokens and `slides.css` the brand list marker (`marker.css`, so a consumer pins brand
-  v0.24.4 or later) from `@hackersandwizards/brand` through the package, never a sibling path.
-  `slides.css` also imports the brand's shared elements (`elements.css`, brand v0.27.12 or later)
+  `test/tokens.test.ts` fails on a raw length or colour anywhere else. `slides.css` imports the brand list marker (`marker.css`) from `@hackersandwizards/brand`
+  through the package, never a sibling path, and the brand's shared elements (`elements.css`)
   and sets their stage scale's settings the engine owns a token for; `SlideShell` puts
   `data-hw-scale="stage"` (and `data-theme="dark"` on night) on every slide. A part that draws a
   brand element renders its `hw-*` class and changes it only through the element's `--hw-*`

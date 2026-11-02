@@ -23,6 +23,7 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
     <div
       className={`print-slide${presentation.theme ? ` theme-${presentation.theme}` : ""}`}
       data-theme={presentation.theme ? "dark" : "light"}
+      data-hw-night={presentation.theme ? "" : undefined}
     >
       <DeckNight.Provider value={!!presentation.theme}>
         <SlideComponent slide={slide} />

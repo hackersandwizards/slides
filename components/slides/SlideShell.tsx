@@ -60,6 +60,7 @@ export function SlideShell({
       className={classes}
       data-hw-scale="stage"
       data-theme={night || deckNight ? "dark" : "light"}
+      data-hw-night={night ? "" : undefined}
     >
       {children}
     </div>

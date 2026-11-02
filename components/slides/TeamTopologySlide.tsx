@@ -73,7 +73,7 @@ export function TeamTopologySlide({ slide }: Props) {
                   {subsystems.length > 0 && (
                     <div className="flex flex-col gap-3 md:flex-row">
                       {subsystems.map((team) => (
-                        <div key={team.name} className="team-octagon flex-1 bg-ampersand">
+                        <div key={team.name} className="team-octagon flex-1 bg-(--slide-ampersand)">
                           <div className="team-octagon flex h-full flex-col justify-center gap-0.5 bg-(--slide-ampersand-ground) px-7 py-3">
                             <span className="text-lg leading-tight font-bold text-text">
                               {team.name}

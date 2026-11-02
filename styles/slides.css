@@ -384,11 +384,18 @@ html:has(.print-slide) {
      corner paints the hairline inward over the padding: a wider border grew every card and table
      row and shrank slides under the fit guard. */
   :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
-    :is(.border, .border-t, .border-b, .border-l, .border-r, .border-x, .border-y, .hw-card):not(
-      .absolute,
-      .fixed,
-      .sticky
-    ) {
+    :is(
+      .border,
+      .border-t,
+      .border-b,
+      .border-l,
+      .border-r,
+      .border-x,
+      .border-y,
+      .hw-card,
+      .hw-code[data-variant="panel"],
+      .hw-status
+    ):not(.absolute, .fixed, .sticky) {
     position: relative;
   }
   :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
@@ -400,7 +407,9 @@ html:has(.print-slide) {
       .border-r,
       .border-x,
       .border-y,
-      .hw-card
+      .hw-card,
+      .hw-code[data-variant="panel"],
+      .hw-status
     )::after {
     content: "";
     position: absolute;
@@ -412,19 +421,47 @@ html:has(.print-slide) {
     pointer-events: none;
   }
   :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
-    :is(.border, .border-t, .border-y, .hw-card)::after {
+    :is(
+      .border,
+      .border-t,
+      .border-y,
+      .hw-card,
+      .hw-code[data-variant="panel"],
+      .hw-status
+    )::after {
     border-top-width: var(--slide-hairline);
   }
   :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
-    :is(.border, .border-b, .border-y, .hw-card)::after {
+    :is(
+      .border,
+      .border-b,
+      .border-y,
+      .hw-card,
+      .hw-code[data-variant="panel"],
+      .hw-status
+    )::after {
     border-bottom-width: var(--slide-hairline);
   }
   :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
-    :is(.border, .border-l, .border-x, .hw-card)::after {
+    :is(
+      .border,
+      .border-l,
+      .border-x,
+      .hw-card,
+      .hw-code[data-variant="panel"],
+      .hw-status
+    )::after {
     border-left-width: var(--slide-hairline);
   }
   :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
-    :is(.border, .border-r, .border-x, .hw-card)::after {
+    :is(
+      .border,
+      .border-r,
+      .border-x,
+      .hw-card,
+      .hw-code[data-variant="panel"],
+      .hw-status
+    )::after {
     border-right-width: var(--slide-hairline);
   }
 }
@@ -444,8 +481,6 @@ html:has(.print-slide) {
      pill's taller line. */
   [data-hw-scale="stage"] {
     --hw-hairline: var(--slide-layout-border);
-    --hw-card-corner: var(--slide-radius);
-    --hw-strip: var(--slide-strip);
     --hw-pill-size: var(--text-xl);
     --hw-pill-pad: 0 calc(var(--spacing) * 5);
   }
@@ -454,6 +489,10 @@ html:has(.print-slide) {
      square on the first line's x-height in its baseline row. The slide sets its size, a second
      level a step smaller and lighter, and the caps' middle beside capitals. A marker's own colour
      utility (bg-green-dark, bg-warning) wins, since this sits in the components layer. */
+  /* The code panel's padding is the layout's own (CodePanel). */
+  .hw-code[data-variant="panel"] {
+    --hw-code-pad: 0;
+  }
   .hw-marker {
     --hw-marker-size: var(--slide-marker);
   }
