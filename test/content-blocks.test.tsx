@@ -183,6 +183,14 @@ describe("merged card and number shapes", () => {
     expect(c.textContent).toContain("Across sites");
   });
 
+  // Pillars keep their density as dense cards (v0.27.2): drawn as plain cards, two four-pillar
+  // slides fell from above 0.9 to 0.82 and 0.86 in trainer-hub's guard.
+  it("draws grid pillars as dense cards", () => {
+    const c = grid({ allActive: true, cards: [{ title: "A", description: "a" }] });
+    expect(c.querySelector(".hw-card")?.className).toContain("card-pad-6");
+    expect(c.querySelector(".hw-card h3")?.className).toContain("text-xl");
+  });
+
   // Pillars render as cards: numbered from `numberFrom` where no card names an icon, with no card
   // colour of its own (merge-cards).
   it("draws grid pillars as cards", () => {
@@ -268,6 +276,21 @@ describe("pipeline into flow (merge-flow)", () => {
     expect(c.querySelector('.hw-frame img[alt="Logo"]')).not.toBeNull();
     expect(c.textContent).toContain("Note");
     expect(c.textContent).toContain("Foot");
+  });
+
+  // A pipeline's flow keeps the pipeline's height (v0.27.2): drawn with the plain flow's tiles
+  // and titles, a slide of two pipelines fell from above 0.9 to 0.79 in trainer-hub's guard.
+  it("draws a pipeline as a dense flow", () => {
+    const c = content([{ type: "pipeline", stages }]);
+    const tile = c.querySelector("h3")?.previousElementSibling;
+    expect(tile?.className).toContain("size-10");
+    expect(c.querySelector("h3")?.className).toContain("text-xl");
+  });
+
+  // A flow block without `dense` keeps its large tiles.
+  it("keeps a plain flow's large tiles", () => {
+    const c = content([{ type: "flow", steps: [{ title: "A" }, { title: "B" }] }]);
+    expect(c.querySelector("h3")?.previousElementSibling?.className).toContain("h-24");
   });
 
   // Inner loops and stage logos are what flow cannot draw: those keep the pipeline.

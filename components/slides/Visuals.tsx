@@ -64,22 +64,26 @@ const TILE_LABEL = 4;
 /** Steps on one line with a tile each, as the flow block draws them; the process
  *  slides draw theirs with it too. `loop` draws the arrow from the last step back to the first,
  *  labelled when non-empty. `revealed` shows the first n steps, the line to each and the loop
- *  once all show. */
+ *  once all show. `dense` draws the small tiles and titles of the pipeline it replaces. */
 export function FlowSteps({
   steps,
   highlight,
   loop,
   revealed = steps.length,
+  dense = false,
 }: {
   steps: FlowStep[];
   highlight?: number;
   loop?: string;
   revealed?: number;
+  dense?: boolean;
 }) {
   const n = steps.length;
   // Six and more steps leave a column about a sixth of the slide: a size down keeps the labels
   // whole words.
-  const dense = n >= 6;
+  const narrow = n >= 6;
+  // The line runs through the tiles' middle: half an xl tile, or half a sm one when dense.
+  const mid = dense ? "top-5" : "top-12";
   const centre = (i: number) => `${((i + 0.5) / n) * 100}%`;
   const edge = `${(0.5 / n) * 100}%`;
   const inTile = steps.every((step) => (step.label?.length ?? 0) <= TILE_LABEL);
@@ -122,7 +126,7 @@ export function FlowSteps({
         {steps.slice(1).map((_, i) => (
           <div key={i} className={show(i + 1 < revealed)} aria-hidden>
             <div
-              className="absolute top-12 h-1 -translate-y-1/2"
+              className={`absolute ${mid} h-1 -translate-y-1/2`}
               style={{
                 left: centre(i),
                 right: `${100 - ((i + 1.5) / n) * 100}%`,
@@ -130,7 +134,7 @@ export function FlowSteps({
               }}
             />
             <svg
-              className="absolute top-12 h-7 w-6 -translate-x-full -translate-y-1/2"
+              className={`absolute ${mid} h-7 w-6 -translate-x-full -translate-y-1/2`}
               style={{ left: `calc(${centre(i + 1)} - var(--slide-arrow-inset))` }}
               viewBox="0 0 24 28"
             >
@@ -152,17 +156,17 @@ export function FlowSteps({
               <div
                 key={i}
                 inert={i >= revealed}
-                className={`flex flex-col items-center ${dense ? "px-2" : "px-5"} text-center ${show(i < revealed)}`}
+                className={`flex flex-col items-center ${narrow ? "px-2" : "px-5"} text-center ${show(i < revealed)}`}
               >
                 <NumberTile
-                  size="xl"
+                  size={dense ? "sm" : "xl"}
                   tone={on ? "solid" : "none"}
                   className={
                     on ? "relative" : `relative border-4 border-text-muted bg-background ${ink}`
                   }
                 >
                   {step.icon && iconMap[step.icon] ? (
-                    <Icon name={step.icon} className="h-12 w-12" />
+                    <Icon name={step.icon} className={dense ? "h-5 w-5" : "h-12 w-12"} />
                   ) : step.label && inTile ? (
                     step.label
                   ) : (
@@ -175,7 +179,7 @@ export function FlowSteps({
                   </span>
                 )}
                 <h3
-                  className={`mt-7 ${dense ? LABEL.replace("text-4xl", "text-2xl") : LABEL} ${on ? "text-primary" : ink}`}
+                  className={`${dense ? "mt-2" : "mt-7"} ${dense ? LABEL.replace("text-4xl", "text-xl") : narrow ? LABEL.replace("text-4xl", "text-2xl") : LABEL} ${on ? "text-primary" : ink}`}
                 >
                   {renderMarkdown(step.title)}
                 </h3>
@@ -206,7 +210,14 @@ export function FlowSteps({
 }
 
 function Flow({ block }: { block: Of<"flow"> }) {
-  const steps = <FlowSteps steps={block.steps} highlight={block.highlight} loop={block.loop} />;
+  const steps = (
+    <FlowSteps
+      steps={block.steps}
+      highlight={block.highlight}
+      loop={block.loop}
+      dense={block.dense}
+    />
+  );
   return block.frame ? <Framed frame={block.frame}>{steps}</Framed> : steps;
 }
 

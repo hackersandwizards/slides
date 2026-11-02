@@ -193,6 +193,7 @@ export function gridAsContent({ cards, ...slide }: GridSlide): ContentSlide {
           highlight: indexOf(cards.findIndex((c) => c.highlight)),
           columns: cards.length === 4 ? 4 : undefined,
           reveal: !slide.allActive,
+          dense: true,
         };
   return {
     type: "content",
@@ -235,6 +236,7 @@ export function pipelineAsFlow(block: Block<"pipeline">): Block<"flow"> | undefi
           footer: block.containerFooter,
         }
       : undefined,
+    dense: true,
   };
 }
 

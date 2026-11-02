@@ -151,6 +151,9 @@ export type VisualBlock =
       loop?: string;
       /** A dashed frame round the steps: a label with logos above, notes beside, a footer. */
       frame?: FlowFrame;
+      /** Small tiles and titles, at the height of the pipeline it replaces: for two flows on one
+       *  slide or a flow with more beside it. */
+      dense?: boolean;
     }
   | {
       type: "layers";
@@ -225,8 +228,8 @@ export type VisualBlock =
       columns?: 1 | 2 | 3 | 4;
       /** Shows the cards one per arrow key instead of all on arrival. */
       reveal?: boolean;
-      /** Draws the cards at the sizes of the `four-column` and `labeled-grid` blocks and the
-       *  `regular` sections they replace: no mark above a card without icon or number, a smaller
+      /** Draws the cards at the sizes of the `four-column` and `labeled-grid` blocks, the
+       *  `regular` sections and the `grid` pillars they replace: no mark above a card without icon or number, a smaller
        *  title, the body in the muted card text. For cards carrying more text than a few words. */
       dense?: boolean;
     };
