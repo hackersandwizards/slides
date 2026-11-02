@@ -656,6 +656,29 @@ const slides: Slide[] = [
     ],
     notes: "visual blocks: numbers wrapping after four figures, each with a description line.",
   },
+  {
+    type: "content",
+    sectionLabel: "Visual: flow, framed",
+    headline: "A flow in a frame, a badge under a step",
+    content: [
+      {
+        type: "flow",
+        highlight: 1,
+        steps: [
+          { title: "Ticket" },
+          { title: "Plan", badge: "You are here" },
+          { title: "Build" },
+          { title: "Review" },
+        ],
+        frame: {
+          label: "Delivery harness",
+          notes: ["Plans versioned", "Checks shared"],
+          footer: "One loop per ticket",
+        },
+      },
+    ],
+    notes: "visual blocks: flow with a badge per step and a frame with label, notes and footer.",
+  },
 
   {
     type: "regular",

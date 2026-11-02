@@ -218,3 +218,42 @@ describe("merged card and number shapes", () => {
     expect([...c.querySelectorAll(".hw-card li")].map((li) => li.textContent)).toEqual(["x", "y"]);
   });
 });
+
+describe("pipeline into flow (merge-flow)", () => {
+  const stages = [{ title: "Plan" }, { title: "Build", state: "new" }, { title: "Ship" }];
+
+  // A pipeline flow can draw renders as the flow: the first new stage lit, the container its
+  // frame with label, logos, notes and footer.
+  it("draws a pipeline as a framed flow", () => {
+    const c = content([
+      {
+        type: "pipeline",
+        stages,
+        containerLabel: "Harness",
+        containerLogos: [{ src: "/l.png", alt: "Logo" }],
+        containerSideNotes: ["Note"],
+        containerFooter: "Foot",
+      },
+    ]);
+    expect(c.querySelector(".pipeline-row")).toBeNull();
+    expect(c.querySelector("h3.text-primary")?.textContent).toBe("Build");
+    expect(c.querySelector(".hw-frame")?.textContent).toContain("Harness");
+    expect(c.querySelector('.hw-frame img[alt="Logo"]')).not.toBeNull();
+    expect(c.textContent).toContain("Note");
+    expect(c.textContent).toContain("Foot");
+  });
+
+  // Inner loops and stage logos are what flow cannot draw: those keep the pipeline.
+  it("keeps the pipeline for inner loops and stage logos", () => {
+    for (const block of [
+      { type: "pipeline", stages, showLoops: true },
+      { type: "pipeline", stages: [{ title: "A", logo: "/a.png" }] },
+    ])
+      expect(content([block]).querySelector(".pipeline-row")).not.toBeNull();
+  });
+
+  it("sets a flow step's badge under it", () => {
+    const c = content([{ type: "flow", steps: [{ title: "A", badge: "You are here" }] }]);
+    expect(c.textContent).toContain("You are here");
+  });
+});

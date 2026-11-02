@@ -1,10 +1,11 @@
 import Image from "../ui/image";
-import type { VisualBlock } from "../../types/slide";
+import type { ReactNode } from "react";
+import type { FlowFrame, VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { useHighlightLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { CodePanel, NumberTile, SlideCard } from "./primitives";
+import { CodePanel, DashedFrame, NumberTile, SlideCard } from "./primitives";
 import { BeforeAfterSides } from "./ComparisonSlide";
 
 // The diagram vocabulary of a content slide: one relationship per block, drawn so the eye reads
@@ -205,7 +206,56 @@ export function FlowSteps({
 }
 
 function Flow({ block }: { block: Of<"flow"> }) {
-  return <FlowSteps steps={block.steps} highlight={block.highlight} loop={block.loop} />;
+  const steps = <FlowSteps steps={block.steps} highlight={block.highlight} loop={block.loop} />;
+  return block.frame ? <Framed frame={block.frame}>{steps}</Framed> : steps;
+}
+
+/** The teal dashed frame round a group of steps: its label with logos above, its notes beside
+ *  the steps, its footer under a rule. A flow's `frame` and the pipeline's container draw it. */
+export function Framed({ frame, children }: { frame: FlowFrame; children: ReactNode }) {
+  return (
+    <DashedFrame tone="primary" active={!!frame.label} className="w-full p-6">
+      {frame.label && (
+        <div className="label-caps mb-4 flex items-baseline gap-2 text-sm">
+          <div className="hw-marker bg-primary" />
+          <span className="text-primary">{frame.label}</span>
+          {frame.logos?.map((logo, i) => (
+            <Image
+              key={i}
+              src={logo.src}
+              alt={logo.alt}
+              width={28}
+              height={28}
+              className="ml-1 h-7 w-auto self-center"
+            />
+          ))}
+        </div>
+      )}
+      <div
+        className={`flex flex-wrap items-center justify-center ${frame.notes ? "gap-6" : "gap-4"}`}
+      >
+        <div className="min-w-0 flex-1">{children}</div>
+        {frame.notes && (
+          <>
+            <div className="h-16 w-px bg-primary/25" />
+            <ul className="space-y-1.5">
+              {frame.notes.map((note, i) => (
+                <li key={i} className="flex items-baseline gap-2 text-base text-text-muted">
+                  <span className="hw-marker slide-marker-nested bg-primary" />
+                  <span>{renderMarkdown(note)}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+      {frame.footer && (
+        <p className="mt-4 border-t border-primary/25 pt-3 text-base text-text-muted">
+          {renderMarkdown(frame.footer)}
+        </p>
+      )}
+    </DashedFrame>
+  );
 }
 
 // ─── layers: a stack, each layer resting on the one below ───────────────────

@@ -206,3 +206,28 @@ export function guidanceAsComparison({
 }: GuidanceSlide): ComparisonGuidanceSlide {
   return { ...slide, type: "comparison", variant: "guidance" };
 }
+
+/** A `pipeline` block as the `flow` block that replaces it, or undefined for one flow cannot
+ *  draw: a stage logo or the inner loops (`showLoops`) stay on the pipeline. */
+export function pipelineAsFlow(block: Block<"pipeline">): Block<"flow"> | undefined {
+  if (block.showLoops || block.stages.some((s) => s.logo)) return undefined;
+  const lit = block.stages.findIndex((s) => s.state === "new" || s.state === "active");
+  const framed =
+    block.containerLabel ||
+    block.containerLogos?.length ||
+    block.containerSideNotes?.length ||
+    block.containerFooter;
+  return {
+    type: "flow",
+    steps: block.stages.map((s) => ({ title: s.title })),
+    highlight: indexOf(lit),
+    frame: framed
+      ? {
+          label: block.containerLabel,
+          logos: block.containerLogos,
+          notes: block.containerSideNotes,
+          footer: block.containerFooter,
+        }
+      : undefined,
+  };
+}

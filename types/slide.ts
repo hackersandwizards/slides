@@ -58,6 +58,10 @@ export type ContentBlock =
     }
   | { type: "hooks"; items: { name: string; description: string }[] }
   | {
+      /** @deprecated A `flow` block, which draws it (decision merge-flow): the container is its
+       *  `frame`, the first new or active stage its `highlight`. A pipeline with a stage logo or
+       *  `showLoops` keeps its own drawing, which flow cannot carry. Moves in phase 4
+       *  (work-phase-4-every-deck-slide-onto-a). */
       type: "pipeline";
       stages: { title: string; state?: StageState; logo?: string }[];
       showLoops?: boolean;
@@ -120,6 +124,13 @@ export type ContentBlock =
     }
   | VisualBlock;
 
+export interface FlowFrame {
+  label?: string;
+  logos?: { src: string; alt: string }[];
+  notes?: string[];
+  footer?: string;
+}
+
 /** The diagram vocabulary (`components/slides/Visuals.tsx`): a content block that draws one
  *  relationship instead of listing it. `highlight` is the index of the one element in the brand
  *  colour; every other element stays neutral. */
@@ -132,10 +143,14 @@ export type VisualBlock =
         icon?: string;
         /** A step whose own name is a state, such as Red or Green in TDD, takes that colour. */
         tone?: "red" | "green";
+        /** A line under the step, such as "You are here". */
+        badge?: string;
       }[];
       highlight?: number;
       /** Label of an arrow from the last step back to the first. */
       loop?: string;
+      /** A dashed frame round the steps: a label with logos above, notes beside, a footer. */
+      frame?: FlowFrame;
     }
   | {
       type: "layers";

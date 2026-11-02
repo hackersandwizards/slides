@@ -31,6 +31,7 @@ import {
   keepHyphenatedWords,
   labeledGridAsCards,
   linkLabel,
+  pipelineAsFlow,
 } from "../../lib/slide-utils";
 import {
   TitledContent,
@@ -561,7 +562,10 @@ function ContentBlockRenderer({
         </div>
       );
 
-    case "pipeline":
+    case "pipeline": {
+      // A pipeline flow can draw renders as the flow (decision merge-flow, 7.62 against 6.94).
+      const flow = pipelineAsFlow(block);
+      if (flow) return <Visual block={flow} />;
       // Teal frame, label, arrows and plain steps, as every other accent; purple marks only an
       // active or new step (blind panel 01.11.: 8.48 against 6.85 for the purple block).
       return (
@@ -608,6 +612,7 @@ function ContentBlockRenderer({
           )}
         </DashedFrame>
       );
+    }
 
     case "image":
       return (

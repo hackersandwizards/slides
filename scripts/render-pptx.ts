@@ -1301,6 +1301,19 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "flow": {
+      // A frame's label stands above the steps, its notes and footer in one line under them.
+      if (b.frame) {
+        const { label, notes = [], footer } = b.frame;
+        const under = [...notes, ...(footer ? [footer] : [])].join(" · ");
+        if (label) box(s, c, label, a.x, a.y, a.w, 0.3, { ...o, size: PT.sm * k, color: c.teal });
+        if (under)
+          box(s, c, under, a.x, a.y + a.h - 0.3, a.w, 0.3, {
+            ...o,
+            size: PT.sm * k,
+            color: c.muted,
+          });
+        a = { ...a, y: a.y + (label ? 0.4 : 0), h: a.h - (label ? 0.4 : 0) - (under ? 0.4 : 0) };
+      }
       const n = b.steps.length;
       const gap = 0.45;
       const sw = (a.w - (n - 1) * gap) / n;
@@ -1329,6 +1342,9 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
               align: "center",
             },
             { runs: md(st.text ?? "", c, { color: c.muted }), align: "center" },
+            ...(st.badge
+              ? [{ runs: md(st.badge, c, { color: c.teal }), align: "center" as const }]
+              : []),
           ],
           x + 0.15,
           a.y + 0.15,
