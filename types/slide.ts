@@ -77,6 +77,9 @@ export type ContentBlock =
       poster?: string;
     }
   | {
+      /** @deprecated A `cards` block with `columns: 4` and `items` per card, which draws it
+       *  (decision merge-cards): `subtitle` is a card's `text`. Moves in phase 4
+       *  (work-phase-4-every-deck-slide-onto-a). */
       type: "four-column";
       columns: { title: string; subtitle?: string; items: string[] }[];
     }
@@ -88,6 +91,9 @@ export type ContentBlock =
       fullWidth?: boolean;
     }
   | {
+      /** @deprecated A `cards` block, which draws it (decision merge-cards): `subtitle` is a
+       *  card's `text`, the `highlighted` item the block's `highlight`. Moves in phase 4
+       *  (work-phase-4-every-deck-slide-onto-a). */
       type: "labeled-grid";
       columns?: number;
       reveal?: boolean;
@@ -169,7 +175,9 @@ export type VisualBlock =
     }
   | {
       type: "numbers";
-      items: { value: string; label: string }[];
+      /** Up to four figures stand in a row, more wrap (five and six in three columns). `text` is
+       *  a line under the label, such as what the figure means. */
+      items: { value: string; label: string; text?: string }[];
       source?: string;
     }
   | {
@@ -195,13 +203,20 @@ export type VisualBlock =
     }
   | {
       /** Parallel points as cards, each the item's own text under an icon, or a number where the
-       *  items are steps or questions. */
+       *  items are steps or questions. `items` on a card is a list under its text. */
       type: "cards";
-      items: { text: string; title?: string; icon?: string }[];
+      items: { title?: string; text?: string; icon?: string; items?: string[] }[];
       numbered?: boolean;
+      highlight?: number;
+      /** The first card's number, where one set of numbered cards runs across two slides. */
+      numberFrom?: number;
+      /** Columns; by default three, two for four cards. */
+      columns?: 1 | 2 | 3 | 4;
+      /** Shows the cards one per arrow key instead of all on arrival. */
+      reveal?: boolean;
     };
 
-export interface ContentSlide {
+export interface ContentSlide extends Grounded {
   type: "content";
   sectionLabel?: string;
   sectionTheme?: SectionTheme;
@@ -302,6 +317,10 @@ export interface GridSlide extends Grounded {
   sectionTheme?: SectionTheme;
   headline: string;
   cards: GridCard[];
+  /** `pillars` (the default) and `stats` are deprecated: the engine draws them as a content slide
+   *  with a `cards` or `numbers` block, through `gridAsContent` in `lib/slide-utils.ts` (decisions
+   *  merge-cards, merge-numbers). Decks move in phase 4 (work-phase-4-every-deck-slide-onto-a);
+   *  `quotes` stays. */
   variant?: "pillars" | "stats" | "quotes";
   columns?: 2 | 3 | 4;
   allActive?: boolean;

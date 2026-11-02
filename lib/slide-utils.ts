@@ -1,7 +1,10 @@
 import { ROLE_NAMES } from "./presenter-sync";
 import type {
+  ContentBlock,
+  ContentSlide,
   DualPillOverviewSlide,
   EvolutionSlide,
+  GridSlide,
   ProcessSlide,
   RoadmapSlide,
   SectionTheme,
@@ -133,5 +136,63 @@ export function dualPillAsRoadmap({ left, right, ...slide }: DualPillOverviewSli
     headline: slide.headline,
     subtitle: slide.subtitle,
     columns: [left, right],
+  };
+}
+
+type Block<T extends ContentBlock["type"]> = Extract<ContentBlock, { type: T }>;
+
+const indexOf = (i: number) => (i < 0 ? undefined : i);
+
+/** A `labeled-grid` block as the `cards` block that replaces it (decision merge-cards). */
+export function labeledGridAsCards(block: Block<"labeled-grid">): Block<"cards"> {
+  return {
+    type: "cards",
+    items: block.items.map((item) => ({ title: item.title, text: item.subtitle })),
+    highlight: indexOf(block.items.findIndex((item) => item.highlighted)),
+    columns: (block.columns ?? (block.items.length % 3 === 0 ? 3 : 2)) as 1 | 2 | 3 | 4,
+    reveal: block.reveal,
+  };
+}
+
+/** A `four-column` block as the `cards` block that replaces it, a list per card. */
+export function fourColumnAsCards(block: Block<"four-column">): Block<"cards"> {
+  return {
+    type: "cards",
+    items: block.columns.map((c) => ({ title: c.title, text: c.subtitle, items: c.items })),
+    columns: Math.min(Math.max(block.columns.length, 1), 4) as 1 | 2 | 3 | 4,
+  };
+}
+
+/** A `grid` slide with pillars or stats as the content slide that replaces it: pillars as a
+ *  `cards` block, numbered where no card names an icon, stats as a `numbers` block. A card's
+ *  colour (`tone`) goes: colour comes from the role. Quotes keep the grid. */
+export function gridAsContent({ cards, ...slide }: GridSlide): ContentSlide {
+  const block: ContentBlock =
+    slide.variant === "stats"
+      ? {
+          type: "numbers",
+          items: cards.map((c) => ({
+            value: c.value ?? "",
+            label: c.label ?? c.title,
+            text: c.description,
+          })),
+        }
+      : {
+          type: "cards",
+          items: cards.map((c) => ({ title: c.title, text: c.description, icon: c.icon })),
+          numbered: !cards.some((c) => c.icon),
+          numberFrom: slide.numberFrom,
+          highlight: indexOf(cards.findIndex((c) => c.highlight)),
+          columns: cards.length === 4 ? 4 : undefined,
+          reveal: !slide.allActive,
+        };
+  return {
+    type: "content",
+    ground: slide.ground,
+    background: slide.background,
+    sectionLabel: slide.sectionLabel,
+    sectionTheme: slide.sectionTheme,
+    headline: slide.headline,
+    content: [block],
   };
 }

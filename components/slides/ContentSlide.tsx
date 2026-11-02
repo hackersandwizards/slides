@@ -19,13 +19,19 @@ import type {
 import { BlurFade } from "../ui/blur-fade";
 import { SectionHeader } from "./SectionHeader";
 import { Visual } from "./Visuals";
-import { SlideShell } from "./SlideShell";
+import { SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
 import { CodeLines } from "../../lib/use-code-highlight";
 import { getStageClasses } from "../../lib/stage-utils";
 import { getSectionStyle } from "../../lib/section-styles";
-import { isDeepDive, keepHyphenatedWords, linkLabel, personAccent } from "../../lib/slide-utils";
-import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
+import {
+  fourColumnAsCards,
+  isDeepDive,
+  keepHyphenatedWords,
+  labeledGridAsCards,
+  linkLabel,
+  personAccent,
+} from "../../lib/slide-utils";
 import {
   TitledContent,
   SlideTitle,
@@ -37,62 +43,6 @@ import {
   VideoPlayer,
   DashedFrame,
 } from "./primitives";
-
-type LabeledGridBlockType = Extract<ContentBlock, { type: "labeled-grid" }>;
-
-const LABELED_GRID_COLS: Record<number, string> = {
-  1: "grid-cols-1",
-  2: "grid-cols-2",
-  3: "grid-cols-3",
-  4: "grid-cols-4",
-};
-
-/** The deck's own column count, or three for a multiple of three items, so three cards never
- *  wrap as two plus an orphan. */
-function labeledGridColumns(block: LabeledGridBlockType): number {
-  if (block.columns && block.columns in LABELED_GRID_COLS) return block.columns;
-  return block.items.length % 3 === 0 ? 3 : 2;
-}
-
-function LabeledGridBlock({
-  block,
-  centered,
-}: {
-  block: LabeledGridBlockType;
-  centered?: boolean;
-}) {
-  // When `reveal` is set, items appear one per ArrowRight; otherwise all show at once.
-  const { revealedCount } = useProgressiveReveal({
-    totalSteps: block.items.length,
-    startFull: !block.reveal,
-  });
-  return (
-    <div
-      className={`grid gap-5 ${LABELED_GRID_COLS[labeledGridColumns(block)]} ${centered ? "mx-auto w-full max-w-6xl" : ""}`}
-    >
-      {block.items.map((item, i) => {
-        const revealed = i < revealedCount;
-        return (
-          <SlideCard
-            key={i}
-            inert={!revealed}
-            tone={item.highlighted ? "success" : "neutral"}
-            className={`transition-all duration-500 card-pad-6 ${
-              revealed ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
-            }`}
-          >
-            <p
-              className={`text-xl font-bold ${item.highlighted ? "text-green-dark" : "text-text"}`}
-            >
-              {item.title}
-            </p>
-            <p className="card-text-lg mt-1 text-text-muted">{renderMarkdown(item.subtitle)}</p>
-          </SlideCard>
-        );
-      })}
-    </div>
-  );
-}
 
 interface Props {
   slide: ContentSlideType;
@@ -736,33 +686,10 @@ function ContentBlockRenderer({
       );
 
     case "four-column":
-      return (
-        <div className="grid grid-cols-4 gap-6">
-          {block.columns.map((col, i) => (
-            <SlideCard key={i} className="card-pad-5">
-              <h3 className="mb-3 font-heading text-lg font-bold text-text">
-                {col.title}
-                {col.subtitle && (
-                  <span className="ml-2 text-sm font-normal text-text-subtle">
-                    ({col.subtitle})
-                  </span>
-                )}
-              </h3>
-              <ul className="space-y-2">
-                {col.items.map((item, j) => (
-                  <li key={j} className="card-text-base flex items-baseline gap-2 text-text-muted">
-                    <span className="hw-marker" />
-                    <span>{renderMarkdown(item)}</span>
-                  </li>
-                ))}
-              </ul>
-            </SlideCard>
-          ))}
-        </div>
-      );
+      return <Visual block={fourColumnAsCards(block)} />;
 
     case "labeled-grid":
-      return <LabeledGridBlock block={block} centered={centered} />;
+      return <Visual block={labeledGridAsCards(block)} />;
 
     case "terminal":
       return (
@@ -934,7 +861,7 @@ function ContentBlockRenderer({
 
 function CenteredContentSlide({ slide }: Props) {
   return (
-    <SlideShell direction="col" overflowHidden night={isDeepDive(slide)}>
+    <SlideShell direction="col" overflowHidden ground={groundOf(slide)} night={isDeepDive(slide)}>
       <div className="slide-content relative z-10 flex flex-col items-center justify-center space-y-6 px-8 text-center md:space-y-8">
         {slide.sectionLabel && (
           <BlurFade delay={0.1} duration={0.4}>
@@ -980,7 +907,7 @@ function StandardContentSlide({ slide }: Props) {
   const pictures = slide.content.filter((b) => MEDIA_BLOCKS.has(b.type)).length;
 
   return (
-    <SlideShell night={isDeepDive(slide)}>
+    <SlideShell ground={groundOf(slide)} night={isDeepDive(slide)}>
       <TitledContent>
         {/* The badge shares the section label's row, in the flow: placed absolutely in the corner,
             a long headline ran underneath it. */}

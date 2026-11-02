@@ -4,180 +4,13 @@ import Image from "../ui/image";
 import type { GridSlide as GridSlideType, GridCard } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell, groundOf } from "./SlideShell";
-import { isDeepDive } from "../../lib/slide-utils";
-import { iconMap, type LucideIcon } from "../../lib/icons";
+import { gridAsContent, isDeepDive } from "../../lib/slide-utils";
+import { ContentSlide } from "./ContentSlide";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { TitledContent, SlideTitle, NumberTile, SlideCard } from "./primitives";
+import { TitledContent, SlideTitle, SlideCard } from "./primitives";
 
 interface Props {
   slide: GridSlideType;
-}
-
-const defaultIcons: LucideIcon[] = [iconMap.brain, iconMap.shield, iconMap.wrench];
-
-const ACCENT_STYLES = {
-  neutral: {
-    border: "border-border",
-    bg: "bg-text-subtle/7",
-    badgeBg: "bg-text-subtle",
-    gradient: "bg-gradient-to-r from-text-subtle to-text-muted",
-    icon: "text-text-muted",
-    text: "text-text-muted",
-  },
-  primary: {
-    border: "border-primary",
-    bg: "bg-primary/7",
-    badgeBg: "bg-primary",
-    gradient: "bg-gradient-to-r from-primary to-secondary",
-    icon: "text-primary",
-    text: "text-primary",
-  },
-  secondary: {
-    border: "border-secondary",
-    bg: "bg-secondary/7",
-    badgeBg: "bg-secondary",
-    gradient: "bg-secondary",
-    icon: "text-secondary",
-    text: "text-secondary",
-  },
-  accent: {
-    border: "border-accent",
-    bg: "bg-accent/7",
-    badgeBg: "bg-accent",
-    gradient: "bg-accent",
-    icon: "text-accent",
-    text: "text-accent",
-  },
-  success: {
-    border: "border-green-dark",
-    bg: "bg-green-dark/7",
-    badgeBg: "bg-green-dark",
-    gradient: "bg-green-dark",
-    icon: "text-green-dark",
-    text: "text-green-dark",
-  },
-};
-
-function PillarCard({
-  card,
-  index,
-  isRevealed,
-  isActive,
-}: {
-  card: GridCard;
-  index: number;
-  isRevealed: boolean;
-  isActive: boolean;
-}) {
-  const Icon = (card.icon ? iconMap[card.icon] : null) ?? defaultIcons[index] ?? iconMap.brain;
-  const isPast = isRevealed && !isActive;
-  const hasExplicitColor = !!(card.tone ?? card.accentColor);
-  const retainPastColor = isPast && hasExplicitColor;
-  const accent = ACCENT_STYLES[card.tone ?? card.accentColor ?? "primary"];
-
-  return (
-    <div
-      className={`relative flex w-full flex-col items-center rounded-brand border p-8 text-center transition-all duration-500 ${
-        isActive
-          ? accent.border
-          : isPast
-            ? retainPastColor
-              ? `${accent.border} `
-              : "border-border bg-white"
-            : "border-border bg-white"
-      }`}
-    >
-      <div
-        className={`absolute inset-0 rounded-brand bg-white transition-opacity duration-500 ${
-          isActive || retainPastColor ? "opacity-0" : "opacity-100"
-        }`}
-      />
-      <div
-        className={`absolute inset-0 rounded-brand ${accent.bg} transition-opacity duration-500 ${
-          isActive ? "opacity-100" : retainPastColor ? "opacity-70" : "opacity-0"
-        }`}
-      />
-
-      <NumberTile
-        tone={isActive || retainPastColor ? "none" : "badge"}
-        className={`absolute -top-6 left-1/2 z-20 -translate-x-1/2 transition-all duration-500 ${
-          isActive
-            ? `${accent.gradient} scale-110 text-white`
-            : retainPastColor
-              ? `${accent.badgeBg} text-white`
-              : ""
-        }`}
-      >
-        {index + 1}
-      </NumberTile>
-
-      <div className="relative z-10 mt-4 mb-4">
-        <Icon
-          className={`h-12 w-12 transition-colors duration-500 ${
-            isActive || retainPastColor ? accent.icon : "text-primary"
-          }`}
-        />
-      </div>
-
-      <h2
-        className={`relative z-10 mb-3 font-heading text-2xl font-bold transition-colors duration-500 ${
-          isRevealed ? "text-text" : "text-text-subtle"
-        }`}
-      >
-        {card.title}
-      </h2>
-
-      {card.description && (
-        <p
-          className={`card-text-lg relative z-10 leading-relaxed transition-colors duration-500 ${
-            isRevealed ? "text-text-muted" : "text-text-subtle/70"
-          }`}
-        >
-          {card.description}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function StatCard({
-  card,
-  isRevealed,
-  columns,
-}: {
-  card: GridCard;
-  isRevealed: boolean;
-  columns?: number;
-}) {
-  const tone = card.tone ?? card.accentColor ?? "primary";
-  const accent = ACCENT_STYLES[tone];
-  const isHighlight = card.highlight || tone === "accent";
-  // A value is one token: "+220 %" never breaks before its unit.
-  const valueSize = (columns ?? 2) >= 4 ? "text-5xl" : "text-6xl";
-
-  return (
-    <div
-      inert={!isRevealed}
-      className={`transition-all duration-500 ${
-        isRevealed ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
-      }`}
-    >
-      <SlideCard
-        tone={isHighlight ? tone : "neutral"}
-        className="flex h-full flex-col transition-all card-pad-8"
-      >
-        <div
-          className={`font-heading font-bold tracking-tight whitespace-nowrap tabular-nums ${valueSize} ${accent.text}`}
-        >
-          {card.value}
-        </div>
-        <div className="mt-3 text-xl font-bold text-text">{card.label ?? card.title}</div>
-        {card.description && (
-          <p className="card-text-lg mt-2 leading-relaxed text-text-muted">{card.description}</p>
-        )}
-      </SlideCard>
-    </div>
-  );
 }
 
 function QuoteCard({ card, isRevealed }: { card: GridCard; isRevealed: boolean }) {
@@ -207,22 +40,21 @@ function QuoteCard({ card, isRevealed }: { card: GridCard; isRevealed: boolean }
   );
 }
 
+/** Quotes in a grid. Pillars and stats render as a content slide with a cards or numbers block
+ *  (`gridAsContent`). */
 export function GridSlide({ slide }: Props) {
-  const variant = slide.variant ?? "pillars";
-  const { revealedCount, stepped } = useProgressiveReveal({
+  if ((slide.variant ?? "pillars") !== "quotes")
+    return <ContentSlide slide={gridAsContent(slide)} />;
+  return <QuoteGrid slide={slide} />;
+}
+
+function QuoteGrid({ slide }: Props) {
+  const { revealedCount } = useProgressiveReveal({
     totalSteps: slide.cards.length,
     startFull: slide.allActive,
   });
-
-  const columns = slide.columns || (variant === "stats" ? 2 : undefined);
   const gridCols =
-    columns === 2
-      ? "grid-cols-2"
-      : columns === 3
-        ? "grid-cols-3"
-        : columns === 4
-          ? "grid-cols-4"
-          : "";
+    slide.columns === 2 ? "grid-cols-2" : slide.columns === 4 ? "grid-cols-4" : "grid-cols-3";
 
   return (
     <SlideShell ground={groundOf(slide)} night={isDeepDive(slide)}>
@@ -237,63 +69,11 @@ export function GridSlide({ slide }: Props) {
         <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
 
         <div className="slide-body items-center">
-          {variant === "pillars" && (
-            <div
-              className={
-                slide.cards.length > 5
-                  ? "flex w-full flex-col items-center gap-6 pt-6 md:flex-row md:flex-wrap md:items-stretch md:justify-center md:gap-y-12"
-                  : `flex w-full flex-col items-center justify-center gap-6 pt-6 md:flex-row md:items-stretch ${slide.cards.length > 3 ? "" : "max-w-6xl"}`
-              }
-            >
-              {slide.cards.map((card, index) => {
-                const isRevealed = index < revealedCount;
-                // The card just revealed is lit, the last one included. A slide that opens with
-                // every card showing (print, a backward arrival) lights none, so no card reads as
-                // the one that matters most.
-                const isActive = stepped && index === revealedCount - 1;
-
-                return (
-                  <div
-                    key={index}
-                    inert={!isRevealed}
-                    className={`flex w-full transition-all duration-500 ${slide.cards.length > 5 ? "md:w-[calc((100%-var(--spacing)*12)/3)]" : "md:w-auto md:min-w-0 md:flex-1"} ${
-                      isRevealed
-                        ? "translate-y-0 opacity-100"
-                        : "pointer-events-none translate-y-8 opacity-0"
-                    }`}
-                  >
-                    <PillarCard
-                      card={card}
-                      index={index + (slide.numberFrom ?? 1) - 1}
-                      isRevealed={isRevealed}
-                      isActive={isActive}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {variant === "stats" && (
-            <div className={`grid w-full max-w-6xl auto-rows-fr gap-6 ${gridCols}`}>
-              {slide.cards.map((card, index) => (
-                <StatCard
-                  key={index}
-                  card={card}
-                  isRevealed={index < revealedCount}
-                  columns={columns}
-                />
-              ))}
-            </div>
-          )}
-
-          {variant === "quotes" && (
-            <div className={`grid w-full max-w-5xl gap-8 ${gridCols || "grid-cols-3"}`}>
-              {slide.cards.map((card, index) => (
-                <QuoteCard key={index} card={card} isRevealed={index < revealedCount} />
-              ))}
-            </div>
-          )}
+          <div className={`grid w-full max-w-5xl gap-8 ${gridCols}`}>
+            {slide.cards.map((card, index) => (
+              <QuoteCard key={index} card={card} isRevealed={index < revealedCount} />
+            ))}
+          </div>
         </div>
       </TitledContent>
     </SlideShell>

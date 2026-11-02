@@ -35,6 +35,10 @@ const SIDE = 96 / 144;
 const TOP = 117 / 144;
 const BOTTOM = H - 123 / 144;
 const CW = W - 2 * SIDE;
+/** A card's text and its list, one line each. */
+const cardText = (card: { text?: string; items?: string[] }) =>
+  [card.text, ...(card.items ?? []).map((item) => `• ${item}`)].filter(Boolean).join("\n");
+
 const PT = {
   label: 13.5,
   sm: 16,
@@ -809,13 +813,11 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
       const items =
         b.type === "labeled-grid"
           ? b.items.map((i) => [i.title, i.subtitle])
-          : b.items.map((i) => [i.title ?? "", i.text]);
+          : b.items.map((i) => [i.title ?? "", cardText(i)]);
       const cols =
         b.type === "labeled-grid"
           ? (b.columns ?? Math.min(items.length, 3))
-          : items.length === 4
-            ? 2
-            : Math.min(items.length, 3);
+          : (b.columns ?? (items.length === 4 ? 2 : Math.min(items.length, 3)));
       const rows = Math.ceil(items.length / cols);
       const cellW = w / cols - 0.2;
       const cell =
@@ -1191,13 +1193,11 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const items =
         b.type === "labeled-grid"
           ? b.items.map((i) => ({ title: i.title, text: i.subtitle, hi: i.highlighted }))
-          : b.items.map((i) => ({ title: i.title, text: i.text, hi: false }));
+          : b.items.map((i, n) => ({ title: i.title, text: cardText(i), hi: b.highlight === n }));
       const cols =
         b.type === "labeled-grid"
           ? (b.columns ?? Math.min(items.length, 3))
-          : items.length === 4
-            ? 2
-            : Math.min(items.length, 3);
+          : (b.columns ?? (items.length === 4 ? 2 : Math.min(items.length, 3)));
       const rows = Math.ceil(items.length / cols);
       const cw = (a.w - (cols - 1) * 0.2) / cols;
       const rh = (a.h - (rows - 1) * 0.15) / rows;
@@ -1207,7 +1207,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         card(s, x, y, cw, rh, it.hi ? c.tealTint : c.card, it.hi ? c.teal : c.border);
         let ty = y + 0.2;
         if (b.type === "cards") {
-          const label = b.numbered ? String(i + 1) : "■";
+          const label = b.numbered ? String(i + (b.numberFrom ?? 1)) : "■";
           rect(s, x + 0.2, ty, 0.28, 0.28, c.teal);
           box(s, c, { runs: [{ text: label }] }, x + 0.2, ty, 0.28, 0.28, {
             size: PT.sm,
@@ -1543,6 +1543,9 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
               align: "center",
             },
             { runs: md(it.label, c, { color: c.muted }), align: "center" },
+            ...(it.text
+              ? [{ runs: md(it.text, c, { color: c.muted }), align: "center" as const }]
+              : []),
           ],
           a.x + i * nw + 0.1,
           a.y,

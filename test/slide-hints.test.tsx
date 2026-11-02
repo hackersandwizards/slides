@@ -33,23 +33,21 @@ describe("SlideHints", () => {
     expect(queryByText("to reveal")).toBeNull();
   });
 
-  it("shows the reveal hint exactly while a step is pending, and lights the last card", () => {
+  it("shows the reveal hint exactly while a step is pending", () => {
     const Grid = slideComponents.grid;
-    const { queryByText, container } = render(
+    const { queryByText } = render(
       <>
         <Grid slide={grid as Slide} />
         <SlideHints slideIndex={3} />
       </>,
     );
-    const lit = () => container.querySelectorAll(".scale-110").length;
     expect(queryByText("to reveal")).not.toBeNull();
     pressRight();
     pressRight();
     expect(queryByText("to reveal")).not.toBeNull();
     pressRight();
-    // The last step: nothing pending, and the card it revealed is lit like the ones before it.
+    // The last step: nothing pending.
     expect(queryByText("to reveal")).toBeNull();
-    expect(lit()).toBe(1);
   });
 
   it("shows the first-slide hints for the opening seconds only, and not again on a return", () => {

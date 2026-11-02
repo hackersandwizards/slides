@@ -4,6 +4,7 @@ import type { VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { useHighlightLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
+import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { CodePanel, NumberTile, SlideCard } from "./primitives";
 
 // The diagram vocabulary of a content slide: one relationship per block, drawn so the eye reads
@@ -492,7 +493,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
   );
 }
 
-// ─── numbers: one to three figures, each with what it counts ────────────────
+// ─── numbers: figures, each with what it counts and an optional line on it ────────────────
 
 // A leading hyphen in a figure is a minus: set the typographic one, which sits on the digits' axis.
 const minus = (v: string) => v.replace(/^-(?=\d)/, "−");
@@ -528,27 +529,37 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
           </span>
           <span className="max-w-(--slide-measure-figure-label) text-5xl leading-tight font-semibold text-balance text-text">
             {renderMarkdown(item.label)}
+            {item.text && (
+              <span className={`mt-4 block font-normal ${CAPTION} text-text-muted`}>
+                {renderMarkdown(item.text)}
+              </span>
+            )}
           </span>
         </div>
         <Source text={block.source} />
       </div>
     );
   }
+  // Up to four figures stand in one row; more wrap, five and six into three columns, so a column
+  // never narrows below a quarter of the slide (blind review 02.11.).
+  const cols = n <= 4 ? n : n <= 6 ? 3 : 4;
   // One size for every figure, set by the longest, so the row shares a baseline and none wraps:
-  // a column is about 1650/n px wide at 1920, a mono digit 0.6em, a rem 21.333px. Leading words
-  // are set at about half size, so each of their characters counts half.
+  // a column is about 1650/cols px wide at 1920, a mono digit 0.6em, a rem 21.333px. Leading
+  // words are set at about half size, so each of their characters counts half.
   const longest = Math.max(
     ...block.items.map((i) => {
       const lead = leadingWords(i.value);
       return i.value.length - lead.length + 0.5 * lead.trim().length;
     }),
   );
-  const size = Math.min(n === 2 ? 9 : 7, (1650 / n - 60) / (longest * 0.6) / 21.333);
+  // A second row takes height the headline needs: wrapped figures stop at 4.5rem.
+  const cap = n > 4 ? 4.5 : cols === 2 ? 9 : 7;
+  const size = Math.min(cap, (1650 / cols - 60) / (longest * 0.6) / 21.333);
   return (
     <div className="w-full">
       <div
-        className="grid w-full gap-14"
-        style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}
+        className="grid w-full gap-x-14 gap-y-12"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
         {block.items.map((item, i) => (
           <div key={i} className="flex flex-col">
@@ -561,6 +572,9 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
             <span className="mt-6 border-t-4 border-border pt-6 text-3xl leading-snug text-text">
               {renderMarkdown(item.label)}
             </span>
+            {item.text && (
+              <span className={`mt-3 ${CAPTION} text-text-muted`}>{renderMarkdown(item.text)}</span>
+            )}
           </div>
         ))}
       </div>
@@ -692,27 +706,60 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
 // ─── cards: parallel points, each under an icon or a number ─────────────────
 
 function Cards({ block }: { block: Of<"cards"> }) {
-  const cols = block.items.length === 4 ? 2 : Math.min(block.items.length, 3);
+  const n = block.items.length;
+  const cols = block.columns ?? (n === 4 ? 2 : Math.min(n, 3));
+  // Four columns leave a card about a quarter of the slide: the title steps down one size.
+  const label = cols >= 4 ? LABEL.replace("text-4xl", "text-3xl") : LABEL;
+  // With `reveal`, the cards appear one per arrow key; otherwise all show at once.
+  const { revealedCount } = useProgressiveReveal({ totalSteps: n, startFull: !block.reveal });
+  const from = block.numberFrom ?? 1;
   return (
     <div
       className="grid w-full gap-6"
       style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
     >
-      {block.items.map((item, i) => (
-        <SlideCard key={i} className="flex flex-col gap-5 card-pad-8/9">
-          {block.numbered ? (
-            <NumberTile size="lg">{i + 1}</NumberTile>
-          ) : item.icon ? (
-            <NumberTile size="lg" tone="soft">
-              <Icon name={item.icon} className="h-9 w-9" />
-            </NumberTile>
-          ) : (
-            <span className="h-1.5 w-16 bg-primary" aria-hidden />
-          )}
-          {item.title && <h3 className={`${LABEL} text-text`}>{renderMarkdown(item.title)}</h3>}
-          <p className={`${CAPTION} text-text [&_strong]:text-text`}>{renderMarkdown(item.text)}</p>
-        </SlideCard>
-      ))}
+      {block.items.map((item, i) => {
+        const on = block.highlight === i;
+        const shown = i < revealedCount;
+        return (
+          <SlideCard
+            key={i}
+            inert={!shown}
+            tone={on ? "primary" : "neutral"}
+            className={`flex flex-col gap-5 transition-all duration-500 ${cols >= 4 ? "card-pad-6" : "card-pad-8/9"} ${shown ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
+          >
+            {block.numbered ? (
+              <NumberTile size="lg">{i + from}</NumberTile>
+            ) : item.icon ? (
+              <NumberTile size="lg" tone={on ? "solid" : "soft"}>
+                <Icon name={item.icon} className="h-9 w-9" />
+              </NumberTile>
+            ) : (
+              <span className="h-1.5 w-16 bg-primary" aria-hidden />
+            )}
+            {item.title && (
+              <h3 className={`${label} ${on ? "text-primary" : "text-text"}`}>
+                {renderMarkdown(item.title)}
+              </h3>
+            )}
+            {item.text && (
+              <p className={`${CAPTION} text-text [&_strong]:text-text`}>
+                {renderMarkdown(item.text)}
+              </p>
+            )}
+            {item.items && (
+              <ul className="flex flex-col gap-3">
+                {item.items.map((entry, j) => (
+                  <li key={j} className={`flex items-baseline gap-3 ${CAPTION} text-text`}>
+                    <span className="hw-marker" />
+                    <span>{renderMarkdown(entry)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SlideCard>
+        );
+      })}
     </div>
   );
 }

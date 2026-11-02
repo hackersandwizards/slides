@@ -616,6 +616,46 @@ const slides: Slide[] = [
     ],
     notes: "visual blocks: cards with icons, numbered cards.",
   },
+  {
+    type: "content",
+    sectionLabel: "Visual: cards, four columns",
+    headline: "Four cards, one highlighted, each with a list",
+    content: [
+      {
+        type: "cards",
+        columns: 4,
+        highlight: 1,
+        reveal: true,
+        items: [
+          { title: "Intake", text: "Tickets", items: ["Template", "Owner"] },
+          { title: "Plan", text: "Before code", items: ["Steps", "Checks", "Risks"] },
+          { title: "Build", text: "In the loop", items: ["Tests first", "Small commits"] },
+          { title: "Ship", text: "Behind a flag", items: ["Review", "Rollout"] },
+        ],
+      },
+    ],
+    notes: "visual blocks: cards with columns, highlight, a list per card, revealed one by one.",
+  },
+  {
+    type: "content",
+    sectionLabel: "Visual: numbers, six figures",
+    headline: "Six figures wrap into three columns",
+    content: [
+      {
+        type: "numbers",
+        items: [
+          { value: "12", label: "teams", text: "Across three sites" },
+          { value: "3x", label: "faster review", text: "Median, first pass" },
+          { value: "-40%", label: "rework", text: "Tickets reopened" },
+          { value: "up to +70%", label: "fewer handoffs", text: "Per ticket" },
+          { value: "98%", label: "green builds", text: "On the main branch" },
+          { value: "about 4", label: "weeks to first win", text: "Per team" },
+        ],
+        source: "Fictional figures",
+      },
+    ],
+    notes: "visual blocks: numbers wrapping after four figures, each with a description line.",
+  },
 
   {
     type: "regular",

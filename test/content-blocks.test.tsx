@@ -151,3 +151,70 @@ describe("numbers block", () => {
     expect(width).toBeLessThanOrEqual(1650 / 3 - 60);
   });
 });
+
+describe("merged card and number shapes", () => {
+  const grid = (slide: object) =>
+    render(<slideComponents.grid slide={{ type: "grid", headline: "H", ...slide } as Slide} />)
+      .container;
+
+  // Five figures and more wrap into three columns, and a figure's description stands under it.
+  it("wraps numbers after four figures and sets a description line", () => {
+    const items = Array.from({ length: 6 }, (_, i) => ({
+      value: `${i}`,
+      label: "l",
+      text: `d${i}`,
+    }));
+    const c = content([{ type: "numbers", items }]);
+    const row = [...c.querySelectorAll<HTMLElement>("div")].find((d) =>
+      d.style.gridTemplateColumns.includes("repeat("),
+    );
+    expect(row?.style.gridTemplateColumns).toBe("repeat(3, minmax(0, 1fr))");
+    expect(c.textContent).toContain("d5");
+  });
+
+  // Grid stats render as the numbers block, the description as its line (merge-numbers).
+  it("draws grid stats as numbers", () => {
+    const c = grid({
+      variant: "stats",
+      cards: [{ title: "Teams", value: "12", description: "Across sites" }],
+    });
+    expect(c.querySelector(".text-\\(length\\:--slide-figure-hero\\)")?.textContent).toBe("12");
+    expect(c.textContent).toContain("Across sites");
+  });
+
+  // Pillars render as cards: numbered from `numberFrom` where no card names an icon, with no card
+  // colour of its own (merge-cards).
+  it("draws grid pillars as cards", () => {
+    const c = grid({
+      allActive: true,
+      numberFrom: 4,
+      cards: [
+        { title: "A", tone: "accent" },
+        { title: "B", highlight: true },
+      ],
+    });
+    expect([...c.querySelectorAll(".hw-card")].map((card) => card.textContent)).toEqual([
+      "4A",
+      "5B",
+    ]);
+    expect(c.querySelectorAll('.hw-card[data-variant="tint"]')).toHaveLength(1);
+    expect(c.querySelector(".bg-accent\\/7")).toBeNull();
+  });
+
+  // A labeled grid's highlighted item is the cards block's highlight; a four-column block's
+  // columns are cards with a list each.
+  it("draws labeled grid and four-column blocks as cards", () => {
+    const c = content([
+      {
+        type: "labeled-grid",
+        items: [
+          { title: "Low", subtitle: "a" },
+          { title: "High", subtitle: "b", highlighted: true },
+        ],
+      },
+      { type: "four-column", columns: [{ title: "T", subtitle: "s", items: ["x", "y"] }] },
+    ]);
+    expect(c.querySelector('.hw-card[data-variant="tint"]')?.textContent).toBe("Highb");
+    expect([...c.querySelectorAll(".hw-card li")].map((li) => li.textContent)).toEqual(["x", "y"]);
+  });
+});
