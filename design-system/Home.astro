@@ -6,6 +6,7 @@
 import modules from "virtual:astrobook/story-modules.mjs";
 import config from "virtual:astrobook/global-config.mjs";
 import AstrobookHome from "@hackersandwizards/brand/expert/components/AstrobookHome.astro";
+import "@hackersandwizards/brand/disclosure.css";
 import elements from "../brand-elements.json";
 
 const SPECIMEN = "http://slides.localhost/specimen/";
@@ -27,19 +28,21 @@ const exceptions = Object.entries(elements.exceptions as Record<string, string>)
       only, each with its variants. <strong>Slide types</strong> compose parts. Every story renders
       at the stage scale (<code>data-hw-scale="stage"</code>), as every slide does.
     </p>
-    <p>
-      From brand: {elements.uses.map((name) => <code>hw-{name}</code>)}. Kept as the slides' own, each
-      with its reason:
-    </p>
-    <ul>
-      {
-        exceptions.map(([name, reason]) => (
-          <li>
-            <code>{name}</code>: {reason}
-          </li>
-        ))
-      }
-    </ul>
+    <details class="hw-disclosure">
+      <summary>
+        Brand elements: {elements.uses.length} from brand, {exceptions.length} kept as the slides' own
+      </summary>
+      <p>From brand: {elements.uses.map((name) => <code>hw-{name}</code>)}.</p>
+      <ul>
+        {
+          exceptions.map(([name, reason]) => (
+            <li>
+              <code>{name}</code>: {reason}
+            </li>
+          ))
+        }
+      </ul>
+    </details>
     <p>
       <a href={`${SPECIMEN}#elements`}>The specimen page</a> shows each as a tile, where <code
         >brand-elements</code
@@ -68,7 +71,7 @@ const exceptions = Object.entries(elements.exceptions as Record<string, string>)
     line-height: 1.6;
   }
   .ds-foundations p,
-  .ds-foundations ul {
+  .ds-foundations details {
     margin: 0 0 0.75rem;
   }
   .ds-foundations code + code {
