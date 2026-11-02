@@ -1,6 +1,8 @@
 // `bun run dev`: serves this checkout on 127.0.0.1:4327 for http://slides.localhost, which Caddy
-// proxies here as it proxies os.localhost to its dev server. Node's API, since this repo's
-// typecheck has no Bun types.
+// proxies here as it proxies os.localhost to its dev server. The specimen is not committed: each
+// request for one of its pages writes it afresh with scripts/specimen.ts (about 0.3 s), so a reload
+// shows the working tree. Node's API, since this repo's typecheck has no Bun types.
+import { spawnSync } from "node:child_process";
 import { createReadStream, statSync } from "node:fs";
 import { createServer, type RequestListener } from "node:http";
 import { extname, join, resolve, sep } from "node:path";
@@ -24,6 +26,10 @@ export const handle: RequestListener = (request, response) => {
   try {
     path = decodeURIComponent(new URL(request.url ?? "/", "http://localhost").pathname);
     file = join(root, path.endsWith("/") ? `${path}index.html` : path);
+    if (file.startsWith(join(root, "specimen") + sep) && file.endsWith(".html")) {
+      const build = spawnSync("bun", ["scripts/specimen.ts"], { cwd: root, encoding: "utf8" });
+      if (build.status) return response.writeHead(500).end(build.stderr);
+    }
     found = file.startsWith(root + sep) && statSync(file, { throwIfNoEntry: false })?.isFile();
   } catch {
     // A malformed escape (`%E0%A4%A`) or a NUL byte threw out of the handler and ended the server.

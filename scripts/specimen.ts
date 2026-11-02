@@ -2,10 +2,11 @@
 // (tokens, parts, types) with every part its variants and the slide types that compose it, then one
 // slide per registered slide type, the first of its type in the specimen deck, then every specimen
 // slide labelled "Block: …" or "Visual: …", one per content block and variant, rendered by the
-// engine's own components in print mode, with slides.css compiled by Tailwind. `--check` fails when
-// either committed file differs from a fresh build, and on a part with no entry below.
-// Usage: bun scripts/specimen.ts [--check]
-import { readFileSync, writeFileSync } from "node:fs";
+// engine's own components in print mode, with slides.css compiled by Tailwind, plus frames.html. It
+// fails on a part with no entry below. None of the three is committed: `bun run check`, `bun run dev`
+// and the Pages workflow each write them afresh.
+// Usage: bun scripts/specimen.ts
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createElement as h, Fragment, type ReactNode } from "react";
@@ -448,17 +449,5 @@ const outputs: [string, string][] = [
   [join(root, "specimen", "build", "slides.css"), css],
 ];
 
-if (process.argv.includes("--check")) {
-  const stale = outputs.filter(([path, text]) => {
-    try {
-      return readFileSync(path, "utf8") !== text;
-    } catch {
-      return true;
-    }
-  });
-  for (const [path] of stale)
-    console.error(`${relative(root, path)} is stale: run bun run specimen`);
-  if (stale.length) process.exit(1);
-} else {
-  for (const [path, text] of outputs) writeFileSync(path, text);
-}
+mkdirSync(join(root, "specimen", "build"), { recursive: true });
+for (const [path, text] of outputs) writeFileSync(path, text);

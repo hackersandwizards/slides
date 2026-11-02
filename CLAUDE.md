@@ -59,11 +59,13 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   content, its images, and the specimen page `index.html` with its compiled `build/slides.css`, a Parts section (every part of
   `primitives.tsx` and `SlideChrome.tsx` in each variant, with the slide types using it), then one
   slide per slide type and one per content block in print mode, which the brand kit links. `bun run specimen` (`scripts/specimen.ts`)
-  writes the page, and `bun run check` fails while it differs from a fresh build. The page's Shared
+  writes the page; it is never committed: `bun run check` writes it before the tests, `bun run dev`
+  on each request for a page, and the Pages workflow for the public page. The page's Shared
   elements section shows each brand element the slides use as a tile and each exception with its
   reason; `frames.html` holds every frame inline, since `brand-elements` reads no frame. The page
   stays the gate's fixture beside the design system: `brand-elements`, the marker test and the
-  brand kit read it as a file, with no server.
+  brand kit read it as a file, with no server, which an Astrobook build would need. talks reads
+  only the deck and its images.
 - `design-system/`: the design system in Astrobook (decision design-system-tool), its own Astro
   config, never shipped: Astro, Astrobook and `@astrojs/react` are dev dependencies, outside
   `files` and `exports`. `stories/Types/` holds a story file per slide type, each specimen slide of
@@ -91,7 +93,7 @@ are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and 
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
 - `bun run dev`: serve the checkout on port 4327 for `http://slides.localhost` (Caddy, as for
-  `os.localhost`); the specimen's header links the brand catalogue and the document specimen at
+  `os.localhost`), writing the specimen afresh on each page request; the specimen's header links the brand catalogue and the document specimen at
   `brand.localhost` and `documents.localhost`.
 - `bun run design-system`: serve the design system at `http://127.0.0.1:4335/design-system/`.
 

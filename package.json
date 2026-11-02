@@ -49,7 +49,7 @@
   ],
   "scripts": {
     "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks || true",
-    "check": "bun scripts/pins.ts && bun run format:check && bun run lint && bun run typecheck && bun .claude/skills/engineering/check-unique-names.ts && bun run test && bun scripts/specimen.ts --check && brand-colours && brand-elements && admin-check",
+    "check": "bun scripts/pins.ts && bun run format:check && bun run lint && bun run typecheck && bun .claude/skills/engineering/check-unique-names.ts && bun scripts/specimen.ts && bun run test && brand-colours && brand-elements && admin-check",
     "lint": "bun --bun eslint --cache --concurrency=auto .",
     "typecheck": "bun --bun tsc --noEmit",
     "test": "bun --bun vitest run",
@@ -135,7 +135,7 @@
     "products": [
       {
         "label": "Slide types",
-        "href": "specimen/index.html"
+        "href": "https://hackersandwizards.github.io/slides/specimen/"
       }
     ]
   }
