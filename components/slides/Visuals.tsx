@@ -497,14 +497,19 @@ function Bars({ block }: { block: Of<"bars"> }) {
 // A leading hyphen in a figure is a minus: set the typographic one, which sits on the digits' axis.
 const minus = (v: string) => v.replace(/^-(?=\d)/, "−");
 
-// A figure's leading words ("about $2M") are set small, so only the figure itself carries weight.
+// A figure's leading words ("about $2M", "up to +70%"): every lowercase word before the first
+// token that is not one. They are set small, so only the figure itself carries weight.
+const leadingWords = (value: string) => /^((?:[a-z]+\s+)+)(?=[^a-z\s])/.exec(value)?.[1] ?? "";
+
 function Figure({ value }: { value: string }) {
-  const m = /^([a-z][a-z\s]*?)\s+(.*)$/.exec(value);
-  if (!m) return <>{minus(value)}</>;
+  const lead = leadingWords(value);
+  if (!lead) return <>{minus(value)}</>;
   return (
     <>
-      <span className="mr-(--slide-figure-unit-gap) text-(length:--slide-figure-unit)">{m[1]}</span>
-      {minus(m[2])}
+      <span className="mr-(--slide-figure-unit-gap) text-(length:--slide-figure-unit)">
+        {lead.trim()}
+      </span>
+      {minus(value.slice(lead.length))}
     </>
   );
 }
@@ -530,9 +535,13 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
     );
   }
   // One size for every figure, set by the longest, so the row shares a baseline and none wraps:
-  // a column is about 1650/n px wide at 1920, a mono digit 0.6em, a rem 21.333px.
+  // a column is about 1650/n px wide at 1920, a mono digit 0.6em, a rem 21.333px. Leading words
+  // are set at about half size, so each of their characters counts half.
   const longest = Math.max(
-    ...block.items.map((i) => i.value.replace(/^[a-z][a-z\s]*\s/, "").length),
+    ...block.items.map((i) => {
+      const lead = leadingWords(i.value);
+      return i.value.length - lead.length + 0.5 * lead.trim().length;
+    }),
   );
   const size = Math.min(n === 2 ? 9 : 7, (1650 / n - 60) / (longest * 0.6) / 21.333);
   return (

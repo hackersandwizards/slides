@@ -569,11 +569,12 @@ const slides: Slide[] = [
         items: [
           { value: "3x", label: "faster review" },
           { value: "-40%", label: "rework" },
+          { value: "up to +70%", label: "fewer handoffs" },
         ],
         source: "Fictional figures",
       },
     ],
-    notes: "visual blocks: numbers with a source.",
+    notes: "visual blocks: numbers with a source, one figure with leading words.",
   },
   {
     type: "content",

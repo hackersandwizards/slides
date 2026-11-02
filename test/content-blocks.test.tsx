@@ -129,3 +129,25 @@ describe("inline code", () => {
       expect(chip(path), path).toContain("[overflow-wrap:anywhere]");
   });
 });
+
+describe("numbers block", () => {
+  // Every leading word of a figure is set small, and the size of the row counts those words at
+  // half a digit's width, so "up to +70%" stays inside its column (blind review 02.11.).
+  it("sets every leading word small and sizes the figure with it", () => {
+    const c = content([
+      {
+        type: "numbers",
+        items: [
+          { value: "up to +70%", label: "a" },
+          { value: "3x", label: "b" },
+          { value: "12", label: "c" },
+        ],
+      },
+    ]);
+    const figure = c.querySelector<HTMLElement>("span[style*='font-size']")!;
+    expect(figure.querySelector("span")?.textContent).toBe("up to");
+    // A column is 1650/3 - 60 px wide at 1920, a mono digit 0.6em, a rem 21.333px.
+    const width = parseFloat(figure.style.fontSize) * 21.333 * 0.6 * ("+70%".length + 0.5 * 5);
+    expect(width).toBeLessThanOrEqual(1650 / 3 - 60);
+  });
+});
