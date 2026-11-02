@@ -21,7 +21,7 @@ describe("PrintDeck", () => {
     const { container } = render(<PrintDeck presentation={deck} />);
     const pages = container.querySelectorAll(".print-slide.theme-brand-dark");
     expect(pages).toHaveLength(2);
-    expect(pages[0].querySelector(".brand-strip")).not.toBeNull();
+    expect(pages[0].querySelector(".hw-strip")).not.toBeNull();
     expect(pages[0].querySelector('.print-watermark img[alt="Client"]')).not.toBeNull();
     expect(pages[1].querySelector('.print-watermark img[alt="Client"]')).toBeNull();
     expect(pages[1].querySelector(".print-watermark .hw-wordmark")).not.toBeNull();

@@ -55,7 +55,7 @@ function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
           <div className="w-full max-w-3xl space-y-6">
             {slide.seedQuestions.map((question, index) => (
               <BlurFade key={index} delay={0.15 + index * 0.06} duration={0.4}>
-                <SlideCard className="px-8 py-5">
+                <SlideCard className="card-pad-5/8">
                   <p className="text-center text-xl font-medium text-text-muted md:text-2xl">
                     {question}
                   </p>
@@ -208,7 +208,10 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                           {speaker.name}
                         </p>
                         {!COMPANIES_WITH_LOGO.has(speaker.company.toLowerCase()) && (
-                          <p className="label-caps mt-1 text-xs text-text-muted md:text-sm">
+                          <p
+                            className="hw-label mt-1 md:[--hw-label-size:var(--text-sm)]"
+                            data-tone="muted"
+                          >
                             {speaker.company}
                           </p>
                         )}

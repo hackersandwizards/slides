@@ -52,7 +52,8 @@ function Elbow({
         )}
         {label && (
           <span
-            className={`label-caps absolute left-3 text-xl text-text-muted ${half === "top" ? "-top-12" : "-bottom-12"}`}
+            className={`hw-label absolute left-3 [--hw-label-size:var(--text-xl)] ${half === "top" ? "-top-12" : "-bottom-12"}`}
+            data-tone="muted"
           >
             {label}
           </span>
@@ -86,14 +87,14 @@ export function DecisionSlide({ slide }: Props) {
             <div className="flex flex-col gap-3 md:hidden">
               <SlideCard
                 tone="primary"
-                className="px-4 py-3 text-base leading-tight font-bold text-text"
+                className="text-base leading-tight font-bold text-text card-pad-3/4"
               >
                 {slide.need}
               </SlideCard>
               <SlideCard
                 tone="primary"
                 look="outline"
-                className="px-4 py-3 text-center text-sm leading-tight font-bold text-text"
+                className="text-center text-sm leading-tight font-bold text-text card-pad-3/4"
               >
                 {slide.question}
               </SlideCard>
@@ -102,14 +103,16 @@ export function DecisionSlide({ slide }: Props) {
                   key={branch.label}
                   className={`rounded-brand border px-4 py-3 ${TEAM[branch.team]}`}
                 >
-                  <p className="label-caps text-sm text-text-muted">{branch.label}</p>
+                  <p className="hw-label [--hw-label-size:var(--text-sm)]" data-tone="muted">
+                    {branch.label}
+                  </p>
                   <p className="text-lg leading-tight font-bold">{branch.title}</p>
                   <p className="text-sm leading-snug text-text">{branch.text}</p>
                 </div>
               ))}
               <SlideCard
                 tone="quiet"
-                className="px-4 py-3 text-base leading-tight font-bold text-text"
+                className="text-base leading-tight font-bold text-text card-pad-3/4"
               >
                 {slide.outcome}
               </SlideCard>
@@ -120,7 +123,7 @@ export function DecisionSlide({ slide }: Props) {
             <div className="decision-grid hidden w-full grid-cols-(--slide-decision-columns) grid-rows-2 items-stretch gap-y-14 md:grid">
               <SlideCard
                 tone="primary"
-                className="col-start-1 row-span-2 row-start-1 self-center px-5 py-4 text-2xl leading-tight font-bold text-text"
+                className="col-start-1 row-span-2 row-start-1 self-center text-2xl leading-tight font-bold text-text card-pad-4/5"
               >
                 {slide.need}
               </SlideCard>

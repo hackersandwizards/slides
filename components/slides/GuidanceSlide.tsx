@@ -62,14 +62,14 @@ export function GuidanceSlide({ slide }: Props) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-                  <SlideCard tone="error" look="soft" className="p-6">
+                  <SlideCard tone="error" look="soft" className="card-pad-6">
                     <p className="label-caps mb-3 text-sm text-error">Bad</p>
                     <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
                       {example.bad}
                     </pre>
                   </SlideCard>
 
-                  <SlideCard tone="success" look="soft" className="p-6">
+                  <SlideCard tone="success" look="soft" className="card-pad-6">
                     <p className="label-caps mb-3 text-sm text-(--slide-success-ink)">Good</p>
                     <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
                       {example.good}

@@ -19,7 +19,10 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
   const page = pageLabel(presentation.slides, index);
 
   return (
-    <div className={`print-slide${presentation.theme ? ` theme-${presentation.theme}` : ""}`}>
+    <div
+      className={`print-slide${presentation.theme ? ` theme-${presentation.theme}` : ""}`}
+      data-theme={presentation.theme ? "dark" : undefined}
+    >
       <SlideComponent slide={slide} />
       <BrandStrip />
       <div className="print-watermark flex items-center gap-2">

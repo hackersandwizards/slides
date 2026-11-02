@@ -104,7 +104,9 @@ export function GanttSlide({ slide }: Props) {
           {slide.milestones && slide.milestones.length > 0 && (
             <BlurFade delay={0.25 + slide.rows.length * 0.05} duration={0.4}>
               <div className="mt-3 md:hidden">
-                <div className="label-caps mb-1 text-sm text-text-subtle">Meilensteine</div>
+                <div className="hw-label mb-1 [--hw-label-size:var(--text-sm)]" data-tone="muted">
+                  Meilensteine
+                </div>
                 {slide.milestones.map((m, i) => (
                   <div key={i} className="text-sm leading-tight font-semibold text-secondary">
                     {slide.columns[m.column - 1]}: {m.label}
@@ -112,7 +114,10 @@ export function GanttSlide({ slide }: Props) {
                 ))}
               </div>
               <div className="mt-3 hidden items-start gap-4 md:flex">
-                <div className="label-caps w-80 shrink-0 text-right text-sm text-text-subtle">
+                <div
+                  className="hw-label w-80 shrink-0 text-right [--hw-label-size:var(--text-sm)]"
+                  data-tone="muted"
+                >
                   Meilensteine
                 </div>
                 <div className="grid flex-1 gap-1" style={track}>

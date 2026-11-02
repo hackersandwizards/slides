@@ -690,7 +690,7 @@ function Cards({ block }: { block: Of<"cards"> }) {
       style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
     >
       {block.items.map((item, i) => (
-        <SlideCard key={i} className="flex flex-col gap-5 px-9 py-8">
+        <SlideCard key={i} className="flex flex-col gap-5 card-pad-8/9">
           {block.numbered ? (
             <NumberTile size="lg">{i + 1}</NumberTile>
           ) : item.icon ? (

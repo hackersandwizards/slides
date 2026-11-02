@@ -15,13 +15,7 @@ export function renderMarkdown(text: string): React.ReactNode {
     if (link && !/^(https?:|mailto:|[/#.]|[^:]*$)/i.test(link[2])) return link[1];
     if (link) {
       return (
-        <a
-          key={i}
-          href={link[2]}
-          target="_blank"
-          rel="noreferrer"
-          className="text-primary underline decoration-from-font underline-offset-4"
-        >
+        <a key={i} href={link[2]} target="_blank" rel="noreferrer" className="hw-link">
           {link[1]}
         </a>
       );

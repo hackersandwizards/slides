@@ -43,7 +43,7 @@ export function ActivitySlide({ slide }: Props) {
               <SlideCard
                 tone="primary"
                 look="soft"
-                className="mb-10 px-9 py-6 text-3xl font-medium text-text"
+                className="mb-10 text-3xl font-medium text-text card-pad-6/9"
               >
                 {renderMarkdown(slide.prompt)}
               </SlideCard>
@@ -72,7 +72,7 @@ export function ActivitySlide({ slide }: Props) {
                 duration={0.4}
                 className="md:w-(--slide-activity-frame) md:shrink-0"
               >
-                <SlideCard className="flex flex-col gap-6 px-9 py-8">
+                <SlideCard className="flex flex-col gap-6 card-pad-8/9">
                   {frame.map(({ icon: Icon, text, lead }, i) => (
                     <div key={i} className="flex items-baseline gap-4">
                       <Icon className="h-7 w-7 shrink-0 translate-y-1 text-primary" aria-hidden />

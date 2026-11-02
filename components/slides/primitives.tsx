@@ -69,7 +69,7 @@ export function SlideCaption({
       inert={!visible}
       tone="secondary"
       look="soft"
-      className={`w-full max-w-5xl px-10 py-5 text-center transition-all duration-500 ${
+      className={`w-full max-w-5xl text-center transition-all duration-500 card-pad-5/10 ${
         visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
@@ -79,17 +79,12 @@ export function SlideCaption({
 }
 
 export type CardTone = "neutral" | "primary" | "secondary" | "accent" | "success" | "error";
+type CardLook = "tint" | "soft" | "outline" | "line";
 
-/** Tailwind sees each class whole: one line per tone and look. */
-const CARD_TONES: Record<CardTone, Record<"tint" | "soft" | "outline" | "line", string>> = {
-  neutral: {
-    tint: "border border-border bg-white",
-    soft: "border border-border bg-white",
-    outline: "border border-border bg-white",
-    line: "border border-border bg-white",
-  },
+/** The tones the brand card has no rule for, the slide's own (exception `card-tone` in
+ *  brand-elements.json). Tailwind sees each class whole: one line per tone and look. */
+const CARD_TONES: Record<Exclude<CardTone, "neutral">, Partial<Record<CardLook, string>>> = {
   primary: {
-    tint: "border border-primary bg-primary/7",
     soft: "border border-primary/25 bg-primary/7",
     outline: "border border-primary bg-white",
     line: "border border-primary/25 bg-white",
@@ -120,11 +115,12 @@ const CARD_TONES: Record<CardTone, Record<"tint" | "soft" | "outline" | "line", 
   },
 };
 
-/** The website's card: brand radius, hairline border, no shadow. `tone` names its colour and
- *  `look` how much of it: `tint` a full border on the 7% tint (the one that matters), `soft` a
- *  light border on the tint, `outline` a full border on white, `line` a light border on white. A
- *  neutral card is white with the grey hairline whatever its look; `quiet` drops the border onto a
- *  grey tint, for a result set apart from the flow. */
+/** The brand card (`hw-card`): a neutral card whatever its look, and the primary `tint`, the one
+ *  that matters, as the brand's tinted card. `tone` names its colour and `look` how much of it:
+ *  `tint` a full border on the 7% tint, `soft` a light border on the tint, `outline` a full border
+ *  on white, `line` a light border on white; those and `quiet`, no border on a grey tint for a
+ *  result set apart from the flow, are the slide's own. The padding is the card's setting, a
+ *  `card-pad-*` utility in `className`, 2rem without one. */
 export function SlideCard({
   tone = "neutral",
   look = "tint",
@@ -132,10 +128,24 @@ export function SlideCard({
   ...props
 }: {
   tone?: CardTone | "quiet";
-  look?: "tint" | "soft" | "outline" | "line";
+  look?: CardLook;
 } & ComponentPropsWithoutRef<"div">) {
+  if (tone === "neutral" || (tone === "primary" && look === "tint"))
+    return (
+      <div
+        className={`hw-card ${className}`.trim()}
+        data-variant={tone === "primary" ? "tint" : undefined}
+        {...props}
+      />
+    );
   const colour = tone === "quiet" ? "bg-ink/7" : CARD_TONES[tone][look];
-  return <div className={`rounded-brand ${colour} ${className}`.trim()} {...props} />;
+  return (
+    <div
+      className={`rounded-brand p-(--hw-card-pad) ${colour} ${className}`.trim()}
+      data-hw-exception="card-tone"
+      {...props}
+    />
+  );
 }
 
 const DISPLAY_SIZES = {
@@ -256,7 +266,7 @@ export function CodePanel({
 /** A chart's plot area: a card of fixed height the chart fills. */
 export function ChartFrame({ children }: { children: ReactNode }) {
   return (
-    <SlideCard className="h-(--slide-chart-height) p-8" data-chart-plot>
+    <SlideCard className="h-(--slide-chart-height) card-pad-8" data-chart-plot>
       {children}
     </SlideCard>
   );
@@ -306,8 +316,8 @@ export function VideoPlayer({
         }
         className={`block cursor-pointer rounded-[inherit] ${className}`.trim()}
       />
-      {/* Round and teal, as every control that holds only an icon (brand tokens, radius-pill;
-            unprimed blind panel 2026-11-01). It straddles the recording's bottom edge, centred,
+      {/* The brand's round icon control over a picture (hw-icon-button, solid teal; unprimed
+            blind panel 2026-11-01), at the stage scale's size. It straddles the recording's bottom edge, centred,
             as on the website, so it covers no corner of the picture (os decision
             play-button-position); the frame's bottom padding holds its lower half. Playing, it
             stays as the pause control, shown only to the keyboard that holds focus on it. */}
@@ -315,12 +325,13 @@ export function VideoPlayer({
         type="button"
         onClick={toggle}
         aria-label={`${playing ? "Pause" : "Play"} ${alt ?? "video"}`}
-        className={`absolute -bottom-10 left-1/2 z-10 flex size-20 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-white ${playing ? "opacity-0 focus-visible:opacity-100" : ""}`}
+        className={`hw-icon-button absolute -bottom-[calc(var(--hw-control-size)/2)] left-1/2 z-10 -translate-x-1/2 ${playing ? "opacity-0 focus-visible:opacity-100" : ""}`}
+        data-on="picture"
       >
         {playing ? (
-          <Pause className="size-10 fill-current" strokeWidth={0} />
+          <Pause className="fill-current" strokeWidth={0} />
         ) : (
-          <Play className="size-10 fill-current" strokeWidth={0} />
+          <Play className="fill-current" strokeWidth={0} />
         )}
       </button>
       {progress > 0 && (

@@ -35,7 +35,12 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `test/tokens.test.ts` fails on a raw length or colour anywhere else. `tokens.css` imports the
   brand tokens and `slides.css` the brand list marker (`marker.css`, so a consumer pins brand
   v0.24.4 or later) from `@hackersandwizards/brand` through the package, never a sibling path.
-  `slides.css` names its own
+  `slides.css` also imports the brand's shared elements (`elements.css`, brand v0.27.0 or later)
+  and sets their stage scale's settings the engine owns a token for; `SlideShell` puts
+  `data-hw-scale="stage"` (and `data-theme="dark"` on night) on every slide. A part that draws a
+  brand element renders its `hw-*` class and changes it only through the element's `--hw-*`
+  settings (a card's padding is a `card-pad-*` utility); what the brand has no rule for is an
+  exception in `brand-elements.json` with its reason. `slides.css` names its own
   `components/` and `lib/` as Tailwind sources, since Tailwind never scans `node_modules`.
   `styles/sources.css` names the same sources for a consumer stylesheet that renders the
   components without importing `slides.css`.
@@ -53,7 +58,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   content, its images, and the specimen page `index.html` with its compiled `build/slides.css`, a Parts section (every part of
   `primitives.tsx` and `SlideChrome.tsx` in each variant, with the slide types using it), then one
   slide per slide type and one per content block in print mode, which the brand kit links. `bun run specimen` (`scripts/specimen.ts`)
-  writes the page, and `bun run check` fails while it differs from a fresh build.
+  writes the page, and `bun run check` fails while it differs from a fresh build. The page's Shared
+  elements section shows each brand element the slides use as a tile and each exception with its
+  reason; `frames.html` holds every frame inline, since `brand-elements` reads no frame.
 - `test/`: the engine's unit tests.
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
@@ -68,7 +75,8 @@ are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and 
 ## Commands
 
 - `bun run check`: format, lint, typecheck, unique function names, tests, the brand colour scan
-  (`brand-colours.json` holds the exceptions). No hook runs it:
+  (`brand-colours.json` holds the exceptions), then `brand-elements` over the specimen pages
+  (`brand-elements.json`). No hook runs it:
   `.githooks/pre-commit` runs `bun run check:staged`: `gitleaks` over the staged changes,
   `prettier --check` and `eslint` on the staged files. `bun install` points `core.hooksPath` at `.githooks/`.
 - `bun run fix`: `eslint --fix`, then `prettier --write`.

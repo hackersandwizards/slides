@@ -84,9 +84,9 @@ describe("content blocks", () => {
   // The play button holds only an icon: round and teal, as on the website and in the apps.
   it("rounds the play button", () => {
     const c = content([{ type: "video", src: "/a.mp4", alt: "Demo" }]);
-    const classes = c.querySelector('button[aria-label="Play Demo"]')?.classList;
-    expect(classes?.contains("rounded-full")).toBe(true);
-    expect(classes?.contains("bg-primary")).toBe(true);
+    const button = c.querySelector('button[aria-label="Play Demo"]');
+    expect(button?.classList.contains("hw-icon-button")).toBe(true);
+    expect(button?.getAttribute("data-on")).toBe("picture");
   });
 
   // The link of a linked image is spelled out under it: projected or printed, the link is invisible.

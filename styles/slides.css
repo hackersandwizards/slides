@@ -2,6 +2,10 @@
 @import "./tokens.css";
 /* The brand's list marker, in the components layer so a marker's colour utility still wins. */
 @import "@hackersandwizards/brand/marker.css" layer(components);
+/* The brand's shared elements (hw-card, hw-label, hw-pill, ...) with their four scales. Every slide
+   sets the stage scale (SlideShell's data-hw-scale); the settings the slide engine owns a token for
+   are set below. */
+@import "@hackersandwizards/brand/elements.css" layer(components);
 /* Tailwind never scans node_modules, so a consumer's build sees the engine's classes only because
    this file names them, relative to itself. */
 @source "../components";
@@ -379,16 +383,25 @@ html:has(.print-slide) {
   /* A box or rule keeps its 1px border for layout, and an overlay in its own border colour and
      corner paints the hairline inward over the padding: a wider border grew every card and table
      row and shrank slides under the fit guard. */
-  :where(.slide-viewport, .print-slide, .slide-story)
-    :is(.border, .border-t, .border-b, .border-l, .border-r, .border-x, .border-y):not(
+  :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
+    :is(.border, .border-t, .border-b, .border-l, .border-r, .border-x, .border-y, .hw-card):not(
       .absolute,
       .fixed,
       .sticky
     ) {
     position: relative;
   }
-  :where(.slide-viewport, .print-slide, .slide-story)
-    :is(.border, .border-t, .border-b, .border-l, .border-r, .border-x, .border-y)::after {
+  :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
+    :is(
+      .border,
+      .border-t,
+      .border-b,
+      .border-l,
+      .border-r,
+      .border-x,
+      .border-y,
+      .hw-card
+    )::after {
     content: "";
     position: absolute;
     inset: calc(var(--slide-layout-border) * -1);
@@ -398,29 +411,43 @@ html:has(.print-slide) {
     border-radius: inherit;
     pointer-events: none;
   }
-  :where(.slide-viewport, .print-slide, .slide-story) :is(.border, .border-t, .border-y)::after {
+  :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
+    :is(.border, .border-t, .border-y, .hw-card)::after {
     border-top-width: var(--slide-hairline);
   }
-  :where(.slide-viewport, .print-slide, .slide-story) :is(.border, .border-b, .border-y)::after {
+  :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
+    :is(.border, .border-b, .border-y, .hw-card)::after {
     border-bottom-width: var(--slide-hairline);
   }
-  :where(.slide-viewport, .print-slide, .slide-story) :is(.border, .border-l, .border-x)::after {
+  :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
+    :is(.border, .border-l, .border-x, .hw-card)::after {
     border-left-width: var(--slide-hairline);
   }
-  :where(.slide-viewport, .print-slide, .slide-story) :is(.border, .border-r, .border-x)::after {
+  :where(.slide-viewport, .print-slide, .slide-story, [data-hw-tile])
+    :is(.border, .border-r, .border-x, .hw-card)::after {
     border-right-width: var(--slide-hairline);
   }
 }
 
+/* A card's padding: the brand card's --hw-card-pad on a Tailwind spacing step, `card-pad-8` all
+   round or `card-pad-6/9` block and inline, where a utility on the padding would fork the card. */
+@utility card-pad-* {
+  --hw-card-pad: --spacing(--value(integer));
+  --hw-card-pad: --spacing(--value(integer)) --spacing(--modifier(integer));
+}
+
 /* In the components layer, so a slide's own colour utility still wins. */
 @layer components {
-  /* The website's tag chip (TrainingList.astro .tl-chip): a pill tinted with its hue, text mixed
-     from the hue and the ink, no outline. --chip names the hue, teal by default. */
-  .slide-chip {
-    border-color: transparent;
-    background: color-mix(in srgb, var(--chip, var(--color-teal)) 15%, var(--color-white));
-    color: color-mix(in srgb, var(--chip, var(--color-teal)) 40%, var(--color-ink));
-    font-weight: 500;
+  /* The stage scale's settings the slide engine owns a token for, after the brand's preset:
+     the hairline is the 1px layout border, which the overlay above paints at --slide-hairline as
+     on every other box; the pill keeps the kicker's step, its block padding taken by the brand
+     pill's taller line. */
+  [data-hw-scale="stage"] {
+    --hw-hairline: var(--slide-layout-border);
+    --hw-card-corner: var(--slide-radius);
+    --hw-strip: var(--slide-strip);
+    --hw-pill-size: var(--text-xl);
+    --hw-pill-pad: 0 calc(var(--spacing) * 5);
   }
 
   /* The list marker is the brand's .hw-marker (marker.css, imported above), which centres the
@@ -576,6 +603,9 @@ html:has(.print-slide) {
   .slide-content :is(.p-8, .p-10) {
     padding: var(--slide-phone-card-padding);
   }
+  .slide-content :is(.card-pad-8, .card-pad-10) {
+    --hw-card-pad: var(--slide-phone-card-padding);
+  }
   /* On a phone the root is 16px, so the website's roles apply at their own size. */
   .slide-content :is(.slide-title, .text-5xl, .text-6xl, .text-7xl, .text-8xl) {
     font-size: var(--type-display-size);
@@ -630,12 +660,6 @@ html:has(.print-slide) {
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
     .hw-wordmark-night {
     display: block;
-  }
-
-  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
-    .slide-chip {
-    background: color-mix(in srgb, var(--chip, var(--color-teal)) 25%, var(--color-night));
-    color: color-mix(in srgb, var(--chip, var(--color-teal)) 35%, var(--color-white));
   }
 
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))

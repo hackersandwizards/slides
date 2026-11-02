@@ -34,13 +34,9 @@ export function SectionHeader({ label, principle, pillColor, stageMarker, stageP
       <div
         className={`slide-kicker mb-4 flex h-auto! min-h-10 flex-wrap items-center gap-5 max-md:min-h-0`}
       >
-        {label && <span className="label-caps text-xl leading-tight text-primary">{label}</span>}
+        {label && <span className="hw-label [--hw-label-size:var(--text-xl)]">{label}</span>}
         {principle && (
-          <span
-            className={`rounded-full border px-5 py-0.5 text-xl leading-tight ${pillColor ?? ACCENT_PILL}`}
-          >
-            {principle}
-          </span>
+          <span className={`hw-pill ${pillColor ?? ACCENT_PILL}`.trim()}>{principle}</span>
         )}
         {hasStageStrip && (
           <div

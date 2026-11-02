@@ -164,7 +164,7 @@ function StatCard({
     >
       <SlideCard
         tone={isHighlight ? tone : "neutral"}
-        className="flex h-full flex-col p-8 transition-all"
+        className="flex h-full flex-col transition-all card-pad-8"
       >
         <div
           className={`font-heading font-bold tracking-tight whitespace-nowrap tabular-nums ${valueSize} ${accent.text}`}
@@ -188,7 +188,7 @@ function QuoteCard({ card, isRevealed }: { card: GridCard; isRevealed: boolean }
         isRevealed ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
-      <SlideCard className="flex h-full flex-col items-center p-8 text-center">
+      <SlideCard className="flex h-full flex-col items-center text-center card-pad-8">
         {card.imageSrc && (
           <Image
             src={card.imageSrc}
@@ -229,7 +229,7 @@ export function GridSlide({ slide }: Props) {
       <TitledContent>
         {slide.sectionLabel && (
           <BlurFade delay={0.05} duration={0.5}>
-            <span className={`slide-kicker label-caps block text-base text-primary`}>
+            <span className="slide-kicker hw-label block [--hw-label-size:var(--text-base)]">
               {slide.sectionLabel}
             </span>
           </BlurFade>

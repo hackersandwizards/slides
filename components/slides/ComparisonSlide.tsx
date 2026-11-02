@@ -108,7 +108,7 @@ function VsVariant({ slide }: { slide: ComparisonSlideType }) {
             <BlurFade key={i} delay={0.2 + i * 0.1} duration={0.6}>
               <SlideCard
                 tone={isActive ? "primary" : "neutral"}
-                className="h-full p-8 transition-all duration-300"
+                className="h-full transition-all duration-300 card-pad-8"
               >
                 <h3 className="mb-6 font-heading text-2xl font-bold text-text">{side.label}</h3>
 
@@ -218,7 +218,7 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSlideType }) {
           inert={phase < 2}
           tone="primary"
           look="soft"
-          className={`p-8 transition-all duration-500 ${
+          className={`transition-all duration-500 card-pad-8 ${
             phase >= 2 ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
           }`}
         >
@@ -257,7 +257,7 @@ function SplitVariant({ slide }: { slide: ComparisonSlideType }) {
     <>
       <div className="grid w-full grid-cols-2 gap-8">
         <BlurFade delay={0.2} duration={0.6}>
-          <SlideCard className="h-full p-8">
+          <SlideCard className="h-full card-pad-8">
             <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.left.label}</h3>
             <ul className="space-y-3">
               {slide.left.items.map((item, i) => (
@@ -268,7 +268,7 @@ function SplitVariant({ slide }: { slide: ComparisonSlideType }) {
         </BlurFade>
 
         <BlurFade delay={0.3} duration={0.6}>
-          <SlideCard className="h-full p-8">
+          <SlideCard className="h-full card-pad-8">
             <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.right.label}</h3>
             <ul className="space-y-3">
               {slide.right.items.map((item, i) => (

@@ -17,7 +17,7 @@ export function groundOf(slide: Grounded): SlideGround {
 }
 
 // The full-viewport frame every slide sits in, owned here so it changes in one place. A slide's
-// decoration stays its own children.
+// decoration stays its own children. It sets the brand elements' stage scale for every slide.
 export function SlideShell({
   children,
   ground = "intro",
@@ -31,7 +31,7 @@ export function SlideShell({
   direction?: "row" | "col";
   overflowHidden?: boolean;
   /** The slide stands on night: `slides.css` sets the night tokens on it and on the frame holding
-   *  it, the corner mark included. */
+   *  it, the corner mark included, and the brand's elements take their night rule. */
   night?: boolean;
   className?: string;
 }) {
@@ -48,7 +48,12 @@ export function SlideShell({
     .join(" ");
 
   return (
-    <div ref={ref} className={classes}>
+    <div
+      ref={ref}
+      className={classes}
+      data-hw-scale="stage"
+      data-theme={night ? "dark" : undefined}
+    >
       {children}
     </div>
   );

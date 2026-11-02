@@ -77,7 +77,7 @@ function LabeledGridBlock({
             key={i}
             inert={!revealed}
             tone={item.highlighted ? "success" : "neutral"}
-            className={`p-6 transition-all duration-500 ${
+            className={`transition-all duration-500 card-pad-6 ${
               revealed ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
             }`}
           >
@@ -382,12 +382,16 @@ function PipelineRow({ block }: { block: PipelineBlock }) {
   );
 }
 
+/** The info callout is the brand's purple callout; warning and success are the slide's own
+ *  (exception `callout-status` in brand-elements.json). */
 const CALLOUT_VARIANTS = {
-  info: "border-secondary/25 bg-secondary/7 text-text",
+  info: "hw-callout text-text",
   // On their tint the brand amber and green drop under 4.5:1 (4.29 and 4.27), so the text mixes
   // them 40% with ink, as the website's chips do.
-  warning: "border-accent/25 bg-accent/7 text-(--slide-insight-ink)",
-  success: "border-success/25 bg-success/7 text-(--slide-success-ink)",
+  warning:
+    "rounded-brand border-2 px-8 py-6 border-accent/25 bg-accent/7 text-(--slide-insight-ink)",
+  success:
+    "rounded-brand border-2 px-8 py-6 border-success/25 bg-success/7 text-(--slide-success-ink)",
 };
 
 function ContentBlockRenderer({
@@ -535,7 +539,7 @@ function ContentBlockRenderer({
       return (
         <div className="grid grid-cols-2 gap-10">
           {sides.map(({ data, style }, i) => (
-            <SlideCard key={i} tone={style.card} look="line" className="p-7">
+            <SlideCard key={i} tone={style.card} look="line" className="card-pad-7">
               {data.title && (
                 <h3 className={`mb-5 font-heading text-2xl font-bold ${style.title}`}>
                   {renderMarkdown(data.title)}
@@ -595,7 +599,7 @@ function ContentBlockRenderer({
       return (
         <div className="space-y-2.5">
           {block.items.map((hook, i) => (
-            <SlideCard key={i} className="flex items-baseline gap-4 p-3">
+            <SlideCard key={i} className="flex items-baseline gap-4 card-pad-3">
               <code className="rounded-brand-sm bg-primary/7 px-3 py-1 font-code text-base text-text">
                 {hook.name}
               </code>
@@ -697,7 +701,7 @@ function ContentBlockRenderer({
               </h3>
             )}
             {block.items.map((item, i) => (
-              <SlideCard key={i} tone="secondary" look="line" className="px-6 py-4">
+              <SlideCard key={i} tone="secondary" look="line" className="card-pad-4/6">
                 <p className="mb-1 text-xl font-bold text-text">{renderMarkdown(item.title)}</p>
                 <p className="card-text-lg text-text">{renderMarkdown(item.subtitle)}</p>
               </SlideCard>
@@ -712,7 +716,7 @@ function ContentBlockRenderer({
     case "callout":
       if (centered) {
         return (
-          <SlideCard className="mx-auto max-w-3xl px-8 py-5">
+          <SlideCard className="mx-auto max-w-3xl card-pad-5/8">
             <p className="text-lg leading-relaxed text-text-muted sm:text-xl md:text-2xl">
               {renderMarkdown(block.text)}
             </p>
@@ -721,7 +725,9 @@ function ContentBlockRenderer({
       }
       return (
         <div
-          className={`max-w-full rounded-brand border-2 px-8 py-6 ${block.fullWidth ? "w-full" : "w-fit"} ${besideBars ? "md:w-[calc(100%-var(--slide-callout-beside-bars))]" : ""} ${CALLOUT_VARIANTS[block.variant ?? "info"]}`}
+          className={`max-w-full ${block.fullWidth ? "w-full" : "w-fit"} ${besideBars ? "md:w-[calc(100%-var(--slide-callout-beside-bars))]" : ""} ${CALLOUT_VARIANTS[block.variant ?? "info"]}`}
+          data-hue={(block.variant ?? "info") === "info" ? "purple" : undefined}
+          data-hw-exception={(block.variant ?? "info") === "info" ? undefined : "callout-status"}
         >
           <p className="text-xl leading-snug font-medium">{renderMarkdown(block.text)}</p>
         </div>
@@ -731,7 +737,7 @@ function ContentBlockRenderer({
       return (
         <div className="grid grid-cols-4 gap-6">
           {block.columns.map((col, i) => (
-            <SlideCard key={i} className="p-5">
+            <SlideCard key={i} className="card-pad-5">
               <h3 className="mb-3 font-heading text-lg font-bold text-text">
                 {col.title}
                 {col.subtitle && (
@@ -906,7 +912,9 @@ function ContentBlockRenderer({
           <div className="relative flex flex-col items-center gap-6">
             <div className="flex items-center gap-4">
               <div className="h-px w-16 bg-text-subtle/25" />
-              <span className="label-caps text-xs text-text-subtle">The verdict</span>
+              <span className="hw-label" data-tone="muted">
+                The verdict
+              </span>
               <div className="h-px w-16 bg-text-subtle/25" />
             </div>
             <DisplayHeading as="h2" size="sm" className="max-w-4xl text-center">
@@ -928,7 +936,7 @@ function CenteredContentSlide({ slide }: Props) {
       <div className="slide-content relative z-10 flex flex-col items-center justify-center space-y-6 px-8 text-center md:space-y-8">
         {slide.sectionLabel && (
           <BlurFade delay={0.1} duration={0.4}>
-            <p className="label-caps text-sm text-primary">{slide.sectionLabel}</p>
+            <p className="hw-label [--hw-label-size:var(--text-sm)]">{slide.sectionLabel}</p>
           </BlurFade>
         )}
 

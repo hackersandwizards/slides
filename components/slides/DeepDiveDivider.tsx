@@ -18,7 +18,7 @@ export function DeepDiveDivider({ slide }: Props) {
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-4 text-center">
         {label && (
           <BlurFade delay={0.05} duration={0.4}>
-            <p className="label-caps mb-8 text-3xl text-primary">{label}</p>
+            <p className="hw-label mb-8 [--hw-label-size:var(--text-3xl)]">{label}</p>
           </BlurFade>
         )}
 

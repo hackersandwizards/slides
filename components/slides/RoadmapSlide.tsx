@@ -61,7 +61,7 @@ function PartCard({
 
   return (
     <BlurFade delay={delay} duration={0.5}>
-      <SlideCard className={`relative h-full overflow-hidden ${style.glow}`}>
+      <SlideCard className={`relative h-full overflow-hidden card-pad-0 ${style.glow}`}>
         <div className={`absolute inset-x-0 top-0 h-2 ${style.bar}`} />
 
         <div className="px-10 pt-12 pb-10">
@@ -143,7 +143,7 @@ export function RoadmapSlide({ slide }: Props) {
           <BlurFade delay={0.05} duration={0.4}>
             {/* The kicker every titled slide carries (SectionHeader): a grey caps line here read as
                 a fourth eyebrow style. */}
-            <p className="slide-kicker label-caps mb-4 text-xl leading-tight text-primary">
+            <p className="slide-kicker hw-label mb-4 [--hw-label-size:var(--text-xl)]">
               {slide.preText}
             </p>
           </BlurFade>

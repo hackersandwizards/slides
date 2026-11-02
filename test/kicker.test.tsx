@@ -9,7 +9,8 @@ const draw = (slide: Slide) => {
 };
 
 // os decisions br-slide-kicker-colour (always teal, which a night slide maps to teal-night),
-// br-label-style (the website's mono caps) and br-gradient-behind-content (no tint behind text).
+// br-label-style (the website's mono caps) and br-gradient-behind-content (no tint behind text):
+// the kicker is the brand's label (hw-label, mono caps in teal-dark) in its default tone.
 describe("the kicker above a slide title", () => {
   const slides: Slide[] = [
     { type: "content", headline: "H", sectionLabel: "K", sectionTheme: "secondary", content: [] },
@@ -23,10 +24,11 @@ describe("the kicker above a slide title", () => {
     "%s is teal mono caps on an untinted ground",
     (_, slide) => {
       const container = draw(slide as Slide);
-      const kicker = [...container.querySelectorAll(".label-caps")].find((el) =>
+      const kicker = [...container.querySelectorAll(".hw-label")].find((el) =>
         /^(K|Part two · K|Stepping Back)$/.test(el.textContent ?? ""),
       );
-      expect(kicker?.className).toContain("text-primary");
+      expect(kicker).toBeDefined();
+      expect(kicker?.hasAttribute("data-tone")).toBe(false);
       expect(container.querySelector('[class*="from-primary/7"]')).toBeNull();
     },
   );

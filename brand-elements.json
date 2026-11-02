@@ -1,0 +1,16 @@
+{
+  "pages": ["specimen/index.html", "specimen/frames.html"],
+  "uses": ["card", "label", "pill", "callout", "link", "strip", "icon-button"],
+  "exceptions": {
+    "card-tone": "A card in a meaning's hue (purple, amber, green, red) and in four weights (tint, soft, outline, line), and the quiet grey card: brand's card has white and the teal tint only.",
+    "label-caps": "The label role as a mixin: labels in a meaning's or a column's hue (purple, amber, red, green), and the type of the stage strip, the gradient title pill and the gantt and table heads; brand's label has teal-dark, muted and ink only.",
+    "callout-status": "Amber and green callouts for a risk and a result, their text mixed 40 % into ink for 4.5:1: brand's callout has teal and purple only.",
+    "code-panel": "The website's code, Shiki github-dark on its own ground (website astro.config.mjs), in the slide's full brand corner: brand's hw-code sets night and its own palette, which the website's code does not use.",
+    "number-tile": "The KPI and number tile: a figure on a square tile, which no other system shows.",
+    "chart-bars": "Chart bars: a slide's data in the slide engine's context and highlight marks.",
+    "slide-table": "The slide table: projected rows at stage size with the slide's own column heads, kept per system.",
+    "header-bars": "Header bars: the roadmap column's bar and the factory frame's gradient title pill, kept per system.",
+    "stage-status": "The stage strip: the pipeline's stages with the active ones marked, a status no other system shows.",
+    "stance-quote": "The two sides of a stance face each other: the right one's rule stands on the right, each in its side's hue; brand's quote has a purple rule on the left only."
+  }
+}

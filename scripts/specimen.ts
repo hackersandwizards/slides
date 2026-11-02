@@ -114,15 +114,15 @@ const PARTS: Record<string, () => ReactNode> = {
     h(
       "div",
       { className: "grid grid-cols-4 gap-6" },
-      h(SlideCard, { className: "px-6 py-4 text-lg" }, "neutral"),
-      h(SlideCard, { tone: "quiet", className: "col-span-3 w-1/3 px-6 py-4 text-lg" }, "quiet"),
+      h(SlideCard, { className: "card-pad-4/6 text-lg" }, "neutral"),
+      h(SlideCard, { tone: "quiet", className: "col-span-3 w-1/3 card-pad-4/6 text-lg" }, "quiet"),
       ...tones
         .filter((tone) => tone !== "neutral")
         .flatMap((tone) =>
           looks.map((look) =>
             h(
               SlideCard,
-              { tone, look, key: `${tone}-${look}`, className: "px-6 py-4 text-lg" },
+              { tone, look, key: `${tone}-${look}`, className: "card-pad-4/6 text-lg" },
               `${tone} · ${look}`,
             ),
           ),
@@ -244,12 +244,112 @@ const partFrames = partNames.map(({ name, file }) => ({
       null,
       h(
         "div",
-        { className: "print-slide bg-section-intro" },
+        { className: "print-slide bg-section-intro", "data-hw-scale": "stage" },
         h("div", { className: "p-24" }, h(Fragment, null, PARTS[name]())),
       ),
     ),
   ).replace(/(src|href|poster)="\/slide-catalogue\//g, '$1="slide-catalogue/'),
 }));
+
+const attr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+
+// ─── Shared elements: what the slides take from brand, and what stays their own ───────────────
+// Rendered on the page itself (not in a frame), so brand-elements measures each tile against the
+// brand rule. The page's 16px rem is the stage's at 1440, the size a slide is designed at.
+const brandVersion = (
+  JSON.parse(readFileSync(join(brand, "package.json"), "utf8")) as { version: string }
+).version;
+const onNight = (child: ReactNode) =>
+  h("div", { className: "slide-night bg-background p-6 text-text", "data-theme": "dark" }, child);
+const onDay = (child: ReactNode) => h("div", { className: "bg-background p-6 text-text" }, child);
+const USES: Record<string, () => ReactNode> = {
+  card: () =>
+    inRow(
+      h(SlideCard, { className: "card-pad-4/6 text-lg" }, "neutral"),
+      h(SlideCard, { tone: "primary", className: "card-pad-4/6 text-lg" }, "primary · tint"),
+    ),
+  label: () =>
+    inRow(
+      h("span", { className: "hw-label [--hw-label-size:var(--text-xl)]" }, "Kicker"),
+      h("span", { className: "hw-label", "data-tone": "muted" }, "Muted label"),
+    ),
+  pill: () =>
+    inRow(
+      h("span", { className: "hw-pill" }, "One loop per team"),
+      h(
+        "span",
+        {
+          className:
+            "hw-pill [--hw-pill-hue:var(--color-success)] [--hw-pill-hue-night:var(--color-success)]",
+        },
+        "Success section",
+      ),
+    ),
+  callout: () =>
+    h(
+      "div",
+      { className: "hw-callout w-fit text-text", "data-hue": "purple" },
+      h("p", { className: "text-xl leading-snug font-medium" }, "An info callout flags one thing."),
+    ),
+  link: () =>
+    h(
+      "p",
+      { className: "text-xl text-text" },
+      "A paragraph with ",
+      h("a", { className: "hw-link", href: "#elements" }, "a link"),
+      ".",
+    ),
+  strip: () => h("div", { className: "hw-strip w-96" }),
+  "icon-button": () =>
+    h(
+      "button",
+      { type: "button", className: "hw-icon-button", "data-on": "picture", "aria-label": "Play" },
+      h("svg", { viewBox: "0 0 24 24", fill: "currentColor" }, h("path", { d: "M6 4l14 8-14 8z" })),
+    ),
+};
+const usesTiles = Object.entries(USES)
+  .map(
+    ([name, render]) =>
+      `<figure class="element"><figcaption><strong>${name}</strong> <span class="from">aus brand v${brandVersion}</span> <code>hw-${name}</code> <a href="http://brand.localhost/catalogue.html#hw-${name}">catalogue</a></figcaption><div data-hw-tile="${name}" data-hw-version="${brandVersion}" data-hw-scale="stage">${renderToStaticMarkup(h(Fragment, null, onDay(render()), onNight(render())))}</div></figure>`,
+  )
+  .join("\n");
+const exceptions = JSON.parse(readFileSync(join(root, "brand-elements.json"), "utf8")) as {
+  exceptions: Record<string, string | { reason: string }>;
+};
+// Where each exception shows: a part rendered here, or the specimen slides that carry it.
+const EXCEPTION_SHOWN: Record<string, () => ReactNode> = {
+  "card-tone": () =>
+    inRow(
+      ...(["secondary", "accent", "success", "error"] as const).map((tone) =>
+        h(SlideCard, { tone, key: tone, className: "card-pad-4/6 text-lg" }, tone),
+      ),
+      h(SlideCard, { tone: "quiet", className: "card-pad-4/6 text-lg" }, "quiet"),
+    ),
+  "number-tile": () =>
+    inRow(h(NumberTile, { children: "3" }), h(NumberTile, { tone: "soft", children: "3" })),
+  "code-panel": () =>
+    h(CodePanel, { as: "pre", className: "p-8 font-code text-xl text-white" }, "$ claude --print"),
+  "header-bars": () => h(GradientTitlePill, null, "The Factory"),
+};
+const exceptionLinks: Record<string, string[]> = {
+  "label-caps": ["overview", "phased-pills", "guidance"],
+  "callout-status": ["frames.html"],
+  "slide-table": ["block-table"],
+  "chart-bars": ["chart", "block-bars"],
+  "header-bars": ["roadmap", "gantt"],
+  "stage-status": ["frames.html"],
+  "stance-quote": ["block-positions"],
+};
+const exceptionSections = Object.entries(exceptions.exceptions)
+  .map(([name, e]) => {
+    const reason = typeof e === "string" ? e : e.reason;
+    const links = (exceptionLinks[name] ?? [])
+      .map((id) => `<a href="${id.endsWith(".html") ? id : `#${id}`}">${id}</a>`)
+      .join(", ");
+    const shown = EXCEPTION_SHOWN[name];
+    return `<section class="exception" data-hw-exception="${name}"><h3><code>${name}</code></h3><p>${attr(reason)}</p>${links ? `<p class="setup">On the slides: ${links}</p>` : ""}${shown ? `<div data-hw-scale="stage">${renderToStaticMarkup(onDay(shown()))}</div>` : ""}</section>`;
+  })
+  .join("\n");
 
 const stylesheet = join(root, "styles", "slides.css");
 const compiler = await compile(readFileSync(stylesheet, "utf8"), {
@@ -271,7 +371,6 @@ const css = compiler
         .join("/")}")`,
   );
 
-const attr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 // A type's anchor is its name, as the brand kit links it; a block's is "block-" and its label,
 // numbered where two slides share a label.
 const ids = new Set<string>();
@@ -319,6 +418,12 @@ figure:target .frame { width: 1440px; height: 810px; }
 figure:target iframe { transform: scale(0.75); }
 .layers { max-width: 60rem; font-size: 1rem; margin: 0 0 1rem; }
 table.parts { border-collapse: collapse; margin: 0 0 2rem; max-width: 80rem; font-size: 0.875rem; }
+.elements { grid-template-columns: repeat(auto-fill, 640px); }
+.element figcaption { display: flex; gap: 0.75rem; align-items: baseline; }
+.element .from, .exception .setup { font-weight: 400; color: var(--color-muted); }
+.exception { max-width: 60rem; margin: 0 0 2rem; }
+.exception h3 { font: 600 1rem/1.4 var(--font-mono); margin: 0 0 0.25rem; }
+.exception p { margin: 0 0 0.5rem; }
 table.parts th, table.parts td { text-align: left; vertical-align: top; padding: 0.375rem 1rem 0.375rem 0; border-bottom: 1px solid var(--color-border); }
 </style>
 </head>
@@ -348,6 +453,12 @@ ${partFrames.map((p) => `<tr><td><a href="#part-${p.name.toLowerCase()}"><code>$
 <main>
 ${partFrames.map((p) => tile(p, "part-")).join("\n")}
 </main>
+<h2 id="elements">Shared elements</h2>
+<p class="layers">The elements the slides take from <code>@hackersandwizards/brand</code>, each at the stage scale (<code>data-hw-scale="stage"</code>, which every slide sets), on day and on night, then the elements the slides keep as their own, each with its reason. <code>brand-elements</code> measures both, last in <code>bun run check</code>, here and on <a href="frames.html">every specimen slide</a>.</p>
+<main class="elements">
+${usesTiles}
+</main>
+${exceptionSections}
 <h2>Slide types</h2>
 <main>
 ${[...frames, ...markerFrames].map((f) => tile(f)).join("\n")}
@@ -365,8 +476,37 @@ if (location.hostname.endsWith(".github.io")) for (const a of document.querySele
 </html>
 `;
 
+// The slides carrying a status callout or a stage strip, which no frame above shows: the frames
+// page adds them, so brand-elements measures the callout and the strip's exceptions show.
+const shown = new Set([...picks, ...blockPicks]);
+const extraFrames = deck.flatMap((s, index) =>
+  !shown.has(index) &&
+  s.type === "content" &&
+  !s.content?.some((b) => codeBlocks.has(b.type)) &&
+  (s.stageMarker || s.content?.some((b) => b.type === "callout"))
+    ? [renderFrame(index, "")]
+    : [],
+);
+// Every frame of the page inline, one 1920x1080 slide after another: brand-elements reads only a
+// page's own document, never a frame's.
+const framesHtml = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Specimen slides inline, @hackersandwizards/slides</title>
+<!-- Generated by scripts/specimen.ts. Do not edit. -->
+<link rel="stylesheet" href="build/slides.css">
+<style>body{margin:0}</style>
+</head>
+<body>
+${[...partFrames, ...frames, ...markerFrames, ...blockFrames, ...extraFrames].map((f) => f.markup).join("\n")}
+</body>
+</html>
+`;
+
 const outputs: [string, string][] = [
   [out, html],
+  [join(root, "specimen", "frames.html"), framesHtml],
   [join(root, "specimen", "build", "slides.css"), css],
 ];
 

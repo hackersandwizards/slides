@@ -1,7 +1,8 @@
 import type { SectionTheme } from "../types/slide";
 
-// One emphasis colour per slide: the principle pill takes the brand teal, never a third hue.
-export const ACCENT_PILL = "slide-chip";
+// One emphasis colour per slide: the principle pill (the brand's hw-pill) takes the brand teal,
+// never a third hue. A section's pill names only its hue, as the pill's settings.
+export const ACCENT_PILL = "";
 
 // Every section sits on the plain brand page, no tint behind the text (os decision
 // br-gradient-behind-content), and its kicker is teal like every other (br-slide-kicker-colour):
@@ -32,7 +33,7 @@ export const SECTION_STYLES: Record<SectionTheme, SectionStyle> = {
   },
   success: {
     border: "border-success/25",
-    pill: "slide-chip [--chip:var(--color-success)]",
+    pill: "[--hw-pill-hue:var(--color-success)] [--hw-pill-hue-night:var(--color-success)]",
   },
   deepdive: {
     border: "border-secondary/25",

@@ -86,11 +86,12 @@ export function HwWordmark({ mark = "lockup" }: { mark?: CornerMark }) {
   );
 }
 
-/** The website's teal-to-purple strip, the one brand mark every slide shares. */
+/** The brand's gradient strip (hw-strip), the one brand mark every slide shares. */
 export function BrandStrip() {
   return (
     <div
-      className="brand-strip absolute inset-x-0 top-0 z-40 h-(--slide-strip) bg-gradient-to-r from-brand to-brand-accent"
+      className="hw-strip absolute inset-x-0 top-0 z-40"
+      data-hw-scale="stage"
       aria-hidden="true"
     />
   );
@@ -122,7 +123,7 @@ export function SlideContainer({ children, logo, theme, page, mark }: Props) {
 
   if (Array.isArray(logo)) {
     return (
-      <div className={viewportClassName}>
+      <div className={viewportClassName} data-theme={theme ? "dark" : undefined}>
         <BrandStrip />
         <MotionConfig reducedMotion="user">{children}</MotionConfig>
         <div className="fixed bottom-6 left-6 z-40" aria-hidden="true">
@@ -143,7 +144,7 @@ export function SlideContainer({ children, logo, theme, page, mark }: Props) {
   const displayLogo = logo ?? HW_LOGO;
 
   return (
-    <div className={viewportClassName}>
+    <div className={viewportClassName} data-theme={theme ? "dark" : undefined}>
       <BrandStrip />
       <MotionConfig reducedMotion="user">{children}</MotionConfig>
       {renderHW(displayLogo)}

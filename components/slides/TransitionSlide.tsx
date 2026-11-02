@@ -19,7 +19,7 @@ export function TransitionSlide({ slide }: Props) {
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-4 text-center">
         {slide.preText && (
           <BlurFade delay={0.05} duration={0.4}>
-            <p className="label-caps mb-6 text-xl text-primary sm:mb-8 sm:text-2xl md:text-3xl">
+            <p className="hw-label mb-6 [--hw-label-size:var(--text-xl)] sm:mb-8 sm:[--hw-label-size:var(--text-2xl)] md:[--hw-label-size:var(--text-3xl)]">
               {slide.preText}
             </p>
           </BlurFade>
@@ -42,7 +42,7 @@ export function TransitionSlide({ slide }: Props) {
             <SlideCard
               tone="primary"
               look="line"
-              className="mt-12 px-12 py-8 sm:mt-14 sm:px-14 sm:py-10 md:mt-18 md:px-18 md:py-12"
+              className="mt-12 card-pad-8/12 sm:mt-14 sm:card-pad-10/14 md:mt-18 md:card-pad-12/18"
             >
               <p className="font-heading text-3xl font-bold text-brand sm:text-4xl md:text-5xl">
                 {slide.speakerName}

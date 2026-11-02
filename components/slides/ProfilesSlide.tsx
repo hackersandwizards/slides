@@ -63,7 +63,7 @@ export function ProfilesSlide({ slide }: Props) {
                 >
                   <SlideCard
                     tone={isHighlighted ? a.tone : "neutral"}
-                    className="flex w-full flex-col p-10 transition-all duration-300"
+                    className="flex w-full flex-col transition-all duration-300 card-pad-10"
                   >
                     <div className="flex items-center gap-8">
                       <div
