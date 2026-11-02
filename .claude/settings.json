@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "git fetch -q origin main && { [ \"$CLAUDE_CODE_REMOTE\" != true ] || git switch -q main; } && git merge --ff-only -q origin/main || echo \"main not switched to or origin/main not merged, fix it per git.md\"; CHECK_LOCK_WAIT_MS=30000 bun .claude/skills/engineering/check-lock.ts bun install --frozen-lockfile || echo \"bun install did not run or failed (another session's gate held the check lock past 30 s, or the install broke): run bun install --frozen-lockfile before your gate\""
+            "command": "git fetch -q origin main && { [ \"$CLAUDE_CODE_REMOTE\" != true ] || git switch -q main; } && git merge --ff-only -q origin/main || echo \"main not switched to or origin/main not merged, fix it per git.md\"; bun install --frozen-lockfile || echo \"bun install --frozen-lockfile failed: run it again before your gate\""
           }
         ]
       }
