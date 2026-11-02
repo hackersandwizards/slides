@@ -35,7 +35,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `test/tokens.test.ts` fails on a raw length or colour anywhere else. `tokens.css` imports the
   brand tokens and `slides.css` the brand list marker (`marker.css`, so a consumer pins brand
   v0.24.4 or later) from `@hackersandwizards/brand` through the package, never a sibling path.
-  `slides.css` also imports the brand's shared elements (`elements.css`, brand v0.27.11 or later)
+  `slides.css` also imports the brand's shared elements (`elements.css`, brand v0.27.12 or later)
   and sets their stage scale's settings the engine owns a token for; `SlideShell` puts
   `data-hw-scale="stage"` (and `data-theme="dark"` on night) on every slide. A part that draws a
   brand element renders its `hw-*` class and changes it only through the element's `--hw-*`
@@ -64,7 +64,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `test/`: the engine's unit tests.
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
-consumer imports, `types/slide`, both stylesheets, `scripts/render-pdf`, the specimen deck and its
+consumer imports, `types/slide`, the three stylesheets (`slides.css`, `sources.css`, and `tokens.css`, which a consumer's design-system page reads), `scripts/render-pdf`, the specimen deck and its
 images, and the `slides-density`, `slides-pins` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is
 a release. Consumers import by those names, `@hackersandwizards/slides/types/slide`, and ship the source: Next lists
 the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest config in

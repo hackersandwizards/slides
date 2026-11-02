@@ -5,6 +5,7 @@ import { MotionConfig } from "motion/react";
 import Image from "../ui/image";
 import type { LogoConfig, SlideLogo } from "../../types/slide";
 import { HW_LOGO } from "../../lib/logo";
+import { DeckNight } from "./SlideShell";
 
 interface Props {
   children: ReactNode;
@@ -123,9 +124,11 @@ export function SlideContainer({ children, logo, theme, page, mark }: Props) {
 
   if (Array.isArray(logo)) {
     return (
-      <div className={viewportClassName} data-theme={theme ? "dark" : undefined}>
+      <div className={viewportClassName} data-theme={theme ? "dark" : "light"}>
         <BrandStrip />
-        <MotionConfig reducedMotion="user">{children}</MotionConfig>
+        <MotionConfig reducedMotion="user">
+          <DeckNight.Provider value={!!theme}>{children}</DeckNight.Provider>
+        </MotionConfig>
         <div className="fixed bottom-6 left-6 z-40" aria-hidden="true">
           <Image
             src={logo[0].src}
@@ -144,9 +147,11 @@ export function SlideContainer({ children, logo, theme, page, mark }: Props) {
   const displayLogo = logo ?? HW_LOGO;
 
   return (
-    <div className={viewportClassName} data-theme={theme ? "dark" : undefined}>
+    <div className={viewportClassName} data-theme={theme ? "dark" : "light"}>
       <BrandStrip />
-      <MotionConfig reducedMotion="user">{children}</MotionConfig>
+      <MotionConfig reducedMotion="user">
+        <DeckNight.Provider value={!!theme}>{children}</DeckNight.Provider>
+      </MotionConfig>
       {renderHW(displayLogo)}
     </div>
   );

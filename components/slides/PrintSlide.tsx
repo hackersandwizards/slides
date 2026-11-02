@@ -5,6 +5,7 @@ import { PrintProvider } from "../../lib/print-context";
 import { pageLabel } from "../../lib/slide-utils";
 import Image from "../ui/image";
 import { BrandStrip, HwWordmark, PageCounter } from "./SlideContainer";
+import { DeckNight } from "./SlideShell";
 
 /** One slide as a printed page: the slide, the brand strip and the corner with the page counter
  *  and the deck's logos, the h&w mark where the deck names none. `scripts/render-pdf.ts` and
@@ -21,9 +22,11 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
   return (
     <div
       className={`print-slide${presentation.theme ? ` theme-${presentation.theme}` : ""}`}
-      data-theme={presentation.theme ? "dark" : undefined}
+      data-theme={presentation.theme ? "dark" : "light"}
     >
-      <SlideComponent slide={slide} />
+      <DeckNight.Provider value={!!presentation.theme}>
+        <SlideComponent slide={slide} />
+      </DeckNight.Provider>
       <BrandStrip />
       <div className="print-watermark flex items-center gap-2">
         {page && (

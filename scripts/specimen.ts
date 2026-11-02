@@ -249,7 +249,11 @@ const partFrames = partNames.map(({ name, file }) => ({
       null,
       h(
         "div",
-        { className: "print-slide bg-section-intro", "data-hw-scale": "stage" },
+        {
+          className: "print-slide bg-section-intro",
+          "data-hw-scale": "stage",
+          "data-theme": "light",
+        },
         h("div", { className: "p-24" }, h(Fragment, null, PARTS[name]())),
       ),
     ),

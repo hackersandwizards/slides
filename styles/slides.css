@@ -756,13 +756,16 @@ html:has(.print-slide) {
   }
 }
 
+/* Reduced motion: no transition at all, so a state such as a focus ring is there the moment it
+   applies (a 0.01 ms transition left it measured mid-way). Nothing waits for transitionend; motion
+   reads the setting itself (MotionConfig in SlideContainer). */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition: none !important;
     scroll-behavior: auto !important;
   }
 }

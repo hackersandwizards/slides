@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type ReactNode } from "react";
+import { createContext, useContext, useLayoutEffect, useRef, type ReactNode } from "react";
 import type { Grounded, SlideGround } from "../../types/slide";
 
 /** Tailwind sees each class whole. */
@@ -16,8 +16,14 @@ export function groundOf(slide: Grounded): SlideGround {
   return named && named in GROUNDS ? (named as SlideGround) : "intro";
 }
 
+/** Whether the deck holding the slide stands on night (`theme-brand-dark`): SlideContainer and
+ *  PrintSlide provide it, so a day slide in a night deck stays night. */
+export const DeckNight = createContext(false);
+
 // The full-viewport frame every slide sits in, owned here so it changes in one place. A slide's
-// decoration stays its own children. It sets the brand elements' stage scale for every slide.
+// decoration stays its own children. It sets the brand elements' stage scale for every slide, and
+// its theme on every slide, "light" included: the brand's night stops at the nearest light theme,
+// so a dark page around a day slide (talks' and trainer-hub's <html>) leaves its elements day.
 export function SlideShell({
   children,
   ground = "intro",
@@ -36,6 +42,7 @@ export function SlideShell({
   className?: string;
 }) {
   const ref = useFitToSlide();
+  const deckNight = useContext(DeckNight);
   const classes = [
     "relative flex min-h-screen items-center justify-center",
     direction === "col" && "flex-col",
@@ -52,7 +59,7 @@ export function SlideShell({
       ref={ref}
       className={classes}
       data-hw-scale="stage"
-      data-theme={night ? "dark" : undefined}
+      data-theme={night || deckNight ? "dark" : "light"}
     >
       {children}
     </div>

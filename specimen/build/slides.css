@@ -3525,14 +3525,16 @@
     .hw-label[data-tone="ink"] {
       color: var(--color-ink);
     }
-    :where([data-theme="dark"]) .hw-label {
-      color: var(--color-teal-night);
-    }
-    :where([data-theme="dark"]) .hw-label[data-tone="muted"] {
-      color: var(--color-night-muted);
-    }
-    :where([data-theme="dark"]) .hw-label[data-tone="ink"] {
-      color: var(--color-night-ink);
+    @scope ([data-theme="dark"]) to ([data-theme="light"]) {
+      .hw-label {
+        color: var(--color-teal-night);
+      }
+      .hw-label[data-tone="muted"] {
+        color: var(--color-night-muted);
+      }
+      .hw-label[data-tone="ink"] {
+        color: var(--color-night-ink);
+      }
     }
     .hw-pill {
       display: inline-block;
@@ -3616,28 +3618,30 @@
     .hw-pill-remove:hover {
       opacity: 1;
     }
-    :where([data-theme="dark"]) .hw-pill {
-      color: var(--color-night-ink);
-      background: var(--hw-pill-hue-night, #47aec6);
-      @supports (color: color-mix(in lab, red, red)) {
-        background: color-mix( in srgb, var(--hw-pill-hue-night, var(--color-teal-night)) 20%, var(--color-night) );
+    @scope ([data-theme="dark"]) to ([data-theme="light"]) {
+      .hw-pill {
+        color: var(--color-night-ink);
+        background: var(--hw-pill-hue-night, #47aec6);
+        @supports (color: color-mix(in lab, red, red)) {
+          background: color-mix( in srgb, var(--hw-pill-hue-night, var(--color-teal-night)) 20%, var(--color-night) );
+        }
       }
-    }
-    :where([data-theme="dark"]) .hw-pill[data-tone="neutral"] {
-      color: color-mix(in srgb, color-mix(in srgb, white 92%, var(--color-night)) 75%, transparent);
-      @supports (color: color-mix(in lab, red, red)) {
-        color: color-mix(in srgb, var(--color-night-ink) 75%, transparent);
+      .hw-pill[data-tone="neutral"] {
+        color: color-mix(in srgb, color-mix(in srgb, white 92%, var(--color-night)) 75%, transparent);
+        @supports (color: color-mix(in lab, red, red)) {
+          color: color-mix(in srgb, var(--color-night-ink) 75%, transparent);
+        }
+        background: color-mix(in srgb, white 10%, transparent);
       }
-      background: color-mix(in srgb, white 10%, transparent);
-    }
-    :where([data-theme="dark"]) .hw-pill:is([data-variant="outline"], [data-variant="add"]) {
-      border-color: color-mix(in srgb, white 25%, transparent);
-      color: var(--color-night-ink);
-      background: transparent;
-    }
-    :where([data-theme="dark"]) .hw-pill[data-variant="add"] {
-      border-color: color-mix(in srgb, white 40%, transparent);
-      color: var(--color-night-muted);
+      .hw-pill:is([data-variant="outline"], [data-variant="add"]) {
+        border-color: color-mix(in srgb, white 25%, transparent);
+        color: var(--color-night-ink);
+        background: transparent;
+      }
+      .hw-pill[data-variant="add"] {
+        border-color: color-mix(in srgb, white 40%, transparent);
+        color: var(--color-night-muted);
+      }
     }
     .hw-card {
       box-sizing: border-box;
@@ -3656,18 +3660,20 @@
         background: color-mix(in srgb, var(--color-teal) 7%, white);
       }
     }
-    :where([data-theme="dark"]) .hw-card {
-      border-color: color-mix(in srgb, white 15%, transparent);
-      background: color-mix(in srgb, white 7%, transparent);
-    }
-    :where([data-theme="dark"]) .hw-card[data-variant="tint"] {
-      border-color: color-mix(in srgb, #47aec6 40%, transparent);
-      @supports (color: color-mix(in lab, red, red)) {
-        border-color: color-mix(in srgb, var(--color-teal-night) 40%, transparent);
+    @scope ([data-theme="dark"]) to ([data-theme="light"]) {
+      .hw-card {
+        border-color: color-mix(in srgb, white 15%, transparent);
+        background: color-mix(in srgb, white 7%, transparent);
       }
-      background: color-mix(in srgb, #47aec6 7%, transparent);
-      @supports (color: color-mix(in lab, red, red)) {
-        background: color-mix(in srgb, var(--color-teal-night) 7%, transparent);
+      .hw-card[data-variant="tint"] {
+        border-color: color-mix(in srgb, #47aec6 40%, transparent);
+        @supports (color: color-mix(in lab, red, red)) {
+          border-color: color-mix(in srgb, var(--color-teal-night) 40%, transparent);
+        }
+        background: color-mix(in srgb, #47aec6 7%, transparent);
+        @supports (color: color-mix(in lab, red, red)) {
+          background: color-mix(in srgb, var(--color-teal-night) 7%, transparent);
+        }
       }
     }
     .hw-callout {
@@ -3685,15 +3691,17 @@
     .hw-callout[data-hue="purple"] {
       --_hue: var(--color-purple);
     }
-    :where([data-theme="dark"]) .hw-callout {
-      --_hue: var(--color-teal-night);
-      background: var(--_hue);
-      @supports (color: color-mix(in lab, red, red)) {
-        background: color-mix(in srgb, var(--_hue) 7%, transparent);
+    @scope ([data-theme="dark"]) to ([data-theme="light"]) {
+      .hw-callout {
+        --_hue: var(--color-teal-night);
+        background: var(--_hue);
+        @supports (color: color-mix(in lab, red, red)) {
+          background: color-mix(in srgb, var(--_hue) 7%, transparent);
+        }
       }
-    }
-    :where([data-theme="dark"]) .hw-callout[data-hue="purple"] {
-      --_hue: var(--color-purple-night);
+      .hw-callout[data-hue="purple"] {
+        --_hue: var(--color-purple-night);
+      }
     }
     .hw-quote {
       margin-inline: 0;
@@ -3704,12 +3712,14 @@
     .hw-quote[data-tone="muted"] {
       color: var(--hw-muted, var(--color-muted));
     }
-    :where([data-theme="dark"]) .hw-quote {
-      border-left-color: var(--color-purple-night);
-      color: var(--color-night-ink);
-    }
-    :where([data-theme="dark"]) .hw-quote[data-tone="muted"] {
-      color: var(--color-night-muted);
+    @scope ([data-theme="dark"]) to ([data-theme="light"]) {
+      .hw-quote {
+        border-left-color: var(--color-purple-night);
+        color: var(--color-night-ink);
+      }
+      .hw-quote[data-tone="muted"] {
+        color: var(--color-night-muted);
+      }
     }
     .hw-table {
       border-collapse: collapse;
@@ -3734,11 +3744,13 @@
       text-transform: var(--type-label-case);
       color: var(--hw-muted, var(--color-muted));
     }
-    :where([data-theme="dark"]) .hw-table :is(th, td) {
-      border-bottom-color: color-mix(in srgb, white 15%, transparent);
-    }
-    :where([data-theme="dark"]) .hw-table th {
-      color: var(--color-night-muted);
+    @scope ([data-theme="dark"]) to ([data-theme="light"]) {
+      .hw-table :is(th, td) {
+        border-bottom-color: color-mix(in srgb, white 15%, transparent);
+      }
+      .hw-table th {
+        color: var(--color-night-muted);
+      }
     }
     :is(.hw-link, .hw-links a) {
       color: var(--color-teal-dark);
@@ -3749,11 +3761,13 @@
     :is(.hw-link, .hw-links a):hover {
       color: var(--color-ink);
     }
-    :where([data-theme="dark"]) :is(.hw-link, .hw-links a) {
-      color: var(--color-teal-night);
-    }
-    :where([data-theme="dark"]) :is(.hw-link, .hw-links a):hover {
-      color: var(--color-white);
+    @scope ([data-theme="dark"]) to ([data-theme="light"]) {
+      :is(.hw-link, .hw-links a) {
+        color: var(--color-teal-night);
+      }
+      :is(.hw-link, .hw-links a):hover {
+        color: var(--color-white);
+      }
     }
     :is(.hw-focus-ring :focus-visible, .hw-focus-ring:focus-visible) {
       outline: var(--hw-focus-width, 3px) solid var(--color-purple);
@@ -3762,8 +3776,10 @@
     .hw-focus-ring :is(p, li, dt, dd, td, th, blockquote, figcaption) > a:focus-visible {
       border-radius: var(--radius-sm);
     }
-    :where([data-theme="dark"]) :is(.hw-focus-ring :focus-visible, .hw-focus-ring:focus-visible), :is(.hw-focus-ring[data-theme="dark"] :focus-visible) {
-      outline-color: var(--color-purple-night);
+    @scope ([data-theme="dark"]) to ([data-theme="light"]) {
+      :is(.hw-focus-ring :focus-visible, .hw-focus-ring:focus-visible) {
+        outline-color: var(--color-purple-night);
+      }
     }
     .hw-icon-button {
       display: inline-flex;
@@ -3801,12 +3817,14 @@
     .hw-icon-button[data-on="picture"]:hover {
       background: var(--color-teal-dark);
     }
-    :where([data-theme="dark"]) .hw-icon-button:not([data-on="picture"]) {
-      color: var(--color-white);
-      background: color-mix(in srgb, white 15%, transparent);
-    }
-    :where([data-theme="dark"]) .hw-icon-button:not([data-on="picture"]):hover {
-      background: color-mix(in srgb, white 25%, transparent);
+    @scope ([data-theme="dark"]) to ([data-theme="light"]) {
+      .hw-icon-button:not([data-on="picture"]) {
+        color: var(--color-white);
+        background: color-mix(in srgb, white 15%, transparent);
+      }
+      .hw-icon-button:not([data-on="picture"]):hover {
+        background: color-mix(in srgb, white 25%, transparent);
+      }
     }
     .hw-strip {
       height: var(--hw-strip, 3px);
@@ -3853,8 +3871,10 @@
     .hw-code-underline {
       text-decoration: underline;
     }
-    :where([data-theme="dark"]) .hw-code {
-      background: var(--color-night-2);
+    @scope ([data-theme="dark"]) to ([data-theme="light"]) {
+      .hw-code {
+        background: var(--color-night-2);
+      }
     }
   }
 }
@@ -4410,7 +4430,7 @@ html:has(.print-slide) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition: none !important;
     scroll-behavior: auto !important;
   }
 }
