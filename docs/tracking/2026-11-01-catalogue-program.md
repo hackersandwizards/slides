@@ -3,7 +3,7 @@
 Stand 2026-11-01, Phase 1 (Analyse und Plan) und Phase 2 ohne offene Entscheidung (Basis-Runde,
 vier Typen bis zum Plateau, Sketch-Variante, v0.12.0), dazu Phase 2b mit `video`, `image` und
 `linked-image` (v0.14.0). Ziel und
-Zeilen je Phase: [GOAL.md](../../GOAL.md). Entscheidungen: `docs/tracking/decisions/items.js`.
+Arbeit je Phase: die `work-phase-*`-Items in [items/](items/), Entscheidungen ebenda.
 
 Benedikt am 01.11. (von Ada weitergegeben): «Wir scheinen da auch bei den Folien gerade ziemlich
 viele Duplikate zu haben, also einfach Folientypen, die super ähnlich zueinander sind. Dafür
