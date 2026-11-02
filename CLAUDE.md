@@ -57,8 +57,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   Its lengths and sizes are measured off the print route at 1920x1080.
 - `specimen/`: `slide-catalogue.ts`, the specimen deck, every slide type and variant with fictional
   content, its images, and the specimen page `index.html` with its compiled `build/slides.css`, a Parts section (every part of
-  `primitives.tsx` and `SlideChrome.tsx` in each variant, with the slide types using it), then one
-  slide per slide type and one per content block in print mode, which the brand kit links. `bun run specimen` (`scripts/specimen.ts`)
+  `primitives.tsx` and `SlideChrome.tsx` in each variant, with the slide types using it), then the
+  catalogue in print mode: one slide per slide type (anchored by its name, which the brand kit links), per further variant
+  and per content block, each under one or two of the 13 communication jobs, with a search over all. `bun run specimen` (`scripts/specimen.ts`)
   writes the page; it is never committed: `bun run check` writes it before the tests, `bun run dev`
   on each request for a page, and the Pages workflow for the public page. The page's Shared
   elements section shows each brand element the slides use as a tile and each exception with its

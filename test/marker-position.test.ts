@@ -186,8 +186,10 @@ it("every step number on the specimen slides sits on its line", async () => {
   let found = 0;
   try {
     await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: SCALE });
+    // One navigation sets the base every frame's relative links resolve against: setContent keeps
+    // the URL, and reloading the page per frame outgrew the timeout once it showed every variant.
+    await page.goto(`file://${join(SPECIMEN, "index.html")}`);
     for (const { title, doc } of frames) {
-      await page.goto(`file://${join(SPECIMEN, "index.html")}`);
       await page.setContent(doc, { waitUntil: "load" });
       await page.evaluate(() => document.fonts.ready.then(() => undefined));
       const read = async (clip: Box) =>
