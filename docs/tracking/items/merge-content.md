@@ -1,6 +1,7 @@
 ---
 kind: decision
 status: assumed
+evidence: "slides a7f65fa (released v0.27.0)"
 priority: 2
 order: 1007
 area: slides

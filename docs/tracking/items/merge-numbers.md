@@ -1,6 +1,7 @@
 ---
 kind: decision
 status: assumed
+evidence: "slides 5ee9d7a (v0.26.2, leading words), 2244788 (released v0.27.0)"
 priority: 2
 order: 1006
 area: slides
