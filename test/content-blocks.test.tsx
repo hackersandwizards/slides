@@ -218,6 +218,32 @@ describe("merged card and number shapes", () => {
     expect(c.querySelector('.hw-card[data-variant="tint"]')?.textContent).toBe("Highb");
     expect([...c.querySelectorAll(".hw-card li")].map((li) => li.textContent)).toEqual(["x", "y"]);
   });
+
+  // The replacements keep the density of the blocks they replace (v0.27.1): drawn at the plain
+  // cards' sizes, a four-column slide of lists fell from 0.84 to 0.75 and a seven-item
+  // labeled grid from 0.81 to 0.74 in talks' density guard. Dense cards carry no mark above the
+  // title, the old blocks' title size and padding, and the body in the muted card text.
+  it("draws labeled grid and four-column blocks as dense cards", () => {
+    const c = content([
+      { type: "labeled-grid", items: [{ title: "Low", subtitle: "a" }] },
+      { type: "four-column", columns: [1, 2, 3, 4].map((n) => ({ title: `T${n}`, items: ["x"] })) },
+    ]);
+    const [grid, four] = c.querySelectorAll(".hw-card");
+    expect(c.querySelector(".hw-card .h-1\\.5")).toBeNull();
+    expect(grid.className).toContain("card-pad-6");
+    expect(grid.querySelector("h3")?.className).toContain("text-xl");
+    expect(grid.querySelector("p")?.className).toContain("card-text-lg");
+    expect(four.className).toContain("card-pad-5");
+    expect(four.querySelector("h3")?.className).toContain("text-lg");
+    expect(four.querySelector("li")?.className).toContain("card-text-base");
+  });
+
+  // A cards block without `dense` keeps its mark and sizes.
+  it("keeps plain cards at their own sizes", () => {
+    const c = content([{ type: "cards", items: [{ title: "A", text: "a" }] }]);
+    expect(c.querySelector(".hw-card .h-1\\.5")).not.toBeNull();
+    expect(c.querySelector(".hw-card")?.className).toContain("card-pad-8/9");
+  });
 });
 
 describe("pipeline into flow (merge-flow)", () => {

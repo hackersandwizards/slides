@@ -225,6 +225,10 @@ export type VisualBlock =
       columns?: 1 | 2 | 3 | 4;
       /** Shows the cards one per arrow key instead of all on arrival. */
       reveal?: boolean;
+      /** Draws the cards at the sizes of the `four-column` and `labeled-grid` blocks and the
+       *  `regular` sections they replace: no mark above a card without icon or number, a smaller
+       *  title, the body in the muted card text. For cards carrying more text than a few words. */
+      dense?: boolean;
     };
 
 export interface ContentSlide extends Grounded {

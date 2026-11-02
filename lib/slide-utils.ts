@@ -157,6 +157,7 @@ export function labeledGridAsCards(block: Block<"labeled-grid">): Block<"cards">
     highlight: indexOf(block.items.findIndex((item) => item.highlighted)),
     columns: (block.columns ?? (block.items.length % 3 === 0 ? 3 : 2)) as 1 | 2 | 3 | 4,
     reveal: block.reveal,
+    dense: true,
   };
 }
 
@@ -166,6 +167,7 @@ export function fourColumnAsCards(block: Block<"four-column">): Block<"cards"> {
     type: "cards",
     items: block.columns.map((c) => ({ title: c.title, text: c.subtitle, items: c.items })),
     columns: Math.min(Math.max(block.columns.length, 1), 4) as 1 | 2 | 3 | 4,
+    dense: true,
   };
 }
 
@@ -298,7 +300,9 @@ export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlid
               icon: s.icon,
               items: s.items,
             })),
-            columns: Math.min(titled.length, 4) as 3 | 4,
+            // Five and six sections stand in three columns, so a column never narrows to a quarter.
+            columns: titled.length === 4 || titled.length > 6 ? 4 : 3,
+            dense: true,
           },
         ]
       : titled.length === 2

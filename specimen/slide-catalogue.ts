@@ -679,6 +679,32 @@ const slides: Slide[] = [
     ],
     notes: "visual blocks: flow with a badge per step and a frame with label, notes and footer.",
   },
+  {
+    type: "content",
+    sectionLabel: "Visual: cards, dense",
+    headline: "Seven cards with a sentence each, at the density of the grids they replace",
+    content: [
+      {
+        type: "paragraph",
+        text: "Dense cards carry more text: no mark above the title, a smaller title, muted body.",
+      },
+      {
+        type: "cards",
+        dense: true,
+        columns: 4,
+        items: [
+          { title: "Shared stance", text: "A written policy gives teams room to try things." },
+          { title: "Version control", text: "The safety net once the pace goes up." },
+          { title: "Reachable docs", text: "Documents and code the agent can find on its own." },
+          { title: "Small batches", text: "Speed turns into value only in small steps." },
+          { title: "User focus", text: "Without it, more output helps nobody." },
+          { title: "Internal platform", text: "Paved paths let the gains spread." },
+          { title: "Clean data", text: "One reachable source amplifies every team." },
+        ],
+      },
+    ],
+    notes: "visual blocks: cards with dense, four columns, a sentence per card.",
+  },
 
   {
     type: "regular",

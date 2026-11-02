@@ -30,4 +30,19 @@ describe("regular slide", () => {
     expect(container.querySelector(".opacity-60")).toBeNull();
     expect(container.querySelector(".opacity-0")).toBeNull();
   });
+
+  // Three and more titled sections are dense cards, five in three columns (v0.27.1): drawn as
+  // plain cards in four columns, a five-section slide fell from above 0.9 to 0.75 in talks.
+  it("draws five titled sections as dense cards in three columns", () => {
+    const SlideComponent = slideComponents.regular;
+    const slide = {
+      type: "regular",
+      headline: "Headline",
+      sections: [1, 2, 3, 4, 5].map((n) => ({ title: `S${n}`, text: "t" })),
+    };
+    const { container } = render(<SlideComponent slide={slide as Slide} />);
+    const grid = container.querySelector<HTMLElement>(".hw-card")?.parentElement;
+    expect(grid?.style.gridTemplateColumns).toBe("repeat(3, minmax(0, 1fr))");
+    expect(container.querySelector(".hw-card .h-1\\.5")).toBeNull();
+  });
 });

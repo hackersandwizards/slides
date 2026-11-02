@@ -733,14 +733,24 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
 function Cards({ block }: { block: Of<"cards"> }) {
   const n = block.items.length;
   const cols = block.columns ?? (n === 4 ? 2 : Math.min(n, 3));
-  // Four columns leave a card about a quarter of the slide: the title steps down one size.
-  const label = cols >= 4 ? LABEL.replace("text-4xl", "text-3xl") : LABEL;
+  const wide = cols >= 4;
+  const dense = !!block.dense;
+  // Four columns leave a card about a quarter of the slide: the title steps down one size. Dense
+  // cards keep the sizes of the four-column and labeled-grid blocks they replace (v0.26).
+  const label = dense
+    ? `font-sans font-bold ${wide ? "text-lg" : "text-xl"}`
+    : wide
+      ? LABEL.replace("text-4xl", "text-3xl")
+      : LABEL;
+  const text = dense ? "card-text-lg text-text-muted" : `${CAPTION} text-text`;
+  const entry = dense ? "card-text-base text-text-muted" : `${CAPTION} text-text`;
+  const pad = dense ? (wide ? "card-pad-5" : "card-pad-6") : wide ? "card-pad-6" : "card-pad-8/9";
   // With `reveal`, the cards appear one per arrow key; otherwise all show at once.
   const { revealedCount } = useProgressiveReveal({ totalSteps: n, startFull: !block.reveal });
   const from = block.numberFrom ?? 1;
   return (
     <div
-      className="grid w-full gap-6"
+      className={`grid w-full ${dense ? "gap-5" : "gap-6"}`}
       style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
     >
       {block.items.map((item, i) => {
@@ -751,7 +761,7 @@ function Cards({ block }: { block: Of<"cards"> }) {
             key={i}
             inert={!shown}
             tone={on ? "primary" : "neutral"}
-            className={`flex flex-col gap-5 transition-all duration-500 ${cols >= 4 ? "card-pad-6" : "card-pad-8/9"} ${shown ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
+            className={`flex flex-col transition-all duration-500 ${dense ? "gap-1" : "gap-5"} ${pad} ${shown ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
           >
             {block.numbered ? (
               <NumberTile size="lg">{i + from}</NumberTile>
@@ -760,7 +770,7 @@ function Cards({ block }: { block: Of<"cards"> }) {
                 <Icon name={item.icon} className="h-9 w-9" />
               </NumberTile>
             ) : (
-              <span className="h-1.5 w-16 bg-primary" aria-hidden />
+              !dense && <span className="h-1.5 w-16 bg-primary" aria-hidden />
             )}
             {item.title && (
               <h3 className={`${label} ${on ? "text-primary" : "text-text"}`}>
@@ -768,16 +778,14 @@ function Cards({ block }: { block: Of<"cards"> }) {
               </h3>
             )}
             {item.text && (
-              <p className={`${CAPTION} text-text [&_strong]:text-text`}>
-                {renderMarkdown(item.text)}
-              </p>
+              <p className={`${text} [&_strong]:text-text`}>{renderMarkdown(item.text)}</p>
             )}
             {item.items && (
-              <ul className="flex flex-col gap-3">
-                {item.items.map((entry, j) => (
-                  <li key={j} className={`flex items-baseline gap-3 ${CAPTION} text-text`}>
+              <ul className={`flex flex-col ${dense ? "mt-2 gap-2" : "gap-3"}`}>
+                {item.items.map((line, j) => (
+                  <li key={j} className={`flex items-baseline gap-3 ${entry}`}>
                     <span className="hw-marker" />
-                    <span>{renderMarkdown(entry)}</span>
+                    <span>{renderMarkdown(line)}</span>
                   </li>
                 ))}
               </ul>
