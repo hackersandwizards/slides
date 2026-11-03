@@ -353,13 +353,10 @@ function ContentBlockRenderer({
   block,
   centered,
   sectionTheme,
-  besideBars,
 }: {
   block: ContentBlock;
   centered?: boolean;
   sectionTheme?: SectionTheme;
-  /** The slide carries a bars block: a callout ends level with the bars' track, not the values. */
-  besideBars?: boolean;
 }) {
   switch (block.type) {
     case "flow":
@@ -689,7 +686,7 @@ function ContentBlockRenderer({
       }
       return (
         <div
-          className={`max-w-full ${block.fullWidth ? "w-full" : "w-fit"} ${besideBars ? "md:w-[calc(100%-var(--slide-callout-beside-bars))]" : ""} ${CALLOUT_VARIANTS[block.variant ?? "info"]}`}
+          className={`max-w-full ${block.fullWidth ? "w-full" : "w-fit"} ${CALLOUT_VARIANTS[block.variant ?? "info"]}`}
           data-hue={(block.variant ?? "info") === "info" ? "purple" : undefined}
           data-hw-exception={(block.variant ?? "info") === "info" ? undefined : "callout-status"}
         >
@@ -819,7 +816,6 @@ function CenteredContentSlide({ slide }: Props) {
 
 function StandardContentSlide({ slide }: Props) {
   const styles = getSectionStyle(slide.sectionTheme);
-  const hasBars = slide.content.some((b) => b.type === "bars");
   const pictures = slide.content.filter((b) => MEDIA_BLOCKS.has(b.type)).length;
 
   return (
@@ -853,11 +849,7 @@ function StandardContentSlide({ slide }: Props) {
           <div className={`slide-blocks space-y-6 ${pictures > 1 ? "slide-media-stack" : ""}`}>
             {slide.content.map((block, index) => (
               <BlurFade key={index} delay={0.2 + index * 0.1} duration={0.5}>
-                <ContentBlockRenderer
-                  block={block}
-                  sectionTheme={slide.sectionTheme}
-                  besideBars={hasBars}
-                />
+                <ContentBlockRenderer block={block} sectionTheme={slide.sectionTheme} />
               </BlurFade>
             ))}
           </div>

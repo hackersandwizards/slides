@@ -13,18 +13,35 @@ const content = (blocks: unknown[]) =>
   ).container;
 
 describe("content blocks", () => {
-  // Beside bars a callout leaves the value column free, but only where that column exists:
-  // on a phone the value drops under the track and the callout takes the full width.
-  it("narrows a callout beside bars from the md breakpoint only", () => {
+  // A callout beside bars runs the full width, as on any other slide (code.talks panel 02.11.).
+  it("gives a full-width callout beside bars the full width", () => {
     const c = content([
       { type: "bars", bars: [{ label: "a", value: 50, display: "50%" }] },
-      { type: "callout", text: "Note" },
+      { type: "callout", text: "Note", fullWidth: true },
     ]);
     const box = c.querySelector("p.text-xl")?.parentElement;
-    expect(box?.className).toContain("md:w-[calc(100%-var(--slide-callout-beside-bars))]");
-    expect(box?.className.split(" ")).not.toContain(
-      "w-[calc(100%-var(--slide-callout-beside-bars))]",
-    );
+    expect(box?.className.split(" ")).toContain("w-full");
+    expect(box?.className).not.toContain("beside-bars");
+  });
+
+  // A named scale is numbered at its ends and quarters; context bars set label and value muted.
+  it("numbers a named scale and mutes the context bars", () => {
+    const c = content([
+      {
+        type: "bars",
+        max: 200,
+        bars: [
+          { label: "Kept", value: 150, highlight: true },
+          { label: "Dropped", value: 50 },
+        ],
+      },
+    ]);
+    const ticks = [...c.querySelectorAll("[aria-hidden] > span")].map((s) => s.textContent);
+    expect(ticks).toEqual(["0", "50", "100", "150", "200"]);
+    expect(c.querySelector("span.text-text-muted")?.textContent).toBe("Dropped");
+    expect(
+      [...c.querySelectorAll("span")].find((s) => s.textContent === "Kept")?.className,
+    ).toContain("text-primary");
   });
 
   // An empty labels object adds no label column.

@@ -520,9 +520,33 @@ function Bars({ block }: { block: Of<"bars"> }) {
       />
     </div>
   );
+  // With a highlight, a bar that is not one is context: its label and value in the muted grey at
+  // the regular weight, so the eye lands on the highlighted ones first (code.talks panel 02.11.:
+  // dropped options in bold ink read stronger than the teal ones).
+  const context = (bar: (typeof bars)[number]) => anyHighlight && !bar.highlight;
+  const tone = (bar: (typeof bars)[number], weight: string) =>
+    context(bar)
+      ? "font-normal text-text-muted"
+      : `${weight} ${bar.highlight ? "text-primary" : "text-text"}`;
+  // A named scale is numbered under the last track at its ends and quarters, in the track's
+  // column of the bars' grid.
+  const scale = block.max != null && (
+    <div aria-hidden className={`${CAPTION} relative mt-3 text-text-muted tabular-nums`}>
+      {/* The 0 stands in the flow and gives the row its height; the others sit on their mark. */}
+      {[0, 25, 50, 75, 100].map((q) => (
+        <span
+          key={q}
+          className={`${q ? "absolute" : "inline-block"} -translate-x-1/2`}
+          style={q ? { left: `${q}%` } : undefined}
+        >
+          {Math.round((max * q) / 100)}
+        </span>
+      ))}
+    </div>
+  );
   const value = (bar: (typeof bars)[number]) => (
     <span
-      className={`font-heading ${inline ? "text-4xl" : "text-5xl"} font-bold whitespace-nowrap ${bar.highlight ? "text-primary" : "text-text"}`}
+      className={`font-heading ${inline ? "text-4xl" : "text-5xl"} whitespace-nowrap ${tone(bar, "font-bold")}`}
     >
       {bar.display ?? (bar.from != null ? `${bar.from}–${bar.value}` : bar.value)}
     </span>
@@ -534,7 +558,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
           inline ? (
             <div key={i} className="grid grid-cols-[18rem_minmax(0,1fr)_14rem] items-center gap-8">
               <span
-                className={`font-sans text-3xl leading-tight font-semibold text-balance ${bar.highlight ? "text-primary" : "text-text"}`}
+                className={`font-sans text-3xl leading-tight text-balance ${tone(bar, "font-semibold")}`}
               >
                 {renderMarkdown(bar.label)}
               </span>
@@ -543,13 +567,13 @@ function Bars({ block }: { block: Of<"bars"> }) {
             </div>
           ) : (
             <div key={i}>
-              <span className={`${LABEL} ${bar.highlight ? "text-primary" : "text-text"}`}>
+              <span
+                className={`font-sans text-4xl leading-tight tracking-tight text-balance ${tone(bar, "font-semibold")}`}
+              >
                 {renderMarkdown(bar.label)}
               </span>
               {/* A track shows the scale's full length when the block names one; the value
-                  stands in its own column right of the track, level with its bar. The column
-                  and its gap take 16rem, which a callout on the same slide leaves free
-                  (ContentSlide). */}
+                  stands in its own column right of the track, level with its bar. */}
               <div className="mt-3 grid grid-cols-[minmax(0,1fr)_14rem] items-center gap-8">
                 {track(bar)}
                 {value(bar)}
@@ -558,6 +582,14 @@ function Bars({ block }: { block: Of<"bars"> }) {
           ),
         )}
       </div>
+      {scale &&
+        (inline ? (
+          <div className="grid grid-cols-[18rem_minmax(0,1fr)_14rem] gap-8">
+            <div className="col-start-2">{scale}</div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-[minmax(0,1fr)_14rem] gap-8">{scale}</div>
+        ))}
       <Source text={block.source} />
     </div>
   );
