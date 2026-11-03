@@ -5,10 +5,8 @@ import faviconSvg from "@hackersandwizards/brand/logos/favicon.svg?url&no-inline
 
 <link rel="icon" href={faviconIco} sizes="32x32" />
 <link rel="icon" href={faviconSvg} type="image/svg+xml" />
-{
-  /* The stylesheet bundle can open with a story's components layer, ahead of Tailwind's order, so
-    Tailwind's base would beat brand's elements: register the order first. */
-}
+{/* The stylesheet bundle can open with a story's components layer, ahead of Tailwind's order, so
+    Tailwind's base would beat brand's elements: register the order first. */}
 <style is:inline>
   @layer properties, theme, base, components, utilities;
 </style>

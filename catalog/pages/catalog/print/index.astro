@@ -20,127 +20,347 @@ const jobButtons = (Object.keys(JOBS) as Job[])
 
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Slide specimen, @hackersandwizards/slides</title>
-<meta name="description" content="Every slide type of the h&amp;w slide engine with each of its variants, its content blocks, parts and shared elements, as they look in a printed deck.">
-<!-- The faces the first screen sets, fetched with the stylesheets: found late through them, their
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Slide specimen, @hackersandwizards/slides</title>
+    <meta
+      name="description"
+      content="Every slide type of the h&amp;w slide engine with each of its variants, its content blocks, parts and shared elements, as they look in a printed deck."
+    />
+    <!-- The faces the first screen sets, fetched with the stylesheets: found late through them, their
      swap moved the parts table (Lighthouse CLS 0.131 on desktop, 03.11.2026). -->
-{["inter-latin-400-normal", "inter-latin-500-normal", "inter-latin-600-normal", "jetbrains-mono-latin-700-normal"].map((face) => (
-<link rel="preload" as="font" type="font/woff2" crossorigin href={`${brandHref}/tokens/fonts/${face}.woff2`}>
-))}
-<link rel="icon" href={`${brandHref}/logos/favicon.ico`} sizes="32x32">
-<link rel="icon" href={`${brandHref}/logos/favicon.svg`} type="image/svg+xml">
-<link rel="stylesheet" href={`${brandHref}/generated/tokens.root.css`}>
-<link rel="stylesheet" href={`${brandHref}/expert/header.css`}>
-<link rel="stylesheet" href="build/slides.css">
-<style is:inline>
-body { margin: 0; background: var(--color-tint); color: var(--color-ink); font-family: var(--font-sans); }
-.intro { margin: 1.5rem 0 2rem; max-width: 60rem; }
-h1 { font: 700 1.5rem/1.25 var(--font-mono); letter-spacing: -0.01em; margin: 0 0 0.5rem; }
-h2 { font: 700 1.125rem/1.3 var(--font-mono); margin: 0 0 1rem; }
-.intro p { margin: 0 0 0.5rem; font-size: 1rem; }
-.intro .setup { font-size: 0.875rem; color: var(--color-muted); }
-main { display: grid; grid-template-columns: repeat(auto-fill, 480px); gap: 2rem 1.5rem; padding-bottom: 4rem; }
-figure { margin: 0; scroll-margin-top: 5.5rem; }
-figcaption { font: 600 0.875rem/1.4 var(--font-mono); margin-bottom: 0.5rem; }
-figcaption a { color: inherit; }
-.frame { width: 480px; height: 270px; overflow: hidden; outline: 1px solid var(--color-border); }
-iframe { width: 1920px; height: 1080px; border: 0; transform: scale(0.25); transform-origin: 0 0; }
-figure:target { grid-column: 1 / -1; }
-figure:target .frame { width: 1440px; height: 810px; }
-figure:target iframe { transform: scale(0.75); }
-.layers { max-width: 60rem; font-size: 1rem; margin: 0 0 1rem; }
-table.parts { border-collapse: collapse; margin: 0 0 2rem; max-width: 80rem; font-size: 0.875rem; }
-.elements { grid-template-columns: repeat(auto-fill, 640px); }
-.element figcaption { display: flex; gap: 0.75rem; align-items: baseline; }
-.element .from, .exception .setup { font-weight: 400; color: var(--color-muted); }
-.exception { max-width: 60rem; margin: 0 0 2rem; }
-.exception h3 { font: 600 1rem/1.4 var(--font-mono); margin: 0 0 0.25rem; }
-.exception p { margin: 0 0 0.5rem; }
-.catalogue { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 2rem; align-items: start; }
-.jobs { position: sticky; top: 5.5rem; display: flex; flex-direction: column; gap: 0.125rem; }
-.jobs button { display: flex; justify-content: space-between; gap: 1rem; font: 500 0.9375rem/1.4 var(--font-sans); color: var(--color-ink); background: none; border: 0; border-radius: var(--radius-sm); padding: 0.375rem 0.75rem; text-align: left; cursor: pointer; }
-.jobs button span { color: var(--color-muted); font-variant-numeric: tabular-nums; }
-.jobs button[aria-pressed="true"] { background: var(--color-ink); color: var(--color-tint); }
-.jobs button[aria-pressed="true"] span { color: inherit; }
-.find { box-sizing: border-box; width: 100%; max-width: 30rem; font: 1rem/1.4 var(--font-sans); padding: 0.5rem 0.75rem; margin: 0 0 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: none; color: var(--color-ink); }
-.meta { display: none; font-size: 0.875rem; color: var(--color-muted); margin: 0.5rem 0 0; }
-figure:target .meta { display: block; }
-.note { max-width: 480px; font-size: 0.875rem; color: var(--color-muted); margin: 0; }
-table.parts th, table.parts td { text-align: left; vertical-align: top; padding: 0.375rem 1rem 0.375rem 0; border-bottom: 1px solid var(--color-border); }
-</style>
-</head>
-<body>
-<header class="hw-header">
-<div class="hw-header-strip"></div>
-<div class="hw-header-row hw-container">
-<a class="hw-header-brand" href="#" aria-label="hackers&amp;wizards Slides"><img class="hw-header-logo" src={`${brandHref}/logos/lockup-screen.svg`} alt="" width="8042" height="1489"><img class="hw-header-logo-night" src={`${brandHref}/logos/lockup-screen-night.svg`} alt="" width="8196" height="1641"><span class="hw-header-product">Slides</span></a>
-<nav class="hw-header-nav" aria-label="Catalogues">
-<a class="hw-header-link" href="https://hackersandwizards.github.io/brand/">Brand</a>
-<a class="hw-header-link" href="#" aria-current="page">Slides</a>
-<a class="hw-header-link" href="https://hackersandwizards.github.io/documents/catalog/">Dokumente</a>
-</nav>
-</div>
-</header>
-<div class="hw-container">
-<div class="intro">
-<h1>Slide specimen</h1>
-<p>Every slide type of the h&amp;w slide engine with each of its variants, and the content blocks a content slide is built from, as they look in a printed deck. All content is made up. Click a name to see its slide at 1440 px.</p>
-<p class="setup">Built by <code>bun run build</code> from <code>specimen/slide-catalogue.ts</code> into <code>dist/</code>, where it also opens from the disk: fonts and logos load from <code>dist/brand/</code>. <code>bun run dev</code> serves it at <code>http://127.0.0.1:4335/slides/catalog/print/</code>, beside the <a href="../">catalog</a> of every slide type and part.</p>
-</div>
-<h2 id="parts">Parts</h2>
-<p class="layers">Three layers, as in the document engine. <strong>Tokens</strong>: <code>styles/tokens.css</code> names every value a slide draws (colour, type step, tracking, leading, measure, rule) from <code>@hackersandwizards/brand</code>; <code>test/tokens.test.ts</code> fails on a raw length or colour anywhere else. <strong>Parts</strong> below are built from tokens only, each with its variants. <strong>Slide types</strong> compose parts; a difference between two types is a part's variant.</p>
-<table class="parts"><thead><tr><th>Part</th><th>What it is</th><th>Used by</th></tr></thead><tbody>
-<Fragment set:html={partRows} />
-</tbody></table>
-<main>
-<Fragment set:html={partTiles} />
-</main>
-<h2 id="elements">Shared elements</h2>
-<p class="layers">The elements the slides take from <code>@hackersandwizards/brand</code>, each at the stage scale (<code>data-hw-scale="stage"</code>, which every slide sets), on day and on night, then the elements the slides keep as their own, each with its reason. <code>brand-elements</code> measures both, last in <code>bun run check</code>, here and on <a href="frames.html">every specimen slide</a>.</p>
-<main class="elements">
-<Fragment set:html={usesTiles} />
-</main>
-<Fragment set:html={exceptionSections} />
-<h2 id="catalogue">Catalogue</h2>
-<p class="layers">Every slide type, variant and content block, by the job a slide does. An entry may sit under two jobs. The search finds every type, block and variant name, and the old names of types that now draw through another. Click a name to see its slide at 1440 px with its jobs.</p>
-<div class="catalogue">
-<nav class="jobs" aria-label="Communication jobs">
-<button type="button" data-job="" aria-pressed="true">All <span>{entries.length}</span></button>
-<Fragment set:html={jobButtons} />
-</nav>
-<div>
-<input type="search" id="find" class="find" placeholder="Search a type, block, variant or job" aria-label="Search the catalogue">
-<main class="tiles">
-<Fragment set:html={entries.map((e) => e.html).join("\n")} />
-</main>
-<p id="none" hidden>No entry matches.</p>
-</div>
-</div>
-</div>
-<script is:inline>
-const tiles = [...document.querySelectorAll(".tiles figure")];
-const find = document.getElementById("find");
-let job = "";
-const apply = () => {
-  const q = find.value.trim().toLowerCase();
-  let shown = 0;
-  for (const t of tiles) {
-    const on = (!job || t.dataset.jobs.split(" ").includes(job)) && (!q || t.dataset.search.includes(q));
-    t.hidden = !on;
-    shown += on;
-  }
-  document.getElementById("none").hidden = shown > 0;
-};
-for (const b of document.querySelectorAll(".jobs button"))
-  b.addEventListener("click", () => {
-    job = b.dataset.job;
-    for (const o of document.querySelectorAll(".jobs button")) o.setAttribute("aria-pressed", String(o === b));
-    apply();
-  });
-find.addEventListener("input", apply);
-</script>
-</body>
+    {[
+      "inter-latin-400-normal",
+      "inter-latin-500-normal",
+      "inter-latin-600-normal",
+      "jetbrains-mono-latin-700-normal",
+    ].map((face) => (
+      <link
+        rel="preload"
+        as="font"
+        type="font/woff2"
+        crossorigin
+        href={`${brandHref}/tokens/fonts/${face}.woff2`}
+      />
+    ))}
+    <link rel="icon" href={`${brandHref}/logos/favicon.ico`} sizes="32x32" />
+    <link rel="icon" href={`${brandHref}/logos/favicon.svg`} type="image/svg+xml" />
+    <link rel="stylesheet" href={`${brandHref}/generated/tokens.root.css`} />
+    <link rel="stylesheet" href={`${brandHref}/expert/header.css`} />
+    <link rel="stylesheet" href="build/slides.css" />
+    <style is:inline>
+      body {
+        margin: 0;
+        background: var(--color-tint);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+      }
+      .intro {
+        margin: 1.5rem 0 2rem;
+        max-width: 60rem;
+      }
+      h1 {
+        font: 700 1.5rem/1.25 var(--font-mono);
+        letter-spacing: -0.01em;
+        margin: 0 0 0.5rem;
+      }
+      h2 {
+        font: 700 1.125rem/1.3 var(--font-mono);
+        margin: 0 0 1rem;
+      }
+      .intro p {
+        margin: 0 0 0.5rem;
+        font-size: 1rem;
+      }
+      .intro .setup {
+        font-size: 0.875rem;
+        color: var(--color-muted);
+      }
+      main {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 480px);
+        gap: 2rem 1.5rem;
+        padding-bottom: 4rem;
+      }
+      figure {
+        margin: 0;
+        scroll-margin-top: 5.5rem;
+      }
+      figcaption {
+        font: 600 0.875rem/1.4 var(--font-mono);
+        margin-bottom: 0.5rem;
+      }
+      figcaption a {
+        color: inherit;
+      }
+      .frame {
+        width: 480px;
+        height: 270px;
+        overflow: hidden;
+        outline: 1px solid var(--color-border);
+      }
+      iframe {
+        width: 1920px;
+        height: 1080px;
+        border: 0;
+        transform: scale(0.25);
+        transform-origin: 0 0;
+      }
+      figure:target {
+        grid-column: 1 / -1;
+      }
+      figure:target .frame {
+        width: 1440px;
+        height: 810px;
+      }
+      figure:target iframe {
+        transform: scale(0.75);
+      }
+      .layers {
+        max-width: 60rem;
+        font-size: 1rem;
+        margin: 0 0 1rem;
+      }
+      table.parts {
+        border-collapse: collapse;
+        margin: 0 0 2rem;
+        max-width: 80rem;
+        font-size: 0.875rem;
+      }
+      .elements {
+        grid-template-columns: repeat(auto-fill, 640px);
+      }
+      .element figcaption {
+        display: flex;
+        gap: 0.75rem;
+        align-items: baseline;
+      }
+      .element .from,
+      .exception .setup {
+        font-weight: 400;
+        color: var(--color-muted);
+      }
+      .exception {
+        max-width: 60rem;
+        margin: 0 0 2rem;
+      }
+      .exception h3 {
+        font: 600 1rem/1.4 var(--font-mono);
+        margin: 0 0 0.25rem;
+      }
+      .exception p {
+        margin: 0 0 0.5rem;
+      }
+      .catalogue {
+        display: grid;
+        grid-template-columns: 15rem minmax(0, 1fr);
+        gap: 2rem;
+        align-items: start;
+      }
+      .jobs {
+        position: sticky;
+        top: 5.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+      }
+      .jobs button {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        font: 500 0.9375rem/1.4 var(--font-sans);
+        color: var(--color-ink);
+        background: none;
+        border: 0;
+        border-radius: var(--radius-sm);
+        padding: 0.375rem 0.75rem;
+        text-align: left;
+        cursor: pointer;
+      }
+      .jobs button span {
+        color: var(--color-muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .jobs button[aria-pressed="true"] {
+        background: var(--color-ink);
+        color: var(--color-tint);
+      }
+      .jobs button[aria-pressed="true"] span {
+        color: inherit;
+      }
+      .find {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 30rem;
+        font: 1rem/1.4 var(--font-sans);
+        padding: 0.5rem 0.75rem;
+        margin: 0 0 1.5rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        background: none;
+        color: var(--color-ink);
+      }
+      .meta {
+        display: none;
+        font-size: 0.875rem;
+        color: var(--color-muted);
+        margin: 0.5rem 0 0;
+      }
+      figure:target .meta {
+        display: block;
+      }
+      .note {
+        max-width: 480px;
+        font-size: 0.875rem;
+        color: var(--color-muted);
+        margin: 0;
+      }
+      table.parts th,
+      table.parts td {
+        text-align: left;
+        vertical-align: top;
+        padding: 0.375rem 1rem 0.375rem 0;
+        border-bottom: 1px solid var(--color-border);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hw-header">
+      <div class="hw-header-strip"></div>
+      <div class="hw-header-row hw-container">
+        <a class="hw-header-brand" href="#" aria-label="hackers&amp;wizards Slides">
+          <img
+            class="hw-header-logo"
+            src={`${brandHref}/logos/lockup-screen.svg`}
+            alt=""
+            width="8042"
+            height="1489"
+          />
+          <img
+            class="hw-header-logo-night"
+            src={`${brandHref}/logos/lockup-screen-night.svg`}
+            alt=""
+            width="8196"
+            height="1641"
+          />
+          <span class="hw-header-product">Slides</span>
+        </a>
+        {/* prettier-ignore */}
+        <nav class="hw-header-nav" aria-label="Catalogues">
+          <a class="hw-header-link" href="https://hackersandwizards.github.io/brand/">Brand</a>
+          <a class="hw-header-link" href="#" aria-current="page">Slides</a>
+          <a class="hw-header-link" href="https://hackersandwizards.github.io/documents/catalog/">Dokumente</a>
+        </nav>
+      </div>
+    </header>
+    <div class="hw-container">
+      <div class="intro">
+        <h1>Slide specimen</h1>
+        <p>
+          Every slide type of the h&amp;w slide engine with each of its variants, and the content
+          blocks a content slide is built from, as they look in a printed deck. All content is made
+          up. Click a name to see its slide at 1440 px.
+        </p>
+        <p class="setup">
+          Built by <code>bun run build</code> from <code>specimen/slide-catalogue.ts</code> into{" "}
+          <code>dist/</code>, where it also opens from the disk: fonts and logos load from{" "}
+          <code>dist/brand/</code>. <code>bun run dev</code> serves it at{" "}
+          <code>http://127.0.0.1:4335/slides/catalog/print/</code>, beside the{" "}
+          <a href="../">catalog</a> of every slide type and part.
+        </p>
+      </div>
+      <h2 id="parts">Parts</h2>
+      <p class="layers">
+        Three layers, as in the document engine. <strong>Tokens</strong>:{" "}
+        <code>styles/tokens.css</code> names every value a slide draws (colour, type step, tracking,
+        leading, measure, rule) from <code>@hackersandwizards/brand</code>;{" "}
+        <code>test/tokens.test.ts</code> fails on a raw length or colour anywhere else.{" "}
+        <strong>Parts</strong> below are built from tokens only, each with its variants.{" "}
+        <strong>Slide types</strong> compose parts; a difference between two types is a part's
+        variant.
+      </p>
+      <table class="parts">
+        <thead>
+          <tr>
+            <th>Part</th>
+            <th>What it is</th>
+            <th>Used by</th>
+          </tr>
+        </thead>
+        <tbody>
+          <Fragment set:html={partRows} />
+        </tbody>
+      </table>
+      <main>
+        <Fragment set:html={partTiles} />
+      </main>
+      <h2 id="elements">Shared elements</h2>
+      <p class="layers">
+        The elements the slides take from <code>@hackersandwizards/brand</code>, each at the stage
+        scale (<code>data-hw-scale="stage"</code>, which every slide sets), on day and on night,
+        then the elements the slides keep as their own, each with its reason.{" "}
+        <code>brand-elements</code> measures both, last in <code>bun run check</code>, here and on{" "}
+        <a href="frames.html">every specimen slide</a>.
+      </p>
+      <main class="elements">
+        <Fragment set:html={usesTiles} />
+      </main>
+      <Fragment set:html={exceptionSections} />
+      <h2 id="catalogue">Catalogue</h2>
+      <p class="layers">
+        Every slide type, variant and content block, by the job a slide does. An entry may sit under
+        two jobs. The search finds every type, block and variant name, and the old names of types
+        that now draw through another. Click a name to see its slide at 1440 px with its jobs.
+      </p>
+      <div class="catalogue">
+        <nav class="jobs" aria-label="Communication jobs">
+          <button type="button" data-job="" aria-pressed="true">
+            All <span>{entries.length}</span>
+          </button>
+          <Fragment set:html={jobButtons} />
+        </nav>
+        <div>
+          <input
+            type="search"
+            id="find"
+            class="find"
+            placeholder="Search a type, block, variant or job"
+            aria-label="Search the catalogue"
+          />
+          <main class="tiles">
+            <Fragment set:html={entries.map((e) => e.html).join("\n")} />
+          </main>
+          <p id="none" hidden>
+            No entry matches.
+          </p>
+        </div>
+      </div>
+    </div>
+    <script is:inline>
+      const tiles = [...document.querySelectorAll(".tiles figure")];
+      const find = document.getElementById("find");
+      let job = "";
+      const apply = () => {
+        const q = find.value.trim().toLowerCase();
+        let shown = 0;
+        for (const t of tiles) {
+          const on =
+            (!job || t.dataset.jobs.split(" ").includes(job)) &&
+            (!q || t.dataset.search.includes(q));
+          t.hidden = !on;
+          shown += on;
+        }
+        document.getElementById("none").hidden = shown > 0;
+      };
+      for (const b of document.querySelectorAll(".jobs button"))
+        b.addEventListener("click", () => {
+          job = b.dataset.job;
+          for (const o of document.querySelectorAll(".jobs button"))
+            o.setAttribute("aria-pressed", String(o === b));
+          apply();
+        });
+      find.addEventListener("input", apply);
+    </script>
+  </body>
 </html>

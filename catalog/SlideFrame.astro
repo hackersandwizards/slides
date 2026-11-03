@@ -11,23 +11,21 @@ const preview = path.includes("/catalog/stories/");
 const src = path.replace("/catalog/dashboard/", "/catalog/stories/");
 ---
 
-{
-  preview ? (
-    <div class="slide-story" data-story-of={component} data-hw-scale="stage">
-      {!part && (
-        <script is:inline>sessionStorage.setItem("slide-direction", "back");</script>
-      )}
-      <slot />
-    </div>
-  ) : (
-    <div class="story-embed" data-story-of={component}>
-      <iframe src={src} title={`${component} story`} loading="lazy" />
-      <a href={src} target="_blank" rel="noreferrer">
-        Open full screen
-      </a>
-    </div>
-  )
-}
+{preview ? (
+  <div class="slide-story" data-story-of={component} data-hw-scale="stage">
+    {!part && <script is:inline>
+      sessionStorage.setItem("slide-direction", "back");
+    </script>}
+    <slot />
+  </div>
+) : (
+  <div class="story-embed" data-story-of={component}>
+    <iframe src={src} title={`${component} story`} loading="lazy" />
+    <a href={src} target="_blank" rel="noreferrer">
+      Open full screen
+    </a>
+  </div>
+)}
 
 <style>
   /* A deck's page stays light behind a light slide when the catalogue is dark. */

@@ -12,30 +12,29 @@ const exceptions = Object.entries(
 <Home>
   <div class="ds-foundations">
     <p>
-      Three layers. <strong>Tokens</strong>: <code>styles/tokens.css</code> names every value a slide
-      draws from <code>@hackersandwizards/brand</code>. <strong>Parts</strong> are built from tokens
-      only, each with its variants. <strong>Slide types</strong> compose parts. Every story renders
-      at the stage scale (<code>data-hw-scale="stage"</code>), as every slide does.
+      Three layers. <strong>Tokens</strong>: <code>styles/tokens.css</code> names every value a
+      slide draws from <code>@hackersandwizards/brand</code>. <strong>Parts</strong> are built from
+      tokens only, each with its variants. <strong>Slide types</strong> compose parts. Every story
+      renders at the stage scale (<code>data-hw-scale="stage"</code>), as every slide does.
     </p>
     <details class="hw-disclosure">
       <summary>
-        Brand elements: {elements.uses.length} from brand, {exceptions.length} kept as the slides' own
+        Brand elements: {elements.uses.length} from brand, {exceptions.length} kept as the slides'
+        own
       </summary>
+      {/* prettier-ignore */}
       <p>From brand: {elements.uses.map((name) => <code>hw-{name}</code>)}.</p>
       <ul>
-        {
-          exceptions.map(([name, reason]) => (
-            <li>
-              <code>{name}</code>: {reason}
-            </li>
-          ))
-        }
+        {exceptions.map(([name, reason]) => (
+          <li>
+            <code>{name}</code>: {reason}
+          </li>
+        ))}
       </ul>
     </details>
     <p>
-      <a href={`${PRINT}#elements`}>The print page</a> shows each as a tile, where <code
-        >brand-elements</code
-      > measures it in <code>bun run check</code>.
+      <a href={`${PRINT}#elements`}>The print page</a> shows each as a tile, where{" "}
+      <code>brand-elements</code> measures it in <code>bun run check</code>.
     </p>
   </div>
 </Home>
