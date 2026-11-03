@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 2
-order: 460
+order: 480
 owner: Agent (slides session)
 evidence: "os `docs/agent-work/2026-11-01-slide-system.md`; `regular`, grid stats and transform merged in slides v0.27.0 (`work-phase-2c-merge-duplicates-each-group-by`)"
 ---

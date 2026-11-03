@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 2
-order: 470
+order: 490
 owner: Agent
 evidence: "slides e383ac9 (released v0.27.0)"
 ---
