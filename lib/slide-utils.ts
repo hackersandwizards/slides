@@ -82,7 +82,7 @@ export function personAccent(index: number): "primary" | "secondary" {
  *  guide), so the part reads as one from the back row: the deep-dive divider, a slide whose
  *  `sectionTheme` is `deepdive` and a pill map whose phases are. Blind-scored against the part
  *  marked by its label alone and against the old rose and amber backdrop (os
- *  docs/tracking/2026-11-01-deep-dive-brand.md). */
+ *  docs/agent-work/2026-11-01-deep-dive-brand.md). */
 export function isDeepDive(slide: {
   type: string;
   sectionTheme?: SectionTheme;

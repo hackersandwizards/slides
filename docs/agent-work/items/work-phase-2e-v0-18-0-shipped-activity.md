@@ -4,7 +4,7 @@ status: open
 priority: 2
 order: 40
 owner: Agent (slides session)
-evidence: "os `docs/tracking/2026-11-01-slide-system.md`; `regular`, grid stats and transform merged in slides v0.27.0 (`work-phase-2c-merge-duplicates-each-group-by`)"
+evidence: "os `docs/agent-work/2026-11-01-slide-system.md`; `regular`, grid stats and transform merged in slides v0.27.0 (`work-phase-2c-merge-duplicates-each-group-by`)"
 ---
 
 # Phase 2e: four merges of the overlap matrix and seven parts still open

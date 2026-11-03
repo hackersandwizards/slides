@@ -4,7 +4,7 @@ status: open
 priority: 3
 order: 70
 owner: Agent (slides session)
-evidence: "trainer-hub `docs/tracking/2026-11-01-performance.md`, section on the engine"
+evidence: "trainer-hub `docs/agent-work/2026-11-01-performance.md`, section on the engine"
 ---
 
 # Fit guard on a slide reached by navigation: `useFitToSlide` measures while `BlurFade` still holds its entrance offset (6 px up), so the …

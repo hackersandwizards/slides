@@ -439,7 +439,7 @@ function ContentBlockRenderer({
               narrower than its longest word. A fixed layout let a word run into the next cell. */}
           {/* The cells take the ink and the heads the step under the cells', set tight: in a lit
               hall and a 720p stream the label step and the muted grey washed out first (blind
-              panel 02.11.; os docs/tracking/2026-11-03-table-legibility.md). The cells' own
+              panel 02.11.; os docs/agent-work/2026-11-03-table-legibility.md). The cells' own
               step for the heads widened a two-column table's first column until its slide fell
               to 0.79 in a consumer's deck; the step under it holds 0.80. */}
           <table className={`w-full border-collapse ${block.compact ? "text-lg" : "text-xl"}`}>

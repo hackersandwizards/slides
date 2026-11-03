@@ -100,9 +100,9 @@
   "devDependencies": {
     "@astrojs/react": "7.1.2",
     "@eslint/js": "10.0.1",
-    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v0.4.1",
+    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v0.6.0",
     "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v0.33.1",
-    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v0.7.0",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v0.8.0",
     "@tailwindcss/node": "4.3.3",
     "@tailwindcss/oxide": "4.3.3",
     "@tailwindcss/vite": "4.3.3",

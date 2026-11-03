@@ -3,7 +3,7 @@
 The hackers&wizards slide engine as one package, `@hackersandwizards/slides`: the slide components,
 the deck types, the slide stylesheet and the PDF renderer. Three repos run it and keep only their
 decks, all on Astro: `talks`, `trainer-hub` and `hycle-private` (its decks in `talks/`). The reasoning is in os
-`docs/tracking/2026-10-30-repo-coupling.md`.
+`docs/agent-work/2026-10-30-repo-coupling.md`.
 
 This repo is public on GitHub (`github.com/hackersandwizards/slides`). Consumers install it as a Git dependency pinned to a tag,
 `git+https://github.com/hackersandwizards/slides.git#v<version>`, which needs no GitHub access. `"private": true` stays:

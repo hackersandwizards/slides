@@ -347,7 +347,7 @@ export const css = compiler
   );
 
 // ─── Catalogue: every entry under its communication jobs (decision catalogue-grouping) ─────────
-// The 13 jobs of docs/tracking/2026-11-01-catalogue-program.md ("Abdeckung je
+// The 13 jobs of docs/agent-work/2026-11-01-catalogue-program.md ("Abdeckung je
 // Kommunikationsaufgabe"). An entry may sit under two.
 export const JOBS = {
   open: "Open and close",

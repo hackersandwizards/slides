@@ -42,4 +42,4 @@ Assumption (agent, 01.11.2026, not Benedikt's words):
 ## Open work
 
 As of 01.11.2026. Analysis, plan and results of phases 2 and 2b:
-[docs/tracking/2026-11-01-catalogue-program.md](../2026-11-01-catalogue-program.md).
+[docs/agent-work/2026-11-01-catalogue-program.md](../2026-11-01-catalogue-program.md).
