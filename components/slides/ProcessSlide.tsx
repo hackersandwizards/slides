@@ -254,13 +254,13 @@ export function ProcessSlide({ slide }: Props) {
                             />
                           </div>
                         </div>
-                        <h3
+                        <h2
                           className={`relative z-10 mt-3 font-heading text-lg font-bold transition-colors duration-500 ${
                             isRevealed ? "text-text" : "text-text-subtle"
                           }`}
                         >
                           {node.title}
-                        </h3>
+                        </h2>
                         <p
                           className={`card-text-base relative z-10 mt-1.5 leading-snug transition-colors duration-500 ${
                             isRevealed ? "text-text-muted" : "text-text-subtle/70"

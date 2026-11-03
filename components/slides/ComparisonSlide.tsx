@@ -133,7 +133,7 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
                 tone={isActive ? "primary" : "neutral"}
                 className="h-full transition-all duration-300 card-pad-8"
               >
-                <h3 className="mb-6 font-heading text-2xl font-bold text-text">{side.label}</h3>
+                <h2 className="mb-6 font-heading text-2xl font-bold text-text">{side.label}</h2>
 
                 <Highlight text={side.highlight} muted={!isActive} />
 
@@ -207,7 +207,7 @@ export function BeforeAfterSides({
       >
         <div className="mb-6 flex items-center gap-3">
           {strike && <XCircle className="h-6 w-6 text-text-subtle" />}
-          <h3 className="font-heading text-2xl font-bold text-text-muted">{left.label}</h3>
+          <h2 className="font-heading text-2xl font-bold text-text-muted">{left.label}</h2>
         </div>
         <Highlight text={left.highlight} muted />
         <ul className="space-y-3">
@@ -243,7 +243,7 @@ export function BeforeAfterSides({
       >
         <div className="mb-6 flex items-center gap-3">
           <CheckCircle className="h-6 w-6 text-primary" />
-          <h3 className="font-heading text-2xl font-bold text-primary">{right.label}</h3>
+          <h2 className="font-heading text-2xl font-bold text-primary">{right.label}</h2>
         </div>
         <Highlight text={right.highlight} />
         <ul className="space-y-3">
@@ -299,7 +299,7 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
       <div className="grid w-full grid-cols-2 gap-8">
         <BlurFade delay={0.2} duration={0.6}>
           <SlideCard className="h-full card-pad-8">
-            <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.left.label}</h3>
+            <h2 className="mb-6 font-heading text-2xl font-bold text-text">{slide.left.label}</h2>
             <Highlight text={slide.left.highlight} />
             <ul className="space-y-3">
               {slide.left.items.map((item, i) => (
@@ -311,7 +311,7 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
 
         <BlurFade delay={0.3} duration={0.6}>
           <SlideCard className="h-full card-pad-8">
-            <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.right.label}</h3>
+            <h2 className="mb-6 font-heading text-2xl font-bold text-text">{slide.right.label}</h2>
             <Highlight text={slide.right.highlight} />
             <ul className="space-y-3">
               {slide.right.items.map((item, i) => (
@@ -385,7 +385,7 @@ export function Positions({
           )}
         </div>
 
-        <h3
+        <h2
           className={`font-heading text-8xl leading-(--slide-figure-leading) font-bold tracking-(--slide-figure-tracking) lg:text-(length:--slide-figure-size) ${a.text}`}
         >
           {/* A line breaks only between words: "All-in" never splits at its hyphen. */}
@@ -395,7 +395,7 @@ export function Positions({
               <span className="whitespace-nowrap">{word}</span>
             </Fragment>
           ))}
-        </h3>
+        </h2>
 
         <p
           className={`mt-2 font-heading text-2xl leading-snug font-medium text-text-muted italic md:text-3xl ${alignRight ? "border-r-2 pr-5" : "border-l-2 pl-5"} ${a.border}`}
@@ -475,7 +475,7 @@ function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
         <BlurFade key={printMode ? i : activeExample} delay={0.25} duration={0.5}>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-2xl text-text">{example.title}</h3>
+              <h2 className="text-2xl text-text">{example.title}</h2>
               {!printMode && examples.length > 1 && (
                 <span className="text-base font-medium text-text-subtle">
                   {activeExample + 1} / {examples.length}

@@ -502,9 +502,9 @@ function ContentBlockRenderer({
           {sides.map(({ data, style }, i) => (
             <SlideCard key={i} tone={style.card} look="line" className="card-pad-7">
               {data.title && (
-                <h3 className={`mb-5 font-heading text-2xl font-bold ${style.title}`}>
+                <h2 className={`mb-5 font-heading text-2xl font-bold ${style.title}`}>
                   {renderMarkdown(data.title)}
-                </h3>
+                </h2>
               )}
               {data.text && renderColumnContent(data.text)}
               {data.items && (
@@ -546,12 +546,12 @@ function ContentBlockRenderer({
           <div className="flex flex-col justify-center space-y-8">
             {block.sections.map((section, i) => (
               <div key={i}>
-                <h3
+                <h2
                   className="hw-label mb-2 text-accent [--hw-label-size:var(--text-xl)]"
                   data-hw-exception="label-hue"
                 >
                   {section.title}
-                </h3>
+                </h2>
                 <p className="text-xl leading-relaxed text-text-muted">
                   {renderMarkdown(section.text)}
                 </p>
@@ -666,12 +666,12 @@ function ContentBlockRenderer({
           )}
           <div className="flex flex-col gap-4">
             {block.gridTitle && (
-              <h3
+              <h2
                 className="hw-label mb-2 text-secondary [--hw-label-size:var(--text-base)]"
                 data-hw-exception="label-hue"
               >
                 {renderMarkdown(block.gridTitle)}
-              </h3>
+              </h2>
             )}
             {block.items.map((item, i) => (
               <SlideCard key={i} tone="secondary" look="line" className="card-pad-4/6">

@@ -28,13 +28,13 @@ describe("evolution, through the process slide", () => {
   it("sets short multipliers in the tiles", () => {
     const { getByText } = printed([stage("1x", "Chat"), stage("10x", "Harness")]);
     expect(getByText("10x").tagName).toBe("SPAN");
-    expect(getByText("10x").nextElementSibling?.tagName).toBe("H3");
+    expect(getByText("10x").nextElementSibling?.tagName).toBe("H2");
   });
 
   // One label too long for a tile moves every label above its title, and the tiles count.
   it("moves every label above the title when one is too long for a tile", () => {
     const { getByText } = printed([stage("Basis", "Chat"), stage("Harness", "Harness")]);
-    expect(getByText("Basis").nextElementSibling?.tagName).toBe("H3");
+    expect(getByText("Basis").nextElementSibling?.tagName).toBe("H2");
     expect(getByText("Basis").previousElementSibling?.textContent).toBe("1");
   });
 

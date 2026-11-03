@@ -38,7 +38,8 @@ export function PageCounter({ label }: { label: string }) {
  * wordmark at `--slide-corner-wordmark`: the lockup's box is the wizard's, taller than the
  * letters and taller again in the Night cut, so each cut takes its own height, overhangs the row
  * above and below without moving it, and carries the brand's `--logo-wizard-lift` so its letters
- * centre on the page counter beside it.
+ * centre on the page counter beside it. Both cuts load lazily, so the one `slides.css` hides is
+ * never fetched (the Night lockup alone is 59 KB); print loads both (`components/ui/image.tsx`).
  */
 export function HwWordmark({ mark = "lockup" }: { mark?: CornerMark }) {
   if (mark === "wordmark") {
@@ -51,7 +52,6 @@ export function HwWordmark({ mark = "lockup" }: { mark?: CornerMark }) {
           alt=""
           width={6571}
           height={952}
-          priority
           className={`hw-wordmark ${className}`}
         />
         <Image
@@ -59,7 +59,6 @@ export function HwWordmark({ mark = "lockup" }: { mark?: CornerMark }) {
           alt=""
           width={6571}
           height={952}
-          priority
           className={`hw-wordmark-night ${className}`}
         />
       </span>
@@ -72,7 +71,6 @@ export function HwWordmark({ mark = "lockup" }: { mark?: CornerMark }) {
         alt=""
         width={8042}
         height={1489}
-        priority
         className="hw-wordmark my-[calc((var(--slide-footer-mark)-var(--slide-corner-lockup))/2)] h-(--slide-corner-lockup) w-auto shrink-0 translate-y-(--logo-wizard-lift)"
       />
       <Image
@@ -80,7 +78,6 @@ export function HwWordmark({ mark = "lockup" }: { mark?: CornerMark }) {
         alt=""
         width={8196}
         height={1641}
-        priority
         className="hw-wordmark-night my-[calc((var(--slide-footer-mark)-var(--slide-corner-lockup-night))/2)] h-(--slide-corner-lockup-night) w-auto shrink-0 translate-y-(--logo-wizard-lift)"
       />
     </span>
@@ -115,7 +112,6 @@ export function SlideContainer({ children, logo, theme, page, mark }: Props) {
           alt={l.alt}
           width={l.width ?? 80}
           height={l.height ?? 65}
-          priority
           className="pointer-events-none h-9 w-auto"
         />
       )}
@@ -139,7 +135,6 @@ export function SlideContainer({ children, logo, theme, page, mark }: Props) {
             alt={logo[0].alt}
             width={logo[0].width ?? 80}
             height={logo[0].height ?? 65}
-            priority
             className="pointer-events-none h-9 w-auto"
           />
         </div>

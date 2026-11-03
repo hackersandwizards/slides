@@ -181,11 +181,11 @@ export function FlowSteps({
                     {step.label}
                   </span>
                 )}
-                <h3
+                <h2
                   className={`${dense ? "mt-2" : "mt-7"} ${dense ? LABEL.replace("text-4xl", "text-xl") : narrow ? LABEL.replace("text-4xl", "text-2xl") : LABEL} ${on ? "text-primary" : ink}`}
                 >
                   {renderMarkdown(step.title)}
-                </h3>
+                </h2>
                 {step.subtitle && (
                   <p className={`mt-2 text-xl font-semibold text-balance ${accent}`}>
                     {renderMarkdown(step.subtitle)}
@@ -290,9 +290,9 @@ function Layers({ block }: { block: Of<"layers"> }) {
                 {i + 1}
               </NumberTile>
             )}
-            <h3 className={`w-96 shrink-0 ${LABEL} ${on ? "text-primary" : "text-text"}`}>
+            <h2 className={`w-96 shrink-0 ${LABEL} ${on ? "text-primary" : "text-text"}`}>
               {renderMarkdown(layer.title)}
-            </h3>
+            </h2>
             {layer.text && (
               <p className={`flex-1 ${CAPTION} text-text`}>{renderMarkdown(layer.text)}</p>
             )}
@@ -382,7 +382,7 @@ function Timeline({ block }: { block: Of<"timeline"> }) {
               )}
               <Dot on={block.highlight === i} future={i > now} />
             </div>
-            <h3 className={`mt-6 ${LABEL} ${tone(i)}`}>{renderMarkdown(e.title)}</h3>
+            <h2 className={`mt-6 ${LABEL} ${tone(i)}`}>{renderMarkdown(e.title)}</h2>
             <p className={`mt-3 ${CAPTION} text-text`}>{e.text && renderMarkdown(e.text)}</p>
           </div>
         ))}
@@ -450,7 +450,7 @@ function Staggered({
                 </span>
               )}
               <span className={`font-heading text-3xl font-bold ${tone(i)}`}>{e.when}</span>
-              <h3 className={`mt-2 ${LABEL} ${tone(i)}`}>{renderMarkdown(e.title)}</h3>
+              <h2 className={`mt-2 ${LABEL} ${tone(i)}`}>{renderMarkdown(e.title)}</h2>
               {e.text && (
                 <p className={`mt-2 ${CAPTION} text-balance text-text`}>{renderMarkdown(e.text)}</p>
               )}
@@ -853,9 +853,9 @@ function Cards({ block }: { block: Of<"cards"> }) {
               !dense && <span className="h-1.5 w-16 bg-primary" aria-hidden />
             )}
             {item.title && (
-              <h3 className={`${label} ${on ? "text-primary" : "text-text"}`}>
+              <h2 className={`${label} ${on ? "text-primary" : "text-text"}`}>
                 {renderMarkdown(item.title)}
-              </h3>
+              </h2>
             )}
             {item.text && (
               <p className={`${text} [&_strong]:text-text`}>{renderMarkdown(item.text)}</p>

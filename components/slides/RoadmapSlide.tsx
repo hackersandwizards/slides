@@ -74,7 +74,7 @@ function PartCard({
 
           {/* The heading's own margin is its descender bleed, so the gap above sits outside it. */}
           <div className="mt-6">
-            <DisplayHeading as="h3" size="sm">
+            <DisplayHeading as="h2" size="sm">
               {title}
             </DisplayHeading>
           </div>
@@ -99,28 +99,32 @@ function PartCard({
                   )}
                   <ul className="space-y-4">
                     {group.items.map((item, i) => (
-                      <BlurFade key={i} delay={delay + 0.05 + row++ * 0.04} duration={0.35}>
-                        <li className="flex items-baseline gap-4 text-xl leading-snug">
-                          {item.number === undefined ? (
-                            <span className={`hw-marker ${markerColour(item) ?? dot}`} />
-                          ) : (
-                            <span
-                              className={`w-10 shrink-0 font-heading text-xl font-bold tabular-nums ${text}`}
-                            >
-                              {item.number}
-                            </span>
-                          )}
-                          <div className="flex-1">
-                            <p className="font-heading text-xl leading-snug font-bold text-text">
-                              {renderMarkdown(item.title)}
+                      <BlurFade
+                        key={i}
+                        delay={delay + 0.05 + row++ * 0.04}
+                        duration={0.35}
+                        as="li"
+                        className="flex items-baseline gap-4 text-xl leading-snug"
+                      >
+                        {item.number === undefined ? (
+                          <span className={`hw-marker ${markerColour(item) ?? dot}`} />
+                        ) : (
+                          <span
+                            className={`w-10 shrink-0 font-heading text-xl font-bold tabular-nums ${text}`}
+                          >
+                            {item.number}
+                          </span>
+                        )}
+                        <div className="flex-1">
+                          <p className="font-heading text-xl leading-snug font-bold text-text">
+                            {renderMarkdown(item.title)}
+                          </p>
+                          {item.description && (
+                            <p className="card-text-base mt-1 leading-snug text-text-muted">
+                              {renderMarkdown(item.description)}
                             </p>
-                            {item.description && (
-                              <p className="card-text-base mt-1 leading-snug text-text-muted">
-                                {renderMarkdown(item.description)}
-                              </p>
-                            )}
-                          </div>
-                        </li>
+                          )}
+                        </div>
                       </BlurFade>
                     ))}
                   </ul>

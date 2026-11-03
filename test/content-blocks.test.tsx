@@ -205,7 +205,7 @@ describe("merged card and number shapes", () => {
   it("draws grid pillars as dense cards", () => {
     const c = grid({ allActive: true, cards: [{ title: "A", description: "a" }] });
     expect(c.querySelector(".hw-card")?.className).toContain("card-pad-6");
-    expect(c.querySelector(".hw-card h3")?.className).toContain("text-xl");
+    expect(c.querySelector(".hw-card h2")?.className).toContain("text-xl");
   });
 
   // Pillars render as cards: numbered from `numberFrom` where no card names an icon, with no card
@@ -256,10 +256,10 @@ describe("merged card and number shapes", () => {
     const [grid, four] = c.querySelectorAll(".hw-card");
     expect(c.querySelector(".hw-card .h-1\\.5")).toBeNull();
     expect(grid.className).toContain("card-pad-6");
-    expect(grid.querySelector("h3")?.className).toContain("text-xl");
+    expect(grid.querySelector("h2")?.className).toContain("text-xl");
     expect(grid.querySelector("p")?.className).toContain("card-text-lg");
     expect(four.className).toContain("card-pad-5");
-    expect(four.querySelector("h3")?.className).toContain("text-lg");
+    expect(four.querySelector("h2")?.className).toContain("text-lg");
     expect(four.querySelector("li")?.className).toContain("card-text-base");
   });
 
@@ -288,7 +288,7 @@ describe("pipeline into flow (merge-flow)", () => {
       },
     ]);
     expect(c.querySelector(".pipeline-row")).toBeNull();
-    expect(c.querySelector("h3.text-primary")?.textContent).toBe("Build");
+    expect(c.querySelector("h2.text-primary")?.textContent).toBe("Build");
     expect(c.querySelector(".hw-frame")?.textContent).toContain("Harness");
     expect(c.querySelector('.hw-frame img[alt="Logo"]')).not.toBeNull();
     expect(c.textContent).toContain("Note");
@@ -299,15 +299,15 @@ describe("pipeline into flow (merge-flow)", () => {
   // and titles, a slide of two pipelines fell from above 0.9 to 0.79 in trainer-hub's guard.
   it("draws a pipeline as a dense flow", () => {
     const c = content([{ type: "pipeline", stages }]);
-    const tile = c.querySelector("h3")?.previousElementSibling;
+    const tile = c.querySelector("h2")?.previousElementSibling;
     expect(tile?.className).toContain("size-10");
-    expect(c.querySelector("h3")?.className).toContain("text-xl");
+    expect(c.querySelector("h2")?.className).toContain("text-xl");
   });
 
   // A flow block without `dense` keeps its large tiles.
   it("keeps a plain flow's large tiles", () => {
     const c = content([{ type: "flow", steps: [{ title: "A" }, { title: "B" }] }]);
-    expect(c.querySelector("h3")?.previousElementSibling?.className).toContain("h-24");
+    expect(c.querySelector("h2")?.previousElementSibling?.className).toContain("h-24");
   });
 
   // Inner loops and stage logos are what flow cannot draw: those keep the pipeline.

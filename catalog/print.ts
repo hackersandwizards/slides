@@ -6,8 +6,8 @@
 // print mode, with slides.css compiled by Tailwind. It fails the build on a part with no entry in
 // parts.ts. The pages open from dist/ on the disk: every link is relative.
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, join, relative, sep } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { compile } from "@tailwindcss/node";
@@ -335,11 +335,13 @@ for (const { markup } of [...frames, ...markerFrames, ...blockFrames, ...partFra
 export const css = compiler
   .build(candidates)
   // Resolved through the package's exports: `fonts/*` maps to `tokens/fonts/*` on disk, which
-  // dist/ holds beside the pages as the checkout does, read from catalog/print/build/.
+  // dist/ holds beside the pages as the checkout does, read from catalog/print/build/. Through a
+  // require of the checkout: `import.meta.resolve` threw in the dev server's module runner, and the
+  // print page answered 500 there.
   .replace(
     /url\("(@hackersandwizards\/brand\/[^"]+)"\)/g,
     (_, id: string) =>
-      `url("../${brandHref}/${relative(brand, fileURLToPath(import.meta.resolve(id)))
+      `url("../${brandHref}/${relative(brand, createRequire(join(root, "package.json")).resolve(id))
         .split(sep)
         .join("/")}")`,
   );
@@ -467,7 +469,7 @@ const tile = (
 };
 const partTile = ({ name, markup }: { name: string; markup: string }) => {
   const id = anchor(name, "part-");
-  return `<figure id="${id}"><figcaption><a href="#${id}">${name}</a></figcaption><div class="frame"><iframe title="${attr(name)}" srcdoc="${attr(frameDoc(markup))}"></iframe></div></figure>`;
+  return `<figure id="${id}"><figcaption><a href="#${id}">${name}</a></figcaption><div class="frame"><iframe loading="lazy" title="${attr(name)}" srcdoc="${attr(frameDoc(markup))}"></iframe></div></figure>`;
 };
 const frameDoc = (markup: string) =>
   `<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="build/slides.css"><style>body{margin:0}</style></head><body>${markup}</body></html>`;

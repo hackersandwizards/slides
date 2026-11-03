@@ -23,29 +23,33 @@ export function AgendaSlide({ slide }: Props) {
         <div className="slide-body">
           <ol className={`flex flex-col ${timed ? "gap-7" : "gap-6"}`}>
             {items.map((item, i) => (
-              <BlurFade key={i} delay={0.15 + i * 0.04} duration={0.4}>
-                <li className="flex items-baseline gap-4 md:gap-8">
-                  {timed ? (
-                    <span
-                      className="shrink-0 font-mono text-xl font-bold text-primary md:text-3xl"
-                      style={{ width: whenWidth }}
-                    >
-                      {item.when !== items[i - 1]?.when ? item.when : ""}
-                    </span>
-                  ) : (
-                    <span className="w-9 shrink-0 text-right font-mono text-2xl font-bold text-primary md:w-14 md:text-4xl">
-                      {i + 1}.
+              <BlurFade
+                key={i}
+                delay={0.15 + i * 0.04}
+                duration={0.4}
+                as="li"
+                className="flex items-baseline gap-4 md:gap-8"
+              >
+                {timed ? (
+                  <span
+                    className="shrink-0 font-mono text-xl font-bold text-primary md:text-3xl"
+                    style={{ width: whenWidth }}
+                  >
+                    {item.when !== items[i - 1]?.when ? item.when : ""}
+                  </span>
+                ) : (
+                  <span className="w-9 shrink-0 text-right font-mono text-2xl font-bold text-primary md:w-14 md:text-4xl">
+                    {i + 1}.
+                  </span>
+                )}
+                <span className="text-2xl text-text md:text-4xl">
+                  {item.title}
+                  {item.text && (
+                    <span className="mt-1 block text-xl text-text-muted md:text-2xl">
+                      {item.text}
                     </span>
                   )}
-                  <span className="text-2xl text-text md:text-4xl">
-                    {item.title}
-                    {item.text && (
-                      <span className="mt-1 block text-xl text-text-muted md:text-2xl">
-                        {item.text}
-                      </span>
-                    )}
-                  </span>
-                </li>
+                </span>
               </BlurFade>
             ))}
           </ol>

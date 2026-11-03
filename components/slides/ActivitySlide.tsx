@@ -52,17 +52,21 @@ export function ActivitySlide({ slide }: Props) {
           <div className="flex flex-col gap-10 md:flex-row md:items-start md:gap-16">
             <ol className="flex flex-1 flex-col gap-6">
               {slide.items.map((item, i) => (
-                <BlurFade key={i} delay={0.25 + i * 0.05} duration={0.4}>
-                  <li className="flex items-baseline gap-5 text-2xl text-text md:text-3xl">
-                    {numbered ? (
-                      <span className="w-10 shrink-0 font-semibold text-primary tabular-nums">
-                        {i + 1}.
-                      </span>
-                    ) : (
-                      <span className="hw-marker" />
-                    )}
-                    <span>{renderMarkdown(item)}</span>
-                  </li>
+                <BlurFade
+                  key={i}
+                  delay={0.25 + i * 0.05}
+                  duration={0.4}
+                  as="li"
+                  className="flex items-baseline gap-5 text-2xl text-text md:text-3xl"
+                >
+                  {numbered ? (
+                    <span className="w-10 shrink-0 font-semibold text-primary tabular-nums">
+                      {i + 1}.
+                    </span>
+                  ) : (
+                    <span className="hw-marker" />
+                  )}
+                  <span>{renderMarkdown(item)}</span>
                 </BlurFade>
               ))}
             </ol>

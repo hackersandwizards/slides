@@ -18,6 +18,8 @@ interface BlurFadeProps extends MotionProps {
   direction?: "up" | "down" | "left" | "right";
   /** Waits until the element scrolls into view; otherwise it fades in on mount. */
   inView?: boolean;
+  /** `li` where the fade is an item of a list, which may hold only list items. */
+  as?: "div" | "li";
 }
 
 export function BlurFade({
@@ -27,6 +29,7 @@ export function BlurFade({
   delay = 0,
   direction = "down",
   inView = false,
+  as: Tag = "div",
   ...props
 }: BlurFadeProps) {
   const printMode = usePrintMode();
@@ -39,7 +42,7 @@ export function BlurFade({
   const hydrating = !useMounted();
 
   if (printMode) {
-    return <div className={className}>{children}</div>;
+    return <Tag className={className}>{children}</Tag>;
   }
 
   const axis = direction === "left" || direction === "right" ? "x" : "y";
@@ -60,8 +63,9 @@ export function BlurFade({
     },
   };
 
+  const Motion = Tag === "li" ? motion.li : motion.div;
   return (
-    <motion.div
+    <Motion
       ref={ref}
       initial={hydrating ? false : "hidden"}
       animate={isInView ? "visible" : "hidden"}
@@ -77,6 +81,6 @@ export function BlurFade({
       {...props}
     >
       {children}
-    </motion.div>
+    </Motion>
   );
 }
