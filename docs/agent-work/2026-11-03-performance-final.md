@@ -79,7 +79,7 @@ Consumers raised to v0.30.0 with green gates: talks (cd5f949), trainer-hub (4214
 
 - Frames page accessibility 96: `color-contrast` (#5c9ba8 on #f7f9fa) and `link-text` ("Read more")
   are both slide specimen content, shown as a deck shows them. Best practices and SEO reach 100
-  and 91: the frames page is a print surface without a meta description in the shell.
+  and 91: SEO's one failing audit is `link-text`, the same "Read more" (measured 03.11. by polish).
 - Catalog home and every dashboard and story: SEO 90-91 (no meta description) and desktop
   accessibility 96 (`target-size`, the rail links). Catalog home mobile performance 97: its 743
   requests are scaffolding's tile iframes. Scaffolding owns the shell; brief for scaffolding: emit

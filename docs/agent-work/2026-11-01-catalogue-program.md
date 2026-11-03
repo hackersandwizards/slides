@@ -114,7 +114,7 @@ Ausnahmeliste nur schrumpfen.
 
 Gleiches Panel, je Block eine Specimen-Folie (30 Folien, Mittel 6,70, Rauschen je Bild 0,47) und
 bis zu drei echte Deckfolien (24 Folien, Mittel 6,96, Rauschen 0,39). Die 26 Typen hatte tm-
-bewertet (os `docs/tracking/2026-11-01-title-closing-max.md`). Mittel aus Specimen und Deck, wo
+bewertet (os `docs/agent-work/2026-11-01-title-closing-max.md`). Mittel aus Specimen und Deck, wo
 beides da ist:
 
 | Block            | Mittel | Specimen | Deck | Hauptkritik                                                 |
@@ -293,7 +293,7 @@ Hervorhebungen in Screenshots bleiben beim Block `annotated`.
 
 Je Gruppe die Specimen-Folien nebeneinander, das Ziel mit Rahmen. "Deckfolien" zählt einmalige
 Folien in talks, trainer-hub und hycle (Abschnitt "Bestand"). Wertung: Gesamt aus dem
-Typen-Panel von tm- (os `docs/tracking/2026-11-01-title-closing-max.md`, eine Runde, zwei Läufe,
+Typen-Panel von tm- (os `docs/agent-work/2026-11-01-title-closing-max.md`, eine Runde, zwei Läufe,
 Rauschen 0,33), nur für Typen, Blöcke hat es nicht bewertet. Jedes Zusammenlegen gilt erst, wenn
 die Zielform auf echten Deckfolien der aufgelösten Typen im Blind-Panel mindestens gleichauf liegt.
 
@@ -410,7 +410,7 @@ Vorrat.
 **Gemaltes Bild:** kein neuer Typ. Die Variante `image-and-grid` `sketch` kommt ins Specimen-Deck
 und auf die Seite. Die Regel im README bleibt: Sketch nur auf der Konzeptfolie mit bis zu vier
 Karten. Auf Titel, Trenner, Vergleich, Statement und Abschluss verlor er in den Panels vom 31.10.
-(os `docs/tracking/2026-10-31-slide-visuals.md`).
+(os `docs/agent-work/2026-10-31-slide-visuals.md`).
 
 **Team Topology:** Phase 2 baut sie in der Formensprache der Team Shape Templates (10): Stream-Team
 waagerecht, Enabling senkrecht, Subsystem als Achteck, Plattform mit gepunktetem Rand, in
@@ -616,8 +616,8 @@ Ein Eintrag ist ein Typ, ein Block oder eine Variante. Ein Eintrag kann in zwei 
 
 ![Mockup der Katalogseite](2026-11-01-catalogue-program/katalog-mockup.jpg)
 
-Die Seite bleibt `specimen/index.html`, aus dem Specimen-Deck generiert. Seit v0.26.1 ist sie nicht
-mehr eingecheckt: `bun run check`, `bun run dev` und der Pages-Workflow schreiben sie. Neu:
+Die Seite ist seit v0.28.0 die Druckseite `catalog/pages/catalog/print/`, aus dem Specimen-Deck
+gebaut und nicht eingecheckt. Neu:
 
 - **Navigation nach Aufgabe.** Links die 13 Aufgaben aus der Tabelle oben, mit Zahl der Einträge
   und einer markierten Lücke. Ein Eintrag darf in zwei Aufgaben stehen.
@@ -669,7 +669,7 @@ mehr eingecheckt: `bun run check`, `bun run dev` und der Pages-Workflow schreibe
 
 ### Phase 3: Katalogseite
 
-Der Vorschlag oben, gebaut in `scripts/specimen.ts`. Prüfung: kleines Panel aus Trainerin, die
+Der Vorschlag oben, gebaut in `scripts/specimen.ts` (seit v0.28.0 `catalog/print.ts`). Prüfung: kleines Panel aus Trainerin, die
 eine Folie sucht, und Designer, mit Suchaufgaben ("eine Folie für einen Zeitplan") und gemessener
 Zeit bis zum Treffer, alte Seite gegen neue.
 
@@ -707,7 +707,7 @@ sind meine Schätzung, gemessen sind nur die Release-Zeiten und die Folienzahlen
 - **dd-** (Deep-Dive-Look) hat die drei schwächsten Typen im Auftrag: `dual-pill-overview` 4,92,
   `deep-dive-divider` 5,08, `phased-pills` 5,58. Gruppe 4 wartet auf sein Ergebnis und baut auf
   ihm auf.
-- **tm-** (os `docs/tracking/2026-11-01-title-closing-max.md`): Wertung je Typ für alle 26 Typen,
+- **tm-** (os `docs/agent-work/2026-11-01-title-closing-max.md`): Wertung je Typ für alle 26 Typen,
   eine Runde, zwei Läufe, Rauschen 0,33. Schwächste: die drei von dd-, dann `statement` 5,75,
   `team-topology` 5,83, `overview` 6,17, `chart` 6,33, `wheel` 6,42, `gantt`, `guidance` und
   `roadmap` je 6,50. Oben: `title` 8,42, `agenda` 8,00. Diese Wertungen ersetzen die Basis-Runde
@@ -737,7 +737,7 @@ sind meine Schätzung, gemessen sind nur die Release-Zeiten und die Folienzahlen
 
 - Keine eigene Wertung in Phase 1: tm- hat die 26 Typen bewertet, die Blöcke bewertet Schritt 1
   von Phase 2.
-- Keine Dichtemessung neu: Stand ist os `docs/tracking/2026-10-31-deck-density.md` (31.10.,
+- Keine Dichtemessung neu: Stand ist os `docs/agent-work/2026-10-31-deck-density.md` (31.10.,
   v0.4.7), seither läuft der Guard mit Schwelle 0,8 in jedem Gate.
 - Kein Anteil-am-Ganzen- oder Abweichungsdiagramm: kein Deck braucht es heute. Aufnehmen, sobald
   ein Readout es braucht.

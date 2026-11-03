@@ -26,14 +26,14 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `lib/`: hooks, navigation, presenter sync, the edit mode, themes and section styles.
   `lib/adapter.tsx` is the one seam to a consumer's framework: `SlidesAdapterProvider` takes an
   `Image` component and a `navigate(href, replace)`. Without a provider the engine renders a plain
-  `<img>` and moves with `history` inside one island, as every consumer now does. `lib/next-adapter.tsx`
+  `<img>` and moves with `history` inside one island, as every consumer does. `lib/next-adapter.tsx`
   is that provider for a Next app, `next/image` and the router, wrapped round its root layout.
 - `types/slide.ts`: the slide types and content blocks a deck may use.
 - `styles/tokens.css`: the slide's roles, each a `var()` over brand: it imports the brand tokens,
   brand's `stage.css` (the slide scale, the type table, measures, spacing, rules and marks, every
   literal a slide draws) and `night.css` (night on `data-hw-night`, which a night deck's frame and a
-  deep-dive slide's shell carry), and derives the type steps and colours from them, so a consumer
-  pins brand v0.29.1 or later.
+  deep-dive slide's shell carry), and derives the type steps and colours from them; the README
+  names the brand version a consumer pins.
   `styles/slides.css` imports Tailwind and `tokens.css` and names tokens only, as do the components;
   `test/tokens.test.ts` fails on a raw length or colour anywhere else. `slides.css` imports the brand list marker (`marker.css`) from `@hackersandwizards/brand`
   through the package, never a sibling path, and the brand's shared elements (`elements.css`)
@@ -111,7 +111,8 @@ are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and 
 
 1. Change the engine here, `bun run check` green, raise `version`, commit, tag `v<version>`, push
    with the tag.
-2. In each consumer, raise the tag in `package.json`, `bun install`, run its gate. The regression
+2. Brief a session in each consumer to raise the tag in its `package.json`, `bun install` and run
+   its gate. The regression
    decks are this repo's `specimen/slide-catalogue.ts`, which talks shows and tests, and
    trainer-hub's `slide-master`; a new slide type or variant lands in the specimen deck first.
 
