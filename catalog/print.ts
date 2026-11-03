@@ -302,7 +302,7 @@ const EXCEPTION_SHOWN: Record<string, () => ReactNode> = {
     ),
 };
 const exceptionLinks: Record<string, string[]> = {
-  "label-caps": ["overview", "phased-pills", "comparison-guidance"],
+  "label-hue": ["overview", "phased-pills", "comparison-guidance"],
   "callout-status": ["frames.html"],
   "slide-table": ["block-table"],
   "chart-bars": ["chart", "block-bars"],

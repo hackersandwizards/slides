@@ -123,7 +123,10 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                           {speaker.name}
                         </p>
                         {speaker.company && (
-                          <p className={`label-caps mt-3 text-xs md:text-sm ${a.text}`}>
+                          <p
+                            className={`hw-label mt-3 [--hw-label-size:var(--text-xs)] md:[--hw-label-size:var(--text-sm)] ${a.text}`}
+                            data-hw-exception="label-hue"
+                          >
                             {speaker.company}
                           </p>
                         )}

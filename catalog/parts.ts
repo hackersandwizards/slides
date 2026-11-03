@@ -19,7 +19,7 @@ const {
 } = primitives;
 const { GradientTitlePill, PulseDot } = chrome;
 export const label = (text: string) =>
-  h("p", { className: "label-caps mb-3 text-xs text-text-muted" }, text);
+  h("p", { className: "hw-label mb-3", "data-tone": "muted" }, text);
 export const inRow = (...children: ReactNode[]) =>
   h("div", { className: "flex flex-wrap items-start gap-8" }, ...children);
 const cell = (name: string, child: ReactNode) => h("div", null, label(name), child);

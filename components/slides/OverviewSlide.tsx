@@ -71,9 +71,9 @@ export function OverviewSlide({ slide }: Props) {
               active={foundationsActive}
               className="p-5 transition-all duration-300"
             >
-              <div className="label-caps mb-4 flex items-baseline gap-2 text-base">
+              <div className="hw-label mb-4 flex items-baseline gap-2 [--hw-label-size:var(--text-base)]">
                 <div className="hw-marker bg-primary" />
-                <span className="text-primary">Foundations</span>
+                <span>Foundations</span>
               </div>
               <div
                 className="grid gap-3"
@@ -111,9 +111,12 @@ export function OverviewSlide({ slide }: Props) {
                         active={pipelineActive}
                         className="flex flex-col gap-3 p-7 transition-all duration-300 md:flex-row md:items-center md:gap-5 md:py-4"
                       >
-                        <div className="label-caps flex shrink-0 items-baseline gap-2 text-base">
+                        <div
+                          className="hw-label flex shrink-0 items-baseline gap-2 text-secondary [--hw-label-size:var(--text-base)]"
+                          data-hw-exception="label-hue"
+                        >
                           <div className="hw-marker bg-secondary" />
-                          <span className="whitespace-nowrap text-secondary tabular-nums">
+                          <span className="whitespace-nowrap tabular-nums">
                             Pipeline {laneIndex + 1}
                           </span>
                         </div>
@@ -140,9 +143,12 @@ export function OverviewSlide({ slide }: Props) {
                     active={pipelineActive}
                     className="flex-1 p-7 transition-all duration-300"
                   >
-                    <div className="label-caps mb-3 flex items-baseline gap-2 text-base">
+                    <div
+                      className="hw-label mb-3 flex items-baseline gap-2 text-secondary [--hw-label-size:var(--text-base)]"
+                      data-hw-exception="label-hue"
+                    >
                       <div className="hw-marker bg-secondary" />
-                      <span className="text-secondary">Pipeline</span>
+                      <span>Pipeline</span>
                     </div>
                     <div className="flex flex-col gap-3 md:flex-row">
                       {pipeline.slice(1).map((stage: Stage, index: number) => (
@@ -167,9 +173,12 @@ export function OverviewSlide({ slide }: Props) {
                 active={pipelineActive}
                 className="mt-6 p-7 transition-all duration-300"
               >
-                <div className="label-caps mb-4 flex items-baseline gap-2 text-base">
+                <div
+                  className="hw-label mb-4 flex items-baseline gap-2 text-secondary [--hw-label-size:var(--text-base)]"
+                  data-hw-exception="label-hue"
+                >
                   <div className="hw-marker bg-secondary" />
-                  <span className="text-secondary">Pipeline</span>
+                  <span>Pipeline</span>
                 </div>
                 <div
                   className="grid gap-3"

@@ -174,7 +174,10 @@ export function FlowSteps({
                   )}
                 </NumberTile>
                 {step.label && !inTile && (
-                  <span className={`label-caps mt-5 -mb-4 text-xl text-balance ${accent}`}>
+                  <span
+                    className={`hw-label mt-5 -mb-4 text-balance [--hw-label-size:var(--text-xl)] ${accent}`}
+                    data-hw-exception="label-hue"
+                  >
                     {step.label}
                   </span>
                 )}
@@ -227,9 +230,9 @@ export function Framed({ frame, children }: { frame: FlowFrame; children: ReactN
   return (
     <DashedFrame tone="primary" active={!!frame.label} className="w-full p-6">
       {frame.label && (
-        <div className="label-caps mb-4 flex items-baseline gap-2 text-sm">
+        <div className="hw-label mb-4 flex items-baseline gap-2 [--hw-label-size:var(--text-sm)]">
           <div className="hw-marker bg-primary" />
-          <span className="text-primary">{frame.label}</span>
+          <span>{frame.label}</span>
           {frame.logos?.map((logo, i) => (
             <Image
               key={i}

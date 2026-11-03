@@ -36,7 +36,8 @@ export function GanttSlide({ slide }: Props) {
                 {slide.columns.map((col, i) => (
                   <div
                     key={i}
-                    className="label-caps border-b-2 border-border pb-1.5 text-center text-sm text-text-subtle"
+                    className="hw-label border-b-2 border-border pb-1.5 text-center [--hw-label-size:var(--text-sm)]"
+                    data-tone="muted"
                   >
                     {col}
                   </div>

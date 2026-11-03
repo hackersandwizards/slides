@@ -42,7 +42,9 @@ export function SectionHeader({ label, principle, pillColor, stageMarker, stageP
           <div
             className={`flex min-w-0 flex-wrap items-center gap-1 rounded-brand-sm border px-4 py-1.5 md:shrink-0 md:flex-nowrap md:rounded-full ${themeStyles.container}`}
           >
-            <span className={`label-caps mr-1.5 text-xl ${themeStyles.label}`}>Stage</span>
+            <span className="hw-label mr-1.5 [--hw-label-size:var(--text-xl)]" data-tone="muted">
+              Stage
+            </span>
             {stagePrefix && (
               <span className="flex items-center">
                 <span

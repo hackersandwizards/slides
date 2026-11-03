@@ -431,7 +431,10 @@ function ContentBlockRenderer({
 
     case "table":
       return (
-        <div className="overflow-x-auto rounded-brand border-2 border-border bg-white">
+        <div
+          className="overflow-x-auto rounded-brand border-2 border-border bg-white"
+          data-hw-exception="slide-table"
+        >
           {/* Automatic layout: `widths` are the columns' preferred shares, and no column ever gets
               narrower than its longest word. A fixed layout let a word run into the next cell. */}
           {/* The cells take the ink and the heads the step under the cells', set tight: in a lit
@@ -456,7 +459,8 @@ function ContentBlockRenderer({
                   {block.headers.map((header, i) => (
                     <th
                       key={i}
-                      className={`label-caps border-b-2 border-border py-3 text-left leading-tight text-text ${block.compact ? "px-4 text-base" : "px-6 text-lg"}`}
+                      className={`hw-label border-b-2 border-border py-3 text-left leading-tight ${block.compact ? "px-4 [--hw-label-size:var(--text-base)]" : "px-6 [--hw-label-size:var(--text-lg)]"}`}
+                      data-tone="ink"
                     >
                       {header}
                     </th>
@@ -542,7 +546,12 @@ function ContentBlockRenderer({
           <div className="flex flex-col justify-center space-y-8">
             {block.sections.map((section, i) => (
               <div key={i}>
-                <h3 className="label-caps mb-2 text-xl text-accent">{section.title}</h3>
+                <h3
+                  className="hw-label mb-2 text-accent [--hw-label-size:var(--text-xl)]"
+                  data-hw-exception="label-hue"
+                >
+                  {section.title}
+                </h3>
                 <p className="text-xl leading-relaxed text-text-muted">
                   {renderMarkdown(section.text)}
                 </p>
@@ -575,9 +584,9 @@ function ContentBlockRenderer({
       return (
         <DashedFrame tone="primary" active={!!block.containerLabel} className="p-6">
           {block.containerLabel && (
-            <div className="label-caps mb-4 flex items-baseline gap-2 text-sm">
+            <div className="hw-label mb-4 flex items-baseline gap-2 [--hw-label-size:var(--text-sm)]">
               <div className="hw-marker bg-primary" />
-              <span className="text-primary">{block.containerLabel}</span>
+              <span>{block.containerLabel}</span>
               {block.containerLogos &&
                 block.containerLogos.map((logo, li) => (
                   <Image
@@ -657,7 +666,10 @@ function ContentBlockRenderer({
           )}
           <div className="flex flex-col gap-4">
             {block.gridTitle && (
-              <h3 className="label-caps mb-2 text-base text-secondary">
+              <h3
+                className="hw-label mb-2 text-secondary [--hw-label-size:var(--text-base)]"
+                data-hw-exception="label-hue"
+              >
                 {renderMarkdown(block.gridTitle)}
               </h3>
             )}
@@ -832,7 +844,7 @@ function StandardContentSlide({ slide }: Props) {
             stagePrefix={slide.stagePrefix}
           />
           {slide.badge && (
-            <div className="label-caps flex shrink-0 items-baseline gap-2.5 rounded-full border border-primary/40 bg-white px-5 py-2 text-sm text-primary">
+            <div className="hw-label flex shrink-0 items-baseline gap-2.5 rounded-full border border-primary/40 bg-white px-5 py-2 [--hw-label-size:var(--text-sm)]">
               <span className="hw-marker" />
               <span>{slide.badge}</span>
             </div>

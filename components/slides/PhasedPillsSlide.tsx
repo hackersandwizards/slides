@@ -99,7 +99,10 @@ export function PhasedPillsSlide({ slide }: Props) {
                     duration={0.3}
                     className={wrap ? "basis-full" : "col-span-full"}
                   >
-                    <div className="label-caps flex items-baseline gap-2.5 text-base">
+                    <div
+                      className="hw-label flex items-baseline gap-2.5 [--hw-label-size:var(--text-base)]"
+                      data-hw-exception="label-hue"
+                    >
                       <div className={`hw-marker ${themeDotColor[theme] ?? "bg-secondary"}`} />
                       <span className={themeLabelColor[theme] ?? "text-secondary"}>
                         {phase.label}

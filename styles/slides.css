@@ -500,18 +500,8 @@ html:has(.print-slide) {
     --hw-marker-size: calc(var(--slide-marker) * 0.75);
     --hw-marker-color: color-mix(in srgb, var(--color-teal) 40%, var(--color-bg));
   }
-  .label-caps > .hw-marker {
+  .hw-label > .hw-marker {
     --hw-marker-mid: var(--slide-marker-caps-mid);
-  }
-
-  /* The website's label-caps (typography.css): metadata, chips and table heads in the label
-     role's family, weight, tracking and case. Each label keeps its own step, so a kicker strip
-     stays one line tall. */
-  .label-caps {
-    font-family: var(--type-label-family);
-    font-weight: var(--type-label-weight);
-    letter-spacing: var(--type-label-tracking);
-    text-transform: var(--type-label-case);
   }
 
   /* The h1 role at the slide's title size (tokens.css). */

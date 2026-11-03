@@ -66,7 +66,8 @@ function PartCard({
 
         <div className="px-10 pt-12 pb-10">
           <div
-            className={`label-caps inline-flex items-center rounded-brand-sm border px-4 py-1.5 text-xs ${style.badge}`}
+            className={`hw-label inline-flex items-center rounded-brand-sm border px-4 py-1.5 [--hw-label-size:var(--text-xs)] ${style.badge}`}
+            data-hw-exception="label-hue"
           >
             {label}
           </div>
@@ -89,7 +90,12 @@ function PartCard({
               return (
                 <div key={g}>
                   {group.label && (
-                    <p className={`label-caps mb-3 text-base ${text}`}>{group.label}</p>
+                    <p
+                      className={`hw-label mb-3 [--hw-label-size:var(--text-base)] ${text}`}
+                      data-hw-exception="label-hue"
+                    >
+                      {group.label}
+                    </p>
                   )}
                   <ul className="space-y-4">
                     {group.items.map((item, i) => (

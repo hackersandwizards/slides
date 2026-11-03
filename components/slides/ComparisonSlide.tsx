@@ -59,7 +59,10 @@ interface Props {
 function Highlight({ text, muted = false }: { text?: string; muted?: boolean }) {
   if (!text) return null;
   return (
-    <p className={`label-caps mb-4 text-base ${muted ? "text-text-subtle" : "text-primary"}`}>
+    <p
+      className="hw-label mb-4 [--hw-label-size:var(--text-base)]"
+      data-tone={muted ? "muted" : undefined}
+    >
       {text}
     </p>
   );
@@ -366,7 +369,12 @@ export function Positions({
             </span>
           )}
           {!alignRight && <span className={`h-px w-10 self-center ${a.rule}`} />}
-          <span className={`label-caps text-sm ${a.text}`}>{side.name}</span>
+          <span
+            className={`hw-label [--hw-label-size:var(--text-sm)] ${a.text}`}
+            data-hw-exception="label-hue"
+          >
+            {side.name}
+          </span>
           {alignRight && <span className={`h-px w-10 self-center ${a.rule}`} />}
           {alignRight && (
             <span
@@ -477,14 +485,24 @@ function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
 
             <div className="grid grid-cols-2 gap-6">
               <SlideCard tone="error" look="soft" className="card-pad-6">
-                <p className="label-caps mb-3 text-sm text-red">Bad</p>
+                <p
+                  className="hw-label mb-3 text-red [--hw-label-size:var(--text-sm)]"
+                  data-hw-exception="label-hue"
+                >
+                  Bad
+                </p>
                 <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
                   {example.bad}
                 </pre>
               </SlideCard>
 
               <SlideCard tone="success" look="soft" className="card-pad-6">
-                <p className="label-caps mb-3 text-sm text-(--slide-success-ink)">Good</p>
+                <p
+                  className="hw-label mb-3 text-(--slide-success-ink) [--hw-label-size:var(--text-sm)]"
+                  data-hw-exception="label-hue"
+                >
+                  Good
+                </p>
                 <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
                   {example.good}
                 </pre>
