@@ -61,7 +61,7 @@ function PartCard({
 
   return (
     <BlurFade delay={delay} duration={0.5}>
-      <SlideCard className={`relative h-full overflow-hidden card-pad-0 ${style.glow}`}>
+      <SlideCard className="relative h-full overflow-hidden shadow-card card-pad-0">
         <div className={`absolute inset-x-0 top-0 h-2 ${style.bar}`} />
 
         <div className="px-10 pt-12 pb-10">

@@ -1,11 +1,6 @@
 import type { ReactNode } from "react";
 import { themeDotColor, type StageCategory } from "../../lib/stage-utils";
 
-// Shared chrome for the two "factory frame" slide types (OverviewSlide,
-// PhasedPillsSlide): the centered gradient title pill and the "new/active" dot.
-// Kept here so the two slides cannot drift apart. The dot does not pulse: a loop
-// that never ends pulls the eye off the speaker for the whole slide.
-
 /** The factory frame's title, a caps label on the brand gradient pill over the frame's edge. */
 export function GradientTitlePill({ children }: { children: ReactNode }) {
   return (
@@ -18,7 +13,8 @@ export function GradientTitlePill({ children }: { children: ReactNode }) {
   );
 }
 
-/** The dot on a stage that is new or active, in its category's colour, ringed white. */
+/** The dot on a stage that is new or active, in its category's colour, ringed white. It does not
+ *  pulse: a loop that never ends pulls the eye off the speaker for the whole slide. */
 export function PulseDot({
   category,
   offset = "-top-1 -right-1",

@@ -24,7 +24,6 @@ describe("content blocks", () => {
     expect(box?.className).not.toContain("beside-bars");
   });
 
-  // A named scale is numbered at its ends and quarters; context bars set label and value muted.
   it("numbers a named scale and mutes the context bars", () => {
     const c = content([
       {
@@ -44,7 +43,6 @@ describe("content blocks", () => {
     ).toContain("text-primary");
   });
 
-  // An empty labels object adds no label column.
   it("gives a timeline with empty labels no extra column", () => {
     const c = content([
       {
@@ -91,7 +89,6 @@ describe("content blocks", () => {
     expect(c.querySelector('button[aria-label="Pause Demo"]')).not.toBeNull();
   });
 
-  // A step naming an icon the engine lacks keeps its number, never an empty tile.
   it("numbers a flow step whose icon is unknown", () => {
     const c = content([
       { type: "flow", steps: [{ title: "a", icon: "no-such-icon" }, { title: "b" }] },
@@ -116,7 +113,6 @@ describe("content blocks", () => {
     expect(c.querySelector("figure > a")?.textContent).toBe("example.com/pull/7");
   });
 
-  // Image, video and linked image stand centred in the body's free height (slides.css).
   it("sets every picture block in the media frame", () => {
     for (const block of [
       { type: "image", src: "/a.png" },
@@ -175,7 +171,6 @@ describe("merged card and number shapes", () => {
     render(<slideComponents.grid slide={{ type: "grid", headline: "H", ...slide } as Slide} />)
       .container;
 
-  // Five figures and more wrap into three columns, and a figure's description stands under it.
   it("wraps numbers after four figures and sets a description line", () => {
     const items = Array.from({ length: 6 }, (_, i) => ({
       value: `${i}`,
@@ -227,8 +222,6 @@ describe("merged card and number shapes", () => {
     expect(c.querySelector(".bg-accent\\/7")).toBeNull();
   });
 
-  // A labeled grid's highlighted item is the cards block's highlight; a four-column block's
-  // columns are cards with a list each.
   it("draws labeled grid and four-column blocks as cards", () => {
     const c = content([
       {
@@ -263,7 +256,6 @@ describe("merged card and number shapes", () => {
     expect(four.querySelector("li")?.className).toContain("card-text-base");
   });
 
-  // A cards block without `dense` keeps its mark and sizes.
   it("keeps plain cards at their own sizes", () => {
     const c = content([{ type: "cards", items: [{ title: "A", text: "a" }] }]);
     expect(c.querySelector(".hw-card .h-1\\.5")).not.toBeNull();
@@ -304,7 +296,6 @@ describe("pipeline into flow (merge-flow)", () => {
     expect(c.querySelector("h2")?.className).toContain("text-xl");
   });
 
-  // A flow block without `dense` keeps its large tiles.
   it("keeps a plain flow's large tiles", () => {
     const c = content([{ type: "flow", steps: [{ title: "A" }, { title: "B" }] }]);
     expect(c.querySelector("h2")?.previousElementSibling?.className).toContain("h-24");
@@ -387,10 +378,18 @@ describe("statement and content merges (merge-statement, merge-content)", () => 
       type: "regular",
       headline: "H",
       layout: "cards",
-      sections: [{ title: "One", text: "t" }],
+      sections: [{ title: "One", text: "**t**", link: { url: "https://example.com", label: "L" } }],
     });
     expect(agenda.textContent).toContain("One");
     expect(agenda.querySelector("ol, ul")).not.toBeNull();
+    expect(agenda.textContent).not.toContain("**");
+    expect(agenda.querySelector('a[href="https://example.com"]')?.textContent).toBe("L");
+    const linkOnly = one({
+      type: "regular",
+      headline: "H",
+      sections: [{ title: "Repo", link: { url: "https://example.com", label: "L" } }],
+    });
+    expect(linkOnly.querySelector('a[href="https://example.com"]')?.textContent).toBe("L");
     const profile = one({
       type: "regular",
       headline: "H",

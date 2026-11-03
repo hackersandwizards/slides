@@ -248,7 +248,6 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
 }
 
 function TrendVariant({ slide }: { slide: ChartSlideType }) {
-  // A chart printed while it grows freezes mid-animation in the PDF.
   const print = usePrintMode();
   const { data, annotation, seriesLabel, series2Label } = slide;
   const mounted = useMounted();

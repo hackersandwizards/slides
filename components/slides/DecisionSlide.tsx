@@ -20,7 +20,6 @@ const TEAM: Record<DecisionTeam, string> = {
   "complicated-subsystem": "border-factory bg-factory/15 text-factory",
 };
 
-// An arrowhead at the right end of a 4px connector.
 function Head() {
   return (
     <span className="absolute top-1/2 -right-1 h-0 w-0 -translate-y-1/2 border-y-(length:--slide-arrowhead-half) border-l-(length:--slide-arrowhead-length) border-y-transparent border-l-primary" />

@@ -31,7 +31,6 @@ describe("evolution, through the process slide", () => {
     expect(getByText("10x").nextElementSibling?.tagName).toBe("H2");
   });
 
-  // One label too long for a tile moves every label above its title, and the tiles count.
   it("moves every label above the title when one is too long for a tile", () => {
     const { getByText } = printed([stage("Basis", "Chat"), stage("Harness", "Harness")]);
     expect(getByText("Basis").nextElementSibling?.tagName).toBe("H2");
@@ -55,7 +54,6 @@ describe("evolution, through the process slide", () => {
 });
 
 describe("ProcessSlide, loop false", () => {
-  // Stages that run once have no loop back and no phone circle; a cycle keeps both.
   it("draws no loop and no circle", () => {
     const nodes = [
       { title: "Chat", description: "a", label: "1x" },

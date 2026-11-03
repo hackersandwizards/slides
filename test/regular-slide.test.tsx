@@ -13,7 +13,6 @@ describe("regular slide", () => {
     expect(getByText("Headline").closest(".slide-title")).not.toBeNull();
   });
 
-  // Arriving backwards opens every section at once; with no step taken, none stands back.
   it("dims no section when the slide opens fully revealed", async () => {
     sessionStorage.setItem("slide-direction", "back");
     const SlideComponent = slideComponents.regular;

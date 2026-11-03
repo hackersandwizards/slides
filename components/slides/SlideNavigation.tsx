@@ -39,7 +39,6 @@ const KEYS: Array<[string, string]> = [
   ["H", "hints on and off"],
   ["?", "this overlay"],
 ];
-// Edit mode exists only on the dev server.
 if (process.env.NODE_ENV === "development") KEYS.push(["E", "edit text, dev only"]);
 
 export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) {

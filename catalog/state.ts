@@ -1,6 +1,3 @@
-// A story's state: the nth slide of a type in the specimen deck, the engine's regression deck, so
-// the catalog shows the slides the print page and talks show. A part's story shows its
-// sheet of variants (parts.ts).
 import { slideCatalogue } from "../specimen/slide-catalogue";
 import type { Slide } from "../types/slide";
 import SlideFrame from "./SlideFrame.astro";

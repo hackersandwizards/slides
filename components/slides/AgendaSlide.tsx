@@ -1,5 +1,6 @@
 "use client";
 
+import { renderMarkdown } from "../../lib/markdown";
 import type { AgendaSlide as AgendaSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
@@ -43,10 +44,10 @@ export function AgendaSlide({ slide }: Props) {
                   </span>
                 )}
                 <span className="text-2xl text-text md:text-4xl">
-                  {item.title}
+                  {renderMarkdown(item.title)}
                   {item.text && (
                     <span className="mt-1 block text-xl text-text-muted md:text-2xl">
-                      {item.text}
+                      {renderMarkdown(item.text)}
                     </span>
                   )}
                 </span>
@@ -56,7 +57,7 @@ export function AgendaSlide({ slide }: Props) {
           {slide.footer && (
             <BlurFade delay={0.3} duration={0.4}>
               <p className="mt-10 border-t-2 border-border pt-6 text-2xl font-medium text-text">
-                {slide.footer}
+                {renderMarkdown(slide.footer)}
               </p>
             </BlurFade>
           )}

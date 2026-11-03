@@ -1,7 +1,4 @@
 ---
-// The print page: every slide type of the engine with each of its variants, the content blocks,
-// the parts and the shared elements, as they look in a printed deck (print.ts). brand-elements,
-// the marker test and the catalogue test read it from dist/ as a file.
 import {
   brandHref,
   entries,
@@ -124,7 +121,6 @@ table.parts th, table.parts td { text-align: left; vertical-align: top; padding:
 </div>
 </div>
 <script is:inline>
-// The catalogue's filter: a job in the left column and the search narrow the tiles together.
 const tiles = [...document.querySelectorAll(".tiles figure")];
 const find = document.getElementById("find");
 let job = "";

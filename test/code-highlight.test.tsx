@@ -65,6 +65,13 @@ describe("CodeLines", () => {
     const span = container.querySelector("span");
     expect(span?.className).toBe("");
     expect(span?.style.color).toBe("");
+    expect(container.querySelectorAll("[data-code-plain]")).toHaveLength(3);
+  });
+
+  // The PDF export waits until no line carries the marker, an unknown language included.
+  it("drops the plain marker once Shiki has loaded", async () => {
+    expect((await block("a\nb", "cobol")).querySelector("[data-code-plain]")).toBeNull();
+    expect((await block("a: b", "yaml")).querySelector("[data-code-plain]")).toBeNull();
   });
 
   it("gives each token its brand code role's class, never an inline colour", async () => {

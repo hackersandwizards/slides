@@ -81,7 +81,6 @@ const slides: Slide[] = [
       "agenda as next steps: due dates in place of the numbers, a repeated date printed once, owners under the titles, the decision as footer.",
   },
 
-  // ─── content: section themes and header furniture ───────────────────────
   {
     type: "content",
     sectionLabel: "Primary theme",
@@ -1601,7 +1600,6 @@ const slides: Slide[] = [
     notes: "closing: discussion with seed questions, primary background.",
   },
 
-  // ─── max-length kickers: a long section label beside a principle or a stage strip ───
   {
     type: "content",
     sectionLabel: "Platform engineering and developer experience",

@@ -45,8 +45,6 @@ const TONES = {
   green: "text-green-dark",
 } as const;
 
-// ─── flow: steps in order on one line, an optional loop back ────────────────
-
 /** A flow step as the process slide passes it: the block's step plus a `label` (a
  *  multiplier or stage name: in the tile while every label fits it, else above the title), a
  *  teal `subtitle`, a closing `badge` and `dim` for a stage outside the story. */
@@ -272,8 +270,6 @@ export function Framed({ frame, children }: { frame: FlowFrame; children: ReactN
   );
 }
 
-// ─── layers: a stack, each layer resting on the one below ───────────────────
-
 function Layers({ block }: { block: Of<"layers"> }) {
   return (
     <div className="flex w-full flex-col gap-5">
@@ -302,8 +298,6 @@ function Layers({ block }: { block: Of<"layers"> }) {
     </div>
   );
 }
-
-// ─── timeline: dated stages on one axis ─────────────────────────────────────
 
 function Dot({ on, future }: { on: boolean; future: boolean }) {
   return (
@@ -416,7 +410,7 @@ function Staggered({
   const leader = <span className="mx-auto h-full min-h-6 w-1" style={{ background: GREY }} />;
   return (
     <div
-      className="grid w-full grid-rows-[auto_auto_auto_1.5rem_3.5rem_1.5rem_auto_auto_auto]"
+      className="grid w-full grid-rows-[auto_auto_auto_--spacing(6)_--spacing(14)_--spacing(6)_auto_auto_auto]"
       style={{
         gridTemplateColumns: `${labels ? "auto " : ""}repeat(${tracks}, minmax(0, 1fr))`,
       }}
@@ -474,8 +468,6 @@ function Staggered({
   );
 }
 
-// ─── transform: what the before list becomes ────────────────────────────────
-
 // Drawn as a comparison's before-after without the strike: the before side stays (decision
 // merge-comparison, 7.94 against 7.29 for the transform's own drawing).
 function Transform({ block }: { block: Of<"transform"> }) {
@@ -485,8 +477,6 @@ function Transform({ block }: { block: Of<"transform"> }) {
     </div>
   );
 }
-
-// ─── bars: categories against one value, labelled at the bar ────────────────
 
 function Bars({ block }: { block: Of<"bars"> }) {
   const anyHighlight = block.bars.some((b) => b.highlight);
@@ -559,7 +549,10 @@ function Bars({ block }: { block: Of<"bars"> }) {
       <div className={`flex flex-col ${inline ? "gap-5" : tall ? "gap-12" : "gap-7"}`}>
         {bars.map((bar, i) =>
           inline ? (
-            <div key={i} className="grid grid-cols-[18rem_minmax(0,1fr)_14rem] items-center gap-8">
+            <div
+              key={i}
+              className="grid grid-cols-[--spacing(72)_minmax(0,1fr)_--spacing(56)] items-center gap-8"
+            >
               <span
                 className={`font-sans text-3xl leading-tight text-balance ${tone(bar, "font-semibold")}`}
               >
@@ -577,7 +570,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
               </span>
               {/* A track shows the scale's full length when the block names one; the value
                   stands in its own column right of the track, level with its bar. */}
-              <div className="mt-3 grid grid-cols-[minmax(0,1fr)_14rem] items-center gap-8">
+              <div className="mt-3 grid grid-cols-[minmax(0,1fr)_--spacing(56)] items-center gap-8">
                 {track(bar)}
                 {value(bar)}
               </div>
@@ -587,18 +580,16 @@ function Bars({ block }: { block: Of<"bars"> }) {
       </div>
       {scale &&
         (inline ? (
-          <div className="grid grid-cols-[18rem_minmax(0,1fr)_14rem] gap-8">
+          <div className="grid grid-cols-[--spacing(72)_minmax(0,1fr)_--spacing(56)] gap-8">
             <div className="col-start-2">{scale}</div>
           </div>
         ) : (
-          <div className="grid grid-cols-[minmax(0,1fr)_14rem] gap-8">{scale}</div>
+          <div className="grid grid-cols-[minmax(0,1fr)_--spacing(56)] gap-8">{scale}</div>
         ))}
       <Source text={block.source} />
     </div>
   );
 }
-
-// ─── numbers: figures, each with what it counts and an optional line on it ────────────────
 
 // A leading hyphen in a figure is a minus: set the typographic one, which sits on the digits' axis.
 const minus = (v: string) => v.replace(/^-(?=\d)/, "−");
@@ -688,8 +679,6 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
   );
 }
 
-// ─── annotated: a screenshot with its lines that matter marked ──────────────
-
 function Annotated({ block }: { block: Of<"annotated"> }) {
   const [w, h] = block.size;
   const top = block.crop?.top ?? 0;
@@ -745,8 +734,6 @@ function Annotated({ block }: { block: Of<"annotated"> }) {
     </div>
   );
 }
-
-// ─── annotated code: code as text, its lines that matter marked ─────────────
 
 // A wrapped code line continues two characters right of its own indent, never at column 0.
 const hang = (line: string) => {
@@ -807,8 +794,6 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
     </div>
   );
 }
-
-// ─── cards: parallel points, each under an icon or a number ─────────────────
 
 function Cards({ block }: { block: Of<"cards"> }) {
   const n = block.items.length;

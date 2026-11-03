@@ -1,34 +1,19 @@
-/* The slide tokens: the slide's roles, derived from the brand. Every value comes from
-   @hackersandwizards/brand, never retyped: the colours, families and type roles from tokens.css, every
-   length, size and step of the stage scale from stage.css, the night column from night.css. This
-   file derives the slide's roles from them with var() only. slides.css and every component name
-   these tokens and nothing else (test/tokens.test.ts): a Tailwind utility whose step is a token, or
-   `var()`, never a bracketed length, colour or line height. theme(static) keeps every token, where
-   Tailwind keeps only those a scanned file names; resolved through the package, each import reads
-   the pinned brand in this checkout and in a consumer's node_modules alike. */
+/* theme(static) keeps every token, where Tailwind keeps only those a scanned file names. */
 @import "@hackersandwizards/brand/tokens.css" theme(static);
 @import "@hackersandwizards/brand/stage.css" theme(static);
-/* Night for a slide written in the light tokens: data-hw-night on a night deck's frame and on a
-   deep-dive slide's shell (SlideContainer, PrintSlide, SlideShell). */
 @import "@hackersandwizards/brand/night.css";
 
-/* The type roles at stage size: each role's website size times --slide-stage (stage.css carries the
-   table, the line heights and the steps with no role). Not inline, so the utilities read the
-   variables. */
+/* Not inline, so the utilities read the variables. */
 @theme {
-  /* The brand corner on the slide scale (see :root below): cards and code blocks take the full
-     corner; number and icon tiles, inline code and the hint bar are square. A text chip stays the
-     website's pill (TrainingList.astro .tl-chip). */
   --radius-brand: var(--slide-radius);
   --radius-brand-sm: var(--slide-radius-sm);
-  /* Status: a warning is the brand's dark amber, as on every surface (an error takes red itself).
-     Not inline, so a theme sets it again. */
+  /* Not inline, so a theme sets it again. */
   --color-warning: var(--color-amber-dark);
   /* Badge colors: opaque teal tints, for overlapping card borders */
   --color-badge-bg: color-mix(in srgb, var(--color-teal) 15%, white);
   --color-badge-border: color-mix(in srgb, var(--color-teal) 25%, white);
-  /* Code ground: the brand's code ground, night; the brand-dark theme sets night-2, as the brand's
-     code block and the PPTX export do. Not inline, so a theme sets it again. */
+  /* The brand-dark theme sets night-2, as the brand's code block and the PPTX export do: not
+     inline, so a theme sets it again. */
   --color-code-bg: var(--code-bg);
   --text-xs: calc(var(--type-label-size) * var(--slide-stage));
   --text-base: calc(var(--type-body-size) * var(--slide-stage));
@@ -64,7 +49,6 @@
   --color-text-subtle: var(--color-muted);
 }
 
-/* The slide's roles on the stage scale (stage.css states each length's reason). */
 :root {
   --slide-footer-side: var(--slide-side);
   --slide-closing-lockup-night: calc(var(--slide-closing-lockup) * 1640.612 / 1489);
@@ -73,8 +57,7 @@
   --foreground: var(--color-ink);
   --slide-chart-tooltip-border: 2px solid var(--color-primary-border);
 
-  /* ── Derived colours ── set again under night below, since a colour mixed from a token
-     resolves where it is declared. */
+  /* Set again under night below, since a colour mixed from a token resolves where it is declared. */
   /* Context marks (a bar that is not the point): the ink at the ladder's 40 % on the page, 2.4:1 on
      light and 3.4:1 on night, where the theme's ink and page turn. Its value stands beside it in
      ink. Mixed with white, as before, it turned near-white on night and outshone the highlight. */
@@ -90,10 +73,7 @@
 }
 
 @layer utilities {
-  /* Brand dark: night.css turns the light tokens (data-hw-night). A whole deck takes it as
-     `theme-brand-dark`, a proposal on no deck by default (decision row in os
-     docs/tracking/decisions); a deep-dive slide always takes it (`SlideShell` `night`), on itself
-     and on the frame holding it, so the corner mark turns with it. The slide's own roles mixed
+  /* A deep-dive slide's frame takes night too, so the corner mark turns with it; the roles mixed
      from a light token resolved on the root, so they are set again here, as is every role a
      component reads by name. */
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night)) {

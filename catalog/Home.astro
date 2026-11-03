@@ -1,14 +1,12 @@
 ---
-// The catalog's home in scaffolding's shell: the rail with the groups, a tile per slide type and
-// part drawing its first state whole at the 1440 stage. The default slot holds the foundations: the
-// three layers and the elements the slides take from brand or keep, which brand-elements measures on
-// the print page.
 import Home from "@hackersandwizards/scaffolding/catalog/Home.astro";
 import "@hackersandwizards/brand/disclosure.css";
 import elements from "../brand-elements.json";
 
 const PRINT = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/catalog/print/`;
-const exceptions = Object.entries(elements.exceptions as Record<string, string>);
+const exceptions = Object.entries(
+  elements.exceptions as Record<string, string | { reason: string }>,
+).map(([name, e]) => [name, typeof e === "string" ? e : e.reason]);
 ---
 
 <Home>

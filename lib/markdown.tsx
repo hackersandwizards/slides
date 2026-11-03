@@ -3,7 +3,6 @@ import React from "react";
 export function renderMarkdown(text: string): React.ReactNode {
   // Single-asterisk emphasis requires non-whitespace immediately inside the
   // markers so arithmetic like "2 * 3 * 4" is not mistaken for emphasis.
-  // Emphasis does not nest.
   const parts = text.split(
     /(\[[^\]]+\]\([^)\s]+\)|\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?!\s)[^*]+(?<!\s)\*|`[^`]+`)/g,
   );
@@ -35,10 +34,9 @@ export function renderMarkdown(text: string): React.ReactNode {
       );
     }
     const text = part.slice(1, -1);
-    // A short chip stays on one line, so a name such as `pr-diff-summarizer` never splits at its
-    // hyphen; a long one, such as a whole command, and a path (a `/` or `.` in it) may break inside
-    // themselves, since they ran past the slide's edge or into the next column: a table of paths
-    // ran its last column off the slide (slides v0.19.0 to v0.21.1).
+    // A short chip stays on one line, so a name never splits at its hyphen; a long one and a path
+    // may break inside themselves, since a table of paths ran its last column off the slide
+    // (slides v0.19.0 to v0.21.1).
     return (
       <code
         key={i}

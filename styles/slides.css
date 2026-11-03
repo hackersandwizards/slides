@@ -2,17 +2,11 @@
 @import "./tokens.css";
 /* The brand's list marker, in the components layer so a marker's colour utility still wins. */
 @import "@hackersandwizards/brand/marker.css" layer(components);
-/* The brand's shared elements (hw-card, hw-label, hw-pill, ...) with their four scales. Every slide
-   sets the stage scale (SlideShell's data-hw-scale); the settings the slide engine owns a token for
-   are set below. */
 @import "@hackersandwizards/brand/elements.css" layer(components);
-/* Tailwind never scans node_modules, so a consumer's build sees the engine's classes only because
-   this file names them, relative to itself. */
 @source "../components";
 @source "../lib";
 
-/* The brand's one font set, the static files of @hackersandwizards/brand, weights 400 to 700.
-   Self-hosted, so a PDF export has no network dependency and cannot silently fall back to a
+/* Self-hosted static weights, so a PDF export has no network dependency and cannot fall back to a
    system font mid-render: Chrome embeds a variable font in a PDF as Type 3 glyphs, which viewers
    draw slowly and blurred. */
 @font-face {
@@ -485,10 +479,6 @@ html:has(.print-slide) {
     --hw-pill-pad: 0 calc(var(--spacing) * 5);
   }
 
-  /* The list marker is the brand's .hw-marker (marker.css, imported above), which centres the
-     square on the first line's x-height in its baseline row. The slide sets its size, a second
-     level a step smaller and lighter, and the caps' middle beside capitals. A marker's own colour
-     utility (bg-green-dark, bg-warning) wins, since this sits in the components layer. */
   /* The code panel's padding is the layout's own (CodePanel). */
   .hw-code[data-variant="panel"] {
     --hw-code-pad: 0;
@@ -504,7 +494,6 @@ html:has(.print-slide) {
     --hw-marker-mid: var(--slide-marker-caps-mid);
   }
 
-  /* The h1 role at the slide's title size (tokens.css). */
   .slide-title {
     font-family: var(--type-h1-family);
     font-size: var(--slide-title-size);
@@ -683,7 +672,6 @@ html:has(.print-slide) {
     background: color-mix(in srgb, var(--color-green-dark) 7%, var(--background));
   }
 
-  /* The Night wordmark on a dark theme, the light one everywhere else. */
   .hw-wordmark-night,
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
     .hw-wordmark {
@@ -697,10 +685,6 @@ html:has(.print-slide) {
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
     .bg-white,
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
-    .bg-white\/90,
-  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
-    .bg-white\/95,
-  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
     .bg-background {
     background-color: var(--color-night-2) !important;
   }
@@ -712,11 +696,6 @@ html:has(.print-slide) {
   }
 
   /* A card's white gradient stop turns the card ground too. */
-  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
-    .from-white {
-    --tw-gradient-from: var(--color-night-2);
-  }
-
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
     .to-white {
     --tw-gradient-to: var(--color-night-2);
@@ -802,7 +781,6 @@ html:has(.print-slide) {
   }
 }
 
-/* A complicated-subsystem team's octagon (tokens.css). */
 .team-octagon {
   --cut: var(--slide-octagon-cut);
   clip-path: polygon(

@@ -8,11 +8,9 @@ import typescript from "shiki/langs/typescript.mjs";
 import yaml from "shiki/langs/yaml.mjs";
 import codeTheme from "@hackersandwizards/brand/code-theme.json";
 
-// The brand's code: Shiki with the brand theme hw-code, as every h&w surface highlights code.
 // Synchronous, with the JavaScript regex engine, so a slide renders its code in the same pass on the
-// server, in the browser and in the print route. A language not loaded here renders as plain text.
-// Each token takes the brand class of its colour's role (hw-code-<role>, elements/code.css), never
-// an inline colour, so the colours come from the --code-* tokens a container may set.
+// server, in the browser and in the print route; each token takes its role's brand class
+// (hw-code-<role>), never an inline colour, so the --code-* tokens a container sets colour it.
 const theme = codeTheme as ThemeRegistration;
 const highlighter = createHighlighterCoreSync({
   themes: [theme],
@@ -21,8 +19,7 @@ const highlighter = createHighlighterCoreSync({
 });
 const LANGS = new Set(highlighter.getLoadedLanguages());
 
-// Each role's colour, read from the theme by the scope that names the role. The text colour takes
-// no class: the code panel sets it.
+// The text colour takes no class: the code panel sets it.
 const colourOf = (scope: string) =>
   theme.tokenColors?.find((t) => [t.scope].flat().includes(scope))?.settings.foreground;
 const ROLES = new Map<string | undefined, string>([

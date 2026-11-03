@@ -69,7 +69,6 @@ function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
   );
 }
 
-/** A speaker's colours, picked by position (`personAccent`). */
 const ACCENT = {
   primary: { ring: "ring-primary/40", text: "text-primary", bg: "bg-primary/15 text-primary" },
   secondary: {

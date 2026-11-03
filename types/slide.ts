@@ -341,8 +341,8 @@ export interface GridCard {
   value?: string;
   label?: string;
   highlight?: boolean;
-  /** The card's tone, a SlideCard tone: its border, tint, badge and icon on a pillar, its tint and
-   *  figure on a stat. `accent` also marks a stat as the one that matters. */
+  /** The card's tone. The web drops it (merge-cards: colour comes from the role); only the
+   *  PowerPoint export still draws it. */
   tone?: GridTone;
   /** @deprecated `tone`, under its old name; read until every deck has moved. */
   accentColor?: GridTone;

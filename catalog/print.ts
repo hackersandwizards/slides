@@ -1,10 +1,3 @@
-// The print pages' content (pages/catalog/print/): the three layers (tokens, parts, types) with
-// every part its variants and the slide types that compose it, the shared elements, then the
-// catalogue: per registered slide type its first slide in the specimen deck and the first of each
-// further variant, then every specimen slide labelled "Block: …" or "Visual: …", one per content
-// block and variant, each under its communication jobs, rendered by the engine's own components in
-// print mode, with slides.css compiled by Tailwind. It fails the build on a part with no entry in
-// parts.ts. The pages open from dist/ on the disk: every link is relative.
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, sep } from "node:path";
@@ -46,15 +39,12 @@ const codeBlocks = new Set(["code", "code-and-text", "annotated-code"]);
 const hasCode = (s: Slide) =>
   (s.type === "content" && !!s.content?.some((b) => codeBlocks.has(b.type))) ||
   (s.type === "lanes" && !!s.codeSnippet);
-// A slide's variant: its `variant`, `layout` or `kind`, or a before-after drawn without strike.
 const variantOf = (s: Slide) =>
   ("variant" in s && s.variant) ||
   ("layout" in s && s.layout) ||
   ("kind" in s && s.kind) ||
   ("strike" in s && s.strike === false ? "without strike" : "");
 
-// A type another one replaced (`aliasTypes`) still renders, but the page shows only its successor.
-// Each type shows its first slide, then the first slide of each further variant.
 const picks = (Object.keys(slideComponents) as (keyof typeof slideComponents)[])
   .filter((type) => !aliasTypes[type])
   .flatMap((type) => {
@@ -72,7 +62,6 @@ const picks = (Object.keys(slideComponents) as (keyof typeof slideComponents)[])
   });
 const blocksOf = (s: Slide) => (s.type === "content" ? s.content.map((b) => b.type) : []);
 const labelled = deck.flatMap((s, index) => (isBlockSlide(s) && !hasCode(s) ? [index] : []));
-// A block no shown slide carries (a callout sits on the theme slides only) adds its first slide.
 const carried = new Set([...picks, ...labelled].flatMap((i) => blocksOf(deck[i])));
 const blockPicks = [
   ...labelled,
@@ -94,8 +83,6 @@ const renderFrame = (index: number, name: string) => {
     .replace(/(src|href|poster)="\/slide-catalogue\//g, '$1="slide-catalogue/');
   return { name, markup, index };
 };
-// A type's first slide is named by its type alone, the anchor the brand kit links; a further
-// variant adds its variant.
 const frames = picks.map((index) => {
   const { type } = deck[index];
   const first = deck.findIndex((s) => s.type === type) === index;
@@ -120,7 +107,6 @@ const blockFrames = blockPicks.map((index) => {
   );
 });
 
-// ─── Parts: the components every slide type composes (design-system/parts.ts) ───────────────
 const { CodePanel, DashedFrame, NumberTile, SlideCard } = primitives;
 const { GradientTitlePill } = chrome;
 
@@ -136,7 +122,6 @@ const partNames = Object.entries({ primitives, SlideChrome: chrome }).flatMap(([
 const unlisted = partNames.filter(({ name }) => !PARTS[name]).map(({ name }) => name);
 if (unlisted.length) throw new Error(`parts without a catalogue entry: ${unlisted.join(", ")}`);
 
-/** A part's purpose: the first sentence of the comment over its export. */
 function purpose(name: string, file: string): string {
   const before = partSources[file].slice(0, partSources[file].indexOf(`export function ${name}(`));
   const end = before.lastIndexOf("*/");
@@ -149,7 +134,6 @@ function purpose(name: string, file: string): string {
   return text.split(/(?<=\.)\s/)[0] ?? "";
 }
 
-// The slide types that compose each part: a type's component and every local component it imports.
 const typeFiles = [...registry.matchAll(/^\s*"?([\w-]+)"?: (\w+) as SlideComponent/gm)]
   .filter(([, type]) => !aliasTypes[type as keyof typeof aliasTypes])
   .map(([, type, component]) => ({ type, component }));
@@ -191,9 +175,7 @@ const partFrames = partNames.map(({ name, file }) => ({
 
 const attr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 
-// ─── Shared elements: what the slides take from brand, and what stays their own ───────────────
-// Rendered on the page itself (not in a frame), so brand-elements measures each tile against the
-// brand rule. The page's 16px rem is the stage's at 1440, the size a slide is designed at.
+// The page's 16px rem is the stage's at 1440, the size a slide is designed at.
 const brandVersion = (
   JSON.parse(readFileSync(join(brand, "package.json"), "utf8")) as { version: string }
 ).version;
@@ -274,7 +256,6 @@ export const usesTiles = Object.entries(USES)
       `<figure class="element"><figcaption><strong>${name}</strong> <span class="from">aus brand v${brandVersion}</span> <code>hw-${name}</code> <a href="https://hackersandwizards.github.io/brand/catalogue.html#hw-${name}">catalogue</a></figcaption><div data-hw-tile="${name}" data-hw-version="${brandVersion}" data-hw-scale="stage">${renderToStaticMarkup(h(Fragment, null, onDay(render()), onNight(render())))}</div></figure>`,
   )
   .join("\n");
-// Where each exception shows: a part rendered here, or the specimen slides that carry it.
 const EXCEPTION_SHOWN: Record<string, () => ReactNode> = {
   "card-tone": () =>
     inRow(
@@ -334,10 +315,7 @@ for (const { markup } of [...frames, ...markerFrames, ...blockFrames, ...partFra
   candidates.push(...new Scanner({}).scanFiles([{ content: markup, extension: "html" }]));
 export const css = compiler
   .build(candidates)
-  // Resolved through the package's exports: `fonts/*` maps to `tokens/fonts/*` on disk, which
-  // dist/ holds beside the pages as the checkout does, read from catalog/print/build/. Through a
-  // require of the checkout: `import.meta.resolve` threw in the dev server's module runner, and the
-  // print page answered 500 there.
+  // A require of the checkout, since `import.meta.resolve` threw in the dev server's module runner.
   .replace(
     /url\("(@hackersandwizards\/brand\/[^"]+)"\)/g,
     (_, id: string) =>
@@ -346,9 +324,8 @@ export const css = compiler
         .join("/")}")`,
   );
 
-// ─── Catalogue: every entry under its communication jobs (decision catalogue-grouping) ─────────
-// The 13 jobs of docs/agent-work/2026-11-01-catalogue-program.md ("Abdeckung je
-// Kommunikationsaufgabe"). An entry may sit under two.
+// The 13 jobs of docs/agent-work/2026-11-01-catalogue-program.md
+// ("Abdeckung je Kommunikationsaufgabe").
 export const JOBS = {
   open: "Open and close",
   orient: "Orient",
@@ -365,7 +342,6 @@ export const JOBS = {
   exercise: "Interaction and exercise",
 } as const;
 export type Job = keyof typeof JOBS;
-// The jobs of a slide type, a "type:variant" or a content block. A name missing here fails the run.
 const JOB_OF: Record<string, Job[]> = {
   title: ["open"],
   closing: ["open"],
@@ -449,8 +425,6 @@ const entryOf = (index: number) => {
   return { jobs, search: [...words, ...jobs.map((j) => JOBS[j])].join(" ").toLowerCase() };
 };
 
-// A type's anchor is its name, as the brand kit links it; a block's is "block-" and its label,
-// numbered where two slides share a label.
 const ids = new Set<string>();
 const anchor = (name: string, prefix = "") => {
   const base = prefix + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -474,7 +448,6 @@ const partTile = ({ name, markup }: { name: string; markup: string }) => {
 const frameDoc = (markup: string) =>
   `<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="build/slides.css"><style>body{margin:0}</style></head><body>${markup}</body></html>`;
 
-// The three code blocks have no frame (see codeBlocks), so their entry is text only.
 const codeEntry = {
   jobs: ["code"] as Job[],
   html: `<figure id="block-code" data-jobs="code" data-search="${[...codeBlocks].join(" ")} code and demo"><figcaption><a href="#block-code">${[...codeBlocks].join(", ")}</a></figcaption><p class="note">No tile: Shiki sets a code block's colours inline, which the brand colour scan allows only in <code>styles/slides.css</code>.</p></figure>`,
@@ -503,8 +476,6 @@ const extraFrames = deck.flatMap((s, index) =>
     ? [renderFrame(index, "")]
     : [],
 );
-// Every frame of the page inline, one 1920x1080 slide after another, for frames.html:
-// brand-elements reads only a page's own document, never a frame's.
 export const inlineFrames = [
   ...partFrames,
   ...frames,

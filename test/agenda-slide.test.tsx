@@ -18,8 +18,6 @@ describe("AgendaSlide", () => {
     }
   });
 
-  // With times the left column holds them instead of the numbers, a time repeated from the row
-  // above is left out, and the line under a title and the footer show.
   it("sets a schedule's times in place of the numbers", () => {
     const SlideComponent = slideComponents.agenda;
     const { queryByText, getAllByText, getByText } = render(

@@ -46,7 +46,6 @@ describe("SlideHints", () => {
     pressRight();
     expect(queryByText("to reveal")).not.toBeNull();
     pressRight();
-    // The last step: nothing pending.
     expect(queryByText("to reveal")).toBeNull();
   });
 

@@ -1,10 +1,3 @@
-// The catalog (decision repo-uniformity-plan, hub-max): one Astro app in scaffolding's catalog shell,
-// served at http://127.0.0.1:4335/slides/catalog/ by `bun run dev` and built to dist/ by
-// `bun run build`, which the Pages workflow publishes at https://hackersandwizards.github.io/slides/.
-// It carries the stories (catalog/stories) and the print pages (pages/catalog/print/), which
-// brand-elements and the page tests read as files. The base is the Pages path, so the gate reads
-// the build that ships. Astro is a dev dependency only: the package ships no Astro, and its
-// consumers render the components in Next and in their own Astro.
 import {
   cpSync,
   createReadStream,
@@ -27,10 +20,8 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const brand = join(root, "node_modules/@hackersandwizards/brand");
 const deckFiles = join(root, "specimen/slide-catalogue");
 
-// The files a page names that live outside the app: a slide names the brand logos (/hw-lockup.svg)
-// and the specimen deck's images from the site root, as a consumer's public folder serves them; the
-// print pages name brand's tokens, fonts, header CSS and logos in node_modules and the deck's images
-// beside themselves, relative, so they also open from the disk: dist/brand/ holds brand's files.
+// A slide names the brand logos and the deck's images from the site root, as a consumer's public
+// folder serves them.
 const fileOf = (path: string) => {
   const logo = path.match(/^\/hw-(wordmark|lockup)(-night)?\.svg$/);
   if (logo) return join(brand, "logos", `${logo[1]}${logo[2] ?? ""}.svg`);
@@ -50,8 +41,7 @@ const types: Record<string, string> = {
   ".ico": "image/x-icon",
 };
 
-// The build puts those files into dist/ where the pages name them, and points the stories' root
-// paths at the base, since a Pages site lives under /slides/.
+// The stories' root paths move under the base, since a Pages site lives under /slides/.
 const files: AstroIntegration = {
   name: "slide-files",
   hooks: {

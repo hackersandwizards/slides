@@ -1,8 +1,6 @@
 ---
-// A story's frame. A slide fills its window (fixed, vh type, the stage rem from the window's width),
-// so the dashboard shows the story's own preview page in a 16:9 iframe, and the preview page
-// (/catalog/stories/...) renders it full screen at the stage scale. A slide opens with every
-// progressive step shown, as arriving backwards does.
+// A slide fills its window (fixed, vh type, the stage rem from its width), so the dashboard frames
+// the story's preview page; "back" opens a slide with every progressive step shown.
 interface Props {
   component: string;
   part?: boolean;

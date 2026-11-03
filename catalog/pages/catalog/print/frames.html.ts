@@ -1,6 +1,4 @@
-// Every frame of the print page inline, one 1920x1080 slide after another: brand-elements and the
-// theme test read only a page's own document, never a frame's. A route ending in .html, which only
-// an endpoint keeps as a file name.
+// An endpoint, since only an endpoint keeps a route ending in .html as its file name.
 import { brandHref, inlineFrames } from "../../../print";
 
 const html = `<!doctype html>

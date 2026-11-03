@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Presentation } from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
-import { arrivedBackwards, ignoredKey } from "../lib/slide-utils";
+import { arrivedBackwards, gridAsContent, ignoredKey } from "../lib/slide-utils";
 
 const LOGO = { src: "/a.svg", alt: "A" };
 
@@ -102,5 +102,15 @@ describe("cornerMark", () => {
       "wordmark",
       "lockup",
     ]);
+  });
+});
+
+describe("gridAsContent", () => {
+  it("keeps a pillars grid's own column count", () => {
+    const cards = ["A", "B", "C", "D"].map((title) => ({ title, description: "d" }));
+    const block = (columns?: 2 | 3 | 4) =>
+      gridAsContent({ type: "grid", variant: "pillars", headline: "H", cards, columns }).content[0];
+    expect(block(2)).toMatchObject({ type: "cards", columns: 2 });
+    expect(block()).toMatchObject({ type: "cards", columns: 4 });
   });
 });

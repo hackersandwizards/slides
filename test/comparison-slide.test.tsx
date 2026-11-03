@@ -29,7 +29,6 @@ describe("ComparisonSlide", () => {
     expect(rules(slide(["Fast", "- No repository context"], ["Edits files"]))).toBe(1);
   });
 
-  // Arriving backwards opens the slide at its last step: the right side lit, no step left.
   it("opens at the last step when the slide is entered backwards", () => {
     sessionStorage.setItem("slide-direction", "back");
     const SlideComponent = slideComponents.comparison;
@@ -60,7 +59,6 @@ describe("comparison variants (merge-comparison)", () => {
     ).container;
   const sides = { left: { label: "Stays", items: ["a"] }, right: { label: "New", items: ["b"] } };
 
-  // Without strike the before side carries no line-through and no cross: it stays.
   it("leaves the before side unstruck with strike off", () => {
     const struck = draw({ variant: "before-after", ...sides });
     const kept = draw({ variant: "before-after", strike: false, ...sides });
@@ -70,7 +68,6 @@ describe("comparison variants (merge-comparison)", () => {
     expect(kept.querySelector(".lucide-circle-x")).toBeNull();
   });
 
-  // The transform block draws the same before-after, strike off.
   it("draws a transform block as before-after without strike", () => {
     const c = render(
       <slideComponents.content
@@ -93,7 +90,6 @@ describe("comparison variants (merge-comparison)", () => {
     expect(c.querySelector(".line-through")).toBeNull();
   });
 
-  // A guidance slide renders as the comparison's guidance variant, the same markup.
   it("renders a guidance slide through the comparison", () => {
     const examples = [{ title: "T", bad: "b", good: "g" }];
     const old = render(
@@ -112,7 +108,7 @@ describe("comparison variants (merge-comparison)", () => {
     expect(c.textContent).toContain("“q”");
   });
 
-  // A side's highlight renders on every two-sided variant: `split` and `before-after` had dropped it.
+  // `split` and `before-after` had dropped the highlight.
   it.each(["vs", "before-after", "split"] as const)("renders both highlights on %s", (variant) => {
     const SlideComponent = slideComponents.comparison;
     const s: ComparisonSlide = {

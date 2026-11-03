@@ -13,7 +13,6 @@ const printed = (slide: ActivitySlide) =>
   );
 
 describe("ActivitySlide", () => {
-  // An exercise numbers its steps and names its kind; the frame card carries time, mode, outcome.
   it("numbers an exercise's steps and shows its frame", () => {
     const { getByText } = printed({
       type: "activity",
@@ -29,7 +28,6 @@ describe("ActivitySlide", () => {
     for (const t of ["25 min", "In pairs", "A plan"]) expect(getByText(t)).toBeTruthy();
   });
 
-  // A demo's watch points carry markers, not numbers, and no frame card without its fields.
   it("marks a demo's watch points without numbers", () => {
     const { getByText, queryByText, container } = printed({
       type: "activity",

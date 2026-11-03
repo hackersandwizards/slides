@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
-// slides-pptx: renders a deck as a native PowerPoint file in the h&w design. Every text is a text
-// box, a table a PowerPoint table, a trend or bar chart a PowerPoint chart, a diagram drawn shapes;
-// only a deck's own images and the h&w logos are pictures. The design is h&w's alone: a deck on a
-// client's template is that consumer's own exporter.
+// slides-pptx: every text is a text box, a table a PowerPoint table, a trend or bar chart a
+// PowerPoint chart, a diagram drawn shapes; only a deck's own images and the h&w logos are pictures.
+// A deck on a client's template is that consumer's own exporter.
 // Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -19,7 +18,13 @@ import type {
   SectionTheme,
 } from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
-import { isDeepDive, linkLabel, pageLabel, personAccent } from "../lib/slide-utils";
+import {
+  isDeepDive,
+  isHighlightPhase,
+  linkLabel,
+  pageLabel,
+  personAccent,
+} from "../lib/slide-utils";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
 type PSlide = ReturnType<Pptx["addSlide"]>;
@@ -27,15 +32,13 @@ type TextProps = PptxGenJS.TextPropsOptions;
 type Run = { text: string; options?: TextProps };
 
 // The print route's 1920 px stage on a 13.333 in slide: 144 px to the inch, so a CSS px is half a
-// point. Every length and size below is measured off the print route at 1920 x 1080, whose root
-// font size is 21.333 px.
+// point; the route's root font size is 21.333 px.
 const W = 13.333;
 const H = 7.5;
 const SIDE = 96 / 144;
 const TOP = 117 / 144;
 const BOTTOM = H - 123 / 144;
 const CW = W - 2 * SIDE;
-/** A card's text and its list, one line each. */
 const cardText = (card: { text?: string; items?: string[] }) =>
   [card.text, ...(card.items ?? []).map((item) => `• ${item}`)].filter(Boolean).join("\n");
 
@@ -112,8 +115,6 @@ function family(stack: string): string {
 }
 const MONO = family(tokens["--font-mono"]);
 const SANS = family(tokens["--font-sans"]);
-
-// ─── text ───────────────────────────────────────────────────────────────────
 
 /** Inline markdown as the engine reads it (lib/markdown.tsx): links, bold, *accent* and code. */
 function md(text: string, c: Palette, base: TextProps = {}): Run[] {
@@ -313,8 +314,6 @@ function need(content: Para[] | Para | string, c: Palette, w: number, o: BoxOpts
   return Math.min(max, parasHeight(asParas(content, c), o, w, 1));
 }
 
-// ─── shapes ─────────────────────────────────────────────────────────────────
-
 function card(
   s: PSlide,
   x: number,
@@ -392,9 +391,6 @@ function chip(
   return w;
 }
 
-// ─── images ─────────────────────────────────────────────────────────────────
-
-/** Width and height of a PNG, JPEG, GIF or WebP from its header. */
 function imageSize(buf: Buffer): [number, number] | undefined {
   if (buf.readUInt32BE(0) === 0x89504e47) return [buf.readUInt32BE(16), buf.readUInt32BE(20)];
   if (buf.toString("ascii", 0, 3) === "GIF") return [buf.readUInt16LE(6), buf.readUInt16LE(8)];
@@ -504,8 +500,6 @@ function picture(
   });
   return { x: px, y: py, w: pw, h: ph };
 }
-
-// ─── slide frame ────────────────────────────────────────────────────────────
 
 const THEME: Record<SectionTheme, keyof Palette> = {
   primary: "teal",
@@ -628,8 +622,6 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
   return y + 0.3;
 }
 
-// ─── content blocks ─────────────────────────────────────────────────────────
-
 interface Area {
   x: number;
   y: number;
@@ -734,7 +726,6 @@ function codeLines(code: string) {
   return lines.map((l) => l.slice(Number.isFinite(cut) ? cut : 0));
 }
 
-/** The height a block wants at scale k in width w. */
 function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number {
   const o = bodyO(c, k);
   switch (b.type) {
@@ -896,7 +887,6 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
 
 const GROWS = new Set(["image", "linked-image", "video", "annotated", "image-and-grid"]);
 
-/** Draws a block into its area at scale k. */
 function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, centered: boolean) {
   const { c } = ctx;
   const o = bodyO(c, k, centered ? { align: "center" } : {});
@@ -1299,7 +1289,6 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "flow": {
-      // A frame's label stands above the steps, its notes and footer in one line under them.
       if (b.frame) {
         const { label, notes = [], footer } = b.frame;
         const under = [...notes, ...(footer ? [footer] : [])].join(" · ");
@@ -1768,11 +1757,8 @@ function blocks(s: PSlide, ctx: Ctx, list: ContentBlock[], a: Area, centered = f
   }
 }
 
-// ─── slide types ────────────────────────────────────────────────────────────
-
 const BODY = (y: number): Area => ({ x: SIDE, y, w: CW, h: BOTTOM - y });
 
-/** A row of n equal cards across the area, each drawn by `draw`. */
 function row<T>(items: T[], a: Area, gap: number, draw: (it: T, r: Area, i: number) => void) {
   const w = (a.w - (items.length - 1) * gap) / items.length;
   items.forEach((it, i) => draw(it, { x: a.x + i * (w + gap), y: a.y, w, h: a.h }, i));
@@ -2603,7 +2589,6 @@ const RENDER: {
   },
 
   process(s, ctx, d, deck) {
-    // Stages that run once draw as the row of stage cards; a cycle as the loop below.
     if (d.loop === false)
       return RENDER.evolution(
         s,
@@ -2619,7 +2604,7 @@ const RENDER: {
             description: n.description,
             badge: n.badge,
             isDimmed: n.dimmed,
-            isHighlighted: n.title === d.highlightPhase,
+            isHighlighted: isHighlightPhase(n.title, d.highlightPhase),
           })),
         },
         deck,
@@ -2646,7 +2631,7 @@ const RENDER: {
     const ny = a.y + 0.3;
     // As the web's last reveal step: the phase named in any case is lit, none without a name.
     row(d.nodes, { ...a, y: ny, h: ch }, gap, (n, r, i) => {
-      const hi = n.title.toLowerCase() === d.highlightPhase?.toLowerCase();
+      const hi = isHighlightPhase(n.title, d.highlightPhase);
       card(s, r.x, r.y, r.w, r.h, c.card, hi ? c.teal : c.border);
       s.addShape("rect", {
         x: r.x + r.w / 2 - 0.17,
@@ -3101,7 +3086,6 @@ const RENDER: {
   },
 
   roadmap(s, ctx, d, deck) {
-    // Columns of phases draw as the pill groups below.
     if (d.columns.some((col) => col.phases))
       return RENDER["dual-pill-overview"](
         s,
@@ -3157,8 +3141,7 @@ const RENDER: {
   },
 
   "deep-dive-divider"(s, ctx, d) {
-    // The transition slide's centred headline, its label in teal; the night ground and its teal come
-    // from the slide's palette.
+    // The night ground and its teal come from the slide's palette.
     const { c } = ctx;
     const label = [d.partLabel, d.kicker].filter(Boolean).join(" · ");
     const paras: Para[] = [

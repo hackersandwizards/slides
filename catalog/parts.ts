@@ -1,6 +1,3 @@
-// The parts every slide type composes, each as a sheet of its variants: the print page
-// (print.ts) renders each sheet in a frame, the catalog (catalog/stories) as a part's story. A part
-// missing here fails the catalog build.
 import { createElement as h, type ReactNode } from "react";
 import * as primitives from "../components/slides/primitives";
 import * as chrome from "../components/slides/SlideChrome";
@@ -26,7 +23,7 @@ const cell = (name: string, child: ReactNode) => h("div", null, label(name), chi
 export const tones = ["neutral", "primary", "secondary", "accent", "success", "error"] as const;
 export const looks = ["tint", "soft", "outline", "line"] as const;
 
-/** Each part with a sheet of its variants; a part missing here fails the build. */
+/** A part missing here fails the build (print.ts). */
 export const PARTS: Record<string, () => ReactNode> = {
   DisplayHeading: () =>
     h(

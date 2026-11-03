@@ -11,13 +11,13 @@ export async function renderPdf(url: string, out: string, title: string, slideCo
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
     await page.goto(url, { waitUntil: "networkidle0", timeout: 300_000 });
-    // A trend or bar chart draws after hydration, from a script loaded only then: network idle
-    // can come first.
+    // A trend or bar chart and a code block's colours draw after hydration, from a script loaded
+    // only then: network idle can come first.
     await page.waitForFunction(
       () =>
         [...document.querySelectorAll("[data-chart-plot]")].every((box) =>
           box.querySelector("svg"),
-        ),
+        ) && !document.querySelector("[data-code-plain]"),
       { timeout: 300_000 },
     );
 

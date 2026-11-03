@@ -3,6 +3,7 @@
 import type { ProcessSlide as ProcessSlideType } from "../../types/slide";
 import { SlideShell, groundOf } from "./SlideShell";
 import { iconMap, type LucideIcon } from "../../lib/icons";
+import { isHighlightPhase } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { TitledContent, SlideTitle, SlideCaption } from "./primitives";
 import { FlowSteps } from "./Visuals";
@@ -18,17 +19,13 @@ const defaultIcons: LucideIcon[] = [
   iconMap.refresh,
 ];
 
-// N nodes sit evenly around an ellipse from the top, clockwise, centred in the canvas so the top
-// and bottom cards stay inside it. A loop of more than four renders every node rather than dropping
-// the overflow.
 const CENTER_X = 50;
 const CENTER_Y = 50;
 const RADIUS_X = 32;
 const RADIUS_Y = 32;
 
-// Canvas is 960×520 (in sixteenths of a rem, so it scales with the slide like its nodes do) for
-// the common 4-node diamond. Loops with more nodes stack two cards per side and get a taller
-// canvas, so the side cards don't collide: the percentage-based radii map to more pixels.
+// Canvas units are sixteenths of a rem, so the canvas scales with the slide; a loop of more than
+// four nodes stacks two cards per side and gets a taller canvas so they don't collide.
 const CANVAS_W = 960;
 const NODE_HALF_W = 120;
 const NODE_HALF_H = 80;
@@ -55,13 +52,10 @@ export function ProcessSlide({ slide }: Props) {
   });
 
   // The named phase stays lit once every step shows; while stepping, the step just revealed is.
-  const named = slide.nodes.findIndex(
-    (node) => node.title.toLowerCase() === slide.highlightPhase?.toLowerCase(),
-  );
+  const named = slide.nodes.findIndex((node) => isHighlightPhase(node.title, slide.highlightPhase));
   const positions = nodePositions(slide.nodes.length);
   const canvasH = canvasHeight(slide.nodes.length);
 
-  // Close the loop: each node points to the next, the last back to the first.
   const arrowPaths = slide.nodes.map((_, i) => ({
     from: i,
     to: (i + 1) % slide.nodes.length,
@@ -179,13 +173,11 @@ export function ProcessSlide({ slide }: Props) {
                   const pos = positions[index];
                   const isRevealed = index < revealedCount;
                   const isActive = index === revealedCount - 1;
-                  const isHighlightPhase = slide.highlightPhase
-                    ? node.title.toLowerCase() === slide.highlightPhase.toLowerCase()
-                    : false;
+                  const isHighlighted = isHighlightPhase(node.title, slide.highlightPhase);
                   const Icon =
                     (node.icon ? iconMap[node.icon] : null) ?? defaultIcons[index] ?? iconMap.bot;
 
-                  const highlighted = isActive || isHighlightPhase;
+                  const highlighted = isActive || isHighlighted;
 
                   return (
                     <div

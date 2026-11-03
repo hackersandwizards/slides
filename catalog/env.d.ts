@@ -4,5 +4,4 @@ declare module "*.astro" {
   export default component;
 }
 
-// The checkout's absolute path, which catalog/astro.config.ts defines for print.ts.
 declare const __SLIDES_ROOT__: string;

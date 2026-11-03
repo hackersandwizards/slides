@@ -191,7 +191,7 @@ export function gridAsContent({ cards, ...slide }: GridSlide): ContentSlide {
           numbered: !cards.some((c) => c.icon),
           numberFrom: slide.numberFrom,
           highlight: indexOf(cards.findIndex((c) => c.highlight)),
-          columns: cards.length === 4 ? 4 : undefined,
+          columns: slide.columns ?? (cards.length === 4 ? 4 : undefined),
           reveal: !slide.allActive,
           dense: true,
         };
@@ -325,7 +325,10 @@ export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlid
             },
           ]
         : titled.flatMap((s): ContentBlock[] => [
-            { type: "paragraph", text: `**${s.title}**${s.text ? ` ${sectionText(s)}` : ""}` },
+            {
+              type: "paragraph",
+              text: [`**${s.title}**`, sectionText(s)].filter(Boolean).join(" "),
+            },
             ...(s.items ? [{ type: "bullets" as const, items: s.items }] : []),
           ]);
   const content: ContentBlock[] = [];
@@ -345,3 +348,7 @@ export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlid
   });
   return { type: "content", headline: slide.headline, content };
 }
+
+/** Whether a process node is the phase a slide names, in any case. */
+export const isHighlightPhase = (title: string, phase?: string) =>
+  !!phase && title.toLowerCase() === phase.toLowerCase();

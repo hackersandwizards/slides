@@ -20,10 +20,8 @@ export function groundOf(slide: Grounded): SlideGround {
  *  PrintSlide provide it, so a day slide in a night deck stays night. */
 export const DeckNight = createContext(false);
 
-// The full-viewport frame every slide sits in, owned here so it changes in one place. A slide's
-// decoration stays its own children. It sets the brand elements' stage scale for every slide, and
-// its theme on every slide, "light" included: the brand's night stops at the nearest light theme,
-// so a dark page around a day slide (talks' and trainer-hub's <html>) leaves its elements day.
+// The theme is set on every slide, "light" included: the brand's night stops at the nearest light
+// theme, so a dark page around a day slide (talks' and trainer-hub's <html>) leaves its elements day.
 export function SlideShell({
   children,
   ground = "intro",

@@ -24,9 +24,8 @@ const withAlpha = (hex: string, alpha: number) =>
 const LINE_WIDTH = 4;
 const HIGHLIGHT_NAME = "slide-marker";
 
-// Draws over text too. Option/Alt-drag highlights text and leaves it selected for copying,
-// Escape clears the highlights;
-// links and controls stay clickable.
+// Draws over text too, while links and controls stay clickable; Option/Alt-drag highlights text
+// and leaves it selected for copying, Escape clears the highlights.
 const INTERACTIVE = "a, button, input, textarea, select, [contenteditable]";
 
 export function LaserPointer() {

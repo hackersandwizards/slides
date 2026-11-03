@@ -23,7 +23,8 @@ const UNIT = "px|rem|em|ex|ch|lh|vh|vw|vmin|vmax|cqw|cqh|pt|mm|cm";
 const LENGTH = new RegExp(
   `(?<![\\w.#-])-?(?!100(vh|vw|cqw|cqh)\\b)\\d*\\.?\\d+(${UNIT})(?![\\w-])`,
 );
-const BRACKET_LENGTH = new RegExp(`(?<![\\w.#-])-?\\d*\\.?\\d+(${UNIT}|%)(?![\\w-])`);
+// `_` separates the parts of a bracket value, so it bounds a length there.
+const BRACKET_LENGTH = new RegExp(`(?<![a-zA-Z\\d.#-])-?\\d*\\.?\\d+(${UNIT}|%)(?![a-zA-Z\\d-])`);
 const COLOUR = /#[0-9a-f]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(/i;
 const NAMED_COLOUR = /:[^;{}]*(?<![\w-])(white|black|red|green|blue|gr[ae]y|teal|purple)(?![\w-])/;
 
@@ -94,7 +95,7 @@ describe("tokens", () => {
     expect(
       rawSourceValues(
         `// 4rem
-        <div className="max-w-[72rem] text-[13rem] leading-[1.05] text-[color-mix(in_srgb,red_60%,blue)] max-w-measure grid-cols-[1fr_auto] my-[calc(var(--a)/2)] w-(--b)" style={{ height: "26.25rem", width: 1920, top: 0, zIndex: 90, left: \`calc(\${x} - 4rem)\`, color: "#fff" }} />;
+        <div className="max-w-[72rem] text-[13rem] leading-[1.05] text-[color-mix(in_srgb,red_60%,blue)] max-w-measure grid-cols-[1fr_auto] grid-cols-[18rem_1fr] my-[calc(var(--a)/2)] w-(--b)" style={{ height: "26.25rem", width: 1920, top: 0, zIndex: 90, left: \`calc(\${x} - 4rem)\`, color: "#fff" }} />;
         const logo = { width: 200 };
         matchMedia("screen and (width < 48rem)"); const w = \`\${share * 100}%\`;`,
       ),
@@ -103,6 +104,7 @@ describe("tokens", () => {
       "text-[13rem]",
       "leading-[1.05]",
       "text-[color-mix(in_srgb,red_60%,blue)]",
+      "grid-cols-[18rem_1fr]",
       'literal "26.25rem"',
       "literal `calc(${x} - 4rem)`",
       'literal "#fff"',
