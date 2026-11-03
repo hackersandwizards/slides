@@ -32,10 +32,10 @@ scheinen andere Folientypen vollständig zu fehlen.»
 Assumption (agent, 01.11.2026, not Benedikt's words):
 
 - Every communication job a deck needs today has a catalogue entry (full-bleed and data charts only
-  when needed), duplicates are merged according to the `merge-*` rows, every entry sits on its
+  when needed), duplicates are merged (the merge groups shipped in v0.27.0), every entry sits on its
   plateau in the blind panel and holds the design guide.
-- The specimen page shows every type, block and variant, ordered by `catalogue-grouping`, with
-  search.
+- The specimen page shows every type, block and variant, ordered by communication job (since
+  v0.27.0), with search.
 - Every slide in talks, trainer-hub and hycle uses a catalogue entry with no adjustment beside it,
   and `slides-density` is green in all three gates.
 
