@@ -28,6 +28,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `Image` component and a `navigate(href, replace)`. Without a provider the engine renders a plain
   `<img>` and moves with `history` inside one island, as every consumer does. `lib/next-adapter.tsx`
   is that provider for a Next app, `next/image` and the router, wrapped round its root layout.
+  `lib/deck-edit.ts` is the edit mode's file logic, `lib/deck-edit-server.ts` its write endpoint
+  as one Node request handler, which each consumer mounts on its dev server with its own map from
+  deck path to file.
 - `types/slide.ts`: the slide types and content blocks a deck may use.
 - `styles/tokens.css`: the slide's roles, each a `var()` over brand: it imports the brand tokens,
   brand's `stage.css` (the slide scale, the type table, measures, spacing, rules and marks, every
@@ -87,6 +90,7 @@ the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest 
 `server.deps.inline`. React, motion, lucide-react, recharts, shiki, Tailwind and the brand package
 are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and `jszip`, which only
 `slides-pptx` imports, are optional peers like `puppeteer`: a consumer installs them to run it.
+`prettier`, which `lib/deck-edit-server` formats an edited deck with, is optional too.
 
 ## Commands
 
