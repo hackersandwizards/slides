@@ -53,6 +53,18 @@ interface Props {
   slide: ComparisonSlideType;
 }
 
+/** A side's highlight under its heading, on every two-sided variant; `muted` for a side that is
+ *  not the point. A step over the label size: at text-sm it read about 12 px in a 1000 px stream
+ *  (blind check 03.11., every reviewer). */
+function Highlight({ text, muted = false }: { text?: string; muted?: boolean }) {
+  if (!text) return null;
+  return (
+    <p className={`label-caps mb-4 text-base ${muted ? "text-text-subtle" : "text-primary"}`}>
+      {text}
+    </p>
+  );
+}
+
 /** The sources under a comparison, on every variant. */
 function Footnotes({ notes }: { notes?: string[] }) {
   if (!notes?.length) return null;
@@ -120,15 +132,7 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
               >
                 <h3 className="mb-6 font-heading text-2xl font-bold text-text">{side.label}</h3>
 
-                {side.highlight && (
-                  <p
-                    className={`label-caps mb-4 text-sm ${
-                      isActive ? "text-primary" : "text-text-subtle"
-                    }`}
-                  >
-                    {side.highlight}
-                  </p>
-                )}
+                <Highlight text={side.highlight} muted={!isActive} />
 
                 {pros.length > 0 && (
                   <div className="mb-4">
@@ -186,8 +190,8 @@ export function BeforeAfterSides({
   after,
   strike = true,
 }: {
-  left: Pick<ComparisonSide, "label" | "items">;
-  right: Pick<ComparisonSide, "label" | "items">;
+  left: Pick<ComparisonSide, "label" | "items" | "highlight">;
+  right: Pick<ComparisonSide, "label" | "items" | "highlight">;
   after: boolean;
   strike?: boolean;
 }) {
@@ -202,6 +206,7 @@ export function BeforeAfterSides({
           {strike && <XCircle className="h-6 w-6 text-text-subtle" />}
           <h3 className="font-heading text-2xl font-bold text-text-muted">{left.label}</h3>
         </div>
+        <Highlight text={left.highlight} muted />
         <ul className="space-y-3">
           {left.items.map((item, i) => (
             <li
@@ -237,6 +242,7 @@ export function BeforeAfterSides({
           <CheckCircle className="h-6 w-6 text-primary" />
           <h3 className="font-heading text-2xl font-bold text-primary">{right.label}</h3>
         </div>
+        <Highlight text={right.highlight} />
         <ul className="space-y-3">
           {right.items.map((item, i) => (
             <li key={i} className="text-xl text-text">
@@ -291,6 +297,7 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
         <BlurFade delay={0.2} duration={0.6}>
           <SlideCard className="h-full card-pad-8">
             <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.left.label}</h3>
+            <Highlight text={slide.left.highlight} />
             <ul className="space-y-3">
               {slide.left.items.map((item, i) => (
                 <MarkedItem key={i}>{item}</MarkedItem>
@@ -302,6 +309,7 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
         <BlurFade delay={0.3} duration={0.6}>
           <SlideCard className="h-full card-pad-8">
             <h3 className="mb-6 font-heading text-2xl font-bold text-text">{slide.right.label}</h3>
+            <Highlight text={slide.right.highlight} />
             <ul className="space-y-3">
               {slide.right.items.map((item, i) => (
                 <MarkedItem key={i}>{item}</MarkedItem>

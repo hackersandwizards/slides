@@ -111,4 +111,22 @@ describe("comparison variants (merge-comparison)", () => {
     expect(c.textContent).toContain("The verdict");
     expect(c.textContent).toContain("“q”");
   });
+
+  // A side's highlight renders on every two-sided variant: `split` and `before-after` had dropped it.
+  it.each(["vs", "before-after", "split"] as const)("renders both highlights on %s", (variant) => {
+    const SlideComponent = slideComponents.comparison;
+    const s: ComparisonSlide = {
+      ...slide(["Fast"], ["Edits files"]),
+      variant,
+      left: { label: "Chat", items: ["Fast"], highlight: "Stops" },
+      right: { label: "Agent", items: ["Edits files"], highlight: "Keeps going" },
+    };
+    const { getByText } = render(
+      <PrintProvider>
+        <SlideComponent slide={s as Slide} />
+      </PrintProvider>,
+    );
+    expect(getByText("Stops")).toBeTruthy();
+    expect(getByText("Keeps going")).toBeTruthy();
+  });
 });

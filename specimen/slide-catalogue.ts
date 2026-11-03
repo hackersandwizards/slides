@@ -951,10 +951,14 @@ const slides: Slide[] = [
     type: "comparison",
     variant: "before-after",
     headline: "Before and after",
-    left: { label: "Before", items: ["Release every month", "Hotfix by hand"] },
-    right: { label: "After", items: ["Release on merge", "Rollback without a meeting"] },
+    left: { label: "Before", items: ["Release every month", "Hotfix by hand"], highlight: "Slow" },
+    right: {
+      label: "After",
+      items: ["Release on merge", "Rollback without a meeting"],
+      highlight: "Routine",
+    },
     punchline: "Same team, other habits.",
-    notes: "comparison: before-after.",
+    notes: "comparison: before-after, highlights.",
   },
   {
     type: "comparison",
