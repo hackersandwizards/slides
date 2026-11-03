@@ -963,9 +963,9 @@ const slides: Slide[] = [
   {
     type: "comparison",
     variant: "split",
-    left: { label: "Platform", items: longBullets.slice(0, 4) },
-    right: { label: "Teams", items: longBullets.slice(2, 6) },
-    notes: "comparison: split, no headline, long items.",
+    left: { label: "Platform", items: longBullets.slice(0, 4), highlight: "Builds the road" },
+    right: { label: "Teams", items: longBullets.slice(2, 6), highlight: "Drive on it" },
+    notes: "comparison: split, no headline, long items, highlights.",
   },
   {
     type: "comparison",
