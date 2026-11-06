@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 3
-order: 7
+order: 530
 owner: Agent (slides session)
 evidence: "slides v1.1.1 session of 06.11.2026: `pdftotext -raw` over the print page's frames.html"
 ---

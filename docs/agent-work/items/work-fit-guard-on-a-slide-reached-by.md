@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 3
-order: 8
+order: 540
 owner: Agent (slides session)
 evidence: "trainer-hub `docs/agent-work/2026-11-01-performance.md`, section on the engine"
 ---
