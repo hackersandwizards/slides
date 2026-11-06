@@ -7,8 +7,6 @@
 @theme {
   --radius-brand: var(--slide-radius);
   --radius-brand-sm: var(--slide-radius-sm);
-  /* Not inline, so a theme sets it again. */
-  --color-warning: var(--color-amber-dark);
   /* Badge colors: opaque teal tints, for overlapping card borders */
   --color-badge-bg: color-mix(in srgb, var(--color-teal) 15%, white);
   --color-badge-border: color-mix(in srgb, var(--color-teal) 25%, white);
@@ -34,8 +32,9 @@
      headings and stats take the heading role's, code keeps font-mono. */
   --font-heading: var(--type-h1-family);
   /* The website's dark amber, as success takes its dark green (green-dark): both carry text at
-     4.5:1 or better on white and on the page background, where the light cuts reach 1.6:1 and 2.1:1. */
-  --color-accent: var(--color-amber-dark);
+     4.5:1 or better on white and on the page background, where the light cuts reach 1.6:1 and 2.1:1.
+     Named for the slide: the app layer's accent is teal, and a page loading both keeps each. */
+  --color-slide-accent: var(--color-amber-dark);
 
   --color-primary: var(--color-teal);
   --color-primary-border: color-mix(in srgb, var(--color-teal) 25%, transparent);
@@ -77,14 +76,13 @@
      from a light token resolved on the root, so they are set again here, as is every role a
      component reads by name. */
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night)) {
-    --color-warning: var(--color-amber);
     --color-code-bg: var(--color-night-2);
     --color-text: var(--color-ink);
     --color-text-muted: var(--color-muted);
     --color-text-subtle: var(--color-muted);
     --color-primary: var(--color-teal);
     --color-secondary: var(--color-purple);
-    --color-accent: var(--color-amber);
+    --color-slide-accent: var(--color-amber);
     --slide-context: color-mix(in srgb, var(--color-ink) 40%, var(--color-bg));
     --slide-insight-ink: color-mix(in srgb, var(--color-amber-dark) 60%, var(--color-ink));
     --slide-success-ink: color-mix(in srgb, var(--color-green-dark) 60%, var(--color-ink));

@@ -346,7 +346,7 @@ const CALLOUT_VARIANTS = {
   // On their tint the brand amber and green drop under 4.5:1 (4.29 and 4.27), so the text mixes
   // them 40% with ink, as the website's chips do.
   warning:
-    "rounded-brand border-2 px-8 py-6 border-accent/25 bg-accent/7 text-(--slide-insight-ink)",
+    "rounded-brand border-2 px-8 py-6 border-slide-accent/25 bg-slide-accent/7 text-(--slide-insight-ink)",
   success:
     "rounded-brand border-2 px-8 py-6 border-green-dark/25 bg-green-dark/7 text-(--slide-success-ink)",
 };

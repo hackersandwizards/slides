@@ -24,7 +24,9 @@ describe("renderMarkdown", () => {
   });
 
   it("renders *emphasis* as an accent <span>", () => {
-    expect(renderMd("a *word* b").querySelector("span.text-accent")?.textContent).toBe("word");
+    expect(renderMd("a *word* b").querySelector("span.text-slide-accent")?.textContent).toBe(
+      "word",
+    );
   });
 
   it("renders `code` as a <code>", () => {
@@ -35,27 +37,27 @@ describe("renderMarkdown", () => {
   // asterisks separated by whitespace are arithmetic, not emphasis.
   it("does not treat spaced asterisks as emphasis", () => {
     const el = renderMd("math: 2 * 3 * 4");
-    expect(el.querySelector("span.text-accent")).toBeNull();
+    expect(el.querySelector("span.text-slide-accent")).toBeNull();
     expect(el.textContent).toBe("math: 2 * 3 * 4");
   });
 
   it("does not treat a single spaced asterisk as emphasis", () => {
     const el = renderMd("a * b");
-    expect(el.querySelector("span.text-accent")).toBeNull();
+    expect(el.querySelector("span.text-slide-accent")).toBeNull();
     expect(el.textContent).toBe("a * b");
   });
 
   it("handles multi-word emphasis", () => {
-    expect(renderMd("say *hello world* now").querySelector("span.text-accent")?.textContent).toBe(
-      "hello world",
-    );
+    expect(
+      renderMd("say *hello world* now").querySelector("span.text-slide-accent")?.textContent,
+    ).toBe("hello world");
   });
 
   // Only a part the split regex captured is formatting: plain text that happens to start and
   // end with an asterisk stays as written.
   it("keeps plain text between spaced asterisks as text", () => {
     const el = renderMd("* see note *");
-    expect(el.querySelector("span.text-accent")).toBeNull();
+    expect(el.querySelector("span.text-slide-accent")).toBeNull();
     expect(el.textContent).toBe("* see note *");
   });
 

@@ -533,7 +533,7 @@ html:has(.print-slide) {
   }
 
   .bg-section-accent {
-    --slide-ground: color-mix(in srgb, var(--color-accent) 7%, var(--background));
+    --slide-ground: color-mix(in srgb, var(--color-slide-accent) 7%, var(--background));
     background: var(--slide-ground);
   }
 

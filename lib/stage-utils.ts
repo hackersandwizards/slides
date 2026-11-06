@@ -16,9 +16,9 @@ const categoryStyles = {
     default: "border border-secondary-border bg-white text-text-muted",
   },
   accent: {
-    new: "border border-accent outline-2 outline-accent bg-accent/15 text-text",
-    active: "border border-accent bg-accent/15 text-text",
-    default: "border border-accent/40 bg-white text-text-muted",
+    new: "border border-slide-accent outline-2 outline-slide-accent bg-slide-accent/15 text-text",
+    active: "border border-slide-accent bg-slide-accent/15 text-text",
+    default: "border border-slide-accent/40 bg-white text-text-muted",
   },
   success: {
     new: "border border-green-dark outline-2 outline-green-dark bg-green-dark/15 text-text",
@@ -43,7 +43,7 @@ export const themeToCategory: Record<string, StageCategory> = {
 };
 
 export const themeDotColor: Record<string, string> = {
-  accent: "bg-accent",
+  accent: "bg-slide-accent",
   primary: "bg-primary",
   secondary: "bg-secondary",
   success: "bg-green-dark",
@@ -51,7 +51,7 @@ export const themeDotColor: Record<string, string> = {
 };
 
 export const themeLabelColor: Record<string, string> = {
-  accent: "text-accent",
+  accent: "text-slide-accent",
   primary: "text-primary",
   secondary: "text-secondary",
   success: "text-green-dark",

@@ -1,4 +1,5 @@
 import { readdirSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -81,7 +82,48 @@ export function rawCssValues(css: string): string[] {
   return found;
 }
 
+/** A stylesheet's `@theme` names with their values: each one is a Tailwind utility. */
+export function themeNames(css: string): Map<string, string> {
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  return new Map(
+    [...text.matchAll(/@theme[^{]*\{([^}]*)\}/g)].flatMap(([, body]) =>
+      [...body.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map(
+        ([, name, value]) => [name, value] as const,
+      ),
+    ),
+  );
+}
+
+/** Names both stylesheets give a theme value, where the two values differ. */
+export function clashes(engine: string, app: string): string[] {
+  const names = themeNames(app);
+  return [...themeNames(engine)]
+    .filter(([name, value]) => names.has(name) && names.get(name) !== value)
+    .map(([name]) => name);
+}
+
 describe("tokens", () => {
+  // A page may load the slide stylesheet beside the app's, and the later `text-accent` then wins
+  // over the other's. The heading role is the mono family in both, by two routes.
+  it("no theme name means one thing on a slide and another in the app", () => {
+    const expert = createRequire(import.meta.url).resolve("@hackersandwizards/brand/expert.css");
+    expect(
+      clashes(
+        readFileSync(join(ROOT, "styles", "tokens.css"), "utf8"),
+        readFileSync(expert, "utf8"),
+      ),
+    ).toEqual(["--font-heading"]);
+  });
+
+  it("control: a theme name with another value is a clash, the same value is not", () => {
+    expect(
+      clashes(
+        "/* --c: 0; */ @theme { --a: 1; } @theme inline { --b: 2; --d: 4; }",
+        "@theme inline { --a: 1; --b: 3; --c: 5; }",
+      ),
+    ).toEqual(["--b"]);
+  });
+
   it("styles/slides.css names tokens only", () => {
     expect(rawCssValues(readFileSync(join(ROOT, "styles", "slides.css"), "utf8"))).toEqual([]);
   });

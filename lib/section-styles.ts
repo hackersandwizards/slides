@@ -19,10 +19,10 @@ export const SECTION_STYLES: Record<SectionTheme, SectionStyle> = {
   },
   secondary: DEFAULT_SECTION_STYLE,
   accent: {
-    border: "border-accent/25",
+    border: "border-slide-accent/25",
   },
   warning: {
-    border: "border-accent/25",
+    border: "border-slide-accent/25",
   },
   success: {
     border: "border-green-dark/25",

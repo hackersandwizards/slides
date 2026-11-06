@@ -236,7 +236,7 @@ describe("merged card and number shapes", () => {
       "5B",
     ]);
     expect(c.querySelectorAll('.hw-card[data-variant="tint"]')).toHaveLength(1);
-    expect(c.querySelector(".bg-accent\\/7")).toBeNull();
+    expect(c.querySelector(".bg-slide-accent\\/7")).toBeNull();
   });
 
   it("draws labeled grid and four-column blocks as cards", () => {

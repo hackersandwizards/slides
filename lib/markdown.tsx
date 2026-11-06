@@ -28,7 +28,7 @@ export function renderMarkdown(text: string): React.ReactNode {
     }
     if (part.startsWith("*") && !part.startsWith("**")) {
       return (
-        <span key={i} className="font-semibold text-accent">
+        <span key={i} className="font-semibold text-slide-accent">
           {part.slice(1, -1)}
         </span>
       );
