@@ -22,16 +22,16 @@ const ACCENT = {
     text: "text-primary",
     tone: "primary" as const,
     pillIdle: "bg-primary/7 text-primary hover:bg-primary/15",
-    dot: "from-primary to-primary/70",
-    avatarFrame: "from-primary/25 to-primary/7",
+    dot: "bg-primary",
+    avatarFrame: "bg-primary/15",
   },
   secondary: {
     ring: "ring-secondary/25",
     text: "text-secondary",
     tone: "secondary" as const,
     pillIdle: "bg-secondary/7 text-secondary hover:bg-secondary/15",
-    dot: "from-secondary to-secondary/70",
-    avatarFrame: "from-secondary/25 to-secondary/7",
+    dot: "bg-secondary",
+    avatarFrame: "bg-secondary/15",
   },
 } satisfies Record<Accent, Record<string, string>>;
 
@@ -67,7 +67,7 @@ export function ProfilesSlide({ slide }: Props) {
                   >
                     <div className="flex items-center gap-8">
                       <div
-                        className={`flex h-32 w-32 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${a.avatarFrame} p-1`}
+                        className={`flex h-32 w-32 shrink-0 items-center justify-center rounded-brand ${a.avatarFrame} p-1`}
                       >
                         {profile.imageSrc ? (
                           <Image
@@ -75,7 +75,7 @@ export function ProfilesSlide({ slide }: Props) {
                             alt={profile.name}
                             width={128}
                             height={128}
-                            className="h-full w-full rounded-full object-cover"
+                            className="h-full w-full rounded-brand object-cover"
                           />
                         ) : (
                           <User className={`h-16 w-16 ${a.text}`} />
@@ -94,7 +94,7 @@ export function ProfilesSlide({ slide }: Props) {
                     <ul className="mt-8 space-y-3">
                       {profile.bullets?.map((bullet, i) => (
                         <li key={i} className="flex items-baseline gap-3 text-lg text-text-muted">
-                          <span className={`hw-marker bg-gradient-to-r ${a.dot}`} />
+                          <span className={`hw-marker ${a.dot}`} />
                           <span>{bullet}</span>
                         </li>
                       ))}

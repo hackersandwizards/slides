@@ -119,14 +119,14 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                       <div className="flex flex-col items-center text-center">
                         {speaker.imageSrc && (
                           <div
-                            className={`relative mb-8 rounded-full ring-2 ring-offset-4 ring-offset-transparent ${a.ring}`}
+                            className={`relative mb-8 rounded-brand ring-2 ring-offset-4 ring-offset-transparent ${a.ring}`}
                           >
                             <Image
                               src={speaker.imageSrc}
                               alt={speaker.name}
                               width={160}
                               height={160}
-                              className="h-36 w-36 rounded-full object-cover"
+                              className="h-36 w-36 rounded-brand object-cover"
                             />
                           </div>
                         )}
@@ -145,7 +145,8 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                           {speaker.contact && (
                             <a
                               href={`mailto:${speaker.contact}`}
-                              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-base font-medium transition-colors md:text-lg ${a.bg}`}
+                              className="hw-button gap-2"
+                              data-variant="secondary"
                             >
                               <Mail className="h-4 w-4 md:h-5 md:w-5" />
                               <span>{speaker.contact}</span>

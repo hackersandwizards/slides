@@ -255,6 +255,9 @@ function fitScale(paras: Para[], o: BoxOpts, w: number, h: number) {
   return Math.max(k, floor);
 }
 
+/** Text the web slide prints as typed, so a `*` or a backtick in it stays a character. */
+const literal = (text: string): Para => ({ runs: [{ text, options: {} }] });
+
 const asParas = (p: Para[] | Para | string, c: Palette): Para[] =>
   typeof p === "string" ? [{ runs: md(p, c) }] : Array.isArray(p) ? p : [p];
 
@@ -1836,15 +1839,27 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   const rowH = d.qr ? 324 / 144 : 119 / 144;
   const rowY = BOTTOM - rowH;
   // Each line of the heading with its options and the gap above it.
-  const lines: [string, BoxOpts, number][] = [
+  const lines: [Para, BoxOpts, number][] = [
     ...(d.kicker
-      ? [[d.kicker.toUpperCase(), { size: PT.base, mono: true, color: c.teal, tracking: 0.06 }, 0]]
+      ? [
+          [
+            literal(d.kicker.toUpperCase()),
+            { size: PT.base, mono: true, color: c.teal, tracking: 0.06 },
+            0,
+          ],
+        ]
       : []),
     ...(d.name
-      ? [[d.name, { size: 32, mono: true, bold: true, color: c.teal, tracking: -0.025 }, 22 / 144]]
+      ? [
+          [
+            literal(d.name),
+            { size: 32, mono: true, bold: true, color: c.teal, tracking: -0.025 },
+            22 / 144,
+          ],
+        ]
       : []),
     [
-      d.title,
+      literal(d.title),
       {
         size: PT.s8,
         mono: true,
@@ -1856,8 +1871,8 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
       },
       d.name ? 34 / 144 : 22 / 144,
     ],
-    ...(d.subtitle ? [[d.subtitle, { size: PT.lead, color: c.muted }, 43 / 144]] : []),
-  ] as [string, BoxOpts, number][];
+    ...(d.subtitle ? [[literal(d.subtitle), { size: PT.lead, color: c.muted }, 43 / 144]] : []),
+  ] as [Para, BoxOpts, number][];
   // A heading taller than the space above the bottom row shrinks to fit it, as the fit guard does.
   const full = lines.map(([text, o]) => need(text, c, CW, o, 3));
   const total = lines.reduce((sum, [, , gap], i) => sum + gap + full[i], 0) - lines[0][2];
@@ -1873,7 +1888,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   const label = d.qr && `↗ ${linkLabel(d.qr.href)}`;
   const colW = label ? Math.max(qr, (label.length * PT.base * ADVANCE.mono) / 72 + 0.1) : 0;
   const textW = CW - (colW && colW + 0.5);
-  const speakers = d.speakers?.join(" & ");
+  const speakers = d.speakers && literal(d.speakers.join(" & "));
   const left = (speakers ? 53 / 144 : 0) + (d.event ? (speakers ? 17 / 144 : 0) + 49 / 144 : 0);
   let ly = mid - left / 2;
   if (speakers) {
@@ -1885,7 +1900,8 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
     });
     ly += 70 / 144;
   }
-  if (d.event) box(s, c, d.event, SIDE, ly, textW, 49 / 144, { size: PT.base, color: c.muted });
+  if (d.event)
+    box(s, c, literal(d.event), SIDE, ly, textW, 49 / 144, { size: PT.base, color: c.muted });
   if (d.qr && label) {
     const colX = W - SIDE - colW;
     picture(s, ctx, d.qr.src, colX + (colW - qr) / 2, rowY, qr, qr, {
@@ -1926,12 +1942,14 @@ const RENDER: {
       floor: 0.5,
       tracking: -0.03,
     };
-    const th = need(d.title, c, CW - 1, o, 3);
-    const sh = d.subtitle ? need(d.subtitle, c, CW - 2, { size: PT.lead, color: c.ink }, 1.2) : 0;
+    const title = literal(d.title);
+    const subtitle = d.subtitle ? literal(d.subtitle) : undefined;
+    const th = need(title, c, CW - 1, o, 3);
+    const sh = subtitle ? need(subtitle, c, CW - 2, { size: PT.lead, color: c.ink }, 1.2) : 0;
     const y = (H - th - sh - 0.5) / 2;
-    box(s, c, d.title, SIDE + 0.5, y, CW - 1, th, o);
-    if (d.subtitle)
-      box(s, c, d.subtitle, SIDE + 1, y + th + 0.5, CW - 2, sh, {
+    box(s, c, title, SIDE + 0.5, y, CW - 1, th, o);
+    if (subtitle)
+      box(s, c, subtitle, SIDE + 1, y + th + 0.5, CW - 2, sh, {
         size: PT.lead,
         color: c.ink,
         align: "center",
@@ -3002,8 +3020,8 @@ const RENDER: {
         rel: PT.lead / PT.display,
         after: 14,
       });
-    paras.push({ runs: md(d.headline, c), mono: true, bold: true, after: 14 });
-    if (d.subtitle) paras.push({ runs: md(d.subtitle, c), rel: PT.lead / PT.display });
+    paras.push({ ...literal(d.headline), mono: true, bold: true, after: 14 });
+    if (d.subtitle) paras.push({ ...literal(d.subtitle), rel: PT.lead / PT.display });
     const speakerH = d.speakerName ? 1.1 : 0;
     const o: BoxOpts = {
       size: PT.display,
@@ -3046,7 +3064,7 @@ const RENDER: {
     const head = discussion ? (d.headline ?? d.line1 ?? "Discussion") : d.line1;
     let y = TOP + 0.3;
     if (head) {
-      box(s, c, head, SIDE, y, CW, 1.1, {
+      box(s, c, literal(head), SIDE, y, CW, 1.1, {
         size: PT.display,
         mono: true,
         bold: true,

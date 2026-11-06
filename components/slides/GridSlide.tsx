@@ -28,7 +28,7 @@ function QuoteCard({ card, isRevealed }: { card: GridCard; isRevealed: boolean }
             alt={card.author ?? ""}
             width={80}
             height={80}
-            className="mb-4 h-20 w-20 rounded-full border-2 border-border object-cover"
+            className="mb-4 h-20 w-20 rounded-brand border-2 border-border object-cover"
           />
         )}
         <p className="card-text-lg mb-4 leading-relaxed text-text-muted italic">

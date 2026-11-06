@@ -28,10 +28,10 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
               alt={profile.name}
               width={208}
               height={208}
-              className="h-36 w-36 rounded-full border-4 border-border object-cover md:h-44 md:w-44"
+              className="h-36 w-36 rounded-brand border-4 border-border object-cover md:h-44 md:w-44"
             />
           ) : (
-            <div className="flex h-36 w-36 items-center justify-center rounded-full border-4 border-border bg-gradient-to-br from-teal/7 to-white md:h-44 md:w-44">
+            <div className="flex h-36 w-36 items-center justify-center rounded-brand border-4 border-border bg-teal/7 md:h-44 md:w-44">
               <User className="h-16 w-16 text-teal/40 md:h-20 md:w-20" />
             </div>
           )}
@@ -140,7 +140,8 @@ function ProfileRegularSlide({ slide }: Props) {
                             href={section.link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex w-fit items-center gap-2 rounded-brand-sm border border-border bg-teal/7 px-4 py-2.5 text-base text-teal transition-all hover:border-teal/25 hover:bg-teal/7 md:gap-3 md:px-5 md:py-3 md:text-lg"
+                            className="hw-button w-fit"
+                            data-variant="secondary"
                           >
                             {section.link.label}
                           </a>

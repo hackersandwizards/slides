@@ -64,9 +64,6 @@ categories with long labels).
 
 ## Still open
 
-- Shapes and colours wait for brand's `shape-and-colour-system`: the closing's email pills and
-  portrait rings, the read-more button, labels in a meaning's hue (`label-hue`), list markers, the
-  stage pill, `GradientTitlePill`.
 - The two-column block's grey item text reads lower in contrast than split's (split panel finding).
 - Media vs the image blocks: a merge, filed in `work-phase-2e-v0-18-0-shipped-activity`.
 
@@ -87,3 +84,57 @@ Claude per persona.
 
 Beside the pairs, regular with profile vs the profiles slide scored 5.67 (Claude unsure or keep at 4
 to 5, Codex keep at 7 to 8): no merge either.
+
+## Shapes and rule lines on brand v1.2.0 (06.11.2026, slides v1.3.0)
+
+Brand's shape rule (v1.1.0) taken over: worded links are `hw-button`, the part bar is `hw-rule`,
+label boxes, tiles, the stage strip and inline code take the small corner, pictures and panels the
+brand corner, legend swatches are square, and no gradient remains outside the strip.
+
+Personas participant (mid-room, 150 seats), trainer (laptop, rehearsing) and brand designer, each
+image at 1280 px. Same criteria as above. Claude (opus) twice and Codex (gpt-6.1-sol) once per
+persona in round 1, once each in rounds 2 and 3. Noise (round 1, Claude, |run 1 − run 2|) 0.46.
+
+| Panel                                            | Variants (overall, mean of all reviewers)                                      | Shipped                               |
+| ------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------- |
+| Frame title, round 1 (overview, phased pills)    | ink fill 7.50, teal fill 7.43, teal outline 7.36, gradient pill (current) 6.44 | tie of the three; round 2             |
+| Frame title, round 2                             | ink fill 7.56, ink outline 7.51, teal outline 7.30                             | ink outline: tie, no exception needed |
+| Worded links (closing email, "Read more")        | tint with brand corner 7.66, `hw-button` secondary 7.57, pill (current) 7.07   | `hw-button`: tie, brand's own element |
+| Portraits (closing, profiles)                    | brand corner 8.27 (best 17 of 18), round 8.03, current 8.04                    | brand corner                          |
+| Conformance (roadmap, gantt, callout, flow, KPI) | after 7.90, before 7.39 (roadmap 8.38 vs 7.05, the rest a tie)                 | after                                 |
+
+Reviewers' recurring reason on the closing: both email buttons are teal, though the second
+speaker's name and label are purple. Brand's button has no purple hue; a brief went to brand.
+
+One reviewer prompt, verbatim (round 1, trainer, Claude, run 1; the image list shortened):
+
+> You are a trainer who presents hackers&wizards workshop and conference decks and picks the slide
+> type for each point. You judge the slides on your laptop at 1280 pixels wide, as you rehearse.
+>
+> The medium: slides of hackers&wizards, a consultancy for agentic software engineering, from
+> workshop decks, client decks and conference talks (German and English), 16:9, projected in a room
+> or shared on a screen.
+>
+> The hackers&wizards brand: a light off-white ground (#f7f9fa) with dark ink text (#19283a), and
+> night (#0b1118, near-black) as a second ground. Accent colours with fixed roles: teal (#1a7285,
+> the primary accent) and purple (#9333ea, the secondary accent); a teal-to-purple brand gradient;
+> green for success, amber for warnings, red only for errors. Tints from one opacity ladder: 7, 15,
+> 25, 40, 70 and 100 %. A signature corner: large radius top-left and bottom-right, small radius
+> elsewhere. JetBrains Mono for headings and labels, Inter for text. The brand forbids decoration
+> such as glow, particles or ornaments.
+>
+> Below are 6 slides, numbered s01 to s06. Each slide comes in several renderings of the same
+> content, letters A, B and so on; the renderings differ only in small details, so compare them
+> closely. Read every image file listed:
+>
+> (19 image paths)
+>
+> Criteria, each scored 0 to 10 for your role: glance (the one key point is clear within 3
+> seconds), clarity (structure and relationships are understood without explanation), legibility
+> (every text readable at your display size), breathing (room, not cramped, nothing touching or
+> crowding another element), calm (nothing competes for attention, no clutter), brand (fits the
+> brand described above and reads as one consistent system), human (looks deliberately designed,
+> not like generic AI-generated slideware: 10 means it does not look generated), overall.
+>
+> For each rendering answer with one JSON object on its own line: (schema). Then for each slide one
+> line (best, decided). Answer with JSON objects only, one per line, nothing else.

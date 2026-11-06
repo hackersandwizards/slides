@@ -15,7 +15,7 @@ const {
   SlideTitle,
   VideoPlayer,
 } = primitives;
-const { GradientTitlePill, PulseDot } = chrome;
+const { FrameTitle, PulseDot } = chrome;
 export const label = (text: string) =>
   h("p", { className: "hw-label mb-3", "data-tone": "muted" }, text);
 export const inRow = (...children: ReactNode[]) =>
@@ -106,7 +106,7 @@ export const PARTS: Record<string, () => ReactNode> = {
   TitledContent: () =>
     label("The column of a titled slide: headline, then the body under the fit guard."),
   ChartFrame: () => label("A chart's plot area: a SlideCard of fixed height the chart fills."),
-  GradientTitlePill: () => h(GradientTitlePill, null, "The Factory"),
+  FrameTitle: () => h(FrameTitle, null, "The Factory"),
   PulseDot: () =>
     h(
       "span",

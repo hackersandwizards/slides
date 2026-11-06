@@ -122,7 +122,6 @@ const blockFrames = blockPicks.map((index) => {
 });
 
 const { CodePanel, DashedFrame, NumberTile, SlideCard } = primitives;
-const { GradientTitlePill } = chrome;
 
 const partSources: Record<string, string> = {
   primitives: sourceOf("primitives"),
@@ -242,6 +241,15 @@ const USES: Record<string, () => ReactNode> = {
       ".",
     ),
   strip: () => h("div", { className: "hw-strip w-96" }),
+  rule: () =>
+    h(
+      "div",
+      { className: "flex w-96 flex-col gap-6" },
+      h("div", { className: "hw-rule", "aria-hidden": "true" }),
+      h("div", { className: "hw-rule", "data-hue": "purple", "aria-hidden": "true" }),
+    ),
+  button: () =>
+    h("a", { className: "hw-button", "data-variant": "secondary", href: "#elements" }, "Read more"),
   status: () =>
     inRow(
       h(SlideCard, { tone: "accent", look: "soft", className: "card-pad-4/6 text-lg" }, "warning"),
@@ -288,7 +296,6 @@ const EXCEPTION_SHOWN: Record<string, () => ReactNode> = {
       { as: "pre", className: "p-8 font-code text-xl" },
       highlightLines('claude --print "fix the failing test" # one run', "bash"),
     ),
-  "header-bars": () => h(GradientTitlePill, null, "The Factory"),
   "frame-tone": () =>
     inRow(
       h(DashedFrame, { className: "w-64 p-6 text-lg" }, "neutral"),
@@ -301,7 +308,6 @@ const exceptionLinks: Record<string, string[]> = {
   "callout-status": ["frames.html"],
   "slide-table": ["block-table"],
   "chart-bars": ["chart", "block-bars"],
-  "header-bars": ["roadmap", "gantt"],
   "stage-status": ["frames.html"],
 };
 export const exceptionSections = Object.entries(

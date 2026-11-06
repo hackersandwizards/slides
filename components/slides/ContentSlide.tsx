@@ -455,7 +455,7 @@ function ContentBlockRenderer({
             )}
             {block.headers && (
               <thead>
-                <tr className="bg-gradient-to-r from-primary/7 to-primary/7">
+                <tr className="bg-primary/7">
                   {block.headers.map((header, i) => (
                     <th
                       key={i}
@@ -752,7 +752,14 @@ function ContentBlockRenderer({
       return (
         <MediaFrame below={block.href && <LinkCaption href={block.href} />}>
           {block.href ? (
-            <a href={block.href} target="_blank" rel="noopener noreferrer" className="contents">
+            <a
+              href={block.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="contents"
+              tabIndex={-1}
+              aria-hidden="true"
+            >
               {picture}
             </a>
           ) : (

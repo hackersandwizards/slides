@@ -127,7 +127,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
               </div>
               {last && (
                 <p
-                  className={`${FRAME_SIZE} flex items-center justify-center rounded-sm border border-night-ink/15 text-night-muted`}
+                  className={`${FRAME_SIZE} flex items-center justify-center rounded-brand border border-night-ink/15 text-night-muted`}
                 >
                   End of the deck
                 </p>
@@ -197,13 +197,13 @@ function SpeakerWindow({ notes, basePath }: Props) {
                 else if (event.key === "Enter" && (event.metaKey || event.ctrlKey))
                   void edit.save();
               }}
-              className="min-h-0 flex-1 resize-none rounded-sm bg-night-2 px-5 py-4 leading-relaxed text-night-ink outline-2 outline-amber"
+              className="min-h-0 flex-1 resize-none rounded-brand bg-night-2 px-5 py-4 leading-relaxed text-night-ink outline-2 outline-amber"
               style={{ fontSize: size }}
             />
           ) : (
             <div
               ref={notesBox}
-              className="min-h-0 flex-1 overflow-y-auto rounded-sm bg-night-2 px-5 py-4 leading-relaxed whitespace-pre-line"
+              className="min-h-0 flex-1 overflow-y-auto rounded-brand bg-night-2 px-5 py-4 leading-relaxed whitespace-pre-line"
               style={{ fontSize: size }}
             >
               {note || <span className="text-night-muted">No notes on this slide.</span>}
@@ -289,7 +289,7 @@ function Frame({ name, src, title }: { name: string; src: string; title: string 
     return () => observer.disconnect();
   }, []);
   return (
-    <div ref={box} className={`${FRAME_SIZE} relative overflow-hidden rounded-sm bg-black`}>
+    <div ref={box} className={`${FRAME_SIZE} relative overflow-hidden rounded-brand bg-black`}>
       <iframe
         name={name}
         src={src}

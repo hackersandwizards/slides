@@ -230,7 +230,7 @@ export function ProcessSlide({ slide }: Props) {
                             }`}
                           />
                           <div
-                            className={`absolute inset-0 bg-gradient-to-r from-teal to-purple transition-opacity duration-500 ${
+                            className={`absolute inset-0 bg-teal transition-opacity duration-500 ${
                               highlighted ? "opacity-100" : "opacity-0"
                             }`}
                           />

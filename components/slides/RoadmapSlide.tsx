@@ -37,7 +37,7 @@ function markerColour(item: PartItem): string | undefined {
   return tone ? themeDotColor[tone] : undefined;
 }
 
-/** One part: the accent bar, a square label, title and subtitle, then groups of rows, each a
+/** One part: the accent rule, a square label, title and subtitle, then groups of rows, each a
  *  marker or a number, a bold title and a grey line. */
 function PartCard({
   label,
@@ -62,7 +62,7 @@ function PartCard({
   return (
     <BlurFade delay={delay} duration={0.5}>
       <SlideCard className="relative h-full overflow-hidden shadow-card card-pad-0">
-        <div className={`absolute inset-x-0 top-0 h-2 ${style.bar}`} />
+        <div className="hw-rule absolute inset-x-0 top-0" data-hue={style.hue} aria-hidden="true" />
 
         <div className="px-10 pt-12 pb-10">
           <div

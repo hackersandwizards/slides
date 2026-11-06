@@ -4,6 +4,6 @@ import { partFrame } from "../../state";
 export default { component: Part };
 
 export const Variants = {
-  args: { name: "GradientTitlePill" },
-  decorators: [partFrame("GradientTitlePill")],
+  args: { name: "FrameTitle" },
+  decorators: [partFrame("FrameTitle")],
 };

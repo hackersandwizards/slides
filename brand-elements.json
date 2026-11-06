@@ -7,6 +7,8 @@
     "callout",
     "link",
     "strip",
+    "rule",
+    "button",
     "status",
     "frame",
     "icon-button",
@@ -20,7 +22,6 @@
     "number-tile": "The KPI and number tile: a figure on a square tile, which no other system shows.",
     "chart-bars": "Chart bars: a slide's data in the slide engine's context and highlight marks.",
     "slide-table": "The slide table: projected rows at stage size with the slide's own column heads, kept per system.",
-    "header-bars": "Header bars: the roadmap column's bar and the factory frame's gradient title pill, kept per system.",
     "stage-status": "The stage strip: the pipeline's stages with the active ones marked, a status no other system shows.",
     "frame-tone": "The dashed frame in the slide's teal or purple, filled with its tone's tint when active and white otherwise: brand's frame has the border colour and no fill. Its line width and corner are brand's hw-frame."
   }

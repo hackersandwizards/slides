@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 import { themeDotColor, type StageCategory } from "../../lib/stage-utils";
 
-/** The factory frame's title, a caps label on the brand gradient pill over the frame's edge. */
-export function GradientTitlePill({ children }: { children: ReactNode }) {
+/** A frame's title over its edge: an ink caps label in a white box with the small corner (blind
+ *  panel 06.11.2026, slides v1.3.0). */
+export function FrameTitle({ children }: { children: ReactNode }) {
   return (
     <span
-      className="hw-label inline-block rounded-full bg-gradient-to-r from-primary via-purple/70 to-secondary px-8 py-2.5 whitespace-nowrap text-white [--hw-label-size:var(--text-base)]"
-      data-hw-exception="header-bars"
+      className="hw-label inline-block rounded-brand-sm border-2 border-ink bg-white px-8 py-2.5 whitespace-nowrap [--hw-label-size:var(--text-base)]"
+      data-tone="ink"
     >
       {children}
     </span>

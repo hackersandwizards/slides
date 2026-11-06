@@ -3,7 +3,7 @@
 import type { OverviewSlide as OverviewSlideType, Stage, StageState } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { getStageClasses, type StageCategory } from "../../lib/stage-utils";
-import { GradientTitlePill, PulseDot } from "./SlideChrome";
+import { FrameTitle, PulseDot } from "./SlideChrome";
 import { SlideShell } from "./SlideShell";
 import { DashedFrame } from "./primitives";
 
@@ -63,7 +63,7 @@ export function OverviewSlide({ slide }: Props) {
         <BlurFade delay={0.1} duration={0.5}>
           <DashedFrame className="relative w-full max-w-(--slide-measure-overview) px-6 pt-12 pb-10">
             <div className="absolute -top-5 left-1/2 -translate-x-1/2">
-              <GradientTitlePill>The Factory</GradientTitlePill>
+              <FrameTitle>The Factory</FrameTitle>
             </div>
 
             <DashedFrame

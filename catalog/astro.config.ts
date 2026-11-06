@@ -93,8 +93,6 @@ export default defineConfig({
     files,
   ],
   vite: {
-    // Found only when a page first loads them, these made Vite optimise again (scaffolding v2.0.1).
-    optimizeDeps: { include: ["lucide-react/icons/mail", "lucide-react/icons/user", "recharts"] },
     define: { __SLIDES_ROOT__: JSON.stringify(root) },
     plugins: [
       tailwindcss(),

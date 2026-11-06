@@ -299,13 +299,13 @@ function TrendVariant({ slide }: { slide: ChartSlideType }) {
           <div className="mb-4 flex items-center justify-center gap-8">
             {seriesLabel && (
               <span className="flex items-center gap-2 text-base font-semibold text-text">
-                <span className="h-1 w-8 rounded-full bg-teal" />
+                <span className="h-1 w-8 bg-teal" />
                 {seriesLabel}
               </span>
             )}
             {series2Label && (
               <span className="flex items-center gap-2 text-base font-semibold text-text">
-                <span className="h-1 w-8 rounded-full bg-secondary" />
+                <span className="h-1 w-8 bg-secondary" />
                 {series2Label}
               </span>
             )}

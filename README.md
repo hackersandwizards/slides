@@ -11,7 +11,8 @@ that the public may not see.
 
 Add the dependency in exactly this form, pinned to the newest tag
 (`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
-`@hackersandwizards/brand` v0.34.0 or later, whose shared elements (`elements.css`) the stylesheet
+`@hackersandwizards/brand` v1.1.0 or later, whose shared elements (`elements.css`, the stage
+button and the accent rule among them) and small corner the stylesheet
 imports and whose `verbal.json` gives the closing its claim. Both repos are public: Bun fetches the
 `git+https://` form through GitHub's tarball API without any GitHub access.
 
@@ -60,7 +61,9 @@ advisories, so a consumer adds `"overrides": { "image-size": "2.0.4" }` as this 
 
 The package ships TypeScript source. Let the build transpile it: Next
 `transpilePackages: ["@hackersandwizards/slides"]`, Astro `vite.ssr.noExternal`, vitest
-`test.server.deps.inline`. A Next app wraps its root layout in `NextSlidesAdapter`, which puts
+`test.server.deps.inline`. An Astro app sets `vite.optimizeDeps` to `slidesOptimizeDeps()` from
+`@hackersandwizards/slides/lib/vite`: the engine served unbundled, the packages its islands import
+named up front. A Next app wraps its root layout in `NextSlidesAdapter`, which puts
 `next/image` and its router behind the engine; without it the engine uses a plain `<img>` and
 `history`.
 

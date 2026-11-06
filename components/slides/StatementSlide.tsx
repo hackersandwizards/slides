@@ -44,7 +44,14 @@ function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linke
   return (
     <figure className="mx-auto mt-10 flex w-11/24 flex-col items-center gap-4">
       {image.href ? (
-        <a href={image.href} target="_blank" rel="noopener noreferrer" className="contents">
+        <a
+          href={image.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="contents"
+          tabIndex={-1}
+          aria-hidden="true"
+        >
           {picture}
         </a>
       ) : (
@@ -70,7 +77,7 @@ export function StatementSlide({ slide }: Props) {
               alt={slide.imageAlt ?? ""}
               width={120}
               height={120}
-              className="mb-8 h-28 w-28 rounded-full border-2 border-border object-cover"
+              className="mb-8 h-28 w-28 rounded-brand border-2 border-border object-cover"
             />
           </BlurFade>
         )}

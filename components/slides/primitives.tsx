@@ -52,7 +52,9 @@ export function SlideSubtitle({ children, delay = 0.15 }: { children: ReactNode;
   );
 }
 
-/** A link spelled out under a picture or a QR code, an arrow before it, opening in a new tab. */
+/** A link spelled out under a picture or a QR code, an arrow before it, opening in a new tab: the
+ *  address's one link for the keyboard and screen readers, the picture's own link taking
+ *  `tabIndex={-1}` and `aria-hidden`. */
 export function LinkCaption({ href }: { href: string }) {
   return (
     <a

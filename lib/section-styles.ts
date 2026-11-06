@@ -40,20 +40,19 @@ export function getSectionStyle(theme?: SectionTheme): SectionStyle {
 
 export type ColumnAccent = "ingredients" | "deepdive";
 
-// The two-part slides' cards stay flat white, since body text never sits on a tint of the gradient
-// (design guide): the accent is the bar and the badge.
+// The two-part slides' cards stay flat white: the accent is the teal rule on top (brand's hw-rule,
+// purple on the second part) and the badge.
 export interface ColumnStyle {
-  bar: string;
+  hue?: "purple";
   badge: string;
 }
 
 export const COLUMN_STYLES: Record<ColumnAccent, ColumnStyle> = {
   ingredients: {
-    bar: "bg-gradient-to-r from-primary via-secondary to-accent",
     badge: "bg-primary/7 text-primary border-border",
   },
   deepdive: {
-    bar: "bg-secondary",
+    hue: "purple",
     badge: "bg-secondary/7 text-secondary border-secondary/25",
   },
 };

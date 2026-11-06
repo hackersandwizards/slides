@@ -62,7 +62,13 @@ function Opening({ slide }: Props) {
           </div>
           {slide.qr && (
             <div className="flex shrink-0 flex-col items-center gap-3">
-              <a href={slide.qr.href} target="_blank" rel="noopener noreferrer">
+              <a
+                href={slide.qr.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                tabIndex={-1}
+                aria-hidden="true"
+              >
                 <Image
                   src={slide.qr.src}
                   alt={`QR code: ${linkLabel(slide.qr.href)}`}

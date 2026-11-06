@@ -30,7 +30,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   is that provider for a Next app, `next/image` and the router, wrapped round its root layout.
   `lib/deck-edit.ts` is the edit mode's file logic, `lib/deck-edit-server.ts` its write endpoint
   as one Node request handler, which each consumer mounts on its dev server with its own map from
-  deck path to file.
+  deck path to file. `lib/vite.ts` is a consumer's Vite `optimizeDeps`, read from the engine's
+  imports.
 - `types/slide.ts`: the slide types and content blocks a deck may use.
 - `styles/tokens.css`: the slide's roles, each a `var()` over brand: it imports the brand tokens,
   brand's `stage.css` (the slide scale, the type table, measures, spacing, rules and marks, every

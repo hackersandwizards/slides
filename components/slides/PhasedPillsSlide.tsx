@@ -9,7 +9,7 @@ import {
   themeLabelColor,
   type StageCategory,
 } from "../../lib/stage-utils";
-import { GradientTitlePill, PulseDot } from "./SlideChrome";
+import { FrameTitle, PulseDot } from "./SlideChrome";
 import { SlideShell } from "./SlideShell";
 import { DashedFrame } from "./primitives";
 import { isDeepDive } from "../../lib/slide-utils";
@@ -70,7 +70,7 @@ export function PhasedPillsSlide({ slide }: Props) {
               duration={0.35}
               className="absolute -top-5 left-1/2 -translate-x-1/2"
             >
-              <GradientTitlePill>{title}</GradientTitlePill>
+              <FrameTitle>{title}</FrameTitle>
             </BlurFade>
           )}
 

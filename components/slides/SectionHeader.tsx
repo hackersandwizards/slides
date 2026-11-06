@@ -18,13 +18,13 @@ export function SectionHeader({ label, principle, pillColor, stageMarker, stageP
     <BlurFade delay={0.1} duration={0.5}>
       {/* The kicker band is one line tall at least and grows with what wraps in it, so a long
           label pushes the title down instead of running into it. The stage strip stays one line
-          from `md` up: where it does not fit beside the label, the whole pill moves to the next
+          from `md` up: where it does not fit beside the label, the whole strip moves to the next
           row. The minimums are the band heights in slides.css. */}
       <div className="slide-kicker mb-4 flex h-auto! min-h-10 flex-wrap items-center gap-5 max-md:min-h-0">
         {label && <span className="hw-label [--hw-label-size:var(--text-xl)]">{label}</span>}
         {principle && <span className={`hw-pill ${pillColor ?? ""}`.trim()}>{principle}</span>}
         {hasStageStrip && (
-          <div className="flex min-w-0 flex-wrap items-center gap-1 rounded-brand-sm border border-border bg-white px-4 py-1.5 md:shrink-0 md:flex-nowrap md:rounded-full">
+          <div className="flex min-w-0 flex-wrap items-center gap-1 rounded-brand-sm border border-border bg-white px-4 py-1.5 md:shrink-0 md:flex-nowrap">
             <span className="hw-label mr-1.5 [--hw-label-size:var(--text-xl)]" data-tone="muted">
               Stage
             </span>
