@@ -36,11 +36,14 @@ export function renderMarkdown(text: string): React.ReactNode {
     const text = part.slice(1, -1);
     // A short chip stays on one line, so a name never splits at its hyphen; a long one and a path
     // may break inside themselves, since a table of paths ran its last column off the slide
-    // (slides v0.19.0 to v0.21.1).
+    // (slides v0.19.0 to v0.21.1). Brand's inline code, in teal. Blind panel 06.11.2026 (engineer in
+    // the audience, deck designer; Claude and Codex, two runs, noise 0.36): this 7.6, the former own
+    // teal chip 8.0 (its night tint vanished on the slide; a tie with Codex), brand's in teal at the
+    // line's size 8.7, a lead only Claude gave, so no exception for the size.
     return (
       <code
         key={i}
-        className={`rounded-brand-sm bg-primary/7 px-2 font-code text-primary ${(text.length <= 24 && !/[/.]/.test(text)) || (text.includes(" ") && text.length <= 40) ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
+        className={`hw-inline-code text-primary ${(text.length <= 24 && !/[/.]/.test(text)) || (text.includes(" ") && text.length <= 40) ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
       >
         {text}
       </code>

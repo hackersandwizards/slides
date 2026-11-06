@@ -102,11 +102,15 @@ const slides: Slide[] = [
       { type: "paragraph", text: "A paragraph carries **one thought** with an optional link." },
       {
         type: "bullets",
-        items: ["Short bullets read faster", { text: "Nested items", children: ["One level"] }],
+        items: [
+          "Short bullets read faster, a command such as `bun run check` inside the line",
+          { text: "Nested items", children: ["One level"] },
+        ],
       },
     ],
     footer: "Footer line: the take-away the speaker repeats.",
-    notes: "content: primary theme, principle, subtitle, paragraph, nested bullets, footer.",
+    notes:
+      "content: primary theme, principle, subtitle, paragraph, nested bullets with inline code, footer.",
   },
   {
     type: "content",
@@ -155,7 +159,12 @@ const slides: Slide[] = [
     sectionLabel: "Success theme",
     sectionTheme: "success",
     headline: "Success theme",
-    content: [{ type: "paragraph", text: "The kicker takes the green of the success theme." }],
+    content: [
+      {
+        type: "paragraph",
+        text: "The kicker stays teal; the success theme's green marks its pill and footer rule.",
+      },
+    ],
     notes: "content: success theme, sparse.",
   },
   {
@@ -163,8 +172,13 @@ const slides: Slide[] = [
     sectionLabel: "Deep-dive theme",
     sectionTheme: "deepdive",
     headline: "Deep-dive theme",
-    content: [{ type: "paragraph", text: "The kicker takes the deep-dive purple." }],
-    notes: "content: deepdive theme, sparse.",
+    content: [
+      {
+        type: "paragraph",
+        text: "A deep-dive part runs on night, and inline code such as `git log --oneline` reads on it.",
+      },
+    ],
+    notes: "content: deepdive theme, sparse, inline code on night.",
   },
   {
     type: "content",

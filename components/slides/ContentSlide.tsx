@@ -567,10 +567,8 @@ function ContentBlockRenderer({
       return (
         <div className="space-y-2.5">
           {block.items.map((hook, i) => (
-            <SlideCard key={i} className="flex items-baseline gap-4 card-pad-3">
-              <code className="rounded-brand-sm bg-primary/7 px-3 py-1 font-code text-base text-text">
-                {hook.name}
-              </code>
+            <SlideCard key={i} className="flex items-baseline gap-4 text-base card-pad-3">
+              <code className="hw-inline-code text-text">{hook.name}</code>
               <span className="text-lg text-text-muted">{hook.description}</span>
             </SlideCard>
           ))}

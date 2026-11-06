@@ -11,7 +11,7 @@ that the public may not see.
 
 Add the dependency in exactly this form, pinned to the newest tag
 (`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
-`@hackersandwizards/brand` v1.4.0 or later, whose shared elements (`elements.css`, the stage
+`@hackersandwizards/brand` v1.5.0 or later, whose shared elements (`elements.css`, the stage
 button, the label box and the accent rule among them) and small corner the stylesheet
 imports and whose `verbal.json` gives the closing its claim. Both repos are public: Bun fetches the
 `git+https://` form through GitHub's tarball API without any GitHub access.

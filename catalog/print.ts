@@ -12,6 +12,7 @@ import { slideCatalogue } from "../specimen/slide-catalogue";
 import type { Slide } from "../types/slide";
 import * as primitives from "../components/slides/primitives";
 import { highlightLines } from "../lib/code-highlight";
+import { renderMarkdown } from "../lib/markdown";
 import { isOpening, replacedBy } from "../lib/slide-utils";
 import * as chrome from "../components/slides/SlideChrome";
 import { PARTS, inRow } from "./parts";
@@ -247,6 +248,8 @@ const USES: Record<string, () => ReactNode> = {
       h("a", { className: "hw-link", href: "#elements" }, "a link"),
       ".",
     ),
+  "inline-code": () =>
+    h("p", { className: "text-xl text-text" }, renderMarkdown("Run `bun run check` first.")),
   strip: () => h("div", { className: "hw-strip w-96" }),
   rule: () =>
     h(
