@@ -107,7 +107,7 @@ are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and 
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
 - `bun run dev` (or `bun run catalog`, which opens it): the catalog at
-  `http://127.0.0.1:4335/`, the print page at `/catalog/print/`.
+  `http://127.0.0.1:4335/`, the print page at `/catalog/print/`: dev serves without the `/slides` base.
 - `bun run build`: the catalog to `dist/`, which the Pages workflow (scaffolding's reusable one)
   publishes at `https://hackersandwizards.github.io/slides/`.
 
