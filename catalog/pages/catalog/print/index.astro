@@ -1,6 +1,6 @@
 ---
+import { brandHref } from "../../../brand-urls";
 import {
-  brandHref,
   entries,
   exceptionSections,
   JOBS,
@@ -42,13 +42,13 @@ const jobButtons = (Object.keys(JOBS) as Job[])
         as="font"
         type="font/woff2"
         crossorigin
-        href={`${brandHref}/tokens/fonts/${face}.woff2`}
+        href={`${brandHref}/fonts/${face}.woff2`}
       />
     ))}
     <link rel="icon" href={`${brandHref}/logos/favicon.ico`} sizes="32x32" />
     <link rel="icon" href={`${brandHref}/logos/favicon.svg`} type="image/svg+xml" />
-    <link rel="stylesheet" href={`${brandHref}/generated/tokens.root.css`} />
-    <link rel="stylesheet" href={`${brandHref}/expert/header.css`} />
+    <link rel="stylesheet" href={`${brandHref}/tokens.root.css`} />
+    <link rel="stylesheet" href={`${brandHref}/header.css`} />
     <link rel="stylesheet" href="build/slides.css" />
     <style is:inline>
       body {

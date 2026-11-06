@@ -15,23 +15,28 @@ import tailwindcss from "@tailwindcss/vite";
 import { catalog } from "@hackersandwizards/scaffolding/catalog";
 import type { AstroIntegration } from "astro";
 import { defineConfig } from "astro/config";
+import { BRAND, brandNames } from "./brand-urls";
 
 const BASE = "/slides";
 const root = fileURLToPath(new URL("..", import.meta.url));
-const brand = dirname(
-  createRequire(join(root, "package.json")).resolve("@hackersandwizards/brand/package.json"),
-);
+const fromRoot = createRequire(join(root, "package.json"));
+const brandFile = (name: string) => fromRoot.resolve(BRAND + name);
 const deckFiles = join(root, "specimen/slide-catalogue");
 
 // A slide names the brand logos and the deck's images from the site root, as a consumer's public
 // folder serves them.
 const fileOf = (path: string) => {
   const logo = path.match(/^\/hw-(wordmark|lockup)(-night)?\.svg$/);
-  if (logo) return join(brand, "logos", `${logo[1]}${logo[2] ?? ""}.svg`);
+  if (logo) return brandFile(`logos/${logo[1]}${logo[2] ?? ""}.svg`);
   const asset = path.match(/^(?:\/slides)?(?:\/catalog\/print)?\/slide-catalogue\/([\w.-]+)$/);
   if (asset) return join(deckFiles, asset[1]);
   const own = path.match(/^(?:\/slides)?\/brand\/(.+)$/);
-  return own && !own[1].includes("..") ? join(brand, own[1]) : undefined;
+  if (!own || own[1].includes("..")) return undefined;
+  try {
+    return brandFile(own[1]);
+  } catch {
+    return undefined;
+  }
 };
 const types: Record<string, string> = {
   ".svg": "image/svg+xml",
@@ -50,17 +55,22 @@ const files: AstroIntegration = {
   hooks: {
     "astro:build:done": ({ dir }) => {
       const dist = fileURLToPath(dir);
-      const out = join(dist, "brand");
-      mkdirSync(join(out, "logos"), { recursive: true });
-      for (const d of ["tokens", "generated", "expert"])
-        cpSync(join(brand, d), join(out, d), { recursive: true, dereference: true });
-      for (const f of readdirSync(join(brand, "logos")))
-        if (f.endsWith(".svg") || f === "favicon.ico")
-          cpSync(join(brand, "logos", f), join(out, "logos", f));
+      const pages = join(dist, "catalog/print");
+      const linked = readdirSync(pages, { recursive: true, encoding: "utf8" })
+        .filter((page) => /\.(html|css)$/.test(page))
+        .flatMap((page) => brandNames(readFileSync(join(pages, page), "utf8")));
+      for (const name of new Set(linked)) {
+        const file = brandFile(name);
+        if (name.endsWith(".css") && /url\(|@import/.test(readFileSync(file, "utf8")))
+          throw new Error(`${name} links further files, which the build does not copy`);
+        const target = join(dist, "brand", name);
+        mkdirSync(dirname(target), { recursive: true });
+        cpSync(file, target);
+      }
       cpSync(deckFiles, join(dist, "catalog/print/slide-catalogue"), { recursive: true });
       cpSync(deckFiles, join(dist, "slide-catalogue"), { recursive: true });
       for (const f of ["wordmark", "wordmark-night", "lockup", "lockup-night"])
-        cpSync(join(brand, "logos", `${f}.svg`), join(dist, `hw-${f}.svg`));
+        cpSync(brandFile(`logos/${f}.svg`), join(dist, `hw-${f}.svg`));
       const stories = join(dist, "stories");
       for (const page of readdirSync(stories, { recursive: true, encoding: "utf8" })) {
         if (!page.endsWith(".html")) continue;
@@ -96,7 +106,7 @@ export default defineConfig({
     files,
   ],
   vite: {
-    define: { __SLIDES_ROOT__: JSON.stringify(root), __BRAND_ROOT__: JSON.stringify(brand) },
+    define: { __SLIDES_ROOT__: JSON.stringify(root) },
     plugins: [
       tailwindcss(),
       {

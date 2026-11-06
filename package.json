@@ -164,7 +164,7 @@
     "allow": [
       {
         "check": "coupling",
-        "path": "catalog/print.ts",
+        "path": "catalog/brand-urls.ts",
         "reason": "the URL the print pages in dist/catalog/print/ link brand's files by, relative to the page, not a path in the checkout"
       }
     ],

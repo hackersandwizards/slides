@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { dirname, join, relative, sep } from "node:path";
+import { dirname, join } from "node:path";
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { compile } from "@tailwindcss/node";
@@ -15,19 +14,14 @@ import { highlightLines } from "../lib/code-highlight";
 import { renderMarkdown } from "../lib/markdown";
 import { isOpening, replacedBy } from "../lib/slide-utils";
 import * as chrome from "../components/slides/SlideChrome";
+import { brandHref, placeBrandUrls } from "./brand-urls";
 import { PARTS, inRow } from "./parts";
 import exceptions from "../brand-elements.json";
 import { version as brandVersion } from "@hackersandwizards/brand/package.json";
 import registry from "../lib/slide-components.ts?raw";
 
-// The checkout and brand's folder, which the config hands over: under Astro's bundle import.meta
-// points into dist/, and the config resolves brand once for its copy to dist/brand/ and for this page.
+// The checkout, which the config hands over: under Astro's bundle import.meta points into dist/.
 const root = __SLIDES_ROOT__;
-const brand = __BRAND_ROOT__;
-// A require of the checkout, since `import.meta.resolve` threw in the dev server's module runner.
-const fromRoot = createRequire(join(root, "package.json"));
-// The brand files as dist/brand/ holds them, relative to the print pages in dist/catalog/print/.
-export const brandHref = "../../brand";
 const sources = import.meta.glob<string>("../components/slides/*.tsx", {
   query: "?raw",
   import: "default",
@@ -350,13 +344,7 @@ const compiler = await compile(readFileSync(stylesheet, "utf8"), {
 const candidates = new Scanner({ sources: compiler.sources }).scan();
 for (const { markup } of [...frames, ...markerFrames, ...blockFrames, ...partFrames])
   candidates.push(...new Scanner({}).scanFiles([{ content: markup, extension: "html" }]));
-export const css = compiler
-  .build(candidates)
-  .replace(
-    /url\("(@hackersandwizards\/brand\/[^"]+)"\)/g,
-    (_, id: string) =>
-      `url("../${brandHref}/${relative(brand, fromRoot.resolve(id)).split(sep).join("/")}")`,
-  );
+export const css = placeBrandUrls(compiler.build(candidates), `../${brandHref}`);
 
 // The 13 jobs of docs/agent-work/2026-11-01-catalogue-program.md
 // ("Abdeckung je Kommunikationsaufgabe").

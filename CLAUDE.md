@@ -78,7 +78,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
     which the brand kit links), per further variant and per content block, each under one or two of
     the 13 communication jobs, with a search over all; `frames.html`, every frame inline, since
     `brand-elements` reads no frame; and `build/slides.css`, compiled by Tailwind. The build copies
-    brand's files to `dist/brand/` and the deck's images beside the pages, so `brand-elements` and
+    each brand file the pages link to `dist/brand/` under its export name and the deck's images beside the pages, so `brand-elements` and
     the page tests (`test/pages/`) read them from `dist/` as files, with no server.
   - The routes `/slides/specimen/` and `/slides/design-system/` forward old links, anchor kept, to the
     print page and the catalog.

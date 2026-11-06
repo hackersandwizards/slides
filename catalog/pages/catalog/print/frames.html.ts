@@ -1,5 +1,6 @@
 // An endpoint, since only an endpoint keeps a route ending in .html as its file name.
-import { brandHref, inlineFrames } from "../../../print";
+import { brandHref } from "../../../brand-urls";
+import { inlineFrames } from "../../../print";
 
 const html = `<!doctype html>
 <html lang="en">
