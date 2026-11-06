@@ -796,8 +796,8 @@ const slides: Slide[] = [
     crossedOut: "Code first, plan later",
     subtitle: "Review reads the plan before anyone writes a line.",
     points: ["The plan is reviewed", "Code follows the plan", "Review reads both"],
-    closing: "That is the whole method.",
-    notes: "statement: highlight, crossed-out, points, plain closing.",
+    closing: "The plan comes first.\nThat is the whole method.",
+    notes: "statement: highlight, crossed-out, points, plain closing in two lines.",
   },
   {
     type: "statement",
@@ -819,8 +819,7 @@ const slides: Slide[] = [
       alt: "Fictional pull request",
       href: "https://example.com/pull/42",
     },
-    closing: "Reviewed by a person,\nmerged by the pipeline",
-    notes: "statement: kicker, a linked image and a closing in two lines under it.",
+    notes: "statement: kicker and a linked image.",
   },
 
   {

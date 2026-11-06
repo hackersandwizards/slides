@@ -230,14 +230,25 @@ it("colours a deep-dive slide's bullets in the night teal, every other slide's i
 });
 
 // pptxgenjs split a run at its \n into paragraphs that each ended a line, so the bold word after
-// the break started a third line.
-it("sets a \\n as a line break inside its paragraph", async () => {
+// the break started a third line. Text boxes and table cells hand text to pptxgenjs apart.
+it.each([
+  [
+    "a statement's closing",
+    { type: "statement", lines: ["S"], closing: "one\ntwo **three** four" },
+  ],
+  ["a title", { type: "title", title: "one\ntwo **three** four" }],
+  [
+    "a table cell",
+    {
+      type: "content",
+      headline: "H",
+      content: [{ type: "table", rows: [["x", "one\ntwo **three** four"]] }],
+    },
+  ],
+])("sets a \\n in %s as a line break inside its paragraph", async (_, slide) => {
   const out = join(dir, "breaks.pptx");
   await renderPptx(
-    {
-      ...slideCatalogue,
-      slides: [{ type: "statement", lines: ["S"], closing: "one\ntwo **three** four" }],
-    },
+    { ...slideCatalogue, slides: [slide as Slide] },
     out,
     join(import.meta.dirname, "..", "specimen"),
   );
@@ -246,9 +257,9 @@ it("sets a \\n as a line break inside its paragraph", async () => {
   )
     .file("ppt/slides/slide1.xml")!
     .async("string");
-  const closing = [...xml.matchAll(/<a:p>(.*?)<\/a:p>/g)].find((m) => m[1].includes(">one<"))!;
-  expect(closing[1].match(/<a:br\/>/g)).toHaveLength(1);
-  expect(closing[1]).toMatch(/>two <\/a:t>.*>three<\/a:t>.*> four<\/a:t>/);
+  const para = [...xml.matchAll(/<a:p>(.*?)<\/a:p>/g)].find((m) => m[1].includes(">one<"))!;
+  expect(para[1].match(/<a:br\/>/g)).toHaveLength(1);
+  expect(para[1]).toMatch(/>two .*three.* four<\/a:t>/);
 });
 
 // pptxgenjs stores every video cover as a PNG part: another format would sit there mislabelled.

@@ -226,10 +226,13 @@ html:has(.print-slide) {
   font-size: var(--slide-root-print);
 }
 
+/* A line break a deck types holds in every field, as the PowerPoint export keeps it; spaces still
+   collapse. The longhand, since the `white-space` shorthand resets `text-wrap: balance`. */
 .slide-content {
   height: 100vh;
   width: 100%;
   max-width: var(--slide-page-width);
+  white-space-collapse: preserve-breaks;
 }
 
 /* A content slide's title sits on one line at the same height on every slide, whatever the slide

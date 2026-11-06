@@ -1,17 +1,5 @@
 import React from "react";
 
-/** Text with each `\n` as a line break, so a break a deck types holds in every field, whatever the
- *  element's `white-space`. */
-function withBreaks(text: string, key: number | string): React.ReactNode {
-  if (!text.includes("\n")) return text;
-  return text.split("\n").map((line, i) => (
-    <React.Fragment key={`${key}-${i}`}>
-      {i > 0 && <br />}
-      {line}
-    </React.Fragment>
-  ));
-}
-
 export function renderMarkdown(text: string): React.ReactNode {
   // Single-asterisk emphasis requires non-whitespace immediately inside the
   // markers so arithmetic like "2 * 3 * 4" is not mistaken for emphasis.
@@ -20,7 +8,7 @@ export function renderMarkdown(text: string): React.ReactNode {
   );
   // `split` with a capturing group puts the captured spans at the odd indices.
   return parts.map((part, i) => {
-    if (i % 2 === 0) return withBreaks(part, i);
+    if (i % 2 === 0) return part;
     const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);
     // Only web, mail and relative targets become links; any other scheme stays plain text.
     if (link && !/^(https?:|mailto:|[/#.]|[^:]*$)/i.test(link[2])) return link[1];
@@ -34,14 +22,14 @@ export function renderMarkdown(text: string): React.ReactNode {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
         <strong key={i} className="font-bold text-text">
-          {withBreaks(part.slice(2, -2), i)}
+          {part.slice(2, -2)}
         </strong>
       );
     }
     if (part.startsWith("*") && !part.startsWith("**")) {
       return (
         <span key={i} className="font-semibold text-accent">
-          {withBreaks(part.slice(1, -1), i)}
+          {part.slice(1, -1)}
         </span>
       );
     }

@@ -129,7 +129,7 @@ const SANS = family(tokens["--font-sans"]);
 function breaks(runs: Run[]): Run[] {
   return runs.flatMap((r) =>
     r.text
-      .split("\n")
+      .split(/\r?\n/)
       .map((text, i) =>
         i ? { text, options: { ...r.options, softBreakBefore: true } } : { ...r, text },
       ),
@@ -138,10 +138,6 @@ function breaks(runs: Run[]): Run[] {
 
 /** Inline markdown as the engine reads it (lib/markdown.tsx): links, bold, *accent* and code. */
 function md(text: string, c: Palette, base: TextProps = {}): Run[] {
-  return breaks(spans(text, c, base));
-}
-
-function spans(text: string, c: Palette, base: TextProps): Run[] {
   const parts = String(text).split(
     /(\[[^\]]+\]\([^)\s]+\)|\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?!\s)[^*]+(?<!\s)\*|`[^`]+`)/g,
   );
@@ -241,7 +237,7 @@ function parasHeight(paras: Para[], o: BoxOpts, w: number, scale: number) {
   return paras.reduce((sum, p) => {
     const size = o.size * (p.rel ?? 1) * scale;
     const indent = p.bullet ? 0.28 + (p.indent ?? 0) * 0.3 : 0;
-    const text = p.runs.map((r) => (r.options?.softBreakBefore ? "\n" : "") + r.text).join("");
+    const text = p.runs.map((r) => r.text).join("");
     const n = lineCount(
       text,
       size,
@@ -1019,10 +1015,12 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       // The web's table: body and headers at the small step, headers as mono capitals.
       const size = Math.max(7, Math.round(PT.base * 0.875 * k * 2) / 2);
       const cell = (t: string, head: boolean): PptxGenJS.TableCell => ({
-        text: md(
-          head ? t.toUpperCase() : t,
-          c,
-          head ? { bold: true, fontFace: MONO, color: c.ink, fontSize: size } : {},
+        text: breaks(
+          md(
+            head ? t.toUpperCase() : t,
+            c,
+            head ? { bold: true, fontFace: MONO, color: c.ink, fontSize: size } : {},
+          ),
         ) as PptxGenJS.TableCell[],
         options: { fill: { color: head ? c.tint : c.card } },
       });
