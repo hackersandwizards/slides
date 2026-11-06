@@ -88,6 +88,7 @@ export default defineConfig({
       groupOrder: ["Types", "Parts"],
       head: "./Head.astro",
       home: "./Home.astro",
+      admin: true,
     }),
     files,
   ],

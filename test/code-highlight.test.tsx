@@ -2,7 +2,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { act, render } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { highlightLines } from "../lib/code-highlight";
 import { CodeLines } from "../lib/use-code-highlight";
 
 const css = readFileSync(join(__dirname, "../styles/tokens.css"), "utf8");
@@ -85,6 +87,16 @@ describe("CodeLines", () => {
       ]),
     );
     expect(await classes("name: reviewer", "yaml")).toContainEqual(["name", "hw-code-inserted"]);
+  });
+
+  // Shiki stops a line after 500 ms by default and returns its rest as one token: under load the
+  // first line of a language, which compiles the grammar, took that long (06.11.2026).
+  it("highlights a line to its end however long the tokenizer takes", () => {
+    let now = 0;
+    const clock = vi.spyOn(Date, "now").mockImplementation(() => (now += 1000));
+    const [line] = highlightLines("// c", "typescript") as ReactElement<{ className?: string }>[][];
+    clock.mockRestore();
+    expect(line.map((span) => span.props.className)).toContain("hw-code-comment");
   });
 
   it("maps every colour of the brand theme to a role", async () => {

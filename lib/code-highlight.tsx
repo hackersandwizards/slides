@@ -40,22 +40,27 @@ const STYLES = [
 /** Each line's tokens, in their role classes: one entry per line of `code`. */
 export function highlightLines(code: string, language?: string): ReactNode[] {
   const lang = language && LANGS.has(language) ? language : "text";
-  return highlighter.codeToTokensBase(code, { lang, theme: codeTheme.name }).map((line) =>
-    // A non-breaking space keeps a blank line's height.
-    line.every((token) => token.content === "")
-      ? " "
-      : line.map((token, j) => {
-          const className = [
-            ROLES.get(token.color?.toLowerCase()),
-            ...STYLES.filter(([flag]) => (token.fontStyle ?? 0) & flag).map(([, c]) => c),
-          ]
-            .filter(Boolean)
-            .join(" ");
-          return (
-            <span key={j} className={className || undefined}>
-              {token.content}
-            </span>
-          );
-        }),
-  );
+  // No time limit: past Shiki's default 500 ms a line's rest becomes one token in the scope it
+  // stopped in. A language's first line compiles the grammar's patterns, 445 ms on an idle Mac
+  // and more under load (06.11.2026); a warm-up line would not cover patterns met later.
+  return highlighter
+    .codeToTokensBase(code, { lang, theme: codeTheme.name, tokenizeTimeLimit: 0 })
+    .map((line) =>
+      // A non-breaking space keeps a blank line's height.
+      line.every((token) => token.content === "")
+        ? " "
+        : line.map((token, j) => {
+            const className = [
+              ROLES.get(token.color?.toLowerCase()),
+              ...STYLES.filter(([flag]) => (token.fontStyle ?? 0) & flag).map(([, c]) => c),
+            ]
+              .filter(Boolean)
+              .join(" ");
+            return (
+              <span key={j} className={className || undefined}>
+                {token.content}
+              </span>
+            );
+          }),
+    );
 }
