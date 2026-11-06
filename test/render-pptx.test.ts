@@ -42,6 +42,7 @@ const NOT_TEXT = new Set([
   "highlight",
   "highlightPhase",
   "contact",
+  "continues",
 ]);
 
 /** Every string a slide shows, by walking its data. */

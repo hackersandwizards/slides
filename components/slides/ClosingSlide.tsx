@@ -70,9 +70,9 @@ function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
 }
 
 const ACCENT = {
-  primary: { ring: "ring-primary/40", text: "text-primary" },
-  secondary: { ring: "ring-secondary/40", text: "text-secondary" },
-};
+  primary: { ring: "ring-primary/40", hue: undefined },
+  secondary: { ring: "ring-secondary/40", hue: "purple" },
+} as const;
 
 /** A line under the speakers: brand's claim or a quote. */
 function ClosingLine({ children }: { children: ReactNode }) {
@@ -130,8 +130,8 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                         </p>
                         {speaker.company && (
                           <p
-                            className={`hw-label mt-3 [--hw-label-size:var(--text-xs)] md:[--hw-label-size:var(--text-sm)] ${a.text}`}
-                            data-hw-exception="label-hue"
+                            className="hw-label mt-3 [--hw-label-size:var(--text-xs)] md:[--hw-label-size:var(--text-sm)]"
+                            data-hue={a.hue}
                           >
                             {speaker.company}
                           </p>
@@ -142,6 +142,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                               href={`mailto:${speaker.contact}`}
                               className="hw-button gap-2"
                               data-variant="secondary"
+                              data-hue={a.hue}
                             >
                               <Mail className="size-6" />
                               <span>{speaker.contact}</span>

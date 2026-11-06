@@ -598,7 +598,7 @@ function eventParas(
 ): Para[] {
   return [
     { runs: md(e.title, c, { color: hi ? c.teal : c.ink }), bold: true, after: 4 },
-    { runs: md(e.text ?? "", c, { color: c.muted }), rel: 0.9, after: 8 },
+    { runs: md(e.text ?? "", c, { color: c.muted }), rel: 0.9, after: 16 },
     ...(e.figure
       ? [
           {
@@ -1500,10 +1500,14 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const n = b.events.length;
       const ew = a.w / n;
       const ly = a.y + 0.35;
+      // A timeline continued over slides runs its line in from the slide's edge or out to it.
+      const into = b.continues === "in" || b.continues === "both";
+      const onward = b.continues === "out" || b.continues === "both";
+      const from = into ? 0 : a.x + ew / 2;
       s.addShape("line", {
-        x: a.x + ew / 2,
+        x: from,
         y: ly,
-        w: a.w - ew,
+        w: (onward ? W : a.x + a.w - ew / 2) - from,
         h: 0.001,
         line: { color: c.border, width: 2 },
       });

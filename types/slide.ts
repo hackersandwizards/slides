@@ -195,6 +195,10 @@ export type VisualBlock =
       now?: number;
       /** Row labels, a table's column headers, set left of the stages: "Slot", "What", "Output". */
       labels?: { when?: string; title?: string; text?: string };
+      /** A timeline split over slides: "out" on the first, "in" on the next, "both" between. The
+       *  line runs in from the slide's edge before the first event or out after the last, and stands
+       *  at one height on every such slide under a headline of the same height. */
+      continues?: "in" | "out" | "both";
     }
   | {
       /** @deprecated Drawn as a comparison's `before-after` with `strike: false` (decision

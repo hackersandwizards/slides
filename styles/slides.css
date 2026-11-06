@@ -274,6 +274,17 @@ html:has(.print-slide) {
   flex-grow: 1.25;
 }
 
+/* A timeline continued over slides stands a fixed step under its title rather than centred in the
+   free space, so its line keeps one height from slide to slide (blind panel 06.11.2026: 8.85 of 10
+   against 6.28 centred, first with all four reviewers). */
+.slide-titled > .slide-body:has(.slide-timeline-continued)::before,
+.slide-titled > .slide-body:has(.slide-timeline-continued)::after {
+  flex-grow: 0;
+}
+.slide-timeline-continued {
+  padding-top: calc(var(--spacing) * 16);
+}
+
 /* A body with a part that grows to fill the space, such as gantt rows, takes all of it. */
 .slide-titled > .slide-body:has(> .flex-1)::before,
 .slide-titled > .slide-body:has(> .flex-1)::after {

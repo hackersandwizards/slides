@@ -1,12 +1,11 @@
 import type { ReactNode } from "react";
 import { themeDotColor, type StageCategory } from "../../lib/stage-utils";
 
-/** A frame's title over its edge: an ink caps label in a white box with the small corner (blind
- *  panel 06.11.2026, slides v1.3.0). */
+/** A frame's title over its edge: brand's label box in ink. */
 export function FrameTitle({ children }: { children: ReactNode }) {
   return (
     <span
-      className="hw-label inline-block rounded-brand-sm border-2 border-ink bg-white px-8 py-2.5 whitespace-nowrap [--hw-label-size:var(--text-base)]"
+      className="hw-label hw-label-box whitespace-nowrap [--hw-label-size:var(--text-base)]"
       data-tone="ink"
     >
       {children}

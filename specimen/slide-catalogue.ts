@@ -1755,6 +1755,33 @@ const slides: Slide[] = [
     content: [
       {
         type: "timeline",
+        continues: "out",
+        events: [
+          {
+            title: "Starting point",
+            text: "A small team that writes product texts, and one metric it may move itself: **time per text.**",
+          },
+          {
+            segment: "1 week",
+            title: "Prototypes",
+            text: "A clickable screen and a script that runs the whole path once: fetch, write, check.",
+          },
+          {
+            title: "Testing loop",
+            text: "Every morning with the people who use it, then twice a week.",
+          },
+        ],
+      },
+    ],
+    notes: "visual blocks: a timeline continued on the next slide, its line running out.",
+  },
+  {
+    type: "content",
+    headline: "Two weeks to the first live version, two more to the measured result",
+    content: [
+      {
+        type: "timeline",
+        continues: "in",
         highlight: 2,
         events: [
           {

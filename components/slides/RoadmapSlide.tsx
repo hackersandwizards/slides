@@ -3,8 +3,8 @@
 import type { MarkerTone, RoadmapSlide as RoadmapSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { renderMarkdown } from "../../lib/markdown";
-import { COLUMN_STYLES, type ColumnAccent } from "../../lib/section-styles";
-import { themeDotColor, themeLabelColor } from "../../lib/stage-utils";
+import { COLUMN_HUE, type ColumnAccent } from "../../lib/section-styles";
+import { themeDotColor, themeHue } from "../../lib/stage-utils";
 import { SlideShell } from "./SlideShell";
 import { TitledContent, SlideTitle, SlideSubtitle, DisplayHeading, SlideCard } from "./primitives";
 
@@ -54,21 +54,17 @@ function PartCard({
   groups: PartGroup[];
   delay: number;
 }) {
-  const style = COLUMN_STYLES[accent];
-  const [defaultDot, defaultText] =
-    accent === "ingredients" ? ["bg-primary", "text-primary"] : ["bg-secondary", "text-secondary"];
+  const hue = COLUMN_HUE[accent];
+  const defaultDot = hue === "teal" ? "bg-primary" : "bg-secondary";
   let row = 0;
 
   return (
     <BlurFade delay={delay} duration={0.5}>
       <SlideCard className="relative h-full overflow-hidden shadow-card card-pad-0">
-        <div className="hw-rule absolute inset-x-0 top-0" data-hue={style.hue} aria-hidden="true" />
+        <div className="hw-rule absolute inset-x-0 top-0" data-hue={hue} aria-hidden="true" />
 
         <div className="px-10 pt-12 pb-10">
-          <div
-            className={`hw-label inline-flex items-center rounded-brand-sm border px-4 py-1.5 [--hw-label-size:var(--text-xs)] ${style.badge}`}
-            data-hw-exception="label-hue"
-          >
+          <div className="hw-label hw-label-box [--hw-label-size:var(--text-xs)]" data-hue={hue}>
             {label}
           </div>
 
@@ -86,13 +82,18 @@ function PartCard({
           <div className="mt-6 space-y-6">
             {groups.map((group, g) => {
               const dot = (group.theme && themeDotColor[group.theme]) || defaultDot;
-              const text = (group.theme && themeLabelColor[group.theme]) || defaultText;
+              const text = dot.replace("bg-", "text-");
+              const labelHue = group.theme
+                ? themeHue[group.theme]
+                : hue === "purple"
+                  ? hue
+                  : undefined;
               return (
                 <div key={g}>
                   {group.label && (
                     <p
-                      className={`hw-label mb-3 [--hw-label-size:var(--text-base)] ${text}`}
-                      data-hw-exception="label-hue"
+                      className="hw-label mb-3 [--hw-label-size:var(--text-base)]"
+                      data-hue={labelHue}
                     >
                       {group.label}
                     </p>

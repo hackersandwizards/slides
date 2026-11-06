@@ -6,7 +6,7 @@ import {
   getStageClasses,
   themeToCategory,
   themeDotColor,
-  themeLabelColor,
+  themeHue,
   type StageCategory,
 } from "../../lib/stage-utils";
 import { FrameTitle, PulseDot } from "./SlideChrome";
@@ -101,12 +101,10 @@ export function PhasedPillsSlide({ slide }: Props) {
                   >
                     <div
                       className="hw-label flex items-baseline gap-2.5 [--hw-label-size:var(--text-base)]"
-                      data-hw-exception="label-hue"
+                      data-hue={theme in themeHue ? themeHue[theme] : "purple"}
                     >
                       <div className={`hw-marker ${themeDotColor[theme] ?? "bg-secondary"}`} />
-                      <span className={themeLabelColor[theme] ?? "text-secondary"}>
-                        {phase.label}
-                      </span>
+                      <span>{phase.label}</span>
                     </div>
                   </BlurFade>
 

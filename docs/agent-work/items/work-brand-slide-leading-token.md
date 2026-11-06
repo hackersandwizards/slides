@@ -4,13 +4,13 @@ status: open
 priority: 3
 order: 640
 owner: Agent (slides session)
-evidence: "slides v1.5.0 session of 06.11.2026: brand v1.3.0's `tokens/stage.css` sets one line height per type step (`--text-*--line-height`) and no slide leading token"
+evidence: "slides v1.6.0 session of 06.11.2026: brand v1.4.0's `tokens/stage.css` sets one line height per type step (`--text-*--line-height`) and no slide leading token"
 ---
 
 # Take brand's slide line-height token once brand releases it
 
-A brand session was adding a line-height token for slides on 06.11.2026. Brand v1.3.0, the newest
-tag that day, does not have it yet. Slides v1.5.0 shipped without it.
+A brand session was adding a line-height token for slides on 06.11.2026. Brand v1.4.0, the newest
+tag when slides v1.6.0 shipped, does not have it yet.
 
 Once brand tags a release with the token:
 

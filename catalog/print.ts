@@ -213,6 +213,13 @@ const USES: Record<string, () => ReactNode> = {
     inRow(
       h("span", { className: "hw-label [--hw-label-size:var(--text-xl)]" }, "Kicker"),
       h("span", { className: "hw-label", "data-tone": "muted" }, "Muted label"),
+      h("span", { className: "hw-label", "data-hue": "purple" }, "Second part"),
+    ),
+  "label-box": () =>
+    inRow(
+      h("span", { className: "hw-label hw-label-box", "data-tone": "ink" }, "The Factory"),
+      h("span", { className: "hw-label hw-label-box", "data-hue": "teal" }, "Part one"),
+      h("span", { className: "hw-label hw-label-box", "data-hue": "purple" }, "Part two"),
     ),
   pill: () =>
     inRow(
@@ -311,7 +318,6 @@ const EXCEPTION_SHOWN: Record<string, () => ReactNode> = {
     ),
 };
 const exceptionLinks: Record<string, string[]> = {
-  "label-hue": ["overview", "phased-pills", "comparison-guidance"],
   "callout-status": ["frames.html"],
   "slide-table": ["block-table"],
   "chart-bars": ["chart", "block-bars"],

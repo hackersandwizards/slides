@@ -551,10 +551,7 @@ function ContentBlockRenderer({
           <div className="flex flex-col justify-center space-y-8">
             {block.sections.map((section, i) => (
               <div key={i}>
-                <h2
-                  className="hw-label mb-2 text-accent [--hw-label-size:var(--text-xl)]"
-                  data-hw-exception="label-hue"
-                >
+                <h2 className="hw-label mb-2 [--hw-label-size:var(--text-xl)]" data-hue="amber">
                   {section.title}
                 </h2>
                 <p className="text-xl leading-relaxed text-text-muted">
@@ -671,10 +668,7 @@ function ContentBlockRenderer({
           )}
           <div className="flex flex-col gap-4">
             {block.gridTitle && (
-              <h2
-                className="hw-label mb-2 text-secondary [--hw-label-size:var(--text-base)]"
-                data-hw-exception="label-hue"
-              >
+              <h2 className="hw-label mb-2 [--hw-label-size:var(--text-base)]" data-hue="purple">
                 {renderMarkdown(block.gridTitle)}
               </h2>
             )}
@@ -829,7 +823,10 @@ function StandardContentSlide({ slide }: Props) {
             stagePrefix={slide.stagePrefix}
           />
           {slide.badge && (
-            <div className="hw-label flex shrink-0 items-baseline gap-2.5 rounded-full border border-primary/40 bg-white px-5 py-2 [--hw-label-size:var(--text-sm)]">
+            <div
+              className="hw-label hw-label-box shrink-0 items-baseline gap-2.5 [--hw-label-size:var(--text-sm)]"
+              data-hue="teal"
+            >
               <span className="hw-marker" />
               <span>{slide.badge}</span>
             </div>

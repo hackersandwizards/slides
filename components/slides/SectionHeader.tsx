@@ -24,7 +24,7 @@ export function SectionHeader({ label, principle, pillColor, stageMarker, stageP
         {label && <span className="hw-label [--hw-label-size:var(--text-xl)]">{label}</span>}
         {principle && <span className={`hw-pill ${pillColor ?? ""}`.trim()}>{principle}</span>}
         {hasStageStrip && (
-          <div className="flex min-w-0 flex-wrap items-center gap-1 rounded-brand-sm border border-border bg-white px-4 py-1.5 md:shrink-0 md:flex-nowrap">
+          <div className="hw-label-box min-w-0 flex-wrap gap-1 md:shrink-0 md:flex-nowrap">
             <span className="hw-label mr-1.5 [--hw-label-size:var(--text-xl)]" data-tone="muted">
               Stage
             </span>

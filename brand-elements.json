@@ -3,6 +3,7 @@
   "uses": [
     "card",
     "label",
+    "label-box",
     "pill",
     "callout",
     "link",
@@ -17,7 +18,6 @@
   ],
   "exceptions": {
     "card-tone": "A card in purple, which means no state, a tinted card in a meaning's hue with its full line (tint), a card outlined on white in any hue (outline, line), and the quiet grey card: brand's card has white and the teal tint only, its status box the four meanings at a 40 % line. The tinted card stays: blind panel 02.11., the highlighted cell as brand's status box scored lower in all five runs (Claude 8:8, 9:8, 8:7; Codex 8.8:8.7, 9.1:9).",
-    "label-hue": "A label in a meaning's, a column's or a speaker's hue (purple, amber, red, green): brand's hw-label with the slide's colour, since brand's label has teal-dark, muted and ink only.",
     "callout-status": "Amber and green callouts for a risk and a result, their text mixed 40 % into ink for 4.5:1: brand's callout has teal and purple only.",
     "code-panel": "The code panel is brand's hw-code panel (corner, hairline, colours) with its padding and type set per layout (a terminal's title bar, an annotated line's marker column) and the slide's code ground, night-2 on a night slide: brand's panel sets one padding, the code role's type and the night ground.",
     "number-tile": "The KPI and number tile: a figure on a square tile, which no other system shows.",

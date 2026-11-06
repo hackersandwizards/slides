@@ -421,10 +421,7 @@ function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
 
             <div className="grid grid-cols-2 gap-6">
               <SlideCard tone="error" look="soft" className="card-pad-6">
-                <p
-                  className="hw-label mb-3 text-red [--hw-label-size:var(--text-sm)]"
-                  data-hw-exception="label-hue"
-                >
+                <p className="hw-label mb-3 [--hw-label-size:var(--text-sm)]" data-hue="red">
                   Bad
                 </p>
                 <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
@@ -433,10 +430,7 @@ function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
               </SlideCard>
 
               <SlideCard tone="success" look="soft" className="card-pad-6">
-                <p
-                  className="hw-label mb-3 text-(--slide-success-ink) [--hw-label-size:var(--text-sm)]"
-                  data-hw-exception="label-hue"
-                >
+                <p className="hw-label mb-3 [--hw-label-size:var(--text-sm)]" data-hue="green">
                   Good
                 </p>
                 <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">

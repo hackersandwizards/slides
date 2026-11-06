@@ -112,8 +112,8 @@ export function OverviewSlide({ slide }: Props) {
                         className="flex flex-col gap-3 p-7 transition-all duration-300 md:flex-row md:items-center md:gap-5 md:py-4"
                       >
                         <div
-                          className="hw-label flex shrink-0 items-baseline gap-2 text-secondary [--hw-label-size:var(--text-base)]"
-                          data-hw-exception="label-hue"
+                          className="hw-label flex shrink-0 items-baseline gap-2 [--hw-label-size:var(--text-base)]"
+                          data-hue="purple"
                         >
                           <div className="hw-marker bg-secondary" />
                           <span className="whitespace-nowrap tabular-nums">
@@ -144,8 +144,8 @@ export function OverviewSlide({ slide }: Props) {
                     className="flex-1 p-7 transition-all duration-300"
                   >
                     <div
-                      className="hw-label mb-3 flex items-baseline gap-2 text-secondary [--hw-label-size:var(--text-base)]"
-                      data-hw-exception="label-hue"
+                      className="hw-label mb-3 flex items-baseline gap-2 [--hw-label-size:var(--text-base)]"
+                      data-hue="purple"
                     >
                       <div className="hw-marker bg-secondary" />
                       <span>Pipeline</span>
@@ -174,8 +174,8 @@ export function OverviewSlide({ slide }: Props) {
                 className="mt-6 p-7 transition-all duration-300"
               >
                 <div
-                  className="hw-label mb-4 flex items-baseline gap-2 text-secondary [--hw-label-size:var(--text-base)]"
-                  data-hw-exception="label-hue"
+                  className="hw-label mb-4 flex items-baseline gap-2 [--hw-label-size:var(--text-base)]"
+                  data-hue="purple"
                 >
                   <div className="hw-marker bg-secondary" />
                   <span>Pipeline</span>

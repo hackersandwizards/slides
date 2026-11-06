@@ -175,8 +175,8 @@ export function FlowSteps({
                 </NumberTile>
                 {step.label && !inTile && (
                   <span
-                    className={`hw-label mt-5 -mb-4 text-balance [--hw-label-size:var(--text-xl)] ${accent}`}
-                    data-hw-exception="label-hue"
+                    className="hw-label mt-5 -mb-4 text-balance [--hw-label-size:var(--text-xl)]"
+                    data-tone={step.dim ? "muted" : undefined}
                   >
                     {step.label}
                   </span>
@@ -379,7 +379,7 @@ function EventBody({
       )}
       {event.figure && (
         <span
-          className={`mt-4 block font-heading text-(length:--slide-figure-size) leading-(--slide-figure-leading) font-bold tracking-(--slide-figure-tracking) ${tone}`}
+          className={`mt-8 block font-heading text-(length:--slide-figure-size) leading-(--slide-figure-leading) font-bold tracking-(--slide-figure-tracking) ${tone}`}
         >
           <Figure value={event.figure} />
         </span>
@@ -388,14 +388,41 @@ function EventBody({
   );
 }
 
+const continuation = (block: Of<"timeline">) => ({
+  into: block.continues === "in" || block.continues === "both",
+  onward: block.continues === "out" || block.continues === "both",
+});
+
+// How far a continued timeline's line runs past its column: to the slide's edge, the side
+// margin plus the column's own padding (px-4).
+const BLEED = "calc(-1 * (var(--slide-side) + var(--spacing) * 4))";
+
+// A continued timeline's line, from the slide's edge into the first dot or out of the last to the
+// edge, so the slide reads as one part of a longer line.
+function Lead({ side, dashed }: { side: "in" | "out"; dashed: boolean }) {
+  return (
+    <div
+      className="absolute top-1/2 -translate-y-1/2"
+      aria-hidden
+      style={{
+        ...(side === "in"
+          ? { left: BLEED, right: "calc(100% - var(--spacing) * 6)" }
+          : { left: "calc(var(--spacing) * 6)", right: BLEED }),
+        borderTop: `var(--slide-rule-heavy) ${dashed ? "dashed" : "solid"} ${GREY}`,
+      }}
+    />
+  );
+}
+
 function Timeline({ block }: { block: Of<"timeline"> }) {
   const n = block.events.length;
+  const { into, onward } = continuation(block);
   const now = block.now ?? n - 1;
   const tone = (i: number) => (block.highlight === i ? "text-primary" : "text-text");
   if (n >= 6) return <Staggered block={block} now={now} tone={tone} />;
   const labels = givenLabels(block.labels);
   return (
-    <div className="w-full">
+    <div className={`w-full ${block.continues ? "slide-timeline-continued" : ""}`}>
       {/* One row per part (date, dot, title, text) shared by every stage, so titles and texts
           start level even where a title wraps. Row labels, when given, take a first column. */}
       {/* The space after "auto" is load-bearing: without it the value is invalid CSS, the grid
@@ -415,6 +442,8 @@ function Timeline({ block }: { block: Of<"timeline"> }) {
             <div key={i} className="relative row-span-4 row-start-1 grid grid-rows-subgrid px-4">
               <span className={`font-heading text-3xl font-bold ${tone(i)}`}>{e.when}</span>
               <div className="relative flex h-12 items-center">
+                {i === 0 && into && <Lead side="in" dashed={false} />}
+                {i === n - 1 && onward && <Lead side="out" dashed={i >= now} />}
                 {i < n - 1 && (
                   <div
                     className="absolute top-1/2 -right-8 left-6 -translate-y-1/2"
@@ -464,9 +493,11 @@ function Staggered({
   const shift = labels ? 1 : 0;
   const edge = `${(2 / tracks) * 100}%`;
   const leader = <span className="mx-auto h-full min-h-6 w-1" style={{ background: GREY }} />;
+  const { into, onward } = continuation(block);
+  const toEdge = "calc(-1 * var(--slide-side))";
   return (
     <div
-      className="grid w-full grid-rows-[auto_auto_auto_--spacing(6)_--spacing(14)_--spacing(6)_auto_auto_auto]"
+      className={`${block.continues ? "slide-timeline-continued" : ""} grid w-full grid-rows-[auto_auto_auto_--spacing(6)_--spacing(14)_--spacing(6)_auto_auto_auto]`}
       style={{
         gridTemplateColumns: `${labels ? "auto " : ""}repeat(${tracks}, minmax(0, 1fr))`,
       }}
@@ -482,7 +513,7 @@ function Staggered({
       <div className="relative row-start-5" style={{ gridColumn: `${1 + shift} / -1` }} aria-hidden>
         <div
           className="absolute top-1/2 h-1 -translate-y-1/2"
-          style={{ left: edge, right: edge, background: GREY }}
+          style={{ left: into ? toEdge : edge, right: onward ? toEdge : edge, background: GREY }}
         />
       </div>
       {block.events.map((e, i) => {

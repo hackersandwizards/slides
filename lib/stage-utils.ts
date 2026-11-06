@@ -50,10 +50,12 @@ export const themeDotColor: Record<string, string> = {
   deepdive: "bg-secondary",
 };
 
-export const themeLabelColor: Record<string, string> = {
-  accent: "text-accent",
-  primary: "text-primary",
-  secondary: "text-secondary",
-  success: "text-green-dark",
-  deepdive: "text-secondary",
+/** A theme's hue for brand's `hw-label` (its `data-hue`): none is the label's own teal. */
+export type LabelHue = "purple" | "amber" | "green" | "red";
+export const themeHue: Record<string, LabelHue | undefined> = {
+  accent: "amber",
+  primary: undefined,
+  secondary: "purple",
+  success: "green",
+  deepdive: "purple",
 };

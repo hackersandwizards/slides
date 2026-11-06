@@ -41,18 +41,8 @@ export function getSectionStyle(theme?: SectionTheme): SectionStyle {
 export type ColumnAccent = "ingredients" | "deepdive";
 
 // The two-part slides' cards stay flat white: the accent is the teal rule on top (brand's hw-rule,
-// purple on the second part) and the badge.
-export interface ColumnStyle {
-  hue?: "purple";
-  badge: string;
-}
-
-export const COLUMN_STYLES: Record<ColumnAccent, ColumnStyle> = {
-  ingredients: {
-    badge: "bg-primary/7 text-primary border-border",
-  },
-  deepdive: {
-    hue: "purple",
-    badge: "bg-secondary/7 text-secondary border-secondary/25",
-  },
+// purple on the second part) and the part's label box in the same hue.
+export const COLUMN_HUE: Record<ColumnAccent, "teal" | "purple"> = {
+  ingredients: "teal",
+  deepdive: "purple",
 };

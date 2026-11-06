@@ -27,7 +27,7 @@ describe("roadmap and dual-pill-overview", () => {
     );
     const row = dual.getByText("Pill").closest("li")!;
     expect(row.firstElementChild?.textContent).toBe("1");
-    expect(dual.getByText("Mindset").className).toContain("text-accent");
+    expect(dual.getByText("Mindset").dataset.hue).toBe("amber");
 
     const roadmap = printed(
       <RoadmapSlide
