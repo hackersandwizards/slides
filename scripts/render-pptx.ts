@@ -123,8 +123,25 @@ function family(stack: string): string {
 const MONO = family(tokens["--font-mono"]);
 const SANS = family(tokens["--font-sans"]);
 
+/** Runs with each `\n` as a line break inside the paragraph (`<a:br/>`). pptxgenjs, given the
+ *  `\n`, splits the run into paragraphs that all end a line, so a run after it, such as a bold word,
+ *  started a paragraph of its own. */
+function breaks(runs: Run[]): Run[] {
+  return runs.flatMap((r) =>
+    r.text
+      .split("\n")
+      .map((text, i) =>
+        i ? { text, options: { ...r.options, softBreakBefore: true } } : { ...r, text },
+      ),
+  );
+}
+
 /** Inline markdown as the engine reads it (lib/markdown.tsx): links, bold, *accent* and code. */
 function md(text: string, c: Palette, base: TextProps = {}): Run[] {
+  return breaks(spans(text, c, base));
+}
+
+function spans(text: string, c: Palette, base: TextProps): Run[] {
   const parts = String(text).split(
     /(\[[^\]]+\]\([^)\s]+\)|\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?!\s)[^*]+(?<!\s)\*|`[^`]+`)/g,
   );
@@ -224,7 +241,7 @@ function parasHeight(paras: Para[], o: BoxOpts, w: number, scale: number) {
   return paras.reduce((sum, p) => {
     const size = o.size * (p.rel ?? 1) * scale;
     const indent = p.bullet ? 0.28 + (p.indent ?? 0) * 0.3 : 0;
-    const text = p.runs.map((r) => r.text).join("");
+    const text = p.runs.map((r) => (r.options?.softBreakBefore ? "\n" : "") + r.text).join("");
     const n = lineCount(
       text,
       size,
@@ -282,7 +299,7 @@ function box(
   paras.forEach((p, i) => {
     const last = i === paras.length - 1;
     const size = Math.round(o.size * (p.rel ?? 1) * k * 2) / 2;
-    p.runs.forEach((r, j) => {
+    breaks(p.runs).forEach((r, j, all) => {
       runs.push({
         text: r.text,
         options: {
@@ -301,7 +318,7 @@ function box(
               }
             : {}),
           ...r.options,
-          ...(j === p.runs.length - 1 && !last ? { breakLine: true } : {}),
+          ...(j === all.length - 1 && !last ? { breakLine: true } : {}),
         },
       });
     });
@@ -1880,13 +1897,14 @@ function portrait(
 type Render = (s: PSlide, ctx: Ctx, slide: never, deck: Presentation) => void;
 
 /** A talk's opening as TitleSlide draws it, measured off the print route: kicker, name and title on
- *  the left, centred above the bottom row, where speakers and event stand beside the QR code and
- *  its link. */
+ *  the left, centred above the bottom row and kept 2rem clear of it, where speakers and event stand
+ *  beside the QR code and its link. */
 function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   const { c } = ctx;
-  const qr = 341 / 144;
-  const rowH = d.qr ? 409 / 144 : 119 / 144;
+  const qr = 256 / 144;
+  const rowH = d.qr ? 324 / 144 : 119 / 144;
   const rowY = BOTTOM - rowH;
+  const headEnd = rowY - 43 / 144;
   // Each line of the heading with its options and the gap above it.
   const lines: [string, BoxOpts, number][] = [
     ...(d.kicker
@@ -1913,9 +1931,9 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   // A heading taller than the space above the bottom row shrinks to fit it, as the fit guard does.
   const full = lines.map(([text, o]) => need(literal(text), c, CW, o, 3));
   const total = lines.reduce((sum, [, , gap], i) => sum + gap + full[i], 0) - lines[0][2];
-  const k = Math.min(1, (rowY - TOP) / total);
+  const k = Math.min(1, (headEnd - TOP) / total);
   const heights = full.map((h) => h * k);
-  let y = TOP + (rowY - TOP - total * k) / 2;
+  let y = TOP + (headEnd - TOP - total * k) / 2;
   lines.forEach(([text, o, gap], i) => {
     if (i) y += gap * k;
     box(s, c, literal(text), SIDE, y, CW, heights[i], o);

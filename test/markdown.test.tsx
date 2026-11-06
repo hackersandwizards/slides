@@ -62,4 +62,13 @@ describe("renderMarkdown", () => {
   it("keeps a lone asterisk", () => {
     expect(renderMd("*").textContent).toBe("*");
   });
+
+  // A statement's closing lost its break: only some of the elements that render markdown keep
+  // white space (hycle-private, slides v1.6.1).
+  it("renders a \\n as a line break, inside bold too", () => {
+    const el = renderMd("one\ntwo **three\nfour**");
+    expect(el.querySelectorAll("br")).toHaveLength(2);
+    expect(el.querySelector("strong br")).not.toBeNull();
+    expect(el.textContent).toBe("onetwo threefour");
+  });
 });

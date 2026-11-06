@@ -819,7 +819,8 @@ const slides: Slide[] = [
       alt: "Fictional pull request",
       href: "https://example.com/pull/42",
     },
-    notes: "statement: kicker and a linked image.",
+    closing: "Reviewed by a person,\nmerged by the pipeline",
+    notes: "statement: kicker, a linked image and a closing in two lines under it.",
   },
 
   {

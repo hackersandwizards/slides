@@ -21,14 +21,19 @@ interface Props {
  *  against 7.75 for the whole stack centred on the left with the QR code apart, 7.68 for the same
  *  bottom row under a rule, 7.31 for the QR code beside the speakers under the title, and 4.65 for
  *  the opening set as a centred content slide. Noise 0.69 per reviewer, so the first three tie; it
- *  ranked first or second with every reviewer. The QR code at 16rem, a third of the slide's height:
- *  8.00 of 10 against 7.00 at 12rem and 6.67 at 20rem, which crowds the logo corner (blind panel
- *  06.11.2026, a back-row attendee, a stream viewer and a designer, Claude and Codex). */
+ *  ranked first or second with every reviewer. The QR code at 12rem, a quarter of the slide's
+ *  height, the title block kept 2rem above the bottom row: blind panel 06.11.2026, two rounds (a
+ *  hall attendee in row 15, a stream viewer, a presentation designer; Claude twice, Codex once),
+ *  on a one-line and a three-line title: 7.58 of 10 against 7.25 for a code that takes what the
+ *  title leaves between 16 and 10rem and 6.67 for 16rem, which on a three-line title crowded the
+ *  title and shrank the whole slide; capping the code at the title block's height scored 7.15 in
+ *  round one. Noise 0.44 (Claude), so the first two tie with Claude; Codex put 12rem 1.0 ahead. An
+ *  earlier panel on the two-line specimen title alone had 16rem ahead, 8.00 against 7.00. */
 function Opening({ slide }: Props) {
   return (
     <SlideShell direction="col" overflowHidden>
       <div className="slide-content relative z-10 flex flex-col items-stretch justify-between px-(--slide-side) pt-(--slide-top)">
-        <BlurFade delay={0.1} duration={0.5} className="flex flex-1 flex-col justify-center">
+        <BlurFade delay={0.1} duration={0.5} className="flex flex-1 flex-col justify-center pb-8">
           {slide.kicker && (
             <p className="hw-label mb-4 [--hw-label-size:var(--text-xl)]">{slide.kicker}</p>
           )}
@@ -68,7 +73,7 @@ function Opening({ slide }: Props) {
                   alt={qrAlt(slide.qr.href, slide.lang)}
                   width={360}
                   height={360}
-                  className="size-64 rounded-brand"
+                  className="size-48 rounded-brand"
                 />
               </PictureLink>
               <LinkCaption href={slide.qr.href} />

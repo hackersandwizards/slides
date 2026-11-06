@@ -229,6 +229,28 @@ it("colours a deep-dive slide's bullets in the night teal, every other slide's i
   expect(night[0]).not.toBe(day[0]);
 });
 
+// pptxgenjs split a run at its \n into paragraphs that each ended a line, so the bold word after
+// the break started a third line.
+it("sets a \\n as a line break inside its paragraph", async () => {
+  const out = join(dir, "breaks.pptx");
+  await renderPptx(
+    {
+      ...slideCatalogue,
+      slides: [{ type: "statement", lines: ["S"], closing: "one\ntwo **three** four" }],
+    },
+    out,
+    join(import.meta.dirname, "..", "specimen"),
+  );
+  const xml = await (
+    await JSZip.loadAsync(readFileSync(out))
+  )
+    .file("ppt/slides/slide1.xml")!
+    .async("string");
+  const closing = [...xml.matchAll(/<a:p>(.*?)<\/a:p>/g)].find((m) => m[1].includes(">one<"))!;
+  expect(closing[1].match(/<a:br\/>/g)).toHaveLength(1);
+  expect(closing[1]).toMatch(/>two <\/a:t>.*>three<\/a:t>.*> four<\/a:t>/);
+});
+
 // pptxgenjs stores every video cover as a PNG part: another format would sit there mislabelled.
 it("warns on a video poster that is no PNG and sets no cover", async () => {
   const out = join(dir, "poster.pptx");
