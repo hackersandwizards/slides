@@ -64,8 +64,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   content, and its images (`specimen/slide-catalogue/`, which talks copies into its `public/`).
 - `catalog/`: the catalog (decision repo-uniformity-plan, hub-max), one Astro app in scaffolding's
   catalog shell (`catalog({...})` in `catalog/astro.config.ts`), never shipped but for
-  `SlideFrame.astro`, the story frame a consumer's catalog takes too: Astro, Astrobook,
-  `@astrojs/react` and scaffolding are dev dependencies, outside `files` and `exports`. Its base is
+  `SlideFrame.astro`, the story frame a consumer's catalog takes too: Astrobook, `@astrojs/react`
+  and scaffolding are dev dependencies, outside `files` and `exports`. Its base is
   the Pages path `/slides`, so the gate reads the build that ships. It carries two kinds of page:
   - The stories: `stories/Types/` a story file per slide type, each specimen slide of the type a
     state (`state.ts`); `stories/Parts/` one per part, drawing its sheet of variants from
@@ -92,7 +92,8 @@ the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest 
 `server.deps.inline`. React, motion, lucide-react, recharts, shiki, Tailwind and the brand package
 are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and `jszip`, which only
 `slides-pptx` imports, are optional peers like `puppeteer`: a consumer installs them to run it.
-`prettier`, which `lib/deck-edit-server` formats an edited deck with, is optional too.
+`prettier`, which `lib/deck-edit-server` formats an edited deck with, is optional too, as is
+`astro`, which only the exported `catalog/SlideFrame.astro` needs.
 
 ## Commands
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import Image from "../ui/image";
 import type { StatementSlide as StatementSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
@@ -31,19 +32,38 @@ function HighlightedLine({ line, highlighted }: { line: string; highlighted?: st
 
 /** A linked screenshot or QR code under the statement, at most 11/24 (46%) of the slide wide
  *  (blind review 02.11.: wider, it pushed the headline under the top strip), its link spelled out
- *  under it. The frame takes the picture's own shape, so a square QR code stands in a square. */
+ *  under it. Once the file has loaded, the frame takes the picture's own shape at the slide's
+ *  picture height, so a square QR code stands in a square, not in a wide box. */
 function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linkedImage"]> }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [ratio, setRatio] = useState<number>();
+  useLayoutEffect(() => {
+    const img = ref.current?.querySelector("img");
+    if (!img) return;
+    const measure = () => {
+      if (img.naturalWidth && img.naturalHeight) setRatio(img.naturalWidth / img.naturalHeight);
+    };
+    measure();
+    img.addEventListener("load", measure);
+    return () => img.removeEventListener("load", measure);
+  }, [image.src]);
   const picture = (
-    <Image
-      src={image.src}
-      alt={image.alt ?? ""}
-      width={1920}
-      height={1080}
-      className="h-auto max-h-(--slide-picture-max) w-auto max-w-full rounded-brand border border-border"
-    />
+    <span
+      ref={ref}
+      className="block w-full"
+      style={ratio ? { width: `min(100%, ${ratio} * var(--slide-picture-max))` } : undefined}
+    >
+      <Image
+        src={image.src}
+        alt={image.alt ?? ""}
+        width={1920}
+        height={1080}
+        className="h-auto max-h-(--slide-picture-max) w-full rounded-brand border border-border object-contain"
+      />
+    </span>
   );
   return (
-    <figure className="mx-auto mt-10 flex max-w-11/24 flex-col items-center gap-4">
+    <figure className="mx-auto mt-10 flex w-11/24 flex-col items-center gap-4">
       {image.href ? <PictureLink href={image.href}>{picture}</PictureLink> : picture}
       {image.href && <LinkCaption href={image.href} />}
     </figure>
@@ -168,7 +188,10 @@ export function StatementSlide({ slide }: Props) {
         )}
 
         {slide.footer && (
-          <SlideFooter className="mt-auto w-full text-left" delay={0.5}>
+          <SlideFooter
+            className="mt-auto w-full text-left"
+            delay={(slide.closing ? closingDelay : pointBaseDelay) + 0.2}
+          >
             {renderMarkdown(slide.footer)}
           </SlideFooter>
         )}

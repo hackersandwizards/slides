@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
 import type { Slide } from "../types/slide";
@@ -80,11 +80,15 @@ describe("statement slide", () => {
     expect(c.querySelector("p.border-t-2")?.textContent).toBe("Source line");
   });
 
-  // The frame takes the picture's own shape, so a square QR code is no wide box.
-  it("lets a linked image keep its own width", () => {
-    const img = statement({
-      linkedImage: { src: "/qr.png", href: "https://example.com" },
-    }).querySelector("figure img");
-    expect(img?.className.split(" ")).toEqual(expect.arrayContaining(["w-auto", "max-w-full"]));
+  // The frame takes the picture's own shape once its file has loaded, so a square QR code is no
+  // wide box.
+  it("sizes a linked image's frame by the picture's own ratio", () => {
+    const c = statement({ linkedImage: { src: "/qr.png", href: "https://example.com" } });
+    const img = c.querySelector<HTMLImageElement>("figure img")!;
+    Object.defineProperties(img, { naturalWidth: { value: 400 }, naturalHeight: { value: 400 } });
+    act(() => {
+      img.dispatchEvent(new Event("load"));
+    });
+    expect(img.parentElement?.style.width).toBe("min(100%, 1 * var(--slide-picture-max))");
   });
 });

@@ -358,7 +358,7 @@ describe("statement and content merges (merge-statement, merge-content)", () => 
       ],
     });
     expect(c.querySelector(".hw-label")?.textContent).toBe("Live demo");
-    expect(c.querySelector("figure.max-w-11\\/24 img")).not.toBeNull();
+    expect(c.querySelector("figure.w-11\\/24 img")).not.toBeNull();
     expect(c.textContent).toContain("example.com/pr/1");
     expect(c.textContent).toContain("Closing line");
     expect(c.querySelector(".hw-card")).toBeNull();

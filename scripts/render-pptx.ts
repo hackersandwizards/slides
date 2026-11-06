@@ -589,14 +589,27 @@ interface Head {
   preText?: string;
 }
 
-/** A timeline event's result in the figure face, as `EventBody` sets it on the web. */
-function figurePara(text: string, color: string): Para {
-  return {
-    runs: [{ text, options: { color } }],
-    mono: true,
-    bold: true,
-    rel: PT.s6 / PT.base,
-  };
+/** A timeline event's title, text and result in the figure face, as `EventBody` sets them on the
+ *  web: one list, so the measured height is the drawn one. */
+function eventParas(
+  e: Extract<ContentBlock, { type: "timeline" }>["events"][number],
+  c: Palette,
+  hi: boolean,
+): Para[] {
+  return [
+    { runs: md(e.title, c, { color: hi ? c.teal : c.ink }), bold: true, after: 4 },
+    { runs: md(e.text ?? "", c, { color: c.muted }), rel: 0.9, after: 8 },
+    ...(e.figure
+      ? [
+          {
+            runs: [{ text: e.figure, options: { color: hi ? c.teal : c.ink } }],
+            mono: true,
+            bold: true,
+            rel: PT.s6 / PT.base,
+          },
+        ]
+      : []),
+  ];
 }
 
 /** The height a slide's footer takes above the bottom edge: its line under a rule. */
@@ -893,18 +906,7 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
       return (
         0.6 +
         Math.max(
-          ...b.events.map((e) =>
-            need(
-              [
-                { runs: [{ text: e.title }], after: 4 },
-                { runs: md(e.text ?? "", c) },
-                ...(e.figure ? [figurePara(e.figure, c.ink)] : []),
-              ],
-              c,
-              w / b.events.length - 0.15,
-              o,
-            ),
-          ),
+          ...b.events.map((e) => need(eventParas(e, c, false), c, w / b.events.length - 0.15, o)),
         )
       );
     case "bars":
@@ -1527,15 +1529,19 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
           fill: { color: hi ? c.teal : c.card },
           line: { color: hi ? c.teal : c.muted, width: 1.5 },
         });
-        // A segment's label stands over the middle of the line that leads to its event.
-        if (e.segment && i > 0)
-          box(s, c, { runs: [{ text: e.segment }] }, cx - ew + 0.05, ly - 0.3, ew - 0.1, 0.22, {
+        // A segment's label breaks the middle of the line that leads to its event, as on the web.
+        if (e.segment && i > 0) {
+          const tw = (e.segment.length * PT.label * k * ADVANCE.mono) / 72 + 0.16;
+          box(s, c, { runs: [{ text: e.segment }] }, cx - ew / 2 - tw / 2, ly - 0.11, tw, 0.22, {
             size: PT.label * k,
             mono: true,
             bold: true,
             color: c.muted,
             align: "center",
+            valign: "middle",
+            fill: c.bg,
           });
+        }
         if (e.when)
           box(s, c, { runs: [{ text: e.when }] }, cx - ew / 2 + 0.05, a.y, ew - 0.1, 0.22, {
             size: PT.label * k,
@@ -1544,20 +1550,10 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
             color: c.muted,
             align: "center",
           });
-        box(
-          s,
-          c,
-          [
-            { runs: md(e.title, c, { color: hi ? c.teal : c.ink }), bold: true, after: 4 },
-            { runs: md(e.text ?? "", c, { color: c.muted }), rel: 0.9, after: 8 },
-            ...(e.figure ? [figurePara(e.figure, hi ? c.teal : c.ink)] : []),
-          ],
-          cx - ew / 2 + 0.07,
-          ly + 0.2,
-          ew - 0.14,
-          a.h - 0.55,
-          { ...o, align: "center" },
-        );
+        box(s, c, eventParas(e, c, hi), cx - ew / 2 + 0.07, ly + 0.2, ew - 0.14, a.h - 0.55, {
+          ...o,
+          align: "center",
+        });
       });
       return;
     }

@@ -111,7 +111,7 @@ export function FlowSteps({
           </svg>
           {loop && (
             <span
-              className={`absolute top-6 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-6 font-sans text-xl font-semibold text-text`}
+              className={`absolute top-6 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-(--slide-ground) px-6 font-sans text-xl font-semibold text-text`}
             >
               {loop}
             </span>
@@ -160,7 +160,9 @@ export function FlowSteps({
                   size={dense ? "sm" : "xl"}
                   tone={on ? "solid" : "none"}
                   className={
-                    on ? "relative" : `relative border-4 border-text-muted bg-background ${ink}`
+                    on
+                      ? "relative"
+                      : `relative border-4 border-text-muted bg-(--slide-ground) ${ink}`
                   }
                 >
                   {step.icon && iconMap[step.icon] ? (
@@ -306,7 +308,7 @@ function Dot({ on, future }: { on: boolean; future: boolean }) {
         on
           ? "h-12 w-12 bg-primary ring-8 ring-primary/15"
           : future
-            ? "h-9 w-9 border-4 bg-background"
+            ? "h-9 w-9 border-4 bg-(--slide-ground)"
             : "h-9 w-9 bg-text"
       }`}
       style={future && !on ? { borderColor: GREY } : undefined}
@@ -348,7 +350,7 @@ function RowLabel({
 function SegmentLabel({ text, tight }: { text: string; tight?: boolean }) {
   return (
     <span
-      className={`bg-background font-heading font-bold whitespace-nowrap text-text-muted ${tight ? "px-2 text-xl" : "px-4 text-2xl"}`}
+      className={`bg-(--slide-ground) font-heading font-bold whitespace-nowrap text-text-muted ${tight ? "px-2 text-xl" : "px-4 text-2xl"}`}
     >
       {text}
     </span>

@@ -657,25 +657,31 @@ html:has(.print-slide) {
   }
 
   /* Section backgrounds: the brand page colour, tinted a few percent towards the section's hue.
-     Flat, so screen and PDF match and the content, not the wash, carries the slide. */
+     Flat, so screen and PDF match and the content, not the wash, carries the slide. A label that
+     breaks a line paints `--slide-ground`, so the gap matches the tint. */
   .bg-section-intro {
-    background: var(--background);
+    --slide-ground: var(--background);
+    background: var(--slide-ground);
   }
 
   .bg-section-primary {
-    background: color-mix(in srgb, var(--color-primary) 7%, var(--background));
+    --slide-ground: color-mix(in srgb, var(--color-primary) 7%, var(--background));
+    background: var(--slide-ground);
   }
 
   .bg-section-secondary {
-    background: color-mix(in srgb, var(--color-secondary) 7%, var(--background));
+    --slide-ground: color-mix(in srgb, var(--color-secondary) 7%, var(--background));
+    background: var(--slide-ground);
   }
 
   .bg-section-accent {
-    background: color-mix(in srgb, var(--color-accent) 7%, var(--background));
+    --slide-ground: color-mix(in srgb, var(--color-accent) 7%, var(--background));
+    background: var(--slide-ground);
   }
 
   .bg-section-success {
-    background: color-mix(in srgb, var(--color-green-dark) 7%, var(--background));
+    --slide-ground: color-mix(in srgb, var(--color-green-dark) 7%, var(--background));
+    background: var(--slide-ground);
   }
 
   .hw-wordmark-night,
