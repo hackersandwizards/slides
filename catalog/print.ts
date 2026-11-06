@@ -21,7 +21,7 @@ import { version as brandVersion } from "@hackersandwizards/brand/package.json";
 import registry from "../lib/slide-components.ts?raw";
 
 // The checkout and brand's folder, which the config hands over: under Astro's bundle import.meta
-// points into dist/.
+// points into dist/, and the config resolves brand once for its copy to dist/brand/ and for this page.
 const root = __SLIDES_ROOT__;
 const brand = __BRAND_ROOT__;
 // A require of the checkout, since `import.meta.resolve` threw in the dev server's module runner.
@@ -193,6 +193,8 @@ const partFrames = partNames.map(({ name, file }) => ({
 
 const attr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 
+// The shared-element tiles render on the page itself, whose 16px rem is the stage's at 1440, the
+// size a slide is designed at.
 const onNight = (child: ReactNode) =>
   h(
     "div",
