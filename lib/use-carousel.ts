@@ -3,7 +3,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useSlideKeyboard } from "./use-slide-keyboard";
 import { usePrintMode } from "./print-context";
-import { arrivedBackwards as readArrivedBackwards, directionKey, writeStored } from "./slide-utils";
+import { opensRevealed as readOpensRevealed, directionKey, writeStored } from "./slide-utils";
 
 interface UseCarouselOptions {
   /** Number of steps; the index clamps to [min, count - 1]. */
@@ -33,12 +33,12 @@ export function useCarousel({
   // A backward arrival opens at the last step, as a reveal slide opens fully revealed, after
   // hydration so the server markup still matches.
   const printMode = usePrintMode();
-  const [arrivedBackwards] = useState(() => enabled && !printMode && readArrivedBackwards());
+  const [opensRevealed] = useState(() => enabled && !printMode && readOpensRevealed());
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount step above
-    if (arrivedBackwards) setIndex(max);
+    if (opensRevealed) setIndex(max);
     writeStored("session", directionKey(), null);
-  }, [arrivedBackwards, max]);
+  }, [opensRevealed, max]);
 
   useSlideKeyboard({
     onRight: () => {

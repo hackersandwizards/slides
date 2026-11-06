@@ -3,7 +3,7 @@ import type { ContentSlide, Presentation } from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
 import {
-  arrivedBackwards,
+  opensRevealed,
   deepDiveAsTransition,
   gridAsContent,
   ignoredKey,
@@ -49,23 +49,30 @@ describe("getSectionStyle", () => {
   });
 });
 
-describe("arrivedBackwards", () => {
+describe("opensRevealed", () => {
   afterEach(() => sessionStorage.clear());
 
   // Navigating backward into a slide marks the direction so the slide opens
   // fully revealed — you don't re-step through every progressive item.
   it("is true when arriving via back-navigation", () => {
     sessionStorage.setItem("slide-direction", "back");
-    expect(arrivedBackwards()).toBe(true);
+    expect(opensRevealed()).toBe(true);
   });
 
   it("is false on a normal forward arrival", () => {
-    expect(arrivedBackwards()).toBe(false);
+    expect(opensRevealed()).toBe(false);
   });
 
   it("is false for any other direction value", () => {
     sessionStorage.setItem("slide-direction", "forward");
-    expect(arrivedBackwards()).toBe(false);
+    expect(opensRevealed()).toBe(false);
+  });
+
+  it("is true on a URL carrying ?revealed", () => {
+    history.replaceState(null, "", "?revealed");
+    expect(opensRevealed()).toBe(true);
+    history.replaceState(null, "", location.pathname);
+    expect(opensRevealed()).toBe(false);
   });
 });
 

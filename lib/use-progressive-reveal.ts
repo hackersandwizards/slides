@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import {
-  arrivedBackwards as readArrivedBackwards,
+  opensRevealed as readOpensRevealed,
   directionKey,
   ignoredKey,
   writeStored,
@@ -99,13 +99,13 @@ export function useProgressiveReveal({
   // Read during render, applied after mount: the server cannot see sessionStorage and renders the
   // slide unrevealed, and React keeps a hydrated tree's mismatched attributes as the server sent
   // them, so revealing in the first client render left a backward arrival blank.
-  const [arrivedBackwards] = useState(() => !full && totalSteps > 0 && readArrivedBackwards());
+  const [opensRevealed] = useState(() => !full && totalSteps > 0 && readOpensRevealed());
   useEffect(() => {
-    if (!arrivedBackwards) return;
+    if (!opensRevealed) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount reveal above
     setRevealedCount(totalSteps);
     setFooterVisible(hasFooter);
-  }, [arrivedBackwards, totalSteps, hasFooter]);
+  }, [opensRevealed, totalSteps, hasFooter]);
   // Consumed after mount, once every hook on the slide has read it in render, so a reload opens
   // unrevealed. Here as well as in SlideNavigation: a story renders a slide without it.
   useEffect(() => writeStored("session", directionKey(), null), []);

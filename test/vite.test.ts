@@ -8,7 +8,9 @@ describe("slidesOptimizeDeps", () => {
     expect(include).toEqual(
       expect.arrayContaining(["recharts", "motion/react", "shiki/core", "lucide-react/icons/mail"]),
     );
-    expect(include.filter((s) => /^(node:|next\/|prettier$|\.)|\.(json|css)$/.test(s))).toEqual([]);
+    expect(
+      include.filter((s) => /^(node:|next\/|prettier$|\.)|\.(json|css)$|\?url$/.test(s)),
+    ).toEqual([]);
   });
 
   it("reads a comment marker inside a string as text", () => {

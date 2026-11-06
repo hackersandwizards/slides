@@ -22,14 +22,11 @@ const fromRoot = createRequire(join(root, "package.json"));
 const brandFile = (name: string) => fromRoot.resolve(`@hackersandwizards/brand/${name}`);
 const deckFiles = join(root, "specimen/slide-catalogue");
 
-// A slide names the brand logos and the deck's images from the site root, as a consumer's public
-// folder serves them.
+// A slide names the deck's images from the site root, as a consumer's public folder serves them.
 const fileOf = (path: string) => {
   const asset = path.match(/^(?:\/slides)?(?:\/catalog\/print)?\/slide-catalogue\/([\w.-]+)$/);
   if (asset) return join(deckFiles, asset[1]);
-  const logo = path.match(/^\/hw-(wordmark|lockup)(-night)?\.svg$/);
-  const own = path.match(/^(?:\/slides)?\/brand\/(.+)$/);
-  const name = logo ? `logos/${logo[1]}${logo[2] ?? ""}.svg` : own?.[1];
+  const name = path.match(/^(?:\/slides)?\/brand\/(.+)$/)?.[1];
   if (!name || name.includes("..")) return undefined;
   try {
     return brandFile(name);
@@ -66,16 +63,14 @@ const files: AstroIntegration = {
       }
       cpSync(deckFiles, join(dist, "catalog/print/slide-catalogue"), { recursive: true });
       cpSync(deckFiles, join(dist, "slide-catalogue"), { recursive: true });
-      for (const f of ["wordmark", "wordmark-night", "lockup", "lockup-night"])
-        cpSync(brandFile(`logos/${f}.svg`), join(dist, `hw-${f}.svg`));
       const stories = join(dist, "stories");
       for (const page of readdirSync(stories, { recursive: true, encoding: "utf8" })) {
         if (!page.endsWith(".html")) continue;
         const file = join(stories, page);
         const html = readFileSync(file, "utf8");
         const based = html.replace(
-          /(src|href|poster)="\/(hw-|slide-catalogue\/)/g,
-          `$1="${BASE}/$2`,
+          /(src|href|poster)="\/slide-catalogue\//g,
+          `$1="${BASE}/slide-catalogue/`,
         );
         if (based !== html) writeFileSync(file, based);
       }

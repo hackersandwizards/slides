@@ -1,6 +1,6 @@
 ---
 // A slide fills its window (fixed, vh type, the stage rem from its width), so the dashboard frames
-// the story's preview page in brand's card; "back" opens a slide with every progressive step shown.
+// the story's preview page in brand's card; `?revealed` opens a slide with every build step shown.
 interface Props {
   component: string;
   part?: boolean;
@@ -14,7 +14,11 @@ const src = path.replace("/dashboard/", "/stories/");
 {preview ? (
   <div class="slide-story" data-story-of={component} data-hw-scale="stage">
     {!part && <script is:inline>
-      sessionStorage.setItem("slide-direction", "back");
+      {
+        const url = new URL(location.href);
+        url.searchParams.set("revealed", "");
+        history.replaceState(history.state, "", url);
+      }
     </script>}
     <slot />
   </div>

@@ -2,6 +2,7 @@ import { createElement as h, Fragment, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Scanner } from "@tailwindcss/oxide";
 import { aliasTypes, slideComponents } from "../lib/slide-components";
+import { brandLogos } from "../lib/brand-logos";
 import { PrintProvider } from "../lib/print-context";
 import { PrintSlide } from "../components/slides/PrintSlide";
 import { slideCatalogue } from "../specimen/slide-catalogue";
@@ -84,12 +85,12 @@ const blockPicks = [
 // Each slide renders in its own 1920x1080 frame, as scripts/render-pdf.ts sets its viewport: a
 // slide's lengths in `vh` (`.slide-content`, image heights) read the window that holds them.
 const renderFrame = (index: number, name: string) => {
-  const markup = renderToStaticMarkup(
-    h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalogue, index })),
-  )
-    .replace(
-      /(src|href)="\/hw-(wordmark|lockup)(-night)?\.svg"/g,
-      `$1="${brandHref}/logos/$2$3.svg"`,
+  const markup = Object.entries(brandLogos)
+    .reduce(
+      (html, [file, url]) => html.replaceAll(`"${url}"`, `"${brandHref}/logos/${file}.svg"`),
+      renderToStaticMarkup(
+        h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalogue, index })),
+      ),
     )
     .replace(/(src|href|poster)="\/slide-catalogue\//g, '$1="slide-catalogue/');
   return { name, markup, index };

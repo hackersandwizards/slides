@@ -9,7 +9,7 @@ import { NumberTicker } from "../ui/number-ticker";
 import { SlideShell } from "./SlideShell";
 import { DisplayHeading } from "./primitives";
 import {
-  arrivedBackwards as readArrivedBackwards,
+  opensRevealed as readOpensRevealed,
   directionKey,
   readStored,
   writeStored,
@@ -71,12 +71,12 @@ export function QuestionSlide({ slide }: Props) {
   const printMode = usePrintMode();
   const [cursor, setCursor] = useState(0);
   // A backward arrival opens at the last option, as every stepped slide opens at its last step.
-  const [arrivedBackwards] = useState(() => !printMode && readArrivedBackwards());
+  const [opensRevealed] = useState(() => !printMode && readOpensRevealed());
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount step above
-    if (arrivedBackwards) setCursor(options.length - 1);
+    if (opensRevealed) setCursor(options.length - 1);
     writeStored("session", directionKey(), null);
-  }, [arrivedBackwards, options.length]);
+  }, [opensRevealed, options.length]);
   const [counts, setCounts] = usePersistedCounts(storageKey, options.length, printMode);
 
   useSlideKeyboard({

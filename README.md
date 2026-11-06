@@ -13,8 +13,10 @@ Add the dependency in exactly this form, pinned to the newest tag
 (`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
 `@hackersandwizards/brand` v1.10.0 or later, whose static faces (`static-fonts.css`), shared
 elements (`elements.css`, the stage button, the label box and the accent rule among them) and small
-corner the stylesheet imports and whose `verbal.json` gives the closing its claim. Both repos are
-public: Bun fetches the `git+https://` form through GitHub's tarball API without any GitHub access.
+corner the stylesheet imports, whose `verbal.json` gives the closing its claim and whose logos the
+slides draw through its exports, as `?url` imports the bundler serves: a deck names a mark as
+`/hw-lockup.svg`, `/hw-wordmark.svg` or their `-night` cuts, and a consumer copies none into
+`public/` for the engine. Both repos are public: Bun fetches the `git+https://` form through GitHub's tarball API without any GitHub access.
 
 ```json
 "@hackersandwizards/slides": "git+https://github.com/hackersandwizards/slides.git#v<version>"
@@ -60,13 +62,18 @@ It shows a client's deck in the h&w design only; a deck on a client's template n
 consumer's own exporter. The PowerPoint parser pulls in `image-size`, whose old version carries
 advisories, so a consumer adds `"overrides": { "image-size": "2.0.4" }` as this package does.
 
+A slide opens with every build step shown on a URL carrying `?revealed`, such as
+`/<deck>/12?revealed`: for a catalog tile, a screenshot or any check that reads the finished slide.
+A story frame sets it on its own page, as `SlideFrame.astro` does. In a frame the plain
+`slide-direction` key no longer reaches the slide, since each frame keeps its own. The print route needs none: `PrintProvider` opens every slide full.
+
 The package ships TypeScript source. Let the build transpile it: Next
 `transpilePackages: ["@hackersandwizards/slides"]`, Astro `vite.ssr.noExternal`, vitest
 `test.server.deps.inline`. An Astro app sets `vite.optimizeDeps` to `slidesOptimizeDeps()` from
 `@hackersandwizards/slides/lib/vite`: the engine served unbundled, the packages its islands import
 named up front. A Next app wraps its root layout in `NextSlidesAdapter`, which puts
 `next/image` and its router behind the engine; without it the engine uses a plain `<img>` and
-`history`.
+`history`. Next resolves no `?url` import by itself, so such an app needs a rule for the logos.
 
 ## Deck structure
 

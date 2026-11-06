@@ -32,8 +32,8 @@ export function PageCounter({ label }: { label: string }) {
 }
 
 /**
- * The h&w mark in the slide corner, from `@hackersandwizards/brand` `logos/`, copied into `public/`
- * by `postinstall`, the Night cut on a dark theme (`slides.css`). `lockup`, wizard and wordmark,
+ * The h&w mark in the slide corner, from brand's exports (`lib/brand-logos.ts`), the Night cut on a
+ * dark theme (`slides.css`). `lockup`, wizard and wordmark,
  * goes on a title and a closing slide, `wordmark` alone on every other slide. Both keep the
  * wordmark at `--slide-corner-wordmark`: the lockup's box is the wizard's, taller than the
  * letters and taller again in the Night cut, so each cut takes its own height, overhangs the row

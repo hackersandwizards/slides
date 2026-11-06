@@ -12,7 +12,7 @@ import { directionKey, writeStored } from "./slide-utils";
  *  `navigate` through `SlidesAdapterProvider`.
  *
  *  The direction is written before navigating and read during the next render by
- *  `arrivedBackwards`: arriving backwards opens a slide fully revealed instead of making the
+ *  `opensRevealed`: arriving backwards opens a slide fully revealed instead of making the
  *  presenter step through it again. */
 const listeners = new Set<() => void>();
 

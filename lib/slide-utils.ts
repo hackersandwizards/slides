@@ -1,5 +1,4 @@
 import verbal from "@hackersandwizards/brand/verbal.json";
-import { ROLE_NAMES } from "./presenter-sync";
 import type {
   AgendaSlide,
   ContentSection,
@@ -22,20 +21,30 @@ import type {
   TransitionSlide,
 } from "../types/slide";
 
-/** The sessionStorage key carrying the direction a navigation arrives from. The frames inside the
- *  speaker window share that window's sessionStorage, so each role keeps a key of its own; the
- *  audience window keeps the plain one. */
-export function directionKey(name = typeof window === "undefined" ? "" : window.name): string {
-  return (Object.values(ROLE_NAMES) as string[]).includes(name)
-    ? `slide-direction:${name}`
-    : "slide-direction";
+/** The sessionStorage key carrying the direction a navigation arrives from. Every frame of a tab
+ *  shares that tab's sessionStorage, so a frame keeps a key of its own under its `window.name`: the
+ *  speaker window's frames their role, any other frame, such as a catalog tile, a name given on
+ *  first use, which holds across its reloads. An unnamed top window keeps the plain key. */
+export function directionKey(name = frameName()): string {
+  return name ? `slide-direction:${name}` : "slide-direction";
 }
 
-/** Whether this slide was reached backwards, which opens it fully revealed. A pure read, safe in a
- *  render-phase state initializer: `SlideNavigation` consumes the key after mount, once every hook
- *  on the slide has read it. */
-export function arrivedBackwards(): boolean {
-  return typeof window !== "undefined" && readStored("session", directionKey()) === "back";
+function frameName(): string {
+  if (typeof window === "undefined") return "";
+  if (window !== window.parent) window.name ||= `tile-${Math.random().toString(36).slice(2)}`;
+  return window.name;
+}
+
+/** Whether this slide opens with every build step shown: reached backwards, or by a URL carrying
+ *  `?revealed`, which the README documents for catalogs and checks. Safe in a render-phase state
+ *  initializer, since it writes nothing but a frame's stable name: `SlideNavigation` consumes the direction after mount, once every
+ *  hook on the slide has read it. */
+export function opensRevealed(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    (readStored("session", directionKey()) === "back" ||
+      new URLSearchParams(location.search).has("revealed"))
+  );
 }
 
 /** A key the deck leaves alone. One held with Cmd, Ctrl or Alt belongs to the browser or the

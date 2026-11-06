@@ -24,6 +24,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   route renders, which the print page renders too.
 - `components/ui/`: effects and `image.tsx`, the engine's image.
 - `lib/`: hooks, navigation, presenter sync, the edit mode, themes and section styles.
+  `lib/brand-logos.ts` is the h&w marks as `?url` imports of brand's exports, which `Image` draws
+  for the root paths a deck names them by (`HW_LOGO`, `/hw-lockup.svg`).
   `lib/adapter.tsx` is the one seam to a consumer's framework: `SlidesAdapterProvider` takes an
   `Image` component and a `navigate(href, replace)`. Without a provider the engine renders a plain
   `<img>` and moves with `history` inside one island, as every consumer does. `lib/next-adapter.tsx`
@@ -32,7 +34,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   as one Node request handler, which each consumer mounts on its dev server with its own map from
   deck path to file. `lib/vite.ts` is a consumer's Vite `optimizeDeps`, read from the engine's
   imports.
-- `types/slide.ts`: the slide types and content blocks a deck may use.
+- `types/slide.ts`: the slide types and content blocks a deck may use. `types/brand-logos.d.ts`
+  declares the `?url` imports for a consumer's own typecheck.
 - `styles/tokens.css`: the slide's roles, each a `var()` over brand: it imports the brand tokens,
   brand's `stage.css` (the slide scale, the type table, measures, spacing, rules and marks, every
   literal a slide draws) and `night.css` (night on `data-hw-night`, which a night deck's frame and a

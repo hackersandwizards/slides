@@ -245,6 +245,23 @@ describe("directionKey", () => {
     expect(directionKey()).toBe(`slide-direction:${ROLE_NAMES.follow}`);
     window.name = "";
   });
+
+  it("gives each unnamed frame a key of its own, kept across calls", () => {
+    const keyIn = () => {
+      const frame = document.body.appendChild(document.createElement("iframe"));
+      const parent = vi.spyOn(window, "parent", "get").mockReturnValue(frame.contentWindow!);
+      const key = directionKey();
+      expect(directionKey()).toBe(key);
+      parent.mockRestore();
+      window.name = "";
+      frame.remove();
+      return key;
+    };
+    const [one, two] = [keyIn(), keyIn()];
+    expect(one).toMatch(/^slide-direction:tile-/);
+    expect(two).toMatch(/^slide-direction:tile-/);
+    expect(one).not.toBe(two);
+  });
 });
 
 describe("formatDuration", () => {

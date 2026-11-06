@@ -16,7 +16,7 @@ import { SlideShell } from "./SlideShell";
 import XCircle from "lucide-react/icons/circle-x";
 import CheckCircle from "lucide-react/icons/circle-check-big";
 import {
-  arrivedBackwards as readArrivedBackwards,
+  opensRevealed as readOpensRevealed,
   directionKey,
   keepHyphenatedWords,
   writeStored,
@@ -88,13 +88,13 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
   const lastStep = slide.punchline && slide.revealPunchline ? 2 : 1;
   const [activeIndex, setActiveIndex] = useState(printMode ? -1 : 0);
   // A backward arrival opens at the last step, after hydration so the server markup still matches.
-  const [arrivedBackwards] = useState(() => !printMode && readArrivedBackwards());
+  const [opensRevealed] = useState(() => !printMode && readOpensRevealed());
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount reveal, as in useProgressiveReveal
-    if (arrivedBackwards) setActiveIndex(lastStep);
+    if (opensRevealed) setActiveIndex(lastStep);
     // Consumed, as useProgressiveReveal does, so a reload opens at step 0.
     writeStored("session", directionKey(), null);
-  }, [arrivedBackwards, lastStep]);
+  }, [opensRevealed, lastStep]);
   const punchlineVisible = printMode || !slide.revealPunchline || activeIndex === 2;
 
   useSlideKeyboard({
