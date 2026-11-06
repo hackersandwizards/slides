@@ -81,6 +81,14 @@ describe("useProgressiveReveal", () => {
     expect(result.current.revealedCount).toBe(1);
   });
 
+  it("opens fully revealed on a URL carrying ?revealed", () => {
+    history.replaceState(null, "", "?revealed");
+    const { result } = renderHook(() => useProgressiveReveal({ totalSteps: 2, hasFooter: true }));
+    history.replaceState(null, "", location.pathname);
+    expect(result.current.revealedCount).toBe(2);
+    expect(result.current.footerVisible).toBe(true);
+  });
+
   it("starts fully revealed when startFull is set", () => {
     const { result } = renderHook(() =>
       useProgressiveReveal({ totalSteps: 3, startFull: true, hasFooter: true }),

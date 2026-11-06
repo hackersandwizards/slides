@@ -62,8 +62,10 @@ It shows a client's deck in the h&w design only; a deck on a client's template n
 consumer's own exporter. The PowerPoint parser pulls in `image-size`, whose old version carries
 advisories, so a consumer adds `"overrides": { "image-size": "2.0.4" }` as this package does.
 
-A slide opens with every build step shown on a URL carrying `?revealed`, such as
-`/<deck>/12?revealed`: for a catalog tile, a screenshot or any check that reads the finished slide.
+A slide opens fully revealed on a URL carrying `?revealed`, such as `/<deck>/12?revealed`, as it does
+on a backward arrival: for a catalog tile, a screenshot or a check of the finished slide. A slide
+whose steps replace each other, such as a guidance comparison, opens at its last step; only print
+shows them all.
 A story frame sets it on its own page, as `SlideFrame.astro` does. In a frame the plain
 `slide-direction` key no longer reaches the slide, since each frame keeps its own. The print route needs none: `PrintProvider` opens every slide full.
 

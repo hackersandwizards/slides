@@ -65,4 +65,11 @@ describe("useCarousel", () => {
     expect(pressKey("ArrowLeft")).toBe(true);
     expect(result.current[0]).toBe(1);
   });
+
+  it("opens at the last step on a URL carrying ?revealed", () => {
+    history.replaceState(null, "", "?revealed");
+    const { result } = renderHook(() => useCarousel({ count: 3 }));
+    history.replaceState(null, "", location.pathname);
+    expect(result.current[0]).toBe(2);
+  });
 });
