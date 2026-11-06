@@ -738,7 +738,8 @@ export interface GanttSlide {
   columns: string[];
   rows: GanttRow[];
   milestones?: { label: string; column: number }[];
-  /** The label of the milestone row, in the deck's language; "Meilensteine" without one. */
+  /** The label of the milestone row, in the deck's language. Without one the web says
+   *  "Meilensteine" and slides-pptx "MILESTONES", as before the field existed. */
   milestonesLabel?: string;
   footer?: string;
 }

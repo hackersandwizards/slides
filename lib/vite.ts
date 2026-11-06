@@ -14,9 +14,8 @@ const STRINGS_OR_COMMENTS =
  *    or dynamic) is named, since Vite does not scan
  *    an excluded package: found on an island's first render instead, they re-run the optimizer
  *    and the island fails to hydrate with a 504. React's client and both JSX runtimes come with them.
- *  Read from the installed engine's source, so the list follows each release. Node built-ins,
- *  `next/*` (the Next adapter), `prettier` (the edit mode's server) and JSON or CSS files, which
- *  Vite cannot pre-bundle and warns about on every start, stay out. */
+ *  Read from the installed engine's source, so the list follows each release; `importsOf` names
+ *  what stays out. */
 export function slidesOptimizeDeps(): { exclude: string[]; include: string[] } {
   const found = new Set([
     "react-dom",
@@ -32,8 +31,9 @@ export function slidesOptimizeDeps(): { exclude: string[]; include: string[] } {
   return { exclude: ["@hackersandwizards/slides"], include: [...found].sort() };
 }
 
-/** The packages a source imports at run time, static, side-effect, re-exported or dynamic, with
- *  Node built-ins, `next/*`, `prettier`, the engine itself and JSON or CSS files left out. */
+/** The packages a source imports at run time, static, side-effect, re-exported or dynamic. Left
+ *  out: Node built-ins, `next/*` (the Next adapter), `prettier` (the edit mode's server), the engine
+ *  itself, and JSON or CSS files, which Vite cannot pre-bundle and warns about on every start. */
 export function importsOf(source: string): string[] {
   return [
     ...source

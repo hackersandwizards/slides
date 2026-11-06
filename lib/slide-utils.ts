@@ -20,7 +20,6 @@ import type {
   Slide,
   TitleSlide,
   TransitionSlide,
-  GanttSlide,
 } from "../types/slide";
 
 /** The sessionStorage key carrying the direction a navigation arrives from. The frames inside the
@@ -119,10 +118,6 @@ export function speakerLine(slide: TitleSlide): string {
 }
 
 /** The alt text of a title slide's QR code, in its `lang`. */
-/** The label of a gantt slide's milestone row: the deck's own, else "Meilensteine". */
-export const milestonesLabel = (slide: Pick<GanttSlide, "milestonesLabel">) =>
-  slide.milestonesLabel ?? "Meilensteine";
-
 export function qrAlt(href: string, lang?: TitleSlide["lang"]): string {
   return `${lang === "de" ? "QR-Code" : "QR code"}: ${linkLabel(href)}`;
 }

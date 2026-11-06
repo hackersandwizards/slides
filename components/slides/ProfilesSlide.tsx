@@ -99,7 +99,7 @@ export function ProfilesSlide({ slide }: Props) {
                     </ul>
 
                     {profile.linkedIn && (
-                      <span className="mt-8">
+                      <span className="mt-8 self-start">
                         <LinkCaption href={profile.linkedIn} variant="linkedin" />
                       </span>
                     )}

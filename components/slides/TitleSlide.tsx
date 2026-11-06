@@ -66,8 +66,8 @@ function Opening({ slide }: Props) {
                 <Image
                   src={slide.qr.src}
                   alt={qrAlt(slide.qr.href, slide.lang)}
-                  width={240}
-                  height={240}
+                  width={360}
+                  height={360}
                   className="size-64 rounded-brand"
                 />
               </PictureLink>

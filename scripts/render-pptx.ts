@@ -24,7 +24,6 @@ import {
   isHighlightPhase,
   isOpening,
   linkLabel,
-  milestonesLabel,
   pageLabel,
   claimParts,
   deepDiveAsTransition,
@@ -2042,20 +2041,13 @@ const RENDER: {
         1.4,
         c.teal,
       );
-      box(
-        s,
-        c,
-        [
-          { runs: [{ text: d.profile.name }], mono: true, bold: true, after: 4 },
-          { runs: [{ text: d.profile.title, options: { color: c.teal } }], rel: 0.9 },
-          ...(d.profile.linkedIn ? [{ ...profileLink(d.profile.linkedIn, c), rel: 0.9 }] : []),
-        ],
-        a.x,
-        a.y + 1.75,
-        pw,
-        0.9,
-        { size: PT.base, color: c.ink, align: "center" },
-      );
+      const who: Para[] = [
+        { runs: [{ text: d.profile.name }], mono: true, bold: true, after: 4 },
+        { runs: [{ text: d.profile.title, options: { color: c.teal } }], rel: 0.9 },
+        ...(d.profile.linkedIn ? [{ ...profileLink(d.profile.linkedIn, c), rel: 0.9 }] : []),
+      ];
+      const o: BoxOpts = { size: PT.base, color: c.ink, align: "center" };
+      box(s, c, who, a.x, a.y + 1.75, pw, Math.max(0.9, need(who, c, pw, o)), o);
       a = { ...a, x: a.x + pw + 0.5, w: a.w - pw - 0.5 };
     }
     const secs = d.sections;
@@ -3159,6 +3151,8 @@ const RENDER: {
       }
     } else if (speakers.length) {
       const sw = Math.min(3.2, CW / speakers.length);
+      // The LinkedIn address under the contact, a line at 0.8 of the size.
+      const linked = speakers.some((sp) => sp.linkedIn) ? 0.3 : 0;
       const sx = (W - sw * speakers.length) / 2;
       speakers.forEach((sp, i) => {
         const x = sx + i * sw;
@@ -3199,11 +3193,11 @@ const RENDER: {
           x,
           y + 1.2,
           sw,
-          1.15,
+          1 + linked,
           { size: PT.h4, color: c.ink, align: "center" },
         );
       });
-      y += 2.35;
+      y += 2.35 + linked;
     }
     const tail: Para[] = [];
     if (d.claim) {
@@ -3382,13 +3376,22 @@ const RENDER: {
     });
     if (d.milestones?.length) {
       const my = y + 0.35 + d.rows.length * rh + 0.1;
-      box(s, c, { runs: [{ text: milestonesLabel(d).toUpperCase() }] }, SIDE, my, lw - 0.15, 0.3, {
-        size: PT.label,
-        mono: true,
-        bold: true,
-        color: c.muted,
-        align: "right",
-      });
+      box(
+        s,
+        c,
+        { runs: [{ text: (d.milestonesLabel ?? "Milestones").toUpperCase() }] },
+        SIDE,
+        my,
+        lw - 0.15,
+        0.3,
+        {
+          size: PT.label,
+          mono: true,
+          bold: true,
+          color: c.muted,
+          align: "right",
+        },
+      );
       for (const m of d.milestones) {
         const mx = gx + (m.column - 1) * colW;
         rect(s, mx, my + 0.02, colW * 0.9, 0.025, c.purple);
