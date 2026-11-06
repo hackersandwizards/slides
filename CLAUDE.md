@@ -94,7 +94,8 @@ the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest 
 are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and `jszip`, which only
 `slides-pptx` imports, are optional peers like `puppeteer`: a consumer installs them to run it.
 `prettier`, which `lib/deck-edit-server` formats an edited deck with, is optional too, as is
-`astro`, which only the exported `catalog/SlideFrame.astro` needs.
+`astro`, which only the exported `catalog/SlideFrame.astro` needs. The brand peer is optional so
+that bun never looks it up on the public npm registry; a consumer still pins it.
 
 ## Commands
 
