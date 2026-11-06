@@ -101,7 +101,7 @@ export function PhasedPillsSlide({ slide }: Props) {
                   >
                     <div
                       className="hw-label flex items-baseline gap-2.5 [--hw-label-size:var(--text-base)]"
-                      data-hue={theme in themeHue ? themeHue[theme] : "purple"}
+                      data-hue={Object.hasOwn(themeHue, theme) ? themeHue[theme] : "purple"}
                     >
                       <div className={`hw-marker ${themeDotColor[theme] ?? "bg-secondary"}`} />
                       <span>{phase.label}</span>

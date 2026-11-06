@@ -43,7 +43,8 @@ describe("roadmap and dual-pill-overview", () => {
     );
     const marker = roadmap.getByText("Item").closest("li")!.firstElementChild!;
     expect(marker.className).toContain("hw-marker");
-    const label = (r: typeof dual) => r.container.querySelector(".hw-label.border")?.className;
+    const label = (r: typeof dual) => r.container.querySelector(".hw-label-box")?.outerHTML;
+    expect(label(dual)).toContain("hw-label-box");
     expect(label(dual)).toBe(label(roadmap));
   });
 });

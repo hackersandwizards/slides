@@ -4,7 +4,7 @@ import type { MarkerTone, RoadmapSlide as RoadmapSlideType } from "../../types/s
 import { BlurFade } from "../ui/blur-fade";
 import { renderMarkdown } from "../../lib/markdown";
 import { COLUMN_HUE, type ColumnAccent } from "../../lib/section-styles";
-import { themeDotColor, themeHue } from "../../lib/stage-utils";
+import { themeDotColor, themeHue, themeLabelColor } from "../../lib/stage-utils";
 import { SlideShell } from "./SlideShell";
 import { TitledContent, SlideTitle, SlideSubtitle, DisplayHeading, SlideCard } from "./primitives";
 
@@ -55,7 +55,6 @@ function PartCard({
   delay: number;
 }) {
   const hue = COLUMN_HUE[accent];
-  const defaultDot = hue === "teal" ? "bg-primary" : "bg-secondary";
   let row = 0;
 
   return (
@@ -81,19 +80,20 @@ function PartCard({
 
           <div className="mt-6 space-y-6">
             {groups.map((group, g) => {
-              const dot = (group.theme && themeDotColor[group.theme]) || defaultDot;
-              const text = dot.replace("bg-", "text-");
-              const labelHue = group.theme
-                ? themeHue[group.theme]
-                : hue === "purple"
-                  ? hue
-                  : undefined;
+              // A group without a known theme takes its column's.
+              const theme =
+                group.theme && Object.hasOwn(themeDotColor, group.theme)
+                  ? group.theme
+                  : hue === "teal"
+                    ? "primary"
+                    : "secondary";
+              const dot = themeDotColor[theme];
               return (
                 <div key={g}>
                   {group.label && (
                     <p
                       className="hw-label mb-3 [--hw-label-size:var(--text-base)]"
-                      data-hue={labelHue}
+                      data-hue={themeHue[theme]}
                     >
                       {group.label}
                     </p>
@@ -111,7 +111,7 @@ function PartCard({
                           <span className={`hw-marker ${markerColour(item) ?? dot}`} />
                         ) : (
                           <span
-                            className={`w-10 shrink-0 font-heading text-xl font-bold tabular-nums ${text}`}
+                            className={`w-10 shrink-0 font-heading text-xl font-bold tabular-nums ${themeLabelColor[theme]}`}
                           >
                             {item.number}
                           </span>

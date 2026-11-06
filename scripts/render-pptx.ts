@@ -598,7 +598,7 @@ function eventParas(
 ): Para[] {
   return [
     { runs: md(e.title, c, { color: hi ? c.teal : c.ink }), bold: true, after: 4 },
-    { runs: md(e.text ?? "", c, { color: c.muted }), rel: 0.9, after: 16 },
+    { runs: md(e.text ?? "", c, { color: c.muted }), rel: 0.9, after: e.text ? 16 : 8 },
     ...(e.figure
       ? [
           {
@@ -1504,28 +1504,26 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const into = b.continues === "in" || b.continues === "both";
       const onward = b.continues === "out" || b.continues === "both";
       const from = into ? 0 : a.x + ew / 2;
+      const to = onward ? W : a.x + a.w - ew / 2;
       s.addShape("line", {
         x: from,
         y: ly,
-        w: (onward ? W : a.x + a.w - ew / 2) - from,
+        w: to - from,
         h: 0.001,
         line: { color: c.border, width: 2 },
       });
-      if (b.now !== undefined && b.now < n - 1) {
-        s.addShape("line", {
-          x: a.x + ew / 2 + b.now * ew,
-          y: ly,
-          w: (n - 1 - b.now) * ew,
-          h: 0.001,
-          line: { color: c.bg, width: 2, dashType: "dash" },
-        });
-        s.addShape("line", {
-          x: a.x + ew / 2 + b.now * ew,
-          y: ly,
-          w: (n - 1 - b.now) * ew,
-          h: 0.001,
-          line: { color: c.muted, width: 2, dashType: "dash" },
-        });
+      // The line after `now` is dashed, as is a run-out past the last event (`now` defaults to it).
+      const now = b.now ?? n - 1;
+      if (now < n - 1 || onward) {
+        const dx = a.x + ew / 2 + now * ew;
+        for (const color of [c.bg, c.muted])
+          s.addShape("line", {
+            x: dx,
+            y: ly,
+            w: to - dx,
+            h: 0.001,
+            line: { color, width: 2, dashType: "dash" },
+          });
       }
       b.events.forEach((e, i) => {
         const cx = a.x + ew * i + ew / 2;
