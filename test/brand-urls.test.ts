@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brandNames, placeBrandUrls } from "../catalog/brand-urls";
+import { brandNames, placeBrandUrls, selfContained } from "../catalog/brand-urls";
 
 const font = "@hackersandwizards/brand/fonts/inter.woff2";
 const placed = 'url("../x/fonts/inter.woff2")';
@@ -12,6 +12,11 @@ describe("placeBrandUrls", () => {
 
   it("leaves a data URL as written, its inner quotes and brackets included", () => {
     const css = `a{mask:url("data:image/svg+xml,%3Csvg fill='rgb(0,0,0)'/%3E")}b{c:url(data:,x)}`;
+    expect(placeBrandUrls(css, "../x")).toBe(css);
+  });
+
+  it("leaves a fragment, which names no file", () => {
+    const css = "a{filter:url(#grain)}";
     expect(placeBrandUrls(css, "../x")).toBe(css);
   });
 
@@ -31,6 +36,21 @@ describe("placeBrandUrls", () => {
   ])("fails on %s, which it cannot place", (token) => {
     expect(() => placeBrandUrls(`a{b:${token}}`, "../x")).toThrow(token);
   });
+});
+
+describe("selfContained", () => {
+  it("takes a stylesheet whose only URLs are inline", () => {
+    expect(selfContained(`a{b:url("data:image/svg+xml,%3Csvg/%3E")}`)).toBe(true);
+  });
+
+  it.each([
+    '@import "./select.css";',
+    '@IMPORT url("a.css");',
+    `a{b:url("${font}")}`,
+    "a{b:url(fonts/x.woff2)}",
+    "a{b:URL('fonts/x.woff2')}",
+    "a{b:url(\n  fonts/x.woff2\n)}",
+  ])("refuses %s", (css) => expect(selfContained(css)).toBe(false));
 });
 
 describe("brandNames", () => {

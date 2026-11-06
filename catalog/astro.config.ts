@@ -1,21 +1,20 @@
 import {
   cpSync,
   createReadStream,
-  mkdirSync,
   readdirSync,
   readFileSync,
   statSync,
   writeFileSync,
 } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, extname, join } from "node:path";
+import { extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 import { catalog } from "@hackersandwizards/scaffolding/catalog";
 import type { AstroIntegration } from "astro";
 import { defineConfig } from "astro/config";
-import { BRAND, brandNames } from "./brand-urls";
+import { BRAND, brandNames, selfContained } from "./brand-urls";
 
 const BASE = "/slides";
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -26,14 +25,14 @@ const deckFiles = join(root, "specimen/slide-catalogue");
 // A slide names the brand logos and the deck's images from the site root, as a consumer's public
 // folder serves them.
 const fileOf = (path: string) => {
-  const logo = path.match(/^\/hw-(wordmark|lockup)(-night)?\.svg$/);
-  if (logo) return brandFile(`logos/${logo[1]}${logo[2] ?? ""}.svg`);
   const asset = path.match(/^(?:\/slides)?(?:\/catalog\/print)?\/slide-catalogue\/([\w.-]+)$/);
   if (asset) return join(deckFiles, asset[1]);
+  const logo = path.match(/^\/hw-(wordmark|lockup)(-night)?\.svg$/);
   const own = path.match(/^(?:\/slides)?\/brand\/(.+)$/);
-  if (!own || own[1].includes("..")) return undefined;
+  const name = logo ? `logos/${logo[1]}${logo[2] ?? ""}.svg` : own?.[1];
+  if (!name || name.includes("..")) return undefined;
   try {
-    return brandFile(own[1]);
+    return brandFile(name);
   } catch {
     return undefined;
   }
@@ -61,11 +60,9 @@ const files: AstroIntegration = {
         .flatMap((page) => brandNames(readFileSync(join(pages, page), "utf8")));
       for (const name of new Set(linked)) {
         const file = brandFile(name);
-        if (name.endsWith(".css") && /url\(|@import/.test(readFileSync(file, "utf8")))
+        if (name.endsWith(".css") && !selfContained(readFileSync(file, "utf8")))
           throw new Error(`${name} links further files, which the build does not copy`);
-        const target = join(dist, "brand", name);
-        mkdirSync(dirname(target), { recursive: true });
-        cpSync(file, target);
+        cpSync(file, join(dist, "brand", name));
       }
       cpSync(deckFiles, join(dist, "catalog/print/slide-catalogue"), { recursive: true });
       cpSync(deckFiles, join(dist, "slide-catalogue"), { recursive: true });
