@@ -2,19 +2,23 @@
 // The install guard a consumer runs in its own gate: fails when node_modules holds a different
 // version of an `@hackersandwizards/*` package than package.json pins with `#v<version>`. A stale
 // install renders with the old engine or brand while every file reads the new pin: documents once
-// had brand 0.21.6 installed against a v0.24.4 pin, and its list markers vanished.
+// had brand 0.21.6 installed against a v0.24.4 pin, and its list markers vanished. It also fails
+// without a brand pin: the peer is optional, so bun installs such a consumer without a word.
 //
-//   slides-pins        (in the consumer's root; exit 1 on any mismatch, and on a pin without a tag)
+//   slides-pins        (in the consumer's root; exit 1 on any mismatch, on a pin without a tag and
+//                       on a missing brand pin)
 
 import { readFileSync } from "node:fs";
 
 const read = (path: string) => JSON.parse(readFileSync(path, "utf8"));
 const pkg = read("package.json");
+const pins: Record<string, string> = { ...pkg.dependencies, ...pkg.devDependencies };
 const found: string[] = [];
-for (const [name, spec] of Object.entries<string>({
-  ...pkg.dependencies,
-  ...pkg.devDependencies,
-})) {
+if (!pins["@hackersandwizards/brand"])
+  found.push(
+    "@hackersandwizards/brand: package.json pins no version; pin it as the slides README shows",
+  );
+for (const [name, spec] of Object.entries(pins)) {
   if (!name.startsWith("@hackersandwizards/")) continue;
   const pinned = /#v([^#]+)$/.exec(spec)?.[1];
   let installed = "nothing";

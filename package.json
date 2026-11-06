@@ -112,7 +112,7 @@
   "devDependencies": {
     "@astrojs/react": "7.1.2",
     "@eslint/js": "10.0.1",
-    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.5.0",
+    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.6.0",
     "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.8.0",
     "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v2.7.3",
     "@tailwindcss/node": "4.3.3",

@@ -11,7 +11,7 @@ that the public may not see.
 
 Add the dependency in exactly this form, pinned to the newest tag
 (`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
-`@hackersandwizards/brand` v1.5.0 or later, whose shared elements (`elements.css`, the stage
+`@hackersandwizards/brand` v1.8.0 or later, whose shared elements (`elements.css`, the stage
 button, the label box and the accent rule among them) and small corner the stylesheet
 imports and whose `verbal.json` gives the closing its claim. Both repos are public: Bun fetches the
 `git+https://` form through GitHub's tarball API without any GitHub access.
@@ -35,7 +35,7 @@ imports and whose `verbal.json` gives the closing its claim. Both repos are publ
 
 The command `slides-pins` goes first in each consumer's gate: it fails when `node_modules` holds
 another version of an `@hackersandwizards/*` package than `package.json` pins, so a stale install
-cannot pass the gate on the old engine or brand.
+cannot pass the gate on the old engine or brand, and when `package.json` pins no brand at all.
 
 The command `slides-density [--serve "<command>"] <print-url> ...` belongs in each consumer's gate:
 it renders each deck's print route and fails on a slide the fit guard shrinks below 0.8, and lists
