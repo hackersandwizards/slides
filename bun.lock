@@ -46,6 +46,7 @@
       },
       "peerDependencies": {
         "@hackersandwizards/brand": "*",
+        "astro": "^7.4.4",
         "jszip": "^3.10.1",
         "lucide-react": "^1.66.0",
         "motion": "^14.9.0",
@@ -60,6 +61,7 @@
         "tailwindcss": "^4.3.3",
       },
       "optionalPeers": [
+        "astro",
         "jszip",
         "next",
         "pptxgenjs",
