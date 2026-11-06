@@ -335,17 +335,6 @@ export const exceptionSections = Object.entries(
   })
   .join("\n");
 
-const stylesheet = join(root, "styles", "slides.css");
-const compiler = await compile(readFileSync(stylesheet, "utf8"), {
-  base: dirname(stylesheet),
-  from: stylesheet,
-  onDependency: () => {},
-});
-const candidates = new Scanner({ sources: compiler.sources }).scan();
-for (const { markup } of [...frames, ...markerFrames, ...blockFrames, ...partFrames])
-  candidates.push(...new Scanner({}).scanFiles([{ content: markup, extension: "html" }]));
-export const css = placeBrandUrls(compiler.build(candidates), `../${brandHref}`);
-
 // The 13 jobs of docs/agent-work/2026-11-01-catalogue-program.md
 // ("Abdeckung je Kommunikationsaufgabe").
 export const JOBS = {
@@ -526,3 +515,15 @@ export const inlineFrames = [
 ]
   .map((f) => f.markup)
   .join("\n");
+
+// Every markup a print page writes: what is left out here draws without its utilities.
+const stylesheet = join(root, "styles", "slides.css");
+const compiler = await compile(readFileSync(stylesheet, "utf8"), {
+  base: dirname(stylesheet),
+  from: stylesheet,
+  onDependency: () => {},
+});
+const candidates = new Scanner({ sources: compiler.sources }).scan();
+for (const content of [inlineFrames, usesTiles, exceptionSections])
+  candidates.push(...new Scanner({}).scanFiles([{ content, extension: "html" }]));
+export const css = placeBrandUrls(compiler.build(candidates), `../${brandHref}`);
