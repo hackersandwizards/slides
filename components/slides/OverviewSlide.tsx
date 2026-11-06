@@ -41,8 +41,8 @@ function StageBox({
   );
 }
 
-// One equal column per stage: a fixed six-column grid left three stages in the left half, their
-// one-line titles overrunning each other (DK-1: slide-master/21).
+// One equal column per stage: a fixed six-column grid would leave three stages in the left half,
+// their one-line titles overrunning each other.
 const columns = (n: number) => `repeat(${Math.max(n, 1)}, minmax(0, 1fr))`;
 
 export function OverviewSlide({ slide }: Props) {

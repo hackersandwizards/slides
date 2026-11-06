@@ -55,8 +55,8 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
   );
 }
 
-/** A regular slide renders through the content blocks (`regularAsContent`, decision
- *  merge-content); the cards layout is an agenda. One with a profile keeps the sidebar drawing. */
+/** A regular slide renders through the content blocks (`regularAsContent`); the cards layout is
+ *  an agenda. One with a profile keeps the sidebar drawing. */
 export function RegularSlide({ slide }: Props) {
   const replaced = regularAsContent(slide);
   if (replaced?.type === "agenda") return <AgendaSlide slide={replaced} />;

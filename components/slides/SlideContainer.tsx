@@ -20,8 +20,8 @@ interface Props {
 export type CornerMark = "lockup" | "wordmark";
 
 /** The page counter beside the corner logo, legible in a half-size video call and a step below the
- *  company name, on its centre line: at 1.625rem it outranked the name, and blind reviewers read the
- *  number before the brand (2026-10-29). */
+ *  company name, on its centre line: at 1.625rem it would outrank the name and be read before the
+ *  brand. */
 export function PageCounter({ label }: { label: string }) {
   return (
     // Below `md` the navigation's own position pill takes its place.

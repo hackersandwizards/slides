@@ -16,19 +16,9 @@ interface Props {
 }
 
 /** A talk's opening: kicker, name and title on the left, the title the largest line; speakers and
- *  event along the bottom, beside the QR code in the lower right. Blind panel 06.11.2026, two
- *  rounds of four reviewers (a hall attendee, a stream viewer, a brand designer, Codex): 8.02 of 10
- *  against 7.75 for the whole stack centred on the left with the QR code apart, 7.68 for the same
- *  bottom row under a rule, 7.31 for the QR code beside the speakers under the title, and 4.65 for
- *  the opening set as a centred content slide. Noise 0.69 per reviewer, so the first three tie; it
- *  ranked first or second with every reviewer. The QR code at 12rem, a quarter of the slide's
- *  height, the title block kept 2rem above the bottom row: blind panel 06.11.2026, two rounds (a
- *  hall attendee in row 15, a stream viewer, a presentation designer; Claude twice, Codex once),
- *  on a one-line and a three-line title: 7.58 of 10 against 7.25 for a code that takes what the
- *  title leaves between 16 and 10rem and 6.67 for 16rem, which on a three-line title crowded the
- *  title and shrank the whole slide; capping the code at the title block's height scored 7.15 in
- *  round one. Noise 0.44 (Claude), so the first two tie with Claude; Codex put 12rem 1.0 ahead. An
- *  earlier panel on the two-line specimen title alone had 16rem ahead, 8.00 against 7.00. */
+ *  event along the bottom, beside the QR code in the lower right. The QR code is 12rem, a quarter
+ *  of the slide's height, and the title block stands 2rem above the bottom row: a 16rem code would
+ *  crowd a three-line title and shrink the whole slide. */
 function Opening({ slide }: Props) {
   return (
     <SlideShell direction="col" overflowHidden>
@@ -86,9 +76,8 @@ function Opening({ slide }: Props) {
 }
 
 /** A title with at most a subtitle stands centred on the ground, the subtitle under it in ink, the
- *  lockup in the corner. No gradient field and no decoration, as on the section divider:
- *  blind-scored against the title on the left half's gradient field and against the centred title
- *  with glow, particles and rule (2026-10-31). Any of the opening's fields draws the opening. */
+ *  lockup in the corner. No gradient field and no glow, particles or rule, as on the section
+ *  divider. Any of the opening's fields draws the opening. */
 export function TitleSlide({ slide }: Props) {
   if (isOpening(slide)) return <Opening slide={slide} />;
   return (

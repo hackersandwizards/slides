@@ -56,9 +56,8 @@ export function SlideSubtitle({ children, delay = 0.15 }: { children: ReactNode;
 
 /** A link spelled out under a picture or a QR code, an arrow before it, opening in a new tab: the
  *  address's one link for the keyboard and screen readers. `linkedin`: a person's profile on a
- *  profile card, the LinkedIn glyph before the address in muted body text. Blind panel 06.11.2026
- *  (three personas, Claude and Codex twice each, noise 0.4): 8.08 of 10 against 7.50 for the glyph
- *  and the word "LinkedIn" in teal, 7.00 for the arrow and address and 6.42 for an outlined button. */
+ *  profile card, the LinkedIn glyph before the address in muted body text, not the word
+ *  "LinkedIn" in teal or an outlined button. */
 export function LinkCaption({ href, variant }: { href: string; variant?: "linkedin" }) {
   return (
     <a
@@ -393,11 +392,11 @@ export function VideoPlayer({
         }
         className={`block cursor-pointer rounded-[inherit] ${className}`.trim()}
       />
-      {/* The brand's round icon control over a picture (hw-icon-button, solid teal; unprimed
-            blind panel 2026-11-01), at the stage scale's size. It straddles the recording's bottom edge, centred,
-            as on the website, so it covers no corner of the picture (os decision
-            play-button-position); the frame's bottom padding holds its lower half. Playing, it
-            stays as the pause control, shown only to the keyboard that holds focus on it. */}
+      {/* The brand's round icon control over a picture (hw-icon-button, solid teal), at the
+            stage scale's size. It straddles the recording's bottom edge, centred, as on the
+            website, so it covers no corner of the picture; the frame's bottom padding holds its
+            lower half. Playing, it stays as the pause control, shown only to the keyboard that
+            holds focus on it. */}
       <button
         type="button"
         onClick={toggle}

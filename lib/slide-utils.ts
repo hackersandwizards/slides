@@ -101,10 +101,9 @@ export function personAccent(index: number): "primary" | "secondary" {
 }
 
 /** A slide of a deep-dive part stands on night, the brand's ground for a whole section (os design
- *  guide), so the part reads as one from the back row: the deep-dive divider, a slide whose
- *  `sectionTheme` is `deepdive` and a pill map whose phases are. Blind-scored against the part
- *  marked by its label alone and against the old rose and amber backdrop (os
- *  docs/agent-work/2026-11-01-deep-dive-brand.md). */
+ *  guide), so the part reads as one from the back row, where its label alone would not mark it: the
+ *  deep-dive divider, a slide whose `sectionTheme` is `deepdive` and a pill map whose phases
+ *  are. */
 export function isDeepDive(slide: {
   type: string;
   night?: boolean;
@@ -201,7 +200,7 @@ type Block<T extends ContentBlock["type"]> = Extract<ContentBlock, { type: T }>;
 
 const indexOf = (i: number) => (i < 0 ? undefined : i);
 
-/** A `labeled-grid` block as the `cards` block that replaces it (decision merge-cards). */
+/** A `labeled-grid` block as the `cards` block that replaces it. */
 export function labeledGridAsCards(block: Block<"labeled-grid">): Block<"cards"> {
   return {
     type: "cards",
@@ -259,8 +258,7 @@ export function gridAsContent({ cards, ...slide }: GridSlide): ContentSlide {
 }
 
 /** A content slide whose one block is a neutral `two-column` of two lists as the comparison's
- *  `split` that replaces it, its footer the punchline; undefined for any other content slide. On
- *  the same slides the split scored 7.58 against 7.02 for the block (blind panel 06.11.2026). */
+ *  `split` that replaces it, its footer the punchline; undefined for any other content slide. */
 export function twoColumnAsSplit(slide: ContentSlide): ComparisonSidesSlide | undefined {
   const [block, ...rest] = slide.content;
   if (rest.length || block?.type !== "two-column" || (block.variant ?? "neutral") !== "neutral")
@@ -373,10 +371,10 @@ export function centeredAsStatement(slide: ContentSlide): StatementSlide | undef
 const sectionText = (s: ContentSection) =>
   [s.text, s.link && `[${s.link.label}](${s.link.url})`].filter(Boolean).join(" ") || undefined;
 
-/** A `regular` slide as the slide that replaces it (decision merge-content), or undefined for one
- *  with a profile, which keeps its own drawing (the sidebar was not panelled). The cards layout is an agenda; otherwise two
- *  titled sections become a two-column block, one a lead line over its list, three and more a
- *  cards block with a list per card; an untitled section is a list, a paragraph, or the closing
+/** A `regular` slide as the slide that replaces it, or undefined for one with a profile, which
+ *  keeps its own drawing. The cards layout is an agenda; otherwise two titled sections become a
+ *  two-column block, one a lead line over its list, three and more a cards block with a list per
+ *  card; an untitled section is a list, a paragraph, or the closing
  *  callout where it comes last. */
 export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlide | undefined {
   if (slide.layout === "cards")

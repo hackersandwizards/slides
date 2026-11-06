@@ -1,10 +1,9 @@
 import puppeteer from "puppeteer";
 
 /** Prints a deck's print route to a PDF through Chrome's own print pipeline, one slide per page
- *  with selectable text. The previous approach screenshotted each `.print-slide` and stitched the
- *  images into a raster PDF: no text, roughly a hundred times slower, 30 MB for a 74-slide deck
- *  (measured 2026-10-27). Each repo's `export-pdf.ts` resolves the deck, the URL and the file
- *  name, and calls this. */
+ *  with selectable text; a raster PDF stitched from screenshots has no text, takes about a hundred
+ *  times as long and ran to 30 MB for a 74-slide deck. Each repo's `export-pdf.ts` resolves the
+ *  deck, the URL and the file name, and calls this. */
 export async function renderPdf(url: string, out: string, title: string, slideCount: number) {
   const browser = await puppeteer.launch({ headless: true, protocolTimeout: 300_000 });
   try {
@@ -67,7 +66,7 @@ export async function renderPdf(url: string, out: string, title: string, slideCo
     await page.pdf({
       path: out,
       // Explicit, not `preferCSSPageSize`: with the CSS page size Chrome evaluated the media queries
-      // between 768 and 1024px, so every `lg:` size printed one step smaller (measured 2026-10-27).
+      // between 768 and 1024px, so every `lg:` size printed one step smaller.
       width: "1920px",
       height: "1080px",
       printBackground: true,

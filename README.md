@@ -108,7 +108,7 @@ which has no diagram of the engine, may carry a generated marker sketch beside t
 frame, and the cards as its items, words unchanged.
 `bun run brand-slide-sketch-prompt` (brand v0.13.0 or later) prints the prompt. No other slide gets
 a sketch: on a title, agenda, transition, statement, comparison, process, data or closing slide, and
-on a concept slide of paragraphs, the slide without one scored higher in blind panels.
+on a concept slide of paragraphs, the slide reads better without one.
 
 ## Work on the package
 

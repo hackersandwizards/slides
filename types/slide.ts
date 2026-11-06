@@ -74,10 +74,9 @@ export type ContentBlock =
     }
   | { type: "hooks"; items: { name: string; description: string }[] }
   | {
-      /** @deprecated A `flow` block, which draws it (decision merge-flow): the container is its
-       *  `frame`, the first new or active stage its `highlight`. A pipeline with a stage logo or
-       *  `showLoops` keeps its own drawing, which flow cannot carry. Moves in phase 4
-       *  (work-phase-4-every-deck-slide-onto-a). */
+      /** @deprecated A `flow` block, which draws it: the container is its `frame`, the first new
+       *  or active stage its `highlight`. A pipeline with a stage logo or `showLoops` keeps its own
+       *  drawing, which flow cannot carry. */
       type: "pipeline";
       stages: { title: string; state?: StageState; logo?: string }[];
       showLoops?: boolean;
@@ -97,9 +96,8 @@ export type ContentBlock =
       poster?: string;
     }
   | {
-      /** @deprecated A `cards` block with `columns: 4` and `items` per card, which draws it
-       *  (decision merge-cards): `subtitle` is a card's `text`. Moves in phase 4
-       *  (work-phase-4-every-deck-slide-onto-a). */
+      /** @deprecated A `cards` block with `columns: 4` and `items` per card, which draws it:
+       *  `subtitle` is a card's `text`. */
       type: "four-column";
       columns: { title: string; subtitle?: string; items: string[] }[];
     }
@@ -111,9 +109,8 @@ export type ContentBlock =
       fullWidth?: boolean;
     }
   | {
-      /** @deprecated A `cards` block, which draws it (decision merge-cards): `subtitle` is a
-       *  card's `text`, the `highlighted` item the block's `highlight`. Moves in phase 4
-       *  (work-phase-4-every-deck-slide-onto-a). */
+      /** @deprecated A `cards` block, which draws it: `subtitle` is a card's `text`, the
+       *  `highlighted` item the block's `highlight`. */
       type: "labeled-grid";
       columns?: number;
       reveal?: boolean;
@@ -131,7 +128,7 @@ export type ContentBlock =
     }
   | {
       /** @deprecated A `comparison` slide with `variant: "positions"`, which draws it the same
-       *  way (decision merge-comparison). Moves in phase 4 (work-phase-4-every-deck-slide-onto-a). */
+       *  way. */
       type: "positions";
       left: PositionSide;
       right: PositionSide;
@@ -202,8 +199,7 @@ export type VisualBlock =
       continues?: "in" | "out" | "both";
     }
   | {
-      /** @deprecated Drawn as a comparison's `before-after` with `strike: false` (decision
-       *  merge-comparison); moves in phase 4 (work-phase-4-every-deck-slide-onto-a). */
+      /** @deprecated Drawn as a comparison's `before-after` with `strike: false`. */
       type: "transform";
       before: { label: string; items: string[] };
       after: { label: string; items: string[] };
@@ -280,9 +276,8 @@ export interface ContentSlide extends Grounded {
   headline: string;
   subtitle?: string;
   /** `centered` renders as a statement slide where its blocks fit one (`centeredAsStatement` in
-   *  `lib/slide-utils.ts`, decision merge-statement): the section label as its kicker, up to two
-   *  paragraphs or a paragraph and a callout as subtitle and closing, one linked image. Decks move
-   *  in phase 4 (work-phase-4-every-deck-slide-onto-a). */
+   *  `lib/slide-utils.ts`): the section label as its kicker, up to two paragraphs or a paragraph
+   *  and a callout as subtitle and closing, one linked image. */
   layout?: "default" | "centered";
   content: ContentBlock[];
   footer?: string;
@@ -306,10 +301,9 @@ export interface ProfileInfo {
   linkedIn?: string;
 }
 
-/** Renders through the content blocks (`regularAsContent` in `lib/slide-utils.ts`, decision
- *  merge-content): two titled sections as a two-column block, three and more as cards, an
- *  untitled last section as the callout, the cards layout as an agenda. With a `profile` it keeps
- *  its own drawing. Decks move in phase 4 (work-phase-4-every-deck-slide-onto-a). */
+/** Renders through the content blocks (`regularAsContent` in `lib/slide-utils.ts`): two titled
+ *  sections as a two-column block, three and more as cards, an untitled last section as the
+ *  callout, the cards layout as an agenda. With a `profile` it keeps its own drawing. */
 export interface RegularSlide {
   type: "regular";
   headline: string;
@@ -389,9 +383,8 @@ export interface GridSlide extends Grounded {
   headline: string;
   cards: GridCard[];
   /** `pillars` (the default) and `stats` are deprecated: the engine draws them as a content slide
-   *  with a `cards` or `numbers` block, through `gridAsContent` in `lib/slide-utils.ts` (decisions
-   *  merge-cards, merge-numbers). Decks move in phase 4 (work-phase-4-every-deck-slide-onto-a);
-   *  `quotes` stays. */
+   *  with a `cards` or `numbers` block, through `gridAsContent` in `lib/slide-utils.ts`; `quotes`
+   *  stays. */
   variant?: "pillars" | "stats" | "quotes";
   columns?: 2 | 3 | 4;
   allActive?: boolean;
@@ -458,9 +451,8 @@ export interface GuidanceExample {
   language?: string;
 }
 
-/** @deprecated A `comparison` slide with `variant: "guidance"`, which draws it (decision
- *  merge-comparison). The engine still renders it, through `guidanceAsComparison` in
- *  `lib/slide-utils.ts`; decks move in phase 4 (work-phase-4-every-deck-slide-onto-a). */
+/** @deprecated A `comparison` slide with `variant: "guidance"`, which draws it. The engine still
+ *  renders it, through `guidanceAsComparison` in `lib/slide-utils.ts`. */
 export interface GuidanceSlide {
   type: "guidance";
   headline?: string;
@@ -681,8 +673,7 @@ export interface RoadmapSlide {
 }
 
 /** @deprecated A `transition` slide with `night: true`, which draws it (`deepDiveAsTransition` in
- *  `lib/slide-utils.ts`): `partLabel` and `kicker`, joined by " · ", are its `preText`. Moves in
- *  phase 4 (work-phase-4-every-deck-slide-onto-a). */
+ *  `lib/slide-utils.ts`): `partLabel` and `kicker`, joined by " · ", are its `preText`. */
 export interface DeepDiveDividerSlide {
   type: "deep-dive-divider";
   partLabel?: string;

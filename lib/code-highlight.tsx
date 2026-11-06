@@ -42,7 +42,7 @@ export function highlightLines(code: string, language?: string): ReactNode[] {
   const lang = language && LANGS.has(language) ? language : "text";
   // No time limit: past Shiki's default 500 ms a line's rest becomes one token in the scope it
   // stopped in. A language's first line compiles the grammar's patterns, 445 ms on an idle Mac
-  // and more under load (06.11.2026); a warm-up line would not cover patterns met later.
+  // and more under load; a warm-up line would not cover patterns met later.
   return highlighter
     .codeToTokensBase(code, { lang, theme: codeTheme.name, tokenizeTimeLimit: 0 })
     .map((line) =>

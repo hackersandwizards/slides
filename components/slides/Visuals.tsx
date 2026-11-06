@@ -345,9 +345,8 @@ function RowLabel({
 }
 
 // A segment's label, such as a duration, set on the line it labels: the line breaks for it, so it
-// reads as the time between two events, never as a point in time. Blind panel 06.11.2026 (three
-// personas, Claude and Codex): 8.00 against 8.00 for the label above the line, which read less
-// clearly as a duration (7.6 against 7.1), and 5.33 for the duration set as the event's date.
+// reads as the time between two events, never as a point in time. Above the line it would read less
+// clearly as a duration, and set as the event's date it would read as a point in time.
 function SegmentLabel({ text, tight }: { text: string; tight?: boolean }) {
   return (
     <span
@@ -359,7 +358,7 @@ function SegmentLabel({ text, tight }: { text: string; tight?: boolean }) {
 }
 
 // An event's text and, under it, its result in the figure face: set under the title, the figure
-// pushed every column's text down (7.00 in the same panel).
+// would push every column's text down.
 function EventBody({
   event,
   tone,
@@ -558,8 +557,7 @@ function Staggered({
   );
 }
 
-// Drawn as a comparison's before-after without the strike: the before side stays (decision
-// merge-comparison, 7.94 against 7.29 for the transform's own drawing).
+// Drawn as a comparison's before-after without the strike: the before side stays.
 function Transform({ block }: { block: Of<"transform"> }) {
   return (
     <div className="flex w-full justify-center">
@@ -581,8 +579,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
     <div
       className={`relative ${inline ? "h-12" : tall ? "h-20" : "h-14"} ${block.max != null ? "border-r-4 border-text/25 bg-text/[0.07]" : ""} rounded-r-sm`}
     >
-      {/* A named scale marks its quarters, so a bar's ends read against it (blind panel 02.11.
-          on ranges: "no axis ticks" from every reviewer). */}
+      {/* A named scale marks its quarters, so a bar's ends read against it. */}
       {block.max != null &&
         [25, 50, 75].map((q) => (
           <div
@@ -604,8 +601,8 @@ function Bars({ block }: { block: Of<"bars"> }) {
     </div>
   );
   // With a highlight, a bar that is not one is context: its label and value in the muted grey at
-  // the regular weight, so the eye lands on the highlighted ones first (code.talks panel 02.11.:
-  // dropped options in bold ink read stronger than the teal ones).
+  // the regular weight, so the eye lands on the highlighted ones first: in bold ink, context bars
+  // would outweigh the teal highlighted ones.
   const context = (bar: (typeof bars)[number]) => anyHighlight && !bar.highlight;
   const tone = (bar: (typeof bars)[number], weight: string) =>
     context(bar)
@@ -727,7 +724,7 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
     );
   }
   // Up to four figures stand in one row; more wrap, five and six into three columns, so a column
-  // never narrows below a quarter of the slide (blind review 02.11.).
+  // never narrows below a quarter of the slide.
   const cols = n <= 4 ? n : n <= 6 ? 3 : 4;
   // One size for every figure, set by the longest, so the row shares a baseline and none wraps:
   // a column is about 1650/cols px wide at 1920, a mono digit 0.6em, a rem 21.333px. Leading

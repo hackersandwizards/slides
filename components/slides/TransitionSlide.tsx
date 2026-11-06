@@ -11,8 +11,8 @@ interface Props {
 }
 
 /** The headline centred on the ground, the label above it, the subtitle and speaker below. A section
- *  divider carries no gradient field and no decoration: blind-scored against the headline on the left
- *  half's gradient field, which read as pushed into the corner beside an empty half (2026-10-31).
+ *  divider carries no gradient field and no decoration: on the left half's gradient field the
+ *  headline reads as pushed into the corner beside an empty half.
  *  `night` opens a deep-dive part. */
 export function TransitionSlide({ slide }: Props) {
   return (

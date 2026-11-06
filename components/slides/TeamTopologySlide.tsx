@@ -27,9 +27,9 @@ function Chips({ labels, className }: { labels: string[]; className: string }) {
 // The Team Shape Templates of Team Topologies, in brand colours: stream-aligned teams are
 // horizontal bars with rounded corners (teal), enabling teams vertical bars with rounded corners
 // (purple), complicated-subsystem teams octagons (neutral), and the platform a grouping with a dotted
-// border (teal) under everything; it keeps the brand corner, the template's square corners lost the
-// blind panel. Change flows left to right, so no team
-// stands between a stream team and its users on the right: the enabling teams stand on the left.
+// border (teal) under everything; it keeps the brand corner rather than the template's square
+// corners. Change flows left to right, so no team stands between a stream team and its users on
+// the right: the enabling teams stand on the left.
 export function TeamTopologySlide({ slide }: Props) {
   const subsystems = slide.complicatedSubsystem ?? [];
   return (

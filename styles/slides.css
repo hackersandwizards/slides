@@ -122,8 +122,7 @@ html:has(.print-slide) {
 }
 
 /* A timeline continued over slides stands a fixed step under its title rather than centred in the
-   free space, so its line keeps one height from slide to slide (blind panel 06.11.2026: 8.85 of 10
-   against 6.28 centred, first with all four reviewers). */
+   free space, so its line keeps one height from slide to slide. */
 .slide-titled > .slide-body:has(.slide-timeline-continued)::before,
 .slide-titled > .slide-body:has(.slide-timeline-continued)::after {
   flex-grow: 0;
@@ -206,7 +205,7 @@ html:has(.print-slide) {
 }
 /* Two or more pictures stacked keep their own height and share the body's left edge and width, so
    they read as one comparison; the fit guard shrinks a stack that runs too long. Sharing the
-   height made pictures of different proportions differ in width (blind panel 2026-11-01). */
+   height would make pictures of different proportions differ in width. */
 .slide-titled > .slide-body:has(.slide-media-stack)::after {
   flex-grow: 1.25;
 }

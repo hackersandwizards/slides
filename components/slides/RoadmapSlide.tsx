@@ -8,9 +8,9 @@ import { themeDotColor, themeHue, themeLabelColor } from "../../lib/stage-utils"
 import { SlideShell } from "./SlideShell";
 import { TitledContent, SlideTitle, SlideSubtitle, DisplayHeading, SlideCard } from "./primitives";
 
-// Draws both two-part slide types, roadmap and dual-pill-overview, so they stay one layout (os
-// decision roadmap-dual-pill-slides): a roadmap column is one group of rows, a dual-pill column
-// one group per phase, its pills numbered rows. A pill's `state` draws nothing, as before.
+// Draws both two-part slide types, roadmap and dual-pill-overview, so they stay one layout: a
+// roadmap column is one group of rows, a dual-pill column one group per phase, its pills numbered
+// rows. A pill's `state` draws nothing.
 interface Props {
   slide: RoadmapSlideType;
 }

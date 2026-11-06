@@ -36,9 +36,8 @@ export function BlurFade({
   const ref = useRef(null);
   // Starting "in view" skips the observer, which only an `inView` fade needs.
   const isInView = useInView(ref, { once: true, margin: "-50px", initial: !inView });
-  // The slide a page load opens on shows at once, from the server's markup (Benedikt 01.11.2026:
-  // „Erste ohne Animation“). A fade that mounts after hydration, on every later slide, enters.
-  // motion reads `initial` on mount only.
+  // The slide a page load opens on shows at once, from the server's markup. A fade that mounts
+  // after hydration, on every later slide, enters. motion reads `initial` on mount only.
   const hydrating = !useMounted();
 
   if (printMode) {

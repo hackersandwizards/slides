@@ -48,8 +48,8 @@ interface Props {
 }
 
 /** A side's highlight under its heading, on every two-sided variant; `muted` for a side that is
- *  not the point. A step over the label size: at text-sm it read about 12 px in a 1000 px stream
- *  (blind check 03.11., every reviewer). */
+ *  not the point. A step over the label size: at text-sm it would read about 12 px in a
+ *  1000 px stream. */
 function Highlight({ text, muted = false }: { text?: string; muted?: boolean }) {
   if (!text) return null;
   return (
@@ -299,7 +299,7 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
 
 /** Two named stances, each on a neutral card with its quote, and the resolution under them, the
  *  `middle` word as its label: the comparison's `positions` variant, and the deprecated positions
- *  block. Blind-scored 8.00 against 6.75 for the coloured stances on an ampersand (06.11.2026). */
+ *  block. Neutral cards, not stances coloured apart on an ampersand. */
 export function Positions({
   block,
 }: {

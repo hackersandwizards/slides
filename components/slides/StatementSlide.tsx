@@ -31,9 +31,9 @@ function HighlightedLine({ line, highlighted }: { line: string; highlighted?: st
 }
 
 /** A linked screenshot or QR code under the statement, at most 11/24 (46%) of the slide wide
- *  (blind review 02.11.: wider, it pushed the headline under the top strip), its link spelled out
- *  under it. Once the file has loaded, the frame takes the picture's own shape at the slide's
- *  picture height, so a square QR code stands in a square, not in a wide box. */
+ *  (wider, it would push the headline under the top strip), its link spelled out under it. Once
+ *  the file has loaded, the frame takes the picture's own shape at the slide's picture height, so
+ *  a square QR code stands in a square, not in a wide box. */
 function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linkedImage"]> }) {
   const ref = useRef<HTMLSpanElement>(null);
   // Kept with the file it was measured on, so the next picture never takes the last one's shape.
@@ -78,8 +78,7 @@ export function StatementSlide({ slide }: Props) {
   const isSimple = !hasSupporting && !slide.subtitle && !slide.highlighted && !slide.crossedOut;
   const pointBaseDelay = 0.1 + slide.lines.length * 0.08;
   // The closing keeps its own gap only after the points: without them the box's gap stands alone,
-  // so a quotation running from the subtitle into the closing reads as one (blind panel 06.11.2026,
-  // Claude and Codex: 7.75 of 10 against 5.75 for both gaps).
+  // so a quotation running from the subtitle into the closing reads as one.
   const afterPoints = slide.points?.length ? "mt-10" : "";
   const closingDelay = pointBaseDelay + (slide.points?.length ?? 0) * 0.06 + 0.05;
   // The source of what the slide quotes: after the closing where there is one, since a quotation

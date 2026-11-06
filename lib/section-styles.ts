@@ -1,8 +1,7 @@
 import type { SectionTheme } from "../types/slide";
 
-// Every section sits on the plain brand page, no tint behind the text (os decision
-// br-gradient-behind-content), and its kicker is teal like every other (br-slide-kicker-colour):
-// the section shows in its rule and pill only.
+// Every section sits on the plain brand page, no tint behind the text, and its kicker is teal
+// like every other: the section shows in its rule and pill only.
 export interface SectionStyle {
   border: string;
   /** One emphasis colour per slide: without one, the principle pill keeps the brand teal. */

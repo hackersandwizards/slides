@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -113,8 +113,8 @@
     "@astrojs/react": "7.1.2",
     "@eslint/js": "10.0.1",
     "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.8.0",
-    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.16.0",
-    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v2.10.0",
+    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.16.1",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v2.11.0",
     "@tailwindcss/node": "4.3.3",
     "@tailwindcss/oxide": "4.3.3",
     "@tailwindcss/vite": "4.3.3",
@@ -182,6 +182,12 @@
         "path": "test/brand-urls.test.ts",
         "text": "node_modules/@hackersandwizards/brand/",
         "reason": "input for placeBrandUrls: the url() Tailwind writes into the compiled stylesheet for an imported brand file, which the test expects it to place or refuse, not a path the test reads"
+      },
+      {
+        "check": "history",
+        "path": "types/slide.ts",
+        "text": "bis 15.11.",
+        "reason": "a format example of an agenda item's `when` in a German deck, not a date of the code's history"
       }
     ],
     "test": "test",

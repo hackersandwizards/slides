@@ -76,7 +76,7 @@ function MediaFrame({
 
 /** A picture in the media frame. Once its file has loaded, it may grow to fill the frame, up to
  *  twice its own pixel width on the 1920 px stage (90rem): a screenshot left at its file's size
- *  stood small in an empty body, and its text was unreadable in the room (blind panel 2026-11-01). */
+ *  stands small in an empty body, and its text is unreadable in the room. */
 function MediaPicture({ src, alt, className }: { src: string; alt?: string; className: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [fill, setFill] = useState<string>();
@@ -389,9 +389,7 @@ function ContentBlockRenderer({
           </div>
         );
       }
-      // Body text at the list's size and measure, in ink: blind panel 06.11.2026 (three personas,
-      // Claude and Codex), 7.83 against 6.67 for the former smaller muted paragraph; 8.00 for a
-      // still larger one, a tie that would have needed a rule of its own for prose-only slides.
+      // Body text at the list's size and measure, in ink, not a smaller muted paragraph.
       return (
         <p className="max-w-(--slide-measure-list) text-2xl leading-snug text-text">
           {renderMarkdown(block.text)}
@@ -443,10 +441,9 @@ function ContentBlockRenderer({
           {/* Automatic layout: `widths` are the columns' preferred shares, and no column ever gets
               narrower than its longest word. A fixed layout let a word run into the next cell. */}
           {/* The cells take the ink and the heads the step under the cells', set tight: in a lit
-              hall and a 720p stream the label step and the muted grey washed out first (blind
-              panel 02.11.; os docs/agent-work/2026-11-03-table-legibility.md). The cells' own
-              step for the heads widened a two-column table's first column until its slide fell
-              to 0.79 in a consumer's deck; the step under it holds 0.80. */}
+              hall and a 720p stream the label step and the muted grey wash out first. The
+              cells' own step for the heads widened a two-column table's first column until a
+              slide of a real deck fell to 0.79; the step under it holds 0.80. */}
           <table className={`w-full border-collapse ${block.compact ? "text-lg" : "text-xl"}`}>
             {block.widths && (
               <colgroup>
@@ -576,11 +573,11 @@ function ContentBlockRenderer({
       );
 
     case "pipeline": {
-      // A pipeline flow can draw renders as the flow (decision merge-flow, 7.62 against 6.94).
+      // A pipeline that `flow` can draw renders as a flow.
       const flow = pipelineAsFlow(block);
       if (flow) return <Visual block={flow} />;
       // Teal frame, label, arrows and plain steps, as every other accent; purple marks only an
-      // active or new step (blind panel 01.11.: 8.48 against 6.85 for the purple block).
+      // active or new step.
       return (
         <DashedFrame tone="primary" active={!!block.containerLabel} className="p-6">
           {block.containerLabel && (

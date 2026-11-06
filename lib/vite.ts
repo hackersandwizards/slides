@@ -14,7 +14,7 @@ const STRINGS_OR_COMMENTS =
  *    or dynamic) is named, since Vite does not scan an excluded package. Unnamed, they are found
  *    on an island's first render and re-run the optimizer (a 504 before Vite 8) or, on Vite 8,
  *    load unbundled file by file (578 requests for a deck's first slide in talks, 146 with this
- *    list, 06.11.2026). React's client and both JSX runtimes come with them.
+ *    list). React's client and both JSX runtimes come with them.
  *  Read from the installed engine's source, so the list follows each release; `importsOf` names
  *  what stays out. */
 export function slidesOptimizeDeps(): { exclude: string[]; include: string[] } {

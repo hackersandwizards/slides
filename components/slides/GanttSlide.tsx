@@ -12,10 +12,10 @@ interface Props {
   slide: GanttSlideType;
 }
 
-// Every bar takes the one data hue, teal, as every bar of the engine and the survey readout does
-// (os docs/agent-work/2026-11-01-bar-colours.md): a bar's label names its work, so a hue per
-// workstream added colour without meaning. Work that runs continuously rather than as a block is
-// the same teal at the ladder's 40 % fill with a 70 % edge, which clears 3:1 on its white guide.
+// Every bar takes the one data hue, teal, as every bar of the engine and the survey readout does:
+// a bar's label names its work, so a hue per workstream would add colour without meaning. Work
+// that runs continuously rather than as a block is the same teal at the ladder's 40 % fill with a
+// 70 % edge, which clears 3:1 on its white guide.
 const BAR = { solid: "bg-primary", soft: "bg-primary/40 border-2 border-primary/70" };
 
 export function GanttSlide({ slide }: Props) {
