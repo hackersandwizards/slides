@@ -1,8 +1,5 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { compile } from "@tailwindcss/node";
 import { Scanner } from "@tailwindcss/oxide";
 import { aliasTypes, slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
@@ -15,6 +12,7 @@ import { renderMarkdown } from "../lib/markdown";
 import { isOpening, replacedBy } from "../lib/slide-utils";
 import * as chrome from "../components/slides/SlideChrome";
 import { brandHref, placeBrandUrls } from "./brand-urls";
+import { classesIn, compileSlides } from "./print-css";
 import { PARTS, inRow } from "./parts";
 import exceptions from "../brand-elements.json";
 import { version as brandVersion } from "@hackersandwizards/brand/package.json";
@@ -516,14 +514,13 @@ export const inlineFrames = [
   .map((f) => f.markup)
   .join("\n");
 
-// Every markup a print page writes: what is left out here draws without its utilities.
-const stylesheet = join(root, "styles", "slides.css");
-const compiler = await compile(readFileSync(stylesheet, "utf8"), {
-  base: dirname(stylesheet),
-  from: stylesheet,
-  onDependency: () => {},
-});
-const candidates = new Scanner({ sources: compiler.sources }).scan();
-for (const content of [inlineFrames, usesTiles, exceptionSections])
-  candidates.push(...new Scanner({}).scanFiles([{ content, extension: "html" }]));
-export const css = placeBrandUrls(compiler.build(candidates), `../${brandHref}`);
+// The markup print.ts draws; a class written elsewhere on the pages, as in index.astro, needs its
+// own entry here (test/pages/print-classes.test.ts).
+const compiler = await compileSlides(root);
+export const css = placeBrandUrls(
+  compiler.build([
+    ...new Scanner({ sources: compiler.sources }).scan(),
+    ...[inlineFrames, usesTiles, exceptionSections].flatMap(classesIn),
+  ]),
+  `../${brandHref}`,
+);
