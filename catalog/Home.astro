@@ -23,7 +23,7 @@ const exceptions = Object.entries(
         own
       </summary>
       {/* prettier-ignore */}
-      <p>From brand: {elements.uses.map((name) => <code>hw-{name}</code>)}.</p>
+      <p>From brand: {elements.uses.map((name, i) => [i ? ", " : "", <code>hw-{name}</code>])}.</p>
       <ul>
         {exceptions.map(([name, reason]) => (
           <li>
@@ -49,8 +49,5 @@ const exceptions = Object.entries(
   .ds-foundations p,
   .ds-foundations details {
     margin: 0 0 0.75rem;
-  }
-  .ds-foundations code + code {
-    margin-left: 0.5rem;
   }
 </style>

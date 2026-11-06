@@ -96,7 +96,7 @@ on a concept slide of paragraphs, the slide without one scored higher in blind p
 
 ```sh
 bun install      # also points the git hooks at .githooks/
-bun run dev      # the catalog at http://127.0.0.1:4335/slides/catalog/
+bun run dev      # the catalog at http://127.0.0.1:4335/
 bun run build    # the catalog to dist/, as https://hackersandwizards.github.io/slides/ publishes it
 bun run check    # the gate: scaffolding's shared steps, then pins, colours and copies, the print pages, brand elements
 ```

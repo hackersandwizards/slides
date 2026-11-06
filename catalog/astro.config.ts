@@ -58,7 +58,7 @@ const files: AstroIntegration = {
       cpSync(deckFiles, join(dist, "slide-catalogue"), { recursive: true });
       for (const f of ["wordmark", "wordmark-night", "lockup", "lockup-night"])
         cpSync(join(brand, "logos", `${f}.svg`), join(dist, `hw-${f}.svg`));
-      const stories = join(dist, "catalog/stories");
+      const stories = join(dist, "stories");
       for (const page of readdirSync(stories, { recursive: true, encoding: "utf8" })) {
         if (!page.endsWith(".html")) continue;
         const file = join(stories, page);
@@ -76,14 +76,12 @@ const files: AstroIntegration = {
 export default defineConfig({
   base: BASE,
   srcDir: ".",
-  compressHTML: false,
   devToolbar: { enabled: false },
   server: { host: "127.0.0.1", port: 4335 },
   integrations: [
     react(),
     catalog({
       product: "Slides",
-      href: "/slides/catalog/",
       lead: "Every slide type of the h&w slide engine, each state a slide of the specimen deck, and the parts the types are built from, each with its variants. All content is made up.",
       css: ["../styles/slides.css"],
       previewSize: [1440, 810],
@@ -94,6 +92,8 @@ export default defineConfig({
     files,
   ],
   vite: {
+    // Found only when a page first loads them, these made Vite optimise again (scaffolding v2.0.1).
+    optimizeDeps: { include: ["lucide-react/icons/mail", "lucide-react/icons/user", "recharts"] },
     define: { __SLIDES_ROOT__: JSON.stringify(root) },
     plugins: [
       tailwindcss(),

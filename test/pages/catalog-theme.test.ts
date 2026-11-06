@@ -32,7 +32,7 @@ beforeAll(async () => {
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address() as AddressInfo;
-  page = (path) => `http://127.0.0.1:${port}/slides/catalog/${path}/`;
+  page = (path) => `http://127.0.0.1:${port}/slides/${path}/`;
   browser = await puppeteer.launch({ headless: true, args: ["--use-mock-keychain"] });
 });
 afterAll(async () => {

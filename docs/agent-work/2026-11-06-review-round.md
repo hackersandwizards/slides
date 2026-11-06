@@ -68,6 +68,22 @@ categories with long labels).
   portrait rings, the read-more button, labels in a meaning's hue (`label-hue`), list markers, the
   stage pill, `GradientTitlePill`.
 - The two-column block's grey item text reads lower in contrast than split's (split panel finding).
-- Overlaps the type-list panel named and this round left: process vs pipeline (phase 2c), media vs
-  image, linked-image and image-and-grid (phase 2e), timeline vs roadmap, terminal and hooks vs
-  code, content vs regular profile.
+- Media vs the image blocks: a merge, filed in `work-phase-2e-v0-18-0-shipped-activity`.
+
+## Overlaps after v1.1.0: blind type-list panel (06.11.2026, slides v1.1.1)
+
+Personas deck author and trainer, each image at 1280 x 720, groups and sets shuffled per reviewer
+under neutral letters; Claude (opus) twice, Codex (gpt-6.1-sol) once. Criterion: distinct (0 to 10,
+10 = two different communication jobs, each needed), with a verdict. Noise = |run 1 − run 2| of
+Claude per persona.
+
+| Pair                                           | Distinct (mean of 6) | Verdicts                                         | Noise | Outcome                   |
+| ---------------------------------------------- | -------------------- | ------------------------------------------------ | ----- | ------------------------- |
+| process slide vs pipeline block                | 7.33                 | 6 keep                                           | 0     | kept                      |
+| timeline block vs roadmap slide                | 6.83                 | 6 keep                                           | 0     | kept                      |
+| content slide vs regular with profile          | 9.50                 | 6 keep                                           | 0–1   | kept                      |
+| media slide vs image, linked-image, image-grid | 2.67                 | 6 merge, image block survives, gallery its form  | 0     | filed (phase 2e)          |
+| code and annotated code vs terminal and hooks  | 5.17                 | Claude 3 merge, 1 unsure (3–4); Codex 2 keep (8) | 0–1   | kept: the models disagree |
+
+Beside the pairs, regular with profile vs the profiles slide scored 5.67 (Claude unsure or keep at 4
+to 5, Codex keep at 7 to 8): no merge either.

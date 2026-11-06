@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -60,7 +60,7 @@
     "fix": "bun --bun eslint --cache --concurrency=auto . --fix && bun --bun prettier --write .",
     "check:staged": "check-staged",
     "dev": "ASTRO_DEV_BACKGROUND=1 bun --bun astro dev --root catalog",
-    "catalog": "bun run dev --open /slides/catalog/",
+    "catalog": "bun run dev --open /",
     "build": "astro build --root catalog"
   },
   "peerDependencies": {
@@ -104,7 +104,7 @@
     "@eslint/js": "10.0.1",
     "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.0.0",
     "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.0.0",
-    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v1.0.0",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v2.0.1",
     "@tailwindcss/node": "4.3.3",
     "@tailwindcss/oxide": "4.3.3",
     "@tailwindcss/vite": "4.3.3",
@@ -140,11 +140,11 @@
     "vitest": "5.0.5"
   },
   "admin": {
-    "designSystem": "https://hackersandwizards.github.io/slides/catalog/",
+    "designSystem": "https://hackersandwizards.github.io/slides/",
     "products": [
       {
         "label": "Slide types",
-        "href": "https://hackersandwizards.github.io/slides/catalog/"
+        "href": "https://hackersandwizards.github.io/slides/"
       }
     ]
   },

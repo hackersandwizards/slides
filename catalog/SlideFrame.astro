@@ -7,8 +7,8 @@ interface Props {
 }
 const { component, part } = Astro.props;
 const path = Astro.url.pathname;
-const preview = path.includes("/catalog/stories/");
-const src = path.replace("/catalog/dashboard/", "/catalog/stories/");
+const preview = path.includes("/stories/");
+const src = path.replace("/dashboard/", "/stories/");
 ---
 
 {preview ? (
