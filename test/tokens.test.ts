@@ -104,8 +104,9 @@ export function clashes(engine: string, app: string): string[] {
 
 describe("tokens", () => {
   // A page may load the slide stylesheet beside the app's, and the later `text-accent` then wins
-  // over the other's. The heading role is the mono family in both, by two routes.
-  it("no theme name means one thing on a slide and another in the app", () => {
+  // over the other's. The heading role is the mono family in both, by two routes. Only the names
+  // tokens.css itself sets: those it imports from brand are brand's to keep apart.
+  it("no theme name tokens.css sets means one thing on a slide and another in the app", () => {
     const expert = createRequire(import.meta.url).resolve("@hackersandwizards/brand/expert.css");
     expect(
       clashes(
