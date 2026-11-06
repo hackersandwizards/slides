@@ -14,12 +14,12 @@ import tailwindcss from "@tailwindcss/vite";
 import { catalog } from "@hackersandwizards/scaffolding/catalog";
 import type { AstroIntegration } from "astro";
 import { defineConfig } from "astro/config";
-import { BRAND, brandNames, selfContained } from "./brand-urls";
+import { brandNames, selfContained } from "./brand-urls";
 
 const BASE = "/slides";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const fromRoot = createRequire(join(root, "package.json"));
-const brandFile = (name: string) => fromRoot.resolve(BRAND + name);
+const brandFile = (name: string) => fromRoot.resolve(`@hackersandwizards/brand/${name}`);
 const deckFiles = join(root, "specimen/slide-catalogue");
 
 // A slide names the brand logos and the deck's images from the site root, as a consumer's public

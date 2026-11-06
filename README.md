@@ -13,8 +13,8 @@ Add the dependency in exactly this form, pinned to the newest tag
 (`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
 `@hackersandwizards/brand` v1.10.0 or later, whose static faces (`static-fonts.css`), shared
 elements (`elements.css`, the stage button, the label box and the accent rule among them) and small
-corner the stylesheet imports and whose `verbal.json` gives the closing its claim. Both repos are public: Bun fetches the
-`git+https://` form through GitHub's tarball API without any GitHub access.
+corner the stylesheet imports and whose `verbal.json` gives the closing its claim. Both repos are
+public: Bun fetches the `git+https://` form through GitHub's tarball API without any GitHub access.
 
 ```json
 "@hackersandwizards/slides": "git+https://github.com/hackersandwizards/slides.git#v<version>"
@@ -33,11 +33,9 @@ corner the stylesheet imports and whose `verbal.json` gives the closing its clai
 | `@hackersandwizards/slides/specimen/slide-catalogue`     | the fictional specimen deck                                                                                          |
 | `@hackersandwizards/slides/catalog/SlideFrame.astro`     | a story's frame in a catalog on scaffolding's shell: `decorators: [{ component: SlideFrame, props: { component } }]` |
 
-The command `slides-pins` belongs in each consumer's gate, after scaffolding's shared steps. Those
-already catch a stale install: the gate's `bun install --frozen-lockfile` and its `coupling` step
-fail when `node_modules` holds another version of an `@hackersandwizards/*` package than
-`package.json` pins. `slides-pins` checks the same and adds one check of its own: it fails when
-`package.json` pins no brand at all, which bun lets pass because the brand peer is optional.
+The command `slides-pins` belongs in each consumer's gate, after scaffolding's shared steps: it
+fails when `package.json` pins no brand, which bun lets pass because the brand peer is optional.
+That the install matches each pin, scaffolding's install and `coupling` steps check.
 
 The command `slides-density [--serve "<command>"] <print-url> ...` belongs in each consumer's gate:
 it renders each deck's print route and fails on a slide the fit guard shrinks below 0.8, and lists

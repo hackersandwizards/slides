@@ -1,6 +1,5 @@
-import { exports } from "@hackersandwizards/brand/package.json";
+import brand from "@hackersandwizards/brand/package.json";
 
-export const BRAND = "@hackersandwizards/brand/";
 // The brand files as dist/brand/ holds them, under their export names, relative to the print pages
 // in dist/catalog/print/.
 export const brandHref = "../../brand";
@@ -10,7 +9,7 @@ const inline = (url: string) => /^(data:|#)/.test(url);
 // A file of the brand package under the name its `exports` give it: `tokens/fonts/x.woff2` is
 // `fonts/x.woff2`.
 const exportName = (path: string) => {
-  for (const [name, target] of Object.entries(exports as Record<string, string>)) {
+  for (const [name, target] of Object.entries(brand.exports as Record<string, string>)) {
     const [from, to] = [target.slice(2), name.slice(2)];
     if (from === path) return to;
     if (from.endsWith("*") && path.startsWith(from.slice(0, -1)))
