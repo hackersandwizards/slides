@@ -5,3 +5,4 @@ declare module "*.astro" {
 }
 
 declare const __SLIDES_ROOT__: string;
+declare const __BRAND_ROOT__: string;

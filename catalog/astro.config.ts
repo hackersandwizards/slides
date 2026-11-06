@@ -7,7 +7,8 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { extname, join } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
@@ -17,7 +18,9 @@ import { defineConfig } from "astro/config";
 
 const BASE = "/slides";
 const root = fileURLToPath(new URL("..", import.meta.url));
-const brand = join(root, "node_modules/@hackersandwizards/brand");
+const brand = dirname(
+  createRequire(join(root, "package.json")).resolve("@hackersandwizards/brand/package.json"),
+);
 const deckFiles = join(root, "specimen/slide-catalogue");
 
 // A slide names the brand logos and the deck's images from the site root, as a consumer's public
@@ -93,7 +96,7 @@ export default defineConfig({
     files,
   ],
   vite: {
-    define: { __SLIDES_ROOT__: JSON.stringify(root) },
+    define: { __SLIDES_ROOT__: JSON.stringify(root), __BRAND_ROOT__: JSON.stringify(brand) },
     plugins: [
       tailwindcss(),
       {

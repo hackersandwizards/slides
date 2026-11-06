@@ -17,11 +17,15 @@ import { isOpening, replacedBy } from "../lib/slide-utils";
 import * as chrome from "../components/slides/SlideChrome";
 import { PARTS, inRow } from "./parts";
 import exceptions from "../brand-elements.json";
+import { version as brandVersion } from "@hackersandwizards/brand/package.json";
 import registry from "../lib/slide-components.ts?raw";
 
-// The checkout, which the config hands over: under Astro's bundle import.meta points into dist/.
+// The checkout and brand's folder, which the config hands over: under Astro's bundle import.meta
+// points into dist/.
 const root = __SLIDES_ROOT__;
-const brand = join(root, "node_modules", "@hackersandwizards", "brand");
+const brand = __BRAND_ROOT__;
+// A require of the checkout, since `import.meta.resolve` threw in the dev server's module runner.
+const fromRoot = createRequire(join(root, "package.json"));
 // The brand files as dist/brand/ holds them, relative to the print pages in dist/catalog/print/.
 export const brandHref = "../../brand";
 const sources = import.meta.glob<string>("../components/slides/*.tsx", {
@@ -189,10 +193,6 @@ const partFrames = partNames.map(({ name, file }) => ({
 
 const attr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 
-// The page's 16px rem is the stage's at 1440, the size a slide is designed at.
-const brandVersion = (
-  JSON.parse(readFileSync(join(brand, "package.json"), "utf8")) as { version: string }
-).version;
 const onNight = (child: ReactNode) =>
   h(
     "div",
@@ -350,13 +350,10 @@ for (const { markup } of [...frames, ...markerFrames, ...blockFrames, ...partFra
   candidates.push(...new Scanner({}).scanFiles([{ content: markup, extension: "html" }]));
 export const css = compiler
   .build(candidates)
-  // A require of the checkout, since `import.meta.resolve` threw in the dev server's module runner.
   .replace(
     /url\("(@hackersandwizards\/brand\/[^"]+)"\)/g,
     (_, id: string) =>
-      `url("../${brandHref}/${relative(brand, createRequire(join(root, "package.json")).resolve(id))
-        .split(sep)
-        .join("/")}")`,
+      `url("../${brandHref}/${relative(brand, fromRoot.resolve(id)).split(sep).join("/")}")`,
   );
 
 // The 13 jobs of docs/agent-work/2026-11-01-catalogue-program.md
