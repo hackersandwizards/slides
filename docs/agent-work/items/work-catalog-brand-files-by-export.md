@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 3
-order: 650
+order: 6
 owner: Agent (slides session)
 evidence: "slides v1.7.2 session of 06.11.2026: /simplify (altitude) and /code-review over 4f08e93..HEAD both named it"
 ---

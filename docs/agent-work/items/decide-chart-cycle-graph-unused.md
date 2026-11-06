@@ -2,7 +2,7 @@
 kind: decision
 status: assumed
 priority: 3
-order: 490
+order: 10
 owner: Benedikt
 evidence: "grep of the talks, trainer-hub and hycle-private decks on origin/main, 06.11.2026: no deck uses chart `cycle` or `graph`"
 recommended: keep

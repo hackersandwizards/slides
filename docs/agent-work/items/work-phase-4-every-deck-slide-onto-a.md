@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 2
-order: 470
+order: 5
 owner: "Agent per repo (talks, trainer-hub, hycle-private)"
 evidence: waits on phases 2 and 3
 ---

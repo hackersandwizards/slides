@@ -2,7 +2,7 @@
 kind: decision
 status: assumed
 priority: 2
-order: 450
+order: 1
 area: slides
 owner: Benedikt
 assumption: "Every deck, by a codemod per repo, following the decisions in the merge rows."
