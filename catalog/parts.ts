@@ -8,6 +8,7 @@ const {
   DashedFrame,
   DisplayHeading,
   LinkCaption,
+  PictureLink,
   NumberTile,
   SlideCaption,
   SlideCard,
@@ -95,6 +96,15 @@ export const PARTS: Record<string, () => ReactNode> = {
     ),
   SlideTitle: () => h(SlideTitle, null, "A slide's headline on one line"),
   LinkCaption: () => h(LinkCaption, { href: "https://example.com/harness" }),
+  PictureLink: () =>
+    h(PictureLink, {
+      href: "https://example.com/harness",
+      children: h("img", {
+        src: "/slide-catalogue/qr-example.png",
+        alt: "",
+        className: "size-48 rounded-brand",
+      }),
+    }),
   SlideSubtitle: () => h(SlideSubtitle, null, "The line under a headline, in muted ink."),
   SlideCaption: () => h(SlideCaption, null, "The caption under a diagram, its last step."),
   CodePanel: () =>

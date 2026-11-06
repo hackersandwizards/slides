@@ -49,7 +49,8 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
               href={profile.linkedIn}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-teal/7 px-4 py-1.5 text-sm text-teal transition-colors hover:bg-teal/7 md:text-base"
+              className="hw-button mt-3 gap-2"
+              data-variant="secondary"
             >
               <Linkedin className="h-4 w-4" />
               LinkedIn

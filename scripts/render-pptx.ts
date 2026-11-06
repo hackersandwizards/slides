@@ -256,7 +256,7 @@ function fitScale(paras: Para[], o: BoxOpts, w: number, h: number) {
 }
 
 /** Text the web slide prints as typed, so a `*` or a backtick in it stays a character. */
-const literal = (text: string): Para => ({ runs: [{ text, options: {} }] });
+const literal = (text: string): Para => ({ runs: [{ text }] });
 
 const asParas = (p: Para[] | Para | string, c: Palette): Para[] =>
   typeof p === "string" ? [{ runs: md(p, c) }] : Array.isArray(p) ? p : [p];
@@ -1839,27 +1839,15 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   const rowH = d.qr ? 324 / 144 : 119 / 144;
   const rowY = BOTTOM - rowH;
   // Each line of the heading with its options and the gap above it.
-  const lines: [Para, BoxOpts, number][] = [
+  const lines: [string, BoxOpts, number][] = [
     ...(d.kicker
-      ? [
-          [
-            literal(d.kicker.toUpperCase()),
-            { size: PT.base, mono: true, color: c.teal, tracking: 0.06 },
-            0,
-          ],
-        ]
+      ? [[d.kicker.toUpperCase(), { size: PT.base, mono: true, color: c.teal, tracking: 0.06 }, 0]]
       : []),
     ...(d.name
-      ? [
-          [
-            literal(d.name),
-            { size: 32, mono: true, bold: true, color: c.teal, tracking: -0.025 },
-            22 / 144,
-          ],
-        ]
+      ? [[d.name, { size: 32, mono: true, bold: true, color: c.teal, tracking: -0.025 }, 22 / 144]]
       : []),
     [
-      literal(d.title),
+      d.title,
       {
         size: PT.s8,
         mono: true,
@@ -1871,17 +1859,17 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
       },
       d.name ? 34 / 144 : 22 / 144,
     ],
-    ...(d.subtitle ? [[literal(d.subtitle), { size: PT.lead, color: c.muted }, 43 / 144]] : []),
-  ] as [Para, BoxOpts, number][];
+    ...(d.subtitle ? [[d.subtitle, { size: PT.lead, color: c.muted }, 43 / 144]] : []),
+  ] as [string, BoxOpts, number][];
   // A heading taller than the space above the bottom row shrinks to fit it, as the fit guard does.
-  const full = lines.map(([text, o]) => need(text, c, CW, o, 3));
+  const full = lines.map(([text, o]) => need(literal(text), c, CW, o, 3));
   const total = lines.reduce((sum, [, , gap], i) => sum + gap + full[i], 0) - lines[0][2];
   const k = Math.min(1, (rowY - TOP) / total);
   const heights = full.map((h) => h * k);
   let y = TOP + (rowY - TOP - total * k) / 2;
   lines.forEach(([text, o, gap], i) => {
     if (i) y += gap * k;
-    box(s, c, text, SIDE, y, CW, heights[i], o);
+    box(s, c, literal(text), SIDE, y, CW, heights[i], o);
     y += heights[i];
   });
   const mid = rowY + rowH / 2;

@@ -5,7 +5,7 @@ import type { TitleSlide as TitleSlideType } from "../../types/slide";
 import { isOpening, linkLabel } from "../../lib/slide-utils";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { DisplayHeading, LinkCaption } from "./primitives";
+import { DisplayHeading, LinkCaption, PictureLink } from "./primitives";
 
 /** Inline, because the `white-space` shorthand of `whitespace-pre-line` resets the class's
  *  `text-wrap: balance`, which left a lone year on the subtitle's second line. */
@@ -62,13 +62,7 @@ function Opening({ slide }: Props) {
           </div>
           {slide.qr && (
             <div className="flex shrink-0 flex-col items-center gap-3">
-              <a
-                href={slide.qr.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                tabIndex={-1}
-                aria-hidden="true"
-              >
+              <PictureLink href={slide.qr.href}>
                 <Image
                   src={slide.qr.src}
                   alt={`QR code: ${linkLabel(slide.qr.href)}`}
@@ -76,7 +70,7 @@ function Opening({ slide }: Props) {
                   height={240}
                   className="size-48 rounded-brand"
                 />
-              </a>
+              </PictureLink>
               <LinkCaption href={slide.qr.href} />
             </div>
           )}

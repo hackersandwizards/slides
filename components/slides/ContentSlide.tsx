@@ -36,6 +36,7 @@ import {
 } from "../../lib/slide-utils";
 import {
   LinkCaption,
+  PictureLink,
   TitledContent,
   SlideTitle,
   SlideCard,
@@ -751,20 +752,7 @@ function ContentBlockRenderer({
       );
       return (
         <MediaFrame below={block.href && <LinkCaption href={block.href} />}>
-          {block.href ? (
-            <a
-              href={block.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="contents"
-              tabIndex={-1}
-              aria-hidden="true"
-            >
-              {picture}
-            </a>
-          ) : (
-            picture
-          )}
+          {block.href ? <PictureLink href={block.href}>{picture}</PictureLink> : picture}
         </MediaFrame>
       );
     }

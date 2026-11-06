@@ -5,7 +5,7 @@ import type { StatementSlide as StatementSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
-import { DisplayHeading, LinkCaption } from "./primitives";
+import { DisplayHeading, LinkCaption, PictureLink } from "./primitives";
 
 interface Props {
   slide: StatementSlideType;
@@ -43,20 +43,7 @@ function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linke
   );
   return (
     <figure className="mx-auto mt-10 flex w-11/24 flex-col items-center gap-4">
-      {image.href ? (
-        <a
-          href={image.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="contents"
-          tabIndex={-1}
-          aria-hidden="true"
-        >
-          {picture}
-        </a>
-      ) : (
-        picture
-      )}
+      {image.href ? <PictureLink href={image.href}>{picture}</PictureLink> : picture}
       {image.href && <LinkCaption href={image.href} />}
     </figure>
   );

@@ -21,7 +21,6 @@ const ACCENT = {
     ring: "ring-primary/25",
     text: "text-primary",
     tone: "primary" as const,
-    pillIdle: "bg-primary/7 text-primary hover:bg-primary/15",
     dot: "bg-primary",
     avatarFrame: "bg-primary/15",
   },
@@ -29,7 +28,6 @@ const ACCENT = {
     ring: "ring-secondary/25",
     text: "text-secondary",
     tone: "secondary" as const,
-    pillIdle: "bg-secondary/7 text-secondary hover:bg-secondary/15",
     dot: "bg-secondary",
     avatarFrame: "bg-secondary/15",
   },
@@ -105,7 +103,8 @@ export function ProfilesSlide({ slide }: Props) {
                         href={profile.linkedIn}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`mt-8 flex items-center gap-2 self-start rounded-full px-5 py-2 text-base font-medium transition-colors ${a.pillIdle}`}
+                        className="hw-button mt-8 gap-2 self-start"
+                        data-variant="secondary"
                       >
                         <Linkedin className="h-5 w-5" />
                         LinkedIn

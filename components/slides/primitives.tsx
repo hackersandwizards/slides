@@ -53,8 +53,7 @@ export function SlideSubtitle({ children, delay = 0.15 }: { children: ReactNode;
 }
 
 /** A link spelled out under a picture or a QR code, an arrow before it, opening in a new tab: the
- *  address's one link for the keyboard and screen readers, the picture's own link taking
- *  `tabIndex={-1}` and `aria-hidden`. */
+ *  address's one link for the keyboard and screen readers. */
 export function LinkCaption({ href }: { href: string }) {
   return (
     <a
@@ -65,6 +64,23 @@ export function LinkCaption({ href }: { href: string }) {
     >
       <ArrowUpRight className="size-(--slide-link-icon) shrink-0" strokeWidth={2.25} />
       {linkLabel(href)}
+    </a>
+  );
+}
+
+/** A picture linked to the address its `LinkCaption` spells out: for the pointer only, out of the
+ *  tab order and hidden from screen readers, so the address is one link. */
+export function PictureLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="contents"
+      tabIndex={-1}
+      aria-hidden="true"
+    >
+      {children}
     </a>
   );
 }
