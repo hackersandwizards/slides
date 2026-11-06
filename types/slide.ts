@@ -185,13 +185,14 @@ export type VisualBlock =
         title: string;
         text?: string;
         /** A label on the line that leads from the previous event to this one, such as the
-         *  duration "2 weeks": `when` names a point in time, this the time between two. */
+         *  duration "2 weeks": `when` names a point in time, this the time between two. The first
+         *  event's is not drawn, a continued timeline's run-in included. */
         segment?: string;
         /** A result in the figure face, such as "-90%". */
         figure?: string;
       }[];
       highlight?: number;
-      /** Index of the last event that has happened; the line after it is dashed. */
+      /** Index of the last event that has happened, -1 for none; the line after it is dashed. */
       now?: number;
       /** Row labels, a table's column headers, set left of the stages: "Slot", "What", "Output". */
       labels?: { when?: string; title?: string; text?: string };

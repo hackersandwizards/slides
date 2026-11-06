@@ -26,6 +26,7 @@ import {
   linkLabel,
   pageLabel,
   claimParts,
+  continuation,
   deepDiveAsTransition,
   personAccent,
   qrAlt,
@@ -1501,8 +1502,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const ew = a.w / n;
       const ly = a.y + 0.35;
       // A timeline continued over slides runs its line in from the slide's edge or out to it.
-      const into = b.continues === "in" || b.continues === "both";
-      const onward = b.continues === "out" || b.continues === "both";
+      const { into, onward } = continuation(b);
       const from = into ? 0 : a.x + ew / 2;
       const to = onward ? W : a.x + a.w - ew / 2;
       s.addShape("line", {
@@ -1512,10 +1512,11 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         h: 0.001,
         line: { color: c.border, width: 2 },
       });
-      // The line after `now` is dashed, as is a run-out past the last event (`now` defaults to it).
+      // The line after `now` is dashed, as is a run-out past the last event (`now` defaults to it)
+      // and a run-in where no event has happened (`now` -1).
       const now = b.now ?? n - 1;
       if (now < n - 1 || onward) {
-        const dx = a.x + ew / 2 + now * ew;
+        const dx = now < 0 ? from : a.x + ew / 2 + now * ew;
         for (const color of [c.bg, c.muted])
           s.addShape("line", {
             x: dx,

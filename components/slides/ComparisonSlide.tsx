@@ -297,33 +297,21 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
   return (
     <>
       <div className="grid w-full grid-cols-2 gap-8">
-        <BlurFade delay={0.2} duration={0.6}>
-          <SlideCard className="h-full card-pad-8">
-            <h2 className="mb-6 font-heading text-2xl font-bold text-text">
-              {renderMarkdown(slide.left.label)}
-            </h2>
-            <Highlight text={slide.left.highlight} />
-            <ul className="space-y-3">
-              {slide.left.items.map((item, i) => (
-                <MarkedItem key={i}>{renderMarkdown(item)}</MarkedItem>
-              ))}
-            </ul>
-          </SlideCard>
-        </BlurFade>
-
-        <BlurFade delay={0.3} duration={0.6}>
-          <SlideCard className="h-full card-pad-8">
-            <h2 className="mb-6 font-heading text-2xl font-bold text-text">
-              {renderMarkdown(slide.right.label)}
-            </h2>
-            <Highlight text={slide.right.highlight} />
-            <ul className="space-y-3">
-              {slide.right.items.map((item, i) => (
-                <MarkedItem key={i}>{renderMarkdown(item)}</MarkedItem>
-              ))}
-            </ul>
-          </SlideCard>
-        </BlurFade>
+        {[slide.left, slide.right].map((side, i) => (
+          <BlurFade key={i} delay={0.2 + i * 0.1} duration={0.6}>
+            <SlideCard className="h-full card-pad-8">
+              <h2 className="mb-6 font-heading text-2xl font-bold text-text">
+                {renderMarkdown(side.label)}
+              </h2>
+              <Highlight text={side.highlight} />
+              <ul className="space-y-3">
+                {side.items.map((item, j) => (
+                  <MarkedItem key={j}>{renderMarkdown(item)}</MarkedItem>
+                ))}
+              </ul>
+            </SlideCard>
+          </BlurFade>
+        ))}
       </div>
 
       {slide.punchline && (

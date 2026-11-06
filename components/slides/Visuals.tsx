@@ -4,6 +4,7 @@ import type { FlowFrame, VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { useHighlightLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
+import { continuation } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { CodePanel, DashedFrame, NumberTile, SlideCard } from "./primitives";
 import { BeforeAfterSides } from "./ComparisonSlide";
@@ -388,11 +389,6 @@ function EventBody({
   );
 }
 
-const continuation = (block: Of<"timeline">) => ({
-  into: block.continues === "in" || block.continues === "both",
-  onward: block.continues === "out" || block.continues === "both",
-});
-
 // How far a continued timeline's line runs past its column or grid: beyond the slide's edge, which
 // clips it, whatever row labels stand before the first column or how far the fit guard shrinks.
 const BLEED = "calc(-1 * (var(--slide-side) + 100%))";
@@ -442,7 +438,7 @@ function Timeline({ block }: { block: Of<"timeline"> }) {
             <div key={i} className="relative row-span-4 row-start-1 grid grid-rows-subgrid px-4">
               <span className={`font-heading text-3xl font-bold ${tone(i)}`}>{e.when}</span>
               <div className="relative flex h-12 items-center">
-                {i === 0 && into && <Lead side="in" dashed={false} />}
+                {i === 0 && into && <Lead side="in" dashed={now < 0} />}
                 {i === n - 1 && onward && <Lead side="out" dashed={i >= now} />}
                 {i < n - 1 && (
                   <div

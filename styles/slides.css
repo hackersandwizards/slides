@@ -178,6 +178,8 @@
      rule, as Astrobook's (system-ui), re-wrapped its text and changed the fit guard's scale. */
   [data-hw-scale="stage"] {
     @apply font-sans antialiased;
+    /* What a part paints to cut a line, such as a future dot; each ground class sets its own. */
+    --slide-ground: var(--background);
   }
 
   /* A slide headline never leaves one word on its last line. Headings take the heading family and

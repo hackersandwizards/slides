@@ -244,6 +244,8 @@ export function twoColumnAsSplit(slide: ContentSlide): ComparisonSidesSlide | un
     return;
   if (slide.stageMarker || slide.stagePrefix) return;
   if (slide.ground || slide.background || slide.layout === "centered") return;
+  // The comparison prints its headline and punchline as typed, as centeredAsStatement knows.
+  if (/[`*[]/.test(slide.headline + (slide.footer ?? ""))) return;
   const side = ({ title, items, text }: typeof block.left) =>
     title && items?.length && !text ? { label: title, items } : undefined;
   const left = side(block.left);
@@ -450,7 +452,9 @@ export function replacedBy(slide: Slide): { to: string; form?: string } | undefi
       return { to: "transition night" };
     case "regular": {
       const to = regularAsContent(slide);
-      return to && { to: to.type === "agenda" ? "agenda" : "content" };
+      if (!to) return undefined;
+      if (to.type === "agenda") return { to: "agenda" };
+      return { to: twoColumnAsSplit(to) ? "comparison split" : "content" };
     }
     case "grid":
       return slide.variant === "quotes"
@@ -473,3 +477,9 @@ export function replacedBy(slide: Slide): { to: string; form?: string } | undefi
       return undefined;
   }
 }
+
+/** Whether a timeline split over slides runs in from the slide's edge and out to it. */
+export const continuation = ({ continues }: { continues?: "in" | "out" | "both" }) => ({
+  into: continues === "in" || continues === "both",
+  onward: continues === "out" || continues === "both",
+});

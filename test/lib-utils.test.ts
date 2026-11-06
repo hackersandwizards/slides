@@ -155,6 +155,8 @@ describe("merges of 06.11.", () => {
     ["a judged variant", { content: [{ ...twoLists.content[0], variant: "success-error" }] }],
     ["a section label", { sectionLabel: "S" }],
     ["a ground", { ground: "primary" }],
+    ["markdown in the headline", { headline: "Why `bun` wins" }],
+    ["markdown in the footer", { footer: "Source: **Survey**" }],
     [
       "a text column",
       {
@@ -169,6 +171,19 @@ describe("merges of 06.11.", () => {
     ],
   ])("keeps the block with %s", (_, change) => {
     expect(twoColumnAsSplit({ ...twoLists, ...change } as ContentSlide)).toBeUndefined();
+  });
+
+  it("names the split as the entry of a regular slide of two titled lists", () => {
+    expect(
+      replacedBy({
+        type: "regular",
+        headline: "H",
+        sections: [
+          { title: "L", items: ["a"] },
+          { title: "R", items: ["b"] },
+        ],
+      }),
+    ).toEqual({ to: "comparison split" });
   });
 
   it("draws a deep-dive divider as a night transition", () => {

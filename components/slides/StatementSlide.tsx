@@ -36,12 +36,15 @@ function HighlightedLine({ line, highlighted }: { line: string; highlighted?: st
  *  picture height, so a square QR code stands in a square, not in a wide box. */
 function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linkedImage"]> }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const [ratio, setRatio] = useState<number>();
+  // Kept with the file it was measured on, so the next picture never takes the last one's shape.
+  const [measured, setMeasured] = useState<{ src: string; ratio: number }>();
+  const ratio = measured?.src === image.src ? measured.ratio : undefined;
   useLayoutEffect(() => {
     const img = ref.current?.querySelector("img");
     if (!img) return;
     const measure = () => {
-      if (img.naturalWidth && img.naturalHeight) setRatio(img.naturalWidth / img.naturalHeight);
+      if (img.naturalWidth && img.naturalHeight)
+        setMeasured({ src: image.src, ratio: img.naturalWidth / img.naturalHeight });
     };
     measure();
     img.addEventListener("load", measure);
