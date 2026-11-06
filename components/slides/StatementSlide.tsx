@@ -5,7 +5,7 @@ import type { StatementSlide as StatementSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
-import { DisplayHeading, LinkCaption, PictureLink } from "./primitives";
+import { DisplayHeading, LinkCaption, PictureLink, SlideFooter } from "./primitives";
 
 interface Props {
   slide: StatementSlideType;
@@ -29,8 +29,9 @@ function HighlightedLine({ line, highlighted }: { line: string; highlighted?: st
   );
 }
 
-/** A linked screenshot or QR code under the statement, 11/24 (46%) of the slide wide (blind review
- *  02.11.: wider, it pushed the headline under the top strip), its link spelled out under it. */
+/** A linked screenshot or QR code under the statement, at most 11/24 (46%) of the slide wide
+ *  (blind review 02.11.: wider, it pushed the headline under the top strip), its link spelled out
+ *  under it. The frame takes the picture's own shape, so a square QR code stands in a square. */
 function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linkedImage"]> }) {
   const picture = (
     <Image
@@ -38,11 +39,11 @@ function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linke
       alt={image.alt ?? ""}
       width={1920}
       height={1080}
-      className="h-auto max-h-(--slide-picture-max) w-full rounded-brand border border-border object-contain"
+      className="h-auto max-h-(--slide-picture-max) w-auto max-w-full rounded-brand border border-border"
     />
   );
   return (
-    <figure className="mx-auto mt-10 flex w-11/24 flex-col items-center gap-4">
+    <figure className="mx-auto mt-10 flex max-w-11/24 flex-col items-center gap-4">
       {image.href ? <PictureLink href={image.href}>{picture}</PictureLink> : picture}
       {image.href && <LinkCaption href={image.href} />}
     </figure>
@@ -53,10 +54,26 @@ export function StatementSlide({ slide }: Props) {
   const hasSupporting = (slide.points && slide.points.length > 0) || slide.closing;
   const isSimple = !hasSupporting && !slide.subtitle && !slide.highlighted && !slide.crossedOut;
   const pointBaseDelay = 0.1 + slide.lines.length * 0.08;
+  // The source of what the slide quotes: after the closing where there is one, since a quotation
+  // may run from the subtitle into the closing.
+  const attribution = slide.attribution && (
+    <BlurFade
+      delay={pointBaseDelay + (slide.closing ? (slide.points?.length ?? 0) * 0.06 + 0.15 : 0)}
+      duration={0.4}
+    >
+      <p className="mt-8 text-xl text-text-muted md:text-2xl">— {slide.attribution}</p>
+    </BlurFade>
+  );
 
   return (
     <SlideShell direction="col" overflowHidden ground={groundOf(slide)}>
-      <div className="slide-content relative z-10 flex flex-col items-center justify-center px-16">
+      <div
+        className={`slide-content relative z-10 flex flex-col items-center justify-center ${slide.footer ? "px-(--slide-side) pt-(--slide-top)" : "px-16"}`}
+      >
+        {/* With a footer, the statement takes a titled slide's top and side padding, so the footer
+            stands where a content slide's does, and centres between them: the two auto margins
+            share the free height. */}
+        {slide.footer && <div className="mt-auto" />}
         {slide.imageSrc && (
           <BlurFade delay={0.05} duration={0.4}>
             <Image
@@ -107,11 +124,7 @@ export function StatementSlide({ slide }: Props) {
             </BlurFade>
           )}
 
-          {slide.attribution && (
-            <BlurFade delay={0.1 + slide.lines.length * 0.08} duration={0.4}>
-              <p className="mt-8 text-xl text-text-muted md:text-2xl">— {slide.attribution}</p>
-            </BlurFade>
-          )}
+          {!slide.closing && attribution}
         </div>
 
         {slide.linkedImage && (
@@ -155,7 +168,14 @@ export function StatementSlide({ slide }: Props) {
                 )}
               </BlurFade>
             )}
+            {slide.closing && <div className="text-center">{attribution}</div>}
           </div>
+        )}
+
+        {slide.footer && (
+          <SlideFooter className="mt-auto w-full text-left" delay={0.5}>
+            {renderMarkdown(slide.footer)}
+          </SlideFooter>
         )}
       </div>
     </SlideShell>

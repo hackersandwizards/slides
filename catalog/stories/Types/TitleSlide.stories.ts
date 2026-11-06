@@ -6,3 +6,4 @@ export default { component: TitleSlide };
 export const Specimen = state("title", 0, "TitleSlide");
 export const Specimen2 = state("title", 1, "TitleSlide");
 export const Opening = state("title", 2, "TitleSlide");
+export const OpeningGerman = state("title", 3, "TitleSlide");

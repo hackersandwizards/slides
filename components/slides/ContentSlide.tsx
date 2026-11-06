@@ -42,6 +42,7 @@ import {
   SlideCard,
   CodePanel,
   SlideSubtitle,
+  SlideFooter,
   DisplayHeading,
   type CardTone,
   VideoPlayer,
@@ -388,8 +389,11 @@ function ContentBlockRenderer({
           </div>
         );
       }
+      // Body text at the list's size and measure, in ink: blind panel 06.11.2026 (three personas,
+      // Claude and Codex), 7.83 against 6.67 for the former smaller muted paragraph; 8.00 for a
+      // still larger one, a tie that would have needed a rule of its own for prose-only slides.
       return (
-        <p className="max-w-6xl text-xl leading-snug text-text-muted">
+        <p className="max-w-(--slide-measure-list) text-2xl leading-snug text-text">
           {renderMarkdown(block.text)}
         </p>
       );
@@ -848,11 +852,9 @@ function StandardContentSlide({ slide }: Props) {
           </div>
 
           {slide.footer && (
-            <BlurFade delay={0.3 + slide.content.length * 0.1} duration={0.5}>
-              <p className={`mt-8 border-t-2 text-2xl text-text ${styles.border} pt-6`}>
-                {renderMarkdown(slide.footer)}
-              </p>
-            </BlurFade>
+            <SlideFooter border={styles.border} delay={0.3 + slide.content.length * 0.1}>
+              {renderMarkdown(slide.footer)}
+            </SlideFooter>
           )}
         </div>
       </TitledContent>

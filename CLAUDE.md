@@ -63,7 +63,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `specimen/`: `slide-catalogue.ts`, the specimen deck, every slide type and variant with fictional
   content, and its images (`specimen/slide-catalogue/`, which talks copies into its `public/`).
 - `catalog/`: the catalog (decision repo-uniformity-plan, hub-max), one Astro app in scaffolding's
-  catalog shell (`catalog({...})` in `catalog/astro.config.ts`), never shipped: Astro, Astrobook,
+  catalog shell (`catalog({...})` in `catalog/astro.config.ts`), never shipped but for
+  `SlideFrame.astro`, the story frame a consumer's catalog takes too: Astro, Astrobook,
   `@astrojs/react` and scaffolding are dev dependencies, outside `files` and `exports`. Its base is
   the Pages path `/slides`, so the gate reads the build that ships. It carries two kinds of page:
   - The stories: `stories/Types/` a story file per slide type, each specimen slide of the type a
@@ -85,7 +86,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
 consumer imports, `types/slide`, the three stylesheets (`slides.css`, `sources.css`, and `tokens.css`, which a consumer's design-system page reads), `scripts/render-pdf`, the specimen deck and its
-images, and the `slides-density`, `slides-pins` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is
+images, the catalog's `SlideFrame.astro`, and the `slides-density`, `slides-pins` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is
 a release. Consumers import by those names, `@hackersandwizards/slides/types/slide`, and ship the source: Next lists
 the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest config in
 `server.deps.inline`. React, motion, lucide-react, recharts, shiki, Tailwind and the brand package

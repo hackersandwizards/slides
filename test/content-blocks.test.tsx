@@ -60,6 +60,23 @@ describe("content blocks", () => {
     expect(grid?.style.gridTemplateColumns.startsWith("auto")).toBe(false);
   });
 
+  // A segment's label stands on the line before its event, a figure under the event's text.
+  it("sets a timeline's segment labels and an event's figure", () => {
+    for (const extra of [0, 4]) {
+      const events = [
+        { title: "Plan" },
+        { title: "Build", segment: "2 weeks" },
+        { title: "Measure", segment: "3 weeks", text: "Time per text", figure: "-90%" },
+        ...Array.from({ length: extra }, (_, i) => ({ title: `Later ${i}` })),
+      ];
+      const c = content([{ type: "timeline", events }]);
+      expect(c.textContent).toContain("2 weeks");
+      expect(c.textContent).toContain("3 weeks");
+      const text = c.textContent ?? "";
+      expect(text.indexOf("Time per text")).toBeLessThan(text.indexOf("−90%"));
+    }
+  });
+
   // Annotated code takes the code panel's faint frame, as every code block does; its own ink
   // frame turned near-white on the night ground, the loudest element on the slide.
   it("frames annotated code as the code panel", () => {
@@ -341,7 +358,7 @@ describe("statement and content merges (merge-statement, merge-content)", () => 
       ],
     });
     expect(c.querySelector(".hw-label")?.textContent).toBe("Live demo");
-    expect(c.querySelector("figure.w-11\\/24 img")).not.toBeNull();
+    expect(c.querySelector("figure.max-w-11\\/24 img")).not.toBeNull();
     expect(c.textContent).toContain("example.com/pr/1");
     expect(c.textContent).toContain("Closing line");
     expect(c.querySelector(".hw-card")).toBeNull();

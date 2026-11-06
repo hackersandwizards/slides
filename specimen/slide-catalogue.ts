@@ -1701,6 +1701,137 @@ const slides: Slide[] = [
     ],
     notes: "gantt: max-length section label and principle.",
   },
+
+  {
+    type: "content",
+    headline: "Why the review queue stalls",
+    content: [
+      {
+        type: "paragraph",
+        text: "Every change waited for the same two reviewers, because only they knew which parts of the system a change could break.",
+      },
+      {
+        type: "paragraph",
+        text: "Once the agent wrote the changes, the queue grew faster than the two could read. Nobody decided this; the old pace had simply hidden it.",
+      },
+      {
+        type: "paragraph",
+        text: "The fix was not a faster review but **a smaller one**: checks that read the plan first.",
+      },
+    ],
+    footer: "Lumen Freight, internal retrospective (fictional)",
+    notes: "content: prose only, three paragraphs and a footer.",
+  },
+  {
+    type: "content",
+    headline: "Three things you take home today, and one thing we ask of you in return",
+    content: [
+      {
+        type: "cards",
+        items: [
+          {
+            icon: "search",
+            text: "A diagnosis you can test against your own organisation: where you stand and how you read it.",
+          },
+          {
+            icon: "workflow",
+            text: "One worked example of a delivery loop, from the first idea to the measured result.",
+          },
+          { icon: "calendar", text: "Changes you can make yourself on Monday." },
+        ],
+      },
+      {
+        type: "callout",
+        text: "In return we ask for your practice: the last twenty minutes are yours.",
+      },
+    ],
+    notes: "content: a two-line headline, a row of text cards and a callout under them.",
+  },
+  {
+    type: "content",
+    headline: "Two weeks to the first live version, two more to the measured result",
+    content: [
+      {
+        type: "timeline",
+        highlight: 2,
+        events: [
+          {
+            title: "Plan",
+            text: "Written from the tested prototype, not before it, and split into tasks the agent works on.",
+          },
+          {
+            segment: "2 weeks",
+            title: "Built and rolled out",
+            text: "First live version behind a feature flag, then iterated and opened to everyone.",
+          },
+          {
+            segment: "2 weeks",
+            title: "Measured",
+            text: "Against the team's metric: time per product text before and after.",
+            figure: "-90%",
+          },
+        ],
+      },
+    ],
+    notes: "visual blocks: timeline with segment labels and a figure on an event, three columns.",
+  },
+  {
+    type: "content",
+    headline: "Six stages from the first ticket to the whole team",
+    content: [
+      {
+        type: "timeline",
+        now: 3,
+        highlight: 3,
+        events: [
+          { when: "Jan", title: "First ticket", text: "One agent, one repository" },
+          { segment: "3 weeks", title: "Plans", text: "Every task starts from a plan" },
+          { segment: "2 weeks", title: "Checks", text: "Review starts from green" },
+          {
+            segment: "1 month",
+            title: "Second team",
+            text: "Lead time per change",
+            figure: "-40%",
+          },
+          { title: "Platform", text: "One harness for both teams" },
+          { title: "Whole team", text: "Every engineer on the loop" },
+        ],
+      },
+    ],
+    notes: "visual blocks: six stages alternate above and below the line, segments and a figure.",
+  },
+  {
+    type: "statement",
+    lines: ["Speed was never the problem"],
+    subtitle:
+      "“The build time set the pace of the whole company, though nobody had chosen it. Planning, review and the business side all followed it.",
+    closing: "The build time is gone; the pace it set is still here.”",
+    attribution: "Mara Lindqvist, Lumen Freight (fictional)",
+    footer: "Delivery Days 2026, keynote (fictional)",
+    notes: "statement: a quotation running from subtitle into closing, attribution and footer.",
+  },
+  {
+    type: "statement",
+    lines: ["Does the diagnosis hold for you?"],
+    subtitle: "What works for you, what does not, and where did you fall flat?",
+    linkedImage: {
+      src: `${IMG}/qr-example.png`,
+      alt: "QR code to a fictional discussion board",
+      href: "https://example.com/discuss",
+    },
+    footer: "The discussion goes on in the hallway and on the board",
+    notes: "statement: a square QR code as the linked image, and a footer.",
+  },
+  {
+    type: "title",
+    lang: "de",
+    kicker: "Erfahrungsbericht",
+    title: "Vierhundert Menschen, ein Lieferweg, zwölf Monate",
+    speakers: ["Mara Lindqvist", "Jonas Okafor"],
+    event: "Delivery Days 2026 · 14. Mai · Rotterdam",
+    qr: { src: `${IMG}/qr-example.png`, href: "https://example.com/harness" },
+    notes: "title: a German talk's opening, the speakers joined in German.",
+  },
 ];
 
 export const slideCatalogue: Presentation = {

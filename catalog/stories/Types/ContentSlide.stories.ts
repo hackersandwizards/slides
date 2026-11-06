@@ -42,3 +42,7 @@ export const VisualCardsDense = state("content", 35, "ContentSlide");
 export const Specimen = state("content", 36, "ContentSlide");
 export const Specimen2 = state("content", 37, "ContentSlide");
 export const ReplacedByComparisonSplit = state("content", 38, "ContentSlide");
+export const Prose = state("content", 39, "ContentSlide");
+export const CardsAndCallout = state("content", 40, "ContentSlide");
+export const VisualTimelineSegments = state("content", 41, "ContentSlide");
+export const VisualTimelineStaggered = state("content", 42, "ContentSlide");

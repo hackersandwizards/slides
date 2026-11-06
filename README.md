@@ -20,17 +20,18 @@ imports and whose `verbal.json` gives the closing its claim. Both repos are publ
 "@hackersandwizards/slides": "git+https://github.com/hackersandwizards/slides.git#v<version>"
 ```
 
-| Import                                                   | What                                                                  |
-| -------------------------------------------------------- | --------------------------------------------------------------------- |
-| `@hackersandwizards/slides/styles/slides.css`            | the slide stylesheet, Tailwind 4                                      |
-| `@hackersandwizards/slides/styles/tokens.css`            | every value a slide draws, as custom properties                       |
-| `@hackersandwizards/slides/types/slide`                  | `Presentation`, `Slide` and the blocks                                |
-| `@hackersandwizards/slides/components/slides/<Name>`     | a slide component                                                     |
-| `@hackersandwizards/slides/lib/<module>`                 | a module `exports` in `package.json` names                            |
-| `@hackersandwizards/slides/lib/next-adapter`             | `NextSlidesAdapter`                                                   |
-| `@hackersandwizards/slides/components/slides/PrintSlide` | `PrintDeck`, a deck's print route, and `PrintSlide`, one printed page |
-| `@hackersandwizards/slides/scripts/render-pdf`           | `renderPdf` for an export script                                      |
-| `@hackersandwizards/slides/specimen/slide-catalogue`     | the fictional specimen deck                                           |
+| Import                                                   | What                                                                                                                 |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `@hackersandwizards/slides/styles/slides.css`            | the slide stylesheet, Tailwind 4                                                                                     |
+| `@hackersandwizards/slides/styles/tokens.css`            | every value a slide draws, as custom properties                                                                      |
+| `@hackersandwizards/slides/types/slide`                  | `Presentation`, `Slide` and the blocks                                                                               |
+| `@hackersandwizards/slides/components/slides/<Name>`     | a slide component                                                                                                    |
+| `@hackersandwizards/slides/lib/<module>`                 | a module `exports` in `package.json` names                                                                           |
+| `@hackersandwizards/slides/lib/next-adapter`             | `NextSlidesAdapter`                                                                                                  |
+| `@hackersandwizards/slides/components/slides/PrintSlide` | `PrintDeck`, a deck's print route, and `PrintSlide`, one printed page                                                |
+| `@hackersandwizards/slides/scripts/render-pdf`           | `renderPdf` for an export script                                                                                     |
+| `@hackersandwizards/slides/specimen/slide-catalogue`     | the fictional specimen deck                                                                                          |
+| `@hackersandwizards/slides/catalog/SlideFrame.astro`     | a story's frame in a catalog on scaffolding's shell: `decorators: [{ component: SlideFrame, props: { component } }]` |
 
 The command `slides-pins` goes first in each consumer's gate: it fails when `node_modules` holds
 another version of an `@hackersandwizards/*` package than `package.json` pins, so a stale install

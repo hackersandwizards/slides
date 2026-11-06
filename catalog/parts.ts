@@ -12,6 +12,7 @@ const {
   NumberTile,
   SlideCaption,
   SlideCard,
+  SlideFooter,
   SlideSubtitle,
   SlideTitle,
   VideoPlayer,
@@ -107,6 +108,7 @@ export const PARTS: Record<string, () => ReactNode> = {
     }),
   SlideSubtitle: () => h(SlideSubtitle, null, "The line under a headline, in muted ink."),
   SlideCaption: () => h(SlideCaption, null, "The caption under a diagram, its last step."),
+  SlideFooter: () => h(SlideFooter, null, "The one line under a slide's body, such as its source."),
   CodePanel: () =>
     h(
       CodePanel,

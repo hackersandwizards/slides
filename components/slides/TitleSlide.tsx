@@ -2,7 +2,7 @@
 
 import Image from "../ui/image";
 import type { TitleSlide as TitleSlideType } from "../../types/slide";
-import { isOpening, linkLabel } from "../../lib/slide-utils";
+import { isOpening, qrAlt, speakerLine } from "../../lib/slide-utils";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { DisplayHeading, LinkCaption, PictureLink } from "./primitives";
@@ -54,9 +54,7 @@ function Opening({ slide }: Props) {
         >
           <div>
             {slide.speakers && slide.speakers.length > 0 && (
-              <p className="font-heading text-4xl font-bold text-text">
-                {slide.speakers.join(" & ")}
-              </p>
+              <p className="font-heading text-4xl font-bold text-text">{speakerLine(slide)}</p>
             )}
             {slide.event && <p className="mt-3 text-2xl text-text-muted">{slide.event}</p>}
           </div>
@@ -65,7 +63,7 @@ function Opening({ slide }: Props) {
               <PictureLink href={slide.qr.href}>
                 <Image
                   src={slide.qr.src}
-                  alt={`QR code: ${linkLabel(slide.qr.href)}`}
+                  alt={qrAlt({ ...slide, qr: slide.qr })}
                   width={240}
                   height={240}
                   className="size-48 rounded-brand"

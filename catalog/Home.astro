@@ -12,10 +12,8 @@ const exceptions = Object.entries(
 <Home>
   <div class="ds-foundations">
     <p>
-      Three layers. <strong>Tokens</strong>: <code>styles/tokens.css</code> names every value a
-      slide draws from <code>@hackersandwizards/brand</code>. <strong>Parts</strong> are built from
-      tokens only, each with its variants. <strong>Slide types</strong> compose parts. Every story
-      renders at the stage scale (<code>data-hw-scale="stage"</code>), as every slide does.
+      Tokens (<code>styles/tokens.css</code>) feed the parts, the parts make the slide types. Every
+      story renders at the stage scale.
     </p>
     <details class="hw-disclosure">
       <summary>
@@ -31,11 +29,10 @@ const exceptions = Object.entries(
           </li>
         ))}
       </ul>
+      <p>
+        <a href={`${PRINT}#elements`}>The print page</a> shows each as a tile.
+      </p>
     </details>
-    <p>
-      <a href={`${PRINT}#elements`}>The print page</a> shows each as a tile, where{" "}
-      <code>brand-elements</code> measures it in <code>bun run check</code>.
-    </p>
   </div>
 </Home>
 

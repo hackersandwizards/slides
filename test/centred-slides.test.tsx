@@ -62,3 +62,29 @@ describe("centred slides", () => {
     expect(container.querySelector("canvas, [class*='gradient'], [class*='blur-']")).toBeNull();
   });
 });
+
+describe("statement slide", () => {
+  const statement = (slide: Partial<Extract<Slide, { type: "statement" }>>) =>
+    render(<slideComponents.statement slide={{ type: "statement", lines: ["L"], ...slide }} />)
+      .container;
+
+  // A quotation may run from the subtitle into the closing, so its source follows the closing.
+  it("sets the attribution after the closing", () => {
+    const text =
+      statement({ subtitle: "“Start", closing: "end.”", attribution: "Mara" }).textContent ?? "";
+    expect(text.indexOf("end.”")).toBeLessThan(text.indexOf("— Mara"));
+  });
+
+  it("sets a footer under a rule, as a content slide does", () => {
+    const c = statement({ footer: "Source line" });
+    expect(c.querySelector("p.border-t-2")?.textContent).toBe("Source line");
+  });
+
+  // The frame takes the picture's own shape, so a square QR code is no wide box.
+  it("lets a linked image keep its own width", () => {
+    const img = statement({
+      linkedImage: { src: "/qr.png", href: "https://example.com" },
+    }).querySelector("figure img");
+    expect(img?.className.split(" ")).toEqual(expect.arrayContaining(["w-auto", "max-w-full"]));
+  });
+});

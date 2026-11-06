@@ -36,4 +36,20 @@ describe("title slide opening", () => {
     );
     expect(container.querySelector(".slide-content.text-center")).not.toBeNull();
   });
+
+  it("joins the speakers and words the QR code's alt text in the slide's language", () => {
+    const { getByText, getByAltText } = render(
+      <TitleSlide
+        slide={{
+          type: "title",
+          lang: "de",
+          title: "Ein Lieferweg",
+          speakers: ["Mara Lindqvist", "Jonas Okafor", "Ada Byron"],
+          qr: { src: "/qr.svg", href: "https://example.com/" },
+        }}
+      />,
+    );
+    expect(getByText("Mara Lindqvist, Jonas Okafor und Ada Byron")).toBeTruthy();
+    expect(getByAltText("QR-Code: example.com")).toBeTruthy();
+  });
 });

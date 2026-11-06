@@ -36,6 +36,9 @@ export interface TitleSlide {
   event?: string;
   /** A QR code and the link it encodes, small in the lower right, the link spelled out under it. */
   qr?: { src: string; href: string };
+  /** The deck's language, which joins `speakers` ("A and B", "A und B") and words the QR code's
+   *  alt text. Without it the speakers are joined with " & ". */
+  lang?: "en" | "de";
 }
 
 export type ContentBlock =
@@ -177,7 +180,16 @@ export type VisualBlock =
     }
   | {
       type: "timeline";
-      events: { when?: string; title: string; text?: string }[];
+      events: {
+        when?: string;
+        title: string;
+        text?: string;
+        /** A label on the line that leads from the previous event to this one, such as the
+         *  duration "2 weeks": `when` names a point in time, this the time between two. */
+        segment?: string;
+        /** A result in the figure face, such as "-90%". */
+        figure?: string;
+      }[];
       highlight?: number;
       /** Index of the last event that has happened; the line after it is dashed. */
       now?: number;
@@ -319,9 +331,11 @@ export interface StatementSlide extends Grounded {
   attribution?: string;
   /** The label above the lines, such as "Live demo". */
   kicker?: string;
-  /** A screenshot or QR code under the lines, about half the slide wide, its link spelled out
-   *  under it. */
+  /** A screenshot or QR code under the lines, at most about half the slide wide, its link
+   *  spelled out under it. */
   linkedImage?: { src: string; alt?: string; href?: string };
+  /** The one line under the slide, such as a source, as a content slide's footer. */
+  footer?: string;
 }
 
 export interface EvolutionStage {

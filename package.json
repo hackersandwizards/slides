@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -36,7 +36,8 @@
     "./styles/tokens.css": "./styles/tokens.css",
     "./scripts/render-pdf": "./scripts/render-pdf.ts",
     "./specimen/slide-catalogue": "./specimen/slide-catalogue.ts",
-    "./specimen/slide-catalogue/*": "./specimen/slide-catalogue/*"
+    "./specimen/slide-catalogue/*": "./specimen/slide-catalogue/*",
+    "./catalog/SlideFrame.astro": "./catalog/SlideFrame.astro"
   },
   "files": [
     "components",
@@ -47,7 +48,8 @@
     "scripts/density.ts",
     "scripts/pins.ts",
     "scripts/render-pptx.ts",
-    "specimen"
+    "specimen",
+    "catalog/SlideFrame.astro"
   ],
   "scripts": {
     "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks || true",

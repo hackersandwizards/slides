@@ -108,6 +108,20 @@ export function isOpening(slide: TitleSlide): boolean {
   return !!(slide.kicker || slide.name || slide.speakers?.length || slide.event || slide.qr);
 }
 
+/** A title slide's speakers in one line: in the slide's `lang` ("A and B", "A und B"), else
+ *  joined with " & ". */
+export function speakerLine(slide: TitleSlide): string {
+  const speakers = slide.speakers ?? [];
+  return slide.lang
+    ? new Intl.ListFormat(slide.lang, { type: "conjunction" }).format(speakers)
+    : speakers.join(" & ");
+}
+
+/** The alt text of a title slide's QR code, in the slide's `lang`. */
+export function qrAlt(slide: TitleSlide & { qr: { href: string } }): string {
+  return `${slide.lang === "de" ? "QR-Code" : "QR code"}: ${linkLabel(slide.qr.href)}`;
+}
+
 /** A link as a slide spells it out under a linked image, where a projected or printed slide hides
  *  the link itself: without its scheme, `www.` and a closing slash. */
 export function linkLabel(href: string): string {

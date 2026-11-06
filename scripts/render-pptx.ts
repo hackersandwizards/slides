@@ -28,6 +28,8 @@ import {
   claimParts,
   deepDiveAsTransition,
   personAccent,
+  qrAlt,
+  speakerLine,
 } from "../lib/slide-utils";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
@@ -587,6 +589,28 @@ interface Head {
   preText?: string;
 }
 
+/** The height a slide's footer takes above the bottom edge: its line under a rule. */
+function footerHeight(ctx: Ctx, text?: string): number {
+  return text ? need(text, ctx.c, CW, { size: PT.base, color: ctx.c.ink }, 0.6) + 0.25 : 0;
+}
+
+/** The slide's footer (`SlideFooter` on the web): one line under a rule at the bottom. */
+function footer(s: PSlide, ctx: Ctx, text: string | undefined, h: number, centered = false) {
+  if (!text) return;
+  s.addShape("line", {
+    x: SIDE,
+    y: BOTTOM - h + 0.05,
+    w: CW,
+    h: 0.001,
+    line: { color: ctx.c.border, width: 0.75 },
+  });
+  box(s, ctx.c, text, SIDE, BOTTOM - h + 0.15, CW, h - 0.15, {
+    size: PT.base,
+    color: ctx.c.ink,
+    align: centered ? "center" : "left",
+  });
+}
+
 /** Kicker, principle pill, title and subtitle; returns where the body starts. */
 function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
   const { c } = ctx;
@@ -861,7 +885,11 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
         Math.max(
           ...b.events.map((e) =>
             need(
-              [{ runs: [{ text: e.title }], after: 4 }, { runs: md(e.text ?? "", c) }],
+              [
+                { runs: [{ text: e.title }], after: 4 },
+                { runs: md(e.text ?? "", c) },
+                ...(e.figure ? [{ runs: [{ text: e.figure }], rel: PT.s6 / PT.base }] : []),
+              ],
               c,
               w / b.events.length - 0.15,
               o,
@@ -1489,6 +1517,15 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
           fill: { color: hi ? c.teal : c.card },
           line: { color: hi ? c.teal : c.muted, width: 1.5 },
         });
+        // A segment's label stands over the middle of the line that leads to its event.
+        if (e.segment && i > 0)
+          box(s, c, { runs: [{ text: e.segment }] }, cx - ew + 0.05, ly - 0.3, ew - 0.1, 0.22, {
+            size: PT.label * k,
+            mono: true,
+            bold: true,
+            color: c.muted,
+            align: "center",
+          });
         if (e.when)
           box(s, c, { runs: [{ text: e.when }] }, cx - ew / 2 + 0.05, a.y, ew - 0.1, 0.22, {
             size: PT.label * k,
@@ -1502,7 +1539,17 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
           c,
           [
             { runs: md(e.title, c, { color: hi ? c.teal : c.ink }), bold: true, after: 4 },
-            { runs: md(e.text ?? "", c, { color: c.muted }), rel: 0.9 },
+            { runs: md(e.text ?? "", c, { color: c.muted }), rel: 0.9, after: 8 },
+            ...(e.figure
+              ? [
+                  {
+                    runs: [{ text: e.figure, options: { color: hi ? c.teal : c.ink } }],
+                    mono: true,
+                    bold: true,
+                    rel: PT.s6 / PT.base,
+                  },
+                ]
+              : []),
           ],
           cx - ew / 2 + 0.07,
           ly + 0.2,
@@ -1873,7 +1920,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   const label = d.qr && `↗ ${linkLabel(d.qr.href)}`;
   const colW = label ? Math.max(qr, (label.length * PT.base * ADVANCE.mono) / 72 + 0.1) : 0;
   const textW = CW - (colW && colW + 0.5);
-  const speakers = d.speakers?.length ? literal(d.speakers.join(" & ")) : undefined;
+  const speakers = d.speakers?.length ? literal(speakerLine(d)) : undefined;
   const left = (speakers ? 53 / 144 : 0) + (d.event ? (speakers ? 17 / 144 : 0) + 49 / 144 : 0);
   let ly = mid - left / 2;
   if (speakers) {
@@ -1890,7 +1937,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   if (d.qr && label) {
     const colX = W - SIDE - colW;
     picture(s, ctx, d.qr.src, colX + (colW - qr) / 2, rowY, qr, qr, {
-      alt: `QR code: ${linkLabel(d.qr.href)}`,
+      alt: qrAlt({ ...d, qr: d.qr }),
       href: d.qr.href,
     });
     box(
@@ -1971,24 +2018,9 @@ const RENDER: {
         x += chip(s, ctx.c, m, x, y - 0.15, PT.label, ctx.c.tealTint, ctx.c.teal) + 0.1;
       y += 0.25;
     }
-    const footH = d.footer
-      ? need(d.footer, ctx.c, CW, { size: PT.base, color: ctx.c.ink }, 0.6) + 0.25
-      : 0;
+    const footH = footerHeight(ctx, d.footer);
     blocks(s, ctx, d.content, { ...BODY(y), h: BOTTOM - y - footH }, centered);
-    if (d.footer) {
-      s.addShape("line", {
-        x: SIDE,
-        y: BOTTOM - footH + 0.05,
-        w: CW,
-        h: 0.001,
-        line: { color: ctx.c.border, width: 0.75 },
-      });
-      box(s, ctx.c, d.footer, SIDE, BOTTOM - footH + 0.15, CW, footH - 0.15, {
-        size: PT.base,
-        color: ctx.c.ink,
-        align: centered ? "center" : "left",
-      });
-    }
+    footer(s, ctx, d.footer, footH, centered);
   },
 
   regular(s, ctx, d) {
@@ -2190,9 +2222,11 @@ const RENDER: {
       line: 1.2,
       floor: 0.5,
     };
-    box(s, c, paras, SIDE, TOP, w, BOTTOM - TOP, o);
+    const footH = footerHeight(ctx, d.footer);
+    box(s, c, paras, SIDE, TOP, w, BOTTOM - TOP - footH, o);
+    footer(s, ctx, d.footer, footH);
     if (side)
-      picture(s, ctx, side, SIDE + w + 0.4, TOP, imgW, BOTTOM - TOP, {
+      picture(s, ctx, side, SIDE + w + 0.4, TOP, imgW, BOTTOM - TOP - footH, {
         alt: d.imageSrc ? d.imageAlt : d.linkedImage?.alt,
         href: d.imageSrc ? undefined : d.linkedImage?.href,
       });

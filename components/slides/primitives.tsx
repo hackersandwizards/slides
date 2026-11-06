@@ -12,6 +12,7 @@ import ArrowUpRight from "lucide-react/icons/arrow-up-right";
 import Pause from "lucide-react/icons/pause";
 import Play from "lucide-react/icons/play";
 import { usePrintMode } from "../../lib/print-context";
+import { DEFAULT_SECTION_STYLE } from "../../lib/section-styles";
 import { linkLabel } from "../../lib/slide-utils";
 import { BlurFade } from "../ui/blur-fade";
 
@@ -75,6 +76,26 @@ export function PictureLink({ href, children }: { href: string; children: ReactN
     <a href={href} target="_blank" rel="noopener noreferrer" className="contents" tabIndex={-1}>
       {children}
     </a>
+  );
+}
+
+/** The one line under a slide's body, such as a source or the point it lands on, set off by a
+ *  rule in the section's colour (`border`, a `getSectionStyle` border class). */
+export function SlideFooter({
+  children,
+  border = DEFAULT_SECTION_STYLE.border,
+  delay,
+  className,
+}: {
+  children: ReactNode;
+  border?: string;
+  delay?: number;
+  className?: string;
+}) {
+  return (
+    <BlurFade delay={delay} duration={0.5} className={className}>
+      <p className={`mt-8 border-t-2 pt-6 text-2xl text-text ${border}`}>{children}</p>
+    </BlurFade>
   );
 }
 
