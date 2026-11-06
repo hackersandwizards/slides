@@ -18,6 +18,7 @@ import type {
   StatementSlide,
   SectionTheme,
   Slide,
+  TitleSlide,
   TransitionSlide,
 } from "../types/slide";
 
@@ -100,6 +101,11 @@ export function isDeepDive(slide: {
     slide.sectionTheme === "deepdive" ||
     (slide.phases?.some((p) => p.theme === "deepdive") ?? false)
   );
+}
+
+/** Whether a title slide carries a talk's opening, which TitleSlide draws left-aligned. */
+export function isOpening(slide: TitleSlide): boolean {
+  return !!(slide.kicker || slide.name || slide.speakers?.length || slide.event || slide.qr);
 }
 
 /** A link as a slide spells it out under a linked image, where a projected or printed slide hides

@@ -30,6 +30,16 @@ const slides: Slide[] = [
     title: "How Lumen Freight moved four hundred engineers onto one delivery harness in a year",
     notes: "title: no subtitle, longest title.",
   },
+  {
+    type: "title",
+    kicker: "Field report",
+    name: "Lumen Harness",
+    title: "Four hundred engineers, one delivery harness, twelve months",
+    speakers: ["Mara Lindqvist", "Jonas Okafor"],
+    event: "Delivery Days 2026 · 14 May · Rotterdam",
+    qr: { src: "/slide-catalogue/qr-example.png", href: "https://example.com/harness" },
+    notes: "title: a talk's opening, every field, the QR code to a fictional link.",
+  },
 
   {
     type: "agenda",

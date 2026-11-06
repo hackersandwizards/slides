@@ -5,9 +5,7 @@ import type { StatementSlide as StatementSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
-import { DisplayHeading } from "./primitives";
-import { linkLabel } from "../../lib/slide-utils";
-import ArrowUpRight from "lucide-react/icons/arrow-up-right";
+import { DisplayHeading, LinkCaption } from "./primitives";
 
 interface Props {
   slide: StatementSlideType;
@@ -52,17 +50,7 @@ function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linke
       ) : (
         picture
       )}
-      {image.href && (
-        <a
-          href={image.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="slide-media-caption slide-media-link"
-        >
-          <ArrowUpRight className="size-(--slide-link-icon) shrink-0" strokeWidth={2.25} />
-          {linkLabel(image.href)}
-        </a>
-      )}
+      {image.href && <LinkCaption href={image.href} />}
     </figure>
   );
 }

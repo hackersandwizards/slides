@@ -19,10 +19,23 @@ export interface Stage {
   state?: StageState;
 }
 
+/** A title, or a talk's opening where any of `kicker`, `name`, `speakers`, `event` or `qr` is
+ *  set: left-aligned, the title the largest line, speakers and event along the bottom. */
 export interface TitleSlide {
   type: "title";
+  /** The largest line: the talk's title or its claim. */
   title: string;
   subtitle?: string;
+  /** Above the title in the heading face: what the talk is about by name, such as a product. */
+  name?: string;
+  /** The caps label above the name, or above the title where there is no name. */
+  kicker?: string;
+  /** Who speaks, under the title. */
+  speakers?: string[];
+  /** Where and when, one quiet line under the speakers. */
+  event?: string;
+  /** A QR code and the link it encodes, small in the lower right, the link spelled out under it. */
+  qr?: { src: string; href: string };
 }
 
 export type ContentBlock =

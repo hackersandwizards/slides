@@ -8,7 +8,6 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import ArrowUpRight from "lucide-react/icons/arrow-up-right";
 import Image from "../ui/image";
 import type {
   ContentSlide as ContentSlideType,
@@ -33,10 +32,10 @@ import {
   isDeepDive,
   keepHyphenatedWords,
   labeledGridAsCards,
-  linkLabel,
   pipelineAsFlow,
 } from "../../lib/slide-utils";
 import {
+  LinkCaption,
   TitledContent,
   SlideTitle,
   SlideCard,
@@ -751,21 +750,7 @@ function ContentBlockRenderer({
         />
       );
       return (
-        <MediaFrame
-          below={
-            block.href && (
-              <a
-                href={block.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="slide-media-caption slide-media-link"
-              >
-                <ArrowUpRight className="size-(--slide-link-icon) shrink-0" strokeWidth={2.25} />
-                {linkLabel(block.href)}
-              </a>
-            )
-          }
-        >
+        <MediaFrame below={block.href && <LinkCaption href={block.href} />}>
           {block.href ? (
             <a href={block.href} target="_blank" rel="noopener noreferrer" className="contents">
               {picture}

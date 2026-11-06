@@ -8,9 +8,11 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
+import ArrowUpRight from "lucide-react/icons/arrow-up-right";
 import Pause from "lucide-react/icons/pause";
 import Play from "lucide-react/icons/play";
 import { usePrintMode } from "../../lib/print-context";
+import { linkLabel } from "../../lib/slide-utils";
 import { BlurFade } from "../ui/blur-fade";
 
 /** A titled slide's column: headline on top, `.slide-body` below, both under the fit guard. */
@@ -47,6 +49,21 @@ export function SlideSubtitle({ children, delay = 0.15 }: { children: ReactNode;
         {children}
       </p>
     </BlurFade>
+  );
+}
+
+/** A link spelled out under a picture or a QR code, an arrow before it, opening in a new tab. */
+export function LinkCaption({ href }: { href: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="slide-media-caption slide-media-link"
+    >
+      <ArrowUpRight className="size-(--slide-link-icon) shrink-0" strokeWidth={2.25} />
+      {linkLabel(href)}
+    </a>
   );
 }
 

@@ -12,7 +12,7 @@ import { slideCatalogue } from "../specimen/slide-catalogue";
 import type { Slide } from "../types/slide";
 import * as primitives from "../components/slides/primitives";
 import { highlightLines } from "../lib/code-highlight";
-import { replacedBy } from "../lib/slide-utils";
+import { isOpening, replacedBy } from "../lib/slide-utils";
 import * as chrome from "../components/slides/SlideChrome";
 import { PARTS, inRow } from "./parts";
 import exceptions from "../brand-elements.json";
@@ -44,7 +44,8 @@ const variantOf = (s: Slide) =>
   ("variant" in s && s.variant) ||
   ("layout" in s && s.layout) ||
   ("kind" in s && s.kind) ||
-  ("strike" in s && s.strike === false ? "without strike" : "");
+  ("strike" in s && s.strike === false ? "without strike" : "") ||
+  (s.type === "title" && isOpening(s) ? "opening" : "");
 
 // A deprecated form stays in the specimen deck, which the consumers test, but leaves the catalogue
 // for the one list of replaced forms: a new slide picks the entry that draws it.
