@@ -63,7 +63,7 @@ function Opening({ slide }: Props) {
               <PictureLink href={slide.qr.href}>
                 <Image
                   src={slide.qr.src}
-                  alt={qrAlt({ ...slide, qr: slide.qr })}
+                  alt={qrAlt(slide.qr.href, slide.lang)}
                   width={240}
                   height={240}
                   className="size-48 rounded-brand"

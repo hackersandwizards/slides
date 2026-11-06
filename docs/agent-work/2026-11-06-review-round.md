@@ -138,3 +138,46 @@ One reviewer prompt, verbatim (round 1, trainer, Claude, run 1; the image list s
 >
 > For each rendering answer with one JSON object on its own line: (schema). Then for each slide one
 > line (best, decided). Answer with JSON objects only, one per line, nothing else.
+
+## Working Products gaps: blind panel (06.11.2026, slides v1.4.0)
+
+Personas a product manager in row 10 of a conference hall, an engineering lead following remotely
+in a video call, a deck author rehearsing; Claude (opus) and Codex (gpt-6.1-sol) each, every image
+at 1280 px, letters shuffled per reviewer, the current drawing scored alongside unmarked, fictional
+specimen content. Score = mean overall of the six runs. Noise = mean |run 1 − run 2| of Claude as
+the hall persona over all 15 renderings: 0.60.
+
+| Surface                          | Renderings (overall)                                                                                                                                                                                       | Shipped                                     |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Prose-only content slide         | current xl muted 6.67, 2xl muted 7.17, 2xl ink at the list measure 7.83, 3xl ink 8.00                                                                                                                      | 2xl ink: ties 3xl, needs no prose-only rule |
+| Cards and callout, two-line head | current 7.50, callout full width 7.67, full width and 3rem under the title 8.00                                                                                                                            | current: every lead inside the noise        |
+| Timeline, durations and a figure | duration as the event's date, figure in its text (current) 5.33; label above the line, figure under the title 7.00; label above, figure under the text 8.00; label on the line, figure under the text 8.00 | label on the line: clarity 7.6 against 7.1  |
+| Statement, quotation and source  | attribution between subtitle and closing (current) 5.17, after the closing with a footer 7.83 (best 6 of 6)                                                                                                | after the closing, footer                   |
+| Statement, square QR code        | 46 % wide frame (current) 6.00, frame in the picture's shape with a footer 8.33 (best 6 of 6)                                                                                                              | frame in the picture's shape                |
+
+Left for a later round, named by most reviewers: the gap between a statement's subtitle and its
+closing splits a quotation that runs across both; icon cards in a row read as template slideware;
+the QR code could stand larger for the back rows.
+
+One reviewer prompt, verbatim (Claude, hall persona, run 1; image paths shortened):
+
+> You are a product manager attending a practitioners' conference talk in a hall of 150 people, seated in row 10, reading the projected slides while the speakers talk. You judge the slides as they reach you from your seat; each image below stands in for the projected slide at 1280 pixels wide.
+>
+> The medium: slides of hackers&wizards, a consultancy for agentic software engineering, from conference talks, client decks and workshops (German and English), 16:9, projected in a room or shared on a screen. All content on these slides is made up.
+>
+> The hackers&wizards brand: a light off-white ground (#f7f9fa) with dark ink text (#19283a), and night (#0b1118, near-black) as a second ground that is part of the system. Accent colours with fixed roles: teal (#1a7285, the primary accent) and purple (#9333ea, the secondary accent); green (dark #15803d) for success; amber (dark #b45309) for warnings; red (#dc2626) only for errors and anti-patterns; a grey-blue (#7c849c) for neutral marks. Tints come from one opacity ladder: 7, 15, 25, 40, 70 and 100 %. Cards, fields and frames take the brand corner (large radius top-left and bottom-right, small radius elsewhere); small marks such as list markers are square. JetBrains Mono for headings and labels, Inter for text. The brand forbids decoration such as glow, particles or ornaments.
+>
+> Below are 5 slides, numbered s01 to s05. Each slide comes in several renderings of the same content, letters A, B and so on. Read every image file listed:
+> s01-A.png s01-B.png s01-C.png s01-D.png s02-A.png s02-B.png s02-C.png s03-A.png s03-B.png s03-C.png s03-D.png s04-A.png s04-B.png s05-A.png s05-B.png
+>
+> What each slide must do:
+>
+> - s01: a slide of three short paragraphs of argument under a headline, a source line at the bottom.
+> - s02: three cards of what the audience takes home, and one sentence of what the speakers ask in return, under a two-line headline.
+> - s03: a project's course in three stages: the time each stretch took, and one result as a figure.
+> - s04: a statement whose quotation runs from the line under the headline into the closing line, with who said it and where it was said.
+> - s05: a closing question with a QR code the room scans during a 20-minute discussion, and one line on where the discussion continues.
+>
+> Criteria, each scored 0 to 10 for your role: glance (the one key point is clear within 3 seconds), clarity (structure and relationships are understood without explanation; on s03, which times are durations and which are points in time), legibility (every text readable at your display size), breathing (room, not cramped, nothing touching or crowding another element), calm (nothing competes for attention, no clutter), brand (fits the brand described above), human (looks deliberately designed, not like generic AI-generated slideware: 10 means it does not look generated), overall.
+>
+> For each rendering answer with one JSON object on its own line: {"id":"s01-A","glance":0,"clarity":0,"legibility":0,"breathing":0,"calm":0,"brand":0,"human":0,"overall":0,"below_max":"what keeps the lowest criteria below 10, at most 20 words"}. Then for each slide one line {"slide":"s01","best":"A"}. Answer with JSON objects only, one per line, nothing else.

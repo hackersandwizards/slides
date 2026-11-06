@@ -174,6 +174,12 @@
     @apply bg-background text-foreground;
   }
 
+  /* A slide sets its own face rather than inheriting the host page's: a host's unlayered html
+     rule, as Astrobook's (system-ui), re-wrapped its text and changed the fit guard's scale. */
+  [data-hw-scale="stage"] {
+    @apply font-sans antialiased;
+  }
+
   /* A slide headline never leaves one word on its last line. Headings take the heading family and
      weight, as the website's base styles set them; a class names any other. */
   :is(h1, h2, h3) {

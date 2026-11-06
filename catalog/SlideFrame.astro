@@ -1,7 +1,6 @@
 ---
 // A slide fills its window (fixed, vh type, the stage rem from its width), so the dashboard frames
 // the story's preview page in brand's card; "back" opens a slide with every progressive step shown.
-// Exported, so a consumer's catalog frames its deck's stories the same way.
 interface Props {
   component: string;
   part?: boolean;
@@ -36,13 +35,9 @@ const src = path.replace("/dashboard/", "/stories/");
     overflow: auto;
     background: var(--color-bg);
     color-scheme: light;
-    /* What the slide inherits in a deck: Tailwind's line height on <html> and the body's sans face,
-       smoothed. Astrobook's unlayered html rule (system-ui, line height 1.15) beats the layered
-       Tailwind base, which re-wraps text and re-scales the fit guard's slides. */
-    font-family: var(--font-sans);
+    /* A deck's html sets Tailwind's line height of 1.5, which Astrobook's unlayered html rule
+       (1.15) beats; brand has no token for it yet. */
     line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
   .story-embed {
     padding: 1rem;

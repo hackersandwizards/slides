@@ -54,13 +54,11 @@ export function StatementSlide({ slide }: Props) {
   const hasSupporting = (slide.points && slide.points.length > 0) || slide.closing;
   const isSimple = !hasSupporting && !slide.subtitle && !slide.highlighted && !slide.crossedOut;
   const pointBaseDelay = 0.1 + slide.lines.length * 0.08;
+  const closingDelay = pointBaseDelay + (slide.points?.length ?? 0) * 0.06 + 0.05;
   // The source of what the slide quotes: after the closing where there is one, since a quotation
   // may run from the subtitle into the closing.
   const attribution = slide.attribution && (
-    <BlurFade
-      delay={pointBaseDelay + (slide.closing ? (slide.points?.length ?? 0) * 0.06 + 0.15 : 0)}
-      duration={0.4}
-    >
+    <BlurFade delay={slide.closing ? closingDelay + 0.1 : pointBaseDelay} duration={0.4}>
       <p className="mt-8 text-xl text-text-muted md:text-2xl">— {slide.attribution}</p>
     </BlurFade>
   );
@@ -151,10 +149,7 @@ export function StatementSlide({ slide }: Props) {
             )}
 
             {slide.closing && (
-              <BlurFade
-                delay={pointBaseDelay + (slide.points?.length ?? 0) * 0.06 + 0.05}
-                duration={0.4}
-              >
+              <BlurFade delay={closingDelay} duration={0.4}>
                 {slide.closingStyle === "quote" ? (
                   <p className="mt-10 text-center text-2xl font-semibold tracking-tight text-text-subtle italic md:text-3xl">
                     <span className="text-primary/70">&ldquo;</span>

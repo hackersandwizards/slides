@@ -589,6 +589,16 @@ interface Head {
   preText?: string;
 }
 
+/** A timeline event's result in the figure face, as `EventBody` sets it on the web. */
+function figurePara(text: string, color: string): Para {
+  return {
+    runs: [{ text, options: { color } }],
+    mono: true,
+    bold: true,
+    rel: PT.s6 / PT.base,
+  };
+}
+
 /** The height a slide's footer takes above the bottom edge: its line under a rule. */
 function footerHeight(ctx: Ctx, text?: string): number {
   return text ? need(text, ctx.c, CW, { size: PT.base, color: ctx.c.ink }, 0.6) + 0.25 : 0;
@@ -888,7 +898,7 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
               [
                 { runs: [{ text: e.title }], after: 4 },
                 { runs: md(e.text ?? "", c) },
-                ...(e.figure ? [{ runs: [{ text: e.figure }], rel: PT.s6 / PT.base }] : []),
+                ...(e.figure ? [figurePara(e.figure, c.ink)] : []),
               ],
               c,
               w / b.events.length - 0.15,
@@ -1540,16 +1550,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
           [
             { runs: md(e.title, c, { color: hi ? c.teal : c.ink }), bold: true, after: 4 },
             { runs: md(e.text ?? "", c, { color: c.muted }), rel: 0.9, after: 8 },
-            ...(e.figure
-              ? [
-                  {
-                    runs: [{ text: e.figure, options: { color: hi ? c.teal : c.ink } }],
-                    mono: true,
-                    bold: true,
-                    rel: PT.s6 / PT.base,
-                  },
-                ]
-              : []),
+            ...(e.figure ? [figurePara(e.figure, hi ? c.teal : c.ink)] : []),
           ],
           cx - ew / 2 + 0.07,
           ly + 0.2,
@@ -1937,7 +1938,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   if (d.qr && label) {
     const colX = W - SIDE - colW;
     picture(s, ctx, d.qr.src, colX + (colW - qr) / 2, rowY, qr, qr, {
-      alt: qrAlt({ ...d, qr: d.qr }),
+      alt: qrAlt(d.qr.href, d.lang),
       href: d.qr.href,
     });
     box(

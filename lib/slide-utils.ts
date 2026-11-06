@@ -117,9 +117,9 @@ export function speakerLine(slide: TitleSlide): string {
     : speakers.join(" & ");
 }
 
-/** The alt text of a title slide's QR code, in the slide's `lang`. */
-export function qrAlt(slide: TitleSlide & { qr: { href: string } }): string {
-  return `${slide.lang === "de" ? "QR-Code" : "QR code"}: ${linkLabel(slide.qr.href)}`;
+/** The alt text of a title slide's QR code, in its `lang`. */
+export function qrAlt(href: string, lang?: TitleSlide["lang"]): string {
+  return `${lang === "de" ? "QR-Code" : "QR code"}: ${linkLabel(href)}`;
 }
 
 /** A link as a slide spells it out under a linked image, where a projected or printed slide hides

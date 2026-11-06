@@ -355,15 +355,34 @@ function SegmentLabel({ text, tight }: { text: string; tight?: boolean }) {
   );
 }
 
-// An event's result in the figure face, under its text: set under the title it pushed every
-// column's text down (7.00 in the same panel).
-function EventFigure({ value, className }: { value: string; className: string }) {
+// An event's text and, under it, its result in the figure face: set under the title, the figure
+// pushed every column's text down (7.00 in the same panel).
+function EventBody({
+  event,
+  tone,
+  className,
+  balance,
+}: {
+  event: Of<"timeline">["events"][number];
+  tone: string;
+  className: string;
+  balance?: boolean;
+}) {
   return (
-    <span
-      className={`mt-4 block font-heading text-(length:--slide-figure-size) leading-(--slide-figure-leading) font-bold tracking-(--slide-figure-tracking) ${className}`}
-    >
-      <Figure value={value} />
-    </span>
+    <div className={className}>
+      {event.text && (
+        <p className={`${CAPTION} text-text ${balance ? "text-balance" : ""}`}>
+          {renderMarkdown(event.text)}
+        </p>
+      )}
+      {event.figure && (
+        <span
+          className={`mt-4 block font-heading text-(length:--slide-figure-size) leading-(--slide-figure-leading) font-bold tracking-(--slide-figure-tracking) ${tone}`}
+        >
+          <Figure value={event.figure} />
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -411,10 +430,7 @@ function Timeline({ block }: { block: Of<"timeline"> }) {
                 <Dot on={block.highlight === i} future={i > now} />
               </div>
               <h2 className={`mt-6 ${LABEL} ${tone(i)}`}>{renderMarkdown(e.title)}</h2>
-              <div className="mt-3">
-                <p className={`${CAPTION} text-text`}>{e.text && renderMarkdown(e.text)}</p>
-                {e.figure && <EventFigure value={e.figure} className={tone(i)} />}
-              </div>
+              <EventBody event={e} tone={tone(i)} className="mt-3" />
             </div>
           );
         })}
@@ -470,6 +486,7 @@ function Staggered({
       {block.events.map((e, i) => {
         const above = i % 2 === 0;
         const line = 2 * i + 3 + shift;
+        const body = e.text || e.figure;
         return (
           <div key={i} className="contents">
             <div
@@ -483,21 +500,10 @@ function Staggered({
               )}
               <span className={`font-heading text-3xl font-bold ${tone(i)}`}>{e.when}</span>
               <h2 className={`mt-2 ${LABEL} ${tone(i)}`}>{renderMarkdown(e.title)}</h2>
-              {(e.text || e.figure) && (
-                <div className="mt-2">
-                  {e.text && (
-                    <p className={`${CAPTION} text-balance text-text`}>{renderMarkdown(e.text)}</p>
-                  )}
-                  {e.figure && <EventFigure value={e.figure} className={tone(i)} />}
-                </div>
-              )}
+              {body && <EventBody event={e} tone={tone(i)} className="mt-2" balance />}
               {/* Above, a stage without text runs its leader up through the text row. */}
               {above && (
-                <span
-                  className="flex pt-3"
-                  style={{ gridRow: e.text || e.figure ? "4" : "3 / 5" }}
-                  aria-hidden
-                >
+                <span className="flex pt-3" style={{ gridRow: body ? "4" : "3 / 5" }} aria-hidden>
                   {leader}
                 </span>
               )}
