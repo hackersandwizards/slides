@@ -72,7 +72,9 @@ A story frame sets it on its own page, as `SlideFrame.astro` does. In a frame th
 A deck's language is its title slide's `lang`, else English. A consumer's deck and print
 layouts set `<html lang={deckLang(presentation)}>` with `deckLang` from
 `@hackersandwizards/slides/lib/slide-utils`, so screen readers and hyphenation read the
-deck's language; `slides-pptx` marks its text with it.
+deck's language; `slides-pptx` marks its text with it. The screen route passes it to
+`SlideContainer` as `lang`, which `PrintSlide` reads from the deck itself: a contact closing shows
+brand's claim in that language unless it sets `claim: false`.
 
 The package ships TypeScript source. Let the build transpile it: Next
 `transpilePackages: ["@hackersandwizards/slides"]`, Astro `vite.ssr.noExternal`, vitest

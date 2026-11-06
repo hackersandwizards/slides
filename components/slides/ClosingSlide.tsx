@@ -1,13 +1,13 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useContext, type ReactNode } from "react";
 import Image from "../ui/image";
 import Mail from "lucide-react/icons/mail";
 import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
-import { SlideShell, groundOf } from "./SlideShell";
+import { DeckLang, SlideShell, groundOf } from "./SlideShell";
 import { DisplayHeading, LinkCaption, SlideCard } from "./primitives";
-import { claimParts, personAccent } from "../../lib/slide-utils";
+import { claimParts, closingClaim, personAccent } from "../../lib/slide-utils";
 
 interface Props {
   slide: ClosingSlideType;
@@ -89,6 +89,7 @@ function ClosingLine({ children }: { children: ReactNode }) {
  *  no decoration, as on the title slide. */
 function ContactVariant({ slide }: { slide: ClosingSlideType }) {
   const hasSpeakerImages = slide.speakers?.some((s) => s.imageSrc);
+  const claim = closingClaim(slide, useContext(DeckLang));
 
   return (
     <SlideShell direction="col" overflowHidden ground={groundOf(slide)}>
@@ -241,10 +242,10 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
             </>
           )}
 
-          {slide.claim && (
+          {claim && (
             <ClosingLine>
               {/* The word brand names for its claim in the brand colour. */}
-              {claimParts(slide.claim).map((part, i) =>
+              {claimParts(claim).map((part, i) =>
                 i === 1 ? (
                   <span key={i} className="text-primary">
                     {part}

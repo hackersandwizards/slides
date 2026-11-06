@@ -1,6 +1,7 @@
 import verbal from "@hackersandwizards/brand/verbal.json";
 import type {
   AgendaSlide,
+  ClosingSlide,
   ContentSection,
   ComparisonGuidanceSlide,
   ComparisonSidesSlide,
@@ -454,6 +455,12 @@ export function claimParts(lang: "en" | "de"): [string, string, string] {
   const at = text.indexOf(word);
   return at < 0 ? [text, "", ""] : [text.slice(0, at), word, text.slice(at + word.length)];
 }
+
+/** The language of the claim a contact closing shows, or undefined for none: `claim: false` or a
+ *  discussion leaves it out, a deprecated `claim` language wins over the deck's, and without either
+ *  there is none. */
+export const closingClaim = (slide: ClosingSlide, lang: "en" | "de" | undefined) =>
+  slide.variant === "discussion" || slide.claim === false ? undefined : (slide.claim ?? lang);
 
 /** Whether a process node is the phase a slide names, in any case. */
 export const isHighlightPhase = (title: string, phase?: string) =>

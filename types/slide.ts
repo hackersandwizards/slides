@@ -635,8 +635,10 @@ export interface ClosingSlide extends Grounded {
   }[];
   /** A line someone said, in quote marks under the speakers. */
   closingQuote?: string;
-  /** The company claim under the speakers, in this language, as brand's `verbal.json` sets it. */
-  claim?: "en" | "de";
+  /** Brand's claim under the speakers of a contact closing (`verbal.json`), in the deck's language
+   *  (`deckLang`) by default; `false` leaves it out. A language (`"en"`, `"de"`) is deprecated: it
+   *  still sets the claim's language until the next major. */
+  claim?: false | "en" | "de";
   seedQuestions?: string[];
   headline?: string;
 }

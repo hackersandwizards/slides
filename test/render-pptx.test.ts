@@ -122,9 +122,31 @@ describe("slides-pptx on the specimen deck", () => {
     }
   });
 
-  it("sets brand's claim on a closing that asks for it", () => {
-    const i = slideCatalogue.slides.findIndex((sl) => sl.type === "closing" && sl.claim);
-    expect(norm(unescape(slideText[i]))).toContain(norm(verbal.claim.en));
+  it("sets brand's claim on a contact closing unless it turns the claim off", () => {
+    const at = (claim: boolean) =>
+      slideCatalogue.slides.findIndex(
+        (sl) => sl.type === "closing" && sl.variant === "contact" && (sl.claim !== false) === claim,
+      );
+    expect(norm(unescape(slideText[at(true)]))).toContain(norm(verbal.claim.en));
+    expect(norm(unescape(slideText[at(false)]))).not.toContain(norm(verbal.claim.en));
+  });
+
+  it("sets the claim in the deck's language", async () => {
+    const out = join(dir, "de.pptx");
+    await renderPptx(
+      {
+        name: "D",
+        slides: [
+          { type: "title", title: "T", lang: "de" },
+          { type: "closing", line1: "Danke." },
+        ],
+      },
+      out,
+      dir,
+    );
+    const de = await JSZip.loadAsync(readFileSync(out));
+    const xml = await de.file("ppt/slides/slide2.xml")!.async("string");
+    expect(norm(unescape(xml.replace(/<[^>]+>/g, "")))).toContain(norm(verbal.claim.de));
   });
 
   it("sets every text of a slide as text on that slide", () => {

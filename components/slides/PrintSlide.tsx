@@ -2,10 +2,10 @@ import type { LogoConfig, Presentation } from "../../types/slide";
 import { slideComponents } from "../../lib/slide-components";
 import { HW_LOGO, cornerMark, resolveSlideLogo } from "../../lib/logo";
 import { PrintProvider } from "../../lib/print-context";
-import { pageLabel } from "../../lib/slide-utils";
+import { deckLang, pageLabel } from "../../lib/slide-utils";
 import Image from "../ui/image";
 import { BrandStrip, HwWordmark, PageCounter } from "./SlideContainer";
-import { DeckNight } from "./SlideShell";
+import { DeckLang, DeckNight } from "./SlideShell";
 
 /** One slide as a printed page: the slide, the brand strip and the corner with the page counter
  *  and the deck's logos, the h&w mark where the deck names none. `scripts/render-pdf.ts` and
@@ -26,7 +26,9 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
       data-hw-night={presentation.theme ? "" : undefined}
     >
       <DeckNight.Provider value={!!presentation.theme}>
-        <SlideComponent slide={slide} />
+        <DeckLang.Provider value={deckLang(presentation)}>
+          <SlideComponent slide={slide} />
+        </DeckLang.Provider>
       </DeckNight.Provider>
       <BrandStrip />
       <div className="print-watermark flex items-center gap-2">

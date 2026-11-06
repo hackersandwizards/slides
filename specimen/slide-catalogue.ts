@@ -22,8 +22,9 @@ const slides: Slide[] = [
   {
     type: "title",
     title: "Slide Catalogue",
+    lang: "en",
     subtitle: "Every slide type and its variants, with fictional content",
-    notes: "title: with subtitle.",
+    notes: "title: with subtitle, setting the deck's language.",
   },
   {
     type: "title",
@@ -1613,16 +1614,17 @@ const slides: Slide[] = [
         imageSrc: `${IMG}/portrait-b.png`,
       },
     ],
-    claim: "en",
     notes:
-      "closing: contact as an h&w deck closes, two speakers with images, the first with a LinkedIn link, the company claim. Fictional people.",
+      "closing: contact as an h&w deck closes, two speakers with images, the first with a LinkedIn link, brand's claim in the deck's language. Fictional people.",
   },
   {
     type: "closing",
     variant: "contact",
     line1: "Questions?",
     speakers: [{ name: "Mara Lindqvist", contact: "mara@example.com", company: "hackers&wizards" }],
-    notes: "closing: contact, one speaker, no image, the lockup. Fictional person.",
+    claim: false,
+    notes:
+      "closing: contact, one speaker, no image, the lockup, the claim turned off. Fictional person.",
   },
   {
     type: "closing",

@@ -5,7 +5,7 @@ import { MotionConfig } from "motion/react";
 import Image from "../ui/image";
 import type { LogoConfig, SlideLogo } from "../../types/slide";
 import { HW_LOGO } from "../../lib/logo";
-import { DeckNight } from "./SlideShell";
+import { DeckLang, DeckNight } from "./SlideShell";
 
 interface Props {
   children: ReactNode;
@@ -15,6 +15,9 @@ interface Props {
   page?: string;
   /** The h&w corner mark, `cornerMark()`: the lockup by default. */
   mark?: CornerMark;
+  /** The deck's language, `deckLang()`: brand's claim on a contact closing takes it. Without it a
+   *  closing shows the claim only where it names a language. */
+  lang?: "en" | "de";
 }
 
 export type CornerMark = "lockup" | "wordmark";
@@ -95,7 +98,12 @@ export function BrandStrip() {
   );
 }
 
-export function SlideContainer({ children, logo, theme, page, mark }: Props) {
+export function SlideContainer({ children, logo, theme, page, mark, lang }: Props) {
+  const slides = (
+    <DeckNight.Provider value={!!theme}>
+      <DeckLang.Provider value={lang}>{children}</DeckLang.Provider>
+    </DeckNight.Provider>
+  );
   const viewportClassName = `slide-viewport fixed inset-0 overflow-hidden${theme ? ` theme-${theme}` : ""}`;
 
   const renderHW = (l: LogoConfig) => (
@@ -126,9 +134,7 @@ export function SlideContainer({ children, logo, theme, page, mark }: Props) {
         data-hw-night={theme ? "" : undefined}
       >
         <BrandStrip />
-        <MotionConfig reducedMotion="user">
-          <DeckNight.Provider value={!!theme}>{children}</DeckNight.Provider>
-        </MotionConfig>
+        <MotionConfig reducedMotion="user">{slides}</MotionConfig>
         <div className="fixed bottom-6 left-6 z-40" aria-hidden="true">
           <Image
             src={logo[0].src}
@@ -152,9 +158,7 @@ export function SlideContainer({ children, logo, theme, page, mark }: Props) {
       data-hw-night={theme ? "" : undefined}
     >
       <BrandStrip />
-      <MotionConfig reducedMotion="user">
-        <DeckNight.Provider value={!!theme}>{children}</DeckNight.Provider>
-      </MotionConfig>
+      <MotionConfig reducedMotion="user">{slides}</MotionConfig>
       {renderHW(displayLogo)}
     </div>
   );

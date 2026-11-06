@@ -4,6 +4,7 @@ import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
 import {
   arrivedBackwards,
+  closingClaim,
   deckLang,
   opensRevealed,
   deepDiveAsTransition,
@@ -85,6 +86,18 @@ describe("deckLang", () => {
     const untitled = { type: "title", title: "T" };
     expect(deckLang(deck([untitled, { ...untitled, lang: "de" }]))).toBe("de");
     expect(deckLang(deck([{ type: "statement" }]))).toBe("en");
+  });
+});
+
+describe("closingClaim", () => {
+  it("is the deck's language on a contact closing, a set language winning, none when off", () => {
+    const contact = { type: "closing", variant: "contact" } as const;
+    expect(closingClaim(contact, "de")).toBe("de");
+    expect(closingClaim({ type: "closing" }, "en")).toBe("en");
+    expect(closingClaim({ ...contact, claim: "en" }, "de")).toBe("en");
+    expect(closingClaim({ ...contact, claim: false }, "de")).toBeUndefined();
+    expect(closingClaim({ type: "closing", variant: "discussion" }, "de")).toBeUndefined();
+    expect(closingClaim(contact, undefined)).toBeUndefined();
   });
 });
 

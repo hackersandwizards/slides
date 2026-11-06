@@ -26,6 +26,7 @@ import {
   linkLabel,
   pageLabel,
   claimParts,
+  closingClaim,
   continuation,
   deckLang,
   deepDiveAsTransition,
@@ -3087,7 +3088,7 @@ const RENDER: {
     }
   },
 
-  closing(s, ctx, d) {
+  closing(s, ctx, d, deck) {
     const { c } = ctx;
     const discussion = d.variant === "discussion";
     const head = discussion ? (d.headline ?? d.line1 ?? "Discussion") : d.line1;
@@ -3216,9 +3217,10 @@ const RENDER: {
       y += 2.35 + linked;
     }
     const tail: Para[] = [];
-    if (d.claim) {
+    const claim = closingClaim(d, deckLang(deck));
+    if (claim) {
       // The claim in muted ink, the word brand names for it in teal, as ClosingSlide draws it.
-      const [before, word, after] = claimParts(d.claim);
+      const [before, word, after] = claimParts(claim);
       tail.push({
         runs: [
           { text: before, options: { color: c.muted } },
