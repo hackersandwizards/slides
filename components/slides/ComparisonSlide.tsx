@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type {
   ComparisonGuidanceSlide,
   ComparisonPositionsSlide,
@@ -9,18 +9,12 @@ import type {
   ComparisonSlide as ComparisonSlideType,
 } from "../../types/slide";
 import { usePrintMode } from "../../lib/print-context";
-import { useSlideKeyboard } from "../../lib/use-slide-keyboard";
 import { useCarousel } from "../../lib/use-carousel";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import XCircle from "lucide-react/icons/circle-x";
 import CheckCircle from "lucide-react/icons/circle-check-big";
-import {
-  opensRevealed as readOpensRevealed,
-  directionKey,
-  keepHyphenatedWords,
-  writeStored,
-} from "../../lib/slide-utils";
+import { keepHyphenatedWords } from "../../lib/slide-utils";
 import { SlideTitle, SlideCard, DisplayHeading } from "./primitives";
 import { renderMarkdown } from "../../lib/markdown";
 
@@ -86,36 +80,12 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
   const printMode = usePrintMode();
   // With `revealPunchline`, step 2 keeps the right side lit and adds the punchline.
   const lastStep = slide.punchline && slide.revealPunchline ? 2 : 1;
-  const [activeIndex, setActiveIndex] = useState(printMode ? -1 : 0);
-  // A backward arrival opens at the last step, after hydration so the server markup still matches.
-  const [opensRevealed] = useState(() => !printMode && readOpensRevealed());
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount reveal, as in useProgressiveReveal
-    if (opensRevealed) setActiveIndex(lastStep);
-    // Consumed, as useProgressiveReveal does, so a reload opens at step 0.
-    writeStored("session", directionKey(), null);
-  }, [opensRevealed, lastStep]);
-  const punchlineVisible = printMode || !slide.revealPunchline || activeIndex === 2;
-
-  useSlideKeyboard({
-    onRight: () => {
-      if (activeIndex < lastStep) {
-        setActiveIndex(activeIndex + 1);
-        return true;
-      }
-      return false;
-    },
-    onLeft: () => {
-      if (activeIndex > 0) {
-        setActiveIndex(activeIndex - 1);
-        return true;
-      }
-      return false;
-    },
+  const [activeIndex] = useCarousel({
+    count: lastStep + 1,
+    initial: printMode ? -1 : 0,
     enabled: !printMode,
-    pending: activeIndex < lastStep,
-    undoable: activeIndex > 0,
   });
+  const punchlineVisible = printMode || !slide.revealPunchline || activeIndex === 2;
 
   const sides = [slide.left, slide.right];
 

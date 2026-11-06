@@ -3,6 +3,7 @@ import type { ContentSlide, Presentation } from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
 import {
+  arrivedBackwards,
   opensRevealed,
   deepDiveAsTransition,
   gridAsContent,
@@ -71,6 +72,7 @@ describe("opensRevealed", () => {
   it("is true on a URL carrying ?revealed", () => {
     history.replaceState(null, "", "?revealed");
     expect(opensRevealed()).toBe(true);
+    expect(arrivedBackwards()).toBe(false);
     history.replaceState(null, "", location.pathname);
     expect(opensRevealed()).toBe(false);
   });

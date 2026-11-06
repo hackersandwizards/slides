@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useSyncExternalStore } from "react";
-import {
-  opensRevealed as readOpensRevealed,
-  directionKey,
-  ignoredKey,
-  writeStored,
-} from "./slide-utils";
+import { opensRevealed, directionKey, ignoredKey, writeStored } from "./slide-utils";
 import { usePrintMode } from "./print-context";
 
 // Which reveal handlers on the page still hold a step ahead, so the presenter hint can say "to
@@ -82,7 +77,7 @@ interface UseProgressiveRevealResult {
   footerVisible: boolean;
   /** True once the presenter's arrow press revealed the newest step, so a slide may light the
    *  step just revealed, the last one included. False when the slide opens fully revealed (print,
-   *  `startFull`, a backward arrival), which shows every step neutral. */
+   *  `startFull`, a backward arrival, `?revealed`), which shows every step neutral. */
   stepped: boolean;
 }
 
@@ -99,15 +94,15 @@ export function useProgressiveReveal({
   // Read during render, applied after mount: the server cannot see sessionStorage and renders the
   // slide unrevealed, and React keeps a hydrated tree's mismatched attributes as the server sent
   // them, so revealing in the first client render left a backward arrival blank.
-  const [opensRevealed] = useState(() => !full && totalSteps > 0 && readOpensRevealed());
+  const [revealed] = useState(() => !full && totalSteps > 0 && opensRevealed());
   useEffect(() => {
-    if (!opensRevealed) return;
+    if (!revealed) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount reveal above
     setRevealedCount(totalSteps);
     setFooterVisible(hasFooter);
-  }, [opensRevealed, totalSteps, hasFooter]);
-  // Consumed after mount, once every hook on the slide has read it in render, so a reload opens
-  // unrevealed. Here as well as in SlideNavigation: a story renders a slide without it.
+  }, [revealed, totalSteps, hasFooter]);
+  // Consumed after mount, once every hook on the slide has read it in render, so a reload after a
+  // backward arrival opens unrevealed. Here as well as in SlideNavigation: a story renders a slide without it.
   useEffect(() => writeStored("session", directionKey(), null), []);
 
   const stateRef = useRef({ revealedCount, footerVisible });

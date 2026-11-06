@@ -1,5 +1,8 @@
 import type { LogoConfig, Presentation, SlideLogo } from "../types/slide";
 
+/** The root paths a deck names the h&w marks by, the file's name as group 1. */
+export const BRAND_MARK = /^\/hw-((?:lockup|wordmark)(?:-night)?)\.svg$/;
+
 /** The default logo, and the one a deck names to stand for the h&w corner mark (`HwWordmark`). Its
  *  `src` is a name, not a file: `Image` draws it from brand's exports, `slides-pptx` its PNG cut. */
 export const HW_LOGO: LogoConfig = { src: "/hw-lockup.svg", alt: "hackers&wizards" };

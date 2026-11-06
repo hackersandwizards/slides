@@ -15,12 +15,11 @@ export default function Image({ src, priority, unoptimized, alt, ...rest }: Imag
   // batch into view and waits for it. Print always loads eagerly.
   const printMode = usePrintMode();
   const eager = priority || printMode;
+  const shared = { ...rest, src: logoUrl(src), alt: alt ?? "" };
   if (Framework)
     return (
       <Framework
-        {...rest}
-        src={logoUrl(src)}
-        alt={alt ?? ""}
+        {...shared}
         priority={priority}
         loading={eager ? "eager" : undefined}
         unoptimized={unoptimized}
@@ -28,9 +27,7 @@ export default function Image({ src, priority, unoptimized, alt, ...rest }: Imag
     );
   return (
     <img
-      {...rest}
-      src={logoUrl(src)}
-      alt={alt ?? ""}
+      {...shared}
       loading={eager ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : undefined}
     />

@@ -18,7 +18,7 @@ import type {
   SectionTheme,
   TitleSlide,
 } from "../types/slide";
-import { cornerMark, resolveSlideLogo } from "../lib/logo";
+import { BRAND_MARK, cornerMark, resolveSlideLogo } from "../lib/logo";
 import {
   isDeepDive,
   isHighlightPhase,
@@ -443,8 +443,6 @@ function imageSize(buf: Buffer): [number, number] | undefined {
   return undefined;
 }
 
-const BRAND_LOGOS = /^\/hw-(lockup|wordmark)(-night)?\.svg$/;
-
 function brandLogo(name: string): string {
   return createRequire(import.meta.url).resolve(`@hackersandwizards/brand/logos/${name}.png`);
 }
@@ -478,10 +476,8 @@ function picture(
     native?: boolean;
   } = {},
 ) {
-  const logo = BRAND_LOGOS.exec(src);
-  const path = logo
-    ? brandLogo(`${logo[1]}${logo[2] ?? ""}`)
-    : join(ctx.assets, src.replace(/^\//, ""));
+  const logo = BRAND_MARK.exec(src);
+  const path = logo ? brandLogo(logo[1]) : join(ctx.assets, src.replace(/^\//, ""));
   const size = existsSync(path) ? imageSize(readFileSync(path)) : undefined;
   if (!size) {
     ctx.warnings.push(
@@ -585,7 +581,7 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   }
   const logo = resolveSlideLogo(deck, index);
   const first = Array.isArray(logo) ? logo[0] : logo;
-  if (first && !BRAND_LOGOS.test(first.src)) {
+  if (first && !BRAND_MARK.test(first.src)) {
     picture(s, ctx, first.src, 24 / 144, H - 24 / 144 - 36 / 144, 1.4, 36 / 144, {
       alt: first.alt,
       align: "left",

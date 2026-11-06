@@ -3,17 +3,13 @@
 import { useState, useEffect } from "react";
 import type { QuestionSlide as QuestionSlideType } from "../../types/slide";
 import { usePrintMode } from "../../lib/print-context";
+import { useCarousel } from "../../lib/use-carousel";
 import { useSlideKeyboard } from "../../lib/use-slide-keyboard";
 import { BlurFade } from "../ui/blur-fade";
 import { NumberTicker } from "../ui/number-ticker";
 import { SlideShell } from "./SlideShell";
 import { DisplayHeading } from "./primitives";
-import {
-  opensRevealed as readOpensRevealed,
-  directionKey,
-  readStored,
-  writeStored,
-} from "../../lib/slide-utils";
+import { readStored, writeStored } from "../../lib/slide-utils";
 
 interface Props {
   slide: QuestionSlideType;
@@ -69,31 +65,10 @@ function usePersistedCounts(storageKey: string, length: number, printMode: boole
 export function QuestionSlide({ slide }: Props) {
   const { headline, storageKey, options } = slide;
   const printMode = usePrintMode();
-  const [cursor, setCursor] = useState(0);
-  // A backward arrival opens at the last option, as every stepped slide opens at its last step.
-  const [opensRevealed] = useState(() => !printMode && readOpensRevealed());
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount step above
-    if (opensRevealed) setCursor(options.length - 1);
-    writeStored("session", directionKey(), null);
-  }, [opensRevealed, options.length]);
+  const [cursor, setCursor] = useCarousel({ count: options.length, enabled: !printMode });
   const [counts, setCounts] = usePersistedCounts(storageKey, options.length, printMode);
 
   useSlideKeyboard({
-    onRight: () => {
-      if (cursor < options.length - 1) {
-        setCursor((prev) => prev + 1);
-        return true;
-      }
-      return false;
-    },
-    onLeft: () => {
-      if (cursor > 0) {
-        setCursor((prev) => prev - 1);
-        return true;
-      }
-      return false;
-    },
     onSpace: () => {
       setCounts((prev) => prev.map((c, i) => (i === cursor ? c + 1 : c)));
     },
@@ -106,8 +81,6 @@ export function QuestionSlide({ slide }: Props) {
       }
     },
     enabled: !printMode,
-    pending: cursor < options.length - 1,
-    undoable: cursor > 0,
   });
 
   return (

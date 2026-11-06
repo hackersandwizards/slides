@@ -8,7 +8,7 @@ import { useGoToSlide } from "../../lib/navigate";
 import { usePendingReveal } from "../../lib/use-progressive-reveal";
 import { arrowEvent, deckSync, ROLE_NAMES } from "../../lib/presenter-sync";
 import {
-  opensRevealed as readOpensRevealed,
+  arrivedBackwards as readArrivedBackwards,
   directionKey,
   ignoredKey,
   writeStored,
@@ -55,7 +55,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
   const atStart = currentIndex === 0 && !undoable;
   // Read during render, as every reveal hook on the slide reads it; consumed once they all have,
   // so a reload or a browser Forward onto the next slide does not open it revealed.
-  const [opensRevealed] = useState(readOpensRevealed);
+  const [arrivedBackwards] = useState(readArrivedBackwards);
   useEffect(() => writeStored("session", directionKey(), null), []);
 
   useEffect(() => {
@@ -68,12 +68,12 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
     const leave = deckSync.connect(`hw-slides:${basePath}`, totalSlides, (slide, direction) =>
       goToSlide(`${basePath}/${slide}`, direction),
     );
-    const arrival = setTimeout(() => deckSync.arrive(currentIndex, opensRevealed));
+    const arrival = setTimeout(() => deckSync.arrive(currentIndex, arrivedBackwards));
     return () => {
       clearTimeout(arrival);
       leave();
     };
-  }, [basePath, totalSlides, goToSlide, currentIndex, opensRevealed]);
+  }, [basePath, totalSlides, goToSlide, currentIndex, arrivedBackwards]);
 
   const navigate = useCallback(
     (direction: "back" | "forward") => {

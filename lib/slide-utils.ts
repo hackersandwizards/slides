@@ -35,15 +35,19 @@ function frameName(): string {
   return window.name;
 }
 
+/** Whether this slide was reached backwards, which `presenter-sync` tells the deck's other windows.
+ *  Safe in a render-phase state initializer, since it writes nothing but a frame's stable name:
+ *  `SlideNavigation` consumes the key after mount, once every hook on the slide has read it. */
+export function arrivedBackwards(): boolean {
+  return typeof window !== "undefined" && readStored("session", directionKey()) === "back";
+}
+
 /** Whether this slide opens with every build step shown: reached backwards, or by a URL carrying
- *  `?revealed`, which the README documents for catalogs and checks. Safe in a render-phase state
- *  initializer, since it writes nothing but a frame's stable name: `SlideNavigation` consumes the direction after mount, once every
- *  hook on the slide has read it. */
+ *  `?revealed`, which the README documents for catalogs and checks and stays with this window. */
 export function opensRevealed(): boolean {
   return (
-    typeof window !== "undefined" &&
-    (readStored("session", directionKey()) === "back" ||
-      new URLSearchParams(location.search).has("revealed"))
+    arrivedBackwards() ||
+    (typeof window !== "undefined" && new URLSearchParams(location.search).has("revealed"))
   );
 }
 

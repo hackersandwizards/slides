@@ -84,15 +84,15 @@ const blockPicks = [
 
 // Each slide renders in its own 1920x1080 frame, as scripts/render-pdf.ts sets its viewport: a
 // slide's lengths in `vh` (`.slide-content`, image heights) read the window that holds them.
+const slideMarkup = (index: number) =>
+  renderToStaticMarkup(
+    h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalogue, index })),
+  );
 const renderFrame = (index: number, name: string) => {
-  const markup = Object.entries(brandLogos)
-    .reduce(
-      (html, [file, url]) => html.replaceAll(`"${url}"`, `"${brandHref}/logos/${file}.svg"`),
-      renderToStaticMarkup(
-        h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalogue, index })),
-      ),
-    )
-    .replace(/(src|href|poster)="\/slide-catalogue\//g, '$1="slide-catalogue/');
+  let markup = slideMarkup(index);
+  for (const [file, url] of Object.entries(brandLogos))
+    markup = markup.replaceAll(`"${url}"`, `"${brandHref}/logos/${file}.svg"`);
+  markup = markup.replace(/(src|href|poster)="\/slide-catalogue\//g, '$1="slide-catalogue/');
   return { name, markup, index };
 };
 const frames = picks.map((index) => {
@@ -103,7 +103,7 @@ const frames = picks.map((index) => {
 // A type whose first slide draws no list marker adds its first slide that does, since the marker
 // check (test/marker-position.test.ts) measures only this page: comparison's split and activity's
 // demo drew nothing for a release while it passed.
-const marked = (index: number) => renderFrame(index, "").markup.includes("hw-marker");
+const marked = (index: number) => slideMarkup(index).includes("hw-marker");
 const markerFrames = [...new Set(picks.map((i) => deck[i].type))].flatMap((type) => {
   if (picks.some((i) => deck[i].type === type && marked(i))) return [];
   const index = deck.findIndex((s, i) => s.type === type && marked(i));

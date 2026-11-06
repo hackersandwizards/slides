@@ -9,7 +9,7 @@ describe("slidesOptimizeDeps", () => {
       expect.arrayContaining(["recharts", "motion/react", "shiki/core", "lucide-react/icons/mail"]),
     );
     expect(
-      include.filter((s) => /^(node:|next\/|prettier$|\.)|\.(json|css)$|\?url$/.test(s)),
+      include.filter((s) => /^(node:|next\/|prettier$|\.|@hackersandwizards\/)/.test(s)),
     ).toEqual([]);
   });
 
