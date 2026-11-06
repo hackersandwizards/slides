@@ -1,6 +1,7 @@
 "use client";
 
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense, useId, useMemo, type ReactNode } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { usePrintMode } from "../../lib/print-context";
 import type { ChartSlide as ChartSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
@@ -23,6 +24,40 @@ interface Props {
 function Annotation({ text }: { text: string }) {
   return (
     <p className="mt-6 text-center text-2xl font-medium text-balance text-secondary">{text}</p>
+  );
+}
+
+/** Draws its plot from left to right, as recharts grows the trend and bar plots (1.5 s, ease):
+ *  a clip over the whole drawing widens from nothing. Like a fade, a slide that a page load opens
+ *  on, a printed one and reduced motion show the plot at once. */
+function DrawIn({
+  width,
+  height,
+  children,
+}: {
+  width: number;
+  height: number;
+  children: ReactNode;
+}) {
+  const id = useId();
+  const mounted = useMounted();
+  const print = usePrintMode();
+  const reduced = useReducedMotion();
+  const still = !mounted || print || !!reduced;
+  if (still) return <>{children}</>;
+  return (
+    <>
+      <clipPath id={id}>
+        <motion.rect
+          y={-height}
+          height={height * 3}
+          initial={{ width: 0 }}
+          animate={{ width }}
+          transition={{ delay: 0.2, duration: 1.5, ease: "easeInOut" }}
+        />
+      </clipPath>
+      <g clipPath={`url(#${id})`}>{children}</g>
+    </>
   );
 }
 
@@ -62,85 +97,87 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
       {/* The segment labels sit on the top edge of the box; overflow keeps their tops. The box is
           12 units taller than the curve, so the percentages under it stay inside. */}
       <svg viewBox={`0 0 ${width} ${height + 12}`} className="w-full overflow-visible">
-        <path
-          d={`${pathD} L ${padding + graphWidth},${height - 40} L ${padding},${height - 40} Z`}
-          fill="var(--color-teal)"
-          fillOpacity={0.07}
-        />
+        <DrawIn width={width} height={height + 12}>
+          <path
+            d={`${pathD} L ${padding + graphWidth},${height - 40} L ${padding},${height - 40} Z`}
+            fill="var(--color-teal)"
+            fillOpacity={0.07}
+          />
 
-        <path d={pathD} fill="none" stroke="var(--color-teal)" strokeWidth="2.5" />
+          <path d={pathD} fill="none" stroke="var(--color-teal)" strokeWidth="2.5" />
 
-        {dividers.map((pos, i) => {
-          const x = padding + pos * graphWidth;
-          return (
-            <line
-              key={i}
-              x1={x}
-              y1={height - 40}
-              x2={x}
-              y2={height - 40 - bellCurve(pos) * graphHeight}
-              stroke="var(--color-text-muted)"
-              strokeWidth="1"
-              strokeDasharray="4 3"
-            />
-          );
-        })}
+          {dividers.map((pos, i) => {
+            const x = padding + pos * graphWidth;
+            return (
+              <line
+                key={i}
+                x1={x}
+                y1={height - 40}
+                x2={x}
+                y2={height - 40 - bellCurve(pos) * graphHeight}
+                stroke="var(--color-text-muted)"
+                strokeWidth="1"
+                strokeDasharray="4 3"
+              />
+            );
+          })}
 
-        {segments.map((seg, i) => {
-          const start = i === 0 ? 0 : dividers[i - 1];
-          const end = i === segments.length - 1 ? 1 : dividers[i];
-          const mid = (start + end) / 2;
-          const x = padding + mid * graphWidth;
-          const isActive = i === currentSegmentIndex;
+          {segments.map((seg, i) => {
+            const start = i === 0 ? 0 : dividers[i - 1];
+            const end = i === segments.length - 1 ? 1 : dividers[i];
+            const mid = (start + end) / 2;
+            const x = padding + mid * graphWidth;
+            const isActive = i === currentSegmentIndex;
 
-          return (
-            <g key={i}>
-              <text
-                x={x}
-                y={height - 18}
-                textAnchor="middle"
-                className="font-sans"
-                fontSize="21"
-                fill={isActive ? "var(--color-teal)" : "var(--color-text-muted)"}
-                fontWeight={isActive ? 600 : 400}
-              >
-                {seg.label}
-              </text>
-              <text
-                x={x}
-                y={height + 8}
-                textAnchor="middle"
-                className="font-sans"
-                fontSize="19"
-                fill="var(--color-text-muted)"
-              >
-                {seg.percentage}%
-              </text>
-              {isActive && (
-                <>
-                  <circle
-                    cx={x}
-                    cy={height - 40 - bellCurve(mid) * graphHeight}
-                    r="6"
-                    fill="var(--color-teal)"
-                  />
-                  {/* On the side the curve falls away from, so the label never crosses it. */}
-                  <text
-                    x={mid < 0.5 ? x - 14 : x + 14}
-                    y={height - 40 - bellCurve(mid) * graphHeight - 14}
-                    textAnchor={mid < 0.5 ? "end" : "start"}
-                    className="font-heading"
-                    fontSize="22"
-                    fill="var(--color-teal)"
-                    fontWeight={600}
-                  >
-                    We are here
-                  </text>
-                </>
-              )}
-            </g>
-          );
-        })}
+            return (
+              <g key={i}>
+                <text
+                  x={x}
+                  y={height - 18}
+                  textAnchor="middle"
+                  className="font-sans"
+                  fontSize="21"
+                  fill={isActive ? "var(--color-teal)" : "var(--color-text-muted)"}
+                  fontWeight={isActive ? 600 : 400}
+                >
+                  {seg.label}
+                </text>
+                <text
+                  x={x}
+                  y={height + 8}
+                  textAnchor="middle"
+                  className="font-sans"
+                  fontSize="19"
+                  fill="var(--color-text-muted)"
+                >
+                  {seg.percentage}%
+                </text>
+                {isActive && (
+                  <>
+                    <circle
+                      cx={x}
+                      cy={height - 40 - bellCurve(mid) * graphHeight}
+                      r="6"
+                      fill="var(--color-teal)"
+                    />
+                    {/* On the side the curve falls away from, so the label never crosses it. */}
+                    <text
+                      x={mid < 0.5 ? x - 14 : x + 14}
+                      y={height - 40 - bellCurve(mid) * graphHeight - 14}
+                      textAnchor={mid < 0.5 ? "end" : "start"}
+                      className="font-heading"
+                      fontSize="22"
+                      fill="var(--color-teal)"
+                      fontWeight={600}
+                    >
+                      We are here
+                    </text>
+                  </>
+                )}
+              </g>
+            );
+          })}
+        </DrawIn>
       </svg>
       {slide.annotation && <Annotation text={slide.annotation} />}
     </BlurFade>
@@ -183,26 +220,27 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
           />
         ))}
 
-        <path d={areaD} fill="var(--color-teal)" fillOpacity={0.07} />
-        <path d={pathD} fill="none" stroke="var(--color-teal)" strokeWidth="2.5" />
+        <DrawIn width={width} height={height}>
+          <path d={areaD} fill="var(--color-teal)" fillOpacity={0.07} />
+          <path d={pathD} fill="none" stroke="var(--color-teal)" strokeWidth="2.5" />
 
-        {currentMarker && markerPoint && (
-          <g>
-            <circle cx={markerPoint.x} cy={markerPoint.y} r="5" fill="var(--color-teal)" />
-            <text
-              x={markerPoint.x}
-              y={markerPoint.y - 18}
-              textAnchor="middle"
-              className="font-heading"
-              fontSize="22"
-              fill="var(--color-teal)"
-              fontWeight={600}
-            >
-              {currentMarker}
-            </text>
-          </g>
-        )}
-
+          {currentMarker && markerPoint && (
+            <g>
+              <circle cx={markerPoint.x} cy={markerPoint.y} r="5" fill="var(--color-teal)" />
+              <text
+                x={markerPoint.x}
+                y={markerPoint.y - 18}
+                textAnchor="middle"
+                className="font-heading"
+                fontSize="22"
+                fill="var(--color-teal)"
+                fontWeight={600}
+              >
+                {currentMarker}
+              </text>
+            </g>
+          )}
+        </DrawIn>
         {futureNote && (
           <text
             x={padding + 10}

@@ -1,8 +1,15 @@
 import { afterEach, describe, expect, it } from "vitest";
-import type { Presentation } from "../types/slide";
+import type { ContentSlide, Presentation } from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
-import { arrivedBackwards, gridAsContent, ignoredKey } from "../lib/slide-utils";
+import {
+  arrivedBackwards,
+  deepDiveAsTransition,
+  gridAsContent,
+  ignoredKey,
+  replacedBy,
+  twoColumnAsSplit,
+} from "../lib/slide-utils";
 
 const LOGO = { src: "/a.svg", alt: "A" };
 
@@ -112,5 +119,66 @@ describe("gridAsContent", () => {
       gridAsContent({ type: "grid", variant: "pillars", headline: "H", cards, columns }).content[0];
     expect(block(2)).toMatchObject({ type: "cards", columns: 2 });
     expect(block()).toMatchObject({ type: "cards", columns: 4 });
+  });
+});
+
+// Round of 06.11.2026: one neutral two-column on its own draws as the comparison's split, the
+// deep-dive divider as the night transition, and the catalogue lists both as replaced.
+describe("merges of 06.11.", () => {
+  const twoLists: ContentSlide = {
+    type: "content",
+    headline: "H",
+    content: [
+      {
+        type: "two-column",
+        left: { title: "L", items: ["a"] },
+        right: { title: "R", items: ["b"] },
+      },
+    ],
+    footer: "F",
+  };
+
+  it("draws a lone neutral two-column of lists as a split, its footer the punchline", () => {
+    expect(twoColumnAsSplit(twoLists)).toEqual({
+      type: "comparison",
+      variant: "split",
+      headline: "H",
+      left: { label: "L", items: ["a"] },
+      right: { label: "R", items: ["b"] },
+      punchline: "F",
+    });
+    expect(replacedBy(twoLists)).toBe("comparison split");
+  });
+
+  it.each([
+    ["a second block", { content: [...twoLists.content, { type: "paragraph", text: "p" }] }],
+    ["a judged variant", { content: [{ ...twoLists.content[0], variant: "success-error" }] }],
+    ["a section label", { sectionLabel: "S" }],
+    ["a ground", { ground: "primary" }],
+    [
+      "a text column",
+      {
+        content: [
+          {
+            type: "two-column",
+            left: { title: "L", text: "t" },
+            right: { title: "R", items: ["b"] },
+          },
+        ],
+      },
+    ],
+  ])("keeps the block with %s", (_, change) => {
+    expect(twoColumnAsSplit({ ...twoLists, ...change } as ContentSlide)).toBeUndefined();
+  });
+
+  it("draws a deep-dive divider as a night transition", () => {
+    expect(
+      deepDiveAsTransition({
+        type: "deep-dive-divider",
+        partLabel: "Part two",
+        kicker: "Deep dive",
+        headline: "H",
+      }),
+    ).toEqual({ type: "transition", night: true, headline: "H", preText: "Part two · Deep dive" });
   });
 });

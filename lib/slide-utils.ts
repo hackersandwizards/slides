@@ -3,8 +3,10 @@ import type {
   AgendaSlide,
   ContentSection,
   ComparisonGuidanceSlide,
+  ComparisonSidesSlide,
   ContentBlock,
   ContentSlide,
+  DeepDiveDividerSlide,
   DualPillOverviewSlide,
   EvolutionSlide,
   GridSlide,
@@ -14,6 +16,8 @@ import type {
   RoadmapSlide,
   StatementSlide,
   SectionTheme,
+  Slide,
+  TransitionSlide,
 } from "../types/slide";
 
 /** The sessionStorage key carrying the direction a navigation arrives from. The frames inside the
@@ -85,11 +89,13 @@ export function personAccent(index: number): "primary" | "secondary" {
  *  docs/agent-work/2026-11-01-deep-dive-brand.md). */
 export function isDeepDive(slide: {
   type: string;
+  night?: boolean;
   sectionTheme?: SectionTheme;
   phases?: { theme?: SectionTheme }[];
 }): boolean {
   return (
     slide.type === "deep-dive-divider" ||
+    (slide.type === "transition" && !!slide.night) ||
     slide.sectionTheme === "deepdive" ||
     (slide.phases?.some((p) => p.theme === "deepdive") ?? false)
   );
@@ -203,6 +209,50 @@ export function gridAsContent({ cards, ...slide }: GridSlide): ContentSlide {
     sectionTheme: slide.sectionTheme,
     headline: slide.headline,
     content: [block],
+  };
+}
+
+/** A content slide whose one block is a neutral `two-column` of two lists as the comparison's
+ *  `split` that replaces it, its footer the punchline; undefined for any other content slide. On
+ *  the same slides the split scored 7.58 against 7.02 for the block (blind panel 06.11.2026). */
+export function twoColumnAsSplit(slide: ContentSlide): ComparisonSidesSlide | undefined {
+  const [block, ...rest] = slide.content;
+  if (rest.length || block?.type !== "two-column" || (block.variant ?? "neutral") !== "neutral")
+    return;
+  if (slide.sectionLabel || slide.subtitle || slide.principle || slide.badge || slide.stageMarker)
+    return;
+  if (slide.ground || slide.background || slide.layout === "centered") return;
+  const side = ({ title, items, text }: typeof block.left) =>
+    title && items?.length && !text ? { label: title, items } : undefined;
+  const left = side(block.left);
+  const right = side(block.right);
+  if (!left || !right) return;
+  return {
+    type: "comparison",
+    variant: "split",
+    headline: slide.headline,
+    left,
+    right,
+    ...(slide.footer ? { punchline: slide.footer } : {}),
+  };
+}
+
+/** A `deep-dive-divider` as the night transition that replaces it. */
+export function deepDiveAsTransition({
+  partLabel,
+  kicker,
+  headline,
+  subtitle,
+  notes,
+}: DeepDiveDividerSlide & { notes?: string }): TransitionSlide & { notes?: string } {
+  const preText = [partLabel, kicker].filter(Boolean).join(" · ");
+  return {
+    type: "transition",
+    night: true,
+    headline,
+    ...(preText ? { preText } : {}),
+    ...(subtitle ? { subtitle } : {}),
+    ...(notes ? { notes } : {}),
   };
 }
 
@@ -352,3 +402,42 @@ export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlid
 /** Whether a process node is the phase a slide names, in any case. */
 export const isHighlightPhase = (title: string, phase?: string) =>
   !!phase && title.toLowerCase() === phase.toLowerCase();
+
+/** The entry that draws a deprecated form, or undefined for a form the catalogue offers: an alias
+ *  type, `regular` without a profile, a `grid` other than quotes, a centered content slide a
+ *  statement carries, a content slide holding a replaced block, and one whose one block is a neutral two-column. */
+export function replacedBy(slide: Slide): string | undefined {
+  switch (slide.type) {
+    case "evolution":
+      return "process";
+    case "dual-pill-overview":
+      return "roadmap";
+    case "guidance":
+      return "comparison guidance";
+    case "deep-dive-divider":
+      return "transition night";
+    case "regular": {
+      const to = regularAsContent(slide);
+      return to && (to.type === "agenda" ? "agenda" : "content");
+    }
+    case "grid":
+      return slide.variant === "quotes"
+        ? undefined
+        : slide.variant === "stats"
+          ? "numbers"
+          : "cards";
+    case "content": {
+      if (slide.layout === "centered" && centeredAsStatement(slide)) return "statement";
+      if (twoColumnAsSplit(slide)) return "comparison split";
+      for (const block of slide.content) {
+        if (block.type === "four-column" || block.type === "labeled-grid") return "cards";
+        if (block.type === "positions") return "comparison positions";
+        if (block.type === "transform") return "comparison before-after";
+        if (block.type === "pipeline" && pipelineAsFlow(block)) return "flow";
+      }
+      return undefined;
+    }
+    default:
+      return undefined;
+  }
+}

@@ -9,6 +9,7 @@ import { createRequire } from "node:module";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { tokens } from "@hackersandwizards/brand/tokens";
+import verbal from "@hackersandwizards/brand/verbal.json";
 import type {
   ContentBlock,
   MarkerTone,
@@ -1112,19 +1113,25 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
     case "positions": {
       const half = a.w / 2 - 0.15;
       const ch = a.h - 0.6;
-      for (const [side, x, i] of [
-        [b.left, a.x, 0],
-        [b.right, a.x + half + 0.3, 1],
+      for (const [side, x] of [
+        [b.left, a.x],
+        [b.right, a.x + half + 0.3],
       ] as const) {
-        const tone = c[THEME[personAccent(i)]] as string;
-        card(s, x, a.y, half, ch, c.card, tone);
+        // The web's neutral card: the name as a muted caps label, the stance in ink, the quote muted.
+        card(s, x, a.y, half, ch, c.card, c.border);
         box(
           s,
           c,
           [
-            { runs: [{ text: side.name }], mono: true, bold: true, rel: 1.1, after: 2 },
-            { runs: [{ text: side.stance, options: { color: tone } }], rel: 0.9, after: 8 },
-            { runs: md(`“${side.quote}”`, c) },
+            {
+              runs: [{ text: side.name.toUpperCase(), options: { color: c.muted } }],
+              mono: true,
+              bold: true,
+              rel: 0.7,
+              after: 4,
+            },
+            { runs: [{ text: side.stance }], mono: true, bold: true, rel: 1.6, after: 8 },
+            { runs: md(`“${side.quote}”`, c, { color: c.muted }) },
           ],
           x + 0.2,
           a.y + 0.2,
@@ -1137,8 +1144,16 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         s,
         c,
         [
-          ...(b.middle ? [{ runs: md(b.middle, c, { color: c.muted }), after: 4 }] : []),
-          { runs: md(b.resolution, c), bold: true },
+          ...(b.middle
+            ? [
+                {
+                  runs: [{ text: b.middle.toUpperCase(), options: { color: c.muted } }],
+                  mono: true,
+                  after: 4,
+                },
+              ]
+            : []),
+          { runs: md(b.resolution, c), mono: true, bold: true },
         ],
         a.x,
         a.y + ch + 0.1,
@@ -3068,6 +3083,22 @@ const RENDER: {
       y += 2.35;
     }
     const tail: Para[] = [];
+    if (d.claim) {
+      // The claim in muted ink, the word brand names for it in teal, as ClosingSlide draws it.
+      const [before, ...rest] = verbal.claim[d.claim].split(verbal.claim.word[d.claim]);
+      const word = rest.length ? verbal.claim.word[d.claim] : "";
+      tail.push({
+        runs: [
+          { text: before, options: { color: c.muted } },
+          ...(word ? [{ text: word, options: { color: c.teal } }] : []),
+          { text: rest.join(word), options: { color: c.muted } },
+        ].filter((r) => r.text),
+        mono: true,
+        bold: true,
+        after: 10,
+        align: "center",
+      });
+    }
     if (d.closingQuote)
       tail.push({
         runs: md(`“${d.closingQuote}”`, c, { color: c.teal }),

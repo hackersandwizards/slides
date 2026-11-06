@@ -13,4 +13,9 @@ import faviconSvg from "@hackersandwizards/brand/logos/favicon.svg?url&no-inline
 <script is:inline>
   document.documentElement.dataset.hwScale = "dense";
   document.documentElement.classList.add("hw-focus-ring");
+  // The shell's theme button sets data-theme on <html>, and brand's night tokens turn only a
+  // subtree marked data-hw-night: the catalog's own page is that subtree. A story's page is not,
+  // so a day slide stays day under a dark catalog.
+  if (!location.pathname.includes("/catalog/stories/"))
+    document.documentElement.dataset.hwNight = "";
 </script>

@@ -12,6 +12,7 @@ import { slideCatalogue } from "../specimen/slide-catalogue";
 import type { Slide } from "../types/slide";
 import * as primitives from "../components/slides/primitives";
 import { highlightLines } from "../lib/code-highlight";
+import { replacedBy } from "../lib/slide-utils";
 import * as chrome from "../components/slides/SlideChrome";
 import { PARTS, inRow } from "./parts";
 import exceptions from "../brand-elements.json";
@@ -45,29 +46,41 @@ const variantOf = (s: Slide) =>
   ("kind" in s && s.kind) ||
   ("strike" in s && s.strike === false ? "without strike" : "");
 
+// A deprecated form stays in the specimen deck, which the consumers test, but leaves the catalogue
+// for the one list of replaced forms: a new slide picks the entry that draws it.
+const offered = (s: Slide) => !replacedBy(s);
 const picks = (Object.keys(slideComponents) as (keyof typeof slideComponents)[])
   .filter((type) => !aliasTypes[type])
   .flatMap((type) => {
-    const first = deck.findIndex((s) => s.type === type);
-    if (first < 0) throw new Error(`specimen deck has no slide of type ${type}`);
+    const first = deck.findIndex((s) => s.type === type && offered(s));
+    if (first < 0) throw new Error(`specimen deck has no offered slide of type ${type}`);
     const seen = new Set([variantOf(deck[first])]);
     return [
       first,
       ...deck.flatMap((s, index) => {
-        if (s.type !== type || isBlockSlide(s) || hasCode(s) || seen.has(variantOf(s))) return [];
+        if (
+          s.type !== type ||
+          !offered(s) ||
+          isBlockSlide(s) ||
+          hasCode(s) ||
+          seen.has(variantOf(s))
+        )
+          return [];
         seen.add(variantOf(s));
         return [index];
       }),
     ];
   });
 const blocksOf = (s: Slide) => (s.type === "content" ? s.content.map((b) => b.type) : []);
-const labelled = deck.flatMap((s, index) => (isBlockSlide(s) && !hasCode(s) ? [index] : []));
+const labelled = deck.flatMap((s, index) =>
+  isBlockSlide(s) && !hasCode(s) && offered(s) ? [index] : [],
+);
 const carried = new Set([...picks, ...labelled].flatMap((i) => blocksOf(deck[i])));
 const blockPicks = [
   ...labelled,
-  ...[...new Set(deck.flatMap(blocksOf))]
+  ...[...new Set(deck.filter(offered).flatMap(blocksOf))]
     .filter((b) => !carried.has(b) && !codeBlocks.has(b))
-    .map((b) => deck.findIndex((s) => blocksOf(s).includes(b))),
+    .map((b) => deck.findIndex((s) => offered(s) && blocksOf(s).includes(b))),
 ];
 
 // Each slide renders in its own 1920x1080 frame, as scripts/render-pdf.ts sets its viewport: a
@@ -289,7 +302,6 @@ const exceptionLinks: Record<string, string[]> = {
   "chart-bars": ["chart", "block-bars"],
   "header-bars": ["roadmap", "gantt"],
   "stage-status": ["frames.html"],
-  "stance-quote": ["block-positions"],
 };
 export const exceptionSections = Object.entries(
   exceptions.exceptions as Record<string, string | { reason: string }>,
@@ -347,7 +359,6 @@ const JOB_OF: Record<string, Job[]> = {
   closing: ["open"],
   agenda: ["orient", "schedule"],
   transition: ["orient"],
-  "deep-dive-divider": ["orient"],
   overview: ["orient"],
   "phased-pills": ["orient"],
   roadmap: ["orient", "schedule"],
@@ -398,14 +409,16 @@ const JOB_OF: Record<string, Job[]> = {
 };
 // The deprecated names that now draw through an entry, so a search for an old name finds it.
 const REPLACES: Record<string, string[]> = {
-  cards: ["pillars", "labeled-grid", "four-column"],
-  numbers: ["stats"],
+  cards: ["pillars", "labeled-grid", "four-column", "grid"],
+  numbers: ["stats", "grid"],
   comparison: ["guidance", "transform", "positions"],
   flow: ["pipeline"],
   process: ["evolution"],
   roadmap: ["dual-pill-overview"],
   statement: ["centered"],
   agenda: ["regular"],
+  content: ["regular"],
+  transition: ["deep-dive-divider"],
 };
 const entryOf = (index: number) => {
   const slide = deck[index];
@@ -458,6 +471,30 @@ export const entries = [
   codeEntry,
 ];
 export const partTiles = partFrames.map(partTile).join("\n");
+
+// The replaced forms, each once: the old name and the entry that draws it.
+const formOf = (s: Slide) =>
+  s.type === "content"
+    ? s.layout === "centered" && replacedBy(s) === "statement"
+      ? "content, centered"
+      : replacedBy(s) === "comparison split"
+        ? "two-column, neutral, alone on a slide"
+        : (blocksOf(s).find((b) =>
+            replacedBy({ ...s, content: s.content.filter((x) => x.type === b) }),
+          ) ?? "content")
+    : [s.type, variantOf(s) || (s.type === "grid" ? "pillars" : "")].filter(Boolean).join(", ");
+export const replacedRows = [
+  ...new Map(
+    deck.flatMap((s) => {
+      const to = replacedBy(s);
+      return to ? [[formOf(s), to] as const] : [];
+    }),
+  ),
+]
+  .map(
+    ([from, to]) => `<tr><td><code>${attr(from)}</code></td><td><code>${attr(to)}</code></td></tr>`,
+  )
+  .join("\n");
 export const partRows = partFrames
   .map(
     (p) =>

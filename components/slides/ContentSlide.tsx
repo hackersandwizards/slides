@@ -19,7 +19,7 @@ import type {
 import { BlurFade } from "../ui/blur-fade";
 import { SectionHeader } from "./SectionHeader";
 import { Visual } from "./Visuals";
-import { Positions } from "./ComparisonSlide";
+import { ComparisonSlide, Positions } from "./ComparisonSlide";
 import { StatementSlide } from "./StatementSlide";
 import { SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
@@ -28,6 +28,7 @@ import { getStageClasses } from "../../lib/stage-utils";
 import { getSectionStyle } from "../../lib/section-styles";
 import {
   centeredAsStatement,
+  twoColumnAsSplit,
   fourColumnAsCards,
   isDeepDive,
   keepHyphenatedWords,
@@ -880,6 +881,8 @@ function StandardContentSlide({ slide }: Props) {
 }
 
 export function ContentSlide({ slide }: Props) {
+  const split = twoColumnAsSplit(slide);
+  if (split) return <ComparisonSlide slide={split} />;
   if (slide.layout === "centered") {
     const statement = centeredAsStatement(slide);
     if (statement) return <StatementSlide slide={statement} />;

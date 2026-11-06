@@ -12,10 +12,11 @@ interface Props {
 
 /** The headline centred on the ground, the label above it, the subtitle and speaker below. A section
  *  divider carries no gradient field and no decoration: blind-scored against the headline on the left
- *  half's gradient field, which read as pushed into the corner beside an empty half (2026-10-31). */
+ *  half's gradient field, which read as pushed into the corner beside an empty half (2026-10-31).
+ *  `night` opens a deep-dive part. */
 export function TransitionSlide({ slide }: Props) {
   return (
-    <SlideShell direction="col" overflowHidden ground={groundOf(slide)}>
+    <SlideShell direction="col" overflowHidden ground={groundOf(slide)} night={slide.night}>
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-4 text-center">
         {slide.preText && (
           <BlurFade delay={0.05} duration={0.4}>

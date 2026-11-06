@@ -101,11 +101,21 @@ describe("comparison variants (merge-comparison)", () => {
     expect(old).toContain("Bad");
   });
 
-  it("draws the positions variant with its verdict", () => {
+  // The resolution carries no label of the engine's own, which read in English on German decks;
+  // `middle` is its label where a deck gives one.
+  it("draws the positions variant with its resolution", () => {
     const side = { name: "A", stance: "S", quote: "q" };
-    const c = draw({ variant: "positions", left: side, right: side, resolution: "R" });
-    expect(c.textContent).toContain("The verdict");
+    const c = draw({
+      variant: "positions",
+      left: side,
+      right: side,
+      middle: "Both",
+      resolution: "R",
+    });
+    expect(c.textContent).not.toContain("The verdict");
     expect(c.textContent).toContain("“q”");
+    expect([...c.querySelectorAll("h2")].map((h) => h.textContent)).toContain("R");
+    expect(c.textContent).toContain("Both");
   });
 
   // `split` and `before-after` had dropped the highlight.

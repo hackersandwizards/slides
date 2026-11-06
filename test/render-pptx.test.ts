@@ -2,6 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import JSZip from "jszip";
+import verbal from "@hackersandwizards/brand/verbal.json";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { renderPptx } from "../scripts/render-pptx";
 import { slideCatalogue } from "../specimen/slide-catalogue";
@@ -120,14 +121,27 @@ describe("slides-pptx on the specimen deck", () => {
     }
   });
 
+  it("sets brand's claim on a closing that asks for it", () => {
+    const i = slideCatalogue.slides.findIndex((sl) => sl.type === "closing" && sl.claim);
+    expect(norm(unescape(slideText[i]))).toContain(norm(verbal.claim.en));
+  });
+
   it("sets every text of a slide as text on that slide", () => {
     const missing = slideCatalogue.slides.flatMap((slide: Slide, i) => {
       const shown = norm(unescape(slideText[i]));
       // A stats card shows its label in place of its title, as the web card does.
+      // A closing without portraits shows the h&w lockup in place of the company's name.
       const data =
         slide.type === "grid" && slide.variant === "stats"
           ? { ...slide, cards: slide.cards.map((cd) => (cd.label ? { ...cd, title: "" } : cd)) }
-          : slide;
+          : slide.type === "closing" && !slide.speakers?.some((sp) => sp.imageSrc)
+            ? {
+                ...slide,
+                speakers: slide.speakers?.map((sp) =>
+                  sp.company === "hackers&wizards" ? { ...sp, company: "" } : sp,
+                ),
+              }
+            : slide;
       return texts(data)
         .filter((t) => !shown.includes(norm(t)))
         .map((t) => `slide ${i + 1} (${slide.type}): ${t}`);

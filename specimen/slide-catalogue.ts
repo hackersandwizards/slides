@@ -1428,12 +1428,20 @@ const slides: Slide[] = [
   },
 
   {
+    type: "transition",
+    night: true,
+    preText: "Part two · Going deeper",
+    headline: "The operational\ntactics",
+    subtitle: "Where each tactic sits in the pipeline.",
+    notes: "transition: night, the divider that opens a deep-dive part.",
+  },
+  {
     type: "deep-dive-divider",
     partLabel: "Part two",
     kicker: "Going deeper",
     headline: "The operational\ntactics",
     subtitle: "Where each tactic sits in the pipeline.",
-    notes: "deep-dive-divider: all fields.",
+    notes: "deep-dive-divider, deprecated: all fields, drawn as the night transition above.",
   },
 
   {
@@ -1567,25 +1575,26 @@ const slides: Slide[] = [
       {
         name: "Mara Lindqvist",
         contact: "mara@example.com",
-        company: "Lumen Freight",
+        company: "hackers&wizards",
         imageSrc: `${IMG}/portrait-a.png`,
       },
       {
         name: "Jonas Okafor",
         contact: "jonas@example.com",
-        company: "Lumen Freight",
+        company: "hackers&wizards",
         imageSrc: `${IMG}/portrait-b.png`,
       },
     ],
-    closingQuote: "The best harness is the one nobody notices.",
-    notes: "closing: contact with two speakers and images, quote.",
+    claim: "en",
+    notes:
+      "closing: contact as an h&w deck closes, two speakers with images, the company claim. Fictional people.",
   },
   {
     type: "closing",
     variant: "contact",
     line1: "Questions?",
-    speakers: [{ name: "Mara Lindqvist", company: "Lumen Freight" }],
-    notes: "closing: contact, one speaker, no image.",
+    speakers: [{ name: "Mara Lindqvist", contact: "mara@example.com", company: "hackers&wizards" }],
+    notes: "closing: contact, one speaker, no image, the lockup. Fictional person.",
   },
   {
     type: "closing",
@@ -1618,6 +1627,20 @@ const slides: Slide[] = [
     headline: "Longest kicker: label, stage prefix and strip",
     content: [{ type: "paragraph", text: "Label and strip wrap, and the headline moves down." }],
     notes: "content: max-length section label with stage prefix and strip.",
+  },
+  {
+    type: "content",
+    headline: "Two lists, one block",
+    content: [
+      {
+        type: "two-column",
+        left: { title: "Chat", items: ["Answers a question", "Forgets the session"] },
+        right: { title: "Agent", items: ["Edits the files", "Runs the checks"] },
+      },
+    ],
+    footer: "Pick by what the work needs.",
+    notes:
+      "content, replaced: one neutral two-column of two lists, drawn as the comparison's split.",
   },
   {
     type: "grid",

@@ -588,6 +588,9 @@ export interface QuestionSlide {
 
 export interface TransitionSlide extends Grounded {
   type: "transition";
+  /** Stands on night, for the divider that opens a deep-dive part (the former
+   *  `deep-dive-divider`); the label above the headline is `preText`. */
+  night?: boolean;
   preText?: string;
   headline: string;
   subtitle?: string;
@@ -606,7 +609,10 @@ export interface ClosingSlide extends Grounded {
     imageSrc?: string;
     linkedIn?: string;
   }[];
+  /** A line someone said, in quote marks under the speakers. */
   closingQuote?: string;
+  /** The company claim under the speakers, in this language, as brand's `verbal.json` sets it. */
+  claim?: "en" | "de";
   seedQuestions?: string[];
   headline?: string;
 }
@@ -642,6 +648,9 @@ export interface RoadmapSlide {
   columns: [RoadmapColumn, RoadmapColumn];
 }
 
+/** @deprecated A `transition` slide with `night: true`, which draws it (`deepDiveAsTransition` in
+ *  `lib/slide-utils.ts`): `partLabel` and `kicker`, joined by " · ", are its `preText`. Moves in
+ *  phase 4 (work-phase-4-every-deck-slide-onto-a). */
 export interface DeepDiveDividerSlide {
   type: "deep-dive-divider";
   partLabel?: string;

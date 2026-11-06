@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type {
   ComparisonGuidanceSlide,
   ComparisonPositionsSlide,
@@ -18,7 +18,6 @@ import CheckCircle from "lucide-react/icons/circle-check-big";
 import {
   arrivedBackwards as readArrivedBackwards,
   directionKey,
-  personAccent,
   writeStored,
 } from "../../lib/slide-utils";
 import { SlideTitle, SlideCard, DisplayHeading } from "./primitives";
@@ -299,11 +298,13 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
       <div className="grid w-full grid-cols-2 gap-8">
         <BlurFade delay={0.2} duration={0.6}>
           <SlideCard className="h-full card-pad-8">
-            <h2 className="mb-6 font-heading text-2xl font-bold text-text">{slide.left.label}</h2>
+            <h2 className="mb-6 font-heading text-2xl font-bold text-text">
+              {renderMarkdown(slide.left.label)}
+            </h2>
             <Highlight text={slide.left.highlight} />
             <ul className="space-y-3">
               {slide.left.items.map((item, i) => (
-                <MarkedItem key={i}>{item}</MarkedItem>
+                <MarkedItem key={i}>{renderMarkdown(item)}</MarkedItem>
               ))}
             </ul>
           </SlideCard>
@@ -311,11 +312,13 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
 
         <BlurFade delay={0.3} duration={0.6}>
           <SlideCard className="h-full card-pad-8">
-            <h2 className="mb-6 font-heading text-2xl font-bold text-text">{slide.right.label}</h2>
+            <h2 className="mb-6 font-heading text-2xl font-bold text-text">
+              {renderMarkdown(slide.right.label)}
+            </h2>
             <Highlight text={slide.right.highlight} />
             <ul className="space-y-3">
               {slide.right.items.map((item, i) => (
-                <MarkedItem key={i}>{item}</MarkedItem>
+                <MarkedItem key={i}>{renderMarkdown(item)}</MarkedItem>
               ))}
             </ul>
           </SlideCard>
@@ -335,104 +338,36 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
   );
 }
 
-/** Two named stances with a quote each, an ampersand between them, and the verdict under them:
- *  the comparison's `positions` variant, and the deprecated positions block. */
+/** Two named stances, each on a neutral card with its quote, and the resolution under them, the
+ *  `middle` word as its label: the comparison's `positions` variant, and the deprecated positions
+ *  block. Blind-scored 8.00 against 6.75 for the coloured stances on an ampersand (06.11.2026). */
 export function Positions({
   block,
 }: {
   block: Pick<ComparisonPositionsSlide, "left" | "right" | "middle" | "resolution">;
 }) {
-  // The two sides are people or their stances: coloured by position, teal first, purple
-  // second, like every person on a slide (`personAccent`).
-  const POSITION_ACCENT = {
-    primary: { text: "text-primary", rule: "bg-primary/40", border: "border-primary/40" },
-    secondary: {
-      text: "text-secondary",
-      rule: "bg-secondary/40",
-      border: "border-secondary/40",
-    },
-  };
-
-  const renderSide = (side: typeof block.left, index: number, alignRight = false) => {
-    const a = POSITION_ACCENT[personAccent(index)];
-    const numeral = String(index + 1).padStart(2, "0");
-    return (
-      <div
-        className={`relative flex flex-col gap-8 ${alignRight ? "items-end text-right" : "items-start text-left"}`}
-      >
-        <div className="flex items-baseline gap-3">
-          {!alignRight && (
-            <span
-              className={`text-xs font-bold tracking-(--slide-index-tracking) tabular-nums ${a.text} opacity-70`}
-            >
-              {numeral}
-            </span>
-          )}
-          {!alignRight && <span className={`h-px w-10 self-center ${a.rule}`} />}
-          <span
-            className={`hw-label [--hw-label-size:var(--text-sm)] ${a.text}`}
-            data-hw-exception="label-hue"
-          >
-            {side.name}
-          </span>
-          {alignRight && <span className={`h-px w-10 self-center ${a.rule}`} />}
-          {alignRight && (
-            <span
-              className={`text-xs font-bold tracking-(--slide-index-tracking) tabular-nums ${a.text} opacity-70`}
-            >
-              {numeral}
-            </span>
-          )}
-        </div>
-
-        <h2
-          className={`font-heading text-8xl leading-(--slide-figure-leading) font-bold tracking-(--slide-figure-tracking) lg:text-(length:--slide-figure-size) ${a.text}`}
-        >
-          {/* A line breaks only between words: "All-in" never splits at its hyphen. */}
-          {side.stance.split(" ").map((word, i) => (
-            <Fragment key={i}>
-              {i > 0 && " "}
-              <span className="whitespace-nowrap">{word}</span>
-            </Fragment>
-          ))}
-        </h2>
-
-        <p
-          className={`mt-2 font-heading text-2xl leading-snug font-medium text-text-muted italic md:text-3xl ${alignRight ? "border-r-2 pr-5" : "border-l-2 pl-5"} ${a.border}`}
-        >
-          {`“${side.quote}”`}
-        </p>
-      </div>
-    );
-  };
-
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col items-stretch gap-20">
-      <div className="relative grid grid-cols-[1fr_auto_1fr] items-start gap-14 pt-4">
-        {renderSide(block.left, 0, true)}
-
-        <div aria-hidden="true" className="relative flex flex-col items-center self-stretch px-2">
-          <div className="w-px flex-1 bg-text-subtle/25" />
-          <span className="my-4 text-6xl leading-none text-text-subtle/40 md:text-7xl">&amp;</span>
-          <div className="w-px flex-1 bg-text-subtle/25" />
-        </div>
-
-        {renderSide(block.right, 1, false)}
+    <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-12">
+      <div className="grid w-full grid-cols-2 gap-8">
+        {[block.left, block.right].map((side, i) => (
+          <SlideCard key={i} className="h-full card-pad-8">
+            <p className="hw-label mb-4 [--hw-label-size:var(--text-base)]" data-tone="muted">
+              {side.name}
+            </p>
+            <h2 className="mb-6 font-heading text-5xl leading-tight font-bold text-text">
+              {side.stance}
+            </h2>
+            <p className="text-2xl leading-snug text-text-muted">{`“${side.quote}”`}</p>
+          </SlideCard>
+        ))}
       </div>
-
-      {block.middle && (
-        <p className="text-center text-lg text-text-subtle italic">{block.middle}</p>
-      )}
-
-      <div className="relative flex flex-col items-center gap-6">
-        <div className="flex items-center gap-4">
-          <div className="h-px w-16 bg-text-subtle/25" />
-          <span className="hw-label" data-tone="muted">
-            The verdict
-          </span>
-          <div className="h-px w-16 bg-text-subtle/25" />
-        </div>
-        <DisplayHeading as="h2" size="sm" className="max-w-4xl text-center">
+      <div className="flex w-full flex-col items-center gap-4">
+        {block.middle && (
+          <p className="hw-label [--hw-label-size:var(--text-base)]" data-tone="muted">
+            {block.middle}
+          </p>
+        )}
+        <DisplayHeading as="h2" size="sm" className="text-center">
           {renderMarkdown(block.resolution)}
         </DisplayHeading>
       </div>

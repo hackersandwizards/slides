@@ -6,6 +6,7 @@ import {
   JOBS,
   partRows,
   partTiles,
+  replacedRows,
   usesTiles,
   type Job,
 } from "../../../print";
@@ -336,6 +337,23 @@ const jobButtons = (Object.keys(JOBS) as Job[])
           </p>
         </div>
       </div>
+      <h2 id="replaced">Replaced forms</h2>
+      <p class="layers">
+        Forms another entry now draws. Decks still using them render unchanged until each moves
+        (phase 4); a new slide takes the entry on the right. The search above finds each by its old
+        name.
+      </p>
+      <table class="parts">
+        <thead>
+          <tr>
+            <th>Old form</th>
+            <th>Drawn as</th>
+          </tr>
+        </thead>
+        <tbody>
+          <Fragment set:html={replacedRows} />
+        </tbody>
+      </table>
     </div>
     <script is:inline>
       const tiles = [...document.querySelectorAll(".tiles figure")];

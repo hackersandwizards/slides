@@ -35,6 +35,7 @@ export const aliasTypes: Partial<Record<Slide["type"], Slide["type"]>> = {
   evolution: "process",
   "dual-pill-overview": "roadmap",
   guidance: "comparison",
+  "deep-dive-divider": "transition",
 };
 
 export const slideComponents: Record<Slide["type"], SlideComponent> = {

@@ -8,6 +8,7 @@ import { BlurFade } from "../ui/blur-fade";
 import { SlideShell, groundOf } from "./SlideShell";
 import { DisplayHeading, SlideCard } from "./primitives";
 import { personAccent } from "../../lib/slide-utils";
+import verbal from "@hackersandwizards/brand/verbal.json";
 
 interface Props {
   slide: ClosingSlideType;
@@ -77,6 +78,26 @@ const ACCENT = {
     bg: "bg-secondary/15 text-secondary",
   },
 };
+
+/** Brand's claim, the word brand names for it in the brand colour. */
+function Claim({ lang }: { lang: "en" | "de" }) {
+  const text = verbal.claim[lang];
+  const word = verbal.claim.word[lang];
+  const at = text.indexOf(word);
+  return (
+    <p className="mx-auto max-w-7xl px-(--slide-closing-side) text-center font-heading text-3xl leading-tight font-bold tracking-tight text-balance text-text-muted">
+      {at < 0 ? (
+        text
+      ) : (
+        <>
+          {text.slice(0, at)}
+          <span className="text-primary">{word}</span>
+          {text.slice(at + word.length)}
+        </>
+      )}
+    </p>
+  );
+}
 
 /** The closing line centred on the ground, the speakers and the lockup under it, no gradient field and
  *  no decoration, as on the title slide. */
@@ -238,6 +259,12 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                 </BlurFade>
               )}
             </>
+          )}
+
+          {slide.claim && (
+            <BlurFade delay={0.35} duration={0.4}>
+              <Claim lang={slide.claim} />
+            </BlurFade>
           )}
 
           {slide.closingQuote && (
