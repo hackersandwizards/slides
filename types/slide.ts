@@ -36,8 +36,8 @@ export interface TitleSlide {
   event?: string;
   /** A QR code and the link it encodes, small in the lower right, the link spelled out under it. */
   qr?: { src: string; href: string };
-  /** The deck's language, which joins `speakers` ("A and B", "A und B") and words the QR code's
-   *  alt text. Without it the speakers are joined with " & ". */
+  /** The deck's language (`deckLang`), which joins `speakers` ("A and B", "A und B"), words the QR
+   *  code's alt text and marks the page and the .pptx. Without it the speakers are joined with " & ". */
   lang?: "en" | "de";
 }
 

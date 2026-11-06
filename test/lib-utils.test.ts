@@ -4,6 +4,7 @@ import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
 import {
   arrivedBackwards,
+  deckLang,
   opensRevealed,
   deepDiveAsTransition,
   gridAsContent,
@@ -75,6 +76,15 @@ describe("opensRevealed", () => {
     expect(arrivedBackwards()).toBe(false);
     history.replaceState(null, "", location.pathname);
     expect(opensRevealed()).toBe(false);
+  });
+});
+
+describe("deckLang", () => {
+  it("is the first title slide's lang that is set, else English", () => {
+    const deck = (slides: unknown[]) => ({ name: "D", slides }) as Presentation;
+    const untitled = { type: "title", title: "T" };
+    expect(deckLang(deck([untitled, { ...untitled, lang: "de" }]))).toBe("de");
+    expect(deckLang(deck([{ type: "statement" }]))).toBe("en");
   });
 });
 

@@ -63,11 +63,16 @@ consumer's own exporter. The PowerPoint parser pulls in `image-size`, whose old 
 advisories, so a consumer adds `"overrides": { "image-size": "2.0.4" }` as this package does.
 
 A slide opens fully revealed on a URL carrying `?revealed`, such as `/<deck>/12?revealed`, as it does
-on a backward arrival: for a catalog tile, a screenshot or a check of the finished slide. A slide
-whose steps replace each other, such as a guidance comparison, opens at its last step; only print
-shows them all.
+on a backward arrival: for a catalog tile, a screenshot or a check of the finished slide. It shows
+no presenter hints there. A slide whose steps replace each other, such as a guidance comparison,
+opens at its last step; only print shows them all.
 A story frame sets it on its own page, as `SlideFrame.astro` does. In a frame the plain
 `slide-direction` key no longer reaches the slide, since each frame keeps its own. The print route needs none: `PrintProvider` opens every slide full.
+
+A deck's language is its title slide's `lang`, else English. A consumer's deck and print
+layouts set `<html lang={deckLang(presentation)}>` with `deckLang` from
+`@hackersandwizards/slides/lib/slide-utils`, so screen readers and hyphenation read the
+deck's language; `slides-pptx` marks its text with it.
 
 The package ships TypeScript source. Let the build transpile it: Next
 `transpilePackages: ["@hackersandwizards/slides"]`, Astro `vite.ssr.noExternal`, vitest

@@ -27,6 +27,7 @@ import {
   pageLabel,
   claimParts,
   continuation,
+  deckLang,
   deepDiveAsTransition,
   personAccent,
   qrAlt,
@@ -3902,6 +3903,7 @@ export async function renderPptx(
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE";
   pptx.title = deck.name;
+  const lang = { de: "de-DE", en: "en-US" }[deckLang(deck)] ?? "en-US";
   if (deck.speakers?.length) pptx.author = deck.speakers.join(", ");
   pptx.theme = { headFontFace: MONO, bodyFontFace: SANS };
   const dark = deck.theme === "brand-dark";
@@ -3926,9 +3928,7 @@ export async function renderPptx(
   // default face. pptxgenjs writes the typeface alone, or a sans pitch for every face in a table.
   const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
   const fallback: Record<string, string> = { [SANS]: "34", [MONO]: "49" };
-  for (const name of Object.keys(zip.files).filter((f) =>
-    /^ppt\/(slides|theme)\/[^/]+\.xml$/.test(f),
-  )) {
+  for (const name of Object.keys(zip.files).filter((f) => /^ppt\/.+\.xml$/.test(f))) {
     const xml = await zip.file(name)!.async("string");
     const n = /^ppt\/slides\/slide(\d+)\.xml$/.exec(name);
     const teal = ctxOf(n ? deck.slides[Number(n[1]) - 1] : undefined).c.teal;
@@ -3940,6 +3940,9 @@ export async function renderPptx(
           (m, face: string) =>
             fallback[face] ? `typeface="${face}" pitchFamily="${fallback[face]}" charset="0"` : m,
         )
+        // pptxgenjs marks every run en-US, so PowerPoint's spelling and hyphenation take a German
+        // deck for English.
+        .replaceAll('lang="en-US"', `lang="${lang}"`)
         // A bullet in the brand colour at four fifths of the text, as the web's square marker;
         // pptxgenjs writes no bullet colour.
         .replace(

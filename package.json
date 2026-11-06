@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -114,7 +114,7 @@
     "@eslint/js": "10.0.1",
     "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.8.0",
     "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.16.0",
-    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v2.9.0",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v2.10.0",
     "@tailwindcss/node": "4.3.3",
     "@tailwindcss/oxide": "4.3.3",
     "@tailwindcss/vite": "4.3.3",
@@ -170,6 +170,12 @@
         "path": "catalog/brand-urls.ts",
         "text": "../../brand",
         "reason": "the URL the print pages in dist/catalog/print/ link brand's files by, relative to the page, not a path in the checkout"
+      },
+      {
+        "check": "coupling",
+        "path": "catalog/brand-urls.ts",
+        "text": "node_modules\\/@hackersandwizards",
+        "reason": "the pattern placeBrandUrls matches in the url() Tailwind writes into the compiled stylesheet for an imported brand file, not a path the code reads"
       },
       {
         "check": "coupling",

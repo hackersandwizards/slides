@@ -23,6 +23,7 @@ const grid: GridSlide = {
 };
 
 afterEach(() => {
+  history.replaceState(null, "", "/");
   sessionStorage.clear();
   localStorage.clear();
 });
@@ -47,6 +48,13 @@ describe("SlideHints", () => {
     expect(queryByText("to reveal")).not.toBeNull();
     pressRight();
     expect(queryByText("to reveal")).toBeNull();
+  });
+
+  // A deck of its own, so the first-slide intro is still open.
+  it("shows no hints on ?revealed", () => {
+    history.replaceState(null, "", "/revealed-deck/0?revealed");
+    const { container } = render(<SlideHints slideIndex={0} />);
+    expect(container.textContent).toBe("");
   });
 
   it("shows the first-slide hints for the opening seconds only, and not again on a return", () => {

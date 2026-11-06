@@ -6,7 +6,7 @@ import Highlighter from "lucide-react/icons/highlighter";
 import { useMounted } from "../../lib/use-mounted";
 import { usePendingReveal } from "../../lib/use-progressive-reveal";
 import { deckSync } from "../../lib/presenter-sync";
-import { readStored, ignoredKey, writeStored } from "../../lib/slide-utils";
+import { readStored, ignoredKey, revealedUrl, writeStored } from "../../lib/slide-utils";
 
 interface Props {
   slideIndex: number;
@@ -66,8 +66,10 @@ export function SlideHints({ slideIndex }: Props) {
   }, []);
 
   // The hints are for whoever holds the keyboard: with a speaker window open the audience window
-  // is on the projector and shows the slide alone, and so do the frames that mirror it.
-  if (!mounted || !visible || speakerOpen || deckSync.role() === "preview") return null;
+  // is on the projector and shows the slide alone, and so do the frames that mirror it and a
+  // `?revealed` page.
+  if (!mounted || !visible || speakerOpen || deckSync.role() === "preview" || revealedUrl())
+    return null;
 
   const hints: { icon: React.ReactNode; text: string }[] = [];
 

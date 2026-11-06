@@ -11,9 +11,10 @@ const STRINGS_OR_COMMENTS =
  *  - The engine itself is excluded: pre-bundled, `lib/navigate.ts` splits from the `.tsx`
  *    components that import it by relative path, and the arrows move the URL but not the slide.
  *  - Every package its components and `lib/` import at run time (static, side-effect, re-exported
- *    or dynamic) is named, since Vite does not scan
- *    an excluded package: found on an island's first render instead, they re-run the optimizer
- *    and the island fails to hydrate with a 504. React's client and both JSX runtimes come with them.
+ *    or dynamic) is named, since Vite does not scan an excluded package. Unnamed, they are found
+ *    on an island's first render and re-run the optimizer (a 504 before Vite 8) or, on Vite 8,
+ *    load unbundled file by file (578 requests for a deck's first slide in talks, 146 with this
+ *    list, 06.11.2026). React's client and both JSX runtimes come with them.
  *  Read from the installed engine's source, so the list follows each release; `importsOf` names
  *  what stays out. */
 export function slidesOptimizeDeps(): { exclude: string[]; include: string[] } {

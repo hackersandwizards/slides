@@ -11,6 +11,7 @@ import type {
   EvolutionSlide,
   GridSlide,
   GuidanceSlide,
+  Presentation,
   ProcessSlide,
   RegularSlide,
   RoadmapSlide,
@@ -42,13 +43,15 @@ export function arrivedBackwards(): boolean {
   return typeof window !== "undefined" && readStored("session", directionKey()) === "back";
 }
 
-/** Whether this slide opens with every build step shown: reached backwards, or by a URL carrying
- *  `?revealed`, which the README documents for catalogs and checks and stays with this window. */
+/** Whether the URL carries `?revealed`, which the README documents for catalogs and checks: the
+ *  slide opens full and shows no presenter hints. The deck's other windows are not told. */
+export function revealedUrl(): boolean {
+  return typeof window !== "undefined" && new URLSearchParams(location.search).has("revealed");
+}
+
+/** Whether this slide opens with every build step shown: reached backwards, or on `?revealed`. */
 export function opensRevealed(): boolean {
-  return (
-    arrivedBackwards() ||
-    (typeof window !== "undefined" && new URLSearchParams(location.search).has("revealed"))
-  );
+  return arrivedBackwards() || revealedUrl();
 }
 
 /** A key the deck leaves alone. One held with Cmd, Ctrl or Alt belongs to the browser or the
@@ -119,6 +122,15 @@ export function isDeepDive(slide: {
 /** Whether a title slide carries a talk's opening, which TitleSlide draws left-aligned. */
 export function isOpening(slide: TitleSlide): boolean {
   return !!(slide.kicker || slide.name || slide.speakers?.length || slide.event || slide.qr);
+}
+
+/** The deck's language, for the `lang` of the page and the file that show it: the first title
+ *  slide's that sets one, else English. */
+export function deckLang(deck: Presentation): "en" | "de" {
+  return (
+    deck.slides.find((slide): slide is TitleSlide => slide.type === "title" && !!slide.lang)
+      ?.lang ?? "en"
+  );
 }
 
 /** A title slide's speakers in one line: in the slide's `lang` ("A and B", "A und B"), else

@@ -229,6 +229,31 @@ it("colours a deep-dive slide's bullets in the night teal, every other slide's i
   expect(night[0]).not.toBe(day[0]);
 });
 
+it("marks the text of a German deck German, its notes included", async () => {
+  const out = join(dir, "lang.pptx");
+  await renderPptx(
+    {
+      ...slideCatalogue,
+      slides: [
+        { type: "title", title: "Titel", lang: "de" },
+        {
+          type: "content",
+          headline: "H",
+          content: [{ type: "paragraph", text: "Text" }],
+          notes: "N",
+        },
+      ] as Slide[],
+    },
+    out,
+    join(import.meta.dirname, "..", "specimen"),
+  );
+  const pptx = await JSZip.loadAsync(readFileSync(out));
+  for (const part of ["ppt/slides/slide2.xml", "ppt/notesSlides/notesSlide2.xml"])
+    expect(await pptx.file(part)!.async("string")).toContain('lang="de-DE"');
+  for (const part of Object.keys(pptx.files).filter((f) => f.endsWith(".xml")))
+    expect(await pptx.file(part)!.async("string")).not.toContain('lang="en-US"');
+});
+
 // pptxgenjs split a run at its \n into paragraphs that each ended a line, so the bold word after
 // the break started a third line. Text boxes and table cells hand text to pptxgenjs apart.
 it.each([
