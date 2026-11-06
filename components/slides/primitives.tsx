@@ -15,6 +15,7 @@ import { usePrintMode } from "../../lib/print-context";
 import { DEFAULT_SECTION_STYLE } from "../../lib/section-styles";
 import { linkLabel } from "../../lib/slide-utils";
 import { BlurFade } from "../ui/blur-fade";
+import { Linkedin } from "../../lib/icons";
 
 /** A titled slide's column: headline on top, `.slide-body` below, both under the fit guard. */
 export function TitledContent({ children }: { children: ReactNode }) {
@@ -54,16 +55,27 @@ export function SlideSubtitle({ children, delay = 0.15 }: { children: ReactNode;
 }
 
 /** A link spelled out under a picture or a QR code, an arrow before it, opening in a new tab: the
- *  address's one link for the keyboard and screen readers. */
-export function LinkCaption({ href }: { href: string }) {
+ *  address's one link for the keyboard and screen readers. `linkedin`: a person's profile on a
+ *  profile card, the LinkedIn glyph before the address in muted body text. Blind panel 06.11.2026
+ *  (three personas, Claude and Codex twice each, noise 0.4): 8.08 of 10 against 7.50 for the glyph
+ *  and the word "LinkedIn" in teal, 7.00 for the arrow and address and 6.42 for an outlined button. */
+export function LinkCaption({ href, variant }: { href: string; variant?: "linkedin" }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="slide-media-caption slide-media-link"
+      className={
+        variant
+          ? "inline-flex items-center gap-2 text-lg text-text-muted"
+          : "slide-media-caption slide-media-link"
+      }
     >
-      <ArrowUpRight className="size-(--slide-link-icon) shrink-0" strokeWidth={2.25} />
+      {variant ? (
+        <Linkedin className="size-5 shrink-0" />
+      ) : (
+        <ArrowUpRight className="size-(--slide-link-icon) shrink-0" strokeWidth={2.25} />
+      )}
       {linkLabel(href)}
     </a>
   );

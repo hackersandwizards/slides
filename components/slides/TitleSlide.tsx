@@ -21,7 +21,9 @@ interface Props {
  *  against 7.75 for the whole stack centred on the left with the QR code apart, 7.68 for the same
  *  bottom row under a rule, 7.31 for the QR code beside the speakers under the title, and 4.65 for
  *  the opening set as a centred content slide. Noise 0.69 per reviewer, so the first three tie; it
- *  ranked first or second with every reviewer. */
+ *  ranked first or second with every reviewer. The QR code at 16rem, a third of the slide's height:
+ *  8.00 of 10 against 7.00 at 12rem and 6.67 at 20rem, which crowds the logo corner (blind panel
+ *  06.11.2026, a back-row attendee, a stream viewer and a designer, Claude and Codex). */
 function Opening({ slide }: Props) {
   return (
     <SlideShell direction="col" overflowHidden>
@@ -66,7 +68,7 @@ function Opening({ slide }: Props) {
                   alt={qrAlt(slide.qr.href, slide.lang)}
                   width={240}
                   height={240}
-                  className="size-48 rounded-brand"
+                  className="size-64 rounded-brand"
                 />
               </PictureLink>
               <LinkCaption href={slide.qr.href} />

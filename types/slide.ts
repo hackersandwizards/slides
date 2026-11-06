@@ -738,6 +738,8 @@ export interface GanttSlide {
   columns: string[];
   rows: GanttRow[];
   milestones?: { label: string; column: number }[];
+  /** The label of the milestone row, in the deck's language; "Meilensteine" without one. */
+  milestonesLabel?: string;
   footer?: string;
 }
 

@@ -256,6 +256,13 @@ const USES: Record<string, () => ReactNode> = {
       h(SlideCard, { tone: "success", look: "soft", className: "card-pad-4/6 text-lg" }, "success"),
     ),
   frame: () => h("div", { className: "hw-frame w-96 p-6 text-lg" }, "A group"),
+  field: () =>
+    h("input", {
+      type: "search",
+      className: "hw-field w-96",
+      placeholder: "Search a type",
+      "aria-label": "Search",
+    }),
   "icon-button": () =>
     h(
       "button",

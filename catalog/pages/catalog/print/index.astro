@@ -191,16 +191,8 @@ const jobButtons = (Object.keys(JOBS) as Job[])
         color: inherit;
       }
       .find {
-        box-sizing: border-box;
-        width: 100%;
         max-width: 30rem;
-        font: 1rem/1.4 var(--font-sans);
-        padding: 0.5rem 0.75rem;
         margin: 0 0 1.5rem;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
-        background: none;
-        color: var(--color-ink);
       }
       .meta {
         display: none;
@@ -325,7 +317,7 @@ const jobButtons = (Object.keys(JOBS) as Job[])
           <input
             type="search"
             id="find"
-            class="find"
+            class="hw-field find"
             placeholder="Search a type, block, variant or job"
             aria-label="Search the catalogue"
           />

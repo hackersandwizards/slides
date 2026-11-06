@@ -96,7 +96,11 @@ export const PARTS: Record<string, () => ReactNode> = {
       }),
     ),
   SlideTitle: () => h(SlideTitle, null, "A slide's headline on one line"),
-  LinkCaption: () => h(LinkCaption, { href: "https://example.com/harness" }),
+  LinkCaption: () =>
+    inRow(
+      h(LinkCaption, { href: "https://example.com/harness" }),
+      h(LinkCaption, { href: "https://www.linkedin.com/in/example", variant: "linkedin" }),
+    ),
   PictureLink: () =>
     h(PictureLink, {
       href: "https://example.com/harness",

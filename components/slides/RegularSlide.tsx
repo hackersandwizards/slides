@@ -5,9 +5,9 @@ import Image from "../ui/image";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import User from "lucide-react/icons/user";
-import { Linkedin } from "../../lib/icons";
 import { regularAsContent } from "../../lib/slide-utils";
 import { AgendaSlide } from "./AgendaSlide";
+import { LinkCaption } from "./primitives";
 import { ContentSlide } from "./ContentSlide";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { usePrintMode } from "../../lib/print-context";
@@ -45,16 +45,9 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
           </h2>
           <p className="mt-1 text-base font-medium text-teal md:text-lg">{profile.title}</p>
           {profile.linkedIn && (
-            <a
-              href={profile.linkedIn}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hw-button mt-3 gap-2"
-              data-variant="secondary"
-            >
-              <Linkedin className="size-6" />
-              LinkedIn
-            </a>
+            <span className="mt-3">
+              <LinkCaption href={profile.linkedIn} variant="linkedin" />
+            </span>
           )}
         </div>
       </BlurFade>

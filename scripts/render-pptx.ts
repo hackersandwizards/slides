@@ -24,6 +24,7 @@ import {
   isHighlightPhase,
   isOpening,
   linkLabel,
+  milestonesLabel,
   pageLabel,
   claimParts,
   deepDiveAsTransition,
@@ -611,6 +612,11 @@ function eventParas(
       : []),
   ];
 }
+
+/** A person's LinkedIn address in muted ink, linked: `LinkCaption`'s linkedin variant. */
+const profileLink = (url: string, c: Palette): Para => ({
+  runs: [{ text: linkLabel(url), options: { color: c.muted, hyperlink: { url } } }],
+});
 
 /** The height a slide's footer takes above the bottom edge: its line under a rule. */
 function footerHeight(ctx: Ctx, text?: string): number {
@@ -1876,8 +1882,8 @@ type Render = (s: PSlide, ctx: Ctx, slide: never, deck: Presentation) => void;
  *  its link. */
 function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   const { c } = ctx;
-  const qr = 256 / 144;
-  const rowH = d.qr ? 324 / 144 : 119 / 144;
+  const qr = 341 / 144;
+  const rowH = d.qr ? 409 / 144 : 119 / 144;
   const rowY = BOTTOM - rowH;
   // Each line of the heading with its options and the gap above it.
   const lines: [string, BoxOpts, number][] = [
@@ -2042,6 +2048,7 @@ const RENDER: {
         [
           { runs: [{ text: d.profile.name }], mono: true, bold: true, after: 4 },
           { runs: [{ text: d.profile.title, options: { color: c.teal } }], rel: 0.9 },
+          ...(d.profile.linkedIn ? [{ ...profileLink(d.profile.linkedIn, c), rel: 0.9 }] : []),
         ],
         a.x,
         a.y + 1.75,
@@ -2616,14 +2623,18 @@ const RENDER: {
   profiles(s, ctx, d) {
     const { c } = ctx;
     const y = header(s, ctx, d);
-    const footH = d.footer ? 0.4 : 0;
+    const footH = footerHeight(ctx, d.footer);
     const a = { ...BODY(y), h: BOTTOM - y - footH };
+    const body = (p: (typeof d.profiles)[number]): Para[] => [
+      ...bulletParas(p.bullets ?? [], c),
+      ...(p.linkedIn ? [profileLink(p.linkedIn, c)] : []),
+    ];
     const ch = Math.min(
       a.h,
       1.6 +
         Math.max(
           ...d.profiles.map((p) =>
-            need(bulletParas(p.bullets, c), c, a.w / d.profiles.length - 0.6, {
+            need(body(p), c, a.w / d.profiles.length - 0.6, {
               size: PT.base,
               color: c.ink,
             }),
@@ -2648,17 +2659,12 @@ const RENDER: {
         1.1,
         { size: PT.base, color: c.ink, valign: "middle" },
       );
-      box(s, c, bulletParas(p.bullets, c), r.x + 0.25, r.y + 1.45, r.w - 0.5, r.h - 1.6, {
+      box(s, c, body(p), r.x + 0.25, r.y + 1.45, r.w - 0.5, r.h - 1.6, {
         size: PT.base,
         color: c.ink,
       });
     });
-    if (d.footer)
-      box(s, c, d.footer, SIDE, a.y + ch + 0.15, CW, 0.3, {
-        size: PT.sm,
-        color: c.muted,
-        align: "center",
-      });
+    footer(s, ctx, d.footer, footH);
   },
 
   "phased-pills"(s, ctx, d) {
@@ -2807,7 +2813,7 @@ const RENDER: {
     const codeH = d.codeSnippet
       ? (d.codeSnippet.code.split("\n").length * PT.sm * 1.3) / 72 + 0.45
       : 0;
-    const footH = d.footer ? 0.45 : 0;
+    const footH = footerHeight(ctx, d.footer);
     const lh = Math.min(0.75, (BOTTOM - y - codeH - footH - 0.3) / d.lanes.length - 0.12);
     let yy = y;
     if (d.codeSnippet) {
@@ -2842,8 +2848,7 @@ const RENDER: {
         }
       });
     });
-    yy += d.lanes.length * (lh + 0.12) + 0.1;
-    if (d.footer) box(s, c, d.footer, SIDE, yy, CW, 0.35, { size: PT.base, color: c.ink });
+    footer(s, ctx, d.footer, footH);
   },
 
   chart(s, ctx, d) {
@@ -3140,7 +3145,7 @@ const RENDER: {
                 {
                   runs: [
                     {
-                      text: sp.linkedIn.replace(/^https?:\/\/(www\.)?/, ""),
+                      text: linkLabel(sp.linkedIn),
                       options: { color: c.teal, hyperlink: { url: sp.linkedIn } },
                     },
                   ],
@@ -3189,11 +3194,12 @@ const RENDER: {
                   },
                 ]
               : []),
+            ...(sp.linkedIn ? [{ ...profileLink(sp.linkedIn, c), rel: 0.8 }] : []),
           ],
           x,
           y + 1.2,
           sw,
-          1,
+          1.15,
           { size: PT.h4, color: c.ink, align: "center" },
         );
       });
@@ -3320,7 +3326,7 @@ const RENDER: {
   gantt(s, ctx, d) {
     const { c } = ctx;
     const y = header(s, ctx, d);
-    const footH = d.footer ? 0.4 : 0;
+    const footH = footerHeight(ctx, d.footer);
     const msH = d.milestones?.length ? 0.5 : 0;
     const lw = 2;
     const gx = SIDE + lw;
@@ -3376,7 +3382,7 @@ const RENDER: {
     });
     if (d.milestones?.length) {
       const my = y + 0.35 + d.rows.length * rh + 0.1;
-      box(s, c, { runs: [{ text: "MILESTONES" }] }, SIDE, my, lw - 0.15, 0.3, {
+      box(s, c, { runs: [{ text: milestonesLabel(d).toUpperCase() }] }, SIDE, my, lw - 0.15, 0.3, {
         size: PT.label,
         mono: true,
         bold: true,
@@ -3389,8 +3395,7 @@ const RENDER: {
         box(s, c, m.label, mx, my + 0.08, colW * 1.5, 0.25, { size: PT.label, color: c.purple });
       }
     }
-    if (d.footer)
-      box(s, c, d.footer, SIDE, BOTTOM - footH, CW, footH, { size: PT.sm, color: c.muted });
+    footer(s, ctx, d.footer, footH);
   },
 
   "team-topology"(s, ctx, d) {
@@ -3521,13 +3526,12 @@ const RENDER: {
         ? [{ runs: [{ text: "\t" }, ...md(it.text, c, { color: c.muted })], rel: 0.75, after: 10 }]
         : []),
     ]);
-    const footH = d.footer ? 0.7 : 0;
+    const footH = footerHeight(ctx, d.footer);
     box(s, c, paras, SIDE, y + 0.2, CW * 0.8, BOTTOM - y - 0.2 - footH, {
       size: PT.h3,
       color: c.ink,
     });
-    if (d.footer)
-      box(s, c, d.footer, SIDE, BOTTOM - footH, CW, footH, { size: PT.lead, color: c.ink });
+    footer(s, ctx, d.footer, footH);
   },
 
   activity(s, ctx, d) {

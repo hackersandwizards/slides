@@ -74,6 +74,10 @@ export function StatementSlide({ slide }: Props) {
   const hasSupporting = (slide.points && slide.points.length > 0) || slide.closing;
   const isSimple = !hasSupporting && !slide.subtitle && !slide.highlighted && !slide.crossedOut;
   const pointBaseDelay = 0.1 + slide.lines.length * 0.08;
+  // The closing keeps its own gap only after the points: without them the box's gap stands alone,
+  // so a quotation running from the subtitle into the closing reads as one (blind panel 06.11.2026,
+  // Claude and Codex: 7.75 of 10 against 5.75 for both gaps).
+  const afterPoints = slide.points?.length ? "mt-10" : "";
   const closingDelay = pointBaseDelay + (slide.points?.length ?? 0) * 0.06 + 0.05;
   // The source of what the slide quotes: after the closing where there is one, since a quotation
   // may run from the subtitle into the closing.
@@ -171,13 +175,17 @@ export function StatementSlide({ slide }: Props) {
             {slide.closing && (
               <BlurFade delay={closingDelay} duration={0.4}>
                 {slide.closingStyle === "quote" ? (
-                  <p className="mt-10 text-center text-2xl font-semibold tracking-tight text-text-subtle italic md:text-3xl">
+                  <p
+                    className={`${afterPoints} text-center text-2xl font-semibold tracking-tight text-text-subtle italic md:text-3xl`}
+                  >
                     <span className="text-primary/70">&ldquo;</span>
                     {renderMarkdown(slide.closing)}
                     <span className="text-primary/70">&rdquo;</span>
                   </p>
                 ) : (
-                  <p className="mt-10 text-center text-2xl font-semibold tracking-tight text-balance text-text md:text-3xl">
+                  <p
+                    className={`${afterPoints} text-center text-2xl font-semibold tracking-tight text-balance text-text md:text-3xl`}
+                  >
                     {renderMarkdown(slide.closing)}
                   </p>
                 )}

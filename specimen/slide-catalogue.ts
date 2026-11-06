@@ -1483,6 +1483,7 @@ const slides: Slide[] = [
       { label: "Baseline", column: 1 },
       { label: "Handover", column: 6 },
     ],
+    milestonesLabel: "Milestones",
     footer: "Fictional plan.",
     notes: "gantt: kicker, principle, sublabels, continuous bar, milestones, footer.",
   },
@@ -1589,6 +1590,7 @@ const slides: Slide[] = [
         contact: "mara@example.com",
         company: "hackers&wizards",
         imageSrc: `${IMG}/portrait-a.png`,
+        linkedIn: "https://www.linkedin.com/in/example",
       },
       {
         name: "Jonas Okafor",
@@ -1599,7 +1601,7 @@ const slides: Slide[] = [
     ],
     claim: "en",
     notes:
-      "closing: contact as an h&w deck closes, two speakers with images, the company claim. Fictional people.",
+      "closing: contact as an h&w deck closes, two speakers with images, the first with a LinkedIn link, the company claim. Fictional people.",
   },
   {
     type: "closing",

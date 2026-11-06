@@ -2,6 +2,9 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const engine = join(import.meta.dirname, "..");
+/** A string literal, kept, or a comment, dropped: a comment marker inside a string stays text. */
+const STRINGS_OR_COMMENTS =
+  /("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g;
 
 /** Vite's `optimizeDeps` for a consumer that serves the engine as source, as an Astro app's
  *  `vite.optimizeDeps`:
@@ -12,7 +15,8 @@ const engine = join(import.meta.dirname, "..");
  *    an excluded package: found on an island's first render instead, they re-run the optimizer
  *    and the island fails to hydrate with a 504. React's client and both JSX runtimes come with them.
  *  Read from the installed engine's source, so the list follows each release. Node built-ins,
- *  `next/*` (the Next adapter) and `prettier` (the edit mode's server) stay out. */
+ *  `next/*` (the Next adapter), `prettier` (the edit mode's server) and JSON or CSS files, which
+ *  Vite cannot pre-bundle and warns about on every start, stay out. */
 export function slidesOptimizeDeps(): { exclude: string[]; include: string[] } {
   const found = new Set([
     "react-dom",
@@ -23,13 +27,23 @@ export function slidesOptimizeDeps(): { exclude: string[]; include: string[] } {
   for (const dir of ["components", "lib"])
     for (const file of readdirSync(join(engine, dir), { recursive: true, encoding: "utf8" }))
       if (/\.tsx?$/.test(file))
-        for (const [, from, dynamic] of readFileSync(join(engine, dir, file), "utf8")
-          .replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, "")
-          .matchAll(
-            /^\s*(?:import|export)\s+(?!type\b)(?:[^;"]*?\sfrom\s+)?"([^".][^"]*)"|\bimport\(\s*"([^".][^"]*)"\s*\)/gm,
-          )) {
-          const spec = from ?? dynamic;
-          if (!/^(node:|next\/|prettier$|@hackersandwizards\/slides)/.test(spec)) found.add(spec);
-        }
+        for (const spec of importsOf(readFileSync(join(engine, dir, file), "utf8")))
+          found.add(spec);
   return { exclude: ["@hackersandwizards/slides"], include: [...found].sort() };
+}
+
+/** The packages a source imports at run time, static, side-effect, re-exported or dynamic, with
+ *  Node built-ins, `next/*`, `prettier`, the engine itself and JSON or CSS files left out. */
+export function importsOf(source: string): string[] {
+  return [
+    ...source
+      .replace(STRINGS_OR_COMMENTS, (_, string?: string) => string ?? "")
+      .matchAll(
+        /^\s*(?:import|export)\s+(?!type\b)(?:[^;"]*?\sfrom\s+)?"([^".][^"]*)"|\bimport\(\s*"([^".][^"]*)"\s*\)/gm,
+      ),
+  ]
+    .map(([, from, dynamic]) => from ?? dynamic)
+    .filter(
+      (spec) => !/^(node:|next\/|prettier$|@hackersandwizards\/slides)|\.(json|css)$/.test(spec),
+    );
 }

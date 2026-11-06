@@ -3,11 +3,10 @@
 import type { ReactNode } from "react";
 import Image from "../ui/image";
 import Mail from "lucide-react/icons/mail";
-import { Linkedin } from "../../lib/icons";
 import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell, groundOf } from "./SlideShell";
-import { DisplayHeading, SlideCard } from "./primitives";
+import { DisplayHeading, LinkCaption, SlideCard } from "./primitives";
 import { claimParts, personAccent } from "../../lib/slide-utils";
 
 interface Props {
@@ -71,12 +70,8 @@ function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
 }
 
 const ACCENT = {
-  primary: { ring: "ring-primary/40", text: "text-primary", bg: "bg-primary/15 text-primary" },
-  secondary: {
-    ring: "ring-secondary/40",
-    text: "text-secondary",
-    bg: "bg-secondary/15 text-secondary",
-  },
+  primary: { ring: "ring-primary/40", text: "text-primary" },
+  secondary: { ring: "ring-secondary/40", text: "text-secondary" },
 };
 
 /** A line under the speakers: brand's claim or a quote. */
@@ -141,7 +136,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                             {speaker.company}
                           </p>
                         )}
-                        <div className="mt-7 flex items-center gap-2">
+                        <div className="mt-7 flex flex-col items-center gap-4">
                           {speaker.contact && (
                             <a
                               href={`mailto:${speaker.contact}`}
@@ -153,15 +148,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                             </a>
                           )}
                           {speaker.linkedIn && (
-                            <a
-                              href={speaker.linkedIn}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              aria-label={`${speaker.name} on LinkedIn`}
-                              className={`flex items-center justify-center rounded-full p-3 transition-colors ${a.bg}`}
-                            >
-                              <Linkedin className="h-4 w-4 md:h-5 md:w-5" />
-                            </a>
+                            <LinkCaption href={speaker.linkedIn} variant="linkedin" />
                           )}
                         </div>
                       </div>

@@ -3,9 +3,10 @@
 import type { GanttSlide as GanttSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { isDeepDive } from "../../lib/slide-utils";
+import { renderMarkdown } from "../../lib/markdown";
+import { isDeepDive, milestonesLabel } from "../../lib/slide-utils";
 import { SectionHeader } from "./SectionHeader";
-import { TitledContent, SlideTitle } from "./primitives";
+import { TitledContent, SlideTitle, SlideFooter } from "./primitives";
 
 interface Props {
   slide: GanttSlideType;
@@ -106,7 +107,7 @@ export function GanttSlide({ slide }: Props) {
             <BlurFade delay={0.25 + slide.rows.length * 0.05} duration={0.4}>
               <div className="mt-3 md:hidden">
                 <div className="hw-label mb-1 [--hw-label-size:var(--text-sm)]" data-tone="muted">
-                  Meilensteine
+                  {milestonesLabel(slide)}
                 </div>
                 {slide.milestones.map((m, i) => (
                   <div key={i} className="text-sm leading-tight font-semibold text-secondary">
@@ -119,7 +120,7 @@ export function GanttSlide({ slide }: Props) {
                   className="hw-label w-80 shrink-0 text-right [--hw-label-size:var(--text-sm)]"
                   data-tone="muted"
                 >
-                  Meilensteine
+                  {milestonesLabel(slide)}
                 </div>
                 <div className="grid flex-1 gap-1" style={track}>
                   {slide.milestones.map((m, i) => (
@@ -137,9 +138,9 @@ export function GanttSlide({ slide }: Props) {
           )}
 
           {slide.footer && (
-            <BlurFade delay={0.35 + slide.rows.length * 0.05} duration={0.4}>
-              <p className="mt-5 text-lg text-text-muted">{slide.footer}</p>
-            </BlurFade>
+            <SlideFooter delay={0.35 + slide.rows.length * 0.05}>
+              {renderMarkdown(slide.footer)}
+            </SlideFooter>
           )}
         </div>
       </TitledContent>

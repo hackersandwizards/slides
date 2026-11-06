@@ -7,7 +7,7 @@ import { isDeepDive } from "../../lib/slide-utils";
 import { SectionHeader } from "./SectionHeader";
 import { CodeLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
-import { TitledContent, SlideTitle, CodePanel } from "./primitives";
+import { TitledContent, SlideTitle, CodePanel, SlideFooter } from "./primitives";
 
 interface Props {
   slide: LanesSlideType;
@@ -79,9 +79,9 @@ export function LanesSlide({ slide }: Props) {
           </div>
 
           {slide.footer && (
-            <BlurFade delay={0.3 + slide.lanes.length * 0.1} duration={0.5}>
-              <p className="mt-10 text-xl text-text-muted">{renderMarkdown(slide.footer)}</p>
-            </BlurFade>
+            <SlideFooter delay={0.3 + slide.lanes.length * 0.1}>
+              {renderMarkdown(slide.footer)}
+            </SlideFooter>
           )}
         </div>
       </TitledContent>

@@ -6,9 +6,9 @@ import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { useCarousel } from "../../lib/use-carousel";
 import User from "lucide-react/icons/user";
-import { Linkedin } from "../../lib/icons";
-import { TitledContent, SlideTitle, SlideCard } from "./primitives";
+import { TitledContent, SlideTitle, SlideCard, SlideFooter, LinkCaption } from "./primitives";
 import { personAccent } from "../../lib/slide-utils";
+import { renderMarkdown } from "../../lib/markdown";
 
 interface Props {
   slide: ProfilesSlideType;
@@ -99,16 +99,9 @@ export function ProfilesSlide({ slide }: Props) {
                     </ul>
 
                     {profile.linkedIn && (
-                      <a
-                        href={profile.linkedIn}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hw-button mt-8 gap-2 self-start"
-                        data-variant="secondary"
-                      >
-                        <Linkedin className="size-6" />
-                        LinkedIn
-                      </a>
+                      <span className="mt-8">
+                        <LinkCaption href={profile.linkedIn} variant="linkedin" />
+                      </span>
                     )}
                   </SlideCard>
                 </BlurFade>
@@ -116,9 +109,9 @@ export function ProfilesSlide({ slide }: Props) {
             })}
           </div>
           {slide.footer && (
-            <BlurFade delay={0.6} duration={0.5}>
-              <p className="mt-10 text-center text-lg text-text-muted">{slide.footer}</p>
-            </BlurFade>
+            <SlideFooter delay={0.6} className="self-stretch">
+              {renderMarkdown(slide.footer)}
+            </SlideFooter>
           )}
         </div>
       </TitledContent>

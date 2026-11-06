@@ -4,7 +4,7 @@ import { renderMarkdown } from "../../lib/markdown";
 import type { AgendaSlide as AgendaSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { TitledContent, SlideTitle } from "./primitives";
+import { TitledContent, SlideTitle, SlideFooter } from "./primitives";
 
 interface Props {
   slide: AgendaSlideType;
@@ -54,13 +54,7 @@ export function AgendaSlide({ slide }: Props) {
               </BlurFade>
             ))}
           </ol>
-          {slide.footer && (
-            <BlurFade delay={0.3} duration={0.4}>
-              <p className="mt-10 border-t-2 border-border pt-6 text-2xl font-medium text-text">
-                {renderMarkdown(slide.footer)}
-              </p>
-            </BlurFade>
-          )}
+          {slide.footer && <SlideFooter delay={0.3}>{renderMarkdown(slide.footer)}</SlideFooter>}
         </div>
       </TitledContent>
     </SlideShell>
