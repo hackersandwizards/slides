@@ -1,4 +1,6 @@
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
@@ -38,6 +40,20 @@ describe("chart draw-in", () => {
     const clip = container.querySelector("clipPath rect");
     expect(clip).toBeTruthy();
     expect(container.querySelector("g[clip-path] path")).toBeTruthy();
+  });
+
+  // The slide a page load opens on shows its plot at once: the clip hydrates at its full width.
+  it("opens a page load's slide with the plot whole", async () => {
+    const SlideComponent = slideComponents.chart;
+    const host = document.createElement("div");
+    host.innerHTML = renderToString(<SlideComponent slide={cycle} />);
+    await act(async () => {
+      hydrateRoot(host, <SlideComponent slide={cycle} />);
+    });
+    // The cycle's drawing is 900 wide, so its clip ends 1800 wide.
+    expect(parseFloat(host.querySelector("clipPath rect")?.getAttribute("width") ?? "0")).toBe(
+      1800,
+    );
   });
 
   it("prints the plot whole", () => {

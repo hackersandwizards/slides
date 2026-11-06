@@ -1,3 +1,4 @@
+import verbal from "@hackersandwizards/brand/verbal.json";
 import { ROLE_NAMES } from "./presenter-sync";
 import type {
   AgendaSlide,
@@ -219,8 +220,9 @@ export function twoColumnAsSplit(slide: ContentSlide): ComparisonSidesSlide | un
   const [block, ...rest] = slide.content;
   if (rest.length || block?.type !== "two-column" || (block.variant ?? "neutral") !== "neutral")
     return;
-  if (slide.sectionLabel || slide.subtitle || slide.principle || slide.badge || slide.stageMarker)
+  if (slide.sectionLabel || slide.sectionTheme || slide.subtitle || slide.principle || slide.badge)
     return;
+  if (slide.stageMarker || slide.stagePrefix) return;
   if (slide.ground || slide.background || slide.layout === "centered") return;
   const side = ({ title, items, text }: typeof block.left) =>
     title && items?.length && !text ? { label: title, items } : undefined;
@@ -399,43 +401,53 @@ export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlid
   return { type: "content", headline: slide.headline, content };
 }
 
+/** Brand's claim in a language, split around the word brand names for it: [before, word, after],
+ *  the word empty where the claim does not hold it. */
+export function claimParts(lang: "en" | "de"): [string, string, string] {
+  const text = verbal.claim[lang];
+  const word = verbal.claim.word[lang];
+  const at = text.indexOf(word);
+  return at < 0 ? [text, "", ""] : [text.slice(0, at), word, text.slice(at + word.length)];
+}
+
 /** Whether a process node is the phase a slide names, in any case. */
 export const isHighlightPhase = (title: string, phase?: string) =>
   !!phase && title.toLowerCase() === phase.toLowerCase();
 
 /** The entry that draws a deprecated form, or undefined for a form the catalogue offers: an alias
  *  type, `regular` without a profile, a `grid` other than quotes, a centered content slide a
- *  statement carries, a content slide holding a replaced block, and one whose one block is a neutral two-column. */
-export function replacedBy(slide: Slide): string | undefined {
+ *  statement carries, a content slide holding a replaced block, and one whose one block is a
+ *  neutral two-column. `form` names a content slide's replaced form. */
+export function replacedBy(slide: Slide): { to: string; form?: string } | undefined {
   switch (slide.type) {
     case "evolution":
-      return "process";
+      return { to: "process" };
     case "dual-pill-overview":
-      return "roadmap";
+      return { to: "roadmap" };
     case "guidance":
-      return "comparison guidance";
+      return { to: "comparison guidance" };
     case "deep-dive-divider":
-      return "transition night";
+      return { to: "transition night" };
     case "regular": {
       const to = regularAsContent(slide);
-      return to && (to.type === "agenda" ? "agenda" : "content");
+      return to && { to: to.type === "agenda" ? "agenda" : "content" };
     }
     case "grid":
       return slide.variant === "quotes"
         ? undefined
-        : slide.variant === "stats"
-          ? "numbers"
-          : "cards";
+        : { to: slide.variant === "stats" ? "numbers" : "cards" };
     case "content": {
-      if (slide.layout === "centered" && centeredAsStatement(slide)) return "statement";
-      if (twoColumnAsSplit(slide)) return "comparison split";
-      for (const block of slide.content) {
-        if (block.type === "four-column" || block.type === "labeled-grid") return "cards";
-        if (block.type === "positions") return "comparison positions";
-        if (block.type === "transform") return "comparison before-after";
-        if (block.type === "pipeline" && pipelineAsFlow(block)) return "flow";
+      if (slide.layout === "centered" && centeredAsStatement(slide))
+        return { to: "statement", form: "content, centered" };
+      if (twoColumnAsSplit(slide))
+        return { to: "comparison split", form: "two-column, neutral, alone on a slide" };
+      for (const { type } of slide.content) {
+        if (type === "four-column" || type === "labeled-grid") return { to: "cards", form: type };
+        if (type === "positions") return { to: "comparison positions", form: type };
+        if (type === "transform") return { to: "comparison before-after", form: type };
       }
-      return undefined;
+      const pipeline = slide.content.find((b) => b.type === "pipeline" && pipelineAsFlow(b));
+      return pipeline && { to: "flow", form: "pipeline" };
     }
     default:
       return undefined;

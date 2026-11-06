@@ -473,21 +473,15 @@ export const entries = [
 export const partTiles = partFrames.map(partTile).join("\n");
 
 // The replaced forms, each once: the old name and the entry that draws it.
-const formOf = (s: Slide) =>
-  s.type === "content"
-    ? s.layout === "centered" && replacedBy(s) === "statement"
-      ? "content, centered"
-      : replacedBy(s) === "comparison split"
-        ? "two-column, neutral, alone on a slide"
-        : (blocksOf(s).find((b) =>
-            replacedBy({ ...s, content: s.content.filter((x) => x.type === b) }),
-          ) ?? "content")
-    : [s.type, variantOf(s) || (s.type === "grid" ? "pillars" : "")].filter(Boolean).join(", ");
 export const replacedRows = [
   ...new Map(
     deck.flatMap((s) => {
-      const to = replacedBy(s);
-      return to ? [[formOf(s), to] as const] : [];
+      const r = replacedBy(s);
+      if (!r) return [];
+      const form =
+        r.form ??
+        [s.type, variantOf(s) || (s.type === "grid" ? "pillars" : "")].filter(Boolean).join(", ");
+      return [[form, r.to] as const];
     }),
   ),
 ]

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Image from "../ui/image";
 import Mail from "lucide-react/icons/mail";
 import { Linkedin } from "../../lib/icons";
@@ -7,8 +8,7 @@ import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell, groundOf } from "./SlideShell";
 import { DisplayHeading, SlideCard } from "./primitives";
-import { personAccent } from "../../lib/slide-utils";
-import verbal from "@hackersandwizards/brand/verbal.json";
+import { claimParts, personAccent } from "../../lib/slide-utils";
 
 interface Props {
   slide: ClosingSlideType;
@@ -79,23 +79,14 @@ const ACCENT = {
   },
 };
 
-/** Brand's claim, the word brand names for it in the brand colour. */
-function Claim({ lang }: { lang: "en" | "de" }) {
-  const text = verbal.claim[lang];
-  const word = verbal.claim.word[lang];
-  const at = text.indexOf(word);
+/** A line under the speakers: brand's claim or a quote. */
+function ClosingLine({ children }: { children: ReactNode }) {
   return (
-    <p className="mx-auto max-w-7xl px-(--slide-closing-side) text-center font-heading text-3xl leading-tight font-bold tracking-tight text-balance text-text-muted">
-      {at < 0 ? (
-        text
-      ) : (
-        <>
-          {text.slice(0, at)}
-          <span className="text-primary">{word}</span>
-          {text.slice(at + word.length)}
-        </>
-      )}
-    </p>
+    <BlurFade delay={0.35} duration={0.4}>
+      <p className="mx-auto max-w-7xl px-(--slide-closing-side) text-center font-heading text-3xl leading-tight font-bold tracking-tight text-balance text-text-muted">
+        {children}
+      </p>
+    </BlurFade>
   );
 }
 
@@ -262,19 +253,26 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
           )}
 
           {slide.claim && (
-            <BlurFade delay={0.35} duration={0.4}>
-              <Claim lang={slide.claim} />
-            </BlurFade>
+            <ClosingLine>
+              {/* The word brand names for its claim in the brand colour. */}
+              {claimParts(slide.claim).map((part, i) =>
+                i === 1 ? (
+                  <span key={i} className="text-primary">
+                    {part}
+                  </span>
+                ) : (
+                  part
+                ),
+              )}
+            </ClosingLine>
           )}
 
           {slide.closingQuote && (
-            <BlurFade delay={0.35} duration={0.4}>
-              <p className="mx-auto max-w-7xl px-(--slide-closing-side) text-center font-heading text-3xl leading-tight font-bold tracking-tight text-balance text-text-muted">
-                <span className="text-primary/70">&ldquo;</span>
-                {slide.closingQuote}
-                <span className="text-primary/70">&rdquo;</span>
-              </p>
-            </BlurFade>
+            <ClosingLine>
+              <span className="text-primary/70">&ldquo;</span>
+              {slide.closingQuote}
+              <span className="text-primary/70">&rdquo;</span>
+            </ClosingLine>
           )}
         </div>
       </div>

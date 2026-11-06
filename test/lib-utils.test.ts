@@ -147,7 +147,7 @@ describe("merges of 06.11.", () => {
       right: { label: "R", items: ["b"] },
       punchline: "F",
     });
-    expect(replacedBy(twoLists)).toBe("comparison split");
+    expect(replacedBy(twoLists)?.to).toBe("comparison split");
   });
 
   it.each([

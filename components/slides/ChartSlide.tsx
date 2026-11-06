@@ -28,8 +28,10 @@ function Annotation({ text }: { text: string }) {
 }
 
 /** Draws its plot from left to right, as recharts grows the trend and bar plots (1.5 s, ease):
- *  a clip over the whole drawing widens from nothing. Like a fade, a slide that a page load opens
- *  on, a printed one and reduced motion show the plot at once. */
+ *  a clip over the whole drawing widens from nothing. A printed slide and reduced motion show the
+ *  plot at once; so does the slide a page load opens on, whose clip mounts at its full width
+ *  (motion reads `initial` on mount only, as in BlurFade). The clip reaches half the drawing's
+ *  size past every edge, so a label the overflowing svg shows outside its box stays whole. */
 function DrawIn({
   width,
   height,
@@ -40,19 +42,19 @@ function DrawIn({
   children: ReactNode;
 }) {
   const id = useId();
-  const mounted = useMounted();
+  const hydrating = !useMounted();
   const print = usePrintMode();
   const reduced = useReducedMotion();
-  const still = !mounted || print || !!reduced;
-  if (still) return <>{children}</>;
+  if (print || reduced) return <>{children}</>;
   return (
     <>
       <clipPath id={id}>
         <motion.rect
+          x={-width / 2}
           y={-height}
           height={height * 3}
-          initial={{ width: 0 }}
-          animate={{ width }}
+          initial={hydrating ? false : { width: width / 2 }}
+          animate={{ width: width * 2 }}
           transition={{ delay: 0.2, duration: 1.5, ease: "easeInOut" }}
         />
       </clipPath>

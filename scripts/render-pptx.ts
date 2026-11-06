@@ -9,7 +9,6 @@ import { createRequire } from "node:module";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { tokens } from "@hackersandwizards/brand/tokens";
-import verbal from "@hackersandwizards/brand/verbal.json";
 import type {
   ContentBlock,
   MarkerTone,
@@ -24,6 +23,8 @@ import {
   isHighlightPhase,
   linkLabel,
   pageLabel,
+  claimParts,
+  deepDiveAsTransition,
   personAccent,
 } from "../lib/slide-utils";
 
@@ -3085,13 +3086,12 @@ const RENDER: {
     const tail: Para[] = [];
     if (d.claim) {
       // The claim in muted ink, the word brand names for it in teal, as ClosingSlide draws it.
-      const [before, ...rest] = verbal.claim[d.claim].split(verbal.claim.word[d.claim]);
-      const word = rest.length ? verbal.claim.word[d.claim] : "";
+      const [before, word, after] = claimParts(d.claim);
       tail.push({
         runs: [
           { text: before, options: { color: c.muted } },
-          ...(word ? [{ text: word, options: { color: c.teal } }] : []),
-          { text: rest.join(word), options: { color: c.muted } },
+          { text: word, options: { color: c.teal } },
+          { text: after, options: { color: c.muted } },
         ].filter((r) => r.text),
         mono: true,
         bold: true,
@@ -3171,33 +3171,9 @@ const RENDER: {
     });
   },
 
-  "deep-dive-divider"(s, ctx, d) {
-    // The night ground and its teal come from the slide's palette.
-    const { c } = ctx;
-    const label = [d.partLabel, d.kicker].filter(Boolean).join(" · ");
-    const paras: Para[] = [
-      ...(label
-        ? [
-            {
-              runs: [{ text: label.toUpperCase(), options: { color: c.teal } }],
-              mono: true,
-              bold: true,
-              rel: PT.lead / PT.display,
-              after: 14,
-            },
-          ]
-        : []),
-      { runs: md(d.headline, c), mono: true, bold: true, after: 14 },
-      ...(d.subtitle ? [{ runs: md(d.subtitle, c), rel: PT.lead / PT.display }] : []),
-    ];
-    box(s, c, paras, SIDE + 0.5, TOP, CW - 1, BOTTOM - TOP, {
-      size: PT.display,
-      color: c.ink,
-      align: "center",
-      valign: "middle",
-      line: 1.1,
-      floor: 0.5,
-    });
+  // Drawn as the night transition that replaces it, as on the web; `isDeepDive` gives it night.
+  "deep-dive-divider"(s, ctx, d, deck) {
+    RENDER.transition(s, ctx, deepDiveAsTransition(d), deck);
   },
 
   "dual-pill-overview"(s, ctx, d) {

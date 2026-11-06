@@ -18,6 +18,7 @@ import CheckCircle from "lucide-react/icons/circle-check-big";
 import {
   arrivedBackwards as readArrivedBackwards,
   directionKey,
+  keepHyphenatedWords,
   writeStored,
 } from "../../lib/slide-utils";
 import { SlideTitle, SlideCard, DisplayHeading } from "./primitives";
@@ -355,7 +356,7 @@ export function Positions({
               {side.name}
             </p>
             <h2 className="mb-6 font-heading text-5xl leading-tight font-bold text-text">
-              {side.stance}
+              {keepHyphenatedWords(side.stance)}
             </h2>
             <p className="text-2xl leading-snug text-text-muted">{`“${side.quote}”`}</p>
           </SlideCard>
