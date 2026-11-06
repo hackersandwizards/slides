@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { brandNames, placeBrandUrls, selfContained } from "../catalog/brand-urls";
 
-const font = "@hackersandwizards/brand/fonts/inter.woff2";
+const font = "../node_modules/@hackersandwizards/brand/tokens/fonts/inter.woff2";
 const placed = 'url("../x/fonts/inter.woff2")';
 
 describe("placeBrandUrls", () => {
@@ -9,6 +9,11 @@ describe("placeBrandUrls", () => {
     "places %s under its export name",
     (token) => expect(placeBrandUrls(`src: ${token};`, "../x")).toBe(`src: ${placed};`),
   );
+
+  it("places a file brand exports by its own path under that name", () => {
+    const css = 'a{b:url("/r/node_modules/@hackersandwizards/brand/tokens/print.css")}';
+    expect(placeBrandUrls(css, "../x")).toBe('a{b:url("../x/print.css")}');
+  });
 
   it("leaves a data URL as written, its inner quotes and brackets included", () => {
     const css = `a{mask:url("data:image/svg+xml,%3Csvg fill='rgb(0,0,0)'/%3E")}b{c:url(data:,x)}`;
@@ -31,6 +36,9 @@ describe("placeBrandUrls", () => {
     "url(fonts/inter.woff2)",
     'url("https://example.org/inter.woff2")',
     'url("@hackersandwizards/slides/x.png")',
+    'url("@hackersandwizards/brand/fonts/inter.woff2")',
+    'url("../node_modules/@hackersandwizards/brand/scripts/tokens.ts")',
+    'url("../node_modules/@hackersandwizards/slides/x.png")',
     'url("a" b)',
     "url()",
   ])("fails on %s, which it cannot place", (token) => {

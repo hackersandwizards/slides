@@ -8,6 +8,7 @@ export const compileSlides = (root: string) => {
     base: dirname(stylesheet),
     from: stylesheet,
     onDependency: () => {},
+    shouldRewriteUrls: true,
   });
 };
 

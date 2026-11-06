@@ -52,8 +52,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   consumer's `check-coupling` lets them through.
 - `scripts/render-pdf.ts`: prints a deck's print route to a PDF; each consumer's `export-pdf.ts`
   resolves deck, URL and file name and calls it.
-- `scripts/pins.ts`: the `slides-pins` command each consumer runs first in its gate: fails when
-  `node_modules` holds another version of an `@hackersandwizards/*` package than `package.json` pins.
+- `scripts/pins.ts`: the `slides-pins` command each consumer runs in its gate after the shared steps:
+  fails when `package.json` pins no brand, and, as the gate's install and `coupling` already do,
+  when `node_modules` holds another version of an `@hackersandwizards/*` package than it pins.
 - `scripts/density.ts`: the `slides-density` command each consumer runs in its gate: fails on a
   slide the fit guard shrinks below 0.8, lists those below 0.9. The engine's own regression decks
   are covered where talks runs it over the specimen deck.

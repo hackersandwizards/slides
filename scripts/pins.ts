@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
-// The install guard a consumer runs in its own gate: fails when node_modules holds a different
-// version of an `@hackersandwizards/*` package than package.json pins with `#v<version>`. A stale
+// A consumer runs this in its gate after scaffolding's shared steps, whose install and coupling step
+// check the versions too. It fails when node_modules holds a different version of an
+// `@hackersandwizards/*` package than package.json pins with `#v<version>`. A stale
 // install renders with the old engine or brand while every file reads the new pin: documents once
 // had brand 0.21.6 installed against a v0.24.4 pin, and its list markers vanished. It also fails
 // without a brand pin: the peer is optional, so bun installs such a consumer without a word.
