@@ -68,18 +68,11 @@ export function LinkCaption({ href }: { href: string }) {
   );
 }
 
-/** A picture linked to the address its `LinkCaption` spells out: for the pointer only, out of the
- *  tab order and hidden from screen readers, so the address is one link. */
+/** A picture linked to the address its `LinkCaption` spells out: out of the tab order, so the
+ *  keyboard reaches the address once; a screen reader still reads the picture's alt text. */
 export function PictureLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="contents"
-      tabIndex={-1}
-      aria-hidden="true"
-    >
+    <a href={href} target="_blank" rel="noopener noreferrer" className="contents" tabIndex={-1}>
       {children}
     </a>
   );

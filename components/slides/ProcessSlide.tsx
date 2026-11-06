@@ -213,11 +213,6 @@ export function ProcessSlide({ slide }: Props) {
                             highlighted ? "opacity-100" : "opacity-0"
                           }`}
                         />
-                        <div
-                          className={`absolute inset-0 rounded-brand transition-opacity duration-500 ${
-                            highlighted ? "opacity-100" : "opacity-0"
-                          }`}
-                        />
 
                         <div className="relative z-10 h-12 w-12 overflow-hidden rounded-brand-sm">
                           <div

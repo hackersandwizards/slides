@@ -52,7 +52,7 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
               className="hw-button mt-3 gap-2"
               data-variant="secondary"
             >
-              <Linkedin className="h-4 w-4" />
+              <Linkedin className="size-6" />
               LinkedIn
             </a>
           )}

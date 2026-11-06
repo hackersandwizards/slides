@@ -743,6 +743,7 @@ const slides: Slide[] = [
       name: "Mara Lindqvist",
       title: "Platform lead, Lumen Freight",
       imageSrc: `${IMG}/portrait-a.png`,
+      linkedIn: "https://www.linkedin.com/in/example",
     },
     sections: [
       { title: "What she built", items: ["One harness", "Shared checks"] },
@@ -752,7 +753,7 @@ const slides: Slide[] = [
         link: { url: "https://example.com", label: "Read more" },
       },
     ],
-    notes: "regular: default layout with profile and image.",
+    notes: "regular: default layout with profile, image and LinkedIn link.",
   },
   {
     type: "regular",
@@ -1092,6 +1093,7 @@ const slides: Slide[] = [
         company: "Lumen Freight",
         imageSrc: `${IMG}/portrait-a.png`,
         bullets: ["Built the harness", "Ten years of platform work"],
+        linkedIn: "https://www.linkedin.com/in/example",
       },
       {
         name: "Jonas Okafor",
@@ -1102,7 +1104,7 @@ const slides: Slide[] = [
       },
     ],
     footer: "Both fictional.",
-    notes: "profiles: two with images and footer.",
+    notes: "profiles: two with images and footer, the first with a LinkedIn link.",
   },
   {
     type: "profiles",

@@ -689,16 +689,10 @@ html:has(.print-slide) {
     background-color: var(--color-night-2) !important;
   }
 
-  /* White type on the gradient stays white, as the design guide sets it on every ground. */
+  /* On night, white type takes the night colour. */
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
-    .text-white:not([class*="bg-gradient"]) {
+    .text-white {
     color: var(--color-night);
-  }
-
-  /* A card's white gradient stop turns the card ground too. */
-  :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
-    .to-white {
-    --tw-gradient-to: var(--color-night-2);
   }
 }
 

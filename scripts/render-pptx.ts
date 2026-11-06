@@ -383,9 +383,12 @@ function chip(
   fill: string,
   color: string,
   mono = true,
+  /** A label box instead of a pill: its line and the small corner (`--slide-radius-sm`, 0.46875
+   *  of the stage's 90 rem). */
+  line?: string,
 ) {
   const w = (plain(text).length * size * (mono ? 0.66 : 0.56)) / 72 + 0.3;
-  card(s, x, y, w, (size * 1.9) / 72, fill, undefined, (size * 1.9) / 144);
+  card(s, x, y, w, (size * 1.9) / 72, fill, line, line ? (0.46875 * W) / 90 : (size * 1.9) / 144);
   box(s, c, { runs: [{ text: plain(text) }] }, x, y, w, (size * 1.9) / 72, {
     size,
     mono,
@@ -452,7 +455,8 @@ function picture(
   o: {
     alt?: string;
     href?: string;
-    round?: boolean;
+    /** Cropped to a square that it fills, as a portrait. */
+    square?: boolean;
     align?: "center" | "left";
     /** Never drawn larger than the file at 144 px to the inch, as the slide never scales one up. */
     native?: boolean;
@@ -477,7 +481,7 @@ function picture(
     return { x, y, w, h };
   }
   const [iw, ih] = size;
-  if (o.round) {
+  if (o.square) {
     const d = Math.min(w, h);
     s.addImage({
       path,
@@ -485,7 +489,6 @@ function picture(
       y,
       w: d,
       h: d,
-      rounding: true,
       sizing: { type: "cover", w: d, h: d },
       altText: o.alt,
     });
@@ -1795,16 +1798,10 @@ function portrait(
   d: number,
   tone: string,
 ) {
-  if (src) picture(s, ctx, src, x, y, d, d, { round: true, alt: name });
+  // The web's brand corner; pptxgenjs crops a picture to a circle only, so a portrait stays square.
+  if (src) picture(s, ctx, src, x, y, d, d, { square: true, alt: name });
   else {
-    s.addShape("ellipse", {
-      x,
-      y,
-      w: d,
-      h: d,
-      fill: { color: mix(tone, ctx.c.bg, 0.25) },
-      line: { type: "none" },
-    });
+    card(s, x, y, d, d, mix(tone, ctx.c.bg, 0.25));
     box(
       s,
       ctx.c,
@@ -1876,7 +1873,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   const label = d.qr && `↗ ${linkLabel(d.qr.href)}`;
   const colW = label ? Math.max(qr, (label.length * PT.base * ADVANCE.mono) / 72 + 0.1) : 0;
   const textW = CW - (colW && colW + 0.5);
-  const speakers = d.speakers && literal(d.speakers.join(" & "));
+  const speakers = d.speakers?.length ? literal(d.speakers.join(" & ")) : undefined;
   const left = (speakers ? 53 / 144 : 0) + (d.event ? (speakers ? 17 / 144 : 0) + 49 / 144 : 0);
   let ly = mid - left / 2;
   if (speakers) {
@@ -2642,7 +2639,7 @@ const RENDER: {
     const { c } = ctx;
     const a = { x: SIDE + 1, y: TOP + 0.2, w: CW - 2, h: BOTTOM - TOP - 0.2 };
     card(s, a.x, a.y, a.w, a.h, c.card, c.border);
-    chip(s, c, "THE FACTORY", W / 2 - 0.75, a.y - 0.15, PT.label, c.teal, c.card);
+    chip(s, c, "THE FACTORY", W / 2 - 0.75, a.y - 0.15, PT.label, c.card, c.ink, true, c.ink);
     const half = (a.h - 0.6) / 2;
     const lane = (
       label: string,

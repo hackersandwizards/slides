@@ -106,7 +106,7 @@ export function ProfilesSlide({ slide }: Props) {
                         className="hw-button mt-8 gap-2 self-start"
                         data-variant="secondary"
                       >
-                        <Linkedin className="h-5 w-5" />
+                        <Linkedin className="size-6" />
                         LinkedIn
                       </a>
                     )}

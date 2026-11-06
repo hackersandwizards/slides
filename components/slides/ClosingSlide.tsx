@@ -148,7 +148,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                               className="hw-button gap-2"
                               data-variant="secondary"
                             >
-                              <Mail className="h-4 w-4 md:h-5 md:w-5" />
+                              <Mail className="size-6" />
                               <span>{speaker.contact}</span>
                             </a>
                           )}
@@ -168,7 +168,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                       {!isLast && (
                         <div
                           aria-hidden="true"
-                          className="hidden w-px self-stretch bg-gradient-to-b from-transparent via-text-subtle/25 to-transparent md:block"
+                          className="hidden w-px self-stretch bg-text-subtle/25 md:block"
                         />
                       )}
                     </div>

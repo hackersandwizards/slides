@@ -7,7 +7,8 @@ const engine = join(import.meta.dirname, "..");
  *  `vite.optimizeDeps`:
  *  - The engine itself is excluded: pre-bundled, `lib/navigate.ts` splits from the `.tsx`
  *    components that import it by relative path, and the arrows move the URL but not the slide.
- *  - Every package its components and `lib/` import at run time is named, since Vite does not scan
+ *  - Every package its components and `lib/` import at run time (static, side-effect, re-exported
+ *    or dynamic) is named, since Vite does not scan
  *    an excluded package: found on an island's first render instead, they re-run the optimizer
  *    and the island fails to hydrate with a 504. React's client and both JSX runtimes come with them.
  *  Read from the installed engine's source, so the list follows each release. Node built-ins,
@@ -22,9 +23,13 @@ export function slidesOptimizeDeps(): { exclude: string[]; include: string[] } {
   for (const dir of ["components", "lib"])
     for (const file of readdirSync(join(engine, dir), { recursive: true, encoding: "utf8" }))
       if (/\.tsx?$/.test(file))
-        for (const [, spec] of readFileSync(join(engine, dir, file), "utf8").matchAll(
-          /import\s+(?!type\b)[^;]*?\sfrom\s+"([^".][^"]*)"/g,
-        ))
+        for (const [, from, dynamic] of readFileSync(join(engine, dir, file), "utf8")
+          .replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, "")
+          .matchAll(
+            /^\s*(?:import|export)\s+(?!type\b)(?:[^;"]*?\sfrom\s+)?"([^".][^"]*)"|\bimport\(\s*"([^".][^"]*)"\s*\)/gm,
+          )) {
+          const spec = from ?? dynamic;
           if (!/^(node:|next\/|prettier$|@hackersandwizards\/slides)/.test(spec)) found.add(spec);
+        }
   return { exclude: ["@hackersandwizards/slides"], include: [...found].sort() };
 }
