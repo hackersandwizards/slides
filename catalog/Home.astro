@@ -15,12 +15,9 @@ const exceptions = Object.entries(
       Tokens (<code>styles/tokens.css</code>) feed the parts, the parts make the slide types. Every
       story renders at the stage scale.
     </p>
-    <p>
-      Brand elements: {elements.uses.length} from brand, {exceptions.length} kept as the slides'
-      own.
-    </p>
     {/* prettier-ignore */}
-    <p>From brand: {elements.uses.map((name, i) => [i ? ", " : "", <code>hw-{name}</code>])}.</p>
+    <p>{elements.uses.length} elements from brand: {elements.uses.map((name, i) => [i ? ", " : "", <code>hw-{name}</code>])}.</p>
+    <p>{exceptions.length} kept as the slides' own:</p>
     <ul>
       {exceptions.map(([name, reason]) => (
         <li>
@@ -36,7 +33,6 @@ const exceptions = Object.entries(
 
 <style>
   .ds-foundations {
-    margin-top: 1.5rem;
     font-size: var(--text-ui);
   }
   .ds-foundations p,
