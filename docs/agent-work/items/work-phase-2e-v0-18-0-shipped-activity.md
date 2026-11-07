@@ -11,8 +11,10 @@ evidence: "re-measured 07.11.2026 against slides v1.20.0: `docs/agent-work/2026-
 
 - **Media slide into the image blocks.** The blind type-list panel of 06.11.2026 scored the media
   slide against the image blocks at 2.67 of 10 distinct, all six runs merge, the image block
-  surviving with the media slide's gallery as its form, noise 0. Not built: a parallel run was
-  adding media coverage to the specimen deck on 07.11.
+  surviving with the media slide's gallery as its form, noise 0. Not built: it needs a gallery form
+  of the image block (several pictures in a row or grid, a video among them, the row's heights) and
+  a home for the media slide's tags, which content slides lack; both are visual choices for a
+  rendered blind round against the current media slide.
 - **`overview` against `phased-pills`.** The os overlap matrix judged a merge without a panel; the
   catalogue program keeps `overview` for rework, and `merge-phased-pills` chose keep for its group.
   The pair has had no blind panel of its own: run one (deck author and trainer) before building
