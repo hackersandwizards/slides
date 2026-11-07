@@ -4,9 +4,7 @@ import { expect, it } from "vitest";
 import { slideComponents } from "../../lib/slide-components";
 import { slideCatalogue } from "../../specimen/slide-catalogue";
 
-// The print page's catalogue (decision catalogue-grouping), as `bun run build` writes it into dist/
-// before `check:pages` runs: every entry under a communication job, and a search
-// that finds every slide type, deprecated ones included, and every content block.
+// Reads the print page `bun run build` writes into dist/ before `check:pages` runs.
 const dist = join(import.meta.dirname, "..", "..", "dist");
 const print = join(dist, "catalog/print");
 const html = readFileSync(join(print, "index.html"), "utf8");
@@ -43,4 +41,13 @@ it("finds every slide type and content block by its name", () => {
   );
   const missing = [...Object.keys(slideComponents), ...blocks].filter((n) => !words.has(n));
   expect(missing).toEqual([]);
+});
+
+it("names every linked picture by its alt text", () => {
+  const frames = readFileSync(join(print, "frames.html"), "utf8");
+  const pictures = [...frames.matchAll(/<a [^>]*>(?:(?!<\/a>)[\s\S])*?<img [^>]*>/g)].map(
+    ([link]) => link,
+  );
+  expect(pictures.length).toBeGreaterThan(0);
+  for (const link of pictures) expect(link, link).toMatch(/<img [^>]*alt="[^"]*\S[^"]*"/);
 });

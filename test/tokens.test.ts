@@ -3,19 +3,16 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// Every value a slide draws is a named token of styles/tokens.css: colours, type steps, tracking,
-// leading, measures, spacing, rules, marks. slides.css and the components name tokens only, so a
-// value changes in one place and no slide type carries a value of its own. A length a component
-// derives from its data (a bar's share, a column's span, a canvas measured in its own units) is
-// computed, not written, and stays.
+// A length a component derives from its data (a bar's share, a column's span, a canvas measured in
+// its own units) is computed, not written, and stays.
 const ROOT = join(import.meta.dirname, "..");
 const SOURCES = ["components", "lib"].flatMap((dir) =>
   readdirSync(join(ROOT, dir), { recursive: true, encoding: "utf8" })
     .filter((f) => /\.tsx?$/.test(f))
     .map((f) => `${dir}/${f}`),
 );
-// Motion keyframes: motion interpolates the numbers inside a filter or an observer margin, which a
-// custom property hides from it. They move a fade, never a slide's resting layout.
+// Motion interpolates the numbers inside a filter or an observer margin, which a custom property
+// hides from it, and these keyframes move only a fade, never a slide's resting layout.
 const MOTION = new Set(["components/ui/blur-fade.tsx"]);
 
 // A length with a unit; a full measure (100vh, 100cqw) and a share (50%) are no design values,

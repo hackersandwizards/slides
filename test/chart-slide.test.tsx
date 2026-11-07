@@ -7,7 +7,6 @@ import { PrintProvider } from "../lib/print-context";
 import type { Slide } from "../types/slide";
 
 describe("chart slide", () => {
-  // Every variant shows the annotation a deck gives it, the cycle included.
   it("renders the annotation of a cycle chart", () => {
     const SlideComponent = slideComponents.chart;
     const slide = {
@@ -21,8 +20,7 @@ describe("chart slide", () => {
   });
 });
 
-// The cycle and graph plots draw in from the left, as recharts grows the trend and bar plots: a
-// clip over the drawing (06.11.2026, "animate these graphs like the others"). Printed, no clip.
+// The cycle and graph plots draw in under a clip, since recharts grows only trend and bar plots.
 describe("chart draw-in", () => {
   const cycle = {
     type: "chart",
@@ -34,15 +32,19 @@ describe("chart draw-in", () => {
   } as Slide;
   const graph = { type: "chart", variant: "graph", currentMarker: "Today" } as Slide;
 
-  it.each([cycle, graph])("clips the $variant plot while it draws", (slide) => {
+  // Each clip starts at half its drawing's width.
+  it.each([
+    { slide: cycle, start: 450 },
+    { slide: graph, start: 400 },
+  ])("clips the $slide.variant plot while it draws", ({ slide, start }) => {
     const SlideComponent = slideComponents.chart;
     const { container } = render(<SlideComponent slide={slide} />);
     const clip = container.querySelector("clipPath rect");
     expect(clip).toBeTruthy();
+    expect(parseFloat(clip?.getAttribute("width") ?? "0")).toBe(start);
     expect(container.querySelector("g[clip-path] path")).toBeTruthy();
   });
 
-  // The slide a page load opens on shows its plot at once: the clip hydrates at its full width.
   it("opens a page load's slide with the plot whole", async () => {
     const SlideComponent = slideComponents.chart;
     const host = document.createElement("div");

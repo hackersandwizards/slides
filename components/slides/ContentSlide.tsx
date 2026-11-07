@@ -441,9 +441,9 @@ function ContentBlockRenderer({
           {/* Automatic layout: `widths` are the columns' preferred shares, and no column ever gets
               narrower than its longest word. A fixed layout let a word run into the next cell. */}
           {/* The cells take the ink and the heads the step under the cells', set tight: in a lit
-              hall and a 720p stream the label step and the muted grey wash out first. The
-              cells' own step for the heads widened a two-column table's first column until a
-              slide of a real deck fell to 0.79; the step under it holds 0.80. */}
+              hall and a 720p stream the label step and the muted grey wash out first, and the
+              cells' own step for the heads widened a two-column table until its slide fell to
+              0.79; the step under it holds 0.80. */}
           <table className={`w-full border-collapse ${block.compact ? "text-lg" : "text-xl"}`}>
             {block.widths && (
               <colgroup>
@@ -573,7 +573,6 @@ function ContentBlockRenderer({
       );
 
     case "pipeline": {
-      // A pipeline that `flow` can draw renders as a flow.
       const flow = pipelineAsFlow(block);
       if (flow) return <Visual block={flow} />;
       // Teal frame, label, arrows and plain steps, as every other accent; purple marks only an

@@ -18,14 +18,12 @@ type Accent = "primary" | "secondary";
 
 const ACCENT = {
   primary: {
-    ring: "ring-primary/25",
     text: "text-primary",
     tone: "primary" as const,
     dot: "bg-primary",
     avatarFrame: "bg-primary/15",
   },
   secondary: {
-    ring: "ring-secondary/25",
     text: "text-secondary",
     tone: "secondary" as const,
     dot: "bg-secondary",

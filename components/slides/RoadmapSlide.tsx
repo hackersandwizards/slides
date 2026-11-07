@@ -80,7 +80,6 @@ function PartCard({
 
           <div className="mt-6 space-y-6">
             {groups.map((group, g) => {
-              // A group without a known theme takes its column's.
               const theme =
                 group.theme && Object.hasOwn(themeDotColor, group.theme)
                   ? group.theme

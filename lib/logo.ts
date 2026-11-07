@@ -7,11 +7,8 @@ export const BRAND_MARK = /^\/hw-((?:lockup|wordmark)(?:-night)?)\.svg$/;
  *  `src` is a name, not a file: `Image` draws it from brand's exports, `slides-pptx` its PNG cut. */
 export const HW_LOGO: LogoConfig = { src: "/hw-lockup.svg", alt: "hackers&wizards" };
 
-// Resolve the logo(s) for a given slide. An explicit per-slide entry in
-// `slideLogos` wins over the deck-wide `logo` — including a `null`, which means
-// "use the default h&w logo on this slide" rather than the deck logo. Returns
-// undefined when neither is set. Callers apply their own default-logo fallback
-// (the on-screen container and the print watermark use different sizes).
+/** A slide's entry in `slideLogos` wins over the deck's `logo`, a `null` included, which means the
+ *  default h&w logo; undefined when neither is set, since each caller draws its own default size. */
 export function resolveSlideLogo(
   presentation: Pick<Presentation, "logo" | "slideLogos">,
   index: number,

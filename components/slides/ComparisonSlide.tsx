@@ -62,7 +62,6 @@ function Highlight({ text, muted = false }: { text?: string; muted?: boolean }) 
   );
 }
 
-/** The sources under a comparison, on every variant. */
 function Footnotes({ notes }: { notes?: string[] }) {
   if (!notes?.length) return null;
   return (
@@ -230,7 +229,6 @@ export function BeforeAfterSides({
 
 function BeforeAfterVariant({ slide }: { slide: ComparisonSidesSlide }) {
   const printMode = usePrintMode();
-  // Phase 1 shows the before, phase 2 adds the after.
   const [phase] = useCarousel({
     count: 3,
     min: 1,
@@ -344,7 +342,6 @@ function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
   const renderExamples = printMode ? examples : [examples[activeExample]];
 
   return (
-    // Left-aligned, as the guidance slide drew it before it became a variant.
     <div className="w-full max-w-6xl self-start">
       {intro && (
         <BlurFade delay={0.15} duration={0.6}>

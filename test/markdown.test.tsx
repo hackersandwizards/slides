@@ -11,8 +11,7 @@ describe("renderMarkdown", () => {
     expect(renderMd(`[x](${href})`).querySelector("a")?.getAttribute("href")).toBe(href);
   });
 
-  // A deck is code, but a link must still never become a script: only web, mail and relative
-  // targets keep their href, anything else renders as plain text.
+  // A deck is code, but a link must still never become a script.
   it("renders a link with any other scheme as text", () => {
     const el = renderMd("[x](javascript:alert)");
     expect(el.querySelector("a")).toBeNull();
@@ -33,8 +32,6 @@ describe("renderMarkdown", () => {
     expect(renderMd("run `cmd` now").querySelector("code")?.textContent).toBe("cmd");
   });
 
-  // Regression guard for the regex tightened in lib/markdown.tsx: single
-  // asterisks separated by whitespace are arithmetic, not emphasis.
   it("does not treat spaced asterisks as emphasis", () => {
     const el = renderMd("math: 2 * 3 * 4");
     expect(el.querySelector("span.text-slide-accent")).toBeNull();
@@ -53,8 +50,6 @@ describe("renderMarkdown", () => {
     ).toBe("hello world");
   });
 
-  // Only a part the split regex captured is formatting: plain text that happens to start and
-  // end with an asterisk stays as written.
   it("keeps plain text between spaced asterisks as text", () => {
     const el = renderMd("* see note *");
     expect(el.querySelector("span.text-slide-accent")).toBeNull();

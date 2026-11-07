@@ -5,10 +5,7 @@ import { extname, join } from "node:path";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
-// The catalog shell's "Dark theme" button sets data-theme="dark" on <html>, and brand's night
-// tokens turn only a subtree marked data-hw-night: without the mark the button turned nothing
-// (06.11.2026). Measured on a built state page, served under the Pages base, since its stylesheets
-// load from /slides/; its story page, a slide, stays day.
+// Served under the Pages base, since a built state page loads its stylesheets from /slides/.
 const dist = join(import.meta.dirname, "..", "..", "dist");
 const NIGHT = "rgb(11, 17, 24)";
 const TYPES: Record<string, string> = { ".css": "text/css", ".js": "text/javascript" };
@@ -18,12 +15,14 @@ let server: Server;
 let page: (path: string) => string;
 beforeAll(async () => {
   server = createServer((request, response) => {
-    const path = decodeURI(new URL(request.url ?? "/", "http://x").pathname).replace(
-      /^\/slides/,
-      "",
-    );
+    const url = decodeURI(new URL(request.url ?? "/", "http://x").pathname);
+    const path = url.slice("/slides".length);
     const file = join(dist, path.endsWith("/") ? `${path}index.html` : path);
-    if (path.includes("..") || !statSync(file, { throwIfNoEntry: false })?.isFile()) {
+    if (
+      !url.startsWith("/slides/") ||
+      path.includes("..") ||
+      !statSync(file, { throwIfNoEntry: false })?.isFile()
+    ) {
       response.statusCode = 404;
       return response.end();
     }
@@ -62,3 +61,26 @@ it("keeps a day slide's story page day under the dark theme", async () => {
   expect(fill).not.toBe(NIGHT);
   await tab.close();
 }, 60_000);
+
+it.each([
+  "stories/Types/closing-slide/contact",
+  "stories/Parts/picture-link/variants",
+  "stories/Parts/video-player/variants",
+])(
+  "loads %s's images from under the Pages base once hydrated",
+  async (path) => {
+    const tab = await browser.newPage();
+    const missing: string[] = [];
+    tab.on("response", (response) => {
+      if (response.status() === 404) missing.push(response.url());
+    });
+    await tab.goto(page(path), { waitUntil: "networkidle0" });
+    const sources = await tab.$$eval("img, video", (media) =>
+      media.map((m) => m.getAttribute("src") ?? ""),
+    );
+    expect(missing).toEqual([]);
+    for (const src of sources) expect(src).not.toMatch(/^\/slide-catalogue\//);
+    await tab.close();
+  },
+  60_000,
+);

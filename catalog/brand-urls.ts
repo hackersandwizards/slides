@@ -1,13 +1,10 @@
 import brand from "@hackersandwizards/brand/package.json";
 
-// The brand files as dist/brand/ holds them, under their export names, relative to the print pages
-// in dist/catalog/print/.
+// Relative to the print pages in dist/catalog/print/.
 export const brandHref = "../../brand";
 const urlToken = /url\(\s*(["']?)(.*?)\1\s*\)/gis;
 const inline = (url: string) => /^(data:|#)/.test(url);
 
-// A file of the brand package under the name its `exports` give it: `tokens/fonts/x.woff2` is
-// `fonts/x.woff2`.
 const exportName = (path: string) => {
   for (const [name, target] of Object.entries(brand.exports as Record<string, string>)) {
     const [from, to] = [target.slice(2), name.slice(2)];

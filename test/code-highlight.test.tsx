@@ -33,8 +33,6 @@ const contrast = (a: string, b: string) => {
 const night = brand("--color-night");
 const subtle = mix("#ffffff", night, 0.6);
 const muted = mix("#ffffff", night, 0.8);
-// The code ground per theme as tokens.css sets it: the brand's code ground on light decks, the
-// brand-dark theme's token on dark ones.
 const lightToken = css.match(/--color-code-bg: var\((--code-bg)\);/)?.[1];
 const lightGround = night;
 const darkToken = css.match(/--color-code-bg: var\((--color-night-2)\);/)?.[1];
@@ -43,7 +41,6 @@ const grounds = [
   ["dark", brand(darkToken as keyof typeof tokens), brand("--color-teal-night")],
 ] as const;
 
-/** Renders a code block and waits for Shiki's chunk, as a slide does after mount. */
 const block = async (code: string, language?: string) => {
   const view = render(<CodeLines code={code} language={language} />);
   await act(() => vi.dynamicImportSettled());
@@ -89,8 +86,8 @@ describe("CodeLines", () => {
     expect(await classes("name: reviewer", "yaml")).toContainEqual(["name", "hw-code-inserted"]);
   });
 
-  // Shiki stops a line after 500 ms by default and returns its rest as one token: under load the
-  // first line of a language, which compiles the grammar, took that long (06.11.2026).
+  // Shiki stops a line after 500 ms by default and returns its rest as one token, and under load
+  // the first line of a language, which compiles the grammar, takes that long.
   it("highlights a line to its end however long the tokenizer takes", () => {
     let now = 0;
     const clock = vi.spyOn(Date, "now").mockImplementation(() => (now += 1000));
@@ -101,7 +98,7 @@ describe("CodeLines", () => {
 
   it("maps every colour of the brand theme to a role", async () => {
     const theme = (await import("@hackersandwizards/brand/code-theme.json")).default;
-    // Every token colour is one of the six highlightLines knows; a seventh would render unclassed.
+    // A colour outside the six highlightLines knows would render unclassed.
     const known = new Set(
       ["comment", "keyword", "string", "markup.inserted", "markup.deleted"].map(
         (scope) =>

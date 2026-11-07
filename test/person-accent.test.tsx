@@ -3,10 +3,7 @@ import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
 import type { Slide } from "../types/slide";
 
-// Every person shown as a person (a profile, a closing's speaker) is coloured by position, in the
-// logo's order: teal first, purple second, whoever they are. A positions slide names its two sides
-// in the muted label instead: neutral cards scored 8.00 against 6.75 for the coloured stances
-// (blind panel 06.11.2026).
+// A person is coloured by position in the logo's order, whoever they are.
 const two = [
   { name: "Mara Lindqvist", company: "Lumen Freight" },
   { name: "Jonas Okafor", company: "Lumen Freight" },

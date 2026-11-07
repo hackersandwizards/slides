@@ -43,7 +43,6 @@ function PillBox({
 
 export function PhasedPillsSlide({ slide }: Props) {
   const { phases, title } = slide;
-  // Up to three pills share a row; a longer phase splits into two even rows.
   const columns = Math.max(
     ...phases.map(({ items }) => (items.length > 3 ? Math.ceil(items.length / 2) : items.length)),
   );

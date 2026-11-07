@@ -4,9 +4,7 @@ import { slideComponents } from "../lib/slide-components";
 import { useMounted } from "../lib/use-mounted";
 import type { Slide } from "../types/slide";
 
-/** A specimen slide as a deck shows it, in `SlideContainer` with the strip, the corner mark and the
- *  page counter. The slide mounts after hydration, so it enters as a slide reached from the one
- *  before does: on the slide a page load opens on, every entrance shows at once. */
+/** Mounts after hydration, since on the slide a page load opens on every entrance shows at once. */
 export function StorySlide({
   slide,
   ...container

@@ -5,11 +5,8 @@ import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { classesIn, compileSlides, unescapeHtml } from "../../catalog/print-css";
 
-// The print pages' stylesheet is compiled from the markup print.ts hands it, not from a scan of the
-// pages: a tile left out of that list drew without its utilities, and the night tiles lost their
-// ground (06.11.2026). Here Tailwind compiles every class the built pages write, frames included,
-// and each rule it draws must be in the shipped stylesheet. A class name alone proves nothing:
-// `.bg-background` stood in the night override of slides.css while its utility was absent.
+// The print stylesheet is compiled from the markup print.ts hands it, not from a scan of the pages,
+// so a class the built pages write can miss its rule; a class name alone in the CSS proves nothing.
 const NIGHT = "rgb(11, 17, 24)";
 const root = join(import.meta.dirname, "..", "..");
 const print = join(root, "dist", "catalog", "print");

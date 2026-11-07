@@ -6,7 +6,6 @@ import { describe, expect, it } from "vitest";
 
 const script = join(__dirname, "../scripts/pins.ts");
 
-/** A consumer pinning brand at `pin` (no pin when undefined). */
 function consumer(pin?: string) {
   const root = mkdtempSync(join(tmpdir(), "slides-pins-"));
   writeFileSync(

@@ -68,9 +68,10 @@ const files: AstroIntegration = {
         if (!page.endsWith(".html")) continue;
         const file = join(stories, page);
         const html = readFileSync(file, "utf8");
+        // The island's props too, or hydration puts the unbased path back.
         const based = html.replace(
-          /(src|href|poster)="\/slide-catalogue\//g,
-          `$1="${BASE}/slide-catalogue/`,
+          /((?:src|href|poster)="|&quot;)\/slide-catalogue\//g,
+          `$1${BASE}/slide-catalogue/`,
         );
         if (based !== html) writeFileSync(file, based);
       }

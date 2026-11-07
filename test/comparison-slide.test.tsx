@@ -19,8 +19,7 @@ function rules(s: ComparisonSlide): number {
 }
 
 describe("ComparisonSlide", () => {
-  // A "- " item is a minus item. The rule separates minus items from plus items, so a side of
-  // minus items alone renders like a side of plus items alone: no rule under its label.
+  // The rule separates "- " items from plus items, so a side of minus items alone has none.
   it("draws no rule on a side that holds only minus items", () => {
     expect(rules(slide(["- Copy and paste", "- No repository context"], ["Edits files"]))).toBe(0);
   });
@@ -101,8 +100,7 @@ describe("comparison variants (merge-comparison)", () => {
     expect(old).toContain("Bad");
   });
 
-  // The resolution carries no label of the engine's own, which read in English on German decks;
-  // `middle` is its label where a deck gives one.
+  // An engine label on the resolution read in English on German decks, so only `middle` labels it.
   it("draws the positions variant with its resolution", () => {
     const side = { name: "A", stance: "S", quote: "q" };
     const c = draw({
@@ -118,7 +116,6 @@ describe("comparison variants (merge-comparison)", () => {
     expect(c.textContent).toContain("Both");
   });
 
-  // `split` and `before-after` had dropped the highlight.
   it.each(["vs", "before-after", "split"] as const)("renders both highlights on %s", (variant) => {
     const SlideComponent = slideComponents.comparison;
     const s: ComparisonSlide = {

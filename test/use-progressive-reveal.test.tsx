@@ -40,7 +40,6 @@ describe("useProgressiveReveal", () => {
     const { result } = renderHook(() => useProgressiveReveal({ totalSteps: 1 }));
     pressRight();
     expect(result.current.revealedCount).toBe(1);
-    // Fully revealed, no footer → the key must pass through so the page navigates.
     expect(pressRight()).toBe(false);
   });
 
@@ -52,11 +51,9 @@ describe("useProgressiveReveal", () => {
     expect(result.current.footerVisible).toBe(false);
     expect(pressRight()).toBe(true);
     expect(result.current.footerVisible).toBe(true);
-    // Footer now shown → further ArrowRight passes through.
     expect(pressRight()).toBe(false);
   });
 
-  // Back steps first, then the slide (Benedikt, engine-back-premise b).
   it("takes the footer, then each step back with ArrowLeft, then lets it through", () => {
     const { result } = renderHook(() => useProgressiveReveal({ totalSteps: 2, hasFooter: true }));
     pressRight();
@@ -105,8 +102,7 @@ describe("useProgressiveReveal", () => {
     expect(result.current.footerVisible).toBe(true);
   });
 
-  // Arriving via back-navigation should show the slide already complete, then
-  // clear the flag so a forward re-entry starts collapsed again.
+  // The flag is cleared so a forward re-entry starts collapsed again.
   it("starts fully revealed when the back-navigation flag is set, then clears it", () => {
     sessionStorage.setItem("slide-direction", "back");
     const { result } = renderHook(() => useProgressiveReveal({ totalSteps: 4 }));
@@ -130,7 +126,6 @@ describe("useProgressiveReveal", () => {
     expect(result.current.revealedCount).toBe(2);
   });
 
-  // Two reveal blocks on one slide: the first reveals first, the last is taken back first.
   it("steps two reveal blocks on one slide one after the other", () => {
     const { result } = renderHook(() => [
       useProgressiveReveal({ totalSteps: 1 }).revealedCount,

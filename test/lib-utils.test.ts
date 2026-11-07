@@ -29,8 +29,7 @@ describe("resolveSlideLogo", () => {
     expect(resolveSlideLogo({ logo: LOGO, slideLogos: { 2: override } }, 2)).toBe(override);
   });
 
-  // An explicit null means "use the default h&w logo on this slide" — distinct
-  // from an absent index, which falls back to the deck logo.
+  // An explicit null shows the default h&w logo, where an absent index takes the deck's.
   it("returns null for an explicit null entry", () => {
     expect(resolveSlideLogo({ logo: LOGO, slideLogos: { 3: null } }, 3)).toBeNull();
   });
@@ -58,8 +57,7 @@ describe("getSectionStyle", () => {
 describe("opensRevealed", () => {
   afterEach(() => sessionStorage.clear());
 
-  // Navigating backward into a slide marks the direction so the slide opens
-  // fully revealed — you don't re-step through every progressive item.
+  // A slide entered backwards opens fully revealed, so nobody re-steps through its reveals.
   it("is true when arriving via back-navigation", () => {
     sessionStorage.setItem("slide-direction", "back");
     expect(opensRevealed()).toBe(true);
@@ -156,8 +154,6 @@ describe("gridAsContent", () => {
   });
 });
 
-// Round of 06.11.2026: one neutral two-column on its own draws as the comparison's split, the
-// deep-dive divider as the night transition, and the catalogue lists both as replaced.
 describe("merges of 06.11.", () => {
   const twoLists: ContentSlide = {
     type: "content",

@@ -8,8 +8,7 @@ const DualPillOverview = slideComponents["dual-pill-overview"];
 const printed = (node: React.ReactNode) => render(<PrintProvider>{node}</PrintProvider>);
 
 describe("roadmap and dual-pill-overview", () => {
-  // One layout draws both (os decision roadmap-dual-pill-slides): the same card and label, a
-  // pill becomes a row whose number stands where the roadmap's marker stands.
+  // One layout draws both: a pill's number stands where the roadmap's marker stands.
   it("draws a pill as a numbered row in the roadmap's card", () => {
     const column = { label: "Part one", title: "Ingredients", accent: "ingredients" as const };
     const dual = printed(

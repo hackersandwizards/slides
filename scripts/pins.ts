@@ -1,9 +1,6 @@
 #!/usr/bin/env bun
-// Fails a consumer whose package.json pins no brand: the brand peer is optional, so bun installs
-// such a consumer without a word. That the install matches each pin is scaffolding's: the gate's
-// `bun install --frozen-lockfile` and its coupling step.
-//
-//   slides-pins        (in the consumer's root; exit 1 on a missing brand pin)
+// The brand peer is optional, so bun installs a consumer that pins no brand without a word; that
+// the install matches a pin is scaffolding's frozen-lockfile install and coupling step.
 
 import { readFileSync } from "node:fs";
 

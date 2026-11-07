@@ -3,9 +3,7 @@ import { pathToFileURL } from "node:url";
 import puppeteer from "puppeteer";
 import { expect, it } from "vitest";
 
-// A line break a deck types holds in every field on the slide (`.slide-content` in slides.css):
-// a statement's closing set it on one line (slides v1.6.1). Measured on the built frames page,
-// whose markup keeps the specimen's `\n` as text, so only the stylesheet can break it.
+// The built frames page keeps the specimen's `\n` as text, so only the stylesheet can break it.
 it("breaks a statement's closing where the deck types \\n", async () => {
   const browser = await puppeteer.launch({ headless: true, args: ["--use-mock-keychain"] });
   try {

@@ -58,7 +58,7 @@ export function OverviewSlide({ slide }: Props) {
   return (
     <SlideShell>
       {/* The vertical padding keeps the fit guard's shrink inside the safe margins, and clear of
- the label that sits above the frame. */}
+          the label that sits above the frame. */}
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-6 py-16">
         <BlurFade delay={0.1} duration={0.5}>
           <DashedFrame className="relative w-full max-w-(--slide-measure-overview) px-6 pt-12 pb-10">

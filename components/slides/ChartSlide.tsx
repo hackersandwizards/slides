@@ -43,9 +43,9 @@ function DrawIn({
 }) {
   const id = useId();
   const hydrating = !useMounted();
-  const print = usePrintMode();
   const reduced = useReducedMotion();
-  if (print || reduced) return <>{children}</>;
+  const print = usePrintMode();
+  if (print) return <>{children}</>;
   return (
     <>
       <clipPath id={id}>
@@ -53,7 +53,7 @@ function DrawIn({
           x={-width / 2}
           y={-height}
           height={height * 3}
-          initial={hydrating ? false : { width: width / 2 }}
+          initial={hydrating || reduced ? false : { width: width / 2 }}
           animate={{ width: width * 2 }}
           transition={{ delay: 0.2, duration: 1.5, ease: "easeInOut" }}
         />

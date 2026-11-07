@@ -537,7 +537,8 @@ const THEME: Record<SectionTheme, keyof Palette> = {
 
 /** A contact closing slide without portraits carries the lockup in its centre column and none in
  *  the corner, as the web's `.slide-closing-mark` does. */
-const centredMark = (d: Extract<Slide, { type: "closing" }>) =>
+/** Whether a closing stands the h&w mark centred in place of its speakers' companies. */
+export const centredMark = (d: Extract<Slide, { type: "closing" }>) =>
   d.variant !== "discussion" && !d.speakers?.some((sp) => sp.imageSrc);
 
 /** The brand strip, the page counter, the corner mark and a client's logo on the left. */

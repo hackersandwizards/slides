@@ -6,7 +6,6 @@ export function renderMarkdown(text: string): React.ReactNode {
   const parts = text.split(
     /(\[[^\]]+\]\([^)\s]+\)|\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?!\s)[^*]+(?<!\s)\*|`[^`]+`)/g,
   );
-  // `split` with a capturing group puts the captured spans at the odd indices.
   return parts.map((part, i) => {
     if (i % 2 === 0) return part;
     const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);
@@ -35,8 +34,7 @@ export function renderMarkdown(text: string): React.ReactNode {
     }
     const text = part.slice(1, -1);
     // A short chip stays on one line, so a name never splits at its hyphen; a long one and a path
-    // may break inside themselves, or a table of paths runs its last column off the slide. Brand's
-    // inline code, in teal.
+    // may break inside themselves, or a table of paths runs its last column off the slide.
     return (
       <code
         key={i}

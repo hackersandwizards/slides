@@ -5,15 +5,8 @@ import { useSlidesAdapter } from "./adapter";
 import { deckSync } from "./presenter-sync";
 import { directionKey, writeStored } from "./slide-utils";
 
-/** Without an adapter a deck page is one React island holding the whole deck, so moving between
- *  its slides is a state change in that island: the URL moves with `history.pushState` and the
- *  island renders the slide the path names (`usePathname`). No document load, no re-hydration,
- *  and a fast run of presses lands where the presses say. A consumer with a router passes its own
- *  `navigate` through `SlidesAdapterProvider`.
- *
- *  The direction is written before navigating and read during the next render by
- *  `opensRevealed`: arriving backwards opens a slide fully revealed instead of making the
- *  presenter step through it again. */
+// Moving within the one island loads no document, so a fast run of presses lands where the presses
+// say; the direction written before navigating lets `opensRevealed` open a backward arrival revealed.
 const listeners = new Set<() => void>();
 
 function historyNavigate(href: string, replace: boolean): void {

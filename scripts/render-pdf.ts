@@ -61,7 +61,6 @@ export async function renderPdf(url: string, out: string, title: string, slideCo
         await img.decode();
       }
     });
-    // The PDF's title is the deck's title, not the print route's tab title.
     await page.evaluate((t) => (document.title = t), title);
     await page.pdf({
       path: out,
@@ -70,7 +69,6 @@ export async function renderPdf(url: string, out: string, title: string, slideCo
       width: "1920px",
       height: "1080px",
       printBackground: true,
-      // Links stay clickable, and the outline lets a reader jump between slide headlines.
       outline: true,
       tagged: true,
       timeout: 300_000,

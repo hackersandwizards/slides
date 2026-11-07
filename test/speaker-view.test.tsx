@@ -193,7 +193,6 @@ describe("DeckEdit", () => {
     press("e");
   });
 
-  // A second refusal of the same text while the first still showed kept the red outline for good.
   it("clears the refusal outline when the same text is refused twice", async () => {
     vi.spyOn(deckSync, "role").mockReturnValue("audience");
     vi.spyOn(globalThis, "fetch").mockImplementation(async () => Response.json({ error: "no" }));

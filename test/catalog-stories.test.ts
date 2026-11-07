@@ -5,9 +5,6 @@ import { aliasTypes } from "../lib/slide-components";
 import { slideCatalogue } from "../specimen/slide-catalogue";
 import { PARTS } from "../catalog/parts";
 
-// The catalog (catalog/stories) shows every slide type with each of its specimen slides
-// as a state, and every part with its sheet of variants: a type, a specimen slide or a part
-// without a story fails here, as the print page fails on a part without an entry.
 const STORIES = join(import.meta.dirname, "..", "catalog", "stories");
 const files = (group: string) =>
   readdirSync(join(STORIES, group)).map((f) => f.replace(/\.stories\.ts$/, ""));
@@ -27,7 +24,6 @@ describe("catalog stories", () => {
 
   it.each(types)("shows every specimen slide of $type as a state", ({ type, component }) => {
     const source = readFileSync(join(STORIES, "Types", `${component}.stories.ts`), "utf8");
-    // A story shows the slide in its deck's chrome, as `StorySlide` renders it.
     expect(source).toContain("export default { component: StorySlide };");
     const states = [...source.matchAll(/state\("([\w-]+)", (\d+), "(\w+)"\)/g)];
     const count = slideCatalogue.slides.filter((s) => s.type === type).length;

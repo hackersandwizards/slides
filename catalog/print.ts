@@ -93,7 +93,10 @@ const renderFrame = (index: number, name: string) => {
   let markup = slideMarkup(index);
   for (const [file, url] of Object.entries(brandLogos))
     markup = markup.replaceAll(`"${url}"`, `"${brandHref}/logos/${file}.svg"`);
-  markup = markup.replace(/(src|href|poster)="\/slide-catalogue\//g, '$1="slide-catalogue/');
+  markup = markup.replace(
+    /(src|href|poster)="(?:\/slides)?\/slide-catalogue\//g,
+    '$1="slide-catalogue/',
+  );
   return { name, markup, index };
 };
 const frames = picks.map((index) => {
@@ -102,12 +105,11 @@ const frames = picks.map((index) => {
   return renderFrame(index, first ? type : `${type} · ${variantOf(deck[index])}`);
 });
 // A type whose first slide draws no list marker adds its first slide that does, since the marker
-// check (test/marker-position.test.ts) measures only this page: comparison's split and activity's
-// demo drew nothing for a release while it passed.
+// check (test/marker-position.test.ts) measures only this page.
 const marked = (index: number) => slideMarkup(index).includes("hw-marker");
 const markerFrames = [...new Set(picks.map((i) => deck[i].type))].flatMap((type) => {
   if (picks.some((i) => deck[i].type === type && marked(i))) return [];
-  const index = deck.findIndex((s, i) => s.type === type && marked(i));
+  const index = deck.findIndex((s, i) => s.type === type && offered(s) && marked(i));
   return index < 0 ? [] : [renderFrame(index, deck[index].type)];
 });
 const blockFrames = blockPicks.map((index) => {
@@ -182,7 +184,7 @@ const partFrames = partNames.map(({ name, file }) => ({
         h("div", { className: "p-24" }, h(Fragment, null, PARTS[name]())),
       ),
     ),
-  ).replace(/(src|href|poster)="\/slide-catalogue\//g, '$1="slide-catalogue/'),
+  ).replace(/(src|href|poster)="(?:\/slides)?\/slide-catalogue\//g, '$1="slide-catalogue/'),
 }));
 
 const attr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
@@ -373,9 +375,6 @@ const JOB_OF: Record<string, Job[]> = {
   content: ["explain"],
   "content:centered": ["statement"],
   regular: ["people", "explain"],
-  "regular:cards": ["orient"],
-  grid: ["explain"],
-  "grid:stats": ["data", "statement"],
   "grid:quotes": ["statement", "people"],
   comparison: ["compare"],
   process: ["process"],
@@ -403,14 +402,10 @@ const JOB_OF: Record<string, Job[]> = {
   "image-and-grid": ["image", "explain"],
   annotated: ["image"],
   cards: ["explain"],
-  "four-column": ["explain"],
-  "labeled-grid": ["explain"],
   flow: ["process"],
   pipeline: ["process"],
   layers: ["process", "structure"],
   timeline: ["schedule", "process"],
-  transform: ["compare"],
-  positions: ["compare"],
   bars: ["data"],
   numbers: ["data", "statement"],
 };
@@ -479,15 +474,12 @@ export const entries = [
 ];
 export const partTiles = partFrames.map(partTile).join("\n");
 
-// The replaced forms, each once: the old name and the entry that draws it.
 export const replacedRows = [
   ...new Map(
     deck.flatMap((s) => {
       const r = replacedBy(s);
       if (!r) return [];
-      const form =
-        r.form ??
-        [s.type, variantOf(s) || (s.type === "grid" ? "pillars" : "")].filter(Boolean).join(", ");
+      const form = r.form ?? [s.type, variantOf(s)].filter(Boolean).join(", ");
       return [[form, r.to] as const];
     }),
   ),

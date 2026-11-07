@@ -4,11 +4,10 @@ import { join } from "node:path";
 import JSZip from "jszip";
 import verbal from "@hackersandwizards/brand/verbal.json";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { renderPptx } from "../scripts/render-pptx";
+import { centredMark, renderPptx } from "../scripts/render-pptx";
 import { slideCatalogue } from "../specimen/slide-catalogue";
 import type { Slide } from "../types/slide";
 
-// Fields that hold no slide text: paths, ids, switches and names of variants, colours and icons.
 const NOT_TEXT = new Set([
   "type",
   "src",
@@ -45,7 +44,6 @@ const NOT_TEXT = new Set([
   "continues",
 ]);
 
-/** Every string a slide shows, by walking its data. */
 function texts(value: unknown, key = ""): string[] {
   if (NOT_TEXT.has(key)) return [];
   if (typeof value === "string") return [value];
@@ -73,7 +71,6 @@ const unescape = (t: string) =>
 let dir: string;
 let zip: JSZip;
 const slideXml: string[] = [];
-// The text of each slide's parts: its own XML and the charts it holds.
 const slideText: string[] = [];
 
 beforeAll(async () => {
@@ -153,15 +150,15 @@ describe("slides-pptx on the specimen deck", () => {
     const missing = slideCatalogue.slides.flatMap((slide: Slide, i) => {
       const shown = norm(unescape(slideText[i]));
       // A stats card shows its label in place of its title, as the web card does.
-      // A closing without portraits shows the h&w lockup in place of the company's name.
+      // A closing whose mark stands centred shows the h&w lockup in place of the company's name.
       const data =
         slide.type === "grid" && slide.variant === "stats"
           ? { ...slide, cards: slide.cards.map((cd) => (cd.label ? { ...cd, title: "" } : cd)) }
-          : slide.type === "closing" && !slide.speakers?.some((sp) => sp.imageSrc)
+          : slide.type === "closing" && centredMark(slide)
             ? {
                 ...slide,
                 speakers: slide.speakers?.map((sp) =>
-                  sp.company === "hackers&wizards" ? { ...sp, company: "" } : sp,
+                  sp.company.toLowerCase() === "hackers&wizards" ? { ...sp, company: "" } : sp,
                 ),
               }
             : slide;
@@ -276,8 +273,7 @@ it("marks the text of a German deck German, its notes included", async () => {
     expect(await pptx.file(part)!.async("string")).not.toContain('lang="en-US"');
 });
 
-// pptxgenjs split a run at its \n into paragraphs that each ended a line, so the bold word after
-// the break started a third line. Text boxes and table cells hand text to pptxgenjs apart.
+// pptxgenjs splits a run at its \n into paragraphs, and text boxes and table cells reach it apart.
 it.each([
   [
     "a statement's closing",
