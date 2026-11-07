@@ -4,8 +4,8 @@ Stand 2026-11-01, Phase 1 (Analyse und Plan) und Phase 2 ohne offene Entscheidun
 vier Typen bis zum Plateau, Sketch-Variante, v0.12.0), dazu Phase 2b mit `video`, `image` und
 `linked-image` (v0.14.0). Seit v0.27.0 (02.11.) sind sechs der sieben Duplikat-Gruppen
 zusammengelegt (Gruppe 4 bleibt nach Blind-Review), und die Specimen-Seite ordnet jeden Eintrag nach
-den 13 Kommunikationsaufgaben, mit Suche. Ziel und
-Arbeit je Phase: die `work-phase-*`-Items in [items/](items/), Entscheidungen ebenda.
+den 13 Kommunikationsaufgaben, mit Suche. Seit v1.1.0 (06.11.) zeichnet `deep-dive-divider` als
+`transition` mit `night`. Was offen ist, steht nur in den `work-phase-*`-Items in [items/](items/).
 
 Benedikt am 01.11. (von Ada weitergegeben): «Wir scheinen da auch bei den Folien gerade ziemlich
 viele Duplikate zu haben, also einfach Folientypen, die super ähnlich zueinander sind. Dafür
@@ -20,7 +20,7 @@ Datendiagrammen bei Bedarf bis 47. Die Agenda als Zeitplan ist eine Variante und
 
 - **Duplikate:** Karten gibt es in fünf Formen, Vergleiche in vier, Abläufe in drei, die
   Deck-Übersicht in drei, Zahlen in zwei, die Textfolie in zwei, die Einzelaussage in zwei. Je
-  Gruppe ein `merge-*`-Item mit dem Ziel, das überlebt.
+  Gruppe entschied eine `merge-*`-Zeile das Ziel, das überlebt (Abschnitt "Duplikate").
 - **Fehlt:** eine Übungsfolie (56 Folien bauen sie von Hand), eine Agenda als Zeitplan (19), eine
   Demo-Folie, "Nächste Schritte" für Pitches und, nur bei Bedarf, ein Vollbild mit Text sowie ein
   Anteils- und ein Abweichungsdiagramm.
