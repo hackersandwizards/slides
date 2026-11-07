@@ -105,8 +105,8 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
 - `bun run check`: `scaffolding check`, the shared steps side by side (install, format, lint,
   stylelint over `stylelint.config.js`, typecheck, structure, coupling, unique names, confidential, the unit
   tests, the catalog build, the item check `admin`), then the `scaffolding.check` steps in
-  `package.json`: `check:pins`, `check:colours` (`brand-colours.json` holds the exceptions) and `check:copies`
-  (`brand-copies`), then `check:pages`
+  `package.json`: `check:pins`, `check:colours` (`brand-colours.json` holds the exceptions), `check:copies`
+  (`brand-copies`) and `check:retired` (`brand-retired` over `dist`), then `check:pages`
   (the tests in `test/pages/` over the built print pages), then `check:elements`
   (`brand-elements` over the print pages, `brand-elements.json`). No hook runs it:
   `.githooks/pre-commit` runs `bun run check:staged`, scaffolding's `check-staged` (`gitleaks`,

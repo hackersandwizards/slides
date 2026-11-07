@@ -1,4 +1,5 @@
-import verbal from "@hackersandwizards/brand/verbal.json";
+// Named, never the default: the whole file would bundle verbal.json's retired lines, which brand-retired fails on.
+import { claim } from "@hackersandwizards/brand/verbal.json";
 import type {
   AgendaSlide,
   ClosingSlide,
@@ -450,8 +451,8 @@ export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlid
 /** Brand's claim in a language, split around the word brand names for it: [before, word, after],
  *  the word empty where the claim does not hold it. */
 export function claimParts(lang: "en" | "de"): [string, string, string] {
-  const text = verbal.claim[lang];
-  const word = verbal.claim.word[lang];
+  const text = claim[lang];
+  const word = claim.word[lang];
   const at = text.indexOf(word);
   return at < 0 ? [text, "", ""] : [text.slice(0, at), word, text.slice(at + word.length)];
 }
