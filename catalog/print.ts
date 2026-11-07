@@ -98,6 +98,22 @@ const besidePage = (markup: string) => {
     markup = markup.replaceAll(`"${url}"`, `"slide-catalogue/${file}"`);
   return markup;
 };
+const partMarkup = (name: string) =>
+  renderToStaticMarkup(
+    h(
+      PrintProvider,
+      null,
+      h(
+        "div",
+        {
+          className: "print-slide bg-section-intro",
+          "data-hw-scale": "stage",
+          "data-theme": "light",
+        },
+        h("div", { className: "p-24" }, h(Fragment, null, PARTS[name]())),
+      ),
+    ),
+  );
 const renderFrame = (index: number, name: string) => ({
   name,
   markup: besidePage(slideMarkup(index)),
@@ -174,23 +190,7 @@ const partFrames = partNames.map(({ name, file }) => ({
   file,
   purpose: purpose(name, file),
   users: usedBy(name),
-  markup: besidePage(
-    renderToStaticMarkup(
-      h(
-        PrintProvider,
-        null,
-        h(
-          "div",
-          {
-            className: "print-slide bg-section-intro",
-            "data-hw-scale": "stage",
-            "data-theme": "light",
-          },
-          h("div", { className: "p-24" }, h(Fragment, null, PARTS[name]())),
-        ),
-      ),
-    ),
-  ),
+  markup: besidePage(partMarkup(name)),
 }));
 
 const attr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");

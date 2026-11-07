@@ -75,11 +75,7 @@ it.each([
       if (response.status() === 404) missing.push(response.url());
     });
     await tab.goto(page(path), { waitUntil: "networkidle0" });
-    const sources = await tab.$$eval("img, video", (media) =>
-      media.map((m) => m.getAttribute("src") ?? ""),
-    );
     expect(missing).toEqual([]);
-    for (const src of sources) expect(src).not.toMatch(/^\/slide-catalogue\//);
     await tab.close();
   },
   60_000,

@@ -480,12 +480,13 @@ interface Ctx {
   warnings: string[];
 }
 
-/** A deck file's path: a root path under the consumer's public directory, a file path as it stands,
- *  which is what Bun gives an imported image, the specimen's among them. Vite's dev URL for one
- *  keeps its query. */
+/** A deck file's path: a root path under the consumer's public directory, else a file path as it
+ *  stands, which is what Bun gives an imported image, the specimen's among them. Vite's dev URL
+ *  for one keeps its query. */
 const assetFile = (ctx: Ctx, src: string) => {
   const path = src.replace(/\?.*$/, "");
-  return existsSync(path) ? path : join(ctx.assets, path.replace(/^\//, ""));
+  const inAssets = join(ctx.assets, path.replace(/^\//, ""));
+  return existsSync(inAssets) || !existsSync(path) ? inAssets : path;
 };
 
 /** A deck image, from the consumer's public directory, contained in the box. The engine's own

@@ -42,8 +42,6 @@ export const specimenImages = {
   "strip-board.png": stripBoard,
   "strip-pull-request.png": stripPullRequest,
 };
-const IMG = specimenImages;
-
 const longBullets = [
   "Every pull request runs the same checks the agent ran locally, so review starts from green",
   "The harness writes its own plan before it writes code, and the plan is reviewed first",
@@ -73,7 +71,7 @@ const slides: Slide[] = [
     title: "Four hundred engineers, one delivery harness, twelve months",
     speakers: ["Mara Lindqvist", "Jonas Okafor"],
     event: "Delivery Days 2026 · 14 May · Rotterdam",
-    qr: { src: IMG["qr-example.png"], href: "https://example.com/harness" },
+    qr: { src: specimenImages["qr-example.png"], href: "https://example.com/harness" },
     notes: "title: a talk's opening, every field, the QR code to a fictional link.",
   },
 
@@ -432,7 +430,9 @@ const slides: Slide[] = [
     type: "content",
     sectionLabel: "Block: image",
     headline: "A screenshot at its full size",
-    content: [{ type: "image", src: IMG["screen-team-board.png"], alt: "Fictional team board" }],
+    content: [
+      { type: "image", src: specimenImages["screen-team-board.png"], alt: "Fictional team board" },
+    ],
     notes: "content blocks: image.",
   },
   {
@@ -442,8 +442,8 @@ const slides: Slide[] = [
     content: [
       {
         type: "video",
-        src: IMG["agent-session.mp4"],
-        poster: IMG["agent-session-poster.png"],
+        src: specimenImages["agent-session.mp4"],
+        poster: specimenImages["agent-session-poster.png"],
         alt: "Fictional agent session",
         caption: "The agent session on a fictional repository, 10 seconds",
       },
@@ -457,7 +457,7 @@ const slides: Slide[] = [
     content: [
       {
         type: "linked-image",
-        src: IMG["screen-pull-request.png"],
+        src: specimenImages["screen-pull-request.png"],
         alt: "Fictional pull request",
         href: "https://forge.example.com/acme/payments/pull/128",
       },
@@ -471,7 +471,7 @@ const slides: Slide[] = [
     content: [
       {
         type: "image-and-grid",
-        image: { src: IMG["screen-code.png"], alt: "Fictional code view" },
+        image: { src: specimenImages["screen-code.png"], alt: "Fictional code view" },
         gridTitle: "What the screen shows",
         items: [
           { title: "Plan", subtitle: "Top line" },
@@ -491,9 +491,9 @@ const slides: Slide[] = [
         type: "image-and-grid",
         // A copy of the brand repository's slide sketch example,
         // applications/slide-visuals/sketch-example-next-token.png at brand v0.20.0: the package
-        // does not export it, and a consumer serves the specimen images from its own public/.
+        // does not export it.
         image: {
-          src: IMG["sketch-next-token.png"],
+          src: specimenImages["sketch-next-token.png"],
           alt: "Marker sketch: next token",
           sketch: true,
         },
@@ -661,7 +661,7 @@ const slides: Slide[] = [
     content: [
       {
         type: "annotated",
-        src: IMG["screen-code.png"],
+        src: specimenImages["screen-code.png"],
         alt: "Fictional code view",
         size: [1600, 1000],
         crop: { top: 0.08, bottom: 0.52 },
@@ -791,7 +791,7 @@ const slides: Slide[] = [
     profile: {
       name: "Mara Lindqvist",
       title: "Platform lead, Lumen Freight",
-      imageSrc: IMG["portrait-a.png"],
+      imageSrc: specimenImages["portrait-a.png"],
       linkedIn: "https://www.linkedin.com/in/example-profile-name",
     },
     sections: [
@@ -840,7 +840,7 @@ const slides: Slide[] = [
     lines: ["We stopped asking how fast the agent types", "and started asking what it reads."],
     closing: "The best harness is the one nobody notices.",
     closingStyle: "quote",
-    imageSrc: IMG["portrait-b.png"],
+    imageSrc: specimenImages["portrait-b.png"],
     imageAlt: "Fictional speaker",
     attribution: "Jonas Okafor, Lumen Freight (fictional)",
     notes: "statement: secondary background, image, quote closing, attribution.",
@@ -850,7 +850,7 @@ const slides: Slide[] = [
     kicker: "Live demo",
     lines: ["The agent opened its own pull request"],
     linkedImage: {
-      src: IMG["screen-pull-request.png"],
+      src: specimenImages["screen-pull-request.png"],
       alt: "Fictional pull request",
       href: "https://example.com/pull/42",
     },
@@ -980,7 +980,7 @@ const slides: Slide[] = [
       {
         title: "The checks caught what I missed.",
         author: "Team lead, fictional",
-        imageSrc: IMG["portrait-a.png"],
+        imageSrc: specimenImages["portrait-a.png"],
       },
       { title: "Monday metrics changed our backlog.", author: "Product lead, fictional" },
     ],
@@ -1098,7 +1098,13 @@ const slides: Slide[] = [
     sectionLabel: "Media",
     sectionTheme: "accent",
     headline: "One screenshot",
-    sources: [{ src: IMG["screen-board.png"], alt: "Fictional board", caption: "The team board" }],
+    sources: [
+      {
+        src: specimenImages["screen-board.png"],
+        alt: "Fictional board",
+        caption: "The team board",
+      },
+    ],
     notes: "media: single image with caption.",
   },
   {
@@ -1106,9 +1112,9 @@ const slides: Slide[] = [
     layout: "grid",
     headline: "Gallery of three",
     sources: [
-      { src: IMG["screen-board.png"], alt: "Board" },
-      { src: IMG["screen-chart.png"], alt: "Chart" },
-      { src: IMG["screen-code.png"], alt: "Code" },
+      { src: specimenImages["screen-board.png"], alt: "Board" },
+      { src: specimenImages["screen-chart.png"], alt: "Chart" },
+      { src: specimenImages["screen-code.png"], alt: "Code" },
     ],
     notes: "media: grid layout, three images.",
   },
@@ -1118,15 +1124,15 @@ const slides: Slide[] = [
     headline: "Row with tags",
     tags: ["Plan", "Build", "Review"],
     sources: [
-      { src: IMG["screen-board.png"], alt: "Plan", height: 280 },
-      { src: IMG["screen-code.png"], alt: "Build", height: 320 },
-      { src: IMG["screen-chart.png"], alt: "Review", height: 280 },
+      { src: specimenImages["screen-board.png"], alt: "Plan", height: 280 },
+      { src: specimenImages["screen-code.png"], alt: "Build", height: 320 },
+      { src: specimenImages["screen-chart.png"], alt: "Review", height: 280 },
     ],
     notes: "media: row layout with tags and heights.",
   },
   {
     type: "media",
-    sources: [{ src: IMG["demo.mp4"], kind: "video", alt: "Fictional demo" }],
+    sources: [{ src: specimenImages["demo.mp4"], kind: "video", alt: "Fictional demo" }],
     notes: "media: video, no headline.",
   },
 
@@ -1138,7 +1144,7 @@ const slides: Slide[] = [
         name: "Mara Lindqvist",
         title: "Platform lead",
         company: "Lumen Freight",
-        imageSrc: IMG["portrait-a.png"],
+        imageSrc: specimenImages["portrait-a.png"],
         bullets: ["Built the harness", "Ten years of platform work"],
         linkedIn: "https://www.linkedin.com/in/example",
       },
@@ -1146,7 +1152,7 @@ const slides: Slide[] = [
         name: "Jonas Okafor",
         title: "Team lead",
         company: "Lumen Freight",
-        imageSrc: IMG["portrait-b.png"],
+        imageSrc: specimenImages["portrait-b.png"],
         bullets: ["Runs the weekly review", "Coaches new teams"],
       },
     ],
@@ -1670,14 +1676,14 @@ const slides: Slide[] = [
         name: "Mara Lindqvist",
         contact: "mara@example.com",
         company: "hackers&wizards",
-        imageSrc: IMG["portrait-a.png"],
+        imageSrc: specimenImages["portrait-a.png"],
         linkedIn: "https://www.linkedin.com/in/example",
       },
       {
         name: "Jonas Okafor",
         contact: "jonas@example.com",
         company: "hackers&wizards",
-        imageSrc: IMG["portrait-b.png"],
+        imageSrc: specimenImages["portrait-b.png"],
       },
     ],
     notes:
@@ -1758,7 +1764,7 @@ const slides: Slide[] = [
     sectionTheme: "accent",
     principle: "Every team ships through the same harness, every day",
     headline: "Media with the longest kicker",
-    sources: [{ src: IMG["screen-board.png"], alt: "Fictional board" }],
+    sources: [{ src: specimenImages["screen-board.png"], alt: "Fictional board" }],
     notes: "media: max-length section label and principle.",
   },
   {
@@ -1916,10 +1922,14 @@ const slides: Slide[] = [
     sectionLabel: "Block: two images",
     headline: "One sprint, seen from the board and from the pull request",
     content: [
-      { type: "image", src: IMG["strip-board.png"], alt: "Fictional sprint board, its header" },
       {
         type: "image",
-        src: IMG["strip-pull-request.png"],
+        src: specimenImages["strip-board.png"],
+        alt: "Fictional sprint board, its header",
+      },
+      {
+        type: "image",
+        src: specimenImages["strip-pull-request.png"],
         alt: "Fictional pull request, its header",
       },
     ],
@@ -1934,10 +1944,20 @@ const slides: Slide[] = [
         type: "gallery",
         layout: "row",
         items: [
-          { src: IMG["screen-board.png"], alt: "Fictional board", caption: "Plan", height: 280 },
-          { src: IMG["screen-code.png"], alt: "Fictional code", caption: "Build", height: 320 },
           {
-            src: IMG["screen-chart.png"],
+            src: specimenImages["screen-board.png"],
+            alt: "Fictional board",
+            caption: "Plan",
+            height: 280,
+          },
+          {
+            src: specimenImages["screen-code.png"],
+            alt: "Fictional code",
+            caption: "Build",
+            height: 320,
+          },
+          {
+            src: specimenImages["screen-chart.png"],
             alt: "Fictional chart",
             caption: "Review",
             height: 280,
@@ -1955,14 +1975,14 @@ const slides: Slide[] = [
       {
         type: "gallery",
         items: [
-          { src: IMG["screen-board.png"], alt: "Fictional board" },
+          { src: specimenImages["screen-board.png"], alt: "Fictional board" },
           {
-            src: IMG["agent-session.mp4"],
-            poster: IMG["agent-session-poster.png"],
+            src: specimenImages["agent-session.mp4"],
+            poster: specimenImages["agent-session-poster.png"],
             kind: "video",
             alt: "Fictional agent session",
           },
-          { src: IMG["screen-chart.png"], alt: "Fictional chart" },
+          { src: specimenImages["screen-chart.png"], alt: "Fictional chart" },
         ],
         tags: ["Sprint 14", "Fictional"],
       },
@@ -1977,7 +1997,7 @@ const slides: Slide[] = [
       "Planning, review and the business side all followed it. The build time is gone; the pace it set is still here.",
     closingStyle: "quote",
     subtitle: "Speed was never the problem.",
-    imageSrc: IMG["portrait-a.png"],
+    imageSrc: specimenImages["portrait-a.png"],
     imageAlt: "Fictional speaker",
     attribution: "Mara Lindqvist, Lumen Freight (fictional)",
     footer: "Delivery Days 2026, keynote (fictional)",
@@ -1989,7 +2009,7 @@ const slides: Slide[] = [
     lines: ["Does the diagnosis hold for you?"],
     subtitle:
       "What works for you? What does not?\nWhere did you fall flat?\n\nOn to the speakers' corner,\nlater on the discussion board",
-    qr: { src: IMG["qr-tight.png"], href: "https://example.com/discuss" },
+    qr: { src: specimenImages["qr-tight.png"], href: "https://example.com/discuss" },
     footer: "The discussion goes on in the hallway and on the board",
     notes: "statement: a QR code without a margin of its own, and a footer.",
   },
@@ -2007,7 +2027,7 @@ const slides: Slide[] = [
     title: "Vierhundert Menschen, ein Lieferweg, zwölf Monate",
     speakers: ["Mara Lindqvist", "Jonas Okafor"],
     event: "Delivery Days 2026 · 14. Mai · Rotterdam",
-    qr: { src: IMG["qr-example.png"], href: "https://example.com/harness" },
+    qr: { src: specimenImages["qr-example.png"], href: "https://example.com/harness" },
     notes: "title: a German talk's opening, the speakers joined in German.",
   },
 ];
