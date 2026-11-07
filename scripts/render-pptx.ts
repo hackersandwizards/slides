@@ -480,6 +480,14 @@ interface Ctx {
   warnings: string[];
 }
 
+/** A deck file's path: a root path under the consumer's public directory, a file path as it stands,
+ *  which is what Bun gives an imported image, the specimen's among them. Vite's dev URL for one
+ *  keeps its query. */
+const assetFile = (ctx: Ctx, src: string) => {
+  const path = src.replace(/\?.*$/, "");
+  return existsSync(path) ? path : join(ctx.assets, path.replace(/^\//, ""));
+};
+
 /** A deck image, from the consumer's public directory, contained in the box. The engine's own
  *  logo paths take the brand package's PNG cut, since PowerPoint shows an SVG without a raster
  *  fallback as a broken picture in older viewers. */
@@ -502,7 +510,7 @@ function picture(
   } = {},
 ) {
   const logo = BRAND_MARK.exec(src);
-  const path = logo ? brandLogo(logo[1]) : join(ctx.assets, src.replace(/^\//, ""));
+  const path = logo ? brandLogo(logo[1]) : assetFile(ctx, src);
   const size = existsSync(path) ? imageSize(readFileSync(path)) : undefined;
   if (!size) {
     ctx.warnings.push(
@@ -1702,12 +1710,12 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "video": {
-      const path = join(ctx.assets, b.src.replace(/^\//, ""));
+      const path = assetFile(ctx, b.src);
       const h = a.h - (b.caption ? 0.35 : 0);
       if (existsSync(path)) {
         const w = Math.min(a.w, (h * 16) / 9);
         // pptxgenjs stores the cover as a PNG part whatever its bytes: anything else stays out.
-        const poster = b.poster && join(ctx.assets, b.poster.replace(/^\//, ""));
+        const poster = b.poster && assetFile(ctx, b.poster);
         const cover = poster && existsSync(poster) ? readFileSync(poster) : undefined;
         const png = cover?.toString("latin1", 1, 4) === "PNG";
         if (b.poster && !png)
@@ -1751,7 +1759,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const k2 = Math.min(iw / srcW, a.h / srcH);
       const pw = srcW * k2;
       const ph = srcH * k2;
-      const path = join(ctx.assets, b.src.replace(/^\//, ""));
+      const path = assetFile(ctx, b.src);
       if (existsSync(path)) {
         s.addImage({
           path,
@@ -3920,7 +3928,7 @@ if (import.meta.main) {
   if (!input || !out || !out.endsWith(".pptx")) {
     console.error("Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]");
     console.error(
-      "The deck is a Presentation as JSON; --assets is the directory a slide's /image path resolves in, ./public by default.",
+      "The deck is a Presentation as JSON; --assets is the directory a slide's /image path resolves in, ./public by default; a path to an existing file is read as it stands.",
     );
     process.exit(1);
   }

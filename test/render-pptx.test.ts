@@ -77,11 +77,8 @@ const slideText: string[] = [];
 beforeAll(async () => {
   dir = mkdtempSync(join(tmpdir(), "slides-pptx-"));
   const out = join(dir, "specimen.pptx");
-  const warnings = await renderPptx(
-    slideCatalogue,
-    out,
-    join(import.meta.dirname, "..", "specimen"),
-  );
+  // Vite names the specimen's images from the repository root.
+  const warnings = await renderPptx(slideCatalogue, out, join(import.meta.dirname, ".."));
   expect(warnings).toEqual([]);
   zip = await JSZip.loadAsync(readFileSync(out));
   for (let i = 1; zip.file(`ppt/slides/slide${i}.xml`); i++) {
@@ -177,7 +174,7 @@ describe("slides-pptx on the specimen deck", () => {
     slideCatalogue.slides.forEach((slide: Slide, i) => {
       const images =
         JSON.stringify(slide).match(
-          /"(src|imageSrc|logo)":"[^"]+\.(png|jpe?g|webp|gif|svg|mp4|webm|mov)"/g,
+          /"(src|imageSrc|logo)":"[^"]+\.(png|jpe?g|webp|gif|svg|mp4|webm|mov)(\?[^"]*)?"/g,
         ) ?? [];
       const pictures = slideXml[i].match(/<p:pic>/g) ?? [];
       expect(pictures.length, `slide ${i + 1} (${slide.type})`).toBeLessThanOrEqual(

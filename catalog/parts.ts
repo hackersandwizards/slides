@@ -3,6 +3,7 @@ import * as primitives from "../components/slides/primitives";
 import * as chrome from "../components/slides/SlideChrome";
 import { highlightLines } from "../lib/code-highlight";
 import { qrAlt } from "../lib/slide-utils";
+import { specimenImages } from "../specimen/slide-catalogue";
 
 const {
   CodePanel,
@@ -19,8 +20,6 @@ const {
   VideoPlayer,
 } = primitives;
 const { FrameTitle, PulseDot } = chrome;
-// Under the Pages base, since a part story builds its paths again on the client.
-const FILES = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/slide-catalogue`;
 export const label = (text: string) =>
   h("p", { className: "hw-label mb-3", "data-tone": "muted" }, text);
 export const inRow = (...children: ReactNode[]) =>
@@ -93,8 +92,8 @@ export const PARTS: Record<string, () => ReactNode> = {
       "div",
       { className: "w-1/2 pb-10" },
       h(VideoPlayer, {
-        src: `${FILES}/agent-session.mp4`,
-        poster: `${FILES}/agent-session-poster.png`,
+        src: specimenImages["agent-session.mp4"],
+        poster: specimenImages["agent-session-poster.png"],
         alt: "An agent session",
       }),
     ),
@@ -108,7 +107,7 @@ export const PARTS: Record<string, () => ReactNode> = {
     h(PictureLink, {
       href: "https://example.com/harness",
       children: h("img", {
-        src: `${FILES}/qr-example.png`,
+        src: specimenImages["qr-example.png"],
         alt: qrAlt("https://example.com/harness"),
         className: "size-48 rounded-brand",
       }),

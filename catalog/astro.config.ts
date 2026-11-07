@@ -1,11 +1,4 @@
-import {
-  cpSync,
-  createReadStream,
-  readdirSync,
-  readFileSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { cpSync, createReadStream, readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@astrojs/react";
@@ -19,9 +12,9 @@ const BASE = "/slides";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const deckFiles = join(root, "specimen/slide-catalogue");
 
-// A slide names the deck's images from the site root, as a consumer's public folder serves them.
+// The print pages name the deck's images beside them and brand's files under brand/, as in dist/.
 const fileOf = (path: string) => {
-  const asset = path.match(/^(?:\/slides)?(?:\/catalog\/print)?\/slide-catalogue\/([\w.-]+)$/);
+  const asset = path.match(/^(?:\/slides)?\/catalog\/print\/slide-catalogue\/([\w.-]+)$/);
   if (asset) return join(deckFiles, asset[1]);
   const name = path.match(/^(?:\/slides)?\/brand\/(.+)$/)?.[1];
   if (!name || name.includes("..")) return undefined;
@@ -42,7 +35,7 @@ const types: Record<string, string> = {
   ".ico": "image/x-icon",
 };
 
-// The stories' root paths move under the base, since a Pages site lives under /slides/.
+// The print pages, read as files: brand's files they link and the deck's images beside them.
 const files: AstroIntegration = {
   name: "slide-files",
   hooks: {
@@ -59,19 +52,6 @@ const files: AstroIntegration = {
         cpSync(file, join(dist, "brand", name));
       }
       cpSync(deckFiles, join(dist, "catalog/print/slide-catalogue"), { recursive: true });
-      cpSync(deckFiles, join(dist, "slide-catalogue"), { recursive: true });
-      const stories = join(dist, "stories");
-      for (const page of readdirSync(stories, { recursive: true, encoding: "utf8" })) {
-        if (!page.endsWith(".html")) continue;
-        const file = join(stories, page);
-        const html = readFileSync(file, "utf8");
-        // The island's props too, or hydration puts the unbased path back.
-        const based = html.replace(
-          /((?:src|href|poster)="|&quot;)\/slide-catalogue\//g,
-          `$1${BASE}/slide-catalogue/`,
-        );
-        if (based !== html) writeFileSync(file, based);
-      }
     },
   },
 };

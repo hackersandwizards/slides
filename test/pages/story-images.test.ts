@@ -2,8 +2,8 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, it } from "vitest";
 
-// A story renders its slide after hydration from the island's props, so a deck image's root path
-// there must carry the Pages base too, or every portrait on the published stories is a 404.
+// A story renders its slide after hydration from the island's props, so a deck image's path there
+// must carry the Pages base too, or every portrait on the published stories is a 404.
 const dist = join(import.meta.dirname, "..", "..", "dist");
 const stories = join(dist, "stories");
 
@@ -12,13 +12,13 @@ it("names each deck image under the base, in the markup and in the props", () =>
     .filter((page) => page.endsWith(".html"))
     .flatMap((page) => [
       ...readFileSync(join(stories, page), "utf8").matchAll(
-        /(?:="|&quot;)(\/[\w/]*slide-catalogue\/[\w.-]+)/g,
+        /(?:="|&quot;)(\/[\w/.-]+\.(?:png|mp4))/g,
       ),
     ])
     .map(([, path]) => path);
   expect(paths.length).toBeGreaterThan(0);
   for (const path of new Set(paths)) {
-    expect(path).toMatch(/^\/slides\/slide-catalogue\//);
+    expect(path).toMatch(/^\/slides\//);
     expect(existsSync(join(dist, path.replace(/^\/slides/, ""))), path).toBe(true);
   }
 });

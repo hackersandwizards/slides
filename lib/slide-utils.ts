@@ -471,7 +471,7 @@ export function claimParts(lang: "en" | "de"): [string, string, string] {
 
 /** Whether a gallery item is a video: so marked, or a video file. */
 export const isVideo = (item: GalleryItem) =>
-  item.kind === "video" || /\.(mp4|webm|mov)$/i.test(item.src);
+  item.kind === "video" || /\.(mp4|webm|mov)(\?|$)/i.test(item.src);
 
 /** A `media` slide as the content slide that replaces it: one picture or video as its own block,
  *  several, or one with a caption or tags, as a `gallery`. */

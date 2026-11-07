@@ -36,7 +36,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   as one Node request handler, which each consumer mounts on its dev server with its own map from
   deck path to file. `lib/vite.ts` is a consumer's Vite `optimizeDeps`, read from the engine's
   imports.
-- `types/slide.ts`: the slide types and content blocks a deck may use. `types/brand-logos.d.ts`
+- `types/slide.ts`: the slide types and content blocks a deck may use. `types/url-imports.d.ts`
   declares the `?url` imports for a consumer's own typecheck.
 - `styles/tokens.css`: the slide's roles, each a `var()` over brand: it imports the brand tokens,
   brand's `stage.css` (the slide scale, the type table, measures, spacing, rules and marks, every
@@ -67,7 +67,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   the h&w design with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
   Its lengths and sizes are measured off the print route at 1920x1080.
 - `specimen/`: `slide-catalogue.ts`, the specimen deck, every slide type and variant with fictional
-  content, and its images (`specimen/slide-catalogue/`, which talks copies into its `public/`).
+  content, and its images (`specimen/slide-catalogue/`), which it imports as `?url` like brand's
+  logos, so a consumer's bundler serves them and `specimenImages` names them.
+  `test/specimen-coverage.test.ts` fails on a slide type, content block or variant it does not show.
 - `catalog/`: the catalog (decision repo-uniformity-plan, hub-max), one Astro app in scaffolding's
   catalog shell (`catalog({...})` in `catalog/astro.config.ts`), never shipped but for
   `SlideFrame.astro`, the story frame a consumer's catalog takes too: Astrobook, `@astrojs/react`
@@ -128,7 +130,7 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
    with the tag.
 2. Brief a session in each consumer to raise the tag in its `package.json`, `bun install` and run
    its gate. The regression
-   decks are this repo's `specimen/slide-catalogue.ts`, which talks shows and tests, and
+   decks are this repo's `specimen/slide-catalogue.ts`, which talks shows, and
    trainer-hub's `slide-master`; a new slide type or variant lands in the specimen deck first.
 
 ## Behavioral rules

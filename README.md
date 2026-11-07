@@ -15,8 +15,8 @@ Add the dependency in exactly this form, pinned to the newest tag
 elements (`elements.css`, the stage button, the label box and the accent rule among them), text
 base (`text-base.css`), slide pointer (`cursor.svg`) and small corner the stylesheet imports, whose `verbal.json` gives the closing its claim and whose logos the
 slides draw through its exports, as `?url` imports the bundler serves: a deck names a mark as
-`/hw-lockup.svg`, `/hw-wordmark.svg` or their `-night` cuts, and a consumer copies none into
-`public/` for the engine. Both repos are public: Bun fetches the `git+https://` form through GitHub's tarball API without any GitHub access.
+`/hw-lockup.svg`, `/hw-wordmark.svg` or their `-night` cuts. The specimen deck imports its images
+the same way, so a consumer copies nothing into `public/` for the engine. Both repos are public: Bun fetches the `git+https://` form through GitHub's tarball API without any GitHub access.
 
 ```json
 "@hackersandwizards/slides": "git+https://github.com/hackersandwizards/slides.git#v<version>"
@@ -32,7 +32,7 @@ slides draw through its exports, as `?url` imports the bundler serves: a deck na
 | `@hackersandwizards/slides/lib/next-adapter`             | `NextSlidesAdapter`                                                                                                  |
 | `@hackersandwizards/slides/components/slides/PrintSlide` | `PrintDeck`, a deck's print route, and `PrintSlide`, one printed page                                                |
 | `@hackersandwizards/slides/scripts/render-pdf`           | `renderPdf` for an export script                                                                                     |
-| `@hackersandwizards/slides/specimen/slide-catalogue`     | the fictional specimen deck                                                                                          |
+| `@hackersandwizards/slides/specimen/slide-catalogue`     | the fictional specimen deck, and `specimenImages`, its images' URLs by file name                                     |
 | `@hackersandwizards/slides/catalog/SlideFrame.astro`     | a story's frame in a catalog on scaffolding's shell: `decorators: [{ component: SlideFrame, props: { component } }]` |
 
 The command `slides-pins` belongs in each consumer's gate, after scaffolding's shared steps: it
@@ -47,7 +47,8 @@ The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]` writes a dec
 PowerPoint file in the h&w design: text as text boxes, tables as tables, trend and bar charts as
 charts, diagrams as shapes, and only the deck's own images and the h&w logos as pictures. The deck
 is the `Presentation` as JSON, `-` reads it from stdin. `--assets` is the folder a deck's `/…`
-image paths resolve against, `./public` by default. It needs `pptxgenjs` and `jszip`, optional
+image paths resolve against, `./public` by default; a path to an existing file, as Bun gives the
+specimen's imported images, is read as it stands. It needs `pptxgenjs` and `jszip`, optional
 peer dependencies a consumer installs only to run it. In `talks`:
 
 ```sh

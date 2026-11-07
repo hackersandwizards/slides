@@ -5,7 +5,7 @@ import { aliasTypes, slideComponents } from "../lib/slide-components";
 import { brandLogos } from "../lib/brand-logos";
 import { PrintProvider } from "../lib/print-context";
 import { PrintSlide } from "../components/slides/PrintSlide";
-import { slideCatalogue } from "../specimen/slide-catalogue";
+import { slideCatalogue, specimenImages } from "../specimen/slide-catalogue";
 import type { Slide } from "../types/slide";
 import * as primitives from "../components/slides/primitives";
 import { highlightLines } from "../lib/code-highlight";
@@ -89,16 +89,20 @@ const slideMarkup = (index: number) =>
   renderToStaticMarkup(
     h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalogue, index })),
   );
-const renderFrame = (index: number, name: string) => {
-  let markup = slideMarkup(index);
+// The pages are read as files from dist/: brand's logos by its copies there, the deck's images by
+// the folder the build copies beside the pages.
+const besidePage = (markup: string) => {
   for (const [file, url] of Object.entries(brandLogos))
     markup = markup.replaceAll(`"${url}"`, `"${brandHref}/logos/${file}.svg"`);
-  markup = markup.replace(
-    /(src|href|poster)="(?:\/slides)?\/slide-catalogue\//g,
-    '$1="slide-catalogue/',
-  );
-  return { name, markup, index };
+  for (const [file, url] of Object.entries(specimenImages))
+    markup = markup.replaceAll(`"${url}"`, `"slide-catalogue/${file}"`);
+  return markup;
 };
+const renderFrame = (index: number, name: string) => ({
+  name,
+  markup: besidePage(slideMarkup(index)),
+  index,
+});
 const frames = picks.map((index) => {
   const { type } = deck[index];
   const first = deck.findIndex((s) => s.type === type) === index;
@@ -170,21 +174,23 @@ const partFrames = partNames.map(({ name, file }) => ({
   file,
   purpose: purpose(name, file),
   users: usedBy(name),
-  markup: renderToStaticMarkup(
-    h(
-      PrintProvider,
-      null,
+  markup: besidePage(
+    renderToStaticMarkup(
       h(
-        "div",
-        {
-          className: "print-slide bg-section-intro",
-          "data-hw-scale": "stage",
-          "data-theme": "light",
-        },
-        h("div", { className: "p-24" }, h(Fragment, null, PARTS[name]())),
+        PrintProvider,
+        null,
+        h(
+          "div",
+          {
+            className: "print-slide bg-section-intro",
+            "data-hw-scale": "stage",
+            "data-theme": "light",
+          },
+          h("div", { className: "p-24" }, h(Fragment, null, PARTS[name]())),
+        ),
       ),
     ),
-  ).replace(/(src|href|poster)="(?:\/slides)?\/slide-catalogue\//g, '$1="slide-catalogue/'),
+  ),
 }));
 
 const attr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
