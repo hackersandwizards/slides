@@ -1,0 +1,18 @@
+.team-octagon {
+  --cut: var(--slide-octagon-cut);
+  clip-path: polygon(
+    var(--cut) 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut)),
+    0 var(--cut)
+  );
+}
+.team-octagon > .team-octagon {
+  --cut: calc(var(--slide-octagon-cut) - var(--slide-octagon-diagonal));
+  margin: var(--slide-octagon-line);
+  height: calc(100% - 2 * var(--slide-octagon-line));
+}

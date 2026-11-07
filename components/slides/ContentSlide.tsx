@@ -260,7 +260,7 @@ function getPipelineArrow(
 type PipelineBlock = Extract<ContentBlock, { type: "pipeline" }>;
 
 /** A pipeline reads as one row. Where its stages wrap, the row steps through `data-step` in
- *  slides.css: 1 closes its gaps and stage padding just as far as one row needs, so the row still
+ *  ContentSlide.css: 1 closes its gaps and stage padding just as far as one row needs, so the row still
  *  spans its box, 2 also sets the labels at body size, the floor, and 3 splits it into two
  *  balanced rows. The fit guard in SlideShell lays the body out wider until a row at 3 holds one
  *  line, sends `pipeline-settle` whenever it changes the width, and sends `pipeline-reset` to

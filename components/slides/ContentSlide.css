@@ -1,0 +1,55 @@
+/* A pipeline whose stages wrap steps down until they hold one row (PipelineRow in ContentSlide):
+   1 closes the gaps from 1rem towards 0.5rem and the stage padding from 1.25rem towards 0.75rem by
+   the share `--tighten`, 2 also sets the labels from text-lg to text-base, the body size and the
+   floor, 3 lays out two balanced rows at the full sizes, with no arrow at the break. A stage takes
+   no transition, so each step lays out at once for the next measurement and never animates in. */
+.pipeline-stage {
+  transition: none;
+}
+
+/* stylelint-disable csstools/value-no-unknown-custom-properties -- PipelineRow sets --tighten on the
+   row at run time. */
+.pipeline-row[data-step="1"],
+.pipeline-row[data-step="1"] > div {
+  gap: calc(
+    var(--slide-pipeline-gap) - (var(--slide-pipeline-gap) - var(--slide-pipeline-gap-tight)) *
+      var(--tighten)
+  );
+}
+
+.pipeline-row[data-step="1"] .pipeline-stage {
+  padding-inline: calc(
+    var(--slide-pipeline-pad) - (var(--slide-pipeline-pad) - var(--slide-pipeline-pad-tight)) *
+      var(--tighten)
+  );
+}
+/* stylelint-enable csstools/value-no-unknown-custom-properties */
+
+.pipeline-row[data-step="2"],
+.pipeline-row[data-step="2"] > div {
+  gap: var(--slide-pipeline-gap-tight);
+}
+
+.pipeline-row[data-step="2"] .pipeline-stage {
+  padding-inline: var(--slide-pipeline-pad-tight);
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+}
+
+.pipeline-break {
+  display: none;
+}
+
+/* The break takes a line of its own between the two rows, so each row gap is half. */
+.pipeline-row[data-step="3"] {
+  row-gap: var(--slide-pipeline-gap-tight);
+}
+
+.pipeline-row[data-step="3"] .pipeline-break {
+  display: block;
+  flex-basis: 100%;
+}
+
+.pipeline-row[data-step="3"] .pipeline-break + div > span {
+  display: none;
+}

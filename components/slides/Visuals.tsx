@@ -91,7 +91,7 @@ export function FlowSteps({
   const show = (on: boolean) =>
     `transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`;
   return (
-    // On a phone (slides.css) up to four steps keep their row at a smaller size, and five or more
+    // On a phone (Visuals.css) up to four steps keep their row at a smaller size, and five or more
     // stand one under another.
     <div className={`slide-flow relative w-full ${n >= 5 ? "slide-flow-long" : ""}`}>
       {/* The loop runs above the nodes, out of the last one and down into the first. */}
@@ -247,7 +247,7 @@ export function Framed({ frame, children }: { frame: FlowFrame; children: ReactN
           ))}
         </div>
       )}
-      {/* On a phone the notes go under the steps, which take the frame's whole width (slides.css). */}
+      {/* On a phone the notes go under the steps, which take the frame's whole width (Visuals.css). */}
       <div
         className={`flex flex-wrap items-center justify-center ${frame.notes ? "gap-6" : "gap-4"}`}
       >

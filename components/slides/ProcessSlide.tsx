@@ -69,7 +69,7 @@ export function ProcessSlide({ slide }: Props) {
         <div className="slide-body items-center">
           <div className="flex w-full flex-col items-center gap-10">
             {/* Desktop and print: the steps on one line as the flow block draws them, the loop
-                back above. Phones keep the circle (slides.css). */}
+                back above. Phones keep the circle (ProcessSlide.css). */}
             <div className={`w-full ${loop ? "hidden md:block" : ""}`}>
               <FlowSteps
                 steps={slide.nodes.map((node) => ({

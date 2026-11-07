@@ -1,0 +1,6 @@
+/* The cycle's canvas draws on a phone only: from `md` up and in print the stages show it. */
+@media screen and (width >= 48rem), print {
+  .process-canvas {
+    display: none;
+  }
+}

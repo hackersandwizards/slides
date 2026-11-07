@@ -6,11 +6,16 @@ import { describe, expect, it } from "vitest";
 // A length a component derives from its data (a bar's share, a column's span, a canvas measured in
 // its own units) is computed, not written, and stays.
 const ROOT = join(import.meta.dirname, "..");
-const SOURCES = ["components", "lib"].flatMap((dir) =>
-  readdirSync(join(ROOT, dir), { recursive: true, encoding: "utf8" })
-    .filter((f) => /\.tsx?$/.test(f))
-    .map((f) => `${dir}/${f}`),
+const FILES = ["components", "lib", "styles"].flatMap((dir) =>
+  readdirSync(join(ROOT, dir), { recursive: true, encoding: "utf8" }).map((f) => `${dir}/${f}`),
 );
+const SOURCES = FILES.filter((f) => /\.tsx?$/.test(f));
+// slides.css and the stylesheets beside components it imports; tokens.css defines the tokens.
+const SLIDES_CSS = readFileSync(join(ROOT, "styles", "slides.css"), "utf8");
+const BESIDE = [...SLIDES_CSS.matchAll(/@import "\.\.\/(components\/[^"]+\.css)"/g)].map(
+  ([, f]) => f,
+);
+const STYLESHEETS = ["styles/slides.css", ...BESIDE];
 // Motion interpolates the numbers inside a filter or an observer margin, which a custom property
 // hides from it, and these keyframes move only a fade, never a slide's resting layout.
 const MOTION = new Set(["components/ui/blur-fade.tsx"]);
@@ -122,9 +127,24 @@ describe("tokens", () => {
     ).toEqual(["--b"]);
   });
 
-  it("styles/slides.css names tokens only", () => {
-    expect(rawCssValues(readFileSync(join(ROOT, "styles", "slides.css"), "utf8"))).toEqual([]);
+  // A stylesheet beside a component reaches a page only through slides.css: a component importing
+  // it would bring its rules to trainer-hub's hub pages, which render components without slides.css.
+  it("slides.css imports every stylesheet beside a component, and no component imports one", () => {
+    expect(BESIDE.toSorted()).toEqual(
+      FILES.filter((f) => /^(components|lib)\/.*\.css$/.test(f)).toSorted(),
+    );
+    expect(BESIDE).toContain("components/slides/PrintSlide.css");
+    expect(
+      SOURCES.filter((f) =>
+        /["'][^"'\n]*\.css(\?[^"'\n]*)?["']/.test(code(readFileSync(join(ROOT, f), "utf8"))),
+      ),
+    ).toEqual([]);
   });
+
+  for (const file of STYLESHEETS)
+    it(`${file} names tokens only`, () => {
+      expect(rawCssValues(readFileSync(join(ROOT, file), "utf8"))).toEqual([]);
+    });
 
   for (const file of SOURCES.filter((f) => !MOTION.has(f)))
     it(`${file} names tokens only`, () => {

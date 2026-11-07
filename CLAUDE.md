@@ -21,7 +21,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `DashedFrame`, `VideoPlayer` and the rest). A part used by a second slide type moves there; a real
   difference is a variant of the part, never a class string of the type's own. `PrintSlide.tsx` is
   the printed page, strip and corner included, and `PrintDeck` the whole deck a consumer's print
-  route renders, which the print page renders too.
+  route renders, which the print page renders too. A CSS rule one component owns lives in a `.css`
+  beside it, which `slides.css` imports where the rule stands in the cascade, never the component
+  itself: trainer-hub's hub pages render components without `slides.css`.
 - `components/ui/`: effects and `image.tsx`, the engine's image.
 - `lib/`: hooks, navigation, presenter sync, the edit mode, themes and section styles.
   `lib/brand-logos.ts` is the h&w marks as `?url` imports of brand's exports, which `Image` draws

@@ -1,0 +1,32 @@
+.print-slide {
+  position: relative;
+  width: var(--slide-page-width);
+  height: var(--slide-page-height);
+  overflow: hidden;
+  break-after: page;
+}
+
+/* The last slide must not push a blank page after it. Next renders its scripts after the slides
+   inside <body>, so the last slide is not always `:last-child`. */
+.print-slide:not(:has(~ .print-slide)) {
+  break-after: auto;
+}
+
+.print-slide > :first-child {
+  min-height: var(--slide-page-height) !important;
+  max-height: var(--slide-page-height) !important;
+  height: var(--slide-page-height) !important;
+}
+
+.print-watermark {
+  position: absolute;
+  bottom: var(--slide-footer-inset);
+  right: var(--slide-footer-side);
+  z-index: 40;
+}
+
+@media print {
+  .print-slide {
+    break-inside: avoid;
+  }
+}

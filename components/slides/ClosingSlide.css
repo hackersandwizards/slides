@@ -1,0 +1,5 @@
+/* A closing slide that shows the lockup in its centre column hides the corner, so the slide carries
+   one lockup. */
+:is(.slide-viewport, .print-slide):has(.slide-closing-mark) > :is(.slide-corner, .print-watermark) {
+  display: none;
+}

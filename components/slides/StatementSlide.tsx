@@ -32,7 +32,7 @@ function HighlightedLine({ line, highlighted }: { line: string; highlighted?: st
   return (
     <>
       {before}
-      <span className="text-gradient-brand">{highlighted}</span>
+      <span className="text-primary">{highlighted}</span>
       {after}
     </>
   );

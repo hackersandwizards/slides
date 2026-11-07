@@ -1,0 +1,75 @@
+/* The player's viewport and its corner row (SlideContainer), imported by styles/slides.css after
+   the phone layout, whose `.slide-content` padding the control bar's below `sm` overrides. */
+@layer base {
+  .slide-viewport {
+    overflow: hidden;
+    scrollbar-width: none;
+    cursor:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Ccircle cx='6' cy='6' r='3' fill='%231A7285' /%3E%3Ccircle cx='6' cy='6' r='4' fill='%231A7285' fill-opacity='0.4' /%3E%3Ccircle cx='6' cy='6' r='5' fill='%231A7285' fill-opacity='0.25' /%3E%3C/svg%3E")
+        6 6,
+      auto;
+  }
+  .slide-viewport::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media screen and (width < 48rem) {
+  /* The corner row follows the slide's content instead of standing over it while it scrolls: it
+     takes the foot of the content's bottom padding, `--slide-phone-corner-below` above the
+     slide's end, so it adds no height, and a slide that fits the screen shows it where a fixed
+     corner would stand. It passes under the ground behind the player's controls. A deck's partner
+     logo (`.slide-corner-start`) shares its row on the left. Each takes the content's side. */
+  .slide-viewport {
+    --slide-phone-corner-below: var(--slide-footer-inset);
+  }
+  .slide-viewport > :is(.slide-corner, .slide-corner-start) {
+    position: relative;
+    inset: auto;
+    z-index: 20;
+    padding: var(--slide-phone-padding);
+    padding-block: 0;
+    pointer-events: none;
+  }
+  .slide-viewport > .slide-corner {
+    justify-content: flex-end;
+    margin: calc(-1 * (var(--slide-footer-mark) + var(--slide-phone-corner-below))) 0
+      var(--slide-phone-corner-below);
+  }
+  .slide-viewport > .slide-corner-start {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    height: var(--slide-footer-mark);
+    margin: calc(-1 * (var(--slide-footer-mark) + var(--slide-phone-corner-below))) 0
+      calc(-1 * var(--slide-footer-mark));
+  }
+  .slide-viewport > .slide-corner-start + .slide-corner {
+    margin-top: 0;
+  }
+  /* Two logos share a phone's row: the partner logo stands at three quarters of its height. */
+  .slide-corner-start img {
+    height: calc(var(--slide-footer-mark) * 0.75);
+  }
+}
+
+/* Below `sm` the player's control bar takes the bottom band: the corner row stands above it, and
+   the slide's ground fades in behind the controls, so no line of text runs under them. */
+@media screen and (width < 40rem) {
+  .slide-viewport {
+    --slide-phone-corner-below: var(--slide-phone-nav-band);
+  }
+  .slide-content {
+    padding: var(--slide-phone-padding-nav);
+  }
+  .slide-viewport .slide-shell::after {
+    content: "";
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 30;
+    height: var(--slide-phone-nav-band);
+    background: linear-gradient(transparent, var(--slide-ground) 20%);
+    pointer-events: none;
+  }
+}

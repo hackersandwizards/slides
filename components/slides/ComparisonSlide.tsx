@@ -141,7 +141,7 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
         <BlurFade delay={0.5} duration={0.6}>
           <p
             inert={!punchlineVisible}
-            className={`text-gradient-brand mt-10 max-w-3xl text-center font-heading text-2xl font-bold transition-opacity duration-500 ${punchlineVisible ? "opacity-100" : "opacity-0"}`}
+            className={`mt-10 max-w-3xl text-center font-heading text-2xl font-bold text-primary transition-opacity duration-500 ${punchlineVisible ? "opacity-100" : "opacity-0"}`}
           >
             {slide.punchline}
           </p>
@@ -252,7 +252,7 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSidesSlide }) {
             phase >= 2 ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
           }`}
         >
-          <p className="text-gradient-brand font-heading text-2xl font-bold">{slide.punchline}</p>
+          <p className="font-heading text-2xl font-bold text-primary">{slide.punchline}</p>
         </div>
       )}
 
@@ -282,7 +282,7 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
 
       {slide.punchline && (
         <BlurFade delay={0.5} duration={0.6}>
-          <p className="text-gradient-brand mt-10 max-w-3xl text-center font-heading text-2xl font-bold">
+          <p className="mt-10 max-w-3xl text-center font-heading text-2xl font-bold text-primary">
             {slide.punchline}
           </p>
         </BlurFade>
