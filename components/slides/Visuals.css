@@ -30,8 +30,6 @@
   .slide-flow-step > h2 {
     margin-top: calc(var(--spacing) * 2);
     font-size: var(--type-body-size);
-    overflow-wrap: anywhere;
-    hyphens: auto;
   }
   .slide-flow-step > p {
     margin-top: var(--spacing);
@@ -47,7 +45,7 @@
     font-size: var(--type-body-size);
   }
 
-  /* Five and more steps stand one under another, each tile beside its words and joined by the line
+  /* Five and more steps, or a title wider than its column, stand one under another, each tile beside its words and joined by the line
      to the next step once that one shows, a loop back named under the last. */
   .slide-flow-long {
     display: flex;

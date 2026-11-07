@@ -59,6 +59,17 @@ export type FlowStep = Of<"flow">["steps"][number] & {
 // every step of the row, so the tiles stay one kind.
 const TILE_LABEL = 4;
 
+// On a phone a row of steps holds a title's longest word only where it fits a column: a mono
+// glyph is 0.6em and the narrowest phone leaves the row 20rem, a column's padding 0.5rem. A word
+// wider than its column, which the hyphenator cannot always split ("Autocomplete"), stands the
+// steps one under another instead, as five and more do (Visuals.css).
+function fitsPhoneRow(steps: FlowStep[]) {
+  const word = Math.max(
+    ...steps.flatMap((step) => step.title.split(/[\s*_`]+/).map((w) => w.length)),
+  );
+  return steps.length * (word * 0.6 + 0.5) <= 20;
+}
+
 /** Steps on one line with a tile each, as the flow block draws them; the process
  *  slides draw theirs with it too. `loop` draws the arrow from the last step back to the first,
  *  labelled when non-empty. `revealed` shows the first n steps, the line to each and the loop
@@ -91,9 +102,11 @@ export function FlowSteps({
   const show = (on: boolean) =>
     `transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`;
   return (
-    // On a phone (Visuals.css) up to four steps keep their row at a smaller size, and five or more
-    // stand one under another.
-    <div className={`slide-flow relative w-full ${n >= 5 ? "slide-flow-long" : ""}`}>
+    // On a phone (Visuals.css) up to four steps keep their row at a smaller size where their words
+    // fit it, and the rest stand one under another.
+    <div
+      className={`slide-flow relative w-full ${n >= 5 || !fitsPhoneRow(steps) ? "slide-flow-long" : ""}`}
+    >
       {/* The loop runs above the nodes, out of the last one and down into the first. */}
       {loop !== undefined && (
         <div

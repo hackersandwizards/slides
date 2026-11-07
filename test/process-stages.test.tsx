@@ -74,3 +74,16 @@ describe("ProcessSlide, loop false", () => {
     expect(once.textContent).toContain("10x");
   });
 });
+
+// On a phone a row of three holds a ten-glyph word per column at most; a longer one, which the
+// hyphenator may not split, stacks the steps rather than cutting it ("Autocomplet / e").
+describe("FlowSteps on a phone", () => {
+  it("stacks the steps where a title's word is wider than its column", () => {
+    const row = (titles: string[]) =>
+      printed(titles.map((title, i) => stage(`${i}x`, title))).container.querySelector(
+        ".slide-flow",
+      )!.className;
+    expect(row(["Autocomplete", "Chat", "Harness"])).toContain("slide-flow-long");
+    expect(row(["Manual", "Chat", "Harness"])).not.toContain("slide-flow-long");
+  });
+});
