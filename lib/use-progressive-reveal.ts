@@ -66,6 +66,14 @@ function stepReveal(event: KeyboardEvent) {
   }
 }
 
+const narrowQuery = () => window.matchMedia?.(NARROW);
+const isNarrow = () => !!narrowQuery()?.matches;
+const subscribeNarrow = (listener: () => void) => {
+  const query = narrowQuery();
+  query?.addEventListener("change", listener);
+  return () => query?.removeEventListener("change", listener);
+};
+
 interface UseProgressiveRevealOptions {
   totalSteps: number;
   startFull?: boolean;
@@ -94,12 +102,11 @@ export function useProgressiveReveal({
   // Read during render, applied after mount: the server cannot see sessionStorage and renders the
   // slide unrevealed, and React keeps a hydrated tree's mismatched attributes as the server sent
   // them, so revealing in the first client render left a backward arrival blank.
+  const [arrivedRevealed] = useState(() => !full && totalSteps > 0 && opensRevealed());
   // On a phone the reader scrolls a one-column slide and Next moves to the next slide, so every
-  // step shows at once and the arrows never step.
-  const [phone] = useState(
-    () => typeof window !== "undefined" && !!window.matchMedia?.(NARROW).matches,
-  );
-  const [revealed] = useState(() => !full && totalSteps > 0 && (phone || opensRevealed()));
+  // step shows at once and the arrows never step; followed, so a rotation into it reveals too.
+  const phone = useSyncExternalStore(subscribeNarrow, isNarrow, () => false);
+  const revealed = arrivedRevealed || (!full && totalSteps > 0 && phone);
   useEffect(() => {
     if (!revealed) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount reveal above
