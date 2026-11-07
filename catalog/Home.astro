@@ -2,7 +2,6 @@
 import Home from "@hackersandwizards/scaffolding/catalog/Home.astro";
 import "@hackersandwizards/brand/disclosure.css";
 import elements from "../brand-elements.json";
-import CatalogNav from "./CatalogNav.astro";
 
 const HOME = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/`;
 const PRINT = `${HOME}catalog/print/`;
@@ -12,7 +11,6 @@ const exceptions = Object.entries(
 ---
 
 <Home>
-  <CatalogNav slot="nav" home={HOME} />
   <div class="ds-foundations">
     <p>
       Tokens (<code>styles/tokens.css</code>) feed the parts, the parts make the slide types. Every

@@ -1,6 +1,6 @@
 ---
 import { brandHref } from "../../../brand-urls";
-import CatalogNav from "../../../CatalogNav.astro";
+import catalogs from "@hackersandwizards/brand/catalogs.json";
 import {
   entries,
   exceptionSections,
@@ -240,7 +240,18 @@ const jobButtons = (Object.keys(JOBS) as Job[])
           />
           <span class="hw-header-product">Slides</span>
         </a>
-        <CatalogNav home="../../index.html" />
+        {/* Brand's catalogs; Slides links home relatively, as the page opens from the disk. */}
+        <nav class="hw-header-nav" aria-label="Main" data-hw-catalogs>
+          {catalogs.map(({ name, href }) => (
+            <a
+              class="hw-header-link"
+              href={name === "Slides" ? "../../index.html" : href}
+              aria-current={name === "Slides" ? "page" : undefined}
+            >
+              {name}
+            </a>
+          ))}
+        </nav>
       </div>
     </header>
     <div class="hw-container">

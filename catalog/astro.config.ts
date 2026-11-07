@@ -12,11 +12,16 @@ import { fileURLToPath } from "node:url";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 import { catalog } from "@hackersandwizards/scaffolding/catalog";
+import catalogs from "@hackersandwizards/brand/catalogs.json";
 import type { AstroIntegration } from "astro";
 import { defineConfig } from "astro/config";
 import { brandNames, selfContained } from "./brand-urls";
 
 const BASE = "/slides";
+// The nav and the print page find this catalog in brand's list by name; a rename would send
+// "Slides" to the published site without a word.
+if (!catalogs.some(({ name }) => name === "Slides"))
+  throw new Error('brand catalogs.json has no "Slides"');
 const root = fileURLToPath(new URL("..", import.meta.url));
 const fromRoot = createRequire(join(root, "package.json"));
 const brandFile = (name: string) => fromRoot.resolve(`@hackersandwizards/brand/${name}`);
@@ -95,6 +100,7 @@ export default defineConfig({
       head: "./Head.astro",
       home: "./Home.astro",
       admin: true,
+      nav: { items: catalogs, current: "Slides" },
     }),
     files,
   ],
