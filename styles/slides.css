@@ -3,6 +3,8 @@
 /* The brand's list marker, in the components layer so a marker's colour utility still wins. */
 @import "@hackersandwizards/brand/marker.css" layer(components);
 @import "@hackersandwizards/brand/elements.css" layer(components);
+/* Headings in their level's face and weight, balanced; paragraphs and list items pretty. */
+@import "@hackersandwizards/brand/text-base.css";
 /* The brand's static faces: a PDF export embeds them as TrueType, never a variable font's Type 3. */
 @import "@hackersandwizards/brand/static-fonts.css";
 @source "../components";
@@ -23,21 +25,6 @@
     /* What a part paints to cut a line, such as a future dot; each ground class sets its own. */
     --slide-ground: var(--background);
   }
-
-  /* A slide headline never leaves one word on its last line. Headings take the heading family and
-     weight, as the website's base styles set them; a class names any other. */
-  :is(h1, h2, h3) {
-    text-wrap: balance;
-  }
-  :is(h1, h2, h3, h4) {
-    font-family: var(--font-heading);
-    font-weight: 700;
-  }
-}
-
-::selection {
-  background-color: var(--color-teal) !important;
-  color: var(--color-white) !important;
 }
 
 /* A slide is a 16:9 stage designed at 1440x810: every rem-sized length (Tailwind's type, spacing
@@ -294,29 +281,20 @@ html:has(.print-slide) {
 
 /* In the components layer, so a slide's own colour utility still wins. */
 @layer components {
-  /* The stage scale's settings the slide engine owns a token for, after the brand's preset:
-     the hairline is the 1px layout border, which the overlay above paints at --slide-hairline as
-     on every other box; the pill keeps the kicker's step, its block padding taken by the brand
-     pill's taller line. */
+  /* The stage scale's setting the slide engine owns a token for, after the brand's preset: the
+     hairline is the 1px layout border, which the overlay above paints at --slide-hairline as on
+     every other box. */
   [data-hw-scale="stage"] {
     --hw-hairline: var(--slide-layout-border);
-    --hw-pill-size: var(--text-xl);
-    --hw-pill-pad: 0 calc(var(--spacing) * 5);
   }
 
   /* The code panel's padding is the layout's own (CodePanel). */
   .hw-code[data-variant="panel"] {
     --hw-code-pad: 0;
   }
-  .hw-marker {
-    --hw-marker-size: var(--slide-marker);
-  }
   .slide-marker-nested {
     --hw-marker-size: calc(var(--slide-marker) * 0.75);
     --hw-marker-color: color-mix(in srgb, var(--color-teal) 40%, var(--color-bg));
-  }
-  .hw-label > .hw-marker {
-    --hw-marker-mid: var(--slide-marker-caps-mid);
   }
 
   .slide-title {

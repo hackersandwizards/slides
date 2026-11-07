@@ -14,15 +14,22 @@ const exportName = (path: string) => {
   }
 };
 
+const exported = (name: string) =>
+  Object.keys(brand.exports).some((key) =>
+    key.endsWith("*") ? name.startsWith(key.slice(2, -1)) : key.slice(2) === name,
+  );
+
 /**
  * Points each `url()` of a compiled stylesheet, which names a brand file by its path in
- * `node_modules`, at that file's export name under `href`, and fails on any other file.
+ * `node_modules` or by its export (`@hackersandwizards/brand/<name>`), at that file's export name
+ * under `href`, and fails on any other file.
  */
 export const placeBrandUrls = (css: string, href: string) =>
   css.replace(urlToken, (token, _quote, url: string) => {
     if (inline(url)) return token;
+    const bare = /^@hackersandwizards\/brand\/(.+)$/.exec(url)?.[1];
     const path = /(?:^|\/)node_modules\/@hackersandwizards\/brand\/(.+)$/.exec(url)?.[1];
-    const name = path && exportName(path);
+    const name = bare ? exported(bare) && bare : path && exportName(path);
     if (!name) throw new Error(`no brand export to place: ${token}`);
     return `url("${href}/${name}")`;
   });

@@ -15,6 +15,14 @@ describe("placeBrandUrls", () => {
     expect(placeBrandUrls(css, "../x")).toBe('a{b:url("../x/print.css")}');
   });
 
+  it.each(["cursor.svg", "fonts/inter.woff2"])(
+    "places the brand export %s named by its package",
+    (name) =>
+      expect(placeBrandUrls(`a{b:url("@hackersandwizards/brand/${name}")}`, "../x")).toBe(
+        `a{b:url("../x/${name}")}`,
+      ),
+  );
+
   it("leaves a data URL as written, its inner quotes and brackets included", () => {
     const css = `a{mask:url("data:image/svg+xml,%3Csvg fill='rgb(0,0,0)'/%3E")}b{c:url(data:,x)}`;
     expect(placeBrandUrls(css, "../x")).toBe(css);
@@ -36,7 +44,7 @@ describe("placeBrandUrls", () => {
     "url(fonts/inter.woff2)",
     'url("https://example.org/inter.woff2")',
     'url("@hackersandwizards/slides/x.png")',
-    'url("@hackersandwizards/brand/fonts/inter.woff2")',
+    'url("@hackersandwizards/brand/scripts/tokens.ts")',
     'url("../node_modules/@hackersandwizards/brand/scripts/tokens.ts")',
     'url("../node_modules/@hackersandwizards/slides/x.png")',
     'url("a" b)',

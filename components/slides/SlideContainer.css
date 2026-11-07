@@ -5,8 +5,7 @@
     overflow: hidden;
     scrollbar-width: none;
     cursor:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Ccircle cx='6' cy='6' r='3' fill='%231A7285' /%3E%3Ccircle cx='6' cy='6' r='4' fill='%231A7285' fill-opacity='0.4' /%3E%3Ccircle cx='6' cy='6' r='5' fill='%231A7285' fill-opacity='0.25' /%3E%3C/svg%3E")
-        6 6,
+      url("@hackersandwizards/brand/cursor.svg") 6 6,
       auto;
   }
   .slide-viewport::-webkit-scrollbar {
