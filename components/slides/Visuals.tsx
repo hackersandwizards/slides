@@ -92,11 +92,13 @@ export function FlowSteps({
   const show = (on: boolean) =>
     `transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`;
   return (
-    <div className="relative w-full">
+    // On a phone (slides.css) up to four steps keep their row at a smaller size, and five or more
+    // stand one under another.
+    <div className={`slide-flow relative w-full ${n >= 5 ? "slide-flow-long" : ""}`}>
       {/* The loop runs above the nodes, out of the last one and down into the first. */}
       {loop !== undefined && (
         <div
-          className={`relative mb-2 ${loop ? "h-24" : "h-16"} ${show(revealed >= n)}`}
+          className={`slide-flow-loop relative mb-2 ${loop ? "h-24" : "h-16"} ${show(revealed >= n)}`}
           aria-hidden
         >
           <div
@@ -123,7 +125,7 @@ export function FlowSteps({
         {/* The line from each node's centre to the next one's, with its arrowhead, shown with
             the step it leads to. */}
         {steps.slice(1).map((_, i) => (
-          <div key={i} className={show(i + 1 < revealed)} aria-hidden>
+          <div key={i} className={`slide-flow-link ${show(i + 1 < revealed)}`} aria-hidden>
             <div
               className={`absolute ${mid} h-1 -translate-y-1/2`}
               style={{
@@ -142,7 +144,7 @@ export function FlowSteps({
           </div>
         ))}
         <div
-          className="relative grid"
+          className="slide-flow-steps relative grid"
           style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}
         >
           {steps.map((step, i) => {
@@ -155,7 +157,7 @@ export function FlowSteps({
               <div
                 key={i}
                 inert={i >= revealed}
-                className={`flex flex-col items-center ${narrow ? "px-2" : "px-5"} text-center ${show(i < revealed)}`}
+                className={`slide-flow-step flex flex-col items-center ${narrow ? "px-2" : "px-5"} text-center ${show(i < revealed)}`}
               >
                 <NumberTile
                   size={dense ? "sm" : "xl"}
@@ -246,14 +248,15 @@ export function Framed({ frame, children }: { frame: FlowFrame; children: ReactN
           ))}
         </div>
       )}
+      {/* On a phone the notes go under the steps, which take the frame's whole width (slides.css). */}
       <div
         className={`flex flex-wrap items-center justify-center ${frame.notes ? "gap-6" : "gap-4"}`}
       >
-        <div className="min-w-0 flex-1">{children}</div>
+        <div className="slide-framed-steps min-w-0 flex-1">{children}</div>
         {frame.notes && (
           <>
-            <div className="h-16 w-px bg-primary/25" />
-            <ul className="space-y-1.5">
+            <div className="slide-framed-rule h-16 w-px bg-primary/25" />
+            <ul className="slide-framed-notes space-y-1.5">
               {frame.notes.map((note, i) => (
                 <li key={i} className="flex items-baseline gap-2 text-base text-text-muted">
                   <span className="hw-marker slide-marker-nested bg-primary" />

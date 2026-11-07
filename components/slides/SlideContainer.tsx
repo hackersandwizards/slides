@@ -135,7 +135,7 @@ export function SlideContainer({ children, logo, theme, page, mark, lang = "en" 
       >
         <BrandStrip />
         <MotionConfig reducedMotion="user">{slides}</MotionConfig>
-        <div className="fixed bottom-6 left-6 z-40" aria-hidden="true">
+        <div className="slide-corner-start fixed bottom-6 left-6 z-40" aria-hidden="true">
           <Image
             src={logo[0].src}
             alt={logo[0].alt}

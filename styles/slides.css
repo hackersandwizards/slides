@@ -499,15 +499,180 @@ html:has(.print-slide) {
     font-size: var(--type-display-size);
     line-height: var(--type-display-line-height);
   }
+
+  /* The corner row follows the slide's content instead of standing over it while it scrolls: it
+     takes the foot of the content's bottom padding, `--slide-phone-corner-below` above the
+     slide's end, so it adds no height, and a slide that fits the screen shows it where a fixed
+     corner would stand. It passes under the ground behind the player's controls. A deck's partner
+     logo (`.slide-corner-start`) shares its row on the left. Each takes the content's side. */
+  .slide-viewport {
+    --slide-phone-corner-below: var(--slide-footer-inset);
+  }
+  .slide-viewport > :is(.slide-corner, .slide-corner-start) {
+    position: relative;
+    inset: auto;
+    z-index: 20;
+    padding: var(--slide-phone-padding);
+    padding-block: 0;
+    pointer-events: none;
+  }
+  .slide-viewport > .slide-corner {
+    justify-content: flex-end;
+    margin: calc(-1 * (var(--slide-footer-mark) + var(--slide-phone-corner-below))) 0
+      var(--slide-phone-corner-below);
+  }
+  .slide-viewport > .slide-corner-start {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    height: var(--slide-footer-mark);
+    margin: calc(-1 * (var(--slide-footer-mark) + var(--slide-phone-corner-below))) 0
+      calc(-1 * var(--slide-footer-mark));
+  }
+  .slide-viewport > .slide-corner-start + .slide-corner {
+    margin-top: 0;
+  }
+  /* Two logos share a phone's row: the partner logo stands at three quarters of its height. */
+  .slide-corner-start img {
+    height: calc(var(--slide-footer-mark) * 0.75);
+  }
+
+  /* A framed flow's notes go under its steps, which take the frame's whole width. */
+  .slide-framed-steps,
+  .slide-framed-notes {
+    flex-basis: 100%;
+  }
+  .slide-framed-rule {
+    width: 100%;
+    height: var(--slide-layout-border);
+  }
+
+  /* Up to four steps keep their row, with tiles and words cut to the phone's columns. */
+  .slide-flow-step {
+    padding-inline: var(--spacing);
+  }
+  .slide-flow-step > :first-child {
+    height: calc(var(--spacing) * 10);
+    min-width: calc(var(--spacing) * 10);
+    padding-inline: var(--spacing);
+    font-size: var(--text-h4);
+  }
+  .slide-flow-step > :first-child > svg {
+    width: 60%;
+    height: 60%;
+  }
+  .slide-flow-link > * {
+    top: calc(var(--spacing) * 5);
+  }
+  .slide-flow-step > h2 {
+    margin-top: calc(var(--spacing) * 2);
+    font-size: var(--type-body-size);
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+  .slide-flow-step > p {
+    margin-top: var(--spacing);
+    font-size: var(--type-small-size);
+    hyphens: auto;
+  }
+  .slide-flow-step > .hw-label {
+    --hw-label-size: var(--type-label-size);
+    margin: calc(var(--spacing) * 2) 0 calc(var(--spacing) * -1);
+  }
+  .slide-flow-loop > span {
+    padding-inline: calc(var(--spacing) * 2);
+    font-size: var(--type-body-size);
+  }
+
+  /* Five and more steps stand one under another, each tile beside its words and joined by the line
+     to the next step once that one shows, a loop back named under the last. */
+  .slide-flow-long {
+    display: flex;
+    flex-direction: column;
+  }
+  .slide-flow-long .slide-flow-link,
+  .slide-flow-long > .slide-flow-loop:not(:has(> span)),
+  .slide-flow-long > .slide-flow-loop > :not(span) {
+    display: none;
+  }
+  .slide-flow-long > .slide-flow-loop {
+    order: 1;
+    height: auto;
+    margin: calc(var(--spacing) * 4) 0 0;
+  }
+  .slide-flow-long > .slide-flow-loop > span {
+    position: static;
+    translate: none;
+    display: block;
+    padding: 0;
+    background: none;
+    text-align: start;
+  }
+  .slide-flow-long > .slide-flow-loop > span::before {
+    content: "\21BA  ";
+    color: var(--color-muted);
+  }
+  .slide-flow-long .slide-flow-steps {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 5);
+  }
+  .slide-flow-long .slide-flow-step {
+    position: relative;
+    display: block;
+    min-height: calc(var(--spacing) * 12);
+    padding: 0 0 0 calc(var(--spacing) * 16);
+    text-align: start;
+  }
+  .slide-flow-long .slide-flow-step > :first-child {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: calc(var(--spacing) * 12);
+    min-width: calc(var(--spacing) * 12);
+    font-size: var(--text-h3);
+  }
+  .slide-flow-long .slide-flow-step > :not(:first-child) {
+    display: block;
+    margin-inline: 0;
+  }
+  .slide-flow-long .slide-flow-step > h2 {
+    margin-top: calc(var(--spacing) * 2.5);
+    font-size: var(--text-h3);
+  }
+  .slide-flow-long .slide-flow-step > .hw-label {
+    margin: 0 0 calc(var(--spacing) * -1.5);
+  }
+  .slide-flow-long .slide-flow-step:has(+ .slide-flow-step:not([inert]))::after {
+    content: "";
+    position: absolute;
+    top: calc(var(--spacing) * 12);
+    bottom: calc(var(--spacing) * -5);
+    left: calc(var(--spacing) * 6);
+    width: var(--spacing);
+    translate: -50%;
+    background: var(--color-muted);
+  }
 }
 
-/* Below `sm` the player's control bar takes the bottom band: the corner row stands above it. */
+/* Below `sm` the player's control bar takes the bottom band: the corner row stands above it, and
+   the slide's ground fades in behind the controls, so no line of text runs under them. */
 @media screen and (width < 40rem) {
-  .slide-viewport > .slide-corner {
-    bottom: var(--slide-phone-nav-band);
+  .slide-viewport {
+    --slide-phone-corner-below: var(--slide-phone-nav-band);
   }
   .slide-content {
     padding: var(--slide-phone-padding-nav);
+  }
+  .slide-viewport .slide-shell::after {
+    content: "";
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 30;
+    height: var(--slide-phone-nav-band);
+    background: linear-gradient(transparent, var(--slide-ground) 20%);
+    pointer-events: none;
   }
 }
 

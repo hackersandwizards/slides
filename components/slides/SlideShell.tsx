@@ -46,7 +46,7 @@ export function SlideShell({
   const ref = useFitToSlide();
   const deckNight = useContext(DeckNight);
   const classes = [
-    "relative flex min-h-screen items-center justify-center",
+    "slide-shell relative flex min-h-screen items-center justify-center",
     direction === "col" && "flex-col",
     overflowHidden && "overflow-hidden",
     GROUNDS[ground],
