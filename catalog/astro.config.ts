@@ -6,7 +6,6 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { createRequire } from "node:module";
 import { extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@astrojs/react";
@@ -14,12 +13,10 @@ import tailwindcss from "@tailwindcss/vite";
 import { catalog } from "@hackersandwizards/scaffolding/catalog";
 import type { AstroIntegration } from "astro";
 import { defineConfig } from "astro/config";
-import { brandNames, selfContained } from "./brand-urls";
+import { brandFile, brandNames, selfContained } from "./brand-urls";
 
 const BASE = "/slides";
 const root = fileURLToPath(new URL("..", import.meta.url));
-const fromRoot = createRequire(join(root, "package.json"));
-const brandFile = (name: string) => fromRoot.resolve(`@hackersandwizards/brand/${name}`);
 const deckFiles = join(root, "specimen/slide-catalogue");
 
 // A slide names the deck's images from the site root, as a consumer's public folder serves them.

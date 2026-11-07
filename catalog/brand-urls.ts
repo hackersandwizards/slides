@@ -15,14 +15,19 @@ const exportName = (path: string) => {
   }
 };
 
-const require = createRequire(import.meta.url);
-/** The file a URL naming a brand export by its package resolves to, if brand exports it. */
-const resolved = (url: string) => {
-  if (!url.startsWith("@hackersandwizards/brand/")) return url;
+const fromPackage = createRequire(import.meta.url);
+/** The file brand exports under `name`; throws where brand exports none. */
+export const brandFile = (name: string) => fromPackage.resolve(`@hackersandwizards/brand/${name}`);
+
+const bareName = /^@hackersandwizards\/brand\/(.+)$/;
+/** The file a URL names: a URL naming a brand export by its package becomes its path. */
+const resolved = (token: string, url: string) => {
+  const name = bareName.exec(url)?.[1];
+  if (!name) return url;
   try {
-    return require.resolve(url);
-  } catch {
-    return url;
+    return brandFile(name);
+  } catch (cause) {
+    throw new Error(`no brand export to place: ${token}`, { cause });
   }
 };
 
@@ -34,7 +39,9 @@ const resolved = (url: string) => {
 export const placeBrandUrls = (css: string, href: string) =>
   css.replace(urlToken, (token, _quote, url: string) => {
     if (inline(url)) return token;
-    const path = /(?:^|\/)node_modules\/@hackersandwizards\/brand\/(.+)$/.exec(resolved(url))?.[1];
+    const path = /(?:^|\/)node_modules\/@hackersandwizards\/brand\/(.+)$/.exec(
+      resolved(token, url),
+    )?.[1];
     const name = path && exportName(path);
     if (!name) throw new Error(`no brand export to place: ${token}`);
     return `url("${href}/${name}")`;

@@ -45,7 +45,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   names the brand version a consumer pins.
   `styles/slides.css` imports Tailwind and `tokens.css` and names tokens only, as do the components;
   `test/tokens.test.ts` fails on a raw length or colour anywhere else. `slides.css` imports the brand list marker (`marker.css`) from `@hackersandwizards/brand`
-  through the package, never a sibling path, and the brand's shared elements (`elements.css`)
+  through the package, never a sibling path, the brand's shared elements (`elements.css`) and its
+  text base (`text-base.css`: heading faces and weights, balanced headings, pretty paragraphs)
   and sets their stage scale's settings the engine owns a token for; `SlideShell` puts
   `data-hw-scale="stage"` (and `data-theme="dark"` on night) on every slide. A part that draws a
   brand element renders its `hw-*` class and changes it only through the element's `--hw-*`
