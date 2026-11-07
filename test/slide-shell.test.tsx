@@ -64,7 +64,7 @@ describe("fit guard", () => {
     try {
       const { container } = render(
         <SlideShell>
-          <div className="slide-content">
+          <div className="slide-content slide-titled">
             <div className="slide-body">table</div>
           </div>
         </SlideShell>,
@@ -80,7 +80,17 @@ describe("fit guard", () => {
   // A centred slide 20% too tall for the space between its edges (5% of its height each, where it
   // has no padding): shrunk from its top and moved down to the top edge, never centred in its
   // padding box, which put a centred headline under the strip.
-  it("shrinks a slide without a body into the space between its edges", () => {
+  it.each([
+    ["without a body", <div key="q">questions</div>],
+    // An untitled body grows with what it holds, so it read as fitting: a tall picture on a
+    // media slide without a headline ran under the strip and the corner.
+    [
+      "with an untitled body",
+      <div key="b" className="slide-body">
+        picture
+      </div>,
+    ],
+  ])("shrinks a slide %s into the space between its edges", (_, child) => {
     const original = HTMLElement.prototype.querySelector;
     HTMLElement.prototype.querySelector = function (this: HTMLElement, selector: string) {
       const el = original.call(this, selector) as HTMLElement | null;
@@ -95,9 +105,7 @@ describe("fit guard", () => {
     try {
       const { container } = render(
         <SlideShell>
-          <div className="slide-content">
-            <div>questions</div>
-          </div>
+          <div className="slide-content">{child}</div>
         </SlideShell>,
       );
       const content = container.querySelector<HTMLElement>(".slide-content")!;

@@ -29,4 +29,17 @@ describe("MediaSlide", () => {
     render(<MediaSlide slide={slide} />);
     expect(screen.getByLabelText("Agent opens a pull request").tagName).toBe("VIDEO");
   });
+
+  // A row picture took any height, so a tall one left the stage under the footer.
+  it("caps a row picture at the media maximum", () => {
+    const slide: MediaSlideType = {
+      type: "media",
+      layout: "row",
+      sources: [{ src: "/x.png", alt: "x", height: 2000 }],
+    };
+    const { container } = render(<MediaSlide slide={slide} />);
+    expect(container.querySelector("img")?.getAttribute("style")).toContain(
+      "min(125rem, var(--slide-picture-max-media))",
+    );
+  });
 });

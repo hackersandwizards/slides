@@ -44,7 +44,7 @@ function MediaItem({
         alt={alt ?? ""}
         width={400}
         height={height}
-        style={{ maxHeight: `${height / 16}rem` }}
+        style={{ maxHeight: `min(${height / 16}rem, var(--slide-picture-max-media))` }}
         className="h-auto w-auto min-w-0 shrink rounded-brand border border-border object-contain object-top"
       />
     );

@@ -33,13 +33,31 @@ export function renderMarkdown(text: string): React.ReactNode {
       );
     }
     const text = part.slice(1, -1);
-    // A short chip stays on one line, so a name never splits at its hyphen; a long one and a path
-    // may break inside themselves, or a table of paths runs its last column off the slide. In
-    // teal's text colour: base teal on the chip's tint over a striped table row falls under 4.5:1.
+    // In teal's text colour: base teal on the chip's tint over a striped table row falls under
+    // 4.5:1.
+    const chip = "hw-inline-code text-teal-dark";
+    // A path or file name breaks only after a slash or a space or before a dot, each piece whole,
+    // so a narrow column or a table of paths never splits `my-skill` at its hyphen or
+    // `settings.json` mid-word.
+    if (/[/.]/.test(text)) {
+      const pieces = text.split(/(?<=[/ ])|(?=\.)/);
+      return (
+        <code key={i} className={chip}>
+          {pieces.map((piece, j) => (
+            <React.Fragment key={j}>
+              {j > 0 && <wbr />}
+              <span className="whitespace-nowrap">{piece}</span>
+            </React.Fragment>
+          ))}
+        </code>
+      );
+    }
+    // A short chip stays on one line, so a name never splits at its hyphen; a long one may break
+    // inside itself.
     return (
       <code
         key={i}
-        className={`hw-inline-code text-teal-dark ${(text.length <= 24 && !/[/.]/.test(text)) || (text.includes(" ") && text.length <= 40) ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
+        className={`${chip} ${text.length <= 24 || (text.includes(" ") && text.length <= 40) ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
       >
         {text}
       </code>

@@ -711,7 +711,7 @@ const slides: Slide[] = [
         highlight: 1,
         steps: [
           { title: "Ticket" },
-          { title: "Plan", badge: "You are here" },
+          { title: "Plan", text: "`.claude/plans/my-ticket.md`", badge: "You are here" },
           { title: "Build" },
           { title: "Review" },
         ],
@@ -722,7 +722,8 @@ const slides: Slide[] = [
         },
       },
     ],
-    notes: "visual blocks: flow with a badge per step and a frame with label, notes and footer.",
+    notes:
+      "visual blocks: flow with a badge per step, a path that breaks only after a slash or before a dot, and a frame with label, notes and footer.",
   },
   {
     type: "content",
@@ -1381,6 +1382,23 @@ const slides: Slide[] = [
     ],
     annotation: "Two in five tickets sit in Build. Fictional figures.",
     notes: "chart: bar.",
+  },
+  {
+    type: "chart",
+    variant: "bar",
+    headline: "Review time goes to waiting",
+    data: [
+      { name: "Waiting for a reviewer", value: 31 },
+      { name: "Reading the diff", value: 14 },
+      { name: "Running the tests locally", value: 9 },
+      { name: "Discussing naming", value: 6 },
+      { name: "Fixing review comments", value: 12 },
+      { name: "Second review round", value: 8 },
+      { name: "Resolving merge conflicts", value: 7 },
+      { name: "Waiting for deployment approval", value: 13 },
+    ],
+    annotation: "Hours per pull request, summed over a sprint. Fictional figures.",
+    notes: "chart: bar with eight bars and long names, each wrapped inside its band.",
   },
 
   {

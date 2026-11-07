@@ -83,7 +83,11 @@ function useFitToSlide() {
   useLayoutEffect(() => {
     const content = ref.current?.querySelector<HTMLElement>(":scope > .slide-content");
     if (!content) return;
-    const body = content.querySelector<HTMLElement>(":scope > .slide-body");
+    // Only a title bounds the body's height (slides.css): an untitled body grows with what it
+    // holds, so it never reads as overflowing, and the whole content is measured instead.
+    const body = content.classList.contains("slide-titled")
+      ? content.querySelector<HTMLElement>(":scope > .slide-body")
+      : null;
     const box = body ?? content;
     // The top and bottom distances the content keeps from the slide's edges: the padding, and at
     // least 5% of the slide's height.

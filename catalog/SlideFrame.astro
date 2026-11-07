@@ -1,6 +1,8 @@
 ---
 // A slide fills its window (fixed, vh type, the stage rem from its width), so the dashboard frames
 // the story's preview page in brand's card; `?revealed` opens a slide with every build step shown.
+// The frame's page is a 1920x1080 stage scaled to the card's width: at the card's own size a
+// phone's card gave the slide a window too short for it, its corner logo over the title.
 interface Props {
   component: string;
   part?: boolean;
@@ -24,7 +26,15 @@ const src = path.replace("/dashboard/", "/stories/");
   </div>
 ) : (
   <div class="story-embed" data-story-of={component}>
-    <iframe class="hw-card" src={src} title={`${component} story`} loading="lazy" />
+    <div class="story-stage hw-card">
+      <iframe src={src} title={`${component} story`} loading="lazy" />
+    </div>
+    <script is:inline>
+      for (const stage of document.querySelectorAll(".story-stage"))
+        new ResizeObserver(() => {
+          stage.firstElementChild.style.transform = `scale(${stage.clientWidth / 1920})`;
+        }).observe(stage);
+    </script>
     <a href={src} target="_blank" rel="noreferrer">
       Open full screen
     </a>
@@ -46,11 +56,20 @@ const src = path.replace("/dashboard/", "/stories/");
   .story-embed {
     padding: 1rem;
   }
-  .story-embed iframe {
-    display: block;
-    width: 100%;
+  .story-stage {
+    position: relative;
     aspect-ratio: 16 / 9;
+    overflow: hidden;
     --hw-card-pad: 0;
+  }
+  .story-stage iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1920px;
+    height: 1080px;
+    border: 0;
+    transform-origin: 0 0;
   }
   .story-embed a {
     display: inline-block;

@@ -154,10 +154,25 @@ describe("inline code", () => {
   const chip = (text: string) =>
     render(<p>{renderMarkdown(`\`${text}\``)}</p>).container.querySelector("code")?.className ?? "";
 
-  it("keeps a short name on one line and lets a path break", () => {
+  it("keeps a short name on one line", () => {
     expect(chip("pr-diff-summarizer")).toContain("md:whitespace-nowrap");
-    for (const path of ["settings.json", ".claude/settings.json", ".vscode/mcp.json"])
-      expect(chip(path), path).toContain("[overflow-wrap:anywhere]");
+  });
+
+  // In a narrow flow step `my-skill` split at its hyphen and `settings.json` mid-word.
+  it("breaks a path only after a slash or before a dot", () => {
+    const code = render(
+      <p>{renderMarkdown("`.claude/skills/my-skill/settings.json`")}</p>,
+    ).container.querySelector("code")!;
+    expect(code.className).not.toContain("overflow-wrap");
+    expect(code.textContent).toBe(".claude/skills/my-skill/settings.json");
+    expect([...code.querySelectorAll("span.whitespace-nowrap")].map((s) => s.textContent)).toEqual([
+      ".claude/",
+      "skills/",
+      "my-skill/",
+      "settings",
+      ".json",
+    ]);
+    expect(code.querySelectorAll("wbr")).toHaveLength(4);
   });
 });
 

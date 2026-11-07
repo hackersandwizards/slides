@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { ChartSlide } from "../../types/slide";
 
 /** The recharts plots of the chart slide, split from it so a deck page loads recharts only when it
@@ -97,6 +97,140 @@ export function TrendPlot({ data, still, xLabel, yLabel }: PlotProps) {
   );
 }
 
+// A tick label's font steps, down to the brand's label size, each taken when a word of the one
+// before is wider than its bar's band.
+const TICK_STEPS = ["var(--text-base)", "var(--text-sm)", "var(--text-xs)"];
+const LINE = 1.2;
+const ANGLE = 40;
+
+export interface TickLayout {
+  /** Index into TICK_STEPS. */
+  step: number;
+  /** Each label's lines, one when angled. */
+  lines: string[][];
+  angled: boolean;
+}
+
+/** Wraps every label at its band width in the first font step where every word fits the band,
+ *  else angles them all one line each at the last step. `widthAt` measures a text at a step. */
+export function tickLayout(
+  labels: string[],
+  band: number,
+  widthAt: (text: string, step: number) => number,
+): TickLayout {
+  for (let step = 0; step < TICK_STEPS.length; step++) {
+    const words = labels.map((label) => label.split(" "));
+    if (!words.flat().every((word) => widthAt(word, step) <= band)) continue;
+    const lines = words.map((ws) =>
+      ws.reduce<string[]>((acc, word) => {
+        const joined = acc.length ? `${acc[acc.length - 1]} ${word}` : word;
+        if (acc.length && widthAt(joined, step) <= band) acc[acc.length - 1] = joined;
+        else acc.push(word);
+        return acc;
+      }, []),
+    );
+    return { step, lines, angled: false };
+  }
+  return { step: TICK_STEPS.length - 1, lines: labels.map((l) => [l]), angled: true };
+}
+
+/** The tick layout for the plot's width, measured in the browser; one line at the first step
+ *  until then. `left` and `right` are the plot's widths beside the bars' bands. */
+function useTickLayout(labels: string[], left: number, right: number) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [layout, setLayout] = useState<TickLayout & { height: number; overhang: number }>();
+  const key = labels.join("\n");
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ctx = document.createElement("canvas").getContext("2d");
+    if (!ctx) return;
+    const update = () => {
+      const { fontFamily } = getComputedStyle(el);
+      const px = TICK_STEPS.map((size) => {
+        const probe = document.createElement("span");
+        probe.style.fontSize = size;
+        el.appendChild(probe);
+        const value = parseFloat(getComputedStyle(probe).fontSize);
+        probe.remove();
+        return value;
+      });
+      const names = key.split("\n");
+      // The bars' gap is a tenth of the band; the labels keep half of it between them.
+      const band = ((el.clientWidth - left - right) / names.length) * 0.95;
+      const next = tickLayout(names, band, (text, step) => {
+        ctx.font = `${px[step]}px ${fontFamily}`;
+        return ctx.measureText(text).width;
+      });
+      const size = px[next.step];
+      ctx.font = `${size}px ${fontFamily}`;
+      const angle = (ANGLE * Math.PI) / 180;
+      const widths = next.lines.map(([l]) => ctx.measureText(l).width);
+      setLayout({
+        ...next,
+        height: next.angled
+          ? Math.max(...widths) * Math.sin(angle) + size * 2
+          : Math.max(...next.lines.map((l) => l.length)) * size * LINE + size,
+        // An angled first label runs left of its bar: the plot moves right to keep it whole.
+        overhang: next.angled ? Math.max(0, widths[0] * Math.cos(angle) - band / 2 - left) : 0,
+      });
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [key, left, right]);
+  return { ref, layout };
+}
+
+function WrappedTick({
+  x,
+  y,
+  index,
+  payload,
+  layout,
+}: {
+  x?: number;
+  y?: number;
+  index?: number;
+  payload?: { value: string };
+  layout?: TickLayout;
+}) {
+  const lines = (layout && index !== undefined && layout.lines[index]) || [payload?.value ?? ""];
+  const fontSize = TICK_STEPS[layout?.step ?? 0];
+  if (layout?.angled) {
+    return (
+      <text
+        x={x}
+        y={y}
+        dominantBaseline="hanging"
+        textAnchor="end"
+        transform={`rotate(-${ANGLE} ${x} ${y})`}
+        fill={tick.fill}
+        fontSize={fontSize}
+      >
+        {lines[0]}
+      </text>
+    );
+  }
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor="middle"
+      dominantBaseline="hanging"
+      fill={tick.fill}
+      fontSize={fontSize}
+    >
+      {lines.map((line, i) => (
+        <tspan key={i} x={x} dy={i ? `${LINE}em` : 0}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
+}
+
 export function BarPlot({
   data,
   still,
@@ -107,46 +241,61 @@ export function BarPlot({
   /** Bars carry their value on top and drop the value axis and grid. */
   labelled?: boolean;
 }) {
+  const yWidth = 64;
+  const { ref, layout } = useTickLayout(
+    (data ?? []).map((d) => String(d.name)),
+    8 + (labelled ? 0 : yWidth),
+    30,
+  );
+  const margin = {
+    top: labelled ? 40 : 12,
+    right: 30,
+    left: 8 + (layout?.overhang ?? 0),
+    bottom: 8,
+  };
   return (
     <Axes xLabel={xLabel} yLabel={labelled ? undefined : yLabel}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: labelled ? 40 : 12, right: 30, left: 8, bottom: 8 }}>
-          {!labelled && <CartesianGrid stroke="var(--color-border)" vertical={false} />}
-          <XAxis
-            dataKey="name"
-            tick={tick}
-            axisLine={{ stroke: "var(--color-border-strong)" }}
-            tickLine={false}
-            tickMargin={12}
-            height={56}
-            interval={0}
-          />
-          <YAxis hide={labelled} tick={tick} axisLine={false} tickLine={false} width={64} />
-          <Tooltip
-            cursor={{ fill: "var(--color-teal)", fillOpacity: 0.07 }}
-            {...tooltip}
-            itemStyle={{ color: "var(--color-text)" }}
-          />
-          <Bar
-            isAnimationActive={still ? false : "auto"}
-            dataKey="value"
-            fill="var(--color-teal)"
-            radius={[4, 4, 0, 0]}
-          >
-            {labelled && (
-              <LabelList
-                dataKey="value"
-                position="top"
-                offset={10}
-                fill="var(--color-text)"
-                fontSize="var(--text-lg)"
-                fontWeight={700}
-                className="font-heading"
-              />
-            )}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      <div ref={ref} className="h-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={margin}>
+            {!labelled && <CartesianGrid stroke="var(--color-border)" vertical={false} />}
+            {/* Each label wraps inside its bar's band, so long names side by side never overlap. */}
+            <XAxis
+              dataKey="name"
+              tick={<WrappedTick layout={layout} />}
+              axisLine={{ stroke: "var(--color-border-strong)" }}
+              tickLine={false}
+              tickMargin={12}
+              height={Math.max(56, Math.ceil((layout?.height ?? 0) + 12))}
+              interval={0}
+            />
+            <YAxis hide={labelled} tick={tick} axisLine={false} tickLine={false} width={yWidth} />
+            <Tooltip
+              cursor={{ fill: "var(--color-teal)", fillOpacity: 0.07 }}
+              {...tooltip}
+              itemStyle={{ color: "var(--color-text)" }}
+            />
+            <Bar
+              isAnimationActive={still ? false : "auto"}
+              dataKey="value"
+              fill="var(--color-teal)"
+              radius={[4, 4, 0, 0]}
+            >
+              {labelled && (
+                <LabelList
+                  dataKey="value"
+                  position="top"
+                  offset={10}
+                  fill="var(--color-text)"
+                  fontSize="var(--text-lg)"
+                  fontWeight={700}
+                  className="font-heading"
+                />
+              )}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </Axes>
   );
 }
