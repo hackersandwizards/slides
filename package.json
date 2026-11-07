@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "1.17.1",
+  "version": "1.17.2",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -108,18 +108,17 @@
   },
   "overrides": {
     "minimatch": "11.0.5",
-    "image-size": "2.1.0",
-    "postcss-selector-parser": "7.1.7"
+    "image-size": "2.1.0"
   },
   "devDependencies": {
     "@astrojs/react": "7.1.4",
     "@eslint/js": "10.0.1",
-    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.10.4",
-    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.28.1",
-    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v2.16.0",
-    "@tailwindcss/node": "4.3.3",
-    "@tailwindcss/oxide": "4.3.3",
-    "@tailwindcss/vite": "4.3.3",
+    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.10.6",
+    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.28.2",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v2.18.0",
+    "@tailwindcss/node": "4.3.5",
+    "@tailwindcss/oxide": "4.3.5",
+    "@tailwindcss/vite": "4.3.5",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@types/node": "26.6.6",
@@ -147,7 +146,7 @@
     "recharts": "3.10.1",
     "shiki": "4.6.0",
     "stylelint": "18.0.0",
-    "tailwindcss": "4.3.3",
+    "tailwindcss": "4.3.5",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "typescript-eslint": "8.72.1",
     "vitest": "5.1.0"
