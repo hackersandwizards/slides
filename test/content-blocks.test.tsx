@@ -163,9 +163,8 @@ describe("inline code", () => {
     const code = render(
       <p>{renderMarkdown("`.claude/skills/my-skill/settings.json`")}</p>,
     ).container.querySelector("code")!;
-    expect(code.className).not.toContain("overflow-wrap");
     expect(code.textContent).toBe(".claude/skills/my-skill/settings.json");
-    expect([...code.querySelectorAll("span.whitespace-nowrap")].map((s) => s.textContent)).toEqual([
+    expect([...code.querySelectorAll("span.inline-block")].map((s) => s.textContent)).toEqual([
       ".claude/",
       "skills/",
       "my-skill/",

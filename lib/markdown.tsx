@@ -36,17 +36,17 @@ export function renderMarkdown(text: string): React.ReactNode {
     // In teal's text colour: base teal on the chip's tint over a striped table row falls under
     // 4.5:1.
     const chip = "hw-inline-code text-teal-dark";
-    // A path or file name breaks only after a slash or a space or before a dot, each piece whole,
-    // so a narrow column or a table of paths never splits `my-skill` at its hyphen or
-    // `settings.json` mid-word.
-    if (/[/.]/.test(text)) {
-      const pieces = text.split(/(?<=[/ ])|(?=\.)/);
+    // A path or file name breaks only after a slash or before a dot, so a narrow column or a table
+    // of paths never splits `my-skill` at its hyphen or `settings.json` mid-word. Each piece is
+    // whole unless it alone is wider than the column.
+    if (/[/.]/.test(text) && !text.includes(" ")) {
+      const pieces = text.split(/(?<=\/)|(?=\.)/);
       return (
         <code key={i} className={chip}>
           {pieces.map((piece, j) => (
             <React.Fragment key={j}>
               {j > 0 && <wbr />}
-              <span className="whitespace-nowrap">{piece}</span>
+              <span className="inline-block max-w-full [overflow-wrap:anywhere]">{piece}</span>
             </React.Fragment>
           ))}
         </code>

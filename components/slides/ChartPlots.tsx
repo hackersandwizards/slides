@@ -143,14 +143,14 @@ export function tickLayout(
 function useTickLayout(labels: string[], left: number, right: number) {
   const ref = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState<TickLayout & { height: number; overhang: number }>();
-  const key = labels.join("\n");
+  const key = JSON.stringify(labels);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el || typeof ResizeObserver === "undefined") return;
     const ctx = document.createElement("canvas").getContext("2d");
     if (!ctx) return;
     const update = () => {
-      const { fontFamily } = getComputedStyle(el);
+      const { fontFamily, fontWeight } = getComputedStyle(el);
       // The steps scale with the stage, so they are read again on every resize, in one pass.
       const probes = TICK_STEPS.map((size) => {
         const probe = el.appendChild(document.createElement("span"));
@@ -159,14 +159,14 @@ function useTickLayout(labels: string[], left: number, right: number) {
       });
       const px = probes.map((probe) => parseFloat(getComputedStyle(probe).fontSize));
       for (const probe of probes) probe.remove();
-      const names = key.split("\n");
+      const names: string[] = JSON.parse(key);
       const band = ((el.clientWidth - left - right) / names.length) * (1 - BAR_GAP / 2);
       const next = tickLayout(names, band, (text, step) => {
-        ctx.font = `${px[step]}px ${fontFamily}`;
+        ctx.font = `${fontWeight} ${px[step]}px ${fontFamily}`;
         return ctx.measureText(text).width;
       });
       const size = px[next.step];
-      ctx.font = `${size}px ${fontFamily}`;
+      ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
       const angle = (ANGLE * Math.PI) / 180;
       const widths = next.lines.map(([l]) => ctx.measureText(l).width);
       const measured = {
@@ -175,7 +175,13 @@ function useTickLayout(labels: string[], left: number, right: number) {
           ? Math.max(...widths) * Math.sin(angle) + size * 2
           : Math.max(...next.lines.map((l) => l.length)) * size * LINE + size,
         // An angled first label runs left of its bar: the plot moves right to keep it whole.
-        overhang: next.angled ? Math.max(0, widths[0] * Math.cos(angle) - band / 2 - left) : 0,
+        // The overhang narrows every band by its share, so the first one is measured narrowed.
+        overhang: next.angled
+          ? Math.max(
+              0,
+              (widths[0] * Math.cos(angle) - band / 2 - left) / (1 - 1 / (2 * names.length)),
+            )
+          : 0,
       };
       // A resize that leaves the labels as they were re-renders nothing.
       setLayout((prev) => (JSON.stringify(prev) === JSON.stringify(measured) ? prev : measured));
@@ -183,6 +189,8 @@ function useTickLayout(labels: string[], left: number, right: number) {
     // The observer reports the element's size once as it starts, which lays the labels out.
     const observer = new ResizeObserver(update);
     observer.observe(el);
+    // A web font still loading measures wider once it arrives.
+    if (document.fonts?.status === "loading") void document.fonts.ready.then(update);
     return () => observer.disconnect();
   }, [key, left, right]);
   return { ref, layout };
