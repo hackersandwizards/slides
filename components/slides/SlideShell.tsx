@@ -145,20 +145,7 @@ function useFitToSlide() {
     };
     // Below `md` a slide is one column that scrolls (slides.css), so nothing shrinks there.
     const narrow = window.matchMedia?.(NARROW);
-    // A slide reached by navigation is measured while its entrance (BlurFade) still holds the text
-    // offset, which read the bottom block short and left a larger scale than a page load gives:
-    // measured with the offset held off, both open at one scale.
     const fit = () => {
-      const entering = [...box.querySelectorAll<HTMLElement>("[data-entrance]")];
-      const kept = entering.map((el) => el.style.getPropertyValue("transform"));
-      for (const el of entering) el.style.setProperty("transform", "none", "important");
-      try {
-        fitNow();
-      } finally {
-        entering.forEach((el, i) => el.style.setProperty("transform", kept[i]));
-      }
-    };
-    const fitNow = () => {
       box.style.removeProperty("--card-boost");
       if (narrow?.matches) {
         box.style.scale = "";
@@ -167,6 +154,21 @@ function useFitToSlide() {
         box.style.justifyContent = "";
         return;
       }
+      // A slide reached by navigation is measured while its entrance (BlurFade) still holds the
+      // text offset, which read the bottom block short and left a larger scale than a page load
+      // gives: measured with the offset held off, both open at one scale.
+      const entering = [...box.querySelectorAll<HTMLElement>("[data-entrance]")].filter(
+        (el) => getComputedStyle(el).transform !== "none",
+      );
+      const kept = entering.map((el) => el.style.getPropertyValue("transform"));
+      for (const el of entering) el.style.setProperty("transform", "none", "important");
+      try {
+        scaleToFit();
+      } finally {
+        entering.forEach((el, i) => el.style.setProperty("transform", kept[i]));
+      }
+    };
+    const scaleToFit = () => {
       box.style.justifyContent = "flex-start";
       let scale = layout();
       // Larger card text is worth a shrink of at most two percent of everything else.

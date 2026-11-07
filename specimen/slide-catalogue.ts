@@ -352,14 +352,13 @@ const slides: Slide[] = [
           { title: "Review" },
           { title: "QA" },
         ],
-        showArrows: true,
         containerLabel: "Delivery harness",
         containerFooter: "One loop per ticket",
         containerSideNotes: ["Plans versioned", "Checks shared"],
       },
     ],
     notes:
-      "content blocks: pipeline with states, arrows, container label, footer, side notes, drawn as flow.",
+      "content blocks: pipeline with states, container label, footer, side notes, drawn as flow.",
   },
   {
     type: "content",

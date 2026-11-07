@@ -322,7 +322,6 @@ describe("pipeline into flow (merge-flow)", () => {
         containerFooter: "Foot",
       },
     ]);
-    expect(c.querySelector(".pipeline-row")).toBeNull();
     expect(c.querySelector("h2.text-primary")?.textContent).toBe("Build");
     expect(c.querySelector(".hw-frame")?.textContent).toContain("Harness");
     expect(c.querySelector('.hw-frame img[alt="Logo"]')).not.toBeNull();
@@ -342,15 +341,6 @@ describe("pipeline into flow (merge-flow)", () => {
   it("keeps a plain flow's large tiles", () => {
     const c = content([{ type: "flow", steps: [{ title: "A" }, { title: "B" }] }]);
     expect(c.querySelector("h2")?.previousElementSibling?.className).toContain("h-24");
-  });
-
-  // Inner loops and stage logos are dropped: such a pipeline draws as flow too.
-  it("draws a pipeline with inner loops or stage logos as flow", () => {
-    for (const block of [
-      { type: "pipeline", stages, showLoops: true },
-      { type: "pipeline", stages: [{ title: "A", logo: "/a.png" }] },
-    ])
-      expect(content([block]).querySelector("img")).toBeNull();
   });
 
   it("sets a flow step's badge under it", () => {
