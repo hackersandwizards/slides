@@ -175,6 +175,12 @@
       },
       {
         "check": "coupling",
+        "path": "catalog/print.ts",
+        "text": "../../_astro/",
+        "reason": "the URL the print pages in dist/catalog/print/ name the bundler's files by, relative to the page, not a path in the checkout"
+      },
+      {
+        "check": "coupling",
         "path": "catalog/brand-urls.ts",
         "text": "node_modules\\/@hackersandwizards",
         "reason": "the pattern placeBrandUrls matches in the url() Tailwind writes into the compiled stylesheet for an imported brand file, not a path the code reads"

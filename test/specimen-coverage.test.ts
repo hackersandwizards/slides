@@ -1,5 +1,11 @@
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { slideCatalogue } from "../specimen/slide-catalogue";
+import {
+  slideCatalogue,
+  slideCatalogueBrandDark,
+  specimenImages,
+} from "../specimen/slide-catalogue";
 import { aliasTypes, slideComponents } from "../lib/slide-components";
 import type {
   ChartSlide,
@@ -166,5 +172,18 @@ describe("slide catalogue coverage", () => {
         (s) => !new RegExp(`^${s.type}[:, ]`).test(s.notes ?? "") && s.type !== "content",
       ),
     ).toEqual([]);
+  });
+
+  // A consumer serves only the images the deck imports: one named by a root path is a 404 there.
+  it("imports every image of its folder and names none by a root path", () => {
+    const folder = join(import.meta.dirname, "..", "specimen", "slide-catalogue");
+    expect(Object.keys(specimenImages).sort()).toEqual(
+      readdirSync(folder)
+        .filter((file) => !file.startsWith("."))
+        .sort(),
+    );
+    expect(JSON.stringify([slideCatalogue, slideCatalogueBrandDark])).not.toMatch(
+      /"\/slide-catalogue\//,
+    );
   });
 });

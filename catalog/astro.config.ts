@@ -10,12 +10,9 @@ import { brandFile, brandNames, selfContained } from "./brand-urls";
 
 const BASE = "/slides";
 const root = fileURLToPath(new URL("..", import.meta.url));
-const deckFiles = join(root, "specimen/slide-catalogue");
 
-// The print pages name the deck's images beside them and brand's files under brand/, as in dist/.
+// The print pages name brand's files under brand/, as in dist/.
 const fileOf = (path: string) => {
-  const asset = path.match(/^(?:\/slides)?\/catalog\/print\/slide-catalogue\/([\w.-]+)$/);
-  if (asset) return join(deckFiles, asset[1]);
   const name = path.match(/^(?:\/slides)?\/brand\/(.+)$/)?.[1];
   if (!name || name.includes("..")) return undefined;
   try {
@@ -29,13 +26,12 @@ const types: Record<string, string> = {
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".webp": "image/webp",
-  ".mp4": "video/mp4",
   ".css": "text/css; charset=utf-8",
   ".woff2": "font/woff2",
   ".ico": "image/x-icon",
 };
 
-// The print pages, read as files: brand's files they link and the deck's images beside them.
+// The print pages, read as files: brand's files they link, under brand/.
 const files: AstroIntegration = {
   name: "slide-files",
   hooks: {
@@ -51,7 +47,6 @@ const files: AstroIntegration = {
           throw new Error(`${name} links further files, which the build does not copy`);
         cpSync(file, join(dist, "brand", name));
       }
-      cpSync(deckFiles, join(dist, "catalog/print/slide-catalogue"), { recursive: true });
     },
   },
 };

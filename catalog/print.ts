@@ -5,7 +5,7 @@ import { aliasTypes, slideComponents } from "../lib/slide-components";
 import { brandLogos } from "../lib/brand-logos";
 import { PrintProvider } from "../lib/print-context";
 import { PrintSlide } from "../components/slides/PrintSlide";
-import { slideCatalogue, specimenImages } from "../specimen/slide-catalogue";
+import { slideCatalogue } from "../specimen/slide-catalogue";
 import type { Slide } from "../types/slide";
 import * as primitives from "../components/slides/primitives";
 import { highlightLines } from "../lib/code-highlight";
@@ -90,13 +90,12 @@ const slideMarkup = (index: number) =>
     h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalogue, index })),
   );
 // The pages are read as files from dist/: brand's logos by its copies there, the deck's images by
-// the folder the build copies beside the pages.
+// the bundler's files, relative to the page.
+const bundled = `"${import.meta.env.BASE_URL.replace(/\/$/, "")}/_astro/`;
 const besidePage = (markup: string) => {
   for (const [file, url] of Object.entries(brandLogos))
     markup = markup.replaceAll(`"${url}"`, `"${brandHref}/logos/${file}.svg"`);
-  for (const [file, url] of Object.entries(specimenImages))
-    markup = markup.replaceAll(`"${url}"`, `"slide-catalogue/${file}"`);
-  return markup;
+  return markup.replaceAll(bundled, '"../../_astro/');
 };
 const partMarkup = (name: string) =>
   renderToStaticMarkup(
