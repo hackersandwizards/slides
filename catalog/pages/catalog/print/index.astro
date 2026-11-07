@@ -1,5 +1,6 @@
 ---
 import { brandHref } from "../../../brand-urls";
+import CatalogNav from "../../../CatalogNav.astro";
 import {
   entries,
   exceptionSections,
@@ -239,12 +240,7 @@ const jobButtons = (Object.keys(JOBS) as Job[])
           />
           <span class="hw-header-product">Slides</span>
         </a>
-        {/* prettier-ignore */}
-        <nav class="hw-header-nav" aria-label="Catalogues">
-          <a class="hw-header-link" href="https://hackersandwizards.github.io/brand/">Brand</a>
-          <a class="hw-header-link" href="#" aria-current="page">Slides</a>
-          <a class="hw-header-link" href="https://hackersandwizards.github.io/documents/catalog/">Dokumente</a>
-        </nav>
+        <CatalogNav home="../../index.html" />
       </div>
     </header>
     <div class="hw-container">

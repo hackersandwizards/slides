@@ -1,0 +1,23 @@
+---
+// The header's links to the four published catalogs, in the order the brand portal links them
+// (brand a7eb836), Slides marked current. `home` is where Slides links from the page rendering it.
+interface Props {
+  home: string;
+}
+
+const { home } = Astro.props;
+const links = [
+  ["Brand", "https://hackersandwizards.github.io/brand/"],
+  ["Slides", home],
+  ["Documents", "https://hackersandwizards.github.io/documents/"],
+  ["Mail", "https://hackersandwizards.github.io/mail/"],
+];
+---
+
+<nav class="hw-header-nav" aria-label="Main">
+  {links.map(([name, href]) => (
+    <a class="hw-header-link" href={href} aria-current={name === "Slides" ? "page" : undefined}>
+      {name}
+    </a>
+  ))}
+</nav>
