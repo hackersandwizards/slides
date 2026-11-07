@@ -99,7 +99,11 @@ export function TrendPlot({ data, still, xLabel, yLabel }: PlotProps) {
 
 // A tick label's font steps, down to the brand's label size, each taken when a word of the one
 // before is wider than its bar's band.
-const TICK_STEPS = ["var(--text-base)", "var(--text-sm)", "var(--text-xs)"];
+const TICK_STEPS = [tick.fontSize, "var(--text-sm)", "var(--text-xs)"];
+// The bars' gap, a share of each band; the labels keep half of it between them.
+const BAR_GAP = 0.1;
+const Y_WIDTH = 64;
+const SIDE = { left: 8, right: 30 };
 const LINE = 1.2;
 const ANGLE = 40;
 
@@ -118,8 +122,8 @@ export function tickLayout(
   band: number,
   widthAt: (text: string, step: number) => number,
 ): TickLayout {
+  const words = labels.map((label) => label.split(" "));
   for (let step = 0; step < TICK_STEPS.length; step++) {
-    const words = labels.map((label) => label.split(" "));
     if (!words.flat().every((word) => widthAt(word, step) <= band)) continue;
     const lines = words.map((ws) =>
       ws.reduce<string[]>((acc, word) => {
@@ -147,17 +151,16 @@ function useTickLayout(labels: string[], left: number, right: number) {
     if (!ctx) return;
     const update = () => {
       const { fontFamily } = getComputedStyle(el);
-      const px = TICK_STEPS.map((size) => {
-        const probe = document.createElement("span");
+      // The steps scale with the stage, so they are read again on every resize, in one pass.
+      const probes = TICK_STEPS.map((size) => {
+        const probe = el.appendChild(document.createElement("span"));
         probe.style.fontSize = size;
-        el.appendChild(probe);
-        const value = parseFloat(getComputedStyle(probe).fontSize);
-        probe.remove();
-        return value;
+        return probe;
       });
+      const px = probes.map((probe) => parseFloat(getComputedStyle(probe).fontSize));
+      for (const probe of probes) probe.remove();
       const names = key.split("\n");
-      // The bars' gap is a tenth of the band; the labels keep half of it between them.
-      const band = ((el.clientWidth - left - right) / names.length) * 0.95;
+      const band = ((el.clientWidth - left - right) / names.length) * (1 - BAR_GAP / 2);
       const next = tickLayout(names, band, (text, step) => {
         ctx.font = `${px[step]}px ${fontFamily}`;
         return ctx.measureText(text).width;
@@ -166,16 +169,18 @@ function useTickLayout(labels: string[], left: number, right: number) {
       ctx.font = `${size}px ${fontFamily}`;
       const angle = (ANGLE * Math.PI) / 180;
       const widths = next.lines.map(([l]) => ctx.measureText(l).width);
-      setLayout({
+      const measured = {
         ...next,
         height: next.angled
           ? Math.max(...widths) * Math.sin(angle) + size * 2
           : Math.max(...next.lines.map((l) => l.length)) * size * LINE + size,
         // An angled first label runs left of its bar: the plot moves right to keep it whole.
         overhang: next.angled ? Math.max(0, widths[0] * Math.cos(angle) - band / 2 - left) : 0,
-      });
+      };
+      // A resize that leaves the labels as they were re-renders nothing.
+      setLayout((prev) => (JSON.stringify(prev) === JSON.stringify(measured) ? prev : measured));
     };
-    update();
+    // The observer reports the element's size once as it starts, which lays the labels out.
     const observer = new ResizeObserver(update);
     observer.observe(el);
     return () => observer.disconnect();
@@ -197,30 +202,15 @@ function WrappedTick({
   layout?: TickLayout;
 }) {
   const lines = (layout && index !== undefined && layout.lines[index]) || [payload?.value ?? ""];
-  const fontSize = TICK_STEPS[layout?.step ?? 0];
-  if (layout?.angled) {
-    return (
-      <text
-        x={x}
-        y={y}
-        dominantBaseline="hanging"
-        textAnchor="end"
-        transform={`rotate(-${ANGLE} ${x} ${y})`}
-        fill={tick.fill}
-        fontSize={fontSize}
-      >
-        {lines[0]}
-      </text>
-    );
-  }
   return (
     <text
       x={x}
       y={y}
-      textAnchor="middle"
+      textAnchor={layout?.angled ? "end" : "middle"}
+      transform={layout?.angled ? `rotate(-${ANGLE} ${x} ${y})` : undefined}
       dominantBaseline="hanging"
       fill={tick.fill}
-      fontSize={fontSize}
+      fontSize={TICK_STEPS[layout?.step ?? 0]}
     >
       {lines.map((line, i) => (
         <tspan key={i} x={x} dy={i ? `${LINE}em` : 0}>
@@ -241,23 +231,22 @@ export function BarPlot({
   /** Bars carry their value on top and drop the value axis and grid. */
   labelled?: boolean;
 }) {
-  const yWidth = 64;
   const { ref, layout } = useTickLayout(
     (data ?? []).map((d) => String(d.name)),
-    8 + (labelled ? 0 : yWidth),
-    30,
+    SIDE.left + (labelled ? 0 : Y_WIDTH),
+    SIDE.right,
   );
   const margin = {
     top: labelled ? 40 : 12,
-    right: 30,
-    left: 8 + (layout?.overhang ?? 0),
+    right: SIDE.right,
+    left: SIDE.left + (layout?.overhang ?? 0),
     bottom: 8,
   };
   return (
     <Axes xLabel={xLabel} yLabel={labelled ? undefined : yLabel}>
       <div ref={ref} className="h-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={margin}>
+          <BarChart data={data} margin={margin} barCategoryGap={`${BAR_GAP * 100}%`}>
             {!labelled && <CartesianGrid stroke="var(--color-border)" vertical={false} />}
             {/* Each label wraps inside its bar's band, so long names side by side never overlap. */}
             <XAxis
@@ -269,7 +258,7 @@ export function BarPlot({
               height={Math.max(56, Math.ceil((layout?.height ?? 0) + 12))}
               interval={0}
             />
-            <YAxis hide={labelled} tick={tick} axisLine={false} tickLine={false} width={yWidth} />
+            <YAxis hide={labelled} tick={tick} axisLine={false} tickLine={false} width={Y_WIDTH} />
             <Tooltip
               cursor={{ fill: "var(--color-teal)", fillOpacity: 0.07 }}
               {...tooltip}
