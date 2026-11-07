@@ -5,6 +5,7 @@ import Image from "../ui/image";
 import type {
   ContentSlide as ContentSlideType,
   ContentBlock,
+  GalleryItem,
   SectionTheme,
 } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
@@ -21,6 +22,7 @@ import {
   twoColumnAsSplit,
   fourColumnAsCards,
   isDeepDive,
+  isVideo,
   keepHyphenatedWords,
   labeledGridAsCards,
   pipelineAsFlow,
@@ -107,6 +109,89 @@ function VideoBlock({ block }: { block: Extract<ContentBlock, { type: "video" }>
         className="slide-media-item"
       />
     </MediaFrame>
+  );
+}
+
+/** One picture or video of a gallery over its caption. A row sets each picture at its own height;
+ *  a grid cell fits the picture to the cell. */
+function GalleryFigure({ item, row }: { item: GalleryItem; row: boolean }) {
+  const caption = item.caption && (
+    <figcaption className="slide-media-caption text-center">
+      {renderMarkdown(item.caption)}
+    </figcaption>
+  );
+  const frame = "rounded-brand border border-border";
+  if (isVideo(item))
+    // The bottom padding holds the lower half of the player's play button.
+    return (
+      <figure className="m-0 flex min-w-0 flex-col gap-(--slide-media-gap) pb-10">
+        <VideoPlayer
+          src={item.src}
+          poster={item.poster}
+          alt={item.alt}
+          className="h-auto max-h-(--slide-picture-max-media) w-full object-contain"
+        />
+        {caption}
+      </figure>
+    );
+  const height = item.height ?? 300;
+  return (
+    <figure className="m-0 flex min-w-0 shrink flex-col items-center gap-(--slide-media-gap)">
+      {row ? (
+        <Image
+          src={item.src}
+          alt={item.alt ?? ""}
+          width={400}
+          height={height}
+          style={{ maxHeight: `min(${height / 16}rem, var(--slide-picture-max-media))` }}
+          className={`h-auto w-auto min-w-0 object-contain object-top ${frame}`}
+        />
+      ) : (
+        <Image
+          src={item.src}
+          alt={item.alt ?? ""}
+          width={1920}
+          height={1080}
+          className={`h-auto max-h-(--slide-picture-max-media) w-auto max-w-full ${frame}`}
+        />
+      )}
+      {caption}
+    </figure>
+  );
+}
+
+/** The image block's gallery form: a row or grid of pictures and videos, each under its caption,
+ *  and the tags they share as brand's outline pills under them. */
+// As many columns as pictures, up to three. Tailwind sees each class whole.
+const GALLERY_COLUMNS: Record<number, string> = { 2: "grid-cols-2", 3: "grid-cols-3" };
+
+function Gallery({ block }: { block: Extract<ContentBlock, { type: "gallery" }> }) {
+  const row = block.layout === "row";
+  return (
+    <div className="flex flex-col items-center gap-6">
+      <div
+        className={
+          row
+            ? // One bottom line, so the captions under pictures of different heights align; on a
+              // phone the pictures stand one under another, as a grid's do.
+              "flex items-end justify-center gap-3 max-md:flex-col max-md:items-center"
+            : `grid w-full gap-6 ${GALLERY_COLUMNS[Math.min(block.items.length, 3)] ?? ""}`
+        }
+      >
+        {block.items.map((item, i) => (
+          <GalleryFigure key={i} item={item} row={row} />
+        ))}
+      </div>
+      {block.tags && block.tags.length > 0 && (
+        <div className="flex max-w-4xl flex-wrap justify-center gap-2">
+          {block.tags.map((tag, i) => (
+            <span key={i} className="hw-pill" data-variant="outline">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -472,6 +557,9 @@ function ContentBlockRenderer({
         </MediaFrame>
       );
 
+    case "gallery":
+      return <Gallery block={block} />;
+
     case "image-and-grid":
       return (
         <div className="grid grid-cols-[2fr_3fr] items-center gap-10">
@@ -643,7 +731,7 @@ function StandardContentSlide({ slide }: Props) {
 
   return (
     <SlideShell ground={groundOf(slide)} night={isDeepDive(slide)}>
-      <TitledContent>
+      <TitledContent titled={!!slide.headline}>
         {/* The badge shares the section label's row, in the flow: placed absolutely in the corner,
             a long headline ran underneath it. */}
         <div className="flex items-start justify-between gap-8">
@@ -665,7 +753,7 @@ function StandardContentSlide({ slide }: Props) {
           )}
         </div>
 
-        <SlideTitle delay={0.15}>{renderMarkdown(slide.headline)}</SlideTitle>
+        {slide.headline && <SlideTitle delay={0.15}>{renderMarkdown(slide.headline)}</SlideTitle>}
 
         {slide.subtitle && (
           <SlideSubtitle delay={0.22}>{renderMarkdown(slide.subtitle)}</SlideSubtitle>

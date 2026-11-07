@@ -85,5 +85,6 @@ describe("FlowSteps on a phone", () => {
       )!.className;
     expect(row(["Autocomplete", "Chat", "Harness"])).toContain("slide-flow-long");
     expect(row(["Manual", "Chat", "Harness"])).not.toContain("slide-flow-long");
+    expect(row(["**Auto**complete", "Chat", "Harness"])).toContain("slide-flow-long");
   });
 });

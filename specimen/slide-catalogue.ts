@@ -1188,7 +1188,7 @@ const slides: Slide[] = [
       { title: "Build", description: "Agent works from plans", icon: "code" },
       { title: "Review", description: "Read plan and diff", icon: "eye" },
     ],
-    footer: "Three nodes, one highlighted.",
+    footer: "Review on Friday decides what Monday plans.",
     notes: "process: three nodes, highlight, footer.",
   },
   {
@@ -1891,6 +1891,51 @@ const slides: Slide[] = [
       },
     ],
     notes: "content blocks: two images stacked, sharing the body's left edge and width.",
+  },
+  {
+    type: "content",
+    sectionLabel: "Block: gallery",
+    headline: "One ticket on three screens",
+    content: [
+      {
+        type: "gallery",
+        layout: "row",
+        items: [
+          { src: `${IMG}/screen-board.png`, alt: "Fictional board", caption: "Plan", height: 280 },
+          { src: `${IMG}/screen-code.png`, alt: "Fictional code", caption: "Build", height: 320 },
+          {
+            src: `${IMG}/screen-chart.png`,
+            alt: "Fictional chart",
+            caption: "Review",
+            height: 280,
+          },
+        ],
+      },
+    ],
+    notes: "content blocks: a gallery row, each picture at its own height under its caption.",
+  },
+  {
+    type: "content",
+    sectionLabel: "Block: gallery",
+    headline: "What the agent left behind",
+    content: [
+      {
+        type: "gallery",
+        items: [
+          { src: `${IMG}/screen-board.png`, alt: "Fictional board" },
+          {
+            src: `${IMG}/agent-session.mp4`,
+            poster: `${IMG}/agent-session-poster.png`,
+            kind: "video",
+            alt: "Fictional agent session",
+          },
+          { src: `${IMG}/screen-chart.png`, alt: "Fictional chart" },
+        ],
+        tags: ["Sprint 14", "Fictional"],
+      },
+    ],
+    notes:
+      "content blocks: a gallery grid with a video among the pictures and the tags they share.",
   },
   {
     type: "statement",

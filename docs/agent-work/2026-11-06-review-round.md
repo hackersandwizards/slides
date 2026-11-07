@@ -181,3 +181,59 @@ One reviewer prompt, verbatim (Claude, hall persona, run 1; image paths shortene
 > Criteria, each scored 0 to 10 for your role: glance (the one key point is clear within 3 seconds), clarity (structure and relationships are understood without explanation; on s03, which times are durations and which are points in time), legibility (every text readable at your display size), breathing (room, not cramped, nothing touching or crowding another element), calm (nothing competes for attention, no clutter), brand (fits the brand described above), human (looks deliberately designed, not like generic AI-generated slideware: 10 means it does not look generated), overall.
 >
 > For each rendering answer with one JSON object on its own line: {"id":"s01-A","glance":0,"clarity":0,"legibility":0,"breathing":0,"calm":0,"brand":0,"human":0,"overall":0,"below_max":"what keeps the lowest criteria below 10, at most 20 words"}. Then for each slide one line {"slide":"s01","best":"A"}. Answer with JSON objects only, one per line, nothing else.
+
+## Phase 2e rounds (07.11.2026, slides v1.22.0)
+
+Personas a presenter rehearsing on a laptop, a workshop participant mid-room and the brand's design
+lead, every image at 1280 px, letters and slide order shuffled per reviewer, the current drawing
+scored unmarked among the variants, fictional specimen content. Round 1: Claude (opus) and Codex
+(gpt-6.1-sol) twice per persona, 12 runs. Round 2: once each, 6 runs. Score = mean overall. Noise =
+mean |run 1 − run 2| of the same reviewer in round 1: 0.43 (Claude 0.37, Codex 0.48). The comparison
+split slide carries no punchline, so its three renderings were the same picture: all three scored
+5.53, the control that equal images score equal.
+
+| Surface                  | Renderings (overall, round 1; round 2 where run)                                                                                                            | Shipped                                       |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Overview vs phased-pills | distinct 3.75; 10 of 12 merge, 2 keep                                                                                                                       | overview draws as phased-pills                |
+| Overview, three by three | current 7.39, as phased pills 6.88; round 2 with one highlight and no numbers: current 7.65, phased pills 7.93                                              | tie, the merge                                |
+| Overview, lanes          | current 5.48, as phased pills 7.24 (best 12 of 12); round 2: 5.88 against 7.52                                                                              | phased pills                                  |
+| Grid quotes              | italic card (current) 6.30, `hw-quote` in a card 7.32, on the ground 7.50; round 2: 6.37, 7.42, attributions aligned 8.12                                   | `hw-quote` on the ground, aligned             |
+| Comparison punchline     | vs: teal mono line (current) 7.57, purple `hw-callout` 6.97, teal 7.42; before-after: 8.32, 7.60, 7.79                                                      | kept: the current line leads                  |
+| Process footer           | purple card (current) 6.88 and 6.70, purple `hw-callout` 7.67 and 7.58, teal 8.32 and 8.14 (best 22 of 24)                                                  | teal `hw-callout`                             |
+| Media row, tags          | small chips (current) 5.83, outline `hw-pill` under the row 6.73, pills above the title 5.99; round 2: 5.98, 6.38, a caption per picture 8.27 (best 6 of 6) | gallery block: captions, shared tags as pills |
+
+The process footer's lead holds with both models (Claude 6.0 to 7.83, Codex 7.75 to 8.82), as do the
+lanes overview (Claude 4.67 to 6.67, Codex 6.3 to 7.82), the quotes and the captions (round 2,
+Claude 5.33 to 8.0, Codex 6.63 to 8.53). In round 1 every reviewer read the media slide's tags as
+labels of single pictures; round 2 tested that reading as a caption per picture.
+
+Left for a later round, named by most reviewers: green plus marks on the specimen's drawbacks in the
+comparison `vs` slide; the phased-pills specimen's amber and green phases read as status colours; a
+pipeline of six wraps into two rows of three and loses its order; one portrait among three quotes
+reads as an exception.
+
+One reviewer prompt, verbatim (round 1, presenter, Claude, run 1; image paths left out):
+
+> You are a trainer and conference speaker who presents hackers&wizards workshop and conference decks and picks the slide type for each point. You judge the slides on your laptop at 1280 pixels wide, as you rehearse.
+>
+> The medium: slides of hackers&wizards, a consultancy for agentic software engineering, from workshop decks, client decks and conference talks (German and English), 16:9, projected in a room or shared on a screen. All content shown is fictional specimen content.
+>
+> The hackers&wizards brand: a light off-white ground (#f7f9fa) with dark ink text (#19283a), and night (#0b1118, near-black) as a second ground. Accent colours with fixed roles: teal (#1a7285, the primary accent) and purple (#9333ea, the secondary accent); a teal-to-purple brand gradient; green for success, amber for warnings, red only for errors. Tints from one opacity ladder: 7, 15, 25, 40, 70 and 100 %. A signature corner: large radius top-left and bottom-right, small radius elsewhere. JetBrains Mono for headings and labels, Inter for text. The brand forbids decoration such as glow, particles or ornaments.
+>
+> Part 1. Below are 9 slides, numbered s01 to s09. Each slide comes in several renderings of the same content, letters A, B and so on; some differ only in one element, so compare them closely. Read every image file listed:
+>
+> (25 image paths)
+>
+> Criteria, each scored 0 to 10 for your role: glance (the one key point is clear within 3 seconds), clarity (structure and relationships are understood without explanation), legibility (every text readable at your display size), breathing (room, not cramped, nothing touching or crowding another element), calm (nothing competes for attention, no clutter), brand (fits the brand described above and reads as one consistent system), human (looks deliberately designed, not like generic AI-generated slideware: 10 means it does not look generated), overall.
+>
+> Part 2. Two slide types of the same deck engine, type X and type Y, each shown by its example slides:
+>
+> (3 image paths)
+>
+> Judge whether a deck needs both types: distinct (0 to 10, 10 = two different communication jobs, each needed; 0 = the same job, one type would do).
+>
+> Answer with JSON objects only, one per line, nothing else:
+>
+> - for each rendering: {"slide":"s01","r":"A","glance":0,"clarity":0,"legibility":0,"breathing":0,"calm":0,"brand":0,"human":0,"overall":0,"below_max":"what keeps overall below 10, in at most 12 words"}
+> - for each slide: {"slide":"s01","best":"A"}
+> - for the pair: {"pair":"XY","distinct":0,"verdict":"keep|merge|unsure","survivor":"X|Y|none","why":"at most 20 words"}

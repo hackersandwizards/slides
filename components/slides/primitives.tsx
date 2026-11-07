@@ -18,8 +18,21 @@ import { BlurFade } from "../ui/blur-fade";
 import { Linkedin } from "../../lib/icons";
 
 /** A titled slide's column: headline on top, `.slide-body` below, both under the fit guard. */
-export function TitledContent({ children }: { children: ReactNode }) {
-  return <div className="slide-content slide-titled relative z-10 flex flex-col">{children}</div>;
+export function TitledContent({
+  children,
+  titled = true,
+}: {
+  children: ReactNode;
+  /** False on a slide without a headline: its body then stands centred, as on any untitled slide. */
+  titled?: boolean;
+}) {
+  return (
+    <div
+      className={`slide-content ${titled ? "slide-titled" : "justify-center"} relative z-10 flex flex-col`}
+    >
+      {children}
+    </div>
+  );
 }
 
 /** The slide headline (`.slide-title`), fading in. `as="h2"` where the slide already has an h1. */
@@ -110,8 +123,8 @@ export function SlideFooter({
   );
 }
 
-/** The purple caption under a slide's diagram, fading in when `visible`: the last step of a
- *  reveal. */
+/** The takeaway under a slide's diagram, brand's callout, fading in when `visible`: the last step
+ *  of a reveal. */
 export function SlideCaption({
   children,
   visible = true,
@@ -120,16 +133,14 @@ export function SlideCaption({
   visible?: boolean;
 }) {
   return (
-    <SlideCard
+    <div
       inert={!visible}
-      tone="secondary"
-      look="soft"
-      className={`w-full max-w-5xl text-center transition-all duration-500 card-pad-5/10 ${
+      className={`hw-callout w-fit max-w-5xl transition-all duration-500 ${
         visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
-      <p className="text-xl font-medium text-secondary">{children}</p>
-    </SlideCard>
+      <p className="text-xl text-text">{children}</p>
+    </div>
   );
 }
 

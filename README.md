@@ -92,14 +92,16 @@ first chapter, listing the chapters in order. Each chapter opens with a `transit
 as `"3 / 9"`. A break, lunch, a live demo or the thanks is not a chapter. A timetable is an `agenda`
 whose items carry a `when` ("09:00"), and so are a pitch's next steps (a due date as `when`, the
 owner as `text`, the decision needed as `footer`). A deck whose agenda is a map that returns before
-each part (`overview`, `phased-pills`) keeps that instead.
+each part (`phased-pills`) keeps that instead.
 
 An exercise, a live demo and a debrief are an `activity` slide (`kind`): the steps, watch points or
 questions, the exact instruction as `prompt`, and the timebox, mode and outcome in one card.
 
-`evolution` and `dual-pill-overview` still render, as a `process` slide with `loop: false` and a
-`roadmap` whose columns carry `phases`; new slides use those (`aliasTypes` in
-`lib/slide-components.ts`). `deprecated` beside it lists every prop and value a deck
+`evolution`, `dual-pill-overview`, `overview` and `media` still render, as a `process` slide with
+`loop: false`, a `roadmap` whose columns carry `phases`, a `phased-pills` slide and a `content`
+slide with an `image`, `video` or `gallery` block; new slides use those (`aliasTypes` in
+`lib/slide-components.ts`). A gallery names each picture by its `caption` and sets its `tags` only
+for what the pictures share. `deprecated` beside it lists every prop and value a deck
 should no longer write, so a consumer's story coverage can skip them.
 A chapter divider is a `transition`; `deep-dive-divider` marks a deep-dive part only. Every slide of a
 deep-dive part, the `deep-dive-divider`, a slide whose `sectionTheme` is `deepdive` and a pill map whose

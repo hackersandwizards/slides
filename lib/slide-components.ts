@@ -36,6 +36,8 @@ export const aliasTypes: Partial<Record<Slide["type"], Slide["type"]>> = {
   "dual-pill-overview": "roadmap",
   guidance: "comparison",
   "deep-dive-divider": "transition",
+  overview: "phased-pills",
+  media: "content",
 };
 
 /** What a deck may still write but no longer should, read until the next major: `props` are

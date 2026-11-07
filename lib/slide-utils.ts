@@ -12,7 +12,11 @@ import type {
   DualPillOverviewSlide,
   EvolutionSlide,
   GridSlide,
+  GalleryItem,
   GuidanceSlide,
+  MediaSlide,
+  OverviewSlide,
+  PhasedPillsSlide,
   Presentation,
   ProcessSlide,
   RegularSlide,
@@ -465,6 +469,58 @@ export function claimParts(lang: "en" | "de"): [string, string, string] {
   return at < 0 ? [text, "", ""] : [text.slice(0, at), word, text.slice(at + word.length)];
 }
 
+/** Whether a gallery item is a video: so marked, or a video file. */
+export const isVideo = (item: GalleryItem) =>
+  item.kind === "video" || /\.(mp4|webm|mov)$/i.test(item.src);
+
+/** A `media` slide as the content slide that replaces it: one picture or video as its own block,
+ *  several, or one with a caption or tags, as a `gallery`. */
+export function mediaAsContent({
+  sources,
+  layout,
+  tags,
+  sectionLabel,
+  sectionTheme,
+  principle,
+  headline,
+}: MediaSlide): ContentSlide {
+  const [one] = sources;
+  const block: ContentBlock =
+    sources.length === 1 && layout !== "row" && !one.caption && !tags?.length
+      ? isVideo(one)
+        ? { type: "video", src: one.src, alt: one.alt, poster: one.poster }
+        : { type: "image", src: one.src, alt: one.alt }
+      : { type: "gallery", items: sources, layout, tags };
+  return {
+    type: "content",
+    sectionLabel,
+    sectionTheme,
+    principle,
+    headline: headline ?? "",
+    content: [block],
+  };
+}
+
+/** An `overview` slide as the phased-pills slide that replaces it: foundations and pipeline as two
+ *  phases, unnumbered, since the foundations are no sequence. Its one marked stage, `new`, is the
+ *  active pill; `active` stages, which the overview tinted all alike, draw plain, so one pill holds
+ *  the focus. */
+export function overviewAsPhases(slide: OverviewSlide): PhasedPillsSlide {
+  const items = (stages: OverviewSlide["foundations"]) =>
+    stages.map((s) => ({
+      title: s.title,
+      state: s.state === "new" ? ("active" as const) : undefined,
+    }));
+  return {
+    type: "phased-pills",
+    title: "The Factory",
+    phases: [
+      { label: "Foundations", theme: "primary", items: items(slide.foundations) },
+      { label: "Pipeline", theme: "secondary", items: items(slide.pipeline) },
+    ],
+  };
+}
+
 /** The language of the claim a contact closing shows, or undefined for none: `claim: false` or a
  *  discussion leaves it out, and a deprecated `claim` language wins over the deck's. */
 export const closingClaim = (slide: ClosingSlide, lang: "en" | "de") =>
@@ -488,6 +544,10 @@ export function replacedBy(slide: Slide): { to: string; form?: string } | undefi
       return { to: "comparison guidance" };
     case "deep-dive-divider":
       return { to: "transition night" };
+    case "overview":
+      return { to: "phased-pills" };
+    case "media":
+      return { to: "gallery" };
     case "regular": {
       const to = regularAsContent(slide);
       if (!to) return undefined;

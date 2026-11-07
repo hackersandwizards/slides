@@ -87,6 +87,16 @@ export type ContentBlock =
     }
   | { type: "image"; src: string; alt?: string }
   | {
+      /** The image block's gallery form: pictures and videos side by side, a `row` at each
+       *  picture's own `height` (a 300 px default on the 1920 stage) or a `grid` of equal cells,
+       *  the default for two and more. A `caption` names its own picture; `tags`, a row of pills
+       *  under the gallery, name what the pictures share. */
+      type: "gallery";
+      items: GalleryItem[];
+      layout?: "grid" | "row";
+      tags?: string[];
+    }
+  | {
       type: "video";
       src: string;
       alt?: string;
@@ -468,6 +478,19 @@ export interface GuidanceSlide {
   examples: GuidanceExample[];
 }
 
+/** One picture or video of a `gallery` block. */
+export interface GalleryItem {
+  src: string;
+  alt?: string;
+  kind?: "image" | "video";
+  /** A video's frame before it plays and in the PDF and PPTX export. */
+  poster?: string;
+  caption?: string;
+  height?: number;
+}
+
+/** @deprecated A `content` slide with an `image`, `video` or `gallery` block, which draws it
+ *  (`mediaAsContent` in `lib/slide-utils.ts`). */
 export interface MediaSlide {
   type: "media";
   sectionLabel?: string;
@@ -476,13 +499,7 @@ export interface MediaSlide {
   headline?: string;
   layout?: "grid" | "row";
   tags?: string[];
-  sources: {
-    src: string;
-    alt?: string;
-    kind?: "image" | "video";
-    caption?: string;
-    height?: number;
-  }[];
+  sources: GalleryItem[];
 }
 
 export interface Profile {
@@ -503,7 +520,8 @@ export interface ProfilesSlide {
 }
 
 export interface PillItem {
-  number: number;
+  /** Drawn as "#3" before the title; left out, the pill shows its title only. */
+  number?: number;
   title: string;
   state?: StageState;
 }
@@ -520,6 +538,10 @@ export interface PhasedPillsSlide {
   phases: PillPhase[];
 }
 
+/** @deprecated A `phased-pills` slide, which draws it (`overviewAsPhases` in
+ *  `lib/slide-utils.ts`): foundations and pipeline as two phases, a `new` stage as the active
+ *  pill, and `active` stages and the frames' `foundationsActive` and `pipelineActive` draw plain.
+ *  The stage descriptions, the lanes and the external ideate stage go. */
 export interface OverviewSlide {
   type: "overview";
   foundationsActive?: boolean;

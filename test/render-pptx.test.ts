@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { centredMark, renderPptx } from "../scripts/render-pptx";
 import { slideCatalogue } from "../specimen/slide-catalogue";
 import type { Slide } from "../types/slide";
+import { overviewAsPhases } from "../lib/slide-utils";
 
 const NOT_TEXT = new Set([
   "type",
@@ -151,17 +152,20 @@ describe("slides-pptx on the specimen deck", () => {
       const shown = norm(unescape(slideText[i]));
       // A stats card shows its label in place of its title, as the web card does.
       // A closing whose mark stands centred shows the h&w lockup in place of the company's name.
+      // An overview draws as phased pills, its stage descriptions gone, as on the web.
       const data =
         slide.type === "grid" && slide.variant === "stats"
           ? { ...slide, cards: slide.cards.map((cd) => (cd.label ? { ...cd, title: "" } : cd)) }
-          : slide.type === "closing" && centredMark(slide)
-            ? {
-                ...slide,
-                speakers: slide.speakers?.map((sp) =>
-                  sp.company.toLowerCase() === "hackers&wizards" ? { ...sp, company: "" } : sp,
-                ),
-              }
-            : slide;
+          : slide.type === "overview"
+            ? overviewAsPhases(slide)
+            : slide.type === "closing" && centredMark(slide)
+              ? {
+                  ...slide,
+                  speakers: slide.speakers?.map((sp) =>
+                    sp.company.toLowerCase() === "hackers&wizards" ? { ...sp, company: "" } : sp,
+                  ),
+                }
+              : slide;
       return texts(data)
         .filter((t) => !shown.includes(norm(t)))
         .map((t) => `slide ${i + 1} (${slide.type}): ${t}`);

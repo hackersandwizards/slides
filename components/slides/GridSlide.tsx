@@ -7,7 +7,7 @@ import { SlideShell, groundOf } from "./SlideShell";
 import { gridAsContent, isDeepDive } from "../../lib/slide-utils";
 import { ContentSlide } from "./ContentSlide";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { TitledContent, SlideTitle, SlideCard } from "./primitives";
+import { TitledContent, SlideTitle } from "./primitives";
 
 interface Props {
   slide: GridSlideType;
@@ -21,21 +21,25 @@ function QuoteCard({ card, isRevealed }: { card: GridCard; isRevealed: boolean }
         isRevealed ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
-      <SlideCard className="flex h-full flex-col items-center text-center card-pad-8">
-        {card.imageSrc && (
-          <Image
-            src={card.imageSrc}
-            alt={card.author ?? ""}
-            width={80}
-            height={80}
-            className="mb-4 h-20 w-20 rounded-brand border-2 border-border object-cover"
-          />
-        )}
-        <p className="card-text-lg mb-4 leading-relaxed text-text-muted italic">
-          &ldquo;{card.description ?? card.title}&rdquo;
-        </p>
-        {card.author && <p className="mt-auto text-base font-bold text-primary">{card.author}</p>}
-      </SlideCard>
+      {/* Brand's quote, upright behind its rule, on the ground. Every attribution row is a portrait
+          high, so a quote with a portrait lines up with one without. */}
+      <figure className="m-0 flex h-full flex-col">
+        <blockquote className="hw-quote card-text-lg mb-6 leading-relaxed">
+          {card.description ?? card.title}
+        </blockquote>
+        <figcaption className="mt-auto flex min-h-14 items-center gap-4">
+          {card.imageSrc && (
+            <Image
+              src={card.imageSrc}
+              alt={card.author ?? ""}
+              width={56}
+              height={56}
+              className="h-14 w-14 rounded-brand border border-border object-cover"
+            />
+          )}
+          {card.author && <span className="text-base font-bold text-primary">{card.author}</span>}
+        </figcaption>
+      </figure>
     </div>
   );
 }

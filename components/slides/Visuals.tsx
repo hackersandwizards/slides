@@ -60,12 +60,19 @@ export type FlowStep = Of<"flow">["steps"][number] & {
 const TILE_LABEL = 4;
 
 // On a phone a row of steps holds a title's longest word only where it fits a column: a mono
-// glyph is 0.6em and the narrowest phone leaves the row 20rem, a column's padding 0.5rem. A word
+// glyph is 0.6em of the title's `--type-body-size` (1rem there, Visuals.css), the narrowest phone
+// leaves the row 20rem inside `--slide-phone-padding`, and a column pads 0.5rem (`--spacing` each
+// side). A word
 // wider than its column, which the hyphenator cannot always split ("Autocomplete"), stands the
 // steps one under another instead, as five and more do (Visuals.css).
 function fitsPhoneRow(steps: FlowStep[]) {
   const word = Math.max(
-    ...steps.flatMap((step) => step.title.split(/[\s*_`]+/).map((w) => w.length)),
+    ...steps.flatMap((step) =>
+      step.title
+        .replace(/[*_`]/g, "")
+        .split(/\s+/)
+        .map((w) => w.length),
+    ),
   );
   return steps.length * (word * 0.6 + 0.5) <= 20;
 }

@@ -43,3 +43,25 @@ describe("MediaSlide", () => {
     );
   });
 });
+
+// The media slide draws as a content slide: several sources as a gallery, each under its caption,
+// the shared tags as brand's outline pills.
+describe("MediaSlide, as a gallery", () => {
+  it("captions each picture and sets the tags as pills", () => {
+    const slide: MediaSlideType = {
+      type: "media",
+      headline: "Gallery",
+      tags: ["Sprint 14"],
+      sources: [
+        { src: "/a.png", alt: "a", caption: "Plan" },
+        { src: "/b.png", alt: "b", caption: "Build" },
+      ],
+    };
+    const { container } = render(<MediaSlide slide={slide} />);
+    expect([...container.querySelectorAll("figcaption")].map((f) => f.textContent)).toEqual([
+      "Plan",
+      "Build",
+    ]);
+    expect(screen.getByText("Sprint 14").className).toBe("hw-pill");
+  });
+});

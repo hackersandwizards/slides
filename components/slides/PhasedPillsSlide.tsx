@@ -24,7 +24,7 @@ function PillBox({
   state = "default",
   category,
 }: {
-  number: number;
+  number?: number;
   title: string;
   state?: StageState;
   category: StageCategory;
@@ -34,7 +34,7 @@ function PillBox({
       className={`relative flex items-center gap-3 rounded-brand px-6 py-2.5 text-xl font-semibold ${getStageClasses(state, category)}`}
     >
       {state === "active" && <PulseDot category={category} offset="-top-1.5 -right-1.5" />}
-      <span className="font-mono text-base opacity-70">#{number}</span>
+      {number !== undefined && <span className="font-mono text-base opacity-70">#{number}</span>}
       {/* A stage not yet reached keeps its full muted ink: faded further it read as disabled. */}
       <span>{title}</span>
     </div>
@@ -107,11 +107,11 @@ export function PhasedPillsSlide({ slide }: Props) {
                     </div>
                   </BlurFade>
 
-                  {phase.items.map((item) => {
+                  {phase.items.map((item, i) => {
                     const delay = 0.15 + itemIndex * 0.04;
                     itemIndex++;
                     return (
-                      <BlurFade key={item.number} delay={delay} duration={0.3}>
+                      <BlurFade key={i} delay={delay} duration={0.3}>
                         <PillBox
                           number={item.number}
                           title={item.title}

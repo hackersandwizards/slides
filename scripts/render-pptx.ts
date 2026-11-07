@@ -23,7 +23,10 @@ import {
   isDeepDive,
   isHighlightPhase,
   isOpening,
+  isVideo,
   linkLabel,
+  mediaAsContent,
+  overviewAsPhases,
   pageLabel,
   claimParts,
   closingClaim,
@@ -408,6 +411,9 @@ function arrow(
   });
 }
 
+const chipWidth = (text: string, size: number, mono: boolean) =>
+  (plain(text).length * size * (mono ? 0.66 : 0.56)) / 72 + 0.3;
+
 function chip(
   s: PSlide,
   c: Palette,
@@ -422,7 +428,7 @@ function chip(
    *  of the stage's 90 rem). */
   line?: string,
 ) {
-  const w = (plain(text).length * size * (mono ? 0.66 : 0.56)) / 72 + 0.3;
+  const w = chipWidth(text, size, mono);
   card(s, x, y, w, (size * 1.9) / 72, fill, line, line ? (0.46875 * W) / 90 : (size * 1.9) / 144);
   box(s, c, { runs: [{ text: plain(text) }] }, x, y, w, (size * 1.9) / 72, {
     size,
@@ -948,6 +954,7 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
     case "numbers":
       return 1.3 + (b.source ? 0.3 : 0);
     case "image":
+    case "gallery":
     case "linked-image":
     case "video":
     case "annotated":
@@ -969,7 +976,48 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
   }
 }
 
-const GROWS = new Set(["image", "linked-image", "video", "annotated", "image-and-grid"]);
+const GROWS = new Set(["image", "gallery", "linked-image", "video", "annotated", "image-and-grid"]);
+
+/** A gallery: its pictures and videos in a row or grid of equal cells, each over its caption, and
+ *  its tags as chips under them. */
+function gallery(s: PSlide, ctx: Ctx, b: Extract<ContentBlock, { type: "gallery" }>, area: Area) {
+  const { c } = ctx;
+  const tagH = b.tags?.length ? 0.4 : 0;
+  const a = { ...area, h: area.h - tagH };
+  const n = b.items.length;
+  const cols = b.layout === "row" ? n : Math.min(n, n === 4 ? 2 : 3);
+  const rows = Math.ceil(n / cols);
+  const cw = (a.w - (cols - 1) * 0.25) / cols;
+  const rh = (a.h - (rows - 1) * 0.25) / rows;
+  b.items.forEach((src, i) => {
+    const x = a.x + (i % cols) * (cw + 0.25);
+    const yy = a.y + Math.floor(i / cols) * (rh + 0.25);
+    const capH = src.caption ? 0.3 : 0;
+    if (isVideo(src)) {
+      drawBlock(
+        s,
+        ctx,
+        { type: "video", src: src.src, alt: src.alt, caption: src.caption, poster: src.poster },
+        { x, y: yy, w: cw, h: rh },
+        1,
+        false,
+      );
+      return;
+    }
+    picture(s, ctx, src.src, x, yy, cw, rh - capH, { alt: src.alt });
+    if (src.caption)
+      box(s, c, src.caption, x, yy + rh - capH + 0.05, cw, capH - 0.05, {
+        size: PT.sm,
+        color: c.muted,
+        align: "center",
+      });
+  });
+  if (!b.tags?.length) return;
+  const row = b.tags.reduce((sum, t) => sum + chipWidth(t, PT.label, false) + 0.1, -0.1);
+  let x = a.x + (a.w - row) / 2;
+  for (const t of b.tags)
+    x += chip(s, c, t, x, a.y + a.h + 0.1, PT.label, c.card, c.ink, false) + 0.1;
+}
 
 function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, centered: boolean) {
   const { c } = ctx;
@@ -1630,6 +1678,8 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
     case "image":
       picture(s, ctx, b.src, a.x, a.y, a.w, a.h, { alt: b.alt, native: true });
       return;
+    case "gallery":
+      return gallery(s, ctx, b, a);
     case "linked-image": {
       // The link spelled out under the picture, as on the slide.
       const line = b.href ? 0.42 : 0;
@@ -2568,43 +2618,8 @@ const RENDER: {
     });
   },
 
-  media(s, ctx, d) {
-    const { c } = ctx;
-    let y = header(s, ctx, d);
-    if (d.tags?.length) {
-      let x = SIDE;
-      for (const t of d.tags) x += chip(s, c, t, x, y - 0.1, PT.label, c.tint, c.ink, false) + 0.1;
-      y += 0.3;
-    }
-    const a = BODY(y);
-    const n = d.sources.length;
-    const cols = d.layout === "row" ? n : Math.min(n, n === 4 ? 2 : 3);
-    const rows = Math.ceil(n / cols);
-    const cw = (a.w - (cols - 1) * 0.25) / cols;
-    const rh = (a.h - (rows - 1) * 0.25) / rows;
-    d.sources.forEach((src, i) => {
-      const x = a.x + (i % cols) * (cw + 0.25);
-      const yy = a.y + Math.floor(i / cols) * (rh + 0.25);
-      const capH = src.caption ? 0.3 : 0;
-      if (src.kind === "video" || /\.(mp4|webm|mov)$/i.test(src.src)) {
-        drawBlock(
-          s,
-          ctx,
-          { type: "video", src: src.src, alt: src.alt, caption: src.caption },
-          { x, y: yy, w: cw, h: rh },
-          1,
-          false,
-        );
-        return;
-      }
-      picture(s, ctx, src.src, x, yy, cw, rh - capH, { alt: src.alt });
-      if (src.caption)
-        box(s, c, src.caption, x, yy + rh - capH + 0.05, cw, capH - 0.05, {
-          size: PT.sm,
-          color: c.muted,
-          align: "center",
-        });
-    });
+  media(s, ctx, d, deck) {
+    return RENDER.content(s, ctx, mediaAsContent(d), deck);
   },
 
   profiles(s, ctx, d) {
@@ -2659,58 +2674,8 @@ const RENDER: {
     pillPhases(s, ctx, d.phases, { x: SIDE + CW * 0.2, y, w: CW * 0.6, h: BOTTOM - y });
   },
 
-  overview(s, ctx, d) {
-    const { c } = ctx;
-    const a = { x: SIDE + 1, y: TOP + 0.2, w: CW - 2, h: BOTTOM - TOP - 0.2 };
-    card(s, a.x, a.y, a.w, a.h, c.card, c.border);
-    chip(s, c, "THE FACTORY", W / 2 - 0.75, a.y - 0.15, PT.label, c.card, c.ink, true, c.ink);
-    const half = (a.h - 0.6) / 2;
-    const lane = (
-      label: string,
-      stages: typeof d.foundations,
-      active: boolean | undefined,
-      ly: number,
-    ) => {
-      card(
-        s,
-        a.x + 0.3,
-        ly,
-        a.w - 0.6,
-        half,
-        active ? c.tealTint : c.bg,
-        active ? c.teal : c.border,
-      );
-      box(s, c, { runs: [{ text: `• ${label}` }] }, a.x + 0.5, ly + 0.12, 3, 0.25, {
-        size: PT.label,
-        mono: true,
-        bold: true,
-        color: c.teal,
-      });
-      const rowH = Math.min(half - 0.6, 1.4);
-      row(
-        stages,
-        { x: a.x + 0.5, y: ly + 0.4 + (half - 0.4 - rowH) / 2, w: a.w - 1, h: rowH },
-        0.2,
-        (st, r) => {
-          const on = st.state === "active" || st.state === "new";
-          card(s, r.x, r.y, r.w, 0.5, on ? c.tealTint : c.card, on ? c.teal : c.border);
-          box(s, c, { runs: md(st.title, c) }, r.x, r.y, r.w, 0.5, {
-            size: PT.h4,
-            bold: true,
-            color: c.ink,
-            align: "center",
-            valign: "middle",
-          });
-          box(s, c, st.description, r.x, r.y + 0.6, r.w, r.h - 0.6, {
-            size: PT.h4,
-            color: c.muted,
-            align: "center",
-          });
-        },
-      );
-    };
-    lane("FOUNDATIONS", d.foundations, d.foundationsActive, a.y + 0.3);
-    lane("PIPELINE", d.pipeline, d.pipelineActive, a.y + 0.45 + half);
+  overview(s, ctx, d, deck) {
+    return RENDER["phased-pills"](s, ctx, overviewAsPhases(d), deck);
   },
 
   process(s, ctx, d, deck) {
@@ -3845,14 +3810,14 @@ function curve(s: PSlide, ctx: Ctx, g: Area, f: (t: number) => number, fill: boo
   });
 }
 
-/** Phases of numbered pills, as phased-pills and dual-pill-overview set them. */
+/** Phases of pills, numbered where an item carries one, as phased-pills and dual-pill-overview set them. */
 function pillPhases(
   s: PSlide,
   ctx: Ctx,
   phases: {
     label: string;
     theme?: SectionTheme;
-    items: { number: number; title: string; state?: string }[];
+    items: { number?: number; title: string; state?: string }[];
   }[],
   a: Area,
 ) {
@@ -3873,7 +3838,7 @@ function pillPhases(
       const w = chip(
         s,
         c,
-        `#${it.number} ${it.title}`,
+        it.number === undefined ? it.title : `#${it.number} ${it.title}`,
         x,
         py + 0.32,
         PT.sm * 0.9,
