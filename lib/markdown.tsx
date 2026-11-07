@@ -34,11 +34,12 @@ export function renderMarkdown(text: string): React.ReactNode {
     }
     const text = part.slice(1, -1);
     // A short chip stays on one line, so a name never splits at its hyphen; a long one and a path
-    // may break inside themselves, or a table of paths runs its last column off the slide.
+    // may break inside themselves, or a table of paths runs its last column off the slide. In
+    // teal's text colour: base teal on the chip's tint over a striped table row falls under 4.5:1.
     return (
       <code
         key={i}
-        className={`hw-inline-code text-primary ${(text.length <= 24 && !/[/.]/.test(text)) || (text.includes(" ") && text.length <= 40) ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
+        className={`hw-inline-code text-teal-dark ${(text.length <= 24 && !/[/.]/.test(text)) || (text.includes(" ") && text.length <= 40) ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
       >
         {text}
       </code>

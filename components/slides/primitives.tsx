@@ -351,9 +351,11 @@ export function ChartFrame({ children }: { children: ReactNode }) {
 /** The one video player: the recording on night in the brand corner, a round teal play button
  *  straddling its bottom edge, centred (the caller leaves 2.5rem below for its lower half), and a
  *  progress line. Click the picture or the button to play or pause; playing, the button stays as
- *  the pause control, shown only to the keyboard that holds focus on it. `className` sizes frame
+ *  the pause control, shown only to the keyboard that holds focus on it. `className` sizes player
  *  and video alike, so the frame's line is a ring: a border takes the frame's box from the video,
- *  which then runs past it. */
+ *  which then runs past it. The frame alone carries the corner and clips the video and the
+ *  progress line to it, so no brand corner sits inside another; the button stays outside it.
+ *  `isolate`, or WebKit draws a playing video's square corners over the clip. */
 export function VideoPlayer({
   src,
   poster,
@@ -376,24 +378,31 @@ export function VideoPlayer({
     else v.pause();
   };
   return (
-    <div className={`relative rounded-brand bg-night ring ring-border ${className}`.trim()}>
-      <video
-        ref={ref}
-        src={src}
-        poster={poster}
-        aria-label={alt}
-        muted
-        playsInline
-        preload={printMode ? "auto" : "metadata"}
-        onClick={toggle}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
-        onTimeUpdate={(e) =>
-          setProgress(e.currentTarget.currentTime / (e.currentTarget.duration || 1))
-        }
-        className={`block cursor-pointer rounded-[inherit] ${className}`.trim()}
-      />
+    <div className={`relative ${className}`.trim()}>
+      <div className="relative isolate overflow-hidden rounded-brand bg-night ring ring-border">
+        <video
+          ref={ref}
+          src={src}
+          poster={poster}
+          aria-label={alt}
+          muted
+          playsInline
+          preload={printMode ? "auto" : "metadata"}
+          onClick={toggle}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={() => setPlaying(false)}
+          onTimeUpdate={(e) =>
+            setProgress(e.currentTarget.currentTime / (e.currentTarget.duration || 1))
+          }
+          className={`block cursor-pointer ${className}`.trim()}
+        />
+        {progress > 0 && (
+          <div className="absolute inset-x-0 bottom-0 h-1.5 bg-white/15">
+            <div className="h-full bg-primary" style={{ width: `${progress * 100}%` }} />
+          </div>
+        )}
+      </div>
       {/* The brand's round icon control over a picture (hw-icon-button, solid teal), at the
             stage scale's size. It straddles the recording's bottom edge, centred, as on the
             website, so it covers no corner of the picture; the frame's bottom padding holds its
@@ -412,11 +421,6 @@ export function VideoPlayer({
           <Play className="fill-current" strokeWidth={0} />
         )}
       </button>
-      {progress > 0 && (
-        <div className="absolute inset-x-0 bottom-0 h-1.5 overflow-hidden rounded-b-[inherit] bg-white/15">
-          <div className="h-full bg-primary" style={{ width: `${progress * 100}%` }} />
-        </div>
-      )}
     </div>
   );
 }

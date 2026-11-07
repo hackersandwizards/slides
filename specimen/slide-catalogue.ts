@@ -220,7 +220,7 @@ const slides: Slide[] = [
         widths: [2, 1],
         rows: [
           ["Compact rows, no header", "Yes"],
-          ["Relative widths", "2 : 1"],
+          ["Relative widths", "`widths: [2, 1]`"],
         ],
       },
     ],
@@ -758,7 +758,7 @@ const slides: Slide[] = [
       name: "Mara Lindqvist",
       title: "Platform lead, Lumen Freight",
       imageSrc: `${IMG}/portrait-a.png`,
-      linkedIn: "https://www.linkedin.com/in/example",
+      linkedIn: "https://www.linkedin.com/in/example-profile-name",
     },
     sections: [
       { title: "What she built", items: ["One harness", "Shared checks"] },
