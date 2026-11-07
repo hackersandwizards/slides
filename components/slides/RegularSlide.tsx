@@ -43,7 +43,9 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
           <h2 className="font-heading text-xl font-bold tracking-tight text-text md:text-2xl">
             {profile.name}
           </h2>
-          <p className="mt-1 text-base font-medium text-teal md:text-lg">{profile.title}</p>
+          <p className="mt-1 text-base font-medium text-balance text-teal md:text-lg">
+            {profile.title}
+          </p>
           {profile.linkedIn && (
             <span className="mt-3">
               <LinkCaption href={profile.linkedIn} variant="linkedin" />

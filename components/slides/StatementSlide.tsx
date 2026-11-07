@@ -1,12 +1,20 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useContext, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Image from "../ui/image";
 import type { StatementSlide as StatementSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
-import { SlideShell, groundOf } from "./SlideShell";
+import { DeckLang, SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
-import { DisplayHeading, LinkCaption, PictureLink, SlideFooter } from "./primitives";
+import { qrAlt } from "../../lib/slide-utils";
+import {
+  DisplayHeading,
+  LinkCaption,
+  PictureLink,
+  SlideCard,
+  SlideFooter,
+  TitledContent,
+} from "./primitives";
 
 interface Props {
   slide: StatementSlideType;
@@ -30,10 +38,9 @@ function HighlightedLine({ line, highlighted }: { line: string; highlighted?: st
   );
 }
 
-/** A linked screenshot or QR code under the statement, at most 11/24 (46%) of the slide wide
- *  (wider, it would push the headline under the top strip), its link spelled out under it. Once
- *  the file has loaded, the frame takes the picture's own shape at the slide's picture height, so
- *  a square QR code stands in a square, not in a wide box. */
+/** A linked screenshot under the statement, at most 11/24 (46%) of the slide wide (wider, it would
+ *  push the headline under the top strip), its link spelled out under it. Once the file has
+ *  loaded, the frame takes the picture's own shape at the slide's picture height. */
 function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linkedImage"]> }) {
   const ref = useRef<HTMLSpanElement>(null);
   // Kept with the file it was measured on, so the next picture never takes the last one's shape.
@@ -73,22 +80,202 @@ function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linke
   );
 }
 
+/** A claim the statement replaces, struck through above its lines. */
+function CrossedOut({ text }: { text: string }) {
+  return (
+    <BlurFade delay={0.05} duration={0.4}>
+      <p className="mb-6 font-heading text-3xl text-text-subtle md:text-4xl">
+        <s className="line-through decoration-text-subtle decoration-(length:--slide-rule-strong)">
+          {text}
+        </s>
+      </p>
+    </BlurFade>
+  );
+}
+
+/** The statement's lines: a column of flex items, so one line's descender bleed never collapses
+ *  into the next line's and opens a gap between them. */
+function Lines({ slide, size }: { slide: StatementSlideType; size: "xl" | "lg" | "md" }) {
+  return (
+    <div className="flex flex-col">
+      {slide.lines.map((line, index) => (
+        <BlurFade key={index} delay={0.1 + index * 0.08} duration={0.4}>
+          <DisplayHeading as="div" size={size}>
+            <HighlightedLine line={line} highlighted={slide.highlighted} />
+          </DisplayHeading>
+        </BlurFade>
+      ))}
+    </div>
+  );
+}
+
+/** When the parts enter: the lines one by one, then the subtitle and the points, then the closing,
+ *  and what follows it after the closing. */
+function delaysOf(slide: StatementSlideType) {
+  const afterLines = 0.1 + slide.lines.length * 0.08;
+  return { afterLines, closing: afterLines + (slide.points?.length ?? 0) * 0.06 + 0.05 };
+}
+
+function Points({ points, delay }: { points: string[]; delay: number }) {
+  return points.map((point, index) => (
+    <BlurFade key={index} delay={delay + index * 0.06} duration={0.4}>
+      <div className="flex items-baseline gap-5 text-left text-xl text-text-muted md:text-2xl">
+        <span className="shrink-0 font-heading text-2xl font-bold tracking-tight text-primary tabular-nums md:text-3xl">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <span className="leading-snug">{renderMarkdown(point)}</span>
+      </div>
+    </BlurFade>
+  ));
+}
+
+/** Everything a statement says, at the left edge. */
+function LeftWords({ slide, size }: { slide: StatementSlideType; size: "lg" | "md" }) {
+  const quoted = slide.closingStyle === "quote";
+  const { afterLines, closing } = delaysOf(slide);
+  return (
+    <>
+      {slide.kicker && (
+        <BlurFade delay={0.05} duration={0.4}>
+          <p className="hw-label mb-6 [--hw-label-size:var(--text-base)]">{slide.kicker}</p>
+        </BlurFade>
+      )}
+      {slide.crossedOut && <CrossedOut text={slide.crossedOut} />}
+      <Lines slide={slide} size={size} />
+      {slide.subtitle && (
+        <BlurFade delay={afterLines} duration={0.4}>
+          <p className="mt-6 text-4xl leading-snug font-medium whitespace-pre-line text-text">
+            {renderMarkdown(slide.subtitle)}
+          </p>
+        </BlurFade>
+      )}
+      {slide.linkedImage && <LinkedPicture image={slide.linkedImage} />}
+      {slide.points && slide.points.length > 0 && (
+        <div className="mt-8 space-y-5">
+          <Points points={slide.points} delay={afterLines} />
+        </div>
+      )}
+      {slide.closing && (
+        <BlurFade delay={closing} duration={0.4}>
+          <p className="mt-6 text-4xl leading-snug font-semibold text-text">
+            {quoted && <span className="text-primary">&ldquo;</span>}
+            {renderMarkdown(slide.closing)}
+            {quoted && <span className="text-primary">&rdquo;</span>}
+          </p>
+        </BlurFade>
+      )}
+    </>
+  );
+}
+
+/** A statement in a titled slide's column, centred above the footer. */
+function LeftStatement({ slide, children }: { slide: StatementSlideType; children: ReactNode }) {
+  return (
+    <SlideShell direction="col" overflowHidden ground={groundOf(slide)}>
+      <TitledContent>
+        <div className="my-auto">{children}</div>
+        {slide.footer && (
+          <SlideFooter className="w-full" delay={delaysOf(slide).closing + 0.2}>
+            {renderMarkdown(slide.footer)}
+          </SlideFooter>
+        )}
+      </TitledContent>
+    </SlideShell>
+  );
+}
+
+/** A closing with a QR code: the words on the left, the code on the right, so neither fills the
+ *  stage alone. The white card's padding is the code's quiet zone, so the brand corner never cuts
+ *  a module. */
+function QrStatement({
+  slide,
+  qr,
+}: {
+  slide: StatementSlideType;
+  qr: NonNullable<StatementSlideType["qr"]>;
+}) {
+  const alt = qrAlt(qr.href, useContext(DeckLang));
+  return (
+    <LeftStatement slide={slide}>
+      <div className="flex items-start gap-20">
+        <div className="min-w-0 flex-1">
+          <LeftWords slide={slide} size="lg" />
+        </div>
+        <BlurFade delay={delaysOf(slide).afterLines} duration={0.4}>
+          <figure className="slide-qr flex shrink-0 flex-col items-center gap-4">
+            <SlideCard className="size-(--slide-qr) bg-white card-pad-10">
+              <PictureLink href={qr.href}>
+                <Image
+                  src={qr.src}
+                  alt={alt}
+                  width={600}
+                  height={600}
+                  className="block size-full"
+                />
+              </PictureLink>
+            </SlideCard>
+            <LinkCaption href={qr.href} />
+          </figure>
+        </BlurFade>
+      </div>
+    </LeftStatement>
+  );
+}
+
+/** Who said it: the name in ink, what follows the first comma in grey. */
+function Attribution({ text }: { text: string }) {
+  const name = text.split(",")[0];
+  return (
+    <p className="mt-8 text-3xl text-text-muted">
+      <span className="font-semibold text-text">{name}</span>
+      {text.slice(name.length)}
+    </p>
+  );
+}
+
+/** A statement someone is named for: at the left edge, since a centred passage reads worst, with
+ *  its portrait beside it. Without one the words take the width behind brand's quote rule: a tile
+ *  in its place reads as a missing photo. */
+function Quotation({ slide, attribution }: { slide: StatementSlideType; attribution: string }) {
+  const words = (
+    <>
+      <LeftWords slide={slide} size={slide.imageSrc ? "md" : "lg"} />
+      <BlurFade delay={delaysOf(slide).closing + 0.05} duration={0.4}>
+        <Attribution text={attribution} />
+      </BlurFade>
+    </>
+  );
+  return (
+    <LeftStatement slide={slide}>
+      {slide.imageSrc ? (
+        <div className="flex items-center gap-16">
+          <BlurFade delay={0.05} duration={0.4} className="shrink-0">
+            <Image
+              src={slide.imageSrc}
+              alt={slide.imageAlt ?? ""}
+              width={480}
+              height={480}
+              className="size-72 rounded-brand object-cover"
+            />
+          </BlurFade>
+          <div className="min-w-0 flex-1">{words}</div>
+        </div>
+      ) : (
+        <blockquote className="hw-quote">{words}</blockquote>
+      )}
+    </LeftStatement>
+  );
+}
+
 export function StatementSlide({ slide }: Props) {
+  if (slide.attribution) return <Quotation slide={slide} attribution={slide.attribution} />;
+  if (slide.qr) return <QrStatement slide={slide} qr={slide.qr} />;
   const hasSupporting = (slide.points && slide.points.length > 0) || slide.closing;
   const isSimple = !hasSupporting && !slide.subtitle && !slide.highlighted && !slide.crossedOut;
-  const pointBaseDelay = 0.1 + slide.lines.length * 0.08;
+  const { afterLines: pointBaseDelay, closing: closingDelay } = delaysOf(slide);
   // The closing keeps its own gap only after the points: without them the box's gap stands alone,
   // so a quotation running from the subtitle into the closing reads as one.
   const afterPoints = slide.points?.length ? "mt-10" : "";
-  const closingDelay = pointBaseDelay + (slide.points?.length ?? 0) * 0.06 + 0.05;
-  // The source of what the slide quotes: after the closing where there is one, since a quotation
-  // may run from the subtitle into the closing.
-  const attribution = slide.attribution && (
-    <BlurFade delay={slide.closing ? closingDelay + 0.1 : pointBaseDelay} duration={0.4}>
-      <p className="mt-8 text-xl text-text-muted md:text-2xl">— {slide.attribution}</p>
-    </BlurFade>
-  );
-
   return (
     <SlideShell direction="col" overflowHidden ground={groundOf(slide)}>
       <div
@@ -117,26 +304,8 @@ export function StatementSlide({ slide }: Props) {
         )}
 
         <div className={`text-center ${hasSupporting ? "mb-2" : ""}`}>
-          {slide.crossedOut && (
-            <BlurFade delay={0.05} duration={0.4}>
-              <p className="mb-6 font-heading text-3xl text-text-subtle md:text-4xl">
-                <s className="line-through decoration-text-subtle decoration-(length:--slide-rule-strong)">
-                  {slide.crossedOut}
-                </s>
-              </p>
-            </BlurFade>
-          )}
-          {/* A column of flex items, so one line's descender bleed never collapses into the next
-              line's and opens a gap between them. */}
-          <div className="flex flex-col">
-            {slide.lines.map((line, index) => (
-              <BlurFade key={index} delay={0.1 + index * 0.08} duration={0.4}>
-                <DisplayHeading as="div" size={isSimple ? "xl" : "lg"}>
-                  <HighlightedLine line={line} highlighted={slide.highlighted} />
-                </DisplayHeading>
-              </BlurFade>
-            ))}
-          </div>
+          {slide.crossedOut && <CrossedOut text={slide.crossedOut} />}
+          <Lines slide={slide} size={isSimple ? "xl" : "lg"} />
 
           {slide.subtitle && (
             <BlurFade delay={0.1 + slide.lines.length * 0.08} duration={0.4}>
@@ -147,8 +316,6 @@ export function StatementSlide({ slide }: Props) {
               </p>
             </BlurFade>
           )}
-
-          {!slide.closing && attribution}
         </div>
 
         {slide.linkedImage && (
@@ -161,16 +328,7 @@ export function StatementSlide({ slide }: Props) {
           <div className="mt-10 w-full max-w-4xl">
             {slide.points && slide.points.length > 0 && (
               <div className="mx-auto mt-4 w-fit space-y-5">
-                {slide.points.map((point, index) => (
-                  <BlurFade key={index} delay={pointBaseDelay + index * 0.06} duration={0.4}>
-                    <div className="flex items-baseline gap-5 text-left text-xl text-text-muted md:text-2xl">
-                      <span className="shrink-0 font-heading text-2xl font-bold tracking-tight text-primary tabular-nums md:text-3xl">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <span className="leading-snug">{renderMarkdown(point)}</span>
-                    </div>
-                  </BlurFade>
-                ))}
+                <Points points={slide.points} delay={pointBaseDelay} />
               </div>
             )}
 
@@ -193,7 +351,6 @@ export function StatementSlide({ slide }: Props) {
                 )}
               </BlurFade>
             )}
-            {slide.closing && <div className="text-center">{attribution}</div>}
           </div>
         )}
 

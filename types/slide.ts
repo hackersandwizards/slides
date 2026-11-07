@@ -223,8 +223,8 @@ export type VisualBlock =
     }
   | {
       type: "numbers";
-      /** Up to four figures stand in a row, more wrap (five and six in three columns). `text` is
-       *  a line under the label, such as what the figure means. */
+      /** Up to four figures stand in a row, more wrap (five and six in three columns, smaller and
+       *  without the rule). `text` is a line under the label, such as what the figure means. */
       items: { value: string; label: string; text?: string }[];
       source?: string;
     }
@@ -327,12 +327,17 @@ export interface StatementSlide extends Grounded {
   closingStyle?: "plain" | "quote";
   imageSrc?: string;
   imageAlt?: string;
+  /** Who said it, such as "Name, Company": the slide becomes a quotation at the left edge, with
+   *  `imageSrc` as the portrait beside it, or behind brand's quote rule without one. */
   attribution?: string;
   /** The label above the lines, such as "Live demo". */
   kicker?: string;
-  /** A screenshot or QR code under the lines, at most about half the slide wide, its link
-   *  spelled out under it. */
+  /** A screenshot under the lines, at most about half the slide wide, its link spelled out under
+   *  it. */
   linkedImage?: { src: string; alt?: string; href?: string };
+  /** A QR code and the link it encodes, on a white card beside the lines. A quotation
+   *  (`attribution`) leaves it out. */
+  qr?: { src: string; href: string };
   /** The one line under the slide, such as a source, as a content slide's footer. */
   footer?: string;
 }

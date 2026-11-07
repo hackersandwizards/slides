@@ -31,6 +31,7 @@ import {
   deckLang,
   deepDiveAsTransition,
   personAccent,
+  profileLabel,
   qrAlt,
   speakerLine,
 } from "../lib/slide-utils";
@@ -626,7 +627,7 @@ function eventParas(
 
 /** A person's LinkedIn address in muted ink, linked: `LinkCaption`'s linkedin variant. */
 const profileLink = (url: string, c: Palette): Para => ({
-  runs: [{ text: linkLabel(url), options: { color: c.muted, hyperlink: { url } } }],
+  runs: [{ text: profileLabel(url), options: { color: c.muted, hyperlink: { url } } }],
 });
 
 /** The height a slide's footer takes above the bottom edge: its line under a rule. */
@@ -2133,10 +2134,16 @@ const RENDER: {
     }
   },
 
-  statement(s, ctx, d) {
+  statement(s, ctx, d, deck) {
     const { c } = ctx;
-    // A linked image stands beside the statement, as a portrait does, its link on the picture.
-    const side = d.imageSrc ?? d.linkedImage?.src;
+    // The picture beside the statement, as the slide picks it: a quotation keeps its portrait and
+    // drops a QR code, and a screenshot's or QR code's link is on the picture.
+    const qr = !d.attribution && d.qr;
+    const side = qr
+      ? { src: qr.src, alt: qrAlt(qr.href, deckLang(deck)), href: qr.href }
+      : d.imageSrc
+        ? { src: d.imageSrc, alt: d.imageAlt, href: undefined }
+        : d.linkedImage;
     const imgW = side ? CW * 0.38 : 0;
     const w = CW - imgW - (imgW ? 0.4 : 0);
     const lineRuns = (line: string): Run[] => {
@@ -2168,7 +2175,6 @@ const RENDER: {
       mono: true,
       bold: true,
       rel: PT.s8 / PT.base,
-      align: "center",
       after: 0,
     }));
     // The crossed-out claim stands above the statement, as the kicker of the web slide.
@@ -2179,14 +2185,12 @@ const RENDER: {
         mono: true,
         bold: true,
         rel: PT.h3 / PT.base,
-        align: "center",
       });
     }
     if (d.subtitle)
       paras.splice(crossed + d.lines.length, 0, {
         runs: md(d.subtitle, c, { color: c.muted }),
         rel: PT.lead / PT.base,
-        align: "center",
       });
     paras.forEach((p, i) => (p.after = i >= crossed && i < crossed + d.lines.length - 1 ? 0 : 16));
     if (d.kicker)
@@ -2195,7 +2199,6 @@ const RENDER: {
         mono: true,
         bold: true,
         rel: PT.label / PT.base,
-        align: "center",
         after: 16,
       });
     for (const [i, pt] of (d.points ?? []).entries()) {
@@ -2209,7 +2212,6 @@ const RENDER: {
         ],
         rel: PT.lead / PT.base,
         after: 6,
-        align: "center",
       });
     }
     if (d.closing) {
@@ -2219,18 +2221,23 @@ const RENDER: {
         bold: !q,
         rel: PT.lead / PT.base,
         after: 4,
-        align: "center",
       });
     }
-    if (d.attribution)
+    if (d.attribution) {
+      // The name in ink and bold, what follows the first comma muted, as the slide sets it.
+      const name = d.attribution.split(",")[0];
       paras.push({
-        runs: [{ text: `— ${d.attribution}`, options: { color: c.muted } }],
-        align: "center",
+        runs: [
+          { text: name, options: { bold: true } },
+          { text: d.attribution.slice(name.length), options: { color: c.muted } },
+        ],
       });
+    }
     const o: BoxOpts = {
       size: PT.base,
       color: c.ink,
-      align: "center",
+      // A quotation and a closing with a QR code stand at the left edge, as on the slide.
+      align: d.attribution || qr ? "left" : "center",
       valign: "middle",
       line: 1.2,
       floor: 0.5,
@@ -2239,9 +2246,9 @@ const RENDER: {
     box(s, c, paras, SIDE, TOP, w, BOTTOM - TOP - footH, o);
     footer(s, ctx, d.footer, footH);
     if (side)
-      picture(s, ctx, side, SIDE + w + 0.4, TOP, imgW, BOTTOM - TOP - footH, {
-        alt: d.imageSrc ? d.imageAlt : d.linkedImage?.alt,
-        href: d.imageSrc ? undefined : d.linkedImage?.href,
+      picture(s, ctx, side.src, SIDE + w + 0.4, TOP, imgW, BOTTOM - TOP - footH, {
+        alt: side.alt,
+        href: side.href,
       });
   },
 

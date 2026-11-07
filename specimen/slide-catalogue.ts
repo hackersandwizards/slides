@@ -633,8 +633,8 @@ const slides: Slide[] = [
         size: [1600, 1000],
         crop: { top: 0.08, bottom: 0.52 },
         notes: [
-          { y: 0.13, text: "The plan's title" },
-          { y: 0.34, h: 0.04, text: "The changed call" },
+          { y: 0.134, text: "The plan's title" },
+          { y: 0.346, text: "The changed call" },
         ],
       },
     ],
@@ -1851,21 +1851,28 @@ const slides: Slide[] = [
     subtitle:
       "“The build time set the pace of the whole company, though nobody had chosen it. Planning, review and the business side all followed it.",
     closing: "The build time is gone; the pace it set is still here.”",
+    imageSrc: `${IMG}/portrait-a.png`,
+    imageAlt: "Fictional speaker",
     attribution: "Mara Lindqvist, Lumen Freight (fictional)",
     footer: "Delivery Days 2026, keynote (fictional)",
-    notes: "statement: a quotation running from subtitle into closing, attribution and footer.",
+    notes:
+      "statement: a quotation running from subtitle into closing, a portrait, attribution and footer.",
   },
   {
     type: "statement",
     lines: ["Does the diagnosis hold for you?"],
-    subtitle: "What works for you, what does not, and where did you fall flat?",
-    linkedImage: {
-      src: `${IMG}/qr-example.png`,
-      alt: "QR code to a fictional discussion board",
-      href: "https://example.com/discuss",
-    },
+    subtitle:
+      "What works for you? What does not?\nWhere did you fall flat?\n\nOn to the speakers' corner,\nlater on the discussion board",
+    qr: { src: `${IMG}/qr-tight.png`, href: "https://example.com/discuss" },
     footer: "The discussion goes on in the hallway and on the board",
-    notes: "statement: a square QR code as the linked image, and a footer.",
+    notes: "statement: a QR code without a margin of its own, and a footer.",
+  },
+  {
+    type: "statement",
+    lines: ["The build set the pace", "and nobody had chosen it"],
+    attribution: "Mara Lindqvist, Lumen Freight (fictional)",
+    subtitle: "Said at the first review after the migration.",
+    notes: "statement: a quotation without a portrait, behind brand's quote rule.",
   },
   {
     type: "title",

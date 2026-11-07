@@ -202,6 +202,15 @@ describe("merged card and number shapes", () => {
     expect(c.textContent).toContain("d5");
   });
 
+  it("drops the rule and quiets a leading word once figures wrap", () => {
+    const items = [{ value: "up to 7", label: "a" }, ...Array(4).fill({ value: "1", label: "b" })];
+    const c = content([{ type: "numbers", items }]);
+    expect(c.querySelector(".border-t-4")).toBeNull();
+    expect(c.querySelector("span.font-sans")?.textContent).toBe("up to");
+    const row = content([{ type: "numbers", items: items.slice(0, 3) }]);
+    expect(row.querySelector(".border-t-4")).not.toBeNull();
+  });
+
   // Grid stats render as the numbers block, the description as its line (merge-numbers).
   it("draws grid stats as numbers", () => {
     const c = grid({

@@ -52,6 +52,8 @@
   --slide-footer-side: var(--slide-side);
   --slide-closing-lockup-night: calc(var(--slide-closing-lockup) * 1640.612 / 1489);
   --slide-footer-band: calc(var(--slide-footer-inset) + var(--slide-footer-mark) + 2rem);
+  /* A QR code's card: the picture height, grown by about the quiet zone its padding takes. */
+  --slide-qr: calc(var(--slide-picture-max) * 1.15);
   --background: var(--color-bg);
   --foreground: var(--color-ink);
   --slide-chart-tooltip-border: 2px solid var(--color-primary-border);

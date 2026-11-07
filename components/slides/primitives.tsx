@@ -13,7 +13,7 @@ import Pause from "lucide-react/icons/pause";
 import Play from "lucide-react/icons/play";
 import { usePrintMode } from "../../lib/print-context";
 import { DEFAULT_SECTION_STYLE } from "../../lib/section-styles";
-import { linkLabel } from "../../lib/slide-utils";
+import { linkLabel, profileLabel } from "../../lib/slide-utils";
 import { BlurFade } from "../ui/blur-fade";
 import { Linkedin } from "../../lib/icons";
 
@@ -56,8 +56,8 @@ export function SlideSubtitle({ children, delay = 0.15 }: { children: ReactNode;
 
 /** A link spelled out under a picture or a QR code, an arrow before it, opening in a new tab: the
  *  address's one link for the keyboard and screen readers. `linkedin`: a person's profile on a
- *  profile card, the LinkedIn glyph before the address in muted body text, not the word
- *  "LinkedIn" in teal or an outlined button. */
+ *  profile card, the LinkedIn glyph before the short address (`in/name`) on one line in muted body
+ *  text, not the word "LinkedIn" in teal or an outlined button. */
 export function LinkCaption({ href, variant }: { href: string; variant?: "linkedin" }) {
   return (
     <a
@@ -66,7 +66,7 @@ export function LinkCaption({ href, variant }: { href: string; variant?: "linked
       rel="noopener noreferrer"
       className={
         variant
-          ? "inline-flex items-center gap-2 text-lg text-text-muted"
+          ? "inline-flex items-center gap-2 text-lg whitespace-nowrap text-text-muted"
           : "slide-media-caption slide-media-link"
       }
     >
@@ -75,7 +75,7 @@ export function LinkCaption({ href, variant }: { href: string; variant?: "linked
       ) : (
         <ArrowUpRight className="size-(--slide-link-icon) shrink-0" strokeWidth={2.25} />
       )}
-      {linkLabel(href)}
+      {variant ? profileLabel(href) : linkLabel(href)}
     </a>
   );
 }
@@ -351,7 +351,9 @@ export function ChartFrame({ children }: { children: ReactNode }) {
 /** The one video player: the recording on night in the brand corner, a round teal play button
  *  straddling its bottom edge, centred (the caller leaves 2.5rem below for its lower half), and a
  *  progress line. Click the picture or the button to play or pause; playing, the button stays as
- *  the pause control, shown only to the keyboard that holds focus on it. */
+ *  the pause control, shown only to the keyboard that holds focus on it. `className` sizes frame
+ *  and video alike, so the frame's line is a ring: a border takes the frame's box from the video,
+ *  which then runs past it. */
 export function VideoPlayer({
   src,
   poster,
@@ -374,7 +376,7 @@ export function VideoPlayer({
     else v.pause();
   };
   return (
-    <div className={`relative rounded-brand border border-border bg-night ${className}`.trim()}>
+    <div className={`relative rounded-brand bg-night ring ring-border ${className}`.trim()}>
       <video
         ref={ref}
         src={src}

@@ -30,9 +30,9 @@ const CONTEXT = "var(--slide-context)";
 
 type Of<T extends VisualBlock["type"]> = Extract<VisualBlock, { type: T }>;
 
-function Source({ text }: { text?: string }) {
+function Source({ text, gap = "mt-10" }: { text?: string; gap?: string }) {
   if (!text) return null;
-  return <p className="mt-10 text-2xl text-text-muted">{renderMarkdown(text)}</p>;
+  return <p className={`${gap} text-2xl text-text-muted`}>{renderMarkdown(text)}</p>;
 }
 
 function Icon({ name, className }: { name?: string; className?: string }) {
@@ -682,15 +682,18 @@ function Bars({ block }: { block: Of<"bars"> }) {
 const minus = (v: string) => v.replace(/^-(?=\d)/, "−");
 
 // A figure's leading words ("about $2M", "up to +70%"): every lowercase word before the first
-// token that is not one. They are set small, so only the figure itself carries weight.
+// token that is not one. They are set small, so only the figure itself carries weight; `quiet`
+// sets them in the label's face, where six figures on a slide would otherwise compete with them.
 const leadingWords = (value: string) => /^((?:[a-z]+\s+)+)(?=[^a-z\s])/.exec(value)?.[1] ?? "";
 
-function Figure({ value }: { value: string }) {
+function Figure({ value, quiet }: { value: string; quiet?: boolean }) {
   const lead = leadingWords(value);
   if (!lead) return <>{minus(value)}</>;
   return (
     <>
-      <span className="mr-(--slide-figure-unit-gap) text-(length:--slide-figure-unit)">
+      <span
+        className={`mr-(--slide-figure-unit-gap) ${quiet ? "font-sans text-3xl font-medium tracking-(--type-body-tracking) text-text-muted" : "text-(length:--slide-figure-unit)"}`}
+      >
         {lead.trim()}
       </span>
       {minus(value.slice(lead.length))}
@@ -735,34 +738,67 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
       return i.value.length - lead.length + 0.5 * lead.trim().length;
     }),
   );
-  // A second row takes height the headline needs: wrapped figures stop at 4.5rem.
-  const cap = n > 4 ? 4.5 : cols === 2 ? 9 : 7;
-  const size = Math.min(cap, (1650 / cols - 60) / (longest * 0.6) / 21.333);
+  // Wrapped figures read as one grid at a glance: no rule, the label bold against its line, and
+  // each pair close to its figure.
+  const wrapped = n > 4;
+  const look = wrapped
+    ? {
+        cap: 5,
+        grid: "gap-16",
+        label: "mt-4 leading-tight font-semibold",
+        text: "mt-1",
+        source: "mt-16",
+      }
+    : {
+        cap: cols === 2 ? 9 : 7,
+        grid: "gap-x-14 gap-y-12",
+        label: "mt-6 border-t-4 border-border pt-6 leading-snug",
+        text: "mt-3",
+        source: undefined,
+      };
+  const size = Math.min(look.cap, (1650 / cols - 60) / (longest * 0.6) / 21.333);
   return (
     <div className="w-full">
       <div
-        className="grid w-full gap-x-14 gap-y-12"
+        className={`grid w-full ${look.grid}`}
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
         {block.items.map((item, i) => (
           <div key={i} className="flex flex-col">
             <span
-              className={`font-heading leading-none font-bold tracking-tight whitespace-nowrap text-primary`}
+              className="font-heading leading-none font-bold tracking-tight whitespace-nowrap text-primary"
               style={{ fontSize: `${size}rem` }}
             >
-              <Figure value={item.value} />
+              <Figure value={item.value} quiet={wrapped} />
             </span>
-            <span className="mt-6 border-t-4 border-border pt-6 text-3xl leading-snug text-text">
-              {renderMarkdown(item.label)}
-            </span>
+            <span className={`text-3xl text-text ${look.label}`}>{renderMarkdown(item.label)}</span>
             {item.text && (
-              <span className={`mt-3 ${CAPTION} text-text-muted`}>{renderMarkdown(item.text)}</span>
+              <span className={`${look.text} ${CAPTION} text-text-muted`}>
+                {renderMarkdown(item.text)}
+              </span>
             )}
           </div>
         ))}
       </div>
-      <Source text={block.source} />
+      <Source text={block.source} gap={look.source} />
     </div>
+  );
+}
+
+/** The numbered notes beside an annotated picture or code. A note of one line centres on its tile,
+ *  a longer one starts level with it. */
+function Notes({ notes }: { notes: { text: string }[] }) {
+  return (
+    <ol className="flex min-w-0 flex-1 flex-col gap-9">
+      {notes.map((n, i) => (
+        <li key={i} className="flex items-start gap-5">
+          <NumberTile size="lg">{i + 1}</NumberTile>
+          <p className="flex min-h-16 flex-col justify-center text-3xl leading-snug text-text [&_strong]:block [&_strong]:text-4xl">
+            <span>{renderMarkdown(n.text)}</span>
+          </p>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -778,11 +814,12 @@ function Annotated({ block }: { block: Of<"annotated"> }) {
     <div className="flex w-full items-center gap-12">
       {/* The numbers stand in a gutter left of the frame, level with their bands, off the code. */}
       <div className="relative flex shrink-0 pl-16">
-        {/* The frame takes the crop's shape at the largest size that fits 60rem by 38rem. */}
+        {/* The frame takes the crop's shape at the largest size that fits 50rem by 38rem, which
+            leaves the notes room for a line of a few words. */}
         <div
           className={`relative shrink-0 overflow-hidden border-4 border-text bg-text ${CARD}`}
           style={{
-            width: `${Math.min(58, (38 * w * right) / (h * span))}rem`,
+            width: `${Math.min(50, (38 * w * right) / (h * span))}rem`,
             aspectRatio: `${w * right} / ${h * span}`,
           }}
         >
@@ -797,7 +834,7 @@ function Annotated({ block }: { block: Of<"annotated"> }) {
           {block.notes.map((n, i) => (
             <div
               key={i}
-              className="absolute inset-x-0 -translate-y-1/2 border-y-(length:--slide-rule-strong) border-primary bg-primary/25"
+              className="absolute inset-x-2 -translate-y-1/2 rounded-brand-sm border-(length:--slide-rule-strong) border-primary bg-primary/25"
               style={{ top: at(n.y), height: `${((n.h ?? 0.03) / span) * 100}%` }}
             />
           ))}
@@ -808,16 +845,7 @@ function Annotated({ block }: { block: Of<"annotated"> }) {
           </span>
         ))}
       </div>
-      <ol className="flex flex-1 flex-col gap-9">
-        {block.notes.map((n, i) => (
-          <li key={i} className="flex items-start gap-5">
-            <NumberTile size="lg">{i + 1}</NumberTile>
-            <p className="pt-1 text-3xl leading-snug text-text [&_strong]:block [&_strong]:text-4xl">
-              {renderMarkdown(n.text)}
-            </p>
-          </li>
-        ))}
-      </ol>
+      <Notes notes={block.notes} />
     </div>
   );
 }
@@ -866,18 +894,7 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
           })}
         </code>
       </CodePanel>
-      {block.notes.length > 0 && (
-        <ol className="flex flex-1 flex-col gap-9">
-          {block.notes.map((n, i) => (
-            <li key={i} className="flex items-start gap-5">
-              <NumberTile size="lg">{i + 1}</NumberTile>
-              <p className="pt-1 text-3xl leading-snug text-text [&_strong]:block [&_strong]:text-4xl">
-                {renderMarkdown(n.text)}
-              </p>
-            </li>
-          ))}
-        </ol>
-      )}
+      {block.notes.length > 0 && <Notes notes={block.notes} />}
     </div>
   );
 }

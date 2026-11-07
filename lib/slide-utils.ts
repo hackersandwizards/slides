@@ -143,7 +143,7 @@ export function speakerLine(slide: TitleSlide): string {
     : speakers.join(" & ");
 }
 
-/** The alt text of a title slide's QR code, in its `lang`. */
+/** The alt text of a slide's QR code, in the deck's language. */
 export function qrAlt(href: string, lang?: TitleSlide["lang"]): string {
   return `${lang === "de" ? "QR-Code" : "QR code"}: ${linkLabel(href)}`;
 }
@@ -152,6 +152,11 @@ export function qrAlt(href: string, lang?: TitleSlide["lang"]): string {
  *  the link itself: without its scheme, `www.` and a closing slash. */
 export function linkLabel(href: string): string {
   return href.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+}
+
+/** A LinkedIn profile as a slide spells it out, short enough for one line: `in/name`. */
+export function profileLabel(href: string): string {
+  return linkLabel(href.replace(/[?#].*$/, "")).replace(/^([a-z]{2,3}\.)?linkedin\.com\//, "");
 }
 
 /** Joins a hyphenated word with a non-breaking hyphen, outside code spans and link targets, so a

@@ -1,6 +1,7 @@
 import { act, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
+import { profileLabel } from "../lib/slide-utils";
 import type { Slide } from "../types/slide";
 
 describe("regular slide", () => {
@@ -43,5 +44,27 @@ describe("regular slide", () => {
     const grid = container.querySelector<HTMLElement>(".hw-card")?.parentElement;
     expect(grid?.style.gridTemplateColumns).toBe("repeat(3, minmax(0, 1fr))");
     expect(container.querySelector(".hw-card .h-1\\.5")).toBeNull();
+  });
+
+  it("shows a profile's LinkedIn address in its short form on one line", () => {
+    const slide = {
+      type: "regular",
+      headline: "Headline",
+      profile: {
+        name: "Mara",
+        title: "Partner",
+        linkedIn: "https://www.linkedin.com/in/mara-lindqvist/",
+      },
+      sections: [{ title: "One", items: ["a"] }],
+    };
+    const { getByText } = render(<slideComponents.regular slide={slide as Slide} />);
+    expect(getByText("in/mara-lindqvist").className).toContain("whitespace-nowrap");
+  });
+
+  it.each([
+    "https://de.linkedin.com/in/mara-lindqvist",
+    "https://www.linkedin.com/in/mara-lindqvist/?originalSubdomain=de",
+  ])("shortens %s to in/name", (url) => {
+    expect(profileLabel(url)).toBe("in/mara-lindqvist");
   });
 });

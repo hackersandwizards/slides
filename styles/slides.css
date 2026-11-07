@@ -157,6 +157,10 @@ html:has(.print-slide) {
   font-size: var(--text-lg);
   color: var(--color-text-muted);
 }
+/* The address is the way in for whoever cannot scan: read from the seats, not from the page. */
+.slide-qr .slide-media-caption {
+  font-size: var(--text-2xl);
+}
 .slide-media-link {
   display: inline-flex;
   align-items: center;

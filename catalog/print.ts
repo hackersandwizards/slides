@@ -43,6 +43,7 @@ const variantOf = (s: Slide) =>
   ("layout" in s && s.layout) ||
   ("kind" in s && s.kind) ||
   ("strike" in s && s.strike === false ? "without strike" : "") ||
+  (s.type === "statement" && (s.attribution ? "quotation" : s.qr ? "qr" : "")) ||
   (s.type === "title" && isOpening(s) ? "opening" : "");
 
 // A deprecated form stays in the specimen deck, which the consumers test, but leaves the catalogue
@@ -274,6 +275,13 @@ const USES: Record<string, () => ReactNode> = {
       { type: "button", className: "hw-icon-button", "data-on": "picture", "aria-label": "Play" },
       h("svg", { viewBox: "0 0 24 24", fill: "currentColor" }, h("path", { d: "M6 4l14 8-14 8z" })),
     ),
+  quote: () =>
+    h(
+      "blockquote",
+      { className: "hw-quote w-fit text-xl text-text" },
+      h("p", null, "The build set the pace."),
+      h("p", { className: "text-text-muted" }, "Mara Lindqvist (fictional)"),
+    ),
   "focus-ring": () =>
     h(
       "button",
@@ -320,6 +328,7 @@ const exceptionLinks: Record<string, string[]> = {
   "slide-table": ["block-table"],
   "chart-bars": ["chart", "block-bars"],
   "stage-status": ["frames.html"],
+  "qr-card": ["statement-qr"],
 };
 export const exceptionSections = Object.entries(
   exceptions.exceptions as Record<string, string | { reason: string }>,
