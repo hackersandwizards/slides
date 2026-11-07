@@ -125,6 +125,21 @@ function family(stack: string): string {
 }
 const MONO = family(tokens["--font-mono"]);
 const SANS = family(tokens["--font-sans"]);
+/** A card's title and a diagram's label in the brand's h3 face, as the web's card-title utility. */
+const TITLE = (() => {
+  const face = family(
+    tokens["--type-h3-family"].replace(
+      /^var\((--[\w-]+)\)$/,
+      (_, v: string) => (tokens as Record<string, string>)[v],
+    ),
+  );
+  const weight = Number(tokens["--type-h3-weight"]);
+  if (![MONO, SANS].includes(face) || !weight)
+    throw new Error(
+      `brand h3 ${face} ${tokens["--type-h3-weight"]}: neither the mono nor the sans`,
+    );
+  return { mono: face === MONO, bold: weight >= 600 };
+})();
 
 /** Runs with each `\n` as a line break inside the paragraph (`<a:br/>`). pptxgenjs, given the
  *  `\n`, splits the run into paragraphs that all end a line, so a run after it, such as a bold word,
@@ -611,7 +626,7 @@ function eventParas(
   hi: boolean,
 ): Para[] {
   return [
-    { runs: md(e.title, c, { color: hi ? c.teal : c.ink }), bold: true, after: 4 },
+    { runs: md(e.title, c, { color: hi ? c.teal : c.ink }), ...TITLE, after: 4 },
     { runs: md(e.text ?? "", c, { color: c.muted }), rel: 0.9, after: e.text ? 16 : 8 },
     ...(e.figure
       ? [
@@ -754,8 +769,7 @@ function itemCard(
   if (o.title)
     paras.push({
       runs: md(o.title, c, { color: o.tone ?? c.ink }),
-      mono: true,
-      bold: true,
+      ...TITLE,
       rel: PT.h4 / PT.base,
       after: 6,
     });
@@ -1300,8 +1314,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
               ? [
                   {
                     runs: md(it.title, c, { color: c.ink }),
-                    mono: b.type !== "labeled-grid",
-                    bold: true,
+                    ...TITLE,
                     rel: 1.05,
                     after: 4,
                   },
@@ -2061,7 +2074,7 @@ const RENDER: {
         c.teal,
       );
       const who: Para[] = [
-        { runs: [{ text: d.profile.name }], mono: true, bold: true, after: 4 },
+        { runs: [{ text: d.profile.name }], ...TITLE, after: 4 },
         { runs: [{ text: d.profile.title, options: { color: c.teal } }], rel: 0.9 },
         ...(d.profile.linkedIn ? [{ ...profileLink(d.profile.linkedIn, c), rel: 0.9 }] : []),
       ];
@@ -2372,7 +2385,7 @@ const RENDER: {
               ...(cd.description ? [{ runs: md(cd.description, c, { color: c.muted }) }] : []),
             ]
           : [
-              { runs: md(cd.title, c), mono: true, bold: true, rel: PT.h4 / PT.base, after: 6 },
+              { runs: md(cd.title, c), ...TITLE, rel: PT.h4 / PT.base, after: 6 },
               ...(cd.description ? [{ runs: md(cd.description, c, { color: c.muted }) }] : []),
             ];
     const ch = Math.min(
@@ -2675,7 +2688,7 @@ const RENDER: {
         s,
         c,
         [
-          { runs: [{ text: p.name }], mono: true, bold: true, rel: PT.h4 / PT.base, after: 2 },
+          { runs: [{ text: p.name }], ...TITLE, rel: PT.h4 / PT.base, after: 2 },
           { runs: [{ text: p.title, options: { color: tone } }], after: 2 },
           { runs: [{ text: p.company, options: { color: c.muted } }] },
         ],
@@ -3350,7 +3363,7 @@ const RENDER: {
         s,
         c,
         [
-          { runs: md(side.title, c, { color: tone }), mono: true, bold: true, after: 2 },
+          { runs: md(side.title, c, { color: tone }), ...TITLE, after: 2 },
           ...(side.subtitle ? [{ runs: md(side.subtitle, c, { color: c.muted }), rel: 0.6 }] : []),
         ],
         r.x + 0.25,
@@ -3512,7 +3525,7 @@ const RENDER: {
         [
           {
             runs: [{ text: g.name, options: g.shape === "platform" ? { color: c.teal } : {} }],
-            bold: true,
+            ...TITLE,
             after: 2,
           },
           ...(g.sub ? [{ runs: md(g.sub, c, { color: c.muted }), rel: 0.85 }] : []),
@@ -3539,7 +3552,11 @@ const RENDER: {
         s,
         c,
         [
-          { runs: [{ text: e.name, options: { color: c.purple } }], bold: true, after: 4 },
+          {
+            runs: [{ text: e.name, options: { color: c.purple } }],
+            ...TITLE,
+            after: 4,
+          },
           ...e.experts.map((x) => ({ runs: md(x, c), rel: 0.9 })),
         ],
         ex + 0.15,
@@ -3724,7 +3741,7 @@ const RENDER: {
           s,
           c,
           [
-            { runs: md(sg.title, c), bold: true, after: 2 },
+            { runs: md(sg.title, c), ...TITLE, after: 2 },
             { runs: md(sg.text, c, { color: c.muted }), rel: 0.85 },
           ],
           x + 0.32,
@@ -3808,10 +3825,7 @@ const RENDER: {
         color: c.ink,
       });
       node(
-        [
-          { runs: md(br.title, c, { color: tone }), bold: true, after: 4 },
-          { runs: md(br.text, c) },
-        ],
+        [{ runs: md(br.title, c, { color: tone }), ...TITLE, after: 4 }, { runs: md(br.text, c) }],
         bx,
         by,
         bw * 1.2,

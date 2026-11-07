@@ -79,9 +79,7 @@ export function ProfilesSlide({ slide }: Props) {
                       </div>
 
                       <div className="min-w-0">
-                        <h2 className="font-heading text-3xl font-bold text-text">
-                          {profile.name}
-                        </h2>
+                        <h2 className="card-title text-3xl text-text">{profile.name}</h2>
                         <p className={`mt-2 text-xl font-semibold ${a.text}`}>{profile.title}</p>
                         <p className="text-lg text-text-muted">{profile.company}</p>
                       </div>

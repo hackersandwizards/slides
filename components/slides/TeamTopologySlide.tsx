@@ -48,7 +48,7 @@ export function TeamTopologySlide({ slide }: Props) {
                     key={team.name}
                     className="flex shrink-0 flex-col gap-1 rounded-brand border-(length:--slide-rule-strong) border-secondary bg-secondary/7 px-4 py-3 md:w-52"
                   >
-                    <span className="text-lg leading-tight font-bold text-secondary">
+                    <span className="card-title text-lg leading-tight text-secondary">
                       {team.name}
                     </span>
                     {team.experts.map((expert) => (
@@ -65,7 +65,9 @@ export function TeamTopologySlide({ slide }: Props) {
                       key={team.name}
                       className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-brand border-(length:--slide-rule-strong) border-primary bg-primary/7 px-5 py-3"
                     >
-                      <span className="text-lg leading-tight font-bold text-text">{team.name}</span>
+                      <span className="card-title text-lg leading-tight text-text">
+                        {team.name}
+                      </span>
                       <Chips labels={team.roles} className="text-teal-dark" />
                     </div>
                   ))}
@@ -75,7 +77,7 @@ export function TeamTopologySlide({ slide }: Props) {
                       {subsystems.map((team) => (
                         <div key={team.name} className="team-octagon flex-1 bg-(--slide-ampersand)">
                           <div className="team-octagon flex h-full flex-col justify-center gap-0.5 bg-(--slide-ampersand-ground) px-7 py-3">
-                            <span className="text-lg leading-tight font-bold text-text">
+                            <span className="card-title text-lg leading-tight text-text">
                               {team.name}
                             </span>
                             {team.description && (
@@ -96,7 +98,7 @@ export function TeamTopologySlide({ slide }: Props) {
               <div className="flex flex-col gap-3 rounded-brand border-(length:--slide-rule-strong) border-dotted border-primary p-3 md:flex-row">
                 {slide.platform.map((team) => (
                   <div key={team.name} className="flex flex-1 flex-col gap-1.5 px-2 py-1">
-                    <span className="text-lg leading-tight font-bold text-teal-dark">
+                    <span className="card-title text-lg leading-tight text-teal-dark">
                       {team.name}
                     </span>
                     {team.description && (

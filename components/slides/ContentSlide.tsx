@@ -504,7 +504,7 @@ function ContentBlockRenderer({
           {sides.map(({ data, style }, i) => (
             <SlideCard key={i} tone={style.card} look="line" className="card-pad-7">
               {data.title && (
-                <h2 className={`mb-5 font-heading text-2xl font-bold ${style.title}`}>
+                <h2 className={`mb-5 card-title text-2xl ${style.title}`}>
                   {renderMarkdown(data.title)}
                 </h2>
               )}
@@ -668,7 +668,7 @@ function ContentBlockRenderer({
             )}
             {block.items.map((item, i) => (
               <SlideCard key={i} tone="secondary" look="line" className="card-pad-4/6">
-                <p className="mb-1 text-xl font-bold text-text">{renderMarkdown(item.title)}</p>
+                <p className="mb-1 card-title text-xl text-text">{renderMarkdown(item.title)}</p>
                 <p className="card-text-lg text-text">{renderMarkdown(item.subtitle)}</p>
               </SlideCard>
             ))}

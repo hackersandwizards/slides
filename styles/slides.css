@@ -334,6 +334,14 @@ html:has(.print-slide) {
   --hw-card-pad: --spacing(--value(integer)) --spacing(--modifier(integer));
 }
 
+/* A card's title and a diagram's label, on every slide type: the brand's h3, "a card or group
+   title". Each site keeps its size. */
+@utility card-title {
+  font-family: var(--type-h3-family);
+  font-weight: var(--type-h3-weight);
+  letter-spacing: var(--type-h3-tracking);
+}
+
 /* In the components layer, so a slide's own colour utility still wins. */
 @layer components {
   /* The stage scale's settings the slide engine owns a token for, after the brand's preset:

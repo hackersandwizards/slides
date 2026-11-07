@@ -20,9 +20,8 @@ import { BeforeAfterSides } from "./ComparisonSlide";
 const CARD = "rounded-brand";
 // The brand's muted grey: 7:1 on the page, so a context bar or a connector in it reads.
 const GREY = "var(--color-muted)";
-// Diagram labels are set in the body face: the mono heading face breaks a narrow label into
-// fragments ("economically / viable").
-const LABEL = "font-sans text-4xl font-semibold leading-tight tracking-tight text-balance";
+// A card's title and a diagram's label: the card-title utility (slides.css), as on every slide type.
+const LABEL = "card-title text-4xl leading-tight text-balance";
 // The smallest running text a visual sets: 36px at 1920, the checklist's floor.
 const CAPTION = "text-xl leading-snug";
 // Context marks (a bar that is not the point): tokens.css `--slide-context`.
@@ -910,7 +909,7 @@ function Cards({ block }: { block: Of<"cards"> }) {
   // Four columns leave a card about a quarter of the slide: the title steps down one size. Dense
   // cards keep the sizes of the four-column and labeled-grid blocks they replace (v0.26).
   const label = dense
-    ? `font-sans font-bold ${wide ? "text-lg" : "text-xl"}`
+    ? `card-title ${wide ? "text-lg" : "text-xl"}`
     : wide
       ? LABEL.replace("text-4xl", "text-3xl")
       : LABEL;

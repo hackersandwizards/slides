@@ -47,7 +47,7 @@ export function WheelSlide({ slide }: Props) {
     <div key={k} className="flex gap-3">
       <NumberTile size="sm">{k + 1}</NumberTile>
       <div>
-        <p className="text-xl leading-tight font-bold text-text">{slide.segments[k].title}</p>
+        <p className="card-title text-xl leading-tight text-text">{slide.segments[k].title}</p>
         <p className="mt-1 text-base leading-snug text-text-muted">{slide.segments[k].text}</p>
       </div>
     </div>

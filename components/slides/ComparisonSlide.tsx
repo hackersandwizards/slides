@@ -102,7 +102,7 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
                 tone={isActive ? "primary" : "neutral"}
                 className="h-full transition-all duration-300 card-pad-8"
               >
-                <h2 className="mb-6 font-heading text-2xl font-bold text-text">{side.label}</h2>
+                <h2 className="mb-6 card-title text-2xl text-text">{side.label}</h2>
 
                 <Highlight text={side.highlight} muted={!isActive} />
 
@@ -176,7 +176,7 @@ export function BeforeAfterSides({
       >
         <div className="mb-6 flex items-center gap-3">
           {strike && <XCircle className="h-6 w-6 text-text-subtle" />}
-          <h2 className="font-heading text-2xl font-bold text-text-muted">{left.label}</h2>
+          <h2 className="card-title text-2xl text-text-muted">{left.label}</h2>
         </div>
         <Highlight text={left.highlight} muted />
         <ul className="space-y-3">
@@ -212,7 +212,7 @@ export function BeforeAfterSides({
       >
         <div className="mb-6 flex items-center gap-3">
           <CheckCircle className="h-6 w-6 text-primary" />
-          <h2 className="font-heading text-2xl font-bold text-primary">{right.label}</h2>
+          <h2 className="card-title text-2xl text-primary">{right.label}</h2>
         </div>
         <Highlight text={right.highlight} />
         <ul className="space-y-3">
@@ -268,9 +268,7 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
         {[slide.left, slide.right].map((side, i) => (
           <BlurFade key={i} delay={0.2 + i * 0.1} duration={0.6}>
             <SlideCard className="h-full card-pad-8">
-              <h2 className="mb-6 font-heading text-2xl font-bold text-text">
-                {renderMarkdown(side.label)}
-              </h2>
+              <h2 className="mb-6 card-title text-2xl text-text">{renderMarkdown(side.label)}</h2>
               <Highlight text={side.highlight} />
               <ul className="space-y-3">
                 {side.items.map((item, j) => (
@@ -311,7 +309,7 @@ export function Positions({
             <p className="hw-label mb-4 [--hw-label-size:var(--text-base)]" data-tone="muted">
               {side.name}
             </p>
-            <h2 className="mb-6 font-heading text-5xl leading-tight font-bold text-text">
+            <h2 className="mb-6 card-title text-5xl leading-tight text-text">
               {keepHyphenatedWords(side.stance)}
             </h2>
             <p className="text-2xl leading-snug text-text-muted">{`“${side.quote}”`}</p>

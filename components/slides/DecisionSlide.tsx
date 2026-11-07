@@ -67,7 +67,7 @@ function GridBranch({ branch, row }: { branch: DecisionBranch; row: 1 | 2 }) {
     <div
       className={`col-start-5 ${row === 1 ? "row-start-1" : "row-start-2"} flex flex-col justify-center rounded-brand border px-6 py-5 ${TEAM[branch.team]}`}
     >
-      <p className="text-2xl leading-tight font-bold">{branch.title}</p>
+      <p className="card-title text-2xl leading-tight">{branch.title}</p>
       <p className="mt-2 text-xl leading-snug text-text">{branch.text}</p>
     </div>
   );
@@ -105,7 +105,7 @@ export function DecisionSlide({ slide }: Props) {
                   <p className="hw-label [--hw-label-size:var(--text-sm)]" data-tone="muted">
                     {branch.label}
                   </p>
-                  <p className="text-lg leading-tight font-bold">{branch.title}</p>
+                  <p className="card-title text-lg leading-tight">{branch.title}</p>
                   <p className="text-sm leading-snug text-text">{branch.text}</p>
                 </div>
               ))}
