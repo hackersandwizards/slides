@@ -38,6 +38,26 @@ export const aliasTypes: Partial<Record<Slide["type"], Slide["type"]>> = {
   "deep-dive-divider": "transition",
 };
 
+/** What a deck may still write but no longer should, read until the next major: `props` are
+ *  deprecated whole, `values` the deprecated literals of a prop whose other values stay (`type`
+ *  holds the alias types and the replaced block types, `variant` a grid's). For a consumer's story
+ *  coverage, which shows each under the name that replaced it. */
+export const deprecated = {
+  props: ["background", "accentColor", "dotColor"],
+  values: {
+    type: [
+      ...Object.keys(aliasTypes),
+      "pipeline",
+      "four-column",
+      "labeled-grid",
+      "positions",
+      "transform",
+    ],
+    variant: ["pillars", "stats"],
+    claim: ["en", "de"],
+  },
+};
+
 export const slideComponents: Record<Slide["type"], SlideComponent> = {
   title: TitleSlide as SlideComponent,
   content: ContentSlide as SlideComponent,

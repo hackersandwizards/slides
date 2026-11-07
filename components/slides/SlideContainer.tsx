@@ -15,8 +15,8 @@ interface Props {
   page?: string;
   /** The h&w corner mark, `cornerMark()`: the lockup by default. */
   mark?: CornerMark;
-  /** The deck's language, `deckLang()`: brand's claim on a contact closing takes it. Without it a
-   *  closing shows the claim only where it names a language. */
+  /** The deck's language, `deckLang()`: brand's claim on a contact closing takes it. English by
+   *  default, as `deckLang` is for a deck whose title slide names none. */
   lang?: "en" | "de";
 }
 
@@ -98,7 +98,7 @@ export function BrandStrip() {
   );
 }
 
-export function SlideContainer({ children, logo, theme, page, mark, lang }: Props) {
+export function SlideContainer({ children, logo, theme, page, mark, lang = "en" }: Props) {
   const slides = (
     <DeckNight.Provider value={!!theme}>
       <DeckLang.Provider value={lang}>{children}</DeckLang.Provider>

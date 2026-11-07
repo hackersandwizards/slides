@@ -25,15 +25,15 @@ describe("a contact closing's claim", () => {
     ).toContain(verbal.claim.de);
   });
 
-  it("is English outside a frame, absent on a screen without a language or when off", () => {
+  it("is English outside a frame and on a screen given no language, absent when off", () => {
     expect(text(<ClosingSlide slide={closing} />)).toContain(verbal.claim.en);
-    const screen = text(
-      <SlideContainer>
-        <ClosingSlide slide={closing} />
-      </SlideContainer>,
-    );
-    expect(screen).not.toContain(verbal.claim.en);
-    expect(screen).not.toContain(verbal.claim.de);
+    expect(
+      text(
+        <SlideContainer>
+          <ClosingSlide slide={closing} />
+        </SlideContainer>,
+      ),
+    ).toContain(verbal.claim.en);
     expect(text(<ClosingSlide slide={{ ...closing, claim: false }} />)).not.toContain(
       verbal.claim.en,
     );

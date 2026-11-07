@@ -1,7 +1,10 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { ContentSlide, Presentation } from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
+import { deprecated } from "../lib/slide-components";
 import {
   arrivedBackwards,
   closingClaim,
@@ -97,7 +100,6 @@ describe("closingClaim", () => {
     expect(closingClaim({ ...contact, claim: "en" }, "de")).toBe("en");
     expect(closingClaim({ ...contact, claim: false }, "de")).toBeUndefined();
     expect(closingClaim({ type: "closing", variant: "discussion" }, "de")).toBeUndefined();
-    expect(closingClaim(contact, undefined)).toBeUndefined();
   });
 });
 
@@ -227,5 +229,28 @@ describe("merges of 06.11.", () => {
         headline: "H",
       }),
     ).toEqual({ type: "transition", night: true, headline: "H", preText: "Part two · Deep dive" });
+  });
+});
+
+describe("deprecated", () => {
+  it("names exactly the props and types types/slide.ts marks @deprecated", () => {
+    const source = readFileSync(join(import.meta.dirname, "..", "types", "slide.ts"), "utf8");
+    // The declaration after each @deprecated comment: a prop, a block's `type` or a slide interface.
+    const tagged = [...source.matchAll(/@deprecated[\s\S]*?\*\/\s*(.+)/g)].map(([, line]) => line);
+    const typeOf = (line: string) =>
+      line.startsWith("export interface")
+        ? source.slice(source.indexOf(line)).match(/type: "([\w-]+)"/)![1]
+        : line.match(/^type: "([\w-]+)"/)?.[1];
+    const types = tagged.flatMap((line) => typeOf(line) ?? []);
+    const props = tagged.filter((line) => !typeOf(line)).map((line) => line.match(/^(\w+)\?:/)![1]);
+    // Controls: a match that returns nothing proves nothing.
+    expect(types).toContain("transform");
+    expect(props).toContain("dotColor");
+    expect([...deprecated.props].sort()).toEqual(props.sort());
+    expect([...deprecated.values.type].sort()).toEqual(types.sort());
+    // The values deprecated in prose: each a literal its prop takes.
+    for (const prop of ["variant", "claim"] as const)
+      for (const value of deprecated.values[prop])
+        expect(source).toMatch(new RegExp(`${prop}\\?: [^;]*"${value}"`));
   });
 });

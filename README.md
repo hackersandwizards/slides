@@ -73,8 +73,8 @@ A deck's language is its title slide's `lang`, else English. A consumer's deck a
 layouts set `<html lang={deckLang(presentation)}>` with `deckLang` from
 `@hackersandwizards/slides/lib/slide-utils`, so screen readers and hyphenation read the
 deck's language; `slides-pptx` marks its text with it. The screen route passes it to
-`SlideContainer` as `lang`, which `PrintSlide` reads from the deck itself: a contact closing shows
-brand's claim in that language unless it sets `claim: false`.
+`SlideContainer` as `lang`, English when left out, which `PrintSlide` reads from the deck itself: a
+contact closing shows brand's claim in that language unless it sets `claim: false`.
 
 The package ships TypeScript source. Let the build transpile it: Next
 `transpilePackages: ["@hackersandwizards/slides"]`, Astro `vite.ssr.noExternal`, vitest
@@ -99,7 +99,8 @@ questions, the exact instruction as `prompt`, and the timebox, mode and outcome 
 
 `evolution` and `dual-pill-overview` still render, as a `process` slide with `loop: false` and a
 `roadmap` whose columns carry `phases`; new slides use those (`aliasTypes` in
-`lib/slide-components.ts`).
+`lib/slide-components.ts`). `deprecated` beside it lists every prop and value a deck
+should no longer write, so a consumer's story coverage can skip them.
 A chapter divider is a `transition`; `deep-dive-divider` marks a deep-dive part only. Every slide of a
 deep-dive part, the `deep-dive-divider`, a slide whose `sectionTheme` is `deepdive` and a pill map whose
 phases are, stands on night (`isDeepDive` in `lib/slide-utils`); nothing else marks the part.

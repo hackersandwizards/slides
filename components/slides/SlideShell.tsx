@@ -21,9 +21,8 @@ export function groundOf(slide: Grounded): SlideGround {
 export const DeckNight = createContext(false);
 
 /** The deck's language (`deckLang`), for the words a slide takes from brand, such as the claim on
- *  a contact closing: PrintSlide and SlideContainer's `lang` provide it. English outside a frame, as
- *  in a story; undefined in a SlideContainer given no `lang`, where no such words appear. */
-export const DeckLang = createContext<"en" | "de" | undefined>("en");
+ *  a contact closing: PrintSlide and SlideContainer's `lang` provide it, English outside a frame. */
+export const DeckLang = createContext<"en" | "de">("en");
 
 // The theme is set on every slide, "light" included: the brand's night stops at the nearest light
 // theme, so a dark page around a day slide (talks' and trainer-hub's <html>) leaves its elements day.
