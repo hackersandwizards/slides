@@ -9,4 +9,6 @@ evidence: "base round in the report, section Phase 2; video and image in section
 
 # Phase 2b, rest: `content` with text, then the weakest blocks
 
-Phase 2b, rest: `content` with text (386 text-only slides), then the weakest blocks of the base round: `paragraph` 6.21, `two-column` 6.29, `pipeline` 6.33 (`video`, `image`, `linked-image` at 8.50, 7.74 and 7.35 since v0.14.0)
+Phase 2b, rest: `content` with text (386 text-only slides), then the weakest blocks of the base
+round: `paragraph` 6.21 and `two-column` 6.29 (`video`, `image`, `linked-image` at 8.50, 7.74 and
+7.35 since v0.14.0). `pipeline` (6.33) left the list in v1.20.0: every pipeline draws as `flow`.
