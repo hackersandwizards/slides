@@ -1,6 +1,5 @@
 ---
 import Home from "@hackersandwizards/scaffolding/catalog/Home.astro";
-import "@hackersandwizards/brand/disclosure.css";
 import elements from "../brand-elements.json";
 
 const HOME = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/`;
@@ -16,24 +15,22 @@ const exceptions = Object.entries(
       Tokens (<code>styles/tokens.css</code>) feed the parts, the parts make the slide types. Every
       story renders at the stage scale.
     </p>
-    <details class="hw-disclosure">
-      <summary>
-        Brand elements: {elements.uses.length} from brand, {exceptions.length} kept as the slides'
-        own
-      </summary>
-      {/* prettier-ignore */}
-      <p>From brand: {elements.uses.map((name, i) => [i ? ", " : "", <code>hw-{name}</code>])}.</p>
-      <ul>
-        {exceptions.map(([name, reason]) => (
-          <li>
-            <code>{name}</code>: {reason}
-          </li>
-        ))}
-      </ul>
-      <p>
-        <a href={`${PRINT}#elements`}>The print page</a> shows each as a tile.
-      </p>
-    </details>
+    <p>
+      Brand elements: {elements.uses.length} from brand, {exceptions.length} kept as the slides'
+      own.
+    </p>
+    {/* prettier-ignore */}
+    <p>From brand: {elements.uses.map((name, i) => [i ? ", " : "", <code>hw-{name}</code>])}.</p>
+    <ul>
+      {exceptions.map(([name, reason]) => (
+        <li>
+          <code>{name}</code>: {reason}
+        </li>
+      ))}
+    </ul>
+    <p>
+      <a href={`${PRINT}#elements`}>The print page</a> shows each as a tile.
+    </p>
   </div>
 </Home>
 
@@ -43,7 +40,7 @@ const exceptions = Object.entries(
     font-size: var(--text-ui);
   }
   .ds-foundations p,
-  .ds-foundations details {
+  .ds-foundations ul {
     margin: 0 0 0.75rem;
   }
 </style>

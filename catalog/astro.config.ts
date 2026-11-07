@@ -12,7 +12,6 @@ import { fileURLToPath } from "node:url";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 import { catalog } from "@hackersandwizards/scaffolding/catalog";
-import catalogs from "@hackersandwizards/brand/catalogs.json";
 import type { AstroIntegration } from "astro";
 import { defineConfig } from "astro/config";
 import { brandNames, selfContained } from "./brand-urls";
@@ -96,7 +95,6 @@ export default defineConfig({
       head: "./Head.astro",
       home: "./Home.astro",
       admin: true,
-      nav: { items: catalogs, current: "Slides" },
     }),
     files,
   ],
