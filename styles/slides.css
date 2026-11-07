@@ -79,7 +79,7 @@ html:has(.print-slide) {
 
 /* A content slide's title sits on one line at the same height on every slide, whatever the slide
    type and whether a kicker runs above it, and the slide's body takes the space below.
-   Title, statement, divider and closing slides keep their own centred layout. Unlayered, so it
+   Title, statement, divider and contact closing slides keep their own centred layout. Unlayered, so it
    wins over the slide's own `justify-center`, `items-center` and padding utilities. */
 .slide-titled {
   justify-content: flex-start;

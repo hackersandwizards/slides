@@ -328,7 +328,10 @@ export interface StatementSlide extends Grounded {
   imageSrc?: string;
   imageAlt?: string;
   /** Who said it, such as "Name, Company": the slide becomes a quotation at the left edge, with
-   *  `imageSrc` as the portrait beside it, or behind brand's quote rule without one. */
+   *  `imageSrc` as the portrait beside it, or behind brand's quote rule without one. The words
+   *  said are the `lines` and a `closing` with `closingStyle: "quote"`, and the name follows them;
+   *  `subtitle`, `points` and a plain `closing` are the slide's own words, set after the name and
+   *  outside the rule. */
   attribution?: string;
   /** The label above the lines, such as "Live demo". */
   kicker?: string;

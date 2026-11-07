@@ -4,7 +4,7 @@ import { slideComponents } from "../lib/slide-components";
 import { slideCatalogue } from "../specimen/slide-catalogue";
 import type { Slide } from "../types/slide";
 
-// Title, section divider, closing, statement and centred content slide centre their headline on the ground, with no gradient
+// Title, section divider, contact closing, statement and centred content slide centre their headline on the ground, with no gradient
 // field and no decoration: no particle canvas, no gradient, no glow.
 const cases: { slide: Slide; headline: string }[] = [
   {
@@ -23,10 +23,6 @@ const cases: { slide: Slide; headline: string }[] = [
       speakers: [{ name: "Mara Lindqvist", company: "Lumen Freight" }],
     },
     headline: "Thank you.",
-  },
-  {
-    slide: { type: "closing", variant: "discussion", headline: "Questions?" },
-    headline: "Questions?",
   },
   {
     slide: {
@@ -69,11 +65,25 @@ describe("statement slide", () => {
     render(<slideComponents.statement slide={{ type: "statement", lines: ["L"], ...slide }} />)
       .container;
 
-  // A quotation may run from the subtitle into the closing, so its source follows the closing.
-  it("sets the attribution after the closing", () => {
-    const text =
-      statement({ subtitle: "“Start", closing: "end.”", attribution: "Mara" }).textContent ?? "";
-    expect(text.indexOf("end.”")).toBeLessThan(text.indexOf("Mara"));
+  // The name follows the words said, the lines and a closing set as a quote; the slide's own
+  // subtitle comes after it, outside the rule, so it never reads as said.
+  it("sets the attribution after the words said, the subtitle after it outside the rule", () => {
+    const c = statement({
+      lines: ["Said"],
+      closing: "Also said",
+      closingStyle: "quote",
+      subtitle: "Our note",
+      attribution: "Mara",
+    });
+    const text = c.textContent ?? "";
+    expect(text.indexOf("Also said")).toBeLessThan(text.indexOf("Mara"));
+    expect(text.indexOf("Mara")).toBeLessThan(text.indexOf("Our note"));
+    expect(c.querySelector(".hw-quote")?.textContent).not.toContain("Our note");
+  });
+
+  it("sets a plain closing after the attribution, as the slide's own words", () => {
+    const text = statement({ closing: "Our point", attribution: "Mara" }).textContent ?? "";
+    expect(text.indexOf("Mara")).toBeLessThan(text.indexOf("Our point"));
   });
 
   it("sets a quotation beside its portrait, behind brand's rule without one", () => {

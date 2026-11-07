@@ -6,7 +6,7 @@ import Mail from "lucide-react/icons/mail";
 import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { DeckLang, SlideShell, groundOf } from "./SlideShell";
-import { DisplayHeading, LinkCaption, SlideCard } from "./primitives";
+import { DisplayHeading, LinkCaption, SlideCard, SlideTitle, TitledContent } from "./primitives";
 import { claimParts, closingClaim, personAccent, profileLabel } from "../../lib/slide-utils";
 
 interface Props {
@@ -44,27 +44,22 @@ const partnersOf = (slide: ClosingSlideType) =>
 function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
   return (
     <SlideShell ground={groundOf(slide)}>
-      <div className="slide-content relative z-10 flex flex-col items-center justify-center px-16">
-        <BlurFade delay={0.1} duration={0.5} className="mb-16">
-          <DisplayHeading className="text-center">
-            {slide.headline ?? slide.line1 ?? "Discussion"}
-          </DisplayHeading>
-        </BlurFade>
-
+      <TitledContent>
+        <SlideTitle>{slide.headline ?? slide.line1 ?? "Discussion"}</SlideTitle>
         {slide.seedQuestions && slide.seedQuestions.length > 0 && (
-          <div className="w-full max-w-3xl space-y-6">
-            {slide.seedQuestions.map((question, index) => (
-              <BlurFade key={index} delay={0.15 + index * 0.06} duration={0.4}>
-                <SlideCard className="card-pad-5/8">
-                  <p className="text-center text-xl font-medium text-text-muted md:text-2xl">
-                    {question}
-                  </p>
-                </SlideCard>
-              </BlurFade>
-            ))}
+          <div className="slide-body">
+            <div className="w-full space-y-6">
+              {slide.seedQuestions.map((question, index) => (
+                <BlurFade key={index} delay={0.15 + index * 0.06} duration={0.4}>
+                  <SlideCard className="card-pad-5/8">
+                    <p className="text-xl font-medium text-text-muted md:text-2xl">{question}</p>
+                  </SlideCard>
+                </BlurFade>
+              ))}
+            </div>
           </div>
         )}
-      </div>
+      </TitledContent>
     </SlideShell>
   );
 }

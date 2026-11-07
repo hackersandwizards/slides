@@ -76,4 +76,37 @@ describe("fit guard", () => {
       HTMLElement.prototype.querySelector = original;
     }
   });
+
+  // A centred slide 20% too tall for the space between its edges (5% of its height each, where it
+  // has no padding): shrunk from its top and moved down to the top edge, never centred in its
+  // padding box, which put a centred headline under the strip.
+  it("shrinks a slide without a body into the space between its edges", () => {
+    const original = HTMLElement.prototype.querySelector;
+    HTMLElement.prototype.querySelector = function (this: HTMLElement, selector: string) {
+      const el = original.call(this, selector) as HTMLElement | null;
+      if (el?.classList.contains("slide-content")) {
+        Object.defineProperty(el, "clientHeight", { configurable: true, get: () => 1000 });
+        const child = el.firstElementChild as HTMLElement;
+        Object.defineProperty(child, "offsetTop", { configurable: true, get: () => 0 });
+        Object.defineProperty(child, "offsetHeight", { configurable: true, get: () => 1080 });
+      }
+      return el;
+    } as typeof original;
+    try {
+      const { container } = render(
+        <SlideShell>
+          <div className="slide-content">
+            <div>questions</div>
+          </div>
+        </SlideShell>,
+      );
+      const content = container.querySelector<HTMLElement>(".slide-content")!;
+      expect(content.style.scale).toBe(String(900 / 1080));
+      expect(content.style.justifyContent).toBe("flex-start");
+      expect(content.style.transformOrigin).toBe("center 0px");
+      expect(content.style.translate).toBe("0 50px");
+    } finally {
+      HTMLElement.prototype.querySelector = original;
+    }
+  });
 });

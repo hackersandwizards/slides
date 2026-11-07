@@ -39,3 +39,23 @@ describe("a contact closing's claim", () => {
     );
   });
 });
+
+// A discussion closing stands as a titled slide: its headline where a content slide's is, so five
+// questions never push it under the strip.
+describe("a discussion closing", () => {
+  it("sets its headline as a slide title and its questions in the body", () => {
+    const { container } = render(
+      <ClosingSlide
+        slide={{
+          type: "closing",
+          variant: "discussion",
+          headline: "Q?",
+          seedQuestions: ["A", "B"],
+        }}
+      />,
+    );
+    expect(container.querySelector(".slide-titled .slide-title")?.textContent).toBe("Q?");
+    expect(container.querySelectorAll(".slide-body p")).toHaveLength(2);
+    expect(container.querySelector("canvas, [class*='gradient'], [class*='blur-']")).toBeNull();
+  });
+});

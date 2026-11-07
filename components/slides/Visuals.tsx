@@ -193,9 +193,9 @@ export function FlowSteps({
                   </p>
                 )}
                 {step.text && (
-                  <p
-                    className={`mt-3 ${CAPTION} text-balance ${step.dim ? "text-text-muted" : "text-text"}`}
-                  >
+                  // Pretty, as every slide paragraph (slides.css), not balanced: in a narrow column
+                  // balance broke a hyphenated word and left "Multi-" alone on its line.
+                  <p className={`mt-3 ${CAPTION} ${step.dim ? "text-text-muted" : "text-text"}`}>
                     {renderMarkdown(step.text)}
                   </p>
                 )}

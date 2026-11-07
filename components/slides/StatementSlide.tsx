@@ -129,10 +129,8 @@ function Points({ points, delay }: { points: string[]; delay: number }) {
   ));
 }
 
-/** Everything a statement says, at the left edge. */
-function LeftWords({ slide, size }: { slide: StatementSlideType; size: "lg" | "md" }) {
-  const quoted = slide.closingStyle === "quote";
-  const { afterLines, closing } = delaysOf(slide);
+/** The statement's own lines at the left edge, with the label and the claim it replaces. */
+function LeftLines({ slide, size }: { slide: StatementSlideType; size: "lg" | "md" }) {
   return (
     <>
       {slide.kicker && (
@@ -142,8 +140,40 @@ function LeftWords({ slide, size }: { slide: StatementSlideType; size: "lg" | "m
       )}
       {slide.crossedOut && <CrossedOut text={slide.crossedOut} />}
       <Lines slide={slide} size={size} />
+    </>
+  );
+}
+
+/** The closing at the left edge, in quote marks where it is a quotation. */
+function LeftClosing({ slide, delay }: { slide: StatementSlideType; delay: number }) {
+  const quoted = slide.closingStyle === "quote";
+  return (
+    <BlurFade delay={delay} duration={0.4}>
+      <p className="mt-6 text-4xl leading-snug font-semibold text-text">
+        {quoted && <span className="text-primary">&ldquo;</span>}
+        {renderMarkdown(slide.closing!)}
+        {quoted && <span className="text-primary">&rdquo;</span>}
+      </p>
+    </BlurFade>
+  );
+}
+
+/** What a statement says under its lines, at the left edge, entering from `start`;
+ *  `closing: false` leaves the closing to the caller. */
+function LeftSupport({
+  slide,
+  closing = true,
+  start = delaysOf(slide).afterLines,
+}: {
+  slide: StatementSlideType;
+  closing?: boolean;
+  start?: number;
+}) {
+  const shift = start - delaysOf(slide).afterLines;
+  return (
+    <>
       {slide.subtitle && (
-        <BlurFade delay={afterLines} duration={0.4}>
+        <BlurFade delay={start} duration={0.4}>
           <p className="mt-6 text-4xl leading-snug font-medium whitespace-pre-line text-text">
             {renderMarkdown(slide.subtitle)}
           </p>
@@ -152,17 +182,11 @@ function LeftWords({ slide, size }: { slide: StatementSlideType; size: "lg" | "m
       {slide.linkedImage && <LinkedPicture image={slide.linkedImage} />}
       {slide.points && slide.points.length > 0 && (
         <div className="mt-8 space-y-5">
-          <Points points={slide.points} delay={afterLines} />
+          <Points points={slide.points} delay={start} />
         </div>
       )}
-      {slide.closing && (
-        <BlurFade delay={closing} duration={0.4}>
-          <p className="mt-6 text-4xl leading-snug font-semibold text-text">
-            {quoted && <span className="text-primary">&ldquo;</span>}
-            {renderMarkdown(slide.closing)}
-            {quoted && <span className="text-primary">&rdquo;</span>}
-          </p>
-        </BlurFade>
+      {closing && slide.closing && (
+        <LeftClosing slide={slide} delay={delaysOf(slide).closing + shift} />
       )}
     </>
   );
@@ -199,7 +223,8 @@ function QrStatement({
     <LeftStatement slide={slide}>
       <div className="flex items-start gap-20">
         <div className="min-w-0 flex-1">
-          <LeftWords slide={slide} size="lg" />
+          <LeftLines slide={slide} size="lg" />
+          <LeftSupport slide={slide} />
         </div>
         <BlurFade delay={delaysOf(slide).afterLines} duration={0.4}>
           <figure className="slide-qr flex shrink-0 flex-col items-center gap-4">
@@ -235,15 +260,29 @@ function Attribution({ text }: { text: string }) {
 
 /** A statement someone is named for: at the left edge, since a centred passage reads worst, with
  *  its portrait beside it. Without one the words take the width behind brand's quote rule: a tile
- *  in its place reads as a missing photo. */
+ *  in its place reads as a missing photo. The name follows the words said, the lines and a
+ *  closing set as a quote; the slide's own words (subtitle, points, a plain closing) come after
+ *  it, outside the rule, so none of them reads as said. */
 function Quotation({ slide, attribution }: { slide: StatementSlideType; attribution: string }) {
-  const words = (
+  const quotedClosing = !!slide.closing && slide.closingStyle === "quote";
+  // The name enters after the words said, the slide's own words after the name.
+  const { afterLines } = delaysOf(slide);
+  const named = afterLines + (quotedClosing ? 0.1 : 0.05);
+  const said = (
     <>
-      <LeftWords slide={slide} size={slide.imageSrc ? "md" : "lg"} />
-      <BlurFade delay={delaysOf(slide).closing + 0.05} duration={0.4}>
+      <LeftLines slide={slide} size={slide.imageSrc ? "md" : "lg"} />
+      {quotedClosing && <LeftClosing slide={slide} delay={afterLines} />}
+      <BlurFade delay={named} duration={0.4}>
         <Attribution text={attribution} />
       </BlurFade>
     </>
+  );
+  // The slide's own words, kept apart from the name, so they never read as part of what was said;
+  // without any, the empty box takes no space.
+  const own = (
+    <div className="mt-10 empty:hidden">
+      <LeftSupport slide={slide} closing={!quotedClosing} start={named + 0.1} />
+    </div>
   );
   return (
     <LeftStatement slide={slide}>
@@ -258,10 +297,16 @@ function Quotation({ slide, attribution }: { slide: StatementSlideType; attribut
               className="size-72 rounded-brand object-cover"
             />
           </BlurFade>
-          <div className="min-w-0 flex-1">{words}</div>
+          <div className="min-w-0 flex-1">
+            {said}
+            {own}
+          </div>
         </div>
       ) : (
-        <blockquote className="hw-quote">{words}</blockquote>
+        <>
+          <blockquote className="hw-quote">{said}</blockquote>
+          {own}
+        </>
       )}
     </LeftStatement>
   );
@@ -274,7 +319,7 @@ export function StatementSlide({ slide }: Props) {
   const isSimple = !hasSupporting && !slide.subtitle && !slide.highlighted && !slide.crossedOut;
   const { afterLines: pointBaseDelay, closing: closingDelay } = delaysOf(slide);
   // The closing keeps its own gap only after the points: without them the box's gap stands alone,
-  // so a quotation running from the subtitle into the closing reads as one.
+  // so a subtitle running into the closing reads as one.
   const afterPoints = slide.points?.length ? "mt-10" : "";
   return (
     <SlideShell direction="col" overflowHidden ground={groundOf(slide)}>

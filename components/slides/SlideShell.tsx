@@ -73,7 +73,8 @@ export function SlideShell({
  *  of spilling past the bottom edge where a projector cuts it off. A slide that fits is left
  *  untouched. On a titled slide only the body below the title shrinks, from its top, laid out
  *  wider by the same factor where that fits, so it still spans the slide's full width and rewraps
- *  into fewer lines; elsewhere the whole `.slide-content` shrinks around its centre. There is no floor
+ *  into fewer lines; elsewhere the whole `.slide-content` shrinks to fill the space between its
+ *  top and bottom edges. There is no floor
  *  here: a body that needs less than 0.8 belongs on two slides, which `slides-density` fails in the
  *  consumer's gate, but in the browser it shows whole.
  *  Measured top-aligned, because centred overflow above the box does not count in `scrollHeight`. */
@@ -113,6 +114,7 @@ function useFitToSlide() {
     // Lays the box out for the largest scale at which it fits, and returns that scale.
     const layout = (event: string) => {
       box.style.scale = "";
+      box.style.translate = "";
       box.style.width = "";
       rows(event);
       if (!body) {
@@ -157,6 +159,7 @@ function useFitToSlide() {
       box.style.removeProperty("--card-boost");
       if (narrow?.matches) {
         box.style.scale = "";
+        box.style.translate = "";
         box.style.width = "";
         box.style.justifyContent = "";
         rows("pipeline-settle");
@@ -199,17 +202,23 @@ function useFitToSlide() {
           rows("pipeline-settle");
         }
       }
-      if (scale >= 1 || !body) box.style.justifyContent = "";
-      if (scale >= 1) return;
+      if (scale >= 1) {
+        box.style.justifyContent = "";
+        return;
+      }
       if (body) {
         box.style.transformOrigin =
           box.style.width || getComputedStyle(body).alignItems !== "center"
             ? "top left"
             : "top center";
       } else {
-        // Shrunk around the middle of the space between the edges, so it stays inside both.
-        const [top, bottom] = edges();
-        box.style.transformOrigin = `center ${(top + box.clientHeight - bottom) / 2}px`;
+        // Shrunk as measured, from the top, and moved down to the top edge: shrunk, it fills the
+        // space between the edges exactly. Centred and shrunk round that space's middle, it was
+        // still centred in the padding box and rose above the top edge where the padding is
+        // smaller than the edge, up under the strip.
+        const start = parseFloat(getComputedStyle(box).paddingTop) || 0;
+        box.style.transformOrigin = `center ${start}px`;
+        box.style.translate = `0 ${edges()[0] - start}px`;
       }
       box.style.scale = String(scale);
     };

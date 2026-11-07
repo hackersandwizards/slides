@@ -1847,16 +1847,17 @@ const slides: Slide[] = [
   },
   {
     type: "statement",
-    lines: ["Speed was never the problem"],
-    subtitle:
-      "“The build time set the pace of the whole company, though nobody had chosen it. Planning, review and the business side all followed it.",
-    closing: "The build time is gone; the pace it set is still here.”",
+    lines: ["The build time set the pace", "of the whole company"],
+    closing:
+      "Planning, review and the business side all followed it. The build time is gone; the pace it set is still here.",
+    closingStyle: "quote",
+    subtitle: "Speed was never the problem.",
     imageSrc: `${IMG}/portrait-a.png`,
     imageAlt: "Fictional speaker",
     attribution: "Mara Lindqvist, Lumen Freight (fictional)",
     footer: "Delivery Days 2026, keynote (fictional)",
     notes:
-      "statement: a quotation running from subtitle into closing, a portrait, attribution and footer.",
+      "statement: a quotation running from its lines into a quoted closing, a portrait, attribution, the presenter's subtitle after it and a footer.",
   },
   {
     type: "statement",

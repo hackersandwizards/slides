@@ -2188,11 +2188,6 @@ const RENDER: {
         rel: PT.h3 / PT.base,
       });
     }
-    if (d.subtitle)
-      paras.splice(crossed + d.lines.length, 0, {
-        runs: md(d.subtitle, c, { color: c.muted }),
-        rel: PT.lead / PT.base,
-      });
     paras.forEach((p, i) => (p.after = i >= crossed && i < crossed + d.lines.length - 1 ? 0 : 16));
     if (d.kicker)
       paras.unshift({
@@ -2202,8 +2197,16 @@ const RENDER: {
         rel: PT.label / PT.base,
         after: 16,
       });
+    // What the slide says under its lines.
+    const support: Para[] = [];
+    if (d.subtitle)
+      support.push({
+        runs: md(d.subtitle, c, { color: c.muted }),
+        rel: PT.lead / PT.base,
+        after: 16,
+      });
     for (const [i, pt] of (d.points ?? []).entries()) {
-      paras.push({
+      support.push({
         runs: [
           {
             text: `${String(i + 1).padStart(2, "0")}  `,
@@ -2215,25 +2218,31 @@ const RENDER: {
         after: 6,
       });
     }
-    if (d.closing) {
-      const q = d.closingStyle === "quote";
-      paras.push({
-        runs: md(q ? `“${d.closing}”` : d.closing, c, q ? { italic: true } : {}),
-        bold: !q,
-        rel: PT.lead / PT.base,
-        after: 4,
-      });
-    }
+    const quoted = d.closingStyle === "quote";
+    const closing: Para[] = d.closing
+      ? [
+          {
+            runs: md(quoted ? `“${d.closing}”` : d.closing, c, quoted ? { italic: true } : {}),
+            bold: !quoted,
+            rel: PT.lead / PT.base,
+            after: 4,
+          },
+        ]
+      : [];
     if (d.attribution) {
-      // The name in ink and bold, what follows the first comma muted, as the slide sets it.
+      // The name follows the words said, the lines and a quoted closing, in ink and bold, what
+      // follows the first comma muted, as the slide sets it; the slide's own words come after it.
       const name = d.attribution.split(",")[0];
-      paras.push({
+      const attribution: Para = {
         runs: [
           { text: name, options: { bold: true } },
           { text: d.attribution.slice(name.length), options: { color: c.muted } },
         ],
-      });
-    }
+      };
+      const own = [...support, ...(quoted ? [] : closing)];
+      if (own.length) attribution.after = 16;
+      paras.push(...(quoted ? closing : []), attribution, ...own);
+    } else paras.push(...support, ...closing);
     const o: BoxOpts = {
       size: PT.base,
       color: c.ink,
@@ -3098,8 +3107,20 @@ const RENDER: {
 
   closing(s, ctx, d, deck) {
     const { c } = ctx;
-    const discussion = d.variant === "discussion";
-    const head = discussion ? (d.headline ?? d.line1 ?? "Discussion") : d.line1;
+    if (d.variant === "discussion") {
+      // A titled slide, as on the web: the headline where a content slide has its own, the
+      // questions under it.
+      const y = header(s, ctx, { headline: d.headline ?? d.line1 ?? "Discussion" });
+      const questions = (d.seedQuestions ?? []).map((q): Para => ({
+        runs: md(q, c),
+        bullet: true,
+        after: 6,
+      }));
+      if (questions.length)
+        box(s, c, questions, SIDE, y, CW, BOTTOM - y, { size: PT.lead, color: c.ink });
+      return;
+    }
+    const head = d.line1;
     let y = TOP + 0.3;
     if (head) {
       box(s, c, literal(head), SIDE, y, CW, 1.1, {
@@ -3249,12 +3270,11 @@ const RENDER: {
         after: 10,
         align: "center",
       });
-    for (const q of d.seedQuestions ?? []) tail.push({ runs: md(q, c), bullet: true, after: 6 });
     if (tail.length)
       box(s, c, tail, SIDE + 1, y, CW - 2, BOTTOM - y, {
         size: PT.lead,
         color: c.ink,
-        align: d.seedQuestions?.length ? "left" : "center",
+        align: "center",
       });
   },
 
