@@ -78,8 +78,6 @@ the cascade order.
 - **The player's cursor** (`SlideContainer.css`) retypes brand teal as `%231A7285` in a data URI,
   which no custom property can reach and the colour scan cannot read. A cursor file in brand's
   exports would let the engine name it by URL.
-- **The two-picture stack** (23 lines) is still drawn by no specimen slide. A media slide with two
-  pictures in `specimen/slide-catalogue.ts` would put it under the pixel guard.
 
 ## Brief for brand (nothing sent)
 

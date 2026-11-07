@@ -1,6 +1,13 @@
+import { readFileSync } from "node:fs";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { SlideShell, groundOf } from "../components/slides/SlideShell";
+import { GROUNDS, SlideShell, groundOf } from "../components/slides/SlideShell";
+
+// A ground whose class slides.css lacks draws no background at all.
+const css = readFileSync("styles/slides.css", "utf8");
+it.each(Object.values(GROUNDS))("slides.css defines %s", (name) => {
+  expect(css).toContain(`.${name} {`);
+});
 
 function shellClass(props: Parameters<typeof SlideShell>[0]): string {
   const { container } = render(<SlideShell {...props} />);

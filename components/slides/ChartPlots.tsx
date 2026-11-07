@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  ReferenceDot,
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
@@ -43,23 +44,56 @@ const tooltip = {
 function Axes({
   xLabel,
   yLabel,
+  note,
   children,
-}: Pick<PlotProps, "xLabel" | "yLabel"> & { children: ReactNode }) {
+}: Pick<PlotProps, "xLabel" | "yLabel"> & { note?: string; children: ReactNode }) {
   return (
     <div className="flex h-full flex-col">
-      {yLabel && <p className="mb-2 text-base text-text-muted">{yLabel}</p>}
+      {(yLabel || note) && (
+        <div className="mb-2 flex justify-between gap-8 text-base text-text-muted">
+          <p>{yLabel}</p>
+          {note && <p className="text-right">{note}</p>}
+        </div>
+      )}
       <div className="min-h-0 flex-1">{children}</div>
       {xLabel && <p className="mt-1 text-center text-base text-text-muted">{xLabel}</p>}
     </div>
   );
 }
 
-export function TrendPlot({ data, still, xLabel, yLabel }: PlotProps) {
-  const two = data?.some((d) => d.value2 !== undefined) ?? false;
+/** `currentMarker` names the data point that is now: it gets a dot and its name above, and each
+ *  line runs on from it dashed and without its area, as planned rather than measured. */
+export function TrendPlot({
+  data = [],
+  still,
+  xLabel,
+  yLabel,
+  currentMarker,
+  futureNote,
+}: PlotProps & Pick<ChartSlide, "currentMarker" | "futureNote">) {
+  const two = data.some((d) => d.value2 !== undefined);
+  const now = data.findIndex((d) => d.name === currentMarker);
+  const rows = data.map((d, i) => ({
+    name: d.name,
+    value: now < 0 || i <= now ? d.value : undefined,
+    value2: now < 0 || i <= now ? d.value2 : undefined,
+    plan: now >= 0 && i >= now ? d.value : undefined,
+    plan2: now >= 0 && i >= now ? d.value2 : undefined,
+  }));
+  const series = [
+    { key: "value", plan: "plan", stroke: "var(--color-teal)", fill: two ? 0 : 0.07 },
+    ...(two ? [{ key: "value2", plan: "plan2", stroke: "var(--color-secondary)", fill: 0 }] : []),
+  ];
+  const line = {
+    isAnimationActive: still ? false : ("auto" as const),
+    type: "monotone" as const,
+    strokeWidth: 4,
+  };
   return (
-    <Axes xLabel={xLabel} yLabel={yLabel}>
+    <Axes xLabel={xLabel} yLabel={yLabel} note={futureNote}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 12, right: 30, left: 8, bottom: 8 }}>
+        {/* A marked plot keeps room above it for the marker's name on the highest point. */}
+        <AreaChart data={rows} margin={{ top: now < 0 ? 12 : 48, right: 30, left: 8, bottom: 8 }}>
           <CartesianGrid stroke="var(--color-border)" vertical={false} />
           <XAxis
             dataKey="name"
@@ -72,23 +106,45 @@ export function TrendPlot({ data, still, xLabel, yLabel }: PlotProps) {
           />
           <YAxis tick={tick} axisLine={false} tickLine={false} width={64} />
           <Tooltip {...tooltip} itemStyle={{ color: "var(--color-text)" }} />
-          <Area
-            isAnimationActive={still ? false : "auto"}
-            type="monotone"
-            dataKey="value"
-            stroke="var(--color-teal)"
-            strokeWidth={4}
-            fill="var(--color-teal)"
-            fillOpacity={two ? 0 : 0.07}
-          />
-          {two && (
+          {series.map((s) => (
             <Area
-              isAnimationActive={still ? false : "auto"}
-              type="monotone"
-              dataKey="value2"
-              stroke="var(--color-secondary)"
-              strokeWidth={4}
-              fillOpacity={0}
+              key={s.key}
+              {...line}
+              dataKey={s.key}
+              stroke={s.stroke}
+              fill={s.stroke}
+              fillOpacity={s.fill}
+            />
+          ))}
+          {now >= 0 &&
+            series.map((s) => (
+              <Area
+                key={`${s.key}-plan`}
+                {...line}
+                dataKey={s.plan}
+                name={`${s.key} (planned)`}
+                stroke={s.stroke}
+                strokeDasharray="12 10"
+                fillOpacity={0}
+              />
+            ))}
+          {now >= 0 && (
+            <ReferenceDot
+              x={data[now].name}
+              y={data[now].value}
+              r={8}
+              fill="var(--color-teal)"
+              stroke="var(--color-white)"
+              strokeWidth={3}
+              label={{
+                value: data[now].name,
+                position: "top",
+                offset: 16,
+                fill: "var(--color-teal)",
+                fontSize: "var(--text-lg)",
+                fontWeight: 600,
+                className: "font-heading",
+              }}
             />
           )}
         </AreaChart>

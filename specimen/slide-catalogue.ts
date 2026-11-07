@@ -1398,6 +1398,23 @@ const slides: Slide[] = [
     annotation: "Hours per pull request, summed over a sprint. Fictional figures.",
     notes: "chart: bar with eight bars and long names, each wrapped inside its band.",
   },
+  {
+    type: "chart",
+    variant: "trend",
+    headline: "Every quarter measures against the first",
+    data: [
+      { name: "Q1", value: 2 },
+      { name: "Q2", value: 3 },
+      { name: "Q3", value: 5 },
+      { name: "Q4", value: 8 },
+    ],
+    xLabel: "Quarter",
+    yLabel: "Teams on the harness",
+    currentMarker: "Q2",
+    futureNote: "Q3 and Q4 planned",
+    annotation: "Fictional figures.",
+    notes: "chart: trend with one series, the current point marked and a note on what lies ahead.",
+  },
 
   {
     type: "activity",
@@ -1860,6 +1877,20 @@ const slides: Slide[] = [
       },
     ],
     notes: "visual blocks: six stages alternate above and below the line, segments and a figure.",
+  },
+  {
+    type: "content",
+    sectionLabel: "Block: two images",
+    headline: "One sprint, seen from the board and from the pull request",
+    content: [
+      { type: "image", src: `${IMG}/strip-board.png`, alt: "Fictional sprint board, its header" },
+      {
+        type: "image",
+        src: `${IMG}/strip-pull-request.png`,
+        alt: "Fictional pull request, its header",
+      },
+    ],
+    notes: "content blocks: two images stacked, sharing the body's left edge and width.",
   },
   {
     type: "statement",

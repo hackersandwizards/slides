@@ -323,7 +323,14 @@ function TrendVariant({ slide }: { slide: ChartSlideType }) {
         <ChartFrame>
           {mounted && (
             <Suspense fallback={null}>
-              <TrendPlot data={data} still={still} xLabel={slide.xLabel} yLabel={slide.yLabel} />
+              <TrendPlot
+                data={data}
+                still={still}
+                xLabel={slide.xLabel}
+                yLabel={slide.yLabel}
+                currentMarker={slide.currentMarker}
+                futureNote={slide.futureNote}
+              />
             </Suspense>
           )}
         </ChartFrame>

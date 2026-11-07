@@ -16,6 +16,7 @@ import puppeteer, { type Browser } from "puppeteer";
 
 const FAIL = 0.8;
 const NOTICE = 0.9;
+const PAGES = 4;
 
 const args = process.argv.slice(2);
 const at = args.indexOf("--serve");
@@ -39,29 +40,28 @@ let failed = 0;
 let noticed = 0;
 let broken = 0;
 try {
-  browser = await puppeteer.launch({ headless: true, protocolTimeout: 900_000 });
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1920, height: 1080 });
-  for (const url of urls) {
-    const deck = new URL(url).pathname.replace(/\/print$/, "").replace(/^\//, "");
-    try {
-      await settle(page, url);
-    } catch (e) {
-      broken++;
-      console.log(`FAIL ${deck} did not render: ${(e as Error).message}`);
-      continue;
-    }
-    for (const r of await page.$$eval(".print-slide", measure, NOTICE)) {
-      const level = r.scale < FAIL ? "FAIL" : "NOTICE";
-      if (level === "FAIL") failed++;
-      else noticed++;
-      const hint =
-        r.groups > 1
-          ? `split into ${r.groups} slides by ${r.label}: ${r.split}`
-          : `one ${r.label} is taller than the slide: split its text or show it as a diagram`;
-      console.log(`${level} ${deck}/${r.i} scale ${r.scale.toFixed(2)} "${r.title}": ${hint}`);
-    }
-  }
+  // Background pages keep their timers and frames: settle waits on both.
+  browser = await puppeteer.launch({
+    headless: true,
+    protocolTimeout: 900_000,
+    args: [
+      "--disable-background-timer-throttling",
+      "--disable-renderer-backgrounding",
+      "--disable-backgrounding-occluded-windows",
+    ],
+  });
+  // Decks render on PAGES pages at once; each deck's lines print together, in the URLs' order.
+  const reports: string[][] = [];
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(PAGES, urls.length) }, async () => {
+      while (next < urls.length) {
+        const i = next++;
+        reports[i] = await check(browser!, urls[i]);
+      }
+    }),
+  );
+  for (const line of reports.flat()) console.log(line);
 } finally {
   await browser?.close();
   server?.kill();
@@ -70,6 +70,31 @@ console.log(
   `[slides-density] ${urls.length} decks: ${failed} slides below ${FAIL} (fail), ${noticed} below ${NOTICE} (notice)${broken ? `, ${broken} decks did not render` : ""}`,
 );
 process.exit(failed || broken ? 1 : 0);
+
+async function check(browser: Browser, url: string): Promise<string[]> {
+  const deck = new URL(url).pathname.replace(/\/print$/, "").replace(/^\//, "");
+  const page = await browser.newPage();
+  // A deck that fails to render or to measure fails alone; the other decks' lines still print.
+  try {
+    await page.setViewport({ width: 1920, height: 1080 });
+    await settle(page, url);
+    return (await page.$$eval(".print-slide", measure, NOTICE)).map((r) => {
+      const level = r.scale < FAIL ? "FAIL" : "NOTICE";
+      if (level === "FAIL") failed++;
+      else noticed++;
+      const hint =
+        r.groups > 1
+          ? `split into ${r.groups} slides by ${r.label}: ${r.split}`
+          : `one ${r.label} is taller than the slide: split its text or show it as a diagram`;
+      return `${level} ${deck}/${r.i} scale ${r.scale.toFixed(2)} "${r.title}": ${hint}`;
+    });
+  } catch (e) {
+    broken++;
+    return [`FAIL ${deck} did not render: ${(e as Error).message}`];
+  } finally {
+    await page.close();
+  }
+}
 
 async function start(command: string, origin: string) {
   const answers = () =>

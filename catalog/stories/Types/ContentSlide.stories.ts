@@ -47,3 +47,4 @@ export const CardsAndCallout = state("content", 40, "ContentSlide");
 export const VisualTimelineContinued = state("content", 41, "ContentSlide");
 export const VisualTimelineSegments = state("content", 42, "ContentSlide");
 export const VisualTimelineStaggered = state("content", 43, "ContentSlide");
+export const BlockTwoImages = state("content", 44, "ContentSlide");

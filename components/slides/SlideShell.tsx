@@ -2,8 +2,8 @@ import { createContext, useContext, useLayoutEffect, useRef, type ReactNode } fr
 import type { Grounded, SlideGround } from "../../types/slide";
 import { NARROW } from "../../lib/slide-utils";
 
-/** Tailwind sees each class whole. */
-const GROUNDS: Record<SlideGround, string> = {
+/** Each ground's class, whole so Tailwind sees it: a deck's deprecated `background` names one. */
+export const GROUNDS: Record<SlideGround, string> = {
   intro: "bg-section-intro",
   primary: "bg-section-primary",
   secondary: "bg-section-secondary",

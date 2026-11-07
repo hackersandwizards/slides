@@ -597,6 +597,9 @@ export interface ChartSlide {
   data?: ChartDataPoint[];
   xLabel?: string;
   yLabel?: string;
+  // The graph variant writes `currentMarker` at a point on its curve; the trend variant marks the
+  // data point of that `name` and draws the lines after it dashed, as planned. `futureNote` is a
+  // note on what lies ahead: inside the graph, above the trend plot on the right.
   currentMarker?: string;
   futureNote?: string;
   annotation?: string;
