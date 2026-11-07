@@ -54,6 +54,8 @@
   --slide-footer-band: calc(var(--slide-footer-inset) + var(--slide-footer-mark) + 2rem);
   /* A QR code's card: the picture height, grown by about the quiet zone its padding takes. */
   --slide-qr: calc(var(--slide-picture-max) * 1.15);
+  /* A space too small to draw, which still reaches a PDF's text as a space (Visuals' Figure). */
+  --slide-figure-space: 1%;
   --background: var(--color-bg);
   --foreground: var(--color-ink);
   --slide-chart-tooltip-border: 2px solid var(--color-primary-border);

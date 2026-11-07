@@ -1,5 +1,6 @@
 import { createContext, useContext, useLayoutEffect, useRef, type ReactNode } from "react";
 import type { Grounded, SlideGround } from "../../types/slide";
+import { NARROW } from "../../lib/slide-utils";
 
 /** Tailwind sees each class whole. */
 const GROUNDS: Record<SlideGround, string> = {
@@ -101,26 +102,11 @@ function useFitToSlide() {
       box.style.width = scale < 1 ? `${100 / scale}%` : "";
       return box.clientHeight / box.scrollHeight;
     };
-    // Every pipeline row in the box hears `pipeline-settle` or `pipeline-reset` (PipelineRow in
-    // ContentSlide), synchronously, so the next measure sees its layout.
-    const rows = (event: string) => {
-      for (const row of box.querySelectorAll(".pipeline-row")) row.dispatchEvent(new Event(event));
-    };
-    // A pipeline row tightens until it holds one line. Where the body shrinks anyway, laying it out
-    // wider with its rows at full spacing reads better, so that layout wins wherever it costs at
-    // most 1% of the scale.
-    const solve = () => {
-      const tight = layout("pipeline-settle");
-      if (!box.querySelector(".pipeline-row")) return tight;
-      const wide = layout("pipeline-reset");
-      return wide >= tight - 0.01 ? wide : layout("pipeline-settle");
-    };
     // Lays the box out for the largest scale at which it fits, and returns that scale.
-    const layout = (event: string) => {
+    const layout = () => {
       box.style.scale = "";
       box.style.translate = "";
       box.style.width = "";
-      rows(event);
       if (!body) {
         // The content fits inside the padding, whose bottom is the footer band, and an unpadded
         // edge keeps a margin of 5% of the slide's height. Measured from the children, laid out
@@ -158,53 +144,39 @@ function useFitToSlide() {
       return best;
     };
     // Below `md` a slide is one column that scrolls (slides.css), so nothing shrinks there.
-    const narrow = window.matchMedia?.("screen and (width < 48rem)");
+    const narrow = window.matchMedia?.(NARROW);
+    // A slide reached by navigation is measured while its entrance (BlurFade) still holds the text
+    // offset, which read the bottom block short and left a larger scale than a page load gives:
+    // measured with the offset held off, both open at one scale.
     const fit = () => {
+      const entering = [...box.querySelectorAll<HTMLElement>("[data-entrance]")];
+      const kept = entering.map((el) => el.style.getPropertyValue("transform"));
+      for (const el of entering) el.style.setProperty("transform", "none", "important");
+      try {
+        fitNow();
+      } finally {
+        entering.forEach((el, i) => el.style.setProperty("transform", kept[i]));
+      }
+    };
+    const fitNow = () => {
       box.style.removeProperty("--card-boost");
       if (narrow?.matches) {
         box.style.scale = "";
         box.style.translate = "";
         box.style.width = "";
         box.style.justifyContent = "";
-        rows("pipeline-settle");
         return;
       }
       box.style.justifyContent = "flex-start";
-      let scale = solve();
+      let scale = layout();
       // Larger card text is worth a shrink of at most two percent of everything else.
       if (scale < 1 && box.querySelector("[class*='card-text-']")) {
         box.style.setProperty("--card-boost", "1");
-        const plain = solve();
+        const plain = layout();
         if (scale >= plain - 0.02) {
           box.style.removeProperty("--card-boost");
-          scale = solve();
+          scale = layout();
         } else scale = plain;
-      }
-      rows("pipeline-settle");
-      // A row that wraps even tightened splits into two (data-step 3): the body is laid out wider,
-      // and shrinks with it, until every row holds one line.
-      const split = () => box.querySelector(".pipeline-row[data-step='3']");
-      if (body && split()) {
-        const kept = box.style.width;
-        const fits = (at: number) => {
-          box.style.width = `${100 / at}%`;
-          rows("pipeline-settle");
-          return !split() && box.clientHeight / box.scrollHeight >= at;
-        };
-        let low = 0.5;
-        let high = Math.min(scale, 1);
-        if (fits(low)) {
-          for (let i = 0; i < 8; i++) {
-            const mid = (low + high) / 2;
-            if (fits(mid)) low = mid;
-            else high = mid;
-          }
-          fits(low);
-          scale = low;
-        } else {
-          box.style.width = kept;
-          rows("pipeline-settle");
-        }
       }
       if (scale >= 1) {
         box.style.justifyContent = "";

@@ -77,6 +77,7 @@ export function BlurFade({
         ease: "easeOut",
       }}
       className={className}
+      data-entrance=""
       {...props}
     >
       {children}

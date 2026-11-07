@@ -697,6 +697,9 @@ function Figure({ value, quiet }: { value: string; quiet?: boolean }) {
         className={`mr-(--slide-figure-unit-gap) ${quiet ? "font-sans text-3xl font-medium tracking-(--type-body-tracking) text-text-muted" : "text-(length:--slide-figure-unit)"}`}
       >
         {lead.trim()}
+        {/* The gap is the margin; this space, set too small to draw, keeps the words apart in the
+            text a PDF, a search or a screen reader takes ("about 4", never "about4"). */}
+        <span className="text-(length:--slide-figure-space)"> </span>
       </span>
       {minus(value.slice(lead.length))}
     </>

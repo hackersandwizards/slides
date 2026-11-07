@@ -190,7 +190,9 @@ describe("numbers block", () => {
       },
     ]);
     const figure = c.querySelector<HTMLElement>("span[style*='font-size']")!;
-    expect(figure.querySelector("span")?.textContent).toBe("up to");
+    // The lead keeps its space in the text, so a PDF or a screen reader reads "up to +70%".
+    expect(figure.querySelector("span")?.textContent).toBe("up to ");
+    expect(figure.textContent).toBe("up to +70%");
     // A column is 1650/3 - 60 px wide at 1920, a mono digit 0.6em, a rem 21.333px.
     const width = parseFloat(figure.style.fontSize) * 21.333 * 0.6 * ("+70%".length + 0.5 * 5);
     // The style serializes the size to six significant digits, which may round it up.
@@ -221,7 +223,7 @@ describe("merged card and number shapes", () => {
     const items = [{ value: "up to 7", label: "a" }, ...Array(4).fill({ value: "1", label: "b" })];
     const c = content([{ type: "numbers", items }]);
     expect(c.querySelector(".border-t-4")).toBeNull();
-    expect(c.querySelector("span.font-sans")?.textContent).toBe("up to");
+    expect(c.querySelector("span.font-sans")?.textContent).toBe("up to ");
     const row = content([{ type: "numbers", items: items.slice(0, 3) }]);
     expect(row.querySelector(".border-t-4")).not.toBeNull();
   });
@@ -342,13 +344,13 @@ describe("pipeline into flow (merge-flow)", () => {
     expect(c.querySelector("h2")?.previousElementSibling?.className).toContain("h-24");
   });
 
-  // Inner loops and stage logos are what flow cannot draw: those keep the pipeline.
-  it("keeps the pipeline for inner loops and stage logos", () => {
+  // Inner loops and stage logos are dropped: such a pipeline draws as flow too.
+  it("draws a pipeline with inner loops or stage logos as flow", () => {
     for (const block of [
       { type: "pipeline", stages, showLoops: true },
       { type: "pipeline", stages: [{ title: "A", logo: "/a.png" }] },
     ])
-      expect(content([block]).querySelector(".pipeline-row")).not.toBeNull();
+      expect(content([block]).querySelector("img")).toBeNull();
   });
 
   it("sets a flow step's badge under it", () => {

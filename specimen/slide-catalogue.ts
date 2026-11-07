@@ -342,7 +342,7 @@ const slides: Slide[] = [
   {
     type: "content",
     sectionLabel: "Block: pipeline",
-    headline: "Pipeline with loops and a container",
+    headline: "Pipeline with a container",
     content: [
       {
         type: "pipeline",
@@ -352,7 +352,6 @@ const slides: Slide[] = [
           { title: "Review" },
           { title: "QA" },
         ],
-        showLoops: true,
         showArrows: true,
         containerLabel: "Delivery harness",
         containerFooter: "One loop per ticket",
@@ -360,7 +359,7 @@ const slides: Slide[] = [
       },
     ],
     notes:
-      "content blocks: pipeline with states, loops, arrows, container label, footer, side notes.",
+      "content blocks: pipeline with states, arrows, container label, footer, side notes, drawn as flow.",
   },
   {
     type: "content",

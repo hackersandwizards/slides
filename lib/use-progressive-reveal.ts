@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useSyncExternalStore } from "react";
-import { opensRevealed, directionKey, ignoredKey, writeStored } from "./slide-utils";
+import { NARROW, opensRevealed, directionKey, ignoredKey, writeStored } from "./slide-utils";
 import { usePrintMode } from "./print-context";
 
 // Which reveal handlers on the page still hold a step ahead, so the presenter hint can say "to
@@ -94,7 +94,12 @@ export function useProgressiveReveal({
   // Read during render, applied after mount: the server cannot see sessionStorage and renders the
   // slide unrevealed, and React keeps a hydrated tree's mismatched attributes as the server sent
   // them, so revealing in the first client render left a backward arrival blank.
-  const [revealed] = useState(() => !full && totalSteps > 0 && opensRevealed());
+  // On a phone the reader scrolls a one-column slide and Next moves to the next slide, so every
+  // step shows at once and the arrows never step.
+  const [phone] = useState(
+    () => typeof window !== "undefined" && !!window.matchMedia?.(NARROW).matches,
+  );
+  const [revealed] = useState(() => !full && totalSteps > 0 && (phone || opensRevealed()));
   useEffect(() => {
     if (!revealed) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount reveal above
@@ -113,7 +118,7 @@ export function useProgressiveReveal({
   // ArrowRight reveals the next step, then the footer; ArrowLeft takes them back in reverse, and
   // only a slide with nothing left to take back lets either key change slides. A slide that starts
   // full is static: it takes neither key, and its footer stays up.
-  const listening = !full && totalSteps > 0;
+  const listening = !full && !phone && totalSteps > 0;
   useEffect(() => {
     if (!listening) return;
     const stepper: Stepper = {

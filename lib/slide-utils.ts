@@ -51,6 +51,10 @@ export function revealedUrl(): boolean {
   return typeof window !== "undefined" && new URLSearchParams(location.search).has("revealed");
 }
 
+/** Below `md` a slide is one column the reader scrolls (slides.css): nothing shrinks to fit, and
+ *  nothing waits for a presenter's step. */
+export const NARROW = "screen and (width < 48rem)";
+
 /** Whether this slide opens with every build step shown: reached backwards, or on `?revealed`. */
 export function opensRevealed(): boolean {
   return arrivedBackwards() || revealedUrl();
@@ -318,10 +322,9 @@ export function guidanceAsComparison({
   return { ...slide, type: "comparison", variant: "guidance" };
 }
 
-/** A `pipeline` block as the `flow` block that replaces it, or undefined for one flow cannot
- *  draw: a stage logo or the inner loops (`showLoops`) stay on the pipeline. */
-export function pipelineAsFlow(block: Block<"pipeline">): Block<"flow"> | undefined {
-  if (block.showLoops || block.stages.some((s) => s.logo)) return undefined;
+/** A `pipeline` block as the `flow` block that replaces it. Its inner loops (`showLoops`) and
+ *  stage logos are not drawn. */
+export function pipelineAsFlow(block: Block<"pipeline">): Block<"flow"> {
   const lit = block.stages.findIndex((s) => s.state === "new" || s.state === "active");
   const framed =
     block.containerLabel ||
@@ -505,8 +508,9 @@ export function replacedBy(slide: Slide): { to: string; form?: string } | undefi
         if (type === "positions") return { to: "comparison positions", form: type };
         if (type === "transform") return { to: "comparison before-after", form: type };
       }
-      const pipeline = slide.content.find((b) => b.type === "pipeline" && pipelineAsFlow(b));
-      return pipeline && { to: "flow", form: "pipeline" };
+      return slide.content.some((b) => b.type === "pipeline")
+        ? { to: "flow", form: "pipeline" }
+        : undefined;
     }
     default:
       return undefined;

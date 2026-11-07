@@ -1,19 +1,11 @@
 "use client";
 
-import {
-  Fragment,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Image from "../ui/image";
 import type {
   ContentSlide as ContentSlideType,
   ContentBlock,
   SectionTheme,
-  StageState,
 } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SectionHeader } from "./SectionHeader";
@@ -23,7 +15,6 @@ import { StatementSlide } from "./StatementSlide";
 import { SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
 import { CodeLines } from "../../lib/use-code-highlight";
-import { getStageClasses } from "../../lib/stage-utils";
 import { getSectionStyle } from "../../lib/section-styles";
 import {
   centeredAsStatement,
@@ -46,7 +37,6 @@ import {
   DisplayHeading,
   type CardTone,
   VideoPlayer,
-  DashedFrame,
 } from "./primitives";
 
 interface Props {
@@ -233,110 +223,6 @@ function renderColumnContent(text: string) {
       </p>
     );
   });
-}
-
-interface PipelineStage {
-  title: string;
-  state?: string;
-}
-
-function getPipelineArrow(
-  stageIndex: number,
-  stages: PipelineStage[],
-  showLoops?: boolean,
-): string {
-  if (!showLoops) return "→";
-  const currentTitle = stages[stageIndex].title.toLowerCase();
-  const nextTitle = stages[stageIndex + 1]?.title.toLowerCase();
-  if (
-    (currentTitle === "refine" && nextTitle === "challenge") ||
-    (currentTitle === "review" && nextTitle === "rework")
-  ) {
-    return "⇄";
-  }
-  return "→";
-}
-
-type PipelineBlock = Extract<ContentBlock, { type: "pipeline" }>;
-
-/** A pipeline reads as one row. Where its stages wrap, the row steps through `data-step` in
- *  ContentSlide.css: 1 closes its gaps and stage padding just as far as one row needs, so the row still
- *  spans its box, 2 also sets the labels at body size, the floor, and 3 splits it into two
- *  balanced rows. The fit guard in SlideShell lays the body out wider until a row at 3 holds one
- *  line, sends `pipeline-settle` whenever it changes the width, and sends `pipeline-reset` to
- *  measure the body with its rows at full spacing. */
-function PipelineRow({ block }: { block: PipelineBlock }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const row = ref.current;
-    if (!row) return;
-    const stages = [...row.querySelectorAll<HTMLElement>(".pipeline-stage")];
-    const wraps = () => new Set(stages.map((stage) => stage.offsetTop)).size > 1;
-    const tighten = (share: number) => row.style.setProperty("--tighten", String(share));
-    const reset = () => {
-      delete row.dataset.step;
-      row.style.removeProperty("--tighten");
-    };
-    const settle = () => {
-      reset();
-      if (!wraps()) return;
-      row.dataset.step = "1";
-      tighten(1);
-      if (wraps()) {
-        row.dataset.step = "2";
-        if (wraps()) row.dataset.step = "3";
-        return;
-      }
-      // The least tightening that holds one row, to 1/256.
-      let loose = 0;
-      let tight = 1;
-      for (let i = 0; i < 8; i++) {
-        const share = (loose + tight) / 2;
-        tighten(share);
-        if (wraps()) loose = share;
-        else tight = share;
-      }
-      tighten(tight);
-    };
-    settle();
-    row.addEventListener("pipeline-settle", settle);
-    row.addEventListener("pipeline-reset", reset);
-    return () => {
-      row.removeEventListener("pipeline-settle", settle);
-      row.removeEventListener("pipeline-reset", reset);
-    };
-  }, []);
-  const half = Math.ceil(block.stages.length / 2);
-  return (
-    <div ref={ref} className="pipeline-row flex flex-wrap items-center justify-center gap-4">
-      {block.stages.map((stage, i) => (
-        <Fragment key={i}>
-          {i === half && <span className="pipeline-break" />}
-          <div className="flex items-center gap-4">
-            {i > 0 && block.showArrows !== false && (
-              <span className="text-2xl text-primary">
-                {getPipelineArrow(i - 1, block.stages, block.showLoops)}
-              </span>
-            )}
-            <div
-              className={`pipeline-stage flex items-center gap-3 rounded-brand px-5 py-3 text-lg font-semibold ${getStageClasses(stage.state as StageState, !stage.state || stage.state === "default" ? "primary" : "secondary")}`}
-            >
-              {stage.logo && (
-                <Image
-                  src={stage.logo}
-                  alt={stage.title}
-                  width={24}
-                  height={24}
-                  className="h-6 w-6 object-contain"
-                />
-              )}
-              {stage.title}
-            </div>
-          </div>
-        </Fragment>
-      ))}
-    </div>
-  );
 }
 
 /** The info callout is the brand's purple callout; warning and success are the slide's own
@@ -572,56 +458,8 @@ function ContentBlockRenderer({
         </div>
       );
 
-    case "pipeline": {
-      const flow = pipelineAsFlow(block);
-      if (flow) return <Visual block={flow} />;
-      // Teal frame, label, arrows and plain steps, as every other accent; purple marks only an
-      // active or new step.
-      return (
-        <DashedFrame tone="primary" active={!!block.containerLabel} className="p-6">
-          {block.containerLabel && (
-            <div className="hw-label mb-4 flex items-baseline gap-2 [--hw-label-size:var(--text-sm)]">
-              <div className="hw-marker bg-primary" />
-              <span>{block.containerLabel}</span>
-              {block.containerLogos &&
-                block.containerLogos.map((logo, li) => (
-                  <Image
-                    key={li}
-                    src={logo.src}
-                    alt={logo.alt}
-                    width={28}
-                    height={28}
-                    className="ml-1 h-7 w-auto self-center"
-                  />
-                ))}
-            </div>
-          )}
-          <div
-            className={`flex flex-wrap ${block.containerSideNotes ? "items-center justify-center gap-6" : "items-center justify-center gap-4"}`}
-          >
-            <PipelineRow block={block} />
-            {block.containerSideNotes && (
-              <>
-                <div className="h-16 w-px bg-primary/25" />
-                <ul className="space-y-1.5">
-                  {block.containerSideNotes.map((note, ni) => (
-                    <li key={ni} className="flex items-baseline gap-2 text-base text-text-muted">
-                      <span className="hw-marker slide-marker-nested bg-primary" />
-                      <span>{renderMarkdown(note)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </div>
-          {block.containerFooter && (
-            <p className="mt-4 border-t border-primary/25 pt-3 text-base text-text-muted">
-              {renderMarkdown(block.containerFooter)}
-            </p>
-          )}
-        </DashedFrame>
-      );
-    }
+    case "pipeline":
+      return <Visual block={pipelineAsFlow(block)} />;
 
     case "image":
       return (

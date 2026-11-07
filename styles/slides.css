@@ -331,8 +331,6 @@ html:has(.print-slide) {
 
 @import "../components/slides/ProcessSlide.css";
 
-@import "../components/slides/ContentSlide.css";
-
 /* Card body text, raised to the 36px floor wherever the slide has room for it: read in a
    half-size video call, a card's text arrives at half its size. The fit guard in SlideShell sets
    `--card-boost` to 1 on a body that would otherwise have to shrink further for it. */

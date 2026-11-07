@@ -31,6 +31,7 @@ import {
   deckLang,
   deepDiveAsTransition,
   personAccent,
+  pipelineAsFlow,
   profileLabel,
   qrAlt,
   speakerLine,
@@ -917,7 +918,7 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
       return rows * cell + (rows - 1) * 0.15;
     }
     case "pipeline":
-      return 1.1 + (b.containerLabel ? 0.4 : 0) + (b.containerFooter ? 0.35 : 0);
+      return blockHeight(pipelineAsFlow(b), c, w, k);
     case "flow":
       return (
         Math.max(
@@ -1331,61 +1332,8 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       });
       return;
     }
-    case "pipeline": {
-      if (b.containerSideNotes?.length) {
-        const nw = Math.min(2.6, a.w * 0.25);
-        box(
-          s,
-          c,
-          b.containerSideNotes.map((t) => ({ runs: md(t, c), bullet: true, after: 4 })),
-          a.x + a.w - nw,
-          a.y + (b.containerLabel ? 0.4 : 0),
-          nw,
-          a.h,
-          { ...o, size: PT.sm * k, color: c.muted, align: "left" },
-        );
-        return drawBlock(
-          s,
-          ctx,
-          { ...b, containerSideNotes: undefined },
-          { ...a, w: a.w - nw - 0.3 },
-          k,
-          centered,
-        );
-      }
-      let y = a.y;
-      if (b.containerLabel) {
-        let x = a.x + chip(s, c, b.containerLabel, a.x, y, PT.label, c.teal, c.card) + 0.15;
-        for (const logo of b.containerLogos ?? [])
-          x += picture(s, ctx, logo.src, x, y, 1, 0.26, { alt: logo.alt, align: "left" }).w + 0.15;
-        y += 0.4;
-      }
-      const n = b.stages.length;
-      const gap = b.showArrows === false ? 0.15 : 0.4;
-      const sw = (a.w - (n - 1) * gap) / n;
-      b.stages.forEach((st, i) => {
-        const x = a.x + i * (sw + gap);
-        const active = st.state === "active" || st.state === "new";
-        card(s, x, y, sw, 0.7, active ? c.tealTint : c.card, active ? c.teal : c.border);
-        box(s, c, { runs: md(st.title, c) }, x + 0.1, y, sw - 0.2, 0.7, {
-          ...o,
-          mono: true,
-          bold: true,
-          align: "center",
-          valign: "middle",
-          size: PT.sm * k,
-        });
-        if (i < n - 1 && b.showArrows !== false)
-          arrow(s, c, x + sw + 0.06, y + 0.35, x + sw + gap - 0.06, y + 0.35);
-      });
-      if (b.containerFooter)
-        box(s, c, b.containerFooter, a.x, y + 0.8, a.w, 0.3, {
-          ...o,
-          color: c.muted,
-          size: PT.sm * k,
-        });
-      return;
-    }
+    case "pipeline":
+      return drawBlock(s, ctx, pipelineAsFlow(b), a, k, centered);
     case "flow": {
       if (b.frame) {
         const { label, notes = [], footer } = b.frame;
