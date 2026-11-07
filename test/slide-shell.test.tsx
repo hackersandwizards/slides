@@ -109,10 +109,11 @@ describe("fit guard", () => {
         </SlideShell>,
       );
       const content = container.querySelector<HTMLElement>(".slide-content")!;
-      expect(content.style.scale).toBe(String(900 / 1080));
+      // The style serializes a number to six significant digits, as a browser does.
+      expect(Number(content.style.scale)).toBeCloseTo(900 / 1080, 5);
       expect(content.style.justifyContent).toBe("flex-start");
       expect(content.style.transformOrigin).toBe("center 0px");
-      expect(content.style.translate).toBe("0 50px");
+      expect(content.style.translate).toBe("0px 50px");
     } finally {
       HTMLElement.prototype.querySelector = original;
     }

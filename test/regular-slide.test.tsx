@@ -42,7 +42,7 @@ describe("regular slide", () => {
     };
     const { container } = render(<SlideComponent slide={slide as Slide} />);
     const grid = container.querySelector<HTMLElement>(".hw-card")?.parentElement;
-    expect(grid?.style.gridTemplateColumns).toBe("repeat(3, minmax(0, 1fr))");
+    expect(grid?.style.gridTemplateColumns).toBe("repeat(3, minmax(0px, 1fr))");
     expect(container.querySelector(".hw-card .h-1\\.5")).toBeNull();
   });
 

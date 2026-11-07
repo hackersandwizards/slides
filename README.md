@@ -60,7 +60,7 @@ woff2, which PowerPoint cannot embed. Each carries its kind (sans, monospace), s
 them shows a font of the same kind. Install both fonts on the presenting machine for the h&w look.
 It shows a client's deck in the h&w design only; a deck on a client's template needs that
 consumer's own exporter. The PowerPoint parser pulls in `image-size`, whose old version carries
-advisories, so a consumer adds `"overrides": { "image-size": "2.0.4" }` as this package does.
+advisories, so a consumer adds `"overrides": { "image-size": "2.1.0" }` as this package does.
 
 A slide opens fully revealed on a URL carrying `?revealed`, such as `/<deck>/12?revealed`, as it does
 on a backward arrival: for a catalog tile, a screenshot or a check of the finished slide. It shows

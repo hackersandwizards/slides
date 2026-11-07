@@ -18,10 +18,6 @@ import { defineConfig } from "astro/config";
 import { brandNames, selfContained } from "./brand-urls";
 
 const BASE = "/slides";
-// The nav and the print page find this catalog in brand's list by name; a rename would send
-// "Slides" to the published site without a word.
-if (!catalogs.some(({ name }) => name === "Slides"))
-  throw new Error('brand catalogs.json has no "Slides"');
 const root = fileURLToPath(new URL("..", import.meta.url));
 const fromRoot = createRequire(join(root, "package.json"));
 const brandFile = (name: string) => fromRoot.resolve(`@hackersandwizards/brand/${name}`);

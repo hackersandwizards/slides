@@ -193,7 +193,8 @@ describe("numbers block", () => {
     expect(figure.querySelector("span")?.textContent).toBe("up to");
     // A column is 1650/3 - 60 px wide at 1920, a mono digit 0.6em, a rem 21.333px.
     const width = parseFloat(figure.style.fontSize) * 21.333 * 0.6 * ("+70%".length + 0.5 * 5);
-    expect(width).toBeLessThanOrEqual(1650 / 3 - 60);
+    // The style serializes the size to six significant digits, which may round it up.
+    expect(width).toBeLessThanOrEqual(1650 / 3 - 60 + 0.001);
   });
 });
 
@@ -212,7 +213,7 @@ describe("merged card and number shapes", () => {
     const row = [...c.querySelectorAll<HTMLElement>("div")].find((d) =>
       d.style.gridTemplateColumns.includes("repeat("),
     );
-    expect(row?.style.gridTemplateColumns).toBe("repeat(3, minmax(0, 1fr))");
+    expect(row?.style.gridTemplateColumns).toBe("repeat(3, minmax(0px, 1fr))");
     expect(c.textContent).toContain("d5");
   });
 
