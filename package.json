@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "1.23.1",
+  "version": "1.23.2",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -65,7 +65,7 @@
     "check:staged": "check-staged",
     "dev": "ASTRO_DEV_BACKGROUND=1 bun --bun astro dev --root catalog",
     "catalog": "bun run dev --open /",
-    "build": "astro build --root catalog"
+    "build": "check-lock astro build --root catalog"
   },
   "peerDependencies": {
     "@hackersandwizards/brand": "*",
@@ -113,9 +113,9 @@
   "devDependencies": {
     "@astrojs/react": "7.1.4",
     "@eslint/js": "10.0.1",
-    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.11.0",
-    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.32.1",
-    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v2.20.0",
+    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.11.1",
+    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.33.0",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v2.21.0",
     "@tailwindcss/node": "4.3.5",
     "@tailwindcss/oxide": "4.3.5",
     "@tailwindcss/vite": "4.3.5",
