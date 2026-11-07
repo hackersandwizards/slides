@@ -71,8 +71,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   and scaffolding are dev dependencies, outside `files` and `exports`. Its base is
   the Pages path `/slides`, so the gate reads the build that ships. It carries two kinds of page:
   - The stories: `stories/Types/` a story file per slide type, each specimen slide of the type a
-    state (`state.ts`); `stories/Parts/` one per part, drawing its sheet of variants from
-    `parts.ts`. `test/catalog-stories.test.ts` fails on a type, specimen slide or part without its
+    state (`state.ts`), drawn by `StorySlide.tsx` as its deck shows it, strip, corner mark and
+    page counter included, and entering as a slide reached from the one before; `stories/Parts/`
+    one per part, drawing its sheet of variants from `parts.ts`. `test/catalog-stories.test.ts` fails on a type, specimen slide or part without its
     story. `Home.astro` renders the shell's home with the foundations.
   - The print pages, `pages/catalog/print/` over `print.ts`: `index.html`, a Parts section (every
     part of `primitives.tsx` and `SlideChrome.tsx` in each variant, with the slide types using it),

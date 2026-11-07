@@ -16,13 +16,14 @@ import type { ReactNode } from "react";
 import type { ChartSlide } from "../../types/slide";
 
 /** The recharts plots of the chart slide, split from it so a deck page loads recharts only when it
- *  shows one of them. `print` stops the growth animation, which a PDF would freeze mid-way.
+ *  shows one of them. `still` stops the growth animation: a PDF would freeze it mid-way, and the
+ *  slide a page load opens on shows at once, as every other entrance on it does.
  *  Series take the brand's chart order (teal, then purple), never a status colour; ticks and axis
  *  labels stay in muted ink at body size, the grid is a recessive horizontal rule, and an area is
  *  a flat 7 % tint under a single series, none under two. */
 interface PlotProps {
   data: ChartSlide["data"];
-  print: boolean;
+  still: boolean;
   xLabel?: string;
   yLabel?: string;
 }
@@ -53,7 +54,7 @@ function Axes({
   );
 }
 
-export function TrendPlot({ data, print, xLabel, yLabel }: PlotProps) {
+export function TrendPlot({ data, still, xLabel, yLabel }: PlotProps) {
   const two = data?.some((d) => d.value2 !== undefined) ?? false;
   return (
     <Axes xLabel={xLabel} yLabel={yLabel}>
@@ -72,7 +73,7 @@ export function TrendPlot({ data, print, xLabel, yLabel }: PlotProps) {
           <YAxis tick={tick} axisLine={false} tickLine={false} width={64} />
           <Tooltip {...tooltip} itemStyle={{ color: "var(--color-text)" }} />
           <Area
-            isAnimationActive={print ? false : "auto"}
+            isAnimationActive={still ? false : "auto"}
             type="monotone"
             dataKey="value"
             stroke="var(--color-teal)"
@@ -82,7 +83,7 @@ export function TrendPlot({ data, print, xLabel, yLabel }: PlotProps) {
           />
           {two && (
             <Area
-              isAnimationActive={print ? false : "auto"}
+              isAnimationActive={still ? false : "auto"}
               type="monotone"
               dataKey="value2"
               stroke="var(--color-secondary)"
@@ -98,7 +99,7 @@ export function TrendPlot({ data, print, xLabel, yLabel }: PlotProps) {
 
 export function BarPlot({
   data,
-  print,
+  still,
   xLabel,
   yLabel,
   labelled,
@@ -127,7 +128,7 @@ export function BarPlot({
             itemStyle={{ color: "var(--color-text)" }}
           />
           <Bar
-            isAnimationActive={print ? false : "auto"}
+            isAnimationActive={still ? false : "auto"}
             dataKey="value"
             fill="var(--color-teal)"
             radius={[4, 4, 0, 0]}

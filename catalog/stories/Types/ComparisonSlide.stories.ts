@@ -1,7 +1,7 @@
-import { ComparisonSlide } from "../../../components/slides/ComparisonSlide";
+import { StorySlide } from "../../StorySlide";
 import { state } from "../../state";
 
-export default { component: ComparisonSlide };
+export default { component: StorySlide };
 
 export const Vs = state("comparison", 0, "ComparisonSlide");
 export const BeforeAfter = state("comparison", 1, "ComparisonSlide");

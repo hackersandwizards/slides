@@ -24,30 +24,31 @@ export function SectionHeader({ label, principle, pillColor, stageMarker, stageP
         {label && <span className="hw-label [--hw-label-size:var(--text-xl)]">{label}</span>}
         {principle && <span className={`hw-pill ${pillColor ?? ""}`.trim()}>{principle}</span>}
         {hasStageStrip && (
-          <div className="hw-label-box min-w-0 flex-wrap gap-1 md:shrink-0 md:flex-nowrap">
+          // Each arrow sits one gap from either neighbour, and only a filled stage takes padding: the
+          // arrow is mid-way between the pill's edge or the word's letters. An arrow wraps with the
+          // stage after it, the prefix with its own.
+          <div className="hw-label-box min-w-0 flex-wrap gap-3 md:shrink-0 md:flex-nowrap">
             <span className="hw-label mr-1.5 [--hw-label-size:var(--text-xl)]" data-tone="muted">
               Stage
             </span>
             {stagePrefix && (
-              <span className="flex items-center">
+              <span className="flex items-center gap-3">
                 <span className="rounded-brand-sm bg-text px-2.5 py-0.5 font-mono text-xl font-bold whitespace-nowrap text-white">
                   {stagePrefix}
                 </span>
-                <span className="mx-2 text-xl font-bold text-text-subtle">»</span>
+                <span className="text-xl font-bold text-text-subtle">»</span>
               </span>
             )}
             {PIPELINE_STAGES.map((stage, i) => {
               const isActive = stageMarker?.includes(stage) ?? false;
               return (
-                <span key={stage} className="flex items-center">
+                <span key={stage} className="flex items-center gap-3">
+                  {i > 0 && <span className="text-xl text-text-subtle/40">›</span>}
                   <span
-                    className={`rounded-brand-sm px-2 py-0.5 font-mono text-xl font-bold whitespace-nowrap transition-colors ${isActive ? "bg-secondary text-white" : "text-text-subtle/70"}`}
+                    className={`rounded-brand-sm py-0.5 font-mono text-xl font-bold whitespace-nowrap transition-colors ${isActive ? "bg-secondary px-2 text-white" : "text-text-subtle/70"}`}
                   >
                     {stage}
                   </span>
-                  {i < PIPELINE_STAGES.length - 1 && (
-                    <span className="mx-0.5 text-xl text-text-subtle/40">›</span>
-                  )}
                 </span>
               );
             })}

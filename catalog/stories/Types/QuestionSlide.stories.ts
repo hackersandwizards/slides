@@ -1,6 +1,6 @@
-import { QuestionSlide } from "../../../components/slides/QuestionSlide";
+import { StorySlide } from "../../StorySlide";
 import { state } from "../../state";
 
-export default { component: QuestionSlide };
+export default { component: StorySlide };
 
 export const Specimen = state("question", 0, "QuestionSlide");

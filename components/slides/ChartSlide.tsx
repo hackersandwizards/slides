@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useId, useMemo, type ReactNode } from "react";
+import { lazy, Suspense, useId, useMemo, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { usePrintMode } from "../../lib/print-context";
 import type { ChartSlide as ChartSlideType } from "../../types/slide";
@@ -287,10 +287,17 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
   );
 }
 
-function TrendVariant({ slide }: { slide: ChartSlideType }) {
-  const print = usePrintMode();
-  const { data, annotation, seriesLabel, series2Label } = slide;
+/** A recharts plot mounts after hydration, so it keeps whether its slide hydrated: the slide a page
+ *  load opens on shows its plot at once, as DrawIn does, and so does a printed one. */
+function usePlot() {
   const mounted = useMounted();
+  const [opened] = useState(!mounted);
+  return { mounted, still: usePrintMode() || opened };
+}
+
+function TrendVariant({ slide }: { slide: ChartSlideType }) {
+  const { data, annotation, seriesLabel, series2Label } = slide;
+  const { mounted, still } = usePlot();
 
   return (
     <div className="w-full max-w-5xl">
@@ -316,7 +323,7 @@ function TrendVariant({ slide }: { slide: ChartSlideType }) {
         <ChartFrame>
           {mounted && (
             <Suspense fallback={null}>
-              <TrendPlot data={data} print={print} xLabel={slide.xLabel} yLabel={slide.yLabel} />
+              <TrendPlot data={data} still={still} xLabel={slide.xLabel} yLabel={slide.yLabel} />
             </Suspense>
           )}
         </ChartFrame>
@@ -332,9 +339,8 @@ function TrendVariant({ slide }: { slide: ChartSlideType }) {
 }
 
 function BarVariant({ slide }: { slide: ChartSlideType }) {
-  const print = usePrintMode();
   const { data, annotation } = slide;
-  const mounted = useMounted();
+  const { mounted, still } = usePlot();
 
   return (
     <div className="w-full max-w-5xl">
@@ -344,7 +350,7 @@ function BarVariant({ slide }: { slide: ChartSlideType }) {
             <Suspense fallback={null}>
               <BarPlot
                 data={data}
-                print={print}
+                still={still}
                 xLabel={slide.xLabel}
                 yLabel={slide.yLabel}
                 labelled

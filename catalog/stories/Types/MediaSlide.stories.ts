@@ -1,7 +1,7 @@
-import { MediaSlide } from "../../../components/slides/MediaSlide";
+import { StorySlide } from "../../StorySlide";
 import { state } from "../../state";
 
-export default { component: MediaSlide };
+export default { component: StorySlide };
 
 export const Media = state("media", 0, "MediaSlide");
 export const Specimen = state("media", 1, "MediaSlide");

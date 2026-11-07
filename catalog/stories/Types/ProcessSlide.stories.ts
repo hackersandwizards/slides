@@ -1,7 +1,7 @@
-import { ProcessSlide } from "../../../components/slides/ProcessSlide";
+import { StorySlide } from "../../StorySlide";
 import { state } from "../../state";
 
-export default { component: ProcessSlide };
+export default { component: StorySlide };
 
 export const Specimen = state("process", 0, "ProcessSlide");
 export const Specimen2 = state("process", 1, "ProcessSlide");
