@@ -77,7 +77,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
   const [split, dividerHandlers] = useSplit(region);
 
   return (
-    <div className="fixed inset-0 z-[55] flex flex-col gap-4 bg-night p-4 font-sans text-night-ink">
+    <div className="slide-presenter fixed inset-0 z-[55] flex flex-col gap-4 bg-night p-4 font-sans text-night-ink">
       <header className="flex items-center gap-6 text-lg">
         <span className="font-mono text-2xl font-bold tabular-nums">
           {slide + 1} / {total}

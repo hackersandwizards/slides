@@ -5,7 +5,6 @@
 
 /* Not inline, so the utilities read the variables. */
 @theme {
-  --radius-brand: var(--slide-radius);
   --radius-brand-sm: var(--slide-radius-sm);
   /* Badge colors: opaque teal tints, for overlapping card borders */
   --color-badge-bg: color-mix(in srgb, var(--color-teal) 15%, white);
@@ -13,16 +12,6 @@
   /* The brand-dark theme sets night-2, as the brand's code block and the PPTX export do: not
      inline, so a theme sets it again. */
   --color-code-bg: var(--code-bg);
-  --text-xs: calc(var(--type-label-size) * var(--slide-stage));
-  --text-base: calc(var(--type-body-size) * var(--slide-stage));
-  --text-xl: calc(var(--type-h4-size) * var(--slide-stage));
-  --text-2xl: calc(var(--type-h4-size) * var(--slide-stage));
-  --text-3xl: calc(var(--type-lead-size) * var(--slide-stage));
-  --text-4xl: calc(var(--type-h3-size) * var(--slide-stage));
-  --text-5xl: calc(var(--text-base) * 2);
-  --text-6xl: calc(var(--text-base) * 2.5);
-  --text-7xl: calc(var(--type-h1-size) * var(--slide-stage));
-  --text-8xl: calc(var(--text-base) * 4);
 }
 
 @theme inline {
@@ -73,6 +62,38 @@
   /* A highlighted code line's comment, on the teal tint of the night panel: AnnotatedCode sets it
      as the line's --code-comment. */
   --slide-code-comment-lit: color-mix(in srgb, var(--color-night-subtle), var(--color-night-muted));
+}
+
+/* The type steps, named so Tailwind makes their utilities, which read the values set on the
+   engine's roots below: a reference emits no variable. */
+@theme reference {
+  --text-xs: var(--text-xs);
+  --text-base: var(--text-base);
+  --text-xl: var(--text-xl);
+  --text-2xl: var(--text-2xl);
+  --text-3xl: var(--text-3xl);
+  --text-4xl: var(--text-4xl);
+  --text-5xl: var(--text-5xl);
+  --text-6xl: var(--text-6xl);
+  --text-7xl: var(--text-7xl);
+  --text-8xl: var(--text-8xl);
+}
+
+/* Names an app stylesheet shares, Tailwind's type steps and brand's corner, take the slide's values
+   only on the engine's own roots: at :root they would turn an app page that loads this stylesheet
+   too, depending on which of the two loads last. */
+:where([data-hw-scale="stage"], .slide-viewport, .print-slide, .slide-presenter) {
+  --radius-brand: var(--slide-radius);
+  --text-xs: calc(var(--type-label-size) * var(--slide-stage));
+  --text-base: calc(var(--type-body-size) * var(--slide-stage));
+  --text-xl: calc(var(--type-h4-size) * var(--slide-stage));
+  --text-2xl: calc(var(--type-h4-size) * var(--slide-stage));
+  --text-3xl: calc(var(--type-lead-size) * var(--slide-stage));
+  --text-4xl: calc(var(--type-h3-size) * var(--slide-stage));
+  --text-5xl: calc(var(--text-base) * 2);
+  --text-6xl: calc(var(--text-base) * 2.5);
+  --text-7xl: calc(var(--type-h1-size) * var(--slide-stage));
+  --text-8xl: calc(var(--text-base) * 4);
 }
 
 @layer utilities {
