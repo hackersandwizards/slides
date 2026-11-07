@@ -320,17 +320,6 @@ html:has(.print-slide) {
   font-size: calc(var(--text-base) * var(--card-boost, 1.125));
 }
 
-/* Card and body text: no single word on a last line. */
-.slide-content :is(p, li) {
-  text-wrap: pretty;
-}
-
-/* A paragraph that asks for balanced lines keeps them: the rule above is unlayered and would
-   otherwise override the utility, leaving a one-word last line under a centred headline. */
-.slide-content :is(p, li).text-balance {
-  text-wrap: balance;
-}
-
 /* A slide is laid out for a projector. Below Tailwind's `md` it becomes one column that scrolls
  * instead of clipping, with headings and card padding cut to fit 390px. Unlayered, so it wins over
  * the utilities it overrides (`overflow-hidden`, `px-16`, `grid-cols-*`, `text-5xl`). Screen only:

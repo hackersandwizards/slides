@@ -15,7 +15,7 @@ describe("placeBrandUrls", () => {
     expect(placeBrandUrls(css, "../x")).toBe('a{b:url("../x/print.css")}');
   });
 
-  it.each(["cursor.svg", "fonts/inter.woff2"])(
+  it.each(["cursor.svg", "fonts/inter-arrows-400-normal.woff2"])(
     "places the brand export %s named by its package",
     (name) =>
       expect(placeBrandUrls(`a{b:url("@hackersandwizards/brand/${name}")}`, "../x")).toBe(
@@ -45,6 +45,7 @@ describe("placeBrandUrls", () => {
     'url("https://example.org/inter.woff2")',
     'url("@hackersandwizards/slides/x.png")',
     'url("@hackersandwizards/brand/scripts/tokens.ts")',
+    'url("@hackersandwizards/brand/fonts/none.woff2")',
     'url("../node_modules/@hackersandwizards/brand/scripts/tokens.ts")',
     'url("../node_modules/@hackersandwizards/slides/x.png")',
     'url("a" b)',
