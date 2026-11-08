@@ -1,9 +1,23 @@
 @media screen and (width < 48rem) {
-  /* A lone figure stands above its label, the label taking the full width. */
+  /* A lone figure stands above its label, the label taking the full width, and each figure is
+     capped at the size that fits its column on one line (`--slide-figure-fit`, in cqi). */
   .slide-figure-row {
     flex-direction: column;
     align-items: flex-start;
     gap: calc(var(--spacing) * 4);
+  }
+  .slide-figure-row,
+  .slide-figure-cell {
+    container-type: inline-size;
+  }
+  .slide-figure-row > :first-child {
+    font-size: min(var(--slide-figure-hero), var(--slide-figure-fit, var(--slide-figure-hero)));
+  }
+  .slide-figure-cell > :first-child {
+    font-size: min(
+      var(--slide-figure-grid-size, var(--slide-figure-size)),
+      var(--slide-figure-fit, var(--slide-figure-size))
+    );
   }
 
   .slide-framed-steps,

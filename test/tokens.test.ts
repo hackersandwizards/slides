@@ -20,11 +20,11 @@ const STYLESHEETS = ["styles/slides.css", ...BESIDE];
 // hides from it, and these keyframes move only a fade, never a slide's resting layout.
 const MOTION = new Set(["components/ui/blur-fade.tsx"]);
 
-// A length with a unit; a full measure (100vh, 100cqw) and a share (50%) are no design values,
+// A length with a unit; a full measure (100vh, 100cqi) and a share (50%) are no design values,
 // except inside a Tailwind bracket, where a share is a width chosen by hand.
-const UNIT = "px|rem|em|ex|ch|lh|vh|vw|vmin|vmax|cqw|cqh|pt|mm|cm";
+const UNIT = "px|rem|em|ex|ch|lh|vh|vw|vmin|vmax|cqw|cqh|cqi|cqb|pt|mm|cm";
 const LENGTH = new RegExp(
-  `(?<![\\w.#-])-?(?!100(vh|vw|cqw|cqh)\\b)\\d*\\.?\\d+(${UNIT})(?![\\w-])`,
+  `(?<![\\w.#-])-?(?!100(vh|vw|cqw|cqh|cqi|cqb)\\b)\\d*\\.?\\d+(${UNIT})(?![\\w-])`,
 );
 // `_` separates the parts of a bracket value, so it bounds a length there.
 const BRACKET_LENGTH = new RegExp(`(?<![a-zA-Z\\d.#-])-?\\d*\\.?\\d+(${UNIT}|%)(?![a-zA-Z\\d-])`);
@@ -180,5 +180,23 @@ describe("tokens", () => {
       "line-height: 1.1;",
       "border-color: white;",
     ]);
+  });
+});
+
+// An inline column template outranks the phone rule in slides.css that stacks every grid into one
+// column, so a grid meant to stack sets its count as `--slide-cols` instead. These keep their
+// columns on a phone and draw their own phone layout: a flow's steps, a timeline's rail, the
+// staggered timeline, a Gantt's months and the phased pills' rows.
+it("keeps inline column templates to the grids that keep their columns on a phone", () => {
+  const counts = Object.fromEntries(
+    SOURCES.map((f) => [
+      f,
+      readFileSync(join(ROOT, f), "utf8").split("gridTemplateColumns").length - 1,
+    ]).filter(([, n]) => n),
+  );
+  expect(counts).toEqual({
+    "components/slides/Visuals.tsx": 3,
+    "components/slides/GanttSlide.tsx": 1,
+    "components/slides/PhasedPillsSlide.tsx": 2,
   });
 });

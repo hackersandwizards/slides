@@ -67,7 +67,7 @@ it.each(STORIES)(
 );
 
 // A profile's company ran past its card beside the portrait on a phone (209 px of text in 148 px,
-// 2026-11-08): there the portrait stands above, and the specimen's first company is one long word.
+// 2026-11-08): there the portrait stands above, and one company in the specimen is one long word.
 it.each(["profiles-slide/specimen", "profiles-slide/specimen2"])(
   "keeps every line of %s inside its card on a phone",
   async (story) => {

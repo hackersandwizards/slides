@@ -186,16 +186,24 @@ describe("numbers block", () => {
         ],
       },
     ]);
-    const figure = c.querySelector<HTMLElement>("span[style*='font-size']")!;
+    const figure = c.querySelector<HTMLElement>("span[style*='--slide-figure-grid-size']")!;
     // The lead keeps its space in the text, so a PDF or a screen reader reads "up to +70%".
     expect(figure.querySelector("span")?.textContent).toBe("up to ");
     expect(figure.textContent).toBe("up to +70%");
     // A column is 1650/3 - 60 px wide at 1920, a mono digit 0.6em, a rem 21.333px.
-    // The size is `min(<stage size>rem, <phone cap>cqi)`; the stage size is the first argument.
-    const stage = parseFloat(figure.style.fontSize.replace("min(", ""));
-    const width = stage * 21.333 * 0.6 * ("+70%".length + 0.5 * 5);
+    const width =
+      parseFloat(figure.style.getPropertyValue("--slide-figure-grid-size")) *
+      21.333 *
+      0.6 *
+      ("+70%".length + 0.5 * 5);
     // The style serializes the size to six significant digits, which may round it up.
     expect(width).toBeLessThanOrEqual(1650 / 3 - 60 + 0.001);
+    // On a phone the widest figure caps them all at its column's width: 4 digits, 5 leading
+    // characters counting half, one more for their gap, 0.6em each.
+    const grid = figure.closest<HTMLElement>(".grid")!;
+    expect(grid.style.getPropertyValue("--slide-figure-fit")).toBe(
+      `${+(100 / (7.5 * 0.6)).toFixed(2)}cqi`,
+    );
   });
 });
 
@@ -232,10 +240,7 @@ describe("merged card and number shapes", () => {
       variant: "stats",
       cards: [{ title: "Teams", value: "12", description: "Across sites" }],
     });
-    const hero = [...c.querySelectorAll<HTMLElement>("span")].find((s) =>
-      s.style.fontSize.includes("--slide-figure-hero"),
-    );
-    expect(hero?.textContent).toBe("12");
+    expect(c.querySelector(".text-\\(length\\:--slide-figure-hero\\)")?.textContent).toBe("12");
     expect(c.textContent).toContain("Across sites");
   });
 

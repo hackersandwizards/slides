@@ -1171,7 +1171,7 @@ const slides: Slide[] = [
       {
         name: "Mara Lindqvist",
         title: "Platform lead",
-        company: "Lumen&Freightworks",
+        company: "Lumen Freight",
         imageSrc: specimenImages["portrait-a.png"],
         bullets: ["Built the harness", "Ten years of platform work"],
         linkedIn: "https://www.linkedin.com/in/example",
@@ -1206,11 +1206,11 @@ const slides: Slide[] = [
       {
         name: "Lena Sato",
         title: "QA lead",
-        company: "Lumen Freight",
+        company: "Harbourline&Quayworks",
         bullets: ["Owns the checks"],
       },
     ],
-    notes: "profiles: three, no images.",
+    notes: "profiles: three, no images, the last company one long word.",
   },
 
   {

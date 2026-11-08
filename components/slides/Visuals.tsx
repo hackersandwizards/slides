@@ -702,16 +702,17 @@ const leadingWords = (value: string) => /^((?:[a-z]+\s+)+)(?=[^a-z\s])/.exec(val
 const COLUMNS = "grid-cols-[repeat(var(--slide-cols),minmax(0,1fr))]";
 const columns = (n: number) => ({ "--slide-cols": n }) as CSSProperties;
 // A figure's width in mono characters (0.6em each), leading words set at about half size counting
-// half. The cap on a figure's size, in % of its container's width, at which a figure that wide fits
-// on one line: one character more where leading words stand, for their gap and their true size
-// (0.55em), which a half undercounts.
+// half.
 const figureChars = (value: string) => {
   const lead = leadingWords(value);
   return value.length - lead.length + 0.5 * lead.trim().length;
 };
-const fitWidth = (value: string) => {
-  const chars = figureChars(value) + (leadingWords(value) ? 1 : 0);
-  return `${+(100 / (chars * 0.6)).toFixed(2)}cqi`;
+// The size, in % of its column's width, at which the widest figure fits on one line, which the
+// phone rule in Visuals.css caps the figures at: one character more where leading words stand, for
+// their gap and their true size (0.55em), which a half undercounts.
+const figureFit = (values: string[]) => {
+  const chars = Math.max(...values.map((v) => figureChars(v) + (leadingWords(v) ? 1 : 0)));
+  return { "--slide-figure-fit": `${+(100 / (chars * 0.6)).toFixed(2)}cqi` } as CSSProperties;
 };
 
 function Figure({ value, quiet }: { value: string; quiet?: boolean }) {
@@ -738,10 +739,9 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
     const item = block.items[0];
     return (
       <div className="w-full">
-        <div className="slide-figure-row @container flex items-center gap-16">
+        <div className="slide-figure-row flex items-center gap-16" style={figureFit([item.value])}>
           <span
-            className="font-heading leading-none font-bold tracking-tight text-primary"
-            style={{ fontSize: `min(var(--slide-figure-hero), ${fitWidth(item.value)})` }}
+            className={`font-heading text-(length:--slide-figure-hero) leading-none font-bold tracking-tight text-primary`}
           >
             <Figure value={item.value} />
           </span>
@@ -785,16 +785,17 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
         source: undefined,
       };
   const size = Math.min(look.cap, (1650 / cols - 60) / (longest * 0.6) / 21.333);
-  // A column narrower than the stage's, a phone's above all, caps the size at its width.
-  const fit = block.items.map((i) => fitWidth(i.value)).join(", ");
   return (
     <div className="w-full">
-      <div className={`grid w-full ${COLUMNS} ${look.grid}`} style={columns(cols)}>
+      <div
+        className={`grid w-full ${COLUMNS} ${look.grid}`}
+        style={{ ...columns(cols), ...figureFit(block.items.map((i) => i.value)) }}
+      >
         {block.items.map((item, i) => (
-          <div key={i} className="@container flex flex-col">
+          <div key={i} className="slide-figure-cell flex flex-col">
             <span
-              className="font-heading leading-none font-bold tracking-tight whitespace-nowrap text-primary"
-              style={{ fontSize: `min(${size}rem, ${fit})` }}
+              className="font-heading text-(length:--slide-figure-grid-size) leading-none font-bold tracking-tight whitespace-nowrap text-primary"
+              style={{ "--slide-figure-grid-size": `${size}rem` } as CSSProperties}
             >
               <Figure value={item.value} quiet={wrapped} />
             </span>
