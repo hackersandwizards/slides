@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 3
-order: 600
+order: 1250
 owner: Agent (slides session)
 evidence: "panels of 07.11.2026, slides v1.22.0: `docs/agent-work/2026-11-06-review-round.md`, section Phase 2e rounds"
 ---

@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 3
-order: 850
+order: 1490
 owner: Agent (slides session)
 evidence: "base round in `docs/agent-work/2026-11-01-catalog-program.md`, section Phase 2"
 ---

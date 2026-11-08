@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 3
-order: 900
+order: 1530
 owner: Agent (slides session)
 evidence: "`docs/agent-work/2026-11-08-performance.md`, section Open (commit 31cefea)"
 ---

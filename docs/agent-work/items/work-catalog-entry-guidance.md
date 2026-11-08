@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 2
-order: 435
+order: 720
 owner: Agent (slides session)
 evidence: "slides e383ac9 (v0.27.0): the print page by communication job, with search; no entry carries a text yet"
 ---

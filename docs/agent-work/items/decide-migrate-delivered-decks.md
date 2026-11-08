@@ -2,7 +2,7 @@
 kind: decision
 status: assumed
 priority: 3
-order: 820
+order: 1440
 area: slides
 owner: Benedikt
 recommended: every-deck
@@ -16,6 +16,8 @@ options:
 ---
 
 # Do delivered decks move to the new slide types too?
+
+Blocks phase 4, `work-move-deck-slides-to-catalog-entries`.
 
 **Context.** The engine merged near-duplicate slide types (for example five card forms into
 `cards`). The old forms still draw through the new ones as aliases. Phase 4

@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 2
-order: 450
+order: 730
 owner: "Agent per repo (talks, trainer-hub, hycle-private)"
 evidence: "measured 07.11.2026 on slides v1.23.2 (talks, trainer-hub) and v1.23.1 (hycle-private), commit 24b1c3a"
 ---
