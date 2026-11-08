@@ -25,6 +25,8 @@ interface PlotProps {
 }
 
 const tick = { fill: "var(--color-text-muted)", fontSize: "var(--text-base)" };
+/** The least room between the axis line and a category label's box; recharts adds its 6 px tick. */
+export const TICK_GAP = 12;
 const tooltip = {
   contentStyle: {
     backgroundColor: "var(--color-white)",
@@ -108,10 +110,10 @@ export function TrendPlot({
           <CartesianGrid stroke="var(--color-border)" vertical={false} />
           <XAxis
             dataKey="name"
-            tick={tick}
+            tick={<AxisTick />}
             axisLine={{ stroke: "var(--color-border-strong)" }}
             tickLine={false}
-            tickMargin={12}
+            tickMargin={TICK_GAP}
             height={56}
             padding={{ left: 24, right: 8 }}
           />
@@ -268,7 +270,9 @@ function useTickLayout(labels: string[], left: number, right: number) {
   return { ref, layout };
 }
 
-function WrappedTick({
+/** A category label, its box hanging from the tick: each line carries the baseline itself, since
+ *  WebKit drops a text's dominant-baseline on the tspans inside it and set the label on the axis. */
+export function AxisTick({
   x,
   y,
   index,
@@ -288,12 +292,11 @@ function WrappedTick({
       y={y}
       textAnchor={layout?.angled ? "end" : "middle"}
       transform={layout?.angled ? `rotate(-${ANGLE} ${x} ${y})` : undefined}
-      dominantBaseline="hanging"
       fill={tick.fill}
       fontSize={TICK_STEPS[layout?.step ?? 0]}
     >
       {lines.map((line, i) => (
-        <tspan key={i} x={x} dy={i ? `${LINE}em` : 0}>
+        <tspan key={i} x={x} dy={i ? `${LINE}em` : 0} dominantBaseline="text-before-edge">
           {line}
         </tspan>
       ))}
@@ -330,11 +333,11 @@ export function BarPlot({
             {!labelled && <CartesianGrid stroke="var(--color-border)" vertical={false} />}
             <XAxis
               dataKey="name"
-              tick={<WrappedTick layout={layout} />}
+              tick={<AxisTick layout={layout} />}
               axisLine={{ stroke: "var(--color-border-strong)" }}
               tickLine={false}
-              tickMargin={12}
-              height={Math.max(56, Math.ceil((layout?.height ?? 0) + 12))}
+              tickMargin={TICK_GAP}
+              height={Math.max(56, Math.ceil((layout?.height ?? 0) + TICK_GAP))}
               interval={0}
             />
             <YAxis hide={labelled} tick={tick} axisLine={false} tickLine={false} width={Y_WIDTH} />

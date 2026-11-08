@@ -2,7 +2,7 @@ import { act, render } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { tickLayout } from "../components/slides/ChartPlots";
+import { AxisTick, tickLayout } from "../components/slides/ChartPlots";
 import { slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import type { Slide } from "../types/slide";
@@ -105,5 +105,27 @@ describe("bar tick layout", () => {
       lines: [["Onboarding"], ["QA"]],
       angled: true,
     });
+  });
+});
+
+// WebKit drops a text's dominant-baseline on the tspans inside it: the labels sat on the axis line
+// in Safari while Chrome hung them below it.
+describe("axis tick", () => {
+  it("hangs every line from its own tspan", () => {
+    const { container } = render(
+      <svg>
+        <AxisTick
+          x={0}
+          y={0}
+          index={0}
+          payload={{ value: "Plan" }}
+          layout={{ step: 0, lines: [["Waiting", "for"]], angled: false }}
+        />
+      </svg>,
+    );
+    const lines = [...container.querySelectorAll("tspan")];
+    expect(lines).toHaveLength(2);
+    for (const line of lines)
+      expect(line.getAttribute("dominant-baseline")).toBe("text-before-edge");
   });
 });

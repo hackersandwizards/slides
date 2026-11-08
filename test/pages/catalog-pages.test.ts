@@ -4,6 +4,7 @@ import type { AddressInfo } from "node:net";
 import { extname, join } from "node:path";
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
+import { TICK_GAP } from "../../components/slides/ChartPlots";
 
 // Served under the Pages base, since a built state page loads its stylesheets from /slides/.
 const dist = join(import.meta.dirname, "..", "..", "dist");
@@ -139,3 +140,35 @@ it("shows a story's whole slide, centred, and fits it again as the window change
   }
   await tab.close();
 }, 60_000);
+
+// Every category label of a chart story stands below the axis line by the tick gap and whole
+// inside its plot, at stage size.
+it.each(["bar", "bar-long-names", "trend", "trend-marked"])(
+  "keeps %s's labels below the axis and whole",
+  async (story) => {
+    const tab = await browser.newPage();
+    await tab.setViewport({ width: 1920, height: 1080 });
+    await tab.goto(page(`stories/Types/chart-slide/${story}`), { waitUntil: "load" });
+    await tab.waitForSelector(".recharts-xAxis-tick-labels text");
+    const m = await tab.evaluate(async () => {
+      // The labels lay out again once the web font arrives, a render or two later.
+      await document.fonts.ready;
+      for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
+      const box = (e: Element) => e.getBoundingClientRect().toJSON() as DOMRect;
+      return {
+        axis: box(document.querySelector(".recharts-xAxis .recharts-cartesian-axis-line")!),
+        plot: box(document.querySelector(".recharts-surface")!),
+        labels: [...document.querySelectorAll(".recharts-xAxis-tick-labels text")].map(box),
+      };
+    });
+    expect(m.labels.length).toBeGreaterThan(0);
+    for (const label of m.labels) {
+      expect(label.top).toBeGreaterThanOrEqual(m.axis.bottom + TICK_GAP);
+      expect(label.left).toBeGreaterThanOrEqual(m.plot.left);
+      expect(label.right).toBeLessThanOrEqual(m.plot.right);
+      expect(label.bottom).toBeLessThanOrEqual(m.plot.bottom);
+    }
+    await tab.close();
+  },
+  60_000,
+);
