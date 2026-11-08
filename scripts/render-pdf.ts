@@ -5,7 +5,11 @@ import puppeteer from "puppeteer";
  *  times as long and ran to 30 MB for a 74-slide deck. Each repo's `export-pdf.ts` resolves the
  *  deck, the URL and the file name, and calls this. */
 export async function renderPdf(url: string, out: string, title: string, slideCount: number) {
-  const browser = await puppeteer.launch({ headless: true, protocolTimeout: 300_000 });
+  const browser = await puppeteer.launch({
+    headless: true,
+    protocolTimeout: 300_000,
+    args: ["--use-mock-keychain", "--password-store=basic"],
+  });
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });

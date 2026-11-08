@@ -296,7 +296,13 @@ export function NumberTile({
     <span
       className={`flex shrink-0 items-center justify-center rounded-brand-sm font-heading font-bold tabular-nums ${TILE_SIZES[size]} ${TILE_TONES[tone]} ${className}`.trim()}
     >
-      {children}
+      {typeof children === "string" || typeof children === "number" ? (
+        // Trimmed to the cap height and the baseline, the numeral itself is what the tile centres:
+        // the font's ascent and descent put it a pixel or more off (test/pages/badge-centre).
+        <span className="[text-box:trim-both_cap_alphabetic]">{children}</span>
+      ) : (
+        children
+      )}
     </span>
   );
 }

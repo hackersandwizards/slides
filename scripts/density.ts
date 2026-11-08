@@ -51,6 +51,8 @@ try {
     headless: true,
     protocolTimeout: 900_000,
     args: [
+      "--use-mock-keychain",
+      "--password-store=basic",
       "--disable-background-timer-throttling",
       "--disable-renderer-backgrounding",
       "--disable-backgrounding-occluded-windows",

@@ -892,10 +892,10 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
             return (
               <div
                 key={i}
-                className={`flex items-start gap-4 pr-6 pl-4 ${n ? "border-l-(length:--slide-rule-accent) border-primary bg-primary/25 [--code-comment:var(--slide-code-comment-lit)]" : "border-l-(length:--slide-rule-accent) border-transparent"}`}
+                className={`flex items-center gap-4 pr-6 pl-4 ${n ? "border-l-(length:--slide-rule-accent) border-primary bg-primary/25 [--code-comment:var(--slide-code-comment-lit)]" : "border-l-(length:--slide-rule-accent) border-transparent"}`}
               >
                 {marked.size > 0 && (
-                  <span className="flex w-10 shrink-0 justify-center pt-1">
+                  <span className="flex w-10 shrink-0 justify-center">
                     {n && <NumberTile size="sm">{n}</NumberTile>}
                   </span>
                 )}

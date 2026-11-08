@@ -27,7 +27,8 @@ describe("evolution, through the process slide", () => {
   it("sets short multipliers in the tiles", () => {
     const { getByText } = printed([stage("1x", "Chat"), stage("10x", "Harness")]);
     expect(getByText("10x").tagName).toBe("SPAN");
-    expect(getByText("10x").nextElementSibling?.tagName).toBe("H2");
+    // The tile draws its text in a span of its own, trimmed to the cap height.
+    expect(getByText("10x").parentElement!.nextElementSibling?.tagName).toBe("H2");
   });
 
   it("moves every label above the title when one is too long for a tile", () => {
