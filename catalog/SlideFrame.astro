@@ -37,7 +37,7 @@ const src = path.replace("/dashboard/", "/stories/");
         const embed = stage.parentElement;
         const pane = embed.parentElement;
         const fit = () => {
-          // The pane's height under the stage's top, less the link and padding below the stage.
+          // The pane's height under the stage's top, less the padding below the stage.
           const box = stage.getBoundingClientRect();
           const top = box.top - pane.getBoundingClientRect().top;
           const below = embed.getBoundingClientRect().bottom - box.bottom;
@@ -51,9 +51,6 @@ const src = path.replace("/dashboard/", "/stories/");
         document.fonts.ready.then(fit);
       }
     </script>
-    <a href={src} target="_blank" rel="noreferrer">
-      Open full screen
-    </a>
   </div>
 )}
 
@@ -88,11 +85,5 @@ const src = path.replace("/dashboard/", "/stories/");
     height: var(--slide-page-height);
     border: 0;
     transform-origin: 0 0;
-  }
-  .story-embed a {
-    display: inline-block;
-    margin-top: 0.5rem;
-    font-size: var(--text-ui);
-    color: inherit;
   }
 </style>
