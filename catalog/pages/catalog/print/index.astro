@@ -175,6 +175,24 @@ const jobLinks = (Object.keys(JOBS) as Job[])
       figure:target .meta {
         display: block;
       }
+      .when {
+        margin: 0.5rem 0 0.25rem;
+        font-size: 0.9375rem;
+      }
+      .dos {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.125rem 0.5rem;
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--color-muted);
+      }
+      .dos dt {
+        font-weight: 600;
+      }
+      .dos dd {
+        margin: 0;
+      }
       .note {
         max-width: 480px;
         font-size: 0.875rem;

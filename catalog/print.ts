@@ -16,6 +16,7 @@ import { DeckTile } from "../components/deck/DeckTile";
 import { brandHref, placeBrandUrls } from "./brand-urls";
 import { classesIn, compileSlides } from "./print-css";
 import { CODE_SAMPLE, PARTS, codePanel, inRow } from "./parts";
+import { GUIDANCE } from "./guidance";
 import exceptions from "../brand-elements.json";
 import { version as brandVersion } from "@hackersandwizards/brand/package.json";
 import registry from "../lib/slide-components.ts?raw";
@@ -522,6 +523,14 @@ const plotStory = (index: number) => {
     ? `src="${base}/stories/Types/chart-slide/${slide.variant}/"`
     : undefined;
 };
+const guidanceOf = (id: string) => {
+  const entry = GUIDANCE[id];
+  if (!entry) throw new Error(`no guidance for the catalogue entry ${id}`);
+  return {
+    search: entry.when.toLowerCase(),
+    html: `<p class="when">${attr(entry.when)}</p><dl class="dos"><dt>Do</dt><dd>${attr(entry.do)}</dd><dt>Don't</dt><dd>${attr(entry.dont)}</dd></dl>`,
+  };
+};
 const tile = (
   { name, markup, index }: { name: string; markup: string; index: number },
   prefix = "",
@@ -529,7 +538,8 @@ const tile = (
   const id = anchor(name, prefix);
   const { jobs, search } = entryOf(index);
   const content = plotStory(index) ?? `srcdoc="${attr(frameDoc(markup))}"`;
-  return `<figure id="${id}" data-jobs="${jobs.join(" ")}" data-search="${attr(`${name.toLowerCase()} ${search}`)}"><figcaption><a href="#${id}">${name}</a></figcaption><div class="frame"><iframe loading="lazy" title="${attr(name)}" ${content}></iframe></div><p class="meta">${jobs.map((j) => JOBS[j]).join(" · ")}</p></figure>`;
+  const guide = guidanceOf(id);
+  return `<figure id="${id}" data-jobs="${jobs.join(" ")}" data-search="${attr(`${name.toLowerCase()} ${search} ${guide.search}`)}"><figcaption><a href="#${id}">${name}</a></figcaption><div class="frame"><iframe loading="lazy" title="${attr(name)}" ${content}></iframe></div><p class="meta">${jobs.map((j) => JOBS[j]).join(" · ")}</p>${guide.html}</figure>`;
 };
 const partTile = ({ name, markup }: { name: string; markup: string }) => {
   const id = anchor(name, "part-");
@@ -540,7 +550,7 @@ const frameDoc = (markup: string) =>
 
 const codeEntry = {
   jobs: ["code"] as Job[],
-  html: `<figure id="block-code" data-jobs="code" data-search="${[...codeBlocks].join(" ")} code and demo"><figcaption><a href="#block-code">${[...codeBlocks].join(", ")}</a></figcaption><p class="note">No tile: Shiki sets a code block's colours inline, which the brand colour scan allows only in <code>styles/slides.css</code>.</p></figure>`,
+  html: `<figure id="block-code" data-jobs="code" data-search="${[...codeBlocks].join(" ")} code and demo ${guidanceOf("block-code").search}"><figcaption><a href="#block-code">${[...codeBlocks].join(", ")}</a></figcaption><p class="note">No tile: Shiki sets a code block's colours inline, which the brand colour scan allows only in <code>styles/slides.css</code>.</p>${guidanceOf("block-code").html}</figure>`,
 };
 export const entries = [
   ...[...frames, ...markerFrames].map((f) => ({ jobs: entryOf(f.index).jobs, html: tile(f) })),

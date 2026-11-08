@@ -112,3 +112,15 @@ idle, the same tile takes 40 ms (one control, the wait condition). Home's cold l
 
 - **Part frames still load every part** (`code-highlight.*.js`, 462 KB raw, 84 KB gzip, in every
   part frame): item `work-part-frames-load-own-part`.
+
+## Deck page bundle (L190), 08.11.2026
+
+Measured on the specimen deck's story at v2.7.0 plus this run's commits, JavaScript requested up to
+the load event, gzip: 182 KB in 33 files. React's client is 64 KB and `primitives` 43 KB (motion
+among them). The slide-type chunks together are 37 KB, the largest `QuestionSlide` at 9 KB, and
+Astro already splits them per module. Another 9 KB load after the load event.
+
+Not split further: 37 KB is the most a split could defer, a deck needs its types within minutes
+anyway, and a lazy slide type shows nothing until its chunk arrives, which would blank the first
+press on each new type. The stylesheet (`slides.css`, 231 KB raw, 53 KB gzip) stays render-blocking
+on a deck page, since every slide's first paint needs it.

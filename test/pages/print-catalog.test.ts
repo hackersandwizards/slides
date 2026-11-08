@@ -34,6 +34,23 @@ it("puts every entry under one or two of the 13 jobs", () => {
   }
 });
 
+it("tells for every entry when to take it, with a do and a don't", () => {
+  // Split at the entries' own starts: a slide's markup holds figures of its own.
+  const figures = html.split(/(?=<figure id="[^"]+" data-jobs=)/).slice(1);
+  expect(figures.length).toBeGreaterThan(50);
+  for (const figure of figures) {
+    expect(figure, figure.slice(0, 80)).toMatch(/<p class="when">[^<]+<\/p>/);
+    expect(figure, figure.slice(0, 80)).toMatch(
+      /<dt>Do<\/dt><dd>[^<]+<\/dd><dt>Don't<\/dt><dd>[^<]+<\/dd>/,
+    );
+  }
+});
+
+it("finds a schedule by what it is for, not by its type's name", () => {
+  const search = (word: string) => entries.filter(([, , s]) => s.includes(word));
+  expect(search("schedule").length).toBeGreaterThan(0);
+});
+
 it("finds every slide type and content block by its name", () => {
   const words = new Set(entries.flatMap(([, , search]) => search.split(" ")));
   const blocks = slideCatalog.slides.flatMap((s) =>
