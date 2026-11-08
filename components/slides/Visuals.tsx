@@ -752,15 +752,17 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
       return i.value.length - lead.length + 0.5 * lead.trim().length;
     }),
   );
-  // Wrapped figures read as one grid at a glance: no rule, the label bold against its line, and
-  // each pair close to its figure.
+  // Wrapped figures read as one grid at a glance: no rule, the label bold against its line, each
+  // pair close to its figure, and in three columns the rows far apart, so a note never reads as
+  // the next figure's. Open space groups them better than a card or a rule per figure, which crowd
+  // the slide. Four columns keep the closer rows, or two rows of notes run past the slide's foot.
   const wrapped = n > 4;
   const look = wrapped
     ? {
         cap: 5,
-        grid: "gap-16",
+        grid: cols === 3 ? "mt-8 gap-x-16 gap-y-28" : "gap-16",
         label: "mt-4 leading-tight font-semibold",
-        text: "mt-1",
+        text: "mt-1 text-pretty",
         source: "mt-16",
       }
     : {
