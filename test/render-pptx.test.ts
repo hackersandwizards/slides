@@ -238,6 +238,37 @@ describe("slides-pptx on the specimen deck", () => {
     );
   });
 
+  it("keeps a marked two-series trend's planned halves out of the legend", async () => {
+    const out = join(dir, "two.pptx");
+    await renderPptx(
+      {
+        name: "T",
+        slides: [
+          {
+            type: "chart",
+            variant: "trend",
+            headline: "H",
+            currentMarker: "b",
+            seriesLabel: "A",
+            series2Label: "B",
+            data: [
+              { name: "a", value: 1, value2: 2 },
+              { name: "b", value: 2, value2: 3 },
+              { name: "c", value: 3, value2: 4 },
+            ],
+          },
+        ],
+      },
+      out,
+      dir,
+    );
+    const zipped = await JSZip.loadAsync(readFileSync(out));
+    const chart = Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))!;
+    const xml = await zipped.file(chart)!.async("string");
+    expect(xml.match(/<c:legendEntry>/g)).toHaveLength(2);
+    expect(xml.match(/<a:prstDash val="dash"\/>/g)).toHaveLength(2);
+  });
+
   it("spells out a linked image's link and covers a video with its poster", async () => {
     const at = (type: string) =>
       slideCatalog.slides.findIndex(

@@ -142,7 +142,8 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
       // listener's stopPropagation when the press was dispatched on window itself.
       if (follows || deckSync.isReplayed(event) || event.defaultPrevented) return;
       const { key, shiftKey } = event;
-      if (key === "?" && dialogOpen()) return setHelp(false);
+      if (key === "?" && dialogOpen() && !event.metaKey && !event.ctrlKey && !event.altKey)
+        return setHelp(false);
       if (ignoredKey(event)) return;
       const asArrow =
         key === "PageDown" || (key === " " && !shiftKey)
@@ -155,7 +156,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
       else if (asArrow) {
         event.preventDefault();
         (event.target ?? window).dispatchEvent(arrowEvent(asArrow));
-      } else if (key === "?") setHelp((v) => !v);
+      } else if (key === "?") setHelp(true);
       else if (key === "f" || key === "F") {
         if (document.fullscreenElement) void document.exitFullscreen();
         else void document.documentElement.requestFullscreen?.();

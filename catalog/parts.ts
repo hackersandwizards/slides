@@ -30,11 +30,11 @@ const cell = (name: string, child: ReactNode) => h("div", null, label(name), chi
 export const tones = ["neutral", "primary", "secondary", "accent", "success", "error"] as const;
 export const looks = ["tint", "soft", "outline", "line"] as const;
 
-/** A part missing here fails the build (print.ts). */
 export const CODE_SAMPLE = 'claude --print "fix the failing test" # one run';
 export const codePanel = (lines: ReactNode) =>
   h(CodePanel, { as: "pre", className: "p-8 font-code text-xl" }, lines);
 
+/** A part missing here fails the build (print.ts). */
 export const PARTS: Record<string, () => ReactNode> = {
   DisplayHeading: () =>
     h(

@@ -43,9 +43,7 @@ function PillBox({
 
 export function PhasedPillsSlide({ slide }: Props) {
   const { phases, title } = slide;
-  const columns = Math.max(
-    ...phases.map(({ items }) => (items.length > 6 ? Math.ceil(items.length / 2) : items.length)),
-  );
+  const columns = Math.max(...phases.map(({ items }) => items.length));
 
   // A phase of more than three pills no longer fits shared columns across the slide: each phase
   // then wraps its pills in rows of their own width.
@@ -72,8 +70,9 @@ export function PhasedPillsSlide({ slide }: Props) {
             </BlurFade>
           )}
 
-          {/* One grid for every phase, so the pills share columns, every column as wide as the
-              widest pill. Up to six stay on one row, since a split loses their order. */}
+          {/* One grid for phases of up to three, so the pills share columns as wide as the widest
+              pill. A phase of four to six keeps one row of its own, since a split loses their
+              order; more than six wrap. */}
           <div
             className={wrap ? "flex flex-col gap-y-4" : "grid gap-y-4"}
             style={
@@ -86,16 +85,24 @@ export function PhasedPillsSlide({ slide }: Props) {
               const theme = phase.theme ?? "secondary";
               const category = themeToCategory[theme] ?? "secondary";
               const phaseDelay = 0.1 + phaseIndex * 0.12;
+              const row = wrap && phase.items.length <= 6;
 
               return (
                 <div
                   key={phaseIndex}
-                  className={`gap-x-4 gap-y-2.5 ${wrap ? "flex flex-wrap" : "col-span-full grid grid-cols-subgrid"}`}
+                  className={`gap-x-4 gap-y-2.5 ${row ? "grid" : wrap ? "flex flex-wrap" : "col-span-full grid grid-cols-subgrid"}`}
+                  style={
+                    row
+                      ? {
+                          gridTemplateColumns: `repeat(${phase.items.length}, minmax(min-content, max-content))`,
+                        }
+                      : undefined
+                  }
                 >
                   <BlurFade
                     delay={phaseDelay}
                     duration={0.3}
-                    className={wrap ? "basis-full" : "col-span-full"}
+                    className={wrap && !row ? "basis-full" : "col-span-full"}
                   >
                     <div
                       className="hw-label flex items-baseline gap-2.5 [--hw-label-size:var(--text-base)]"

@@ -41,7 +41,10 @@ const hasCode = (s: Slide) =>
   (s.type === "content" && !!s.content?.some((b) => codeBlocks.has(b.type))) ||
   (s.type === "lanes" && !!s.codeSnippet);
 const variantOf = (s: Slide) =>
-  (s.type === "grid" && s.cards.some((c) => c.imageSrc) && "quotes with portraits") ||
+  (s.type === "grid" &&
+    s.variant === "quotes" &&
+    s.cards.every((c) => c.imageSrc) &&
+    "quotes with portraits") ||
   ("variant" in s && s.variant) ||
   ("layout" in s && s.layout) ||
   ("kind" in s && s.kind) ||
@@ -377,12 +380,7 @@ const EXCEPTION_SHOWN: Record<string, () => ReactNode> = {
     ),
   "number-tile": () =>
     inRow(h(NumberTile, { children: "3" }), h(NumberTile, { tone: "soft", children: "3" })),
-  "code-panel": () =>
-    h(
-      CodePanel,
-      { as: "pre", className: "p-8 font-code text-xl" },
-      highlightLines('claude --print "fix the failing test" # one run', "bash"),
-    ),
+  "code-panel": () => codePanel(highlightLines(CODE_SAMPLE, "bash")),
   "frame-tone": () =>
     inRow(
       h(DashedFrame, { className: "w-64 p-6 text-lg" }, "neutral"),
@@ -548,9 +546,10 @@ const partTile = ({ name, markup }: { name: string; markup: string }) => {
 const frameDoc = (markup: string) =>
   `<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="build/slides.css"><style>body{margin:0}</style></head><body>${markup}</body></html>`;
 
+const codeGuide = guidanceOf("block-code");
 const codeEntry = {
   jobs: ["code"] as Job[],
-  html: `<figure id="block-code" data-jobs="code" data-search="${[...codeBlocks].join(" ")} code and demo ${guidanceOf("block-code").search}"><figcaption><a href="#block-code">${[...codeBlocks].join(", ")}</a></figcaption><p class="note">No tile: Shiki sets a code block's colours inline, which the brand colour scan allows only in <code>styles/slides.css</code>.</p>${guidanceOf("block-code").html}</figure>`,
+  html: `<figure id="block-code" data-jobs="code" data-search="${[...codeBlocks].join(" ")} code and demo ${codeGuide.search}"><figcaption><a href="#block-code">${[...codeBlocks].join(", ")}</a></figcaption><p class="note">No tile: Shiki sets a code block's colours inline, which the brand colour scan allows only in <code>styles/slides.css</code>.</p>${codeGuide.html}</figure>`,
 };
 export const entries = [
   ...[...frames, ...markerFrames].map((f) => ({ jobs: entryOf(f.index).jobs, html: tile(f) })),

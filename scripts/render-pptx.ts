@@ -479,6 +479,8 @@ interface Ctx {
   assets: string;
   dark: boolean;
   warnings: string[];
+  /** The deck's chart count, and per chart number of a marked trend its marked point. */
+  charts: { count: number; marked: Map<number, number> };
 }
 
 /** A deck file's path: a root path under the consumer's public directory, else a file path as it
@@ -2874,6 +2876,8 @@ const RENDER: {
         ...(two ? halves(d.series2Label ?? "", (p) => p.value2 ?? 0) : []),
       ] as { name: string; labels: string[]; values: number[] }[];
       const hues = two ? [c.teal, c.purple] : [c.teal];
+      ctx.charts.count += 1;
+      if (now >= 0) ctx.charts.marked.set(ctx.charts.count, now);
       s.addChart(d.variant === "trend" ? pptx.ChartType.line : pptx.ChartType.bar, series, {
         x: a.x + 0.5,
         y: a.y,
@@ -3894,27 +3898,30 @@ function pillPhases(
   });
 }
 
-/** Builds the deck and writes it; returns the warnings for images or videos it could not place. */
-// pptxgenjs sets a line's dash and its data markers per chart. A marked trend's planned series get
-// the dash here, and its first measured series the dot on the marked point, the first point its
-// planned half holds.
-function finishPlanned(xml: string, name: string) {
-  if (!/^ppt\/charts\/chart\d+\.xml$/.test(name) || !xml.includes(`${PLANNED}</c:v>`)) return xml;
-  const series = (ser: string) => /<c:tx>.*?<c:v>(.*?)<\/c:v>/s.exec(ser)?.[1] ?? "";
+// pptxgenjs sets a line's dash and its data markers per chart. A marked trend's series alternate
+// measured and planned: the planned ones get the dash and leave the legend, its first measured one
+// the dot on the marked point.
+function finishPlanned(xml: string, now: number | undefined) {
+  if (now === undefined) return xml;
   const all = xml.match(/<c:ser>.*?<\/c:ser>/gs) ?? [];
-  const planned = all.find((ser) => series(ser).endsWith(PLANNED))!;
-  const now = /<c:val>.*?<c:pt idx="(\d+)"><c:v>[^<]/s.exec(planned)?.[1];
-  const hue = /srgbClr val="(\w+)"/.exec(planned)?.[1];
+  const planned = all.filter((_, i) => i % 2 === 1);
+  const hue = /srgbClr val="(\w+)"/.exec(all[0] ?? "")?.[1];
   const dot = `<c:dPt><c:idx val="${now}"/><c:marker><c:symbol val="circle"/><c:size val="11"/><c:spPr><a:solidFill><a:srgbClr val="${hue}"/></a:solidFill><a:ln w="19050"><a:solidFill><a:srgbClr val="${hex("--color-white")}"/></a:solidFill></a:ln></c:spPr></c:marker><c:bubble3D val="0"/></c:dPt>`;
-  return xml.replace(/<c:ser>.*?<\/c:ser>/gs, (ser) =>
-    series(ser).endsWith(PLANNED)
-      ? ser.replace('<a:prstDash val="solid"/>', '<a:prstDash val="dash"/>')
-      : ser === all[0]
-        ? ser.replace(/(<c:dLbls>.*?<\/c:dLbls>)\s*(<c:marker>.*?<\/c:marker>)/s, `$2${dot}$1`)
-        : ser,
-  );
+  const entries = planned
+    .map((_, i) => `<c:legendEntry><c:idx val="${2 * i + 1}"/><c:delete val="1"/></c:legendEntry>`)
+    .join("");
+  return xml
+    .replace('<c:legendPos val="t"/>', `<c:legendPos val="t"/>${entries}`)
+    .replace(/<c:ser>.*?<\/c:ser>/gs, (ser) =>
+      planned.includes(ser)
+        ? ser.replace('<a:prstDash val="solid"/>', '<a:prstDash val="dash"/>')
+        : ser === all[0]
+          ? ser.replace(/(<c:dLbls>.*?<\/c:dLbls>)\s*(<c:marker>.*?<\/c:marker>)/s, `$2${dot}$1`)
+          : ser,
+    );
 }
 
+/** Builds the deck and writes it; returns the warnings for images or videos it could not place. */
 export async function renderPptx(
   deck: Presentation,
   out: string,
@@ -3927,7 +3934,14 @@ export async function renderPptx(
   if (deck.speakers?.length) pptx.author = deck.speakers.join(", ");
   pptx.theme = { headFontFace: MONO, bodyFontFace: SANS };
   const dark = deck.theme === "brand-dark";
-  const deckCtx: Ctx = { pptx, c: palette(dark), assets, dark, warnings: [] };
+  const deckCtx: Ctx = {
+    pptx,
+    c: palette(dark),
+    assets,
+    dark,
+    warnings: [],
+    charts: { count: 0, marked: new Map() },
+  };
   // A deep-dive slide stands on night, as on the web (`isDeepDive`).
   const nightCtx: Ctx = { ...deckCtx, c: palette(true), dark: true };
   const ctxOf = (slide: Slide | undefined) =>
@@ -3948,8 +3962,15 @@ export async function renderPptx(
   // default face. pptxgenjs writes the typeface alone, or a sans pitch for every face in a table.
   const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
   const fallback: Record<string, string> = { [SANS]: "34", [MONO]: "49" };
+  // pptxgenjs numbers charts across every deck of the process: within one, they run in drawing order.
+  const chartFiles = Object.keys(zip.files)
+    .filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
+    .sort((a, b) => parseInt(a.match(/\d+/)![0]) - parseInt(b.match(/\d+/)![0]));
   for (const name of Object.keys(zip.files).filter((f) => /^ppt\/.+\.xml$/.test(f))) {
-    const xml = finishPlanned(await zip.file(name)!.async("string"), name);
+    const xml = finishPlanned(
+      await zip.file(name)!.async("string"),
+      deckCtx.charts.marked.get(chartFiles.indexOf(name) + 1),
+    );
     const n = /^ppt\/slides\/slide(\d+)\.xml$/.exec(name);
     const teal = ctxOf(n ? deck.slides[Number(n[1]) - 1] : undefined).c.teal;
     zip.file(

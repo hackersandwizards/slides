@@ -49,11 +49,11 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]}`;
   <div class="story-embed" data-story-of={component} style={corner}>
     <div class="story-stage hw-card" popover>
       <iframe src={src} title={`${component} story`} loading="lazy" />
-      <button class="story-close hw-button" type="button">
+      <button class="story-close" type="button">
         Close
       </button>
     </div>
-    <button class="story-enlarge hw-button" type="button">
+    <button class="story-enlarge" type="button">
       Enlarge slide
     </button>
     <script is:inline>
@@ -64,7 +64,7 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]}`;
         const pane = embed.parentElement;
         const fit = () => {
           // Enlarged, the slide fills the window, across a portrait phone so it is read turned.
-          if (stage.matches(":popover-open")) {
+          if (stage.showPopover && stage.matches(":popover-open")) {
             stage.style.width = "";
             const { clientWidth: w, clientHeight: h } = stage;
             const [slideW, slideH] = [frame.offsetWidth, frame.offsetHeight];
@@ -89,7 +89,9 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]}`;
         };
         new ResizeObserver(fit).observe(pane);
         stage.addEventListener("toggle", fit);
-        embed.querySelector(".story-enlarge").onclick = () => stage.showPopover();
+        const enlarge = embed.querySelector(".story-enlarge");
+        if (stage.showPopover) enlarge.onclick = () => stage.showPopover();
+        else enlarge.remove();
         embed.querySelector(".story-close").onclick = () => stage.hidePopover();
         // A face that loads late changes the story bar's height but not the pane's.
         document.fonts.ready.then(fit);
@@ -101,7 +103,6 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]}`;
 <style>
   @import "@hackersandwizards/brand/stage.css";
   @import "@hackersandwizards/brand/elements/card.css";
-  @import "@hackersandwizards/brand/elements/button.css";
 
   /* A deck's page stays light behind a light slide when the catalog is dark. */
   .slide-story {
@@ -140,6 +141,16 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]}`;
     aspect-ratio: auto;
     --hw-card-corner: 0;
     --hw-hairline: 0;
+  }
+  /* System colours and the frame's own corner: a consumer's catalog need carry no brand token. */
+  .story-close,
+  .story-enlarge {
+    padding: 0.5rem 1rem;
+    border: 1px solid currentColor;
+    border-radius: var(--hw-card-corner);
+    background: Canvas;
+    color: CanvasText;
+    font: inherit;
   }
   .story-close {
     display: none;

@@ -1,42 +1,16 @@
-import { createReadStream, statSync } from "node:fs";
-import { createServer, type Server } from "node:http";
-import type { AddressInfo } from "node:net";
-import { extname, join } from "node:path";
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { TICK_GAP } from "../../components/slides/ChartPlots";
+import { serveDist } from "./serve-dist";
 
 // Served under the Pages base, since a built state page loads its stylesheets from /slides/.
-const dist = join(import.meta.dirname, "..", "..", "dist");
 const NIGHT = "rgb(11, 17, 24)";
-const TYPES: Record<string, string> = {
-  ".css": "text/css",
-  ".js": "text/javascript",
-  ".svg": "image/svg+xml",
-};
-
 let browser: Browser;
-let server: Server;
+let served: Awaited<ReturnType<typeof serveDist>>;
 let page: (path: string) => string;
 beforeAll(async () => {
-  server = createServer((request, response) => {
-    const url = decodeURI(new URL(request.url ?? "/", "http://x").pathname);
-    const path = url.slice("/slides".length);
-    const file = join(dist, path.endsWith("/") ? `${path}index.html` : path);
-    if (
-      !url.startsWith("/slides/") ||
-      path.includes("..") ||
-      !statSync(file, { throwIfNoEntry: false })?.isFile()
-    ) {
-      response.statusCode = 404;
-      return response.end();
-    }
-    response.setHeader("Content-Type", TYPES[extname(file)] ?? "text/html");
-    createReadStream(file).pipe(response);
-  });
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-  const { port } = server.address() as AddressInfo;
-  page = (path) => `http://127.0.0.1:${port}/slides/${path}/`;
+  served = await serveDist();
+  page = (path) => `${served.origin}/slides/${path}/`;
   browser = await puppeteer.launch({
     headless: true,
     args: ["--use-mock-keychain", "--password-store=basic"],
@@ -44,7 +18,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await browser?.close();
-  server?.close();
+  served?.close();
 });
 
 // A tab holds focus as the one in front does, as brand-elements emulates it: a background tab never

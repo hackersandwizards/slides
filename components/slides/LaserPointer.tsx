@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { deckSync } from "../../lib/presenter-sync";
+import { dialogOpen } from "../../lib/slide-utils";
 
 interface Point {
   x: number;
@@ -148,6 +149,7 @@ export function LaserPointer() {
     };
 
     const handleMouseDown = (e: MouseEvent) => {
+      if (dialogOpen()) return;
       if (e.button === 0) {
         if (e.altKey) {
           isHighlighting = highlight !== null;
