@@ -1,23 +1,23 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference -- an ambient wildcard module has no import form, and a consumer's typecheck reaches it only from here
 /// <reference path="../types/url-imports.d.ts" />
 import type { Presentation, Slide } from "../types/slide";
-import agentSessionPoster from "./slide-catalogue/agent-session-poster.png?url&no-inline";
-import agentSessionVideo from "./slide-catalogue/agent-session.mp4?url&no-inline";
-import demoVideo from "./slide-catalogue/demo.mp4?url&no-inline";
-import portraitA from "./slide-catalogue/portrait-a.png?url&no-inline";
-import portraitB from "./slide-catalogue/portrait-b.png?url&no-inline";
-import qrExample from "./slide-catalogue/qr-example.png?url&no-inline";
-import qrTight from "./slide-catalogue/qr-tight.png?url&no-inline";
-import screenBoard from "./slide-catalogue/screen-board.png?url&no-inline";
-import screenChart from "./slide-catalogue/screen-chart.png?url&no-inline";
-import screenCode from "./slide-catalogue/screen-code.png?url&no-inline";
-import screenPullRequest from "./slide-catalogue/screen-pull-request.png?url&no-inline";
-import screenTeamBoard from "./slide-catalogue/screen-team-board.png?url&no-inline";
-import sketchNextToken from "./slide-catalogue/sketch-next-token.png?url&no-inline";
-import stripBoard from "./slide-catalogue/strip-board.png?url&no-inline";
-import stripPullRequest from "./slide-catalogue/strip-pull-request.png?url&no-inline";
+import agentSessionPoster from "./slide-catalog/agent-session-poster.png?url&no-inline";
+import agentSessionVideo from "./slide-catalog/agent-session.mp4?url&no-inline";
+import demoVideo from "./slide-catalog/demo.mp4?url&no-inline";
+import portraitA from "./slide-catalog/portrait-a.png?url&no-inline";
+import portraitB from "./slide-catalog/portrait-b.png?url&no-inline";
+import qrExample from "./slide-catalog/qr-example.png?url&no-inline";
+import qrTight from "./slide-catalog/qr-tight.png?url&no-inline";
+import screenBoard from "./slide-catalog/screen-board.png?url&no-inline";
+import screenChart from "./slide-catalog/screen-chart.png?url&no-inline";
+import screenCode from "./slide-catalog/screen-code.png?url&no-inline";
+import screenPullRequest from "./slide-catalog/screen-pull-request.png?url&no-inline";
+import screenTeamBoard from "./slide-catalog/screen-team-board.png?url&no-inline";
+import sketchNextToken from "./slide-catalog/sketch-next-token.png?url&no-inline";
+import stripBoard from "./slide-catalog/strip-board.png?url&no-inline";
+import stripPullRequest from "./slide-catalog/strip-pull-request.png?url&no-inline";
 
-/** The deck's images in `slide-catalogue/` beside this file, keyed by file name: each the URL the
+/** The deck's images in `slide-catalog/` beside this file, keyed by file name: each the URL the
  *  consumer's bundler gives the file, as for brand's logos. */
 export const specimenImages = {
   "agent-session-poster.png": agentSessionPoster,
@@ -48,7 +48,7 @@ const longBullets = [
 const slides: Slide[] = [
   {
     type: "title",
-    title: "Slide Catalogue",
+    title: "Slide Catalog",
     lang: "en",
     subtitle: "Every slide type and its variants, with fictional content",
     notes: "title: with subtitle, setting the deck's language.",
@@ -1494,7 +1494,7 @@ const slides: Slide[] = [
   {
     type: "question",
     headline: "Where does your team review today?",
-    storageKey: "slide-catalogue-question",
+    storageKey: "slide-catalog-question",
     options: [
       { label: "A", text: "Only the diff" },
       { label: "B", text: "The plan and the diff" },
@@ -2026,8 +2026,8 @@ const slides: Slide[] = [
   },
 ];
 
-export const slideCatalogue: Presentation = {
-  name: "Slide Catalogue",
+export const slideCatalog: Presentation = {
+  name: "Slide Catalog",
   subtitle: "Every slide type and its variants",
   speakers: ["hackers&wizards"],
   slides,
@@ -2035,8 +2035,8 @@ export const slideCatalogue: Presentation = {
 
 /** A proposal: the same slides in the engine's brand dark theme, on the website's night tokens.
  *  On no live deck. */
-export const slideCatalogueBrandDark: Presentation = {
-  ...slideCatalogue,
-  name: "Slide Catalogue, brand dark (proposal)",
+export const slideCatalogBrandDark: Presentation = {
+  ...slideCatalog,
+  name: "Slide Catalog, brand dark (proposal)",
   theme: "brand-dark",
 };

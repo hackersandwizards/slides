@@ -1,11 +1,7 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import {
-  slideCatalogue,
-  slideCatalogueBrandDark,
-  specimenImages,
-} from "../specimen/slide-catalogue";
+import { slideCatalog, slideCatalogBrandDark, specimenImages } from "../specimen/slide-catalog";
 import { aliasTypes, slideComponents } from "../lib/slide-components";
 import type {
   ChartSlide,
@@ -101,7 +97,7 @@ const THEMES: Record<SectionTheme, true> = {
 // The catalogue shows an alias's target type in its place.
 const ALIASES = new Set(Object.keys(aliasTypes));
 
-const slides = slideCatalogue.slides;
+const slides = slideCatalog.slides;
 const blocks = slides.flatMap((s) => (s.type === "content" ? s.content : []));
 const missing = (wanted: object, seen: Iterable<unknown>) => {
   const have = new Set(seen);
@@ -174,14 +170,12 @@ describe("slide catalogue coverage", () => {
 
   // A consumer serves only the images the deck imports: one named by a root path is a 404 there.
   it("imports every image of its folder and names none by a root path", () => {
-    const folder = join(import.meta.dirname, "..", "specimen", "slide-catalogue");
+    const folder = join(import.meta.dirname, "..", "specimen", "slide-catalog");
     expect(Object.keys(specimenImages).sort()).toEqual(
       readdirSync(folder)
         .filter((file) => !file.startsWith("."))
         .sort(),
     );
-    expect(JSON.stringify([slideCatalogue, slideCatalogueBrandDark])).not.toMatch(
-      /"\/slide-catalogue\//,
-    );
+    expect(JSON.stringify([slideCatalog, slideCatalogBrandDark])).not.toMatch(/"\/slide-catalog\//);
   });
 });

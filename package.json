@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "1.26.1",
+  "version": "2.0.0",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -35,8 +35,8 @@
     "./styles/sources.css": "./styles/sources.css",
     "./styles/tokens.css": "./styles/tokens.css",
     "./scripts/render-pdf": "./scripts/render-pdf.ts",
-    "./specimen/slide-catalogue": "./specimen/slide-catalogue.ts",
-    "./specimen/slide-catalogue/*": "./specimen/slide-catalogue/*",
+    "./specimen/slide-catalog": "./specimen/slide-catalog.ts",
+    "./specimen/slide-catalog/*": "./specimen/slide-catalog/*",
     "./catalog/SlideFrame.astro": "./catalog/SlideFrame.astro"
   },
   "files": [
@@ -65,7 +65,8 @@
     "check:staged": "check-staged",
     "dev": "ASTRO_DEV_BACKGROUND=1 bun --bun astro dev --root catalog",
     "catalog": "bun run dev --open /",
-    "build": "check-lock astro build --root catalog"
+    "build": "check-lock astro build --root catalog",
+    "check:markers": "mkdir -p node_modules/.cache/slides-markers && ln -sfn \"$PWD/dist\" node_modules/.cache/slides-markers/slides && brand-markers --site node_modules/.cache/slides-markers --catalog dist --catalog-at /slides /slides/catalog/print/frames.html"
   },
   "peerDependencies": {
     "@hackersandwizards/brand": "*",
@@ -114,7 +115,7 @@
     "@astrojs/react": "7.1.4",
     "@eslint/js": "10.0.1",
     "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.11.3",
-    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.38.0",
+    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.42.0",
     "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v2.21.2",
     "@tailwindcss/node": "4.3.5",
     "@tailwindcss/oxide": "4.3.5",
@@ -210,7 +211,8 @@
         "check:retired"
       ],
       "check:pages",
-      "check:elements"
+      "check:elements",
+      "check:markers"
     ]
   }
 }

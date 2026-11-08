@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { expect, it } from "vitest";
 import { slideComponents } from "../../lib/slide-components";
-import { slideCatalogue } from "../../specimen/slide-catalogue";
+import { slideCatalog } from "../../specimen/slide-catalog";
 
 // Reads the print page `bun run build` writes into dist/ before `check:pages` runs.
 const dist = join(import.meta.dirname, "..", "..", "dist");
@@ -36,7 +36,7 @@ it("puts every entry under one or two of the 13 jobs", () => {
 
 it("finds every slide type and content block by its name", () => {
   const words = new Set(entries.flatMap(([, , search]) => search.split(" ")));
-  const blocks = slideCatalogue.slides.flatMap((s) =>
+  const blocks = slideCatalog.slides.flatMap((s) =>
     s.type === "content" ? s.content.map((b) => b.type) : [],
   );
   const missing = [...Object.keys(slideComponents), ...blocks].filter((n) => !words.has(n));

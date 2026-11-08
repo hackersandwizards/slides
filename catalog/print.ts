@@ -5,7 +5,7 @@ import { aliasTypes, slideComponents } from "../lib/slide-components";
 import { brandLogos } from "../lib/brand-logos";
 import { PrintProvider } from "../lib/print-context";
 import { PrintSlide } from "../components/slides/PrintSlide";
-import { slideCatalogue } from "../specimen/slide-catalogue";
+import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
 import * as primitives from "../components/slides/primitives";
 import { highlightLines } from "../lib/code-highlight";
@@ -28,7 +28,7 @@ const sources = import.meta.glob<string>("../components/slides/*.tsx", {
 });
 const sourceOf = (component: string) => sources[`../components/slides/${component}.tsx`] ?? "";
 
-const deck = slideCatalogue.slides;
+const deck = slideCatalog.slides;
 const blockLabel = /^(Block|Visual): /;
 const isBlockSlide = (s: Slide) =>
   s.type === "content" && !!s.sectionLabel && blockLabel.test(s.sectionLabel);
@@ -87,7 +87,7 @@ const blockPicks = [
 // slide's lengths in `vh` (`.slide-content`, image heights) read the window that holds them.
 const slideMarkup = (index: number) =>
   renderToStaticMarkup(
-    h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalogue, index })),
+    h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalog, index })),
   );
 const bundled = `"${import.meta.env.BASE_URL.replace(/\/$/, "")}/_astro/`;
 const besidePage = (markup: string) => {

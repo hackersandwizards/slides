@@ -67,8 +67,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `scripts/render-pptx.ts`: the `slides-pptx` command, a deck JSON to a native PowerPoint file in
   the h&w design with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
   Its lengths and sizes are measured off the print route at 1920x1080.
-- `specimen/`: `slide-catalogue.ts`, the specimen deck, every slide type and variant with fictional
-  content, and its images (`specimen/slide-catalogue/`), which it imports as `?url` like brand's
+- `specimen/`: `slide-catalog.ts`, the specimen deck, every slide type and variant with fictional
+  content, and its images (`specimen/slide-catalog/`), which it imports as `?url` like brand's
   logos, so a consumer's bundler serves them and `specimenImages` names them.
   `test/specimen-coverage.test.ts` fails on a slide type, content block or variant it does not show.
 - `catalog/`: the catalog (decision repo-uniformity-plan, hub-max), one Astro app in scaffolding's
@@ -113,7 +113,9 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
   `package.json`: `check:pins`, `check:colours` (`brand-colours.json` holds the exceptions), `check:copies`
   (`brand-copies`) and `check:retired` (`brand-retired` over `dist`), then `check:pages`
   (the tests in `test/pages/` over the built print pages), then `check:elements`
-  (`brand-elements` over the print pages, `brand-elements.json`). No hook runs it:
+  (`brand-elements` over the print pages, `brand-elements.json`), then `check:markers` (`brand-markers` over `frames.html` and every
+  story page at the default 1280 width, served from a `slides` link to `dist/` in `node_modules/.cache`,
+  since the pages load their assets from the `/slides` base). No hook runs it:
   `.githooks/pre-commit` runs `bun run check:staged`, scaffolding's `check-staged` (`gitleaks`,
   coupling and confidential over the staged changes, `prettier --check` and `eslint` on the staged
   files, `admin-check` when an item is staged); `commit-msg` runs `check-confidential` on the message; the hooks are scaffolding's skeleton. `bun install` points `core.hooksPath` at `.githooks/`.
@@ -130,7 +132,7 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
    with the tag.
 2. Brief a session in each consumer to raise the tag in its `package.json`, `bun install` and run
    its gate. The regression
-   decks are this repo's `specimen/slide-catalogue.ts`, which talks shows, and
+   decks are this repo's `specimen/slide-catalog.ts`, which talks shows, and
    trainer-hub's `slide-master`; a new slide type or variant lands in the specimen deck first.
 
 ## Behavioral rules

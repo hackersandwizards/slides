@@ -154,7 +154,7 @@ const jobButtons = (Object.keys(JOBS) as Job[])
       .exception p {
         margin: 0 0 0.5rem;
       }
-      .catalogue {
+      .catalog {
         display: grid;
         grid-template-columns: 15rem minmax(0, 1fr);
         gap: 2rem;
@@ -263,7 +263,7 @@ const jobButtons = (Object.keys(JOBS) as Job[])
           up. Click a name to see its slide at 1440 px.
         </p>
         <p class="setup">
-          Built by <code>bun run build</code> from <code>specimen/slide-catalogue.ts</code> into{" "}
+          Built by <code>bun run build</code> from <code>specimen/slide-catalog.ts</code> into{" "}
           <code>dist/</code>, where it also opens from the disk: fonts and logos load from{" "}
           <code>dist/brand/</code>. <code>bun run dev</code> serves it at{" "}
           <code>http://127.0.0.1:4335/catalog/print/</code>, beside the{" "}
@@ -307,13 +307,13 @@ const jobButtons = (Object.keys(JOBS) as Job[])
         <Fragment set:html={usesTiles} />
       </main>
       <Fragment set:html={exceptionSections} />
-      <h2 id="catalogue">Catalogue</h2>
+      <h2 id="catalog">Catalogue</h2>
       <p class="layers">
         Every slide type, variant and content block, by the job a slide does. An entry may sit under
         two jobs. The search finds every type, block and variant name, and the old names of types
         that now draw through another. Click a name to see its slide at 1440 px with its jobs.
       </p>
-      <div class="catalogue">
+      <div class="catalog">
         <nav class="jobs" aria-label="Communication jobs">
           <button type="button" data-job="" aria-pressed="true">
             All <span>{entries.length}</span>

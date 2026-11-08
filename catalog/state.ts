@@ -1,23 +1,23 @@
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { deckLang, pageLabel } from "../lib/slide-utils";
-import { slideCatalogue } from "../specimen/slide-catalogue";
+import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
 import SlideFrame from "./SlideFrame.astro";
 
 export const state = (type: Slide["type"], nth: number, component: string) => {
   // Astrobook reads a story's args on the server only, so the client bundle leaves out the deck.
   if (!import.meta.env.SSR) return {};
-  const slide = slideCatalogue.slides.filter((s) => s.type === type)[nth];
+  const slide = slideCatalog.slides.filter((s) => s.type === type)[nth];
   if (!slide) throw new Error(`the specimen deck has no ${type} slide number ${nth + 1}`);
-  const index = slideCatalogue.slides.indexOf(slide);
+  const index = slideCatalog.slides.indexOf(slide);
   return {
     args: {
       slide,
-      logo: resolveSlideLogo(slideCatalogue, index),
-      theme: slideCatalogue.theme,
-      page: pageLabel(slideCatalogue.slides, index),
-      mark: cornerMark(slideCatalogue, index),
-      lang: deckLang(slideCatalogue),
+      logo: resolveSlideLogo(slideCatalog, index),
+      theme: slideCatalog.theme,
+      page: pageLabel(slideCatalog.slides, index),
+      mark: cornerMark(slideCatalog, index),
+      lang: deckLang(slideCatalog),
     },
     decorators: [{ component: SlideFrame, props: { component } }],
   };

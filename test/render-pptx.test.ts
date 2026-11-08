@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import verbal from "@hackersandwizards/brand/verbal.json";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { centredMark, renderPptx } from "../scripts/render-pptx";
-import { slideCatalogue } from "../specimen/slide-catalogue";
+import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
 import { overviewAsPhases } from "../lib/slide-utils";
 
@@ -78,7 +78,7 @@ beforeAll(async () => {
   dir = mkdtempSync(join(tmpdir(), "slides-pptx-"));
   const out = join(dir, "specimen.pptx");
   // Vite names the specimen's images from the repository root.
-  const warnings = await renderPptx(slideCatalogue, out, join(import.meta.dirname, ".."));
+  const warnings = await renderPptx(slideCatalog, out, join(import.meta.dirname, ".."));
   expect(warnings).toEqual([]);
   zip = await JSZip.loadAsync(readFileSync(out));
   for (let i = 1; zip.file(`ppt/slides/slide${i}.xml`); i++) {
@@ -102,7 +102,7 @@ afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("slides-pptx on the specimen deck", () => {
   it("writes one slide per deck slide", () => {
-    expect(slideXml).toHaveLength(slideCatalogue.slides.length);
+    expect(slideXml).toHaveLength(slideCatalog.slides.length);
   });
 
   // A malformed part opens in no viewer: Quick Look hangs on it and PowerPoint offers a repair.
@@ -119,7 +119,7 @@ describe("slides-pptx on the specimen deck", () => {
 
   it("sets brand's claim on a contact closing unless it turns the claim off", () => {
     const at = (claim: boolean) =>
-      slideCatalogue.slides.findIndex(
+      slideCatalog.slides.findIndex(
         (sl) => sl.type === "closing" && sl.variant === "contact" && (sl.claim !== false) === claim,
       );
     expect(norm(unescape(slideText[at(true)]))).toContain(norm(verbal.claim.en));
@@ -145,7 +145,7 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("sets every text of a slide as text on that slide", () => {
-    const missing = slideCatalogue.slides.flatMap((slide: Slide, i) => {
+    const missing = slideCatalog.slides.flatMap((slide: Slide, i) => {
       const shown = norm(unescape(slideText[i]));
       // A stats card shows its label in place of its title, as the web card does.
       // A closing whose mark stands centred shows the h&w lockup in place of the company's name.
@@ -171,7 +171,7 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("places pictures only for a deck's images and the h&w mark", () => {
-    slideCatalogue.slides.forEach((slide: Slide, i) => {
+    slideCatalog.slides.forEach((slide: Slide, i) => {
       const images =
         JSON.stringify(slide).match(
           /"(src|imageSrc|logo)":"[^"]+\.(png|jpe?g|webp|gif|svg|mp4|webm|mov)(\?[^"]*)?"/g,
@@ -184,7 +184,7 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("draws tables as tables and trend and bar charts as charts", () => {
-    slideCatalogue.slides.forEach((slide: Slide, i) => {
+    slideCatalog.slides.forEach((slide: Slide, i) => {
       if (slide.type === "content" && slide.content.some((b) => b.type === "table")) {
         expect(slideXml[i], `slide ${i + 1}`).toContain("<a:tbl>");
       }
@@ -196,7 +196,7 @@ describe("slides-pptx on the specimen deck", () => {
 
   it("spells out a linked image's link and covers a video with its poster", async () => {
     const at = (type: string) =>
-      slideCatalogue.slides.findIndex(
+      slideCatalog.slides.findIndex(
         (s) => s.type === "content" && s.content.some((b) => b.type === type),
       );
     expect(slideText[at("linked-image")]).toContain("forge.example.com/acme/payments/pull/128");
@@ -204,7 +204,7 @@ describe("slides-pptx on the specimen deck", () => {
       .file(`ppt/slides/_rels/slide${at("video") + 1}.xml.rels`)!
       .async("string");
     const poster = readFileSync(
-      join(import.meta.dirname, "..", "specimen", "slide-catalogue", "agent-session-poster.png"),
+      join(import.meta.dirname, "..", "specimen", "slide-catalog", "agent-session-poster.png"),
     );
     const pictures = await Promise.all(
       [...rels.matchAll(/Target="\.\.\/media\/([^"]+\.png)"/g)].map(async (m) =>
@@ -231,7 +231,7 @@ it("colours a deep-dive slide's bullets in the night teal, every other slide's i
   };
   const out = join(dir, "bullets.pptx");
   await renderPptx(
-    { ...slideCatalogue, slides: [slide, { ...slide, sectionTheme: "deepdive" }] as Slide[] },
+    { ...slideCatalog, slides: [slide, { ...slide, sectionTheme: "deepdive" }] as Slide[] },
     out,
     join(import.meta.dirname, "..", "specimen"),
   );
@@ -253,7 +253,7 @@ it("marks the text of a German deck German, its notes included", async () => {
   const out = join(dir, "lang.pptx");
   await renderPptx(
     {
-      ...slideCatalogue,
+      ...slideCatalog,
       slides: [
         { type: "title", title: "Titel", lang: "de" },
         {
@@ -292,7 +292,7 @@ it.each([
 ])("sets a \\n in %s as a line break inside its paragraph", async (_, slide) => {
   const out = join(dir, "breaks.pptx");
   await renderPptx(
-    { ...slideCatalogue, slides: [slide as Slide] },
+    { ...slideCatalog, slides: [slide as Slide] },
     out,
     join(import.meta.dirname, "..", "specimen"),
   );
@@ -311,7 +311,7 @@ it("warns on a video poster that is no PNG and sets no cover", async () => {
   const out = join(dir, "poster.pptx");
   const warnings = await renderPptx(
     {
-      ...slideCatalogue,
+      ...slideCatalog,
       slides: [
         {
           type: "content",
@@ -319,8 +319,8 @@ it("warns on a video poster that is no PNG and sets no cover", async () => {
           content: [
             {
               type: "video",
-              src: "/slide-catalogue/demo.mp4",
-              poster: "/slide-catalogue/demo.mp4",
+              src: "/slide-catalog/demo.mp4",
+              poster: "/slide-catalog/demo.mp4",
             },
           ],
         },
@@ -346,7 +346,7 @@ it.each([true, false])(
     const phases = ["Two", "two", undefined, "Nope", "Three"];
     const out = join(dir, "process.pptx");
     await renderPptx(
-      { ...slideCatalogue, slides: phases.map(slide) as Slide[] },
+      { ...slideCatalog, slides: phases.map(slide) as Slide[] },
       out,
       join(import.meta.dirname, "..", "specimen"),
     );

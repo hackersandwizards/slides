@@ -1,7 +1,7 @@
 import { act, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
-import { slideCatalogue } from "../specimen/slide-catalogue";
+import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
 
 const cases: { slide: Slide; headline: string }[] = [
@@ -140,7 +140,7 @@ describe("statement slide", () => {
 
 // The fit guard and the page's centring both reach `.slide-content` as the shell's own child: a
 // wrapper round it left a closing unfitted, and at the left edge of any window over 1920 px.
-it.each(slideCatalogue.slides.map((slide, i) => [i, slide.type, slide] as const))(
+it.each(slideCatalog.slides.map((slide, i) => [i, slide.type, slide] as const))(
   "keeps specimen slide %i (%s) directly in its shell",
   (_, type, slide) => {
     const SlideComponent = slideComponents[type];

@@ -32,7 +32,7 @@ the same way, so a consumer copies nothing into `public/` for the engine. Both r
 | `@hackersandwizards/slides/lib/next-adapter`             | `NextSlidesAdapter`                                                                                                  |
 | `@hackersandwizards/slides/components/slides/PrintSlide` | `PrintDeck`, a deck's print route, and `PrintSlide`, one printed page                                                |
 | `@hackersandwizards/slides/scripts/render-pdf`           | `renderPdf` for an export script                                                                                     |
-| `@hackersandwizards/slides/specimen/slide-catalogue`     | the fictional specimen deck, and `specimenImages`, its images' URLs by file name                                     |
+| `@hackersandwizards/slides/specimen/slide-catalog`       | the fictional specimen deck, and `specimenImages`, its images' URLs by file name                                     |
 | `@hackersandwizards/slides/catalog/SlideFrame.astro`     | a story's frame in a catalog on scaffolding's shell: `decorators: [{ component: SlideFrame, props: { component } }]` |
 
 The command `slides-pins` belongs in each consumer's gate, after scaffolding's shared steps: it
@@ -97,10 +97,12 @@ whose items carry a `when` ("09:00"), and so are a pitch's next steps (a due dat
 owner as `text`, the decision needed as `footer`). A deck whose agenda is a map that returns before
 each part (`phased-pills`) keeps that instead.
 
-One to three short statements under a headline are a `statement` slide, never a content slide of
-bullets, which leaves the slide empty around them: the section label as `kicker`, the headline as
-`lines`, the statements that lead up as `subtitle` (one per line) and the one they lead to as
-`closing`.
+One or two short statements under a headline are a `statement` slide, never a content slide of
+bullets, which leaves the slide empty around them, and `slides-density` fails on such a slide. Three
+are one too where they lead up to one line. Three parallel points stay bullets: only the deck's
+author can tell the two apart, so the check leaves three alone. The section label is the `kicker`,
+the headline the `lines`, the statements that lead up the `subtitle` (one per line) and the one they
+lead to the `closing`.
 
 An exercise, a live demo and a debrief are an `activity` slide (`kind`): the steps, watch points or
 questions, the exact instruction as `prompt`, and the timebox, mode and outcome in one card.
@@ -129,7 +131,7 @@ on a concept slide of paragraphs, the slide reads better without one.
 bun install      # also points the git hooks at .githooks/
 bun run dev      # the catalog at http://127.0.0.1:4335/
 bun run build    # the catalog to dist/, as https://hackersandwizards.github.io/slides/ publishes it
-bun run check    # the gate: scaffolding's shared steps, then pins, colours, copies and retired lines, the print pages, brand elements
+bun run check    # the gate: scaffolding's shared steps, then pins, colours, copies and retired lines, the print pages, brand elements, list markers
 ```
 
 A release is a tag `v<version>` matching `version` in `package.json`; consumers then raise the tag

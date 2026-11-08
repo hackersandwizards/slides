@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { aliasTypes } from "../lib/slide-components";
-import { slideCatalogue } from "../specimen/slide-catalogue";
+import { slideCatalog } from "../specimen/slide-catalog";
 import { PARTS } from "../catalog/parts";
 
 const STORIES = join(import.meta.dirname, "..", "catalog", "stories");
@@ -26,7 +26,7 @@ describe("catalog stories", () => {
     const source = readFileSync(join(STORIES, "Types", `${component}.stories.ts`), "utf8");
     expect(source).toContain(`export default { component: storySlide(${component}) };`);
     const states = [...source.matchAll(/state\("([\w-]+)", (\d+), "(\w+)"\)/g)];
-    const count = slideCatalogue.slides.filter((s) => s.type === type).length;
+    const count = slideCatalog.slides.filter((s) => s.type === type).length;
     expect(states.map(([, t, n, c]) => `${t} ${n} ${c}`)).toEqual(
       Array.from({ length: count }, (_, n) => `${type} ${n} ${component}`),
     );

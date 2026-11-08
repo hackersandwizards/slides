@@ -429,7 +429,7 @@ Trainings-Lieferungen sind Kopien des Standards. Notizen zählen dabei nicht mit
 | hycle       |     1 |         41 |
 | zusammen    |    52 |      2.157 |
 
-Einmalig sind es 1.687 Folien. Das Specimen-Deck `slide-catalogue` hat 89 Folien, dazu dieselben
+Einmalig sind es 1.687 Folien. Das Specimen-Deck `slide-catalog` hat 89 Folien, dazu dieselben
 89 im Theme brand-dark.
 
 ### Folientypen

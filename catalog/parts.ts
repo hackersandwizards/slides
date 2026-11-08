@@ -3,7 +3,7 @@ import * as primitives from "../components/slides/primitives";
 import * as chrome from "../components/slides/SlideChrome";
 import { highlightLines } from "../lib/code-highlight";
 import { qrAlt } from "../lib/slide-utils";
-import { specimenImages } from "../specimen/slide-catalogue";
+import { specimenImages } from "../specimen/slide-catalog";
 
 const {
   CodePanel,
