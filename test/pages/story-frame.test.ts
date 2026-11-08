@@ -46,18 +46,21 @@ it("enlarges the slide across a portrait phone and closes back to the card", asy
   const page = await open(390, 844);
   const small = await page.evaluate(scaleOf);
   await page.click(".story-enlarge");
-  await page.waitForSelector(".story-stage:popover-open");
+  await page.waitForSelector(".story-stage[data-turned]:popover-open");
+  // The `toggle` event that runs the fit is queued after the popover opens.
+  await page.waitForFunction(`(${scaleOf})() > ${small}`);
   expect(await page.evaluate(scaleOf)).toBeCloseTo(390 / 1080, 3);
   expect(small).toBeLessThan(0.2);
   const box = await page.$eval(".story-stage iframe", (f) => {
     const r = f.getBoundingClientRect();
-    return [r.left, r.right, r.top, r.bottom];
+    return [r.left, r.right, r.top, r.bottom].map(Math.round);
   });
   expect(box[0]).toBeGreaterThanOrEqual(0);
   expect(box[1]).toBeLessThanOrEqual(390);
   expect(box[2]).toBeGreaterThanOrEqual(0);
   expect(box[3]).toBeLessThanOrEqual(844);
   await page.click(".story-close");
+  await page.waitForFunction(`(${scaleOf})() < 0.2`);
   expect(await page.$(".story-stage:popover-open")).toBeNull();
   expect(await page.evaluate(scaleOf)).toBeCloseTo(small, 3);
   await page.close();
