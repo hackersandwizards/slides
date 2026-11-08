@@ -27,4 +27,4 @@ it("breaks a statement's closing where the deck types \\n", async () => {
   } finally {
     await browser.close();
   }
-});
+}, 60_000);

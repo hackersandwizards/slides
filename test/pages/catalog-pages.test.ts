@@ -47,8 +47,48 @@ afterAll(async () => {
   server?.close();
 });
 
-it("turns the catalog page night with its dark theme button, and back", async () => {
+// A tab holds focus as the one in front does, as brand-elements emulates it: a background tab never
+// paints, and the catalog's frames load only after the first paint.
+const newTab = async () => {
   const tab = await browser.newPage();
+  await (
+    await tab.createCDPSession()
+  ).send("Emulation.setFocusEmulationEnabled", { enabled: true });
+  return tab;
+};
+
+// Since scaffolding v2.22.0 a tile's frame loads once the home has painted and the tile is within
+// 200 px of the view, so a check reading the tiles without scrolling them in sees none.
+it("loads every tile on the catalog home, with no failed request", async () => {
+  const tab = await newTab();
+  await tab.setViewport({ width: 1440, height: 900 });
+  const failed: string[] = [];
+  tab.on("requestfailed", (request) => failed.push(request.url()));
+  tab.on("response", (response) => {
+    if (response.status() >= 400) failed.push(`${response.status()} ${response.url()}`);
+  });
+  await tab.goto(page("").slice(0, -1), { waitUntil: "load" });
+  const count = await tab.$$eval(".hw-catalog-preview iframe", (all) => all.length);
+  const loaded = () =>
+    tab.$$eval(
+      ".hw-catalog-preview iframe",
+      (all) =>
+        all.filter((frame) => frame.contentDocument?.querySelector("[data-hw-scale]")).length,
+    );
+  for (let at = 0; (await loaded()) < count && at < 100; at++)
+    await tab.evaluate(async () => {
+      const main = document.querySelector("main")!;
+      (main.scrollHeight > main.clientHeight ? main : document.scrollingElement!).scrollBy(0, 400);
+      await new Promise((done) => setTimeout(done, 100));
+    });
+  expect(count).toBeGreaterThan(20);
+  expect(await loaded()).toBe(count);
+  expect(failed).toEqual([]);
+  await tab.close();
+}, 120_000);
+
+it("turns the catalog page night with its dark theme button, and back", async () => {
+  const tab = await newTab();
   await tab.goto(page("dashboard/Types/closing-slide/contact"), { waitUntil: "load" });
   const ground = () => tab.evaluate(() => getComputedStyle(document.body).backgroundColor);
   const day = await ground();
@@ -60,7 +100,7 @@ it("turns the catalog page night with its dark theme button, and back", async ()
 }, 60_000);
 
 it("keeps a day slide's story page day under the dark theme", async () => {
-  const tab = await browser.newPage();
+  const tab = await newTab();
   await tab.evaluateOnNewDocument(() => localStorage.setItem("theme-toggle", "dark"));
   await tab.goto(page("stories/Types/closing-slide/contact"), { waitUntil: "load" });
   const fill = await tab.evaluate(
@@ -77,7 +117,7 @@ it.each([
 ])(
   "loads %s's images from under the Pages base once hydrated",
   async (path) => {
-    const tab = await browser.newPage();
+    const tab = await newTab();
     const missing: string[] = [];
     tab.on("response", (response) => {
       if (response.status() === 404) missing.push(response.url());
@@ -120,9 +160,15 @@ const fits = (tab: Page) =>
   });
 
 it("shows a story's whole slide, centred, and fits it again as the window changes", async () => {
-  const tab = await browser.newPage();
+  const tab = await newTab();
   await tab.setViewport({ width: 1920, height: 1080 });
   await tab.goto(page("dashboard/Types/activity-slide/specimen3"), { waitUntil: "networkidle0" });
+  // The frame measured is the story's own page, loaded.
+  expect(
+    await tab.$eval(".story-stage iframe", (frame) =>
+      Boolean(frame.contentDocument?.querySelector(".slide-story")),
+    ),
+  ).toBe(true);
   for (const [width, height] of [
     [1920, 1080],
     [1440, 900],
@@ -146,7 +192,7 @@ it("shows a story's whole slide, centred, and fits it again as the window change
 it.each(["bar", "bar-long-names", "trend", "trend-marked"])(
   "keeps %s's labels below the axis and whole",
   async (story) => {
-    const tab = await browser.newPage();
+    const tab = await newTab();
     await tab.setViewport({ width: 1920, height: 1080 });
     await tab.goto(page(`stories/Types/chart-slide/${story}`), { waitUntil: "load" });
     await tab.waitForSelector(".recharts-xAxis-tick-labels text");

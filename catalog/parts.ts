@@ -1,5 +1,6 @@
 import { createElement as h, type ReactNode } from "react";
 import * as primitives from "../components/slides/primitives";
+import { AxisTick, TICK_GAP, tickLayout } from "../components/slides/ChartPlots";
 import * as chrome from "../components/slides/SlideChrome";
 import { highlightLines } from "../lib/code-highlight";
 import { qrAlt } from "../lib/slide-utils";
@@ -147,6 +148,23 @@ export const PARTS: Record<string, () => ReactNode> = {
     ),
   TitledContent: () =>
     label("The column of a titled slide: headline, then the body under the fit guard."),
+  // Measured at 10 px a character, "Spec review" wraps in an 80 px band and angles in a 40 px one,
+  // where "review" alone is too wide.
+  AxisTick: () =>
+    inRow(
+      ...([80, 40] as const).map((band) => {
+        const layout = tickLayout(["Spec review"], band, (text) => text.length * 10);
+        return cell(
+          layout.angled ? "angled" : "wrapped",
+          h(
+            "svg",
+            { width: 480, height: 240, key: band },
+            h("line", { x1: 40, x2: 440, y1: 80, y2: 80, stroke: "var(--color-border-strong)" }),
+            h(AxisTick, { x: 240, y: 80 + TICK_GAP, index: 0, layout }),
+          ),
+        );
+      }),
+    ),
   ChartFrame: () => label("A chart's plot area: a SlideCard of fixed height the chart fills."),
   FrameTitle: () => h(FrameTitle, null, "The Factory"),
   PulseDot: () =>
