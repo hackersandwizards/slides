@@ -68,21 +68,21 @@ it("loads every tile on the catalog home, with no failed request", async () => {
     if (response.status() >= 400) failed.push(`${response.status()} ${response.url()}`);
   });
   await tab.goto(page("").slice(0, -1), { waitUntil: "load" });
-  const count = await tab.$$eval(".hw-catalog-preview iframe", (all) => all.length);
-  const loaded = () =>
-    tab.$$eval(
-      ".hw-catalog-preview iframe",
-      (all) =>
-        all.filter((frame) => frame.contentDocument?.querySelector("[data-hw-scale]")).length,
+  const tiles = ".hw-catalog-preview iframe";
+  const count = await tab.$$eval(tiles, (all) => all.length);
+  await tab.$$eval(tiles, async (all) => {
+    for (const frame of all) {
+      frame.scrollIntoView();
+      await new Promise((done) => setTimeout(done, 50));
+    }
+  });
+  const allDrawn = (selector: string) =>
+    [...document.querySelectorAll<HTMLIFrameElement>(selector)].every((frame) =>
+      frame.contentDocument?.querySelector("[data-hw-scale]"),
     );
-  for (let at = 0; (await loaded()) < count && at < 100; at++)
-    await tab.evaluate(async () => {
-      const main = document.querySelector("main")!;
-      (main.scrollHeight > main.clientHeight ? main : document.scrollingElement!).scrollBy(0, 400);
-      await new Promise((done) => setTimeout(done, 100));
-    });
+  await tab.waitForFunction(allDrawn, { timeout: 60_000 }, tiles).catch(() => undefined);
   expect(count).toBeGreaterThan(20);
-  expect(await loaded()).toBe(count);
+  expect(await tab.evaluate(allDrawn, tiles)).toBe(true);
   expect(failed).toEqual([]);
   await tab.close();
 }, 120_000);

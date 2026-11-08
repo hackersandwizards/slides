@@ -4,8 +4,9 @@
 // takes the largest 16:9 box that fits both the page's width and the scroll pane's height under
 // the story bar, so the whole slide shows without scrolling.
 // `?revealed` opens a slide with every build step shown. A consumer whose catalog loads another
-// stylesheet names the slides' own in `css`, linked on the story page alone; `light` keeps that page
-// light whatever the catalog's theme, marking it `data-deck` for a theme sync that skips a deck.
+// stylesheet names the slides' own in `css`, a URL with the site's base such as a `?url` import,
+// linked on the story page alone; `light` keeps that page light whatever the catalog's theme,
+// marking it `data-deck` for a theme sync that skips a deck.
 interface Props {
   component: string;
   part?: boolean;

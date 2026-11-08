@@ -82,7 +82,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
     one per part, drawing its sheet of variants from `parts.ts`. `test/catalog-stories.test.ts` fails on a type, specimen slide or part without its
     story. `Home.astro` renders the shell's home with the foundations.
   - The print pages, `pages/catalog/print/` over `print.ts`: `index.html`, a Parts section (every
-    part of `primitives.tsx` and `SlideChrome.tsx` in each variant, with the slide types using it),
+    part of `primitives.tsx` and `SlideChrome.tsx`, and the chart's `AxisTick`, in each variant, with the slide types using it),
     the Shared elements section (each brand element the slides use as a tile, each exception with
     its reason), then the catalogue in print mode: one slide per slide type (anchored by its name,
     which the brand kit links), per further variant and per content block, each under one or two of

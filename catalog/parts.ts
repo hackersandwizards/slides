@@ -158,9 +158,10 @@ export const PARTS: Record<string, () => ReactNode> = {
           layout.angled ? "angled" : "wrapped",
           h(
             "svg",
-            { width: 480, height: 240, key: band },
+            { width: 480, height: 240 },
             h("line", { x1: 40, x2: 440, y1: 80, y2: 80, stroke: "var(--color-border-strong)" }),
-            h(AxisTick, { x: 240, y: 80 + TICK_GAP, index: 0, layout }),
+            // Below the axis by recharts' 6 px tick and the gap, as on a chart.
+            h(AxisTick, { x: 240, y: 80 + 6 + TICK_GAP, index: 0, layout }),
           ),
         );
       }),

@@ -144,12 +144,17 @@ const { CodePanel, DashedFrame, NumberTile, SlideCard } = primitives;
 const partSources: Record<string, string> = {
   primitives: sourceOf("primitives"),
   SlideChrome: sourceOf("SlideChrome"),
+  ChartPlots: sourceOf("ChartPlots"),
 };
-const partNames = Object.entries({ primitives, SlideChrome: chrome }).flatMap(([file, mod]) =>
-  Object.entries(mod)
-    .filter(([, v]) => typeof v === "function")
-    .map(([name]) => ({ name, file })),
-);
+// The chart's category label is a part too, the one of ChartPlots.tsx a deck sees alone.
+const partNames = [
+  ...Object.entries({ primitives, SlideChrome: chrome }).flatMap(([file, mod]) =>
+    Object.entries(mod)
+      .filter(([, v]) => typeof v === "function")
+      .map(([name]) => ({ name, file })),
+  ),
+  { name: "AxisTick", file: "ChartPlots" },
+];
 const unlisted = partNames.filter(({ name }) => !PARTS[name]).map(({ name }) => name);
 if (unlisted.length) throw new Error(`parts without a catalogue entry: ${unlisted.join(", ")}`);
 
@@ -172,9 +177,10 @@ const reach = (component: string, seen = new Set<string>()): string => {
   if (seen.has(component) || component === "primitives" || component === "SlideChrome") return "";
   seen.add(component);
   const source = sourceOf(component);
-  return [source, ...[...source.matchAll(/from "\.\/(\w+)"/g)].map(([, c]) => reach(c, seen))].join(
-    "\n",
-  );
+  return [
+    source,
+    ...[...source.matchAll(/(?:from |import\()"\.\/(\w+)"/g)].map(([, c]) => reach(c, seen)),
+  ].join("\n");
 };
 const typeSources = typeFiles.map(({ type, component }) => ({ type, source: reach(component) }));
 const usedBy = (name: string) =>
