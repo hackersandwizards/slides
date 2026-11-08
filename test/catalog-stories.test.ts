@@ -21,7 +21,8 @@ describe("catalog stories", () => {
     expect(files("Types").sort()).toEqual(types.map((t) => t.component).sort());
     expect(files("Parts").sort()).toEqual(Object.keys(PARTS).sort());
     const deck = readdirSync(join(import.meta.dirname, "..", "components", "deck"));
-    expect(files("Deck").sort()).toEqual(deck.map((f) => f.replace(/\.tsx$/, "")).sort());
+    const components = deck.filter((f) => f.endsWith(".tsx")).map((f) => f.slice(0, -4));
+    expect(files("Deck").sort()).toEqual(components.sort());
   });
 
   it.each(types)("shows every specimen slide of $type as a state", ({ type, component }) => {

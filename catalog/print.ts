@@ -12,6 +12,7 @@ import { highlightLines } from "../lib/code-highlight";
 import { renderMarkdown } from "../lib/markdown";
 import { isOpening, replacedBy } from "../lib/slide-utils";
 import * as chrome from "../components/slides/SlideChrome";
+import { DeckTile } from "../components/deck/DeckTile";
 import { brandHref, placeBrandUrls } from "./brand-urls";
 import { classesIn, compileSlides } from "./print-css";
 import { PARTS, inRow } from "./parts";
@@ -212,6 +213,16 @@ const onNight = (child: ReactNode) =>
   );
 const onDay = (child: ReactNode) => h("div", { className: "bg-background p-6 text-text" }, child);
 const USES: Record<string, () => ReactNode> = {
+  // The deck tile: the linked card and its print view, an arrow link.
+  "arrow-link": () =>
+    h(DeckTile, {
+      href: "#elements",
+      printHref: "#elements",
+      title: "A deck",
+      blurb: "What it is for.",
+      slideCount: 12,
+      family: { label: "Talk", hue: ["var(--color-teal)", "var(--color-teal-night)"] },
+    }),
   card: () =>
     inRow(
       h(SlideCard, { className: "card-pad-4/6 text-lg" }, "neutral"),

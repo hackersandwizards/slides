@@ -2,8 +2,8 @@ import brand from "@hackersandwizards/brand/tokens.json";
 import type { CSSProperties } from "react";
 import { DeckTile, type DeckTileProps } from "../components/deck/DeckTile";
 
-// A deck list's corner: slides.css sets --radius-brand to the slide's, so a list on it sets the
-// card's corner back to the site's, as talks' list does.
+// The story frame is on the stage scale, whose --radius-brand is the slide's corner: the sheet
+// sets the card's corner back to the site's, which a deck list has.
 const LIST = { "--hw-card-corner": brand.tokens["--radius-brand"] } as CSSProperties;
 
 // Made-up decks; the hues are brand's category hues, day and night.

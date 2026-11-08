@@ -1,5 +1,11 @@
 import type { CSSProperties } from "react";
 
+const ARROW = (
+  <span className="hw-arrow" aria-hidden="true">
+    &nbsp;<span>&rarr;</span>
+  </span>
+);
+
 export interface DeckTileProps {
   /** Where the tile opens the deck: its first slide, or the slide its day starts on. */
   href: string;
@@ -28,9 +34,15 @@ export function DeckTile({
   featured = false,
 }: DeckTileProps) {
   const [day, night] = family.hue ?? [];
+  // Settings of brand's elements rather than utilities: a hub page renders the tile without
+  // slides.css, so neither its card-pad-* utility nor its muted text role reaches it there, and
+  // the grey is the inherited text at 70 %, which holds on day, night and the hub's dark theme.
+  // Labels set in Inter, as on the apps' pills.
   const style = {
-    ...(day && { "--hw-pill-hue": day, "--hw-pill-hue-night": night }),
-    ...(featured && { "--hw-card-pad": "calc(var(--spacing) * 5)" }),
+    "--hw-pill-hue": day,
+    "--hw-pill-hue-night": night,
+    "--hw-card-pad": featured ? "calc(var(--spacing) * 5)" : undefined,
+    "--hw-label-family": "var(--font-sans)",
   } as CSSProperties;
   return (
     <article className="hw-card" style={style}>
@@ -45,18 +57,14 @@ export function DeckTile({
       <h3 className={`mt-2 font-heading font-bold ${featured ? "text-body" : "text-small"}`}>
         <a href={href} className="hw-card-link">
           {title}
-          <span className="hw-arrow" aria-hidden="true">
-            &nbsp;<span>&rarr;</span>
-          </span>
+          {ARROW}
         </a>
       </h3>
       {blurb && <p className="mt-1 text-small text-current/70">{blurb}</p>}
       {printHref && (
         <a href={printHref} className="hw-arrow-link inline-block text-small">
           Print view
-          <span className="hw-arrow" aria-hidden="true">
-            &nbsp;<span>&rarr;</span>
-          </span>
+          {ARROW}
         </a>
       )}
     </article>
