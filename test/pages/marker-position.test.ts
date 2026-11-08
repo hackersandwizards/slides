@@ -6,12 +6,12 @@ import { fileURLToPath } from "node:url";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
-// Every list marker and step number on the print page's slides, measured on the pixels Chrome
-// paints at 1920x1080. Markers drifted 1.2 to 3.4 px off for months while every check passed,
-// since only a render shows where they land. The squares are the brand's .hw-marker, measured by
-// the brand's own `brand-markers` command on each slide frame written to a file of its own. A step
-// number's baseline on its line's baseline, which brand-markers does not measure, is measured
-// here.
+// Every step number on the print page's slides, measured on the pixels Chrome paints at
+// 1920x1080. Markers drifted 1.2 to 3.4 px off for months while every check passed, since only a
+// render shows where they land. The squares are the brand's .hw-marker, which `check:markers`
+// measures with brand's `brand-markers` at 1920 on frames.html and every story; this file holds its
+// control on each slide frame written to a file of its own. A step number's baseline on its line's
+// baseline, which brand-markers does not measure, is measured here.
 const TOLERANCE = 0.6; // CSS px at 1920x1080; step numbers measured within it at 4x (2026-11-01)
 const SCALE = 4;
 const PRINT = join(import.meta.dirname, "..", "..", "dist", "catalog", "print");
@@ -151,13 +151,6 @@ function frameFiles(css = "") {
 const brandMarkers = (files: string[]) =>
   spawnSync("bun", ["run", "brand-markers", "--width", "1920", ...files], { encoding: "utf8" });
 
-it("every square marker on the specimen slides sits on its line", () => {
-  const files = frameFiles();
-  expect(files.length).toBeGreaterThan(10);
-  const run = brandMarkers(files);
-  expect(run.status, run.stderr + run.stdout).toBe(0);
-}, 600_000);
-
 // A marker class no stylesheet defines draws nothing, and brand-markers cannot see what is not
 // drawn: comparison's split and activity's demo kept `slide-marker` after v0.18.0 removed it.
 it("every marker class in the components is defined", () => {
@@ -177,9 +170,11 @@ it("every marker class in the components is defined", () => {
   expect(undefinedClasses).toEqual([]);
 });
 
-// The control: the same command over the squares moved half a pixel down must fail.
+// The control for check:markers: brand-markers over the squares moved half a pixel down must fail.
 it("brand-markers fails on squares moved by half a pixel", () => {
-  const run = brandMarkers(frameFiles(".hw-marker { translate: 0 0.5px }").slice(0, 3));
+  const files = frameFiles(".hw-marker { translate: 0 0.5px }");
+  expect(files.length).toBeGreaterThan(10);
+  const run = brandMarkers(files.slice(0, 3));
   expect(run.status).toBe(1);
 }, 300_000);
 

@@ -77,7 +77,10 @@ describe("fit guard", () => {
         </SlideShell>,
       );
       const body = container.querySelector<HTMLElement>(".slide-body")!;
-      expect(body.style.scale).toBe("0.8");
+      expect(body.style.zoom).toBe("0.8");
+      expect(body.style.getPropertyValue("--hw-zoom")).toBe("0.8");
+      expect(body.style.scale).toBe("");
+      // jsdom reads the width as declared; a browser reads it in px, which zooms with the body.
       expect(body.style.width).toBe("125%");
     } finally {
       HTMLElement.prototype.querySelector = original;
@@ -85,8 +88,8 @@ describe("fit guard", () => {
   });
 
   // A centred slide 20% too tall for the space between its edges (5% of its height each, where it
-  // has no padding): shrunk from its top and moved down to the top edge, never centred in its
-  // padding box, which put a centred headline under the strip.
+  // has no padding): shrunk from the top edge, never centred in its padding box, which put a
+  // centred headline under the strip.
   it.each([
     ["without a body", <div key="q">questions</div>],
     // An untitled body grows with what it holds, so it read as fitting: a tall picture on a
@@ -117,10 +120,13 @@ describe("fit guard", () => {
       );
       const content = container.querySelector<HTMLElement>(".slide-content")!;
       // The style serializes a number to six significant digits, as a browser does.
-      expect(Number(content.style.scale)).toBeCloseTo(900 / 1080, 5);
+      const zoom = Number(content.style.zoom);
+      expect(zoom).toBeCloseTo(900 / 1080, 5);
+      expect(Number(content.style.getPropertyValue("--hw-zoom"))).toBeCloseTo(zoom, 5);
       expect(content.style.justifyContent).toBe("flex-start");
-      expect(content.style.transformOrigin).toBe("center 0px");
-      expect(content.style.translate).toBe("0px 50px");
+      expect(content.style.marginInline).toBe("auto");
+      // The top edge in the zoomed box's own pixels, so it draws 50 px down.
+      expect(parseFloat(content.style.paddingTop) * zoom).toBeCloseTo(50, 3);
     } finally {
       HTMLElement.prototype.querySelector = original;
     }

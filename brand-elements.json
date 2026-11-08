@@ -19,6 +19,12 @@
     "quote",
     "focus-ring"
   ],
+  "markers": {
+    "**/content-slide/density/": {
+      "reason": "A measuring artefact of brand-markers, not a marker off its line: it rewrites each marked line and reads the line's boxes in the same task, and the fit guard then refits the longer slide to another zoom before the shot (at 1920x900, 0.909 as served, 0.688 after the newline and the rewrite). With the refit held off (ResizeObserver removed, 08.11.) all 24 readings on this page read 0.02 to 0.03 px; with it, -0.13 to 0.27. Drop this entry once brand-markers reads its boxes after the page settles.",
+      "off": 2
+    }
+  },
   "exceptions": {
     "card-tone": "A card in purple, which means no state, a tinted card in a meaning's hue with its full line (tint), a card outlined on white in any hue (outline, line), and the quiet grey card: brand's card has white and the teal tint only, its status box the four meanings at a 40 % line. The tinted card stays: blind panel 02.11., the highlighted cell as brand's status box scored lower in all five runs (Claude 8:8, 9:8, 8:7; Codex 8.8:8.7, 9.1:9).",
     "callout-status": "Amber and green callouts for a risk and a result, their text mixed 40 % into ink for 4.5:1: brand's callout has teal and purple only.",

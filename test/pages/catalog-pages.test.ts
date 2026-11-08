@@ -218,3 +218,47 @@ it.each(["bar", "bar-long-names", "trend", "trend-marked"])(
   },
   60_000,
 );
+
+// The fit guard shrinks with zoom, which draws a px width zoomed but a percentage at full size: a
+// shrunk titled body still spans the slide's width, and an untitled one fills its height, centred.
+it("draws a shrunk slide at the slide's full width or height", async () => {
+  const tab = await newTab();
+  await tab.setViewport({ width: 1920, height: 1080 });
+  const read = async (story: string, selector: string) => {
+    await tab.goto(page(`stories/Types/${story}`), { waitUntil: "load" });
+    await tab.waitForSelector(`${selector}[style*="zoom"]`);
+    return tab.evaluate(async (selector) => {
+      await document.fonts.ready;
+      for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
+      const box = document.querySelector<HTMLElement>(selector)!;
+      const outer = box.parentElement!;
+      const cs = getComputedStyle(outer);
+      const r = box.getBoundingClientRect();
+      const o = outer.getBoundingClientRect();
+      return {
+        zoom: Number(box.style.zoom),
+        width: box.style.width,
+        drawn: {
+          left: r.left - o.left,
+          right: o.right - r.right,
+          top: r.top - o.top,
+          height: r.height,
+        },
+        inner: o.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+        outer: { width: o.width, height: o.height },
+      };
+    }, selector);
+  };
+  const body = await read("content-slide/density", ".slide-body");
+  expect(body.zoom).toBeGreaterThan(0.5);
+  expect(body.zoom).toBeLessThan(1);
+  expect(body.width).toMatch(/px$/);
+  expect(body.outer.width - body.drawn.left - body.drawn.right).toBeCloseTo(body.inner, 0);
+  const content = await read("closing-slide/contact", ".slide-content");
+  expect(content.zoom).toBeGreaterThan(0.5);
+  expect(content.zoom).toBeLessThan(1);
+  expect(content.drawn.top).toBeCloseTo(0, 0);
+  expect(content.drawn.height).toBeCloseTo(content.outer.height, 0);
+  expect(content.drawn.left).toBeCloseTo(content.drawn.right, 0);
+  await tab.close();
+}, 60_000);

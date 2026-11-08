@@ -117,7 +117,7 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
   (`brand-copies`) and `check:retired` (`brand-retired` over `dist`), then `check:pages`
   (the tests in `test/pages/` over the built print pages), then `check:elements`
   (`brand-elements` over the print pages, `brand-elements.json`), then `check:markers` (`brand-markers` over `frames.html` and every
-  story page at the default 1280 width, served from a `slides` link to `dist/` in `node_modules/.cache`,
+  story page at 1920, the stage width, served from a `slides` link to `dist/` in `node_modules/.cache`,
   since the pages load their assets from the `/slides` base). No hook runs it:
   `.githooks/pre-commit` runs `bun run check:staged`, scaffolding's `check-staged` (`gitleaks`,
   coupling and confidential over the staged changes, `prettier --check` and `eslint` on the staged

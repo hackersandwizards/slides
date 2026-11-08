@@ -1,6 +1,6 @@
 import { createContext, useContext, useLayoutEffect, useRef, type ReactNode } from "react";
 import type { Grounded, SlideGround } from "../../types/slide";
-import { NARROW } from "../../lib/slide-utils";
+import { FIT_STYLE, NARROW } from "../../lib/slide-utils";
 
 /** Each ground's class, whole so Tailwind sees it: a deck's deprecated `background` names one. */
 export const GROUNDS: Record<SlideGround, string> = {
@@ -75,7 +75,12 @@ export function SlideShell({
  *  shrinks, from its top, laid out wider by the same factor where that fits, so it rewraps into
  *  fewer lines; elsewhere the whole `.slide-content` shrinks. No floor here: `slides-density` owns
  *  it. Measured top-aligned, because centred overflow above the box does not count in
- *  `scrollHeight`. */
+ *  `scrollHeight`.
+ *
+ *  It shrinks with `zoom`, which lays the box out smaller, and sets brand's `--hw-zoom` beside it,
+ *  so the list marker rounds to real pixels. Under `scale` Chrome snaps each baseline to the device
+ *  pixel grid but draws the marker where the transform puts it, up to half a device pixel off its
+ *  line. */
 function useFitToSlide() {
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -98,10 +103,9 @@ function useFitToSlide() {
       return box.clientHeight / box.scrollHeight;
     };
     // Lays the box out for the largest scale at which it fits, and returns that scale.
+    const reset = () => FIT_STYLE.forEach((p) => box.style.removeProperty(p));
     const layout = () => {
-      box.style.scale = "";
-      box.style.translate = "";
-      box.style.width = "";
+      reset();
       if (!body) {
         // Measured from the children: `scrollHeight` never reads less than the box, so it misses
         // content that reaches into the bottom padding without passing the box's edge.
@@ -141,9 +145,7 @@ function useFitToSlide() {
     const fit = () => {
       box.style.removeProperty("--card-boost");
       if (narrow?.matches) {
-        box.style.scale = "";
-        box.style.translate = "";
-        box.style.width = "";
+        reset();
         box.style.justifyContent = "";
         return;
       }
@@ -177,21 +179,24 @@ function useFitToSlide() {
         box.style.justifyContent = "";
         return;
       }
-      if (body) {
-        box.style.transformOrigin =
-          box.style.width || getComputedStyle(body).alignItems !== "center"
-            ? "top left"
-            : "top center";
-      } else {
-        // Shrunk as measured, from the top, and moved down to the top edge: shrunk, it fills the
-        // space between the edges exactly. Centred and shrunk round that space's middle, it was
-        // still centred in the padding box and rose above the top edge where the padding is
-        // smaller than the edge, up under the strip.
-        const start = parseFloat(getComputedStyle(box).paddingTop) || 0;
-        box.style.transformOrigin = `center ${start}px`;
-        box.style.translate = `0 ${edges()[0] - start}px`;
+      // A zoomed box draws its own lengths zoomed too, a percentage width excepted: each is set in
+      // px as laid out, so the box keeps its lines and draws at `scale` of that width.
+      // Each is read before the first write, which changes the computed style.
+      const { width, height, alignItems } = getComputedStyle(box);
+      const [top] = edges();
+      if (!box.style.width && (!body || alignItems === "center")) box.style.marginInline = "auto";
+      if (!body) {
+        // Shrunk as measured, from the top edge: it fills the space between the edges exactly, at
+        // the slide's full height. Centred in its padding box, it rose above the top edge where
+        // the padding is smaller than the edge, up under the strip.
+        box.style.height = `${parseFloat(height) / scale}px`;
+        box.style.paddingTop = `${top / scale}px`;
       }
-      box.style.scale = String(scale);
+      box.style.width = width;
+      box.style.zoom = String(scale);
+      // Under a zoomed frame, such as a deck tile, the marker rounds in the product of both.
+      const outer = (box.parentElement as { currentCSSZoom?: number } | null)?.currentCSSZoom ?? 1;
+      box.style.setProperty("--hw-zoom", String(scale * outer));
     };
     // The children's sizes the last fit left, so an observer report of those same sizes, such as
     // the one every observation starts with, lays nothing out again.
@@ -200,7 +205,7 @@ function useFitToSlide() {
       [...box.children]
         .map((child) => {
           // The computed size keeps fractions; the offset size covers an inline child, whose
-          // computed size reads "auto". Neither moves with the box's own `scale`.
+          // computed size reads "auto". Neither moves with the box's own `zoom`.
           const { width, height } = getComputedStyle(child);
           const { offsetWidth, offsetHeight } = child as HTMLElement;
           return `${width}x${height}/${offsetWidth}x${offsetHeight}`;

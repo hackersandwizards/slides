@@ -16,6 +16,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { constants } from "node:os";
 import puppeteer, { type Browser } from "puppeteer";
+import { FIT_STYLE } from "../lib/slide-utils";
 
 const FAIL = 0.8;
 const NOTICE = 0.9;
@@ -81,7 +82,7 @@ async function check(browser: Browser, url: string): Promise<string[]> {
   try {
     await page.setViewport({ width: 1920, height: 1080 });
     await settle(page, url);
-    return (await page.$$eval(".print-slide", measure, NOTICE)).map((r) => {
+    return (await page.$$eval(".print-slide", measure, NOTICE, [...FIT_STYLE])).map((r) => {
       if ("use" in r) {
         failed++;
         return `FAIL ${deck}/${r.i} "${r.title}": ${STATEMENT}`;
@@ -149,19 +150,19 @@ async function settle(page: import("puppeteer").Page, url: string) {
   await new Promise((r) => setTimeout(r, 500));
 }
 
-function measure(nodes: Element[], notice: number) {
+function measure(nodes: Element[], notice: number, fitStyle: string[]) {
   return nodes.flatMap((slide, i) => {
     const title = slide.querySelector("h1, h2")?.textContent?.trim().slice(0, 60) ?? "";
     const misused = (slide as HTMLElement).dataset.use ? [{ i, title, use: true as const }] : [];
     const box = slide.querySelector<HTMLElement>(
-      ".slide-body[style*='scale'], .slide-content[style*='scale']",
+      ".slide-body[style*='zoom'], .slide-content[style*='zoom']",
     );
-    const scale = box ? parseFloat(box.style.scale) || 1 : 1;
+    const scale = box ? parseFloat(box.style.zoom) || 1 : 1;
     if (misused.length || !box || scale >= notice) return misused;
-    // Lay the box out at full size and natural width to see where its blocks fall.
-    const kept = [box.style.scale, box.style.width];
-    box.style.scale = "";
-    box.style.width = "";
+    // Lay the box out at full size and natural width, as the fit guard measures it, to see where
+    // its blocks fall.
+    const kept = fitStyle.map((p) => box.style.getPropertyValue(p));
+    fitStyle.forEach((p) => box.style.removeProperty(p));
     let parent: Element = box;
     while (parent.children.length === 1) parent = parent.children[0];
     const blocks = [...parent.children].filter((c) => getComputedStyle(c).position !== "absolute");
@@ -179,7 +180,7 @@ function measure(nodes: Element[], notice: number) {
       group.push(k + 1);
     });
     if (group.length) groups.push(group);
-    [box.style.scale, box.style.width] = kept;
+    fitStyle.forEach((p, k) => box.style.setProperty(p, kept[k]));
     const label = parent.tagName === "UL" ? "list item" : "block";
     const split = groups.map((g) => (g.length > 1 ? `${g[0]}-${g.at(-1)}` : `${g[0]}`)).join(" | ");
     return [...misused, { i, scale, title, label, groups: groups.length, split }];
