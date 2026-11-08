@@ -1,4 +1,6 @@
 ---
+import brand from "@hackersandwizards/brand/tokens.json";
+
 // A slide fills its window, so the dashboard frames its preview page at brand's slide page size,
 // scaled to the card: at the card's own size a phone's window was too short for the slide. The card
 // takes the largest 16:9 box that fits both the page's width and the scroll pane's height under
@@ -17,6 +19,9 @@ const { component, part, css, light } = Astro.props;
 const path = Astro.url.pathname;
 const preview = path.includes("/stories/");
 const src = path.replace("/dashboard/", "/stories/");
+// The dashboard page's own stylesheet need carry no slide token: the frame imports the page size
+// and its card below. The card's line is the catalog's own colour, its corner the site's.
+const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]}`;
 ---
 
 {preview ? (
@@ -41,17 +46,38 @@ const src = path.replace("/dashboard/", "/stories/");
     <slot />
   </div>
 ) : (
-  <div class="story-embed" data-story-of={component}>
-    <div class="story-stage hw-card">
+  <div class="story-embed" data-story-of={component} style={corner}>
+    <div class="story-stage hw-card" popover>
       <iframe src={src} title={`${component} story`} loading="lazy" />
+      <button class="story-close hw-button" type="button">
+        Close
+      </button>
     </div>
+    <button class="story-enlarge hw-button" type="button">
+      Enlarge slide
+    </button>
     <script is:inline>
       {
-        const stage = document.currentScript.previousElementSibling;
+        const embed = document.currentScript.parentElement;
+        const stage = embed.querySelector(".story-stage");
         const frame = stage.firstElementChild;
-        const embed = stage.parentElement;
         const pane = embed.parentElement;
         const fit = () => {
+          // Enlarged, the slide fills the window, across a portrait phone so it is read turned.
+          if (stage.matches(":popover-open")) {
+            stage.style.width = "";
+            const { clientWidth: w, clientHeight: h } = stage;
+            const [slideW, slideH] = [frame.offsetWidth, frame.offsetHeight];
+            const turned = h > w;
+            stage.toggleAttribute("data-turned", turned);
+            const scale = turned
+              ? Math.min(h / slideW, w / slideH)
+              : Math.min(w / slideW, h / slideH);
+            frame.style.transform = turned
+              ? `translate(${(w + slideH * scale) / 2}px, ${(h - slideW * scale) / 2}px) rotate(90deg) scale(${scale})`
+              : `translate(${(w - slideW * scale) / 2}px, ${(h - slideH * scale) / 2}px) scale(${scale})`;
+            return;
+          }
           // The pane's height under the stage's top, less the padding below the stage.
           const box = stage.getBoundingClientRect();
           const top = box.top - pane.getBoundingClientRect().top;
@@ -62,6 +88,9 @@ const src = path.replace("/dashboard/", "/stories/");
           frame.style.transform = `scale(${stage.clientWidth / frame.offsetWidth})`;
         };
         new ResizeObserver(fit).observe(pane);
+        stage.addEventListener("toggle", fit);
+        embed.querySelector(".story-enlarge").onclick = () => stage.showPopover();
+        embed.querySelector(".story-close").onclick = () => stage.hidePopover();
         // A face that loads late changes the story bar's height but not the pane's.
         document.fonts.ready.then(fit);
       }
@@ -70,6 +99,10 @@ const src = path.replace("/dashboard/", "/stories/");
 )}
 
 <style>
+  @import "@hackersandwizards/brand/stage.css";
+  @import "@hackersandwizards/brand/elements/card.css";
+  @import "@hackersandwizards/brand/elements/button.css";
+
   /* A deck's page stays light behind a light slide when the catalog is dark. */
   .slide-story {
     position: fixed;
@@ -91,6 +124,44 @@ const src = path.replace("/dashboard/", "/stories/");
     aspect-ratio: 16 / 9;
     overflow: hidden;
     --hw-card-pad: 0;
+    /* Open or not it stays in the page: a popover's own defaults would hide and size it. */
+    display: block;
+    width: auto;
+    height: auto;
+    background: Canvas;
+  }
+  .story-stage:popover-open {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    margin: 0;
+    aspect-ratio: auto;
+    --hw-card-corner: 0;
+    --hw-hairline: 0;
+  }
+  .story-close {
+    display: none;
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+  .story-stage:popover-open .story-close {
+    display: block;
+  }
+  .story-stage[data-turned] .story-close {
+    writing-mode: vertical-rl;
+  }
+  .story-enlarge {
+    display: none;
+    margin: 0.75rem auto 0;
+  }
+  /* Below this width the card draws a slide's text under 12 px. */
+  @media (max-width: 40rem) {
+    .story-enlarge {
+      display: block;
+    }
   }
   .story-stage iframe {
     position: absolute;
