@@ -75,10 +75,11 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `test/specimen-coverage.test.ts` fails on a slide type, content block or variant it does not show.
 - `catalog/`: the catalog (decision repo-uniformity-plan, hub-max), one Astro app in scaffolding's
   catalog shell (`catalog({...})` in `catalog/astro.config.ts`), never shipped but for
-  `SlideFrame.astro`, the story frame a consumer's catalog takes too: Astrobook, `@astrojs/react`
+  `SlideFrame.astro`, the story frame a consumer's catalog takes too, which imports its own page
+  size and card and below 40rem offers the slide enlarged across the turned phone: Astrobook, `@astrojs/react`
   and scaffolding are dev dependencies, outside `files` and `exports`. Its base is
   the Pages path `/slides`, so the gate reads the build that ships. The catalog's `css` is brand's
-  tokens, stage scale and elements; each state hands `slides.css` to `SlideFrame` as a `?url`, linked
+  tokens and elements; each state hands `slides.css` to `SlideFrame` as a `?url`, linked
   on the slide's page alone. It carries two kinds of page:
   - The stories: `stories/Types/` a story file per slide type, each specimen slide of the type a
     state (`state.ts`), drawn by `StorySlide.tsx` as its deck shows it, strip, corner mark and
@@ -91,7 +92,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
     the Shared elements section (each brand element the slides use as a tile, each exception with
     its reason), then the catalogue in print mode: one slide per slide type (anchored by its name,
     which the brand kit links), per further variant and per content block, each under one or two of
-    the 13 communication jobs, with a search over all; `frames.html`, every frame inline, since
+    the 13 communication jobs with its when, do and don't from `catalog/guidance.ts`, with a search
+    over all (a trend or bar tile frames its story page, since recharts draws no static plot); `frames.html`, every frame inline, since
     `brand-elements` reads no frame; and `build/slides.css`, compiled by Tailwind. The build copies
     each brand file the pages link to `dist/brand/` under its export name, and the pages name the
     deck's images by the bundler's files relative to them, so `brand-elements` and the page tests (`test/pages/`) read them from `dist/` as files, with no server.
