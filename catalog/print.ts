@@ -291,6 +291,44 @@ const USES: Record<string, () => ReactNode> = {
       placeholder: "Search a type",
       "aria-label": "Search",
     }),
+  search: () =>
+    h(
+      "div",
+      { className: "hw-search w-96" },
+      h("input", {
+        type: "search",
+        className: "hw-field",
+        placeholder: "Search a type",
+        "aria-label": "Search a type",
+      }),
+    ),
+  nav: () =>
+    h(
+      "nav",
+      { className: "hw-nav w-96", "aria-label": "Jobs" },
+      h(
+        "ul",
+        null,
+        h("li", null, h("a", { href: "#elements", "aria-current": "true" }, "All")),
+        h("li", null, h("a", { href: "#elements" }, "Compare")),
+      ),
+    ),
+  table: () =>
+    h(
+      "table",
+      { className: "hw-table" },
+      h("thead", null, h("tr", null, h("th", null, "Part"), h("th", null, "Used by"))),
+      h("tbody", null, h("tr", null, h("td", null, "Card"), h("td", null, "Grid slide"))),
+    ),
+  kbd: () =>
+    inRow(
+      h("kbd", { className: "hw-kbd" }, "Shift"),
+      "+",
+      h("kbd", { className: "hw-kbd" }, "Space"),
+    ),
+  empty: () => h("p", { className: "hw-empty w-96", "data-variant": "plain" }, "No entry matches."),
+  dialog: () =>
+    h("dialog", { open: true, className: "hw-dialog", "data-size": "small" }, "A dialog panel."),
   "icon-button": () =>
     h(
       "button",

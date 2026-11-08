@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type CSSProperties, Fragment, useCallback, useEffect, useRef, useState } from "react";
 import ChevronLeft from "lucide-react/icons/chevron-left";
 import ChevronRight from "lucide-react/icons/chevron-right";
 import { MotionGlobalConfig } from "motion/react";
@@ -31,15 +31,15 @@ const stepForward = () => document.body.dispatchEvent(arrowEvent("ArrowRight"));
 const stepBack = () => document.body.dispatchEvent(arrowEvent("ArrowLeft"));
 
 /** What a presenter can press, for the "?" overlay. A clicker sends PageDown and PageUp. */
-const KEYS: Array<[string, string]> = [
-  ["→  PageDown  Space", "next step or slide"],
-  ["←  PageUp  Shift+Space", "previous step or slide"],
-  ["F", "fullscreen on and off"],
-  ["S", "speaker view in a second window"],
-  ["H", "hints on and off"],
-  ["?", "this overlay"],
+const KEYS: Array<[string[], string]> = [
+  [["→", "PageDown", "Space"], "next step or slide"],
+  [["←", "PageUp", "Shift+Space"], "previous step or slide"],
+  [["F"], "fullscreen on and off"],
+  [["S"], "speaker view in a second window"],
+  [["H"], "hints on and off"],
+  [["?"], "this overlay"],
 ];
-if (process.env.NODE_ENV === "development") KEYS.push(["E", "edit text, dev only"]);
+if (process.env.NODE_ENV === "development") KEYS.push([["E"], "edit text, dev only"]);
 
 export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) {
   const goToSlide = useGoToSlide();
@@ -135,7 +135,6 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
         event.preventDefault();
         (event.target ?? window).dispatchEvent(arrowEvent(asArrow));
       } else if (key === "?") setHelp((v) => !v);
-      else if (key === "Escape") setHelp(false);
       else if (key === "f" || key === "F") {
         if (document.fullscreenElement) void document.exitFullscreen();
         else void document.documentElement.requestFullscreen?.();
@@ -180,32 +179,61 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
   return (
     <>
       {help && (
-        <div
-          role="dialog"
+        // Nothing inside takes focus, so the dialog holds it, which is no control to draw a ring
+        // round. The backdrop's clicks reach the dialog, outside its panel.
+        <dialog
+          ref={(dialog) => {
+            if (dialog && !dialog.open) dialog.showModal();
+          }}
+          className="hw-dialog"
+          data-hw-scale="dense"
+          data-size="large"
+          style={{ "--hw-focus-width": 0 } as CSSProperties}
           aria-label="Keyboard shortcuts"
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40"
-          onClick={() => setHelp(false)}
+          onClose={() => setHelp(false)}
+          onClick={(event) => {
+            const panel = event.currentTarget.getBoundingClientRect();
+            const inside =
+              event.clientX >= panel.left &&
+              event.clientX <= panel.right &&
+              event.clientY >= panel.top &&
+              event.clientY <= panel.bottom;
+            if (!inside) setHelp(false);
+          }}
         >
-          <dl className="grid grid-cols-[auto_auto] gap-x-6 gap-y-2 rounded-brand bg-night px-6 py-5 text-sm text-night-ink">
+          <dl className="grid grid-cols-[auto_auto] items-center gap-x-6 gap-y-2 text-sm [--hw-kbd-size:var(--text-sm)]">
             {KEYS.map(([keys, what]) => (
-              <div key={keys} className="contents">
-                <dt className="font-mono text-night-muted">{keys}</dt>
+              <div key={what} className="contents">
+                <dt className="flex gap-1">
+                  {keys.map((key) => (
+                    <span key={key} className="flex items-center gap-1">
+                      {key.split("+").map((part, i) => (
+                        <Fragment key={part}>
+                          {i > 0 && "+"}
+                          <kbd className="hw-kbd">{part}</kbd>
+                        </Fragment>
+                      ))}
+                    </span>
+                  ))}
+                </dt>
                 <dd>{what}</dd>
               </div>
             ))}
           </dl>
-        </div>
+        </dialog>
       )}
-      <div className="fixed bottom-4 left-1/2 z-50 flex w-max -translate-x-1/2 items-center gap-3 sm:hidden">
+      <div
+        data-hw-scale="screen"
+        className="fixed bottom-4 left-1/2 z-50 flex w-max -translate-x-1/2 items-center gap-3 sm:hidden"
+      >
         <button
           onClick={stepBack}
           disabled={atStart}
-          className={`hw-focus-ring flex h-12 w-12 items-center justify-center rounded-full border border-night-ink/15 bg-night-2 backdrop-blur-sm transition-all ${
-            atStart ? "cursor-not-allowed opacity-25" : "opacity-100 active:scale-95"
-          }`}
+          className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
+          data-on="picture"
           aria-label="Previous slide"
         >
-          <ChevronLeft className="h-6 w-6 text-white" />
+          <ChevronLeft />
         </button>
 
         <div className="rounded-full border border-night-ink/15 bg-night-2 px-3 py-1.5 text-xs whitespace-nowrap text-night-muted backdrop-blur-sm">
@@ -215,12 +243,11 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
         <button
           onClick={stepForward}
           disabled={atEnd}
-          className={`hw-focus-ring flex h-12 w-12 items-center justify-center rounded-full border border-night-ink/15 bg-night-2 backdrop-blur-sm transition-all ${
-            atEnd ? "cursor-not-allowed opacity-25" : "opacity-100 active:scale-95"
-          }`}
+          className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
+          data-on="picture"
           aria-label="Next slide"
         >
-          <ChevronRight className="h-6 w-6 text-white" />
+          <ChevronRight />
         </button>
       </div>
     </>

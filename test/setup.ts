@@ -31,6 +31,11 @@ if (!window.matchMedia) {
 
 window.scrollTo = () => {};
 
+// jsdom has no modal <dialog>: open it as the browser would, without the top layer.
+HTMLDialogElement.prototype.showModal = function () {
+  this.setAttribute("open", "");
+};
+
 // jsdom has no canvas backend; the title-slide particle effect calls
 // getContext and already tolerates a null result. Return null quietly instead
 // of letting jsdom log a "Not implemented" warning per render.

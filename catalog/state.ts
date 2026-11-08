@@ -2,6 +2,7 @@ import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { deckLang, pageLabel } from "../lib/slide-utils";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
+import slidesCss from "../styles/slides.css?url";
 import SlideFrame from "./SlideFrame.astro";
 
 export const state = (type: Slide["type"], nth: number, component: string) => {
@@ -19,11 +20,11 @@ export const state = (type: Slide["type"], nth: number, component: string) => {
       mark: cornerMark(slideCatalog, index),
       lang: deckLang(slideCatalog),
     },
-    decorators: [{ component: SlideFrame, props: { component } }],
+    decorators: [{ component: SlideFrame, props: { component, css: slidesCss } }],
   };
 };
 
 export const partFrame = (component: string) => ({
   component: SlideFrame,
-  props: { component, part: true },
+  props: { component, part: true, css: slidesCss },
 });

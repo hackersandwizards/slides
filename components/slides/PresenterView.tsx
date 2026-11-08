@@ -77,7 +77,11 @@ function SpeakerWindow({ notes, basePath }: Props) {
   const [split, dividerHandlers] = useSplit(region);
 
   return (
-    <div className="slide-presenter fixed inset-0 z-[55] flex flex-col gap-4 bg-night p-4 font-sans text-night-ink">
+    <div
+      data-theme="dark"
+      data-hw-scale="dense"
+      className="slide-presenter fixed inset-0 z-[55] flex flex-col gap-4 bg-night p-4 font-sans text-night-ink"
+    >
       <header className="flex items-center gap-6 text-lg">
         <span className="font-mono text-2xl font-bold tabular-nums">
           {slide + 1} / {total}
@@ -88,12 +92,8 @@ function SpeakerWindow({ notes, basePath }: Props) {
           {pending ? "More on this slide" : last ? "Last slide" : "Next press: next slide"}
         </span>
         <span className="flex-1" />
-        <StepButton
-          label="Previous"
-          keyName="ArrowLeft"
-          icon={<ChevronLeft className="h-5 w-5" />}
-        />
-        <StepButton label="Next" keyName="ArrowRight" icon={<ChevronRight className="h-5 w-5" />} />
+        <StepButton label="Previous" keyName="ArrowLeft" icon={<ChevronLeft />} />
+        <StepButton label="Next" keyName="ArrowRight" icon={<ChevronRight />} />
         <Timer />
         <Clock />
       </header>
@@ -165,24 +165,25 @@ function SpeakerWindow({ notes, basePath }: Props) {
               (edit.open ? (
                 <>
                   <IconButton label="Cancel editing" onClick={edit.cancel}>
-                    <X className="h-4 w-4" />
+                    <X />
                   </IconButton>
-                  <IconButton label="Save notes" onClick={() => void edit.save()}>
-                    <Check className="h-4 w-4" />
-                    <span className="text-sm">{edit.saving ? "Saving" : "Save"}</span>
+                  <IconButton
+                    label={edit.saving ? "Saving" : "Save notes"}
+                    onClick={() => void edit.save()}
+                  >
+                    <Check />
                   </IconButton>
                 </>
               ) : (
                 <IconButton label="Edit notes" onClick={() => edit.start(slide)}>
-                  <Pencil className="h-4 w-4" />
-                  <span className="text-sm">Edit</span>
+                  <Pencil />
                 </IconButton>
               ))}
             <IconButton label="Smaller notes" onClick={() => setSize(size - 2)}>
-              <Minus className="h-4 w-4" />
+              <Minus />
             </IconButton>
             <IconButton label="Larger notes" onClick={() => setSize(size + 2)}>
-              <Plus className="h-4 w-4" />
+              <Plus />
             </IconButton>
           </div>
           {edit.open ? (
@@ -342,7 +343,7 @@ function IconButton({
       onKeyUp={(event) => {
         if (event.key === " ") event.preventDefault();
       }}
-      className="flex h-9 min-w-9 items-center justify-center gap-2 rounded-full bg-night-ink/15 px-2 text-night-ink hover:bg-night-ink/25"
+      className="hw-icon-button"
     >
       {children}
     </button>
@@ -528,13 +529,13 @@ function Timer() {
           )
         }
       >
-        {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+        {paused ? <Play /> : <Pause />}
       </IconButton>
       <IconButton
         label="Reset timer"
         onClick={() => save({ start: Date.now(), pausedAt: paused ? Date.now() : null })}
       >
-        <RotateCcw className="h-4 w-4" />
+        <RotateCcw />
       </IconButton>
     </span>
   );

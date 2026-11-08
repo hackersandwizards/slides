@@ -90,7 +90,9 @@ it("loads every tile on the catalog home, with no failed request", async () => {
 it("turns the catalog page night with its dark theme button, and back", async () => {
   const tab = await newTab();
   await tab.goto(page("dashboard/Types/closing-slide/contact"), { waitUntil: "load" });
-  const ground = () => tab.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  // The shell paints the ground on <html>; the body is transparent over it.
+  const ground = () =>
+    tab.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
   const day = await ground();
   await tab.click("button[data-hw-theme]");
   expect(await ground()).toBe(NIGHT);
@@ -128,6 +130,21 @@ it.each([
   },
   60_000,
 );
+
+it("links slides.css on a slide's page alone, never on the state's page framing it", async () => {
+  const stylesheets = async (path: string) => {
+    const tab = await newTab();
+    await tab.goto(page(path), { waitUntil: "load" });
+    const links = await tab.$$eval('link[rel="stylesheet"]', (all) =>
+      all.map((link) => (link as HTMLLinkElement).href),
+    );
+    await tab.close();
+    return links;
+  };
+  const isSlidesCss = (href: string) => /\/slides\.[^/]+\.css$/.test(href);
+  expect((await stylesheets("dashboard/Types/title-slide/specimen")).some(isSlidesCss)).toBe(false);
+  expect((await stylesheets("stories/Types/title-slide/specimen")).some(isSlidesCss)).toBe(true);
+}, 60_000);
 
 // A wide window scaled the slide to the page's width alone, so its bottom ran below the window
 // (Benedikt, 08.11.2026, ActivitySlide at about 1900x1200).

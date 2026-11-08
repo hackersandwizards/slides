@@ -60,7 +60,13 @@ export default defineConfig({
     catalog({
       product: "Slides",
       lead: "Every slide type of the h&w slide engine, each state a slide of the specimen deck, and the parts the types are built from, each with its variants. All content is made up.",
-      css: ["../styles/slides.css"],
+      // A state's page frames its slide, so only the slide's page links slides.css (SlideFrame's
+      // `css`): here the tokens, the stage scale's --slide-page-width and brand's card.
+      css: [
+        "@hackersandwizards/brand/tokens.root.css",
+        "@hackersandwizards/brand/stage.css",
+        "@hackersandwizards/brand/elements.css",
+      ],
       previewSize: [1440, 810],
       groupOrder: ["Types", "Parts", "Deck"],
       head: "./Head.astro",

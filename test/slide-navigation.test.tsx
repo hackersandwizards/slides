@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, fireEvent } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SlideNavigation } from "../components/slides/SlideNavigation";
 
@@ -45,7 +45,7 @@ describe("SlideNavigation clicker keys", () => {
     render(<SlideNavigation currentIndex={0} totalSlides={3} basePath="/d" />);
     press("?");
     expect(screen.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeTruthy();
-    press("Escape");
+    fireEvent(screen.getByRole("dialog"), new Event("close"));
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

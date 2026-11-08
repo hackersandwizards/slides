@@ -12,10 +12,10 @@ import {
   type Job,
 } from "../../../print";
 
-const jobButtons = (Object.keys(JOBS) as Job[])
+const jobLinks = (Object.keys(JOBS) as Job[])
   .map(
     (j) =>
-      `<button type="button" data-job="${j}" aria-pressed="false">${JOBS[j]} <span>${entries.filter((e) => e.jobs.includes(j)).length}</span></button>`,
+      `<li><a href="#catalog" data-job="${j}">${JOBS[j]}<span class="hw-nav-count">${entries.filter((e) => e.jobs.includes(j)).length}</span></a></li>`,
   )
   .join("\n");
 ---
@@ -125,10 +125,8 @@ const jobButtons = (Object.keys(JOBS) as Job[])
         margin: 0 0 1rem;
       }
       table.parts {
-        border-collapse: collapse;
         margin: 0 0 2rem;
         max-width: 80rem;
-        font-size: 0.875rem;
       }
       .elements {
         grid-template-columns: repeat(auto-fill, 640px);
@@ -163,33 +161,6 @@ const jobButtons = (Object.keys(JOBS) as Job[])
       .jobs {
         position: sticky;
         top: 5.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.125rem;
-      }
-      .jobs button {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        font: 500 0.9375rem/1.4 var(--font-sans);
-        color: var(--color-ink);
-        background: none;
-        border: 0;
-        border-radius: var(--radius-sm);
-        padding: 0.375rem 0.75rem;
-        text-align: left;
-        cursor: pointer;
-      }
-      .jobs button span {
-        color: var(--color-muted);
-        font-variant-numeric: tabular-nums;
-      }
-      .jobs button[aria-pressed="true"] {
-        background: var(--color-ink);
-        color: var(--color-tint);
-      }
-      .jobs button[aria-pressed="true"] span {
-        color: inherit;
       }
       .find {
         max-width: 30rem;
@@ -209,13 +180,6 @@ const jobButtons = (Object.keys(JOBS) as Job[])
         font-size: 0.875rem;
         color: var(--color-muted);
         margin: 0;
-      }
-      table.parts th,
-      table.parts td {
-        text-align: left;
-        vertical-align: top;
-        padding: 0.375rem 1rem 0.375rem 0;
-        border-bottom: 1px solid var(--color-border);
       }
     </style>
   </head>
@@ -280,7 +244,7 @@ const jobButtons = (Object.keys(JOBS) as Job[])
         <strong>Slide types</strong> compose parts; a difference between two types is a part's
         variant.
       </p>
-      <table class="parts">
+      <table class="parts hw-table">
         <thead>
           <tr>
             <th>Part</th>
@@ -314,24 +278,30 @@ const jobButtons = (Object.keys(JOBS) as Job[])
         that now draw through another. Click a name to see its slide at 1440 px with its jobs.
       </p>
       <div class="catalog">
-        <nav class="jobs" aria-label="Communication jobs">
-          <button type="button" data-job="" aria-pressed="true">
-            All <span>{entries.length}</span>
-          </button>
-          <Fragment set:html={jobButtons} />
+        <nav class="jobs hw-nav" aria-label="Communication jobs">
+          <ul>
+            <li>
+              <a href="#catalog" data-job="" aria-current="true">
+                All<span class="hw-nav-count">{entries.length}</span>
+              </a>
+            </li>
+            <Fragment set:html={jobLinks} />
+          </ul>
         </nav>
         <div>
-          <input
-            type="search"
-            id="find"
-            class="hw-field find"
-            placeholder="Search a type, block, variant or job"
-            aria-label="Search the catalogue"
-          />
+          <div class="hw-search find">
+            <input
+              type="search"
+              id="find"
+              class="hw-field"
+              placeholder="Search a type, block, variant or job"
+              aria-label="Search the catalogue"
+            />
+          </div>
           <main class="tiles">
             <Fragment set:html={entries.map((e) => e.html).join("\n")} />
           </main>
-          <p id="none" hidden>
+          <p id="none" class="hw-empty" data-variant="plain" hidden>
             No entry matches.
           </p>
         </div>
@@ -342,7 +312,7 @@ const jobButtons = (Object.keys(JOBS) as Job[])
         (phase 4); a new slide takes the entry on the right. The search above finds each by its old
         name.
       </p>
-      <table class="parts">
+      <table class="parts hw-table">
         <thead>
           <tr>
             <th>Old form</th>
@@ -370,11 +340,13 @@ const jobButtons = (Object.keys(JOBS) as Job[])
         }
         document.getElementById("none").hidden = shown > 0;
       };
-      for (const b of document.querySelectorAll(".jobs button"))
-        b.addEventListener("click", () => {
-          job = b.dataset.job;
-          for (const o of document.querySelectorAll(".jobs button"))
-            o.setAttribute("aria-pressed", String(o === b));
+      const jobs = [...document.querySelectorAll(".jobs a")];
+      for (const a of jobs)
+        a.addEventListener("click", (event) => {
+          event.preventDefault();
+          job = a.dataset.job;
+          for (const o of jobs) o.removeAttribute("aria-current");
+          a.setAttribute("aria-current", "true");
           apply();
         });
       find.addEventListener("input", apply);

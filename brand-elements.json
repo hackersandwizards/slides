@@ -17,7 +17,13 @@
     "field",
     "icon-button",
     "quote",
-    "focus-ring"
+    "focus-ring",
+    "search",
+    "nav",
+    "table",
+    "kbd",
+    "empty",
+    "dialog"
   ],
   "markers": {
     "**/content-slide/density/": {
@@ -26,6 +32,7 @@
     }
   },
   "exceptions": {
+    "icon-button-disabled": "The phone deck's step buttons at the ends of a deck: disabled at 25 % opacity with a not-allowed cursor. Brand's round icon control has no disabled state, while its button stands at half opacity; drop once brand's control has one.",
     "card-tone": "A card in purple, which means no state, a tinted card in a meaning's hue with its full line (tint), a card outlined on white in any hue (outline, line), and the quiet grey card: brand's card has white and the teal tint only, its status box the four meanings at a 40 % line. The tinted card stays: blind panel 02.11., the highlighted cell as brand's status box scored lower in all five runs (Claude 8:8, 9:8, 8:7; Codex 8.8:8.7, 9.1:9).",
     "callout-status": "Amber and green callouts for a risk and a result, their text mixed 40 % into ink for 4.5:1: brand's callout has teal and purple only.",
     "code-panel": "The code panel is brand's hw-code panel (corner, hairline, colours) with its padding and type set per layout (a terminal's title bar, an annotated line's marker column) and the slide's code ground, night-2 on a night slide: brand's panel sets one padding, the code role's type and the night ground.",
@@ -34,7 +41,6 @@
     "slide-table": "The slide table: projected rows at stage size with the slide's own column heads, kept per system.",
     "stage-status": "The stage strip: the pipeline's stages with the active ones marked, a status no other system shows.",
     "frame-tone": "The dashed frame in the slide's teal or purple, filled with its tone's tint when active and white otherwise: brand's frame has the border colour and no fill. Its line width and corner are brand's hw-frame.",
-    "qr-card": "A QR code's card is white on a night slide too, since a scanner reads dark modules on light, and its padding is the code's quiet zone: brand's card takes the night ground.",
-    "job-list": "The print page's filter by communication job: fourteen choices in a sticky column beside the tiles, the chosen one filled in ink. Brand has no vertical filter list, and its pill and segmented control run in a row: brand's pills in a row over the tiles scored 6.75 of 10 against 7.75 for this column in a blind panel on 06.11.2026 (a consultant and a brand designer, Claude and Codex, a lead of 1.0 with both models). The search field beside it is brand's hw-field."
+    "qr-card": "A QR code's card is white on a night slide too, since a scanner reads dark modules on light, and its padding is the code's quiet zone: brand's card takes the night ground."
   }
 }
