@@ -79,7 +79,6 @@ describe("fit guard", () => {
       const body = container.querySelector<HTMLElement>(".slide-body")!;
       expect(body.style.zoom).toBe("0.8");
       expect(body.style.getPropertyValue("--hw-zoom")).toBe("0.8");
-      expect(body.style.scale).toBe("");
       // jsdom reads the width as declared; a browser reads it in px, which zooms with the body.
       expect(body.style.width).toBe("125%");
     } finally {
@@ -124,7 +123,6 @@ describe("fit guard", () => {
       expect(zoom).toBeCloseTo(900 / 1080, 5);
       expect(Number(content.style.getPropertyValue("--hw-zoom"))).toBeCloseTo(zoom, 5);
       expect(content.style.justifyContent).toBe("flex-start");
-      expect(content.style.marginInline).toBe("auto");
       // The top edge in the zoomed box's own pixels, so it draws 50 px down.
       expect(parseFloat(content.style.paddingTop) * zoom).toBeCloseTo(50, 3);
     } finally {

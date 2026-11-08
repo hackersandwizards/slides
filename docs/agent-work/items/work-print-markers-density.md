@@ -20,4 +20,6 @@ off over widths 1600 to 2050.
 
 Waits on brand (brief in the run report of 08.11.): brand-markers reads its boxes after the page
 settles. Then raise the brand pin; the exception fails as stale, and this item closes with its
-removal.
+removal, together with a second `check:markers` run at the default 1280 width. That run read 0
+off on 452 readings on 08.11., but it cannot join the gate while the exception stands: brand-markers
+reads one `markers` block for every run and fails the entry as stale at 1280.

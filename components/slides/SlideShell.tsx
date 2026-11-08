@@ -102,8 +102,8 @@ function useFitToSlide() {
       box.style.width = scale < 1 ? `${100 / scale}%` : "";
       return box.clientHeight / box.scrollHeight;
     };
-    // Lays the box out for the largest scale at which it fits, and returns that scale.
     const reset = () => FIT_STYLE.forEach((p) => box.style.removeProperty(p));
+    // Lays the box out for the largest scale at which it fits, and returns that scale.
     const layout = () => {
       reset();
       if (!body) {
@@ -184,7 +184,10 @@ function useFitToSlide() {
       // Each is read before the first write, which changes the computed style.
       const { width, height, alignItems } = getComputedStyle(box);
       const [top] = edges();
-      if (!box.style.width && (!body || alignItems === "center")) box.style.marginInline = "auto";
+      // Under a zoomed frame the marker rounds in the product of both zooms.
+      const outer = (box.parentElement as { currentCSSZoom?: number } | null)?.currentCSSZoom ?? 1;
+      // A narrower body centred in its slide; the shell centres an untitled box itself.
+      if (body && !box.style.width && alignItems === "center") box.style.marginInline = "auto";
       if (!body) {
         // Shrunk as measured, from the top edge: it fills the space between the edges exactly, at
         // the slide's full height. Centred in its padding box, it rose above the top edge where
@@ -194,15 +197,15 @@ function useFitToSlide() {
       }
       box.style.width = width;
       box.style.zoom = String(scale);
-      // Under a zoomed frame, such as a deck tile, the marker rounds in the product of both.
-      const outer = (box.parentElement as { currentCSSZoom?: number } | null)?.currentCSSZoom ?? 1;
       box.style.setProperty("--hw-zoom", String(scale * outer));
     };
-    // The children's sizes the last fit left, so an observer report of those same sizes, such as
-    // the one every observation starts with, lays nothing out again.
+    // The sizes the last fit left, so an observer report of those same sizes, such as the one every
+    // observation starts with, lays nothing out again: the children's and the parent's, since the
+    // zoomed box's px width and height no longer follow a window that changes size.
     let sizes = "";
+    const parent = box.parentElement!;
     const measure = () =>
-      [...box.children]
+      [parent, ...box.children]
         .map((child) => {
           // The computed size keeps fractions; the offset size covers an inline child, whose
           // computed size reads "auto". Neither moves with the box's own `zoom`.
@@ -219,11 +222,12 @@ function useFitToSlide() {
     // A web font still loading changes the text's size once it arrives.
     if (document.fonts?.status === "loading") void document.fonts.ready.then(refit);
     if (typeof ResizeObserver === "undefined") return;
-    // The box keeps its size, so what grows is a child: an image loading, a block revealed.
+    // The box keeps its size, so what grows is a child, an image loading, a block revealed, or the
+    // parent with the window.
     const observer = new ResizeObserver(() => {
       if (measure() !== sizes) refit();
     });
-    for (const child of box.children) observer.observe(child);
+    for (const el of [parent, ...box.children]) observer.observe(el);
     return () => observer.disconnect();
   }, []);
   return ref;

@@ -135,7 +135,7 @@ afterAll(async () => {
 
 /** The frames drawing a square marker, each as a file whose relative links resolve in the print page's folder,
  * with `css` added. */
-function frameFiles(css = "") {
+function frameFiles(css: string) {
   return frames
     .filter(({ doc }) => doc.includes("hw-marker"))
     .map(({ title, doc }, i) => {

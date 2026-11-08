@@ -220,40 +220,60 @@ it.each(["bar", "bar-long-names", "trend", "trend-marked"])(
 );
 
 // The fit guard shrinks with zoom, which draws a px width zoomed but a percentage at full size: a
-// shrunk titled body still spans the slide's width, and an untitled one fills its height, centred.
+// shrunk titled body still spans the slide's width, and an untitled one fills its height, centred,
+// also once its slide narrows without the text changing size, as a deck window wider than 16:9 does
+// (the stage follows the height alone).
 it("draws a shrunk slide at the slide's full width or height", async () => {
   const tab = await newTab();
   await tab.setViewport({ width: 1920, height: 1080 });
-  const read = async (story: string, selector: string) => {
+  const read = async (story: string, selector: string, narrow = false) => {
     await tab.goto(page(`stories/Types/${story}`), { waitUntil: "load" });
     await tab.waitForSelector(`${selector}[style*="zoom"]`);
-    return tab.evaluate(async (selector) => {
-      await document.fonts.ready;
-      for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
-      const box = document.querySelector<HTMLElement>(selector)!;
-      const outer = box.parentElement!;
-      const cs = getComputedStyle(outer);
-      const r = box.getBoundingClientRect();
-      const o = outer.getBoundingClientRect();
-      return {
-        zoom: Number(box.style.zoom),
-        width: box.style.width,
-        drawn: {
-          left: r.left - o.left,
-          right: o.right - r.right,
-          top: r.top - o.top,
-          height: r.height,
-        },
-        inner: o.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
-        outer: { width: o.width, height: o.height },
-      };
-    }, selector);
+    return tab.evaluate(
+      async (selector, narrow) => {
+        const settle = async () => {
+          for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
+        };
+        await document.fonts.ready;
+        await settle();
+        const box = document.querySelector<HTMLElement>(selector)!;
+        // Narrowed once the fit the font's arrival sets off has run.
+        if (narrow) {
+          await new Promise((r) => setTimeout(r, 300));
+          box.parentElement!.style.maxWidth = "1600px";
+          await settle();
+        }
+        const outer = box.parentElement!;
+        const cs = getComputedStyle(outer);
+        const r = box.getBoundingClientRect();
+        const o = outer.getBoundingClientRect();
+        return {
+          zoom: Number(box.style.zoom),
+          width: box.style.width,
+          drawn: {
+            left: r.left - o.left,
+            right: o.right - r.right,
+            top: r.top - o.top,
+            height: r.height,
+          },
+          inner: o.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+          outer: { width: o.width, height: o.height },
+        };
+      },
+      selector,
+      narrow,
+    );
   };
   const body = await read("content-slide/density", ".slide-body");
   expect(body.zoom).toBeGreaterThan(0.5);
   expect(body.zoom).toBeLessThan(1);
   expect(body.width).toMatch(/px$/);
   expect(body.outer.width - body.drawn.left - body.drawn.right).toBeCloseTo(body.inner, 0);
+  const resized = await read("content-slide/density", ".slide-body", true);
+  expect(resized.outer.width - resized.drawn.left - resized.drawn.right).toBeCloseTo(
+    resized.inner,
+    0,
+  );
   const content = await read("closing-slide/contact", ".slide-content");
   expect(content.zoom).toBeGreaterThan(0.5);
   expect(content.zoom).toBeLessThan(1);
