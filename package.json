@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -67,7 +67,7 @@
     "catalog": "bun run dev --open /",
     "build": "check-lock astro build --root catalog",
     "preview": "ASTRO_PREVIEW_BACKGROUND=1 bun --bun astro preview --root catalog",
-    "check:markers": "mkdir -p node_modules/.cache/slides-markers && ln -sfn \"$PWD/dist\" node_modules/.cache/slides-markers/slides && brand-markers --width 1920 --site node_modules/.cache/slides-markers --catalog dist --catalog-at /slides /slides/catalog/print/frames.html"
+    "check:markers": "mkdir -p node_modules/.cache/slides-markers && ln -sfn \"$PWD/dist\" node_modules/.cache/slides-markers/slides && brand-markers --width 1920 --site node_modules/.cache/slides-markers --catalog dist --catalog-at /slides /slides/catalog/print/frames.html && brand-markers --site node_modules/.cache/slides-markers --catalog dist --catalog-at /slides /slides/catalog/print/frames.html"
   },
   "peerDependencies": {
     "@hackersandwizards/brand": "*",
@@ -115,9 +115,9 @@
   "devDependencies": {
     "@astrojs/react": "7.1.4",
     "@eslint/js": "10.0.1",
-    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.12.0",
-    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.49.0",
-    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.0.0",
+    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.16.0",
+    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.52.0",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.0.1",
     "@tailwindcss/node": "4.3.5",
     "@tailwindcss/oxide": "4.3.5",
     "@tailwindcss/vite": "4.3.5",

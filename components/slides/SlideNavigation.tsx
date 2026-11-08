@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import ChevronLeft from "lucide-react/icons/chevron-left";
 import ChevronRight from "lucide-react/icons/chevron-right";
 import { MotionGlobalConfig } from "motion/react";
@@ -179,8 +179,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
   return (
     <>
       {help && (
-        // Nothing inside takes focus, so the dialog holds it, which is no control to draw a ring
-        // round. The backdrop's clicks reach the dialog, outside its panel.
+        // The backdrop's clicks reach the dialog, outside its panel.
         <dialog
           ref={(dialog) => {
             if (dialog && !dialog.open) dialog.showModal();
@@ -188,7 +187,6 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
           className="hw-dialog"
           data-hw-scale="dense"
           data-size="large"
-          style={{ "--hw-focus-width": 0 } as CSSProperties}
           aria-label="Keyboard shortcuts"
           onClose={() => setHelp(false)}
           onClick={(event) => {
@@ -201,25 +199,27 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
             if (!inside) setHelp(false);
           }}
         >
-          <dl className="grid grid-cols-[auto_auto] items-center gap-x-6 gap-y-2 text-sm [--hw-kbd-size:var(--text-sm)]">
-            {KEYS.map(([keys, what]) => (
-              <div key={what} className="contents">
-                <dt className="flex gap-1">
-                  {keys.map((key) => (
-                    <span key={key} className="flex items-center gap-1">
-                      {key.split("+").map((part, i) => (
-                        <Fragment key={part}>
-                          {i > 0 && "+"}
-                          <kbd className="hw-kbd">{part}</kbd>
-                        </Fragment>
-                      ))}
-                    </span>
-                  ))}
-                </dt>
-                <dd>{what}</dd>
-              </div>
-            ))}
-          </dl>
+          <div className="hw-dialog-body">
+            <dl className="grid gap-y-4 text-sm [--hw-kbd-size:var(--text-sm)] sm:grid-cols-[auto_auto] sm:items-center sm:gap-x-6 sm:gap-y-2">
+              {KEYS.map(([keys, what]) => (
+                <div key={what} className="grid gap-y-1 sm:contents">
+                  <dt className="flex flex-wrap gap-1">
+                    {keys.map((key) => (
+                      <span key={key} className="flex items-center gap-1">
+                        {key.split("+").map((part, i) => (
+                          <Fragment key={part}>
+                            {i > 0 && "+"}
+                            <kbd className="hw-kbd">{part}</kbd>
+                          </Fragment>
+                        ))}
+                      </span>
+                    ))}
+                  </dt>
+                  <dd>{what}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </dialog>
       )}
       <div
