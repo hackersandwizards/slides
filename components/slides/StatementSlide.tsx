@@ -372,8 +372,9 @@ export function StatementSlide({ slide }: Props) {
                     <span className="text-primary/70">&rdquo;</span>
                   </p>
                 ) : (
+                  // At the subtitle's size: smaller, the payoff reads quieter than its grey setup.
                   <p
-                    className={`${afterPoints} text-center text-2xl font-semibold tracking-tight text-balance text-text md:text-3xl`}
+                    className={`${afterPoints} text-center text-2xl leading-snug font-semibold tracking-tight text-balance text-text sm:text-3xl md:text-4xl md:leading-snug`}
                   >
                     {renderMarkdown(slide.closing)}
                   </p>

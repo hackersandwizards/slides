@@ -2,15 +2,15 @@ import type { LogoConfig, Presentation } from "../../types/slide";
 import { slideComponents } from "../../lib/slide-components";
 import { HW_LOGO, cornerMark, resolveSlideLogo } from "../../lib/logo";
 import { PrintProvider } from "../../lib/print-context";
-import { deckLang, pageLabel } from "../../lib/slide-utils";
+import { bulletsAsStatement, deckLang, pageLabel } from "../../lib/slide-utils";
 import Image from "../ui/image";
 import { BrandStrip, HwWordmark, PageCounter } from "./SlideContainer";
 import { DeckLang, DeckNight } from "./SlideShell";
 
 /** One slide as a printed page: the slide, the brand strip and the corner with the page counter
  *  and the deck's logos, the h&w mark where the deck names none. `scripts/render-pdf.ts` and
- *  `slides-density` read each `.print-slide`. Render it inside `PrintProvider`, as `PrintDeck`
- *  does. */
+ *  `slides-density` read each `.print-slide`; `data-use` names the type a slide should be, which
+ *  `slides-density` fails on. Render it inside `PrintProvider`, as `PrintDeck` does. */
 export function PrintSlide({ presentation, index }: { presentation: Presentation; index: number }) {
   const slide = presentation.slides[index];
   const SlideComponent = slideComponents[slide.type];
@@ -24,6 +24,7 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
       className={`print-slide${presentation.theme ? ` theme-${presentation.theme}` : ""}`}
       data-theme={presentation.theme ? "dark" : "light"}
       data-hw-night={presentation.theme ? "" : undefined}
+      data-use={slide.type === "content" && bulletsAsStatement(slide) ? "statement" : undefined}
     >
       <DeckNight.Provider value={!!presentation.theme}>
         <DeckLang.Provider value={deckLang(presentation)}>

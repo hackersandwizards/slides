@@ -61,7 +61,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `scripts/pins.ts`: the `slides-pins` command each consumer runs in its gate after the shared steps:
   fails when `package.json` pins no brand.
 - `scripts/density.ts`: the `slides-density` command each consumer runs in its gate: fails on a
-  slide the fit guard shrinks below 0.8, lists those below 0.9. The engine's own regression decks
+  slide the fit guard shrinks below 0.8 and on one `PrintSlide` marks with `data-use` (a content
+  slide a statement carries), lists those below 0.9. The engine's own regression decks
   are covered where talks runs it over the specimen deck.
 - `scripts/render-pptx.ts`: the `slides-pptx` command, a deck JSON to a native PowerPoint file in
   the h&w design with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.

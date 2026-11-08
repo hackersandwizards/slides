@@ -383,6 +383,24 @@ export function centeredAsStatement(slide: ContentSlide): StatementSlide | undef
   };
 }
 
+/** A content slide holding nothing but one or two short bullets as the statement that carries
+ *  them, or undefined: as bullets they leave the slide empty around them. Short is one line at
+ *  body size. `slides-density` fails on each. */
+export function bulletsAsStatement(slide: ContentSlide): StatementSlide | undefined {
+  const [block, ...rest] = slide.content;
+  if (rest.length || block?.type !== "bullets" || slide.subtitle || slide.footer) return;
+  const items = block.items;
+  if (items.length > 2 || !items.every((i) => typeof i === "string" && i.length <= 90)) return;
+  const [subtitle, closing] = items as string[];
+  return {
+    type: "statement",
+    ...(slide.sectionLabel ? { kicker: slide.sectionLabel } : {}),
+    lines: [slide.headline],
+    subtitle,
+    ...(closing ? { closing } : {}),
+  };
+}
+
 /** A section's text with its link set as a markdown link after it. */
 const sectionText = (s: ContentSection) =>
   [s.text, s.link && `[${s.link.label}](${s.link.url})`].filter(Boolean).join(" ") || undefined;

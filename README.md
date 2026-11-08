@@ -41,7 +41,9 @@ That the install matches each pin, scaffolding's install and `coupling` steps ch
 
 The command `slides-density [--serve "<command>"] <print-url> ...` belongs in each consumer's gate:
 it renders each deck's print route and fails on a slide the fit guard shrinks below 0.8, and lists
-those below 0.9. `--serve` starts the consumer's server for the run and stops it afterwards.
+those below 0.9. It fails too on a content slide holding only one or two short bullets, which a
+`statement` carries (`bulletsAsStatement` in `lib/slide-utils`). `--serve` starts the consumer's
+server for the run and stops it afterwards.
 
 The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]` writes a deck as a native
 PowerPoint file in the h&w design: text as text boxes, tables as tables, trend and bar charts as
@@ -94,6 +96,11 @@ as `"3 / 9"`. A break, lunch, a live demo or the thanks is not a chapter. A time
 whose items carry a `when` ("09:00"), and so are a pitch's next steps (a due date as `when`, the
 owner as `text`, the decision needed as `footer`). A deck whose agenda is a map that returns before
 each part (`phased-pills`) keeps that instead.
+
+One to three short statements under a headline are a `statement` slide, never a content slide of
+bullets, which leaves the slide empty around them: the section label as `kicker`, the headline as
+`lines`, the statements that lead up as `subtitle` (one per line) and the one they lead to as
+`closing`.
 
 An exercise, a live demo and a debrief are an `activity` slide (`kind`): the steps, watch points or
 questions, the exact instruction as `prompt`, and the timebox, mode and outcome in one card.

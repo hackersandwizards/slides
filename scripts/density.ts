@@ -4,11 +4,14 @@
 // FAIL a slide fails the run; below NOTICE it is listed without failing. Body text stands at 36 px
 // (18 pt on a 960 pt slide) at factor 1 and shrinks with it, so 0.8 keeps it at 29 px. Each listed
 // slide gets a split suggestion: its blocks laid out at full size, grouped into slides that fit.
+// A slide the printed page marks with `data-use` (a content slide of one or two short bullets)
+// fails too, naming the type that carries it.
 //
 //   slides-density [--serve "<command>"] <print-url> ...
 //
 // `--serve` starts the consumer's server for the run, waits until the first URL's origin answers
-// and stops it at the end. Exit 1 on any slide below FAIL or any deck that does not render.
+// and stops it at the end. Exit 1 on any slide below FAIL or of the wrong type, or any deck that
+// does not render.
 
 import { spawn, type ChildProcess } from "node:child_process";
 import { constants } from "node:os";
@@ -17,6 +20,8 @@ import puppeteer, { type Browser } from "puppeteer";
 const FAIL = 0.8;
 const NOTICE = 0.9;
 const PAGES = 4;
+const STATEMENT =
+  "one or two short bullets leave the slide empty: make it a statement slide, the section label its kicker, the headline its line, the first bullet its subtitle and the second its closing (bulletsAsStatement in lib/slide-utils)";
 
 const args = process.argv.slice(2);
 const at = args.indexOf("--serve");
@@ -38,6 +43,7 @@ if (serve) await start(serve, new URL(urls[0]).origin);
 let browser: Browser | undefined;
 let failed = 0;
 let noticed = 0;
+let wrongType = 0;
 let broken = 0;
 try {
   // Background pages keep their timers and frames: settle waits on both.
@@ -66,9 +72,9 @@ try {
   server?.kill();
 }
 console.log(
-  `[slides-density] ${urls.length} decks: ${failed} slides below ${FAIL} (fail), ${noticed} below ${NOTICE} (notice)${broken ? `, ${broken} decks did not render` : ""}`,
+  `[slides-density] ${urls.length} decks: ${failed} slides below ${FAIL} (fail), ${noticed} below ${NOTICE} (notice)${wrongType ? `, ${wrongType} of the wrong type (fail)` : ""}${broken ? `, ${broken} decks did not render` : ""}`,
 );
-process.exit(failed || broken ? 1 : 0);
+process.exit(failed || wrongType || broken ? 1 : 0);
 
 async function check(browser: Browser, url: string): Promise<string[]> {
   const deck = new URL(url).pathname.replace(/\/print$/, "").replace(/^\//, "");
@@ -76,7 +82,11 @@ async function check(browser: Browser, url: string): Promise<string[]> {
   try {
     await page.setViewport({ width: 1920, height: 1080 });
     await settle(page, url);
-    return (await page.$$eval(".print-slide", measure, NOTICE)).map((r) => {
+    const misused = (await page.$$eval(".print-slide", useOf)).map((r) => {
+      wrongType++;
+      return `FAIL ${deck}/${r.i} "${r.title}": ${r.use === "statement" ? STATEMENT : `make it a ${r.use} slide`}`;
+    });
+    const shrunk = (await page.$$eval(".print-slide", measure, NOTICE)).map((r) => {
       const level = r.scale < FAIL ? "FAIL" : "NOTICE";
       if (level === "FAIL") failed++;
       else noticed++;
@@ -86,6 +96,7 @@ async function check(browser: Browser, url: string): Promise<string[]> {
           : `one ${r.label} is taller than the slide: split its text or show it as a diagram`;
       return `${level} ${deck}/${r.i} scale ${r.scale.toFixed(2)} "${r.title}": ${hint}`;
     });
+    return [...misused, ...shrunk];
   } catch (e) {
     broken++;
     return [`FAIL ${deck} did not render: ${(e as Error).message}`];
@@ -138,6 +149,14 @@ async function settle(page: import("puppeteer").Page, url: string) {
     () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
   );
   await new Promise((r) => setTimeout(r, 500));
+}
+
+function useOf(nodes: Element[]) {
+  return nodes.flatMap((slide, i) => {
+    const use = (slide as HTMLElement).dataset.use;
+    const title = slide.querySelector("h1, h2")?.textContent?.trim().slice(0, 60) ?? "";
+    return use ? [{ i, use, title }] : [];
+  });
 }
 
 function measure(nodes: Element[], notice: number) {
