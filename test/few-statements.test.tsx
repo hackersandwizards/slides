@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { PrintDeck } from "../components/slides/PrintSlide";
-import { bulletsAsStatement } from "../lib/slide-utils";
+import { bulletsAsStatement, replacedBy } from "../lib/slide-utils";
 import type { ContentSlide } from "../types/slide";
 
 const few = (items: (string | { text: string; children: string[] })[]): ContentSlide => ({
@@ -21,6 +21,7 @@ describe("bulletsAsStatement", () => {
       closing: "That became our lead.",
     });
     expect(bulletsAsStatement(few(["Time, no brief."]))?.closing).toBeUndefined();
+    expect(replacedBy(few(["One.", "Two."]))?.to).toBe("statement");
   });
 
   it("leaves a slide with three bullets, a long bullet, nested items or another block", () => {
@@ -31,6 +32,13 @@ describe("bulletsAsStatement", () => {
     more.content.push({ type: "paragraph", text: "More." });
     expect(bulletsAsStatement(more)).toBeUndefined();
     expect(bulletsAsStatement({ ...few(["One.", "Two."]), subtitle: "Sub" })).toBeUndefined();
+    expect(bulletsAsStatement(few([]))).toBeUndefined();
+    expect(bulletsAsStatement({ ...few(["One."]), headline: "Ship **daily**" })).toBeUndefined();
+    expect(bulletsAsStatement({ ...few(["One."]), sectionTheme: "deepdive" })).toBeUndefined();
+    expect(bulletsAsStatement({ ...few(["One."]), badge: "New" })).toBeUndefined();
+    const ordered = few(["One.", "Two."]);
+    ordered.content = [{ type: "bullets", ordered: true, items: ["One.", "Two."] }];
+    expect(bulletsAsStatement(ordered)).toBeUndefined();
   });
 });
 

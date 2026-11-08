@@ -385,19 +385,26 @@ export function centeredAsStatement(slide: ContentSlide): StatementSlide | undef
 
 /** A content slide holding nothing but one or two short bullets as the statement that carries
  *  them, or undefined: as bullets they leave the slide empty around them. Short is one line at
- *  body size. `slides-density` fails on each. */
+ *  body size. */
 export function bulletsAsStatement(slide: ContentSlide): StatementSlide | undefined {
   const [block, ...rest] = slide.content;
-  if (rest.length || block?.type !== "bullets" || slide.subtitle || slide.footer) return;
+  if (rest.length || block?.type !== "bullets" || block.ordered) return;
+  const { subtitle: sub, footer, badge, principle, stageMarker, sectionTheme, headline } = slide;
+  if (sub || footer || badge || principle || stageMarker || sectionTheme === "deepdive") return;
+  // A statement's lines print as typed, as centeredAsStatement knows.
+  if (/[`*[]/.test(headline)) return;
   const items = block.items;
-  if (items.length > 2 || !items.every((i) => typeof i === "string" && i.length <= 90)) return;
+  if (!items.length || items.length > 2) return;
+  if (!items.every((i) => typeof i === "string" && i.length <= 90)) return;
   const [subtitle, closing] = items as string[];
   return {
     type: "statement",
-    ...(slide.sectionLabel ? { kicker: slide.sectionLabel } : {}),
+    ground: slide.ground,
+    background: slide.background,
+    kicker: slide.sectionLabel,
     lines: [slide.headline],
     subtitle,
-    ...(closing ? { closing } : {}),
+    closing,
   };
 }
 
@@ -552,8 +559,9 @@ export const isHighlightPhase = (title: string, phase?: string) =>
 
 /** The entry that draws a deprecated form, or undefined for a form the catalogue offers: an alias
  *  type, `regular` without a profile, a `grid` other than quotes, a centered content slide a
- *  statement carries, a content slide holding a replaced block, and one whose one block is a
- *  neutral two-column. `form` names a content slide's replaced form. */
+ *  statement carries, one holding only one or two short bullets, a content slide holding a
+ *  replaced block, and one whose one block is a neutral two-column. `form` names a content
+ *  slide's replaced form. */
 export function replacedBy(slide: Slide): { to: string; form?: string } | undefined {
   switch (slide.type) {
     case "evolution":
@@ -583,6 +591,7 @@ export function replacedBy(slide: Slide): { to: string; form?: string } | undefi
     case "content": {
       if (slide.layout === "centered" && centeredAsStatement(slide))
         return { to: "statement", form: "content, centered" };
+      if (bulletsAsStatement(slide)) return { to: "statement", form: "one or two short bullets" };
       if (twoColumnAsSplit(slide))
         return { to: "comparison split", form: "two-column, neutral, alone on a slide" };
       for (const { type } of slide.content) {

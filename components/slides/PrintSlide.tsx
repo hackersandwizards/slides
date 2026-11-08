@@ -9,8 +9,8 @@ import { DeckLang, DeckNight } from "./SlideShell";
 
 /** One slide as a printed page: the slide, the brand strip and the corner with the page counter
  *  and the deck's logos, the h&w mark where the deck names none. `scripts/render-pdf.ts` and
- *  `slides-density` read each `.print-slide`; `data-use` names the type a slide should be, which
- *  `slides-density` fails on. Render it inside `PrintProvider`, as `PrintDeck` does. */
+ *  `slides-density` read each `.print-slide`; `data-use` names the type a slide should be. Render
+ *  it inside `PrintProvider`, as `PrintDeck` does. */
 export function PrintSlide({ presentation, index }: { presentation: Presentation; index: number }) {
   const slide = presentation.slides[index];
   const SlideComponent = slideComponents[slide.type];

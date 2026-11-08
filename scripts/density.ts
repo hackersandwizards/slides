@@ -10,8 +10,8 @@
 //   slides-density [--serve "<command>"] <print-url> ...
 //
 // `--serve` starts the consumer's server for the run, waits until the first URL's origin answers
-// and stops it at the end. Exit 1 on any slide below FAIL or of the wrong type, or any deck that
-// does not render.
+// and stops it at the end. Exit 1 on any slide below FAIL or marked, or any deck that does not
+// render.
 
 import { spawn, type ChildProcess } from "node:child_process";
 import { constants } from "node:os";
@@ -21,7 +21,7 @@ const FAIL = 0.8;
 const NOTICE = 0.9;
 const PAGES = 4;
 const STATEMENT =
-  "one or two short bullets leave the slide empty: make it a statement slide, the section label its kicker, the headline its line, the first bullet its subtitle and the second its closing (bulletsAsStatement in lib/slide-utils)";
+  "one or two short bullets leave the slide empty: make it the statement slide bulletsAsStatement in lib/slide-utils returns";
 
 const args = process.argv.slice(2);
 const at = args.indexOf("--serve");
@@ -43,7 +43,6 @@ if (serve) await start(serve, new URL(urls[0]).origin);
 let browser: Browser | undefined;
 let failed = 0;
 let noticed = 0;
-let wrongType = 0;
 let broken = 0;
 try {
   // Background pages keep their timers and frames: settle waits on both.
@@ -72,9 +71,9 @@ try {
   server?.kill();
 }
 console.log(
-  `[slides-density] ${urls.length} decks: ${failed} slides below ${FAIL} (fail), ${noticed} below ${NOTICE} (notice)${wrongType ? `, ${wrongType} of the wrong type (fail)` : ""}${broken ? `, ${broken} decks did not render` : ""}`,
+  `[slides-density] ${urls.length} decks: ${failed} slides below ${FAIL} or of the wrong type (fail), ${noticed} below ${NOTICE} (notice)${broken ? `, ${broken} decks did not render` : ""}`,
 );
-process.exit(failed || wrongType || broken ? 1 : 0);
+process.exit(failed || broken ? 1 : 0);
 
 async function check(browser: Browser, url: string): Promise<string[]> {
   const deck = new URL(url).pathname.replace(/\/print$/, "").replace(/^\//, "");
@@ -82,11 +81,11 @@ async function check(browser: Browser, url: string): Promise<string[]> {
   try {
     await page.setViewport({ width: 1920, height: 1080 });
     await settle(page, url);
-    const misused = (await page.$$eval(".print-slide", useOf)).map((r) => {
-      wrongType++;
-      return `FAIL ${deck}/${r.i} "${r.title}": ${r.use === "statement" ? STATEMENT : `make it a ${r.use} slide`}`;
-    });
-    const shrunk = (await page.$$eval(".print-slide", measure, NOTICE)).map((r) => {
+    return (await page.$$eval(".print-slide", measure, NOTICE)).map((r) => {
+      if ("use" in r) {
+        failed++;
+        return `FAIL ${deck}/${r.i} "${r.title}": ${STATEMENT}`;
+      }
       const level = r.scale < FAIL ? "FAIL" : "NOTICE";
       if (level === "FAIL") failed++;
       else noticed++;
@@ -96,7 +95,6 @@ async function check(browser: Browser, url: string): Promise<string[]> {
           : `one ${r.label} is taller than the slide: split its text or show it as a diagram`;
       return `${level} ${deck}/${r.i} scale ${r.scale.toFixed(2)} "${r.title}": ${hint}`;
     });
-    return [...misused, ...shrunk];
   } catch (e) {
     broken++;
     return [`FAIL ${deck} did not render: ${(e as Error).message}`];
@@ -151,21 +149,15 @@ async function settle(page: import("puppeteer").Page, url: string) {
   await new Promise((r) => setTimeout(r, 500));
 }
 
-function useOf(nodes: Element[]) {
-  return nodes.flatMap((slide, i) => {
-    const use = (slide as HTMLElement).dataset.use;
-    const title = slide.querySelector("h1, h2")?.textContent?.trim().slice(0, 60) ?? "";
-    return use ? [{ i, use, title }] : [];
-  });
-}
-
 function measure(nodes: Element[], notice: number) {
   return nodes.flatMap((slide, i) => {
+    const title = slide.querySelector("h1, h2")?.textContent?.trim().slice(0, 60) ?? "";
+    const misused = (slide as HTMLElement).dataset.use ? [{ i, title, use: true as const }] : [];
     const box = slide.querySelector<HTMLElement>(
       ".slide-body[style*='scale'], .slide-content[style*='scale']",
     );
     const scale = box ? parseFloat(box.style.scale) || 1 : 1;
-    if (!box || scale >= notice) return [];
+    if (misused.length || !box || scale >= notice) return misused;
     // Lay the box out at full size and natural width to see where its blocks fall.
     const kept = [box.style.scale, box.style.width];
     box.style.scale = "";
@@ -188,9 +180,8 @@ function measure(nodes: Element[], notice: number) {
     });
     if (group.length) groups.push(group);
     [box.style.scale, box.style.width] = kept;
-    const title = slide.querySelector("h1, h2")?.textContent?.trim().slice(0, 60) ?? "";
     const label = parent.tagName === "UL" ? "list item" : "block";
     const split = groups.map((g) => (g.length > 1 ? `${g[0]}-${g.at(-1)}` : `${g[0]}`)).join(" | ");
-    return [{ i, scale, title, label, groups: groups.length, split }];
+    return [...misused, { i, scale, title, label, groups: groups.length, split }];
   });
 }
