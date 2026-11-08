@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
@@ -62,18 +63,11 @@ function measure(): { label: string; offset: number }[] {
 }
 
 let browser: Browser;
-let frames: { title: string; doc: string }[];
 beforeAll(async () => {
   browser = await puppeteer.launch({
     headless: true,
     args: ["--use-mock-keychain", "--password-store=basic"],
   });
-  const page = await browser.newPage();
-  await page.goto(`file://${join(PRINT, "index.html")}`);
-  frames = await page.$$eval("iframe", (all) =>
-    all.map((f) => ({ title: f.title, doc: f.srcdoc })),
-  );
-  await page.close();
 });
 afterAll(async () => {
   await browser?.close();
@@ -91,7 +85,12 @@ const codeStories = readdirSync(join(DIST, "stories"), { recursive: true, encodi
   )
   .map((file) => `${ORIGIN}/slides/stories/${file.replace(/index\.html$/, "")}`);
 
-const TYPES: Record<string, string> = { js: "text/javascript", css: "text/css", html: "text/html" };
+const TYPES: Record<string, string> = {
+  js: "text/javascript",
+  css: "text/css",
+  html: "text/html",
+  svg: "image/svg+xml",
+};
 
 async function serveDist(page: Page) {
   await page.setRequestInterception(true);
@@ -112,28 +111,33 @@ async function serveDist(page: Page) {
   });
 }
 
-/** Each badge's offset on every print frame and code story, with `css` added. */
-async function offsets(css = "") {
+// The control: numerals untrimmed and the code rows as before 08.11., aligned to their top with
+// the badge a spacing step down, must read off centre.
+const CONTROL =
+  ".tabular-nums > span { text-box: none !important } pre div { align-items: start !important } pre div > span:first-child { padding-top: calc(var(--spacing) * 1) }";
+
+type Reading = { label: string; offset: number };
+
+/** Each badge's offset on every print frame and code story, as drawn and under the control. */
+async function offsets() {
   const page = await browser.newPage();
-  const found: { label: string; offset: number }[] = [];
+  const found: Reading[] = [];
+  const control: Reading[] = [];
   const read = async (where: string) => {
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
     for (const f of await page.evaluate(measure))
       found.push({ ...f, label: `${where}: ${f.label}` });
+    await page.addStyleTag({ content: CONTROL });
+    for (const f of await page.evaluate(measure))
+      control.push({ ...f, label: `${where}: ${f.label}` });
   };
   try {
     await page.setViewport({ width: 1920, height: 1080 });
-    await page.goto(`file://${join(PRINT, "index.html")}`);
-    for (const { title, doc } of frames) {
-      await page.setContent(doc.replace("</head>", `<style>${css}</style></head>`), {
-        waitUntil: "load",
-      });
-      await read(title);
-    }
+    await page.goto(pathToFileURL(join(PRINT, "frames.html")).href, { waitUntil: "load" });
+    await read("frames");
     await serveDist(page);
     for (const url of codeStories) {
       await page.goto(url, { waitUntil: "networkidle0" });
-      if (css) await page.addStyleTag({ content: css });
       // The slide enters as one reached from the one before, and the code colours after load.
       await page.waitForFunction(() => !document.querySelector("[data-code-plain]"));
       await new Promise((done) => setTimeout(done, 1500));
@@ -142,27 +146,19 @@ async function offsets(css = "") {
   } finally {
     await page.close();
   }
-  return found;
+  return { found, control };
 }
 
-const outside = (found: { label: string; offset: number }[]) =>
-  found
+const outside = (readings: Reading[]) =>
+  readings
     .filter(({ offset }) => Math.abs(offset) > TOLERANCE)
     .map(({ label, offset }) => `${label}: ${offset.toFixed(2)} px`);
 
 it("every numbered badge on the specimen slides centres its numeral", async () => {
-  const found = await offsets();
-  expect(codeStories.length).toBeGreaterThan(0);
+  const { found, control } = await offsets();
   expect(found.filter(({ label }) => label.startsWith(ORIGIN)).length).toBeGreaterThan(0);
   expect(found.length).toBeGreaterThan(20);
   expect(outside(found)).toEqual([]);
-}, 300_000);
-
-// The control: numerals untrimmed and the code rows as before 08.11. must read off centre.
-it("reads the untrimmed numerals and top-aligned code badges off centre", async () => {
-  const found = await offsets(
-    ".tabular-nums > span { text-box: none !important } pre div { align-items: start !important } pre div > span:first-child { padding-top: calc(var(--spacing) * 1) }",
-  );
-  expect(outside(found).length).toBeGreaterThan(10);
-  expect(outside(found).filter((line) => line.includes("on its line")).length).toBeGreaterThan(0);
+  expect(outside(control).length).toBeGreaterThan(10);
+  expect(outside(control).filter((line) => line.includes("on its line")).length).toBeGreaterThan(0);
 }, 300_000);

@@ -888,11 +888,12 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
           {lines.map((line, i) => {
             const n = marked.get(i + 1);
             // Under a marked line's teal a comment in night-subtle falls to 4.3:1 (dark theme):
-            // there it takes the grey halfway to night-muted, 5.6:1, still below the code's.
+            // there it takes the grey halfway to night-muted, 5.6:1, still below the code's. The
+            // badge's numeral stands on the line's first baseline, so a wrapped line keeps it there.
             return (
               <div
                 key={i}
-                className={`flex items-center gap-4 pr-6 pl-4 ${n ? "border-l-(length:--slide-rule-accent) border-primary bg-primary/25 [--code-comment:var(--slide-code-comment-lit)]" : "border-l-(length:--slide-rule-accent) border-transparent"}`}
+                className={`flex items-baseline gap-4 border-l-(length:--slide-rule-accent) pr-6 pl-4 ${n ? "border-primary bg-primary/25 [--code-comment:var(--slide-code-comment-lit)]" : "border-transparent"}`}
               >
                 {marked.size > 0 && (
                   <span className="flex w-10 shrink-0 justify-center">

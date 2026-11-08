@@ -331,7 +331,11 @@ export function Portrait({
   children?: ReactNode;
 }) {
   return (
-    <span className={`hw-avatar ${PORTRAIT_HUES[tone]} ${className}`.trim()}>
+    // Top-aligned, so a block parent's line adds no descent below the circle.
+    <span
+      className={`hw-avatar align-top ${PORTRAIT_HUES[tone]} ${className}`.trim()}
+      {...(!src && alt ? { role: "img", "aria-label": alt } : {})}
+    >
       {src ? <Image src={src} alt={alt} width={480} height={480} /> : children}
     </span>
   );

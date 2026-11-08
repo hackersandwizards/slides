@@ -527,17 +527,20 @@ function picture(
   }
   const [iw, ih] = size;
   if (o.round) {
+    // Filled and anchored at the top, as the web's hw-avatar (object-position: top).
     const d = Math.min(w, h);
+    const k = d / Math.min(iw, ih);
     const [px, py] = [x + (w - d) / 2, y + (h - d) / 2];
     s.addImage({
       path,
       x: px,
       y: py,
-      w: d,
-      h: d,
-      sizing: { type: "cover", w: d, h: d },
+      w: iw * k,
+      h: ih * k,
+      sizing: { type: "crop", x: (iw * k - d) / 2, y: 0, w: d, h: d },
       rounding: true,
       altText: o.alt,
+      ...(o.href ? { hyperlink: { url: o.href } } : {}),
     });
     return { x: px, y: py, w: d, h: d };
   }
@@ -1889,14 +1892,7 @@ function portrait(
   // Round, as the web's hw-avatar.
   if (src) picture(s, ctx, src, x, y, d, d, { round: true, alt: name });
   else {
-    s.addShape("ellipse", {
-      x,
-      y,
-      w: d,
-      h: d,
-      fill: { color: mix(tone, ctx.c.bg, 0.25) },
-      line: { type: "none" },
-    });
+    s.addShape("ellipse", { x, y, w: d, h: d, fill: { color: tone }, line: { type: "none" } });
     box(
       s,
       ctx.c,
@@ -1915,7 +1911,14 @@ function portrait(
       y,
       d,
       d,
-      { size: d * 24, mono: true, bold: true, color: tone, align: "center", valign: "middle" },
+      {
+        size: d * 24,
+        mono: true,
+        bold: true,
+        color: hex("--color-white"),
+        align: "center",
+        valign: "middle",
+      },
     );
   }
 }
@@ -2171,7 +2174,7 @@ const RENDER: {
     const side = qr
       ? { src: qr.src, alt: qrAlt(qr.href, deckLang(deck)), href: qr.href }
       : d.imageSrc
-        ? { src: d.imageSrc, alt: d.imageAlt, href: undefined }
+        ? { src: d.imageSrc, alt: d.imageAlt, href: undefined, round: !!d.attribution }
         : d.linkedImage;
     const imgW = side ? CW * 0.38 : 0;
     const w = CW - imgW - (imgW ? 0.4 : 0);
@@ -2282,13 +2285,21 @@ const RENDER: {
     const footH = footerHeight(ctx, d.footer);
     box(s, c, paras, SIDE, TOP, w, BOTTOM - TOP - footH, o);
     footer(s, ctx, d.footer, footH);
-    if (side)
-      picture(s, ctx, side.src, SIDE + w + 0.4, TOP, imgW, BOTTOM - TOP - footH, {
-        alt: side.alt,
-        href: side.href,
-        // A quotation's portrait, round as on the web.
-        round: !!d.attribution && side.src === d.imageSrc,
-      });
+    if (side) {
+      // A quotation's portrait is round at the web's size, 384 px at 1920, centred in the side.
+      const [x, h] = [SIDE + w + 0.4, BOTTOM - TOP - footH];
+      const r = "round" in side && side.round ? 384 / 144 : 0;
+      picture(
+        s,
+        ctx,
+        side.src,
+        r ? x + (imgW - r) / 2 : x,
+        r ? TOP + (h - r) / 2 : TOP,
+        r || imgW,
+        r || h,
+        { alt: side.alt, href: side.href, round: !!r },
+      );
+    }
   },
 
   evolution(s, ctx, d) {
