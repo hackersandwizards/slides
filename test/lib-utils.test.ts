@@ -114,6 +114,15 @@ describe("ignoredKey", () => {
     expect(ignoredKey(key(true))).toBe(true);
   });
 
+  it("holds back a key pressed under an open dialog, while another window's replay still counts", () => {
+    expect(ignoredKey(key(true))).toBe(false);
+    const dialog = document.body.appendChild(document.createElement("dialog"));
+    dialog.setAttribute("open", "");
+    expect(ignoredKey(key(true))).toBe(true);
+    expect(ignoredKey(key(false))).toBe(false);
+    dialog.remove();
+  });
+
   // Touch buttons and replays from the speaker window dispatch their own presses.
   it("lets presses the engine dispatches through", () => {
     document.documentElement.dataset.deckEdit = "";

@@ -1,6 +1,13 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import {
+  Fragment,
+  type MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import ChevronLeft from "lucide-react/icons/chevron-left";
 import ChevronRight from "lucide-react/icons/chevron-right";
 import { MotionGlobalConfig } from "motion/react";
@@ -9,6 +16,7 @@ import { usePendingReveal } from "../../lib/use-progressive-reveal";
 import { arrowEvent, deckSync, ROLE_NAMES } from "../../lib/presenter-sync";
 import {
   arrivedBackwards as readArrivedBackwards,
+  dialogOpen,
   directionKey,
   ignoredKey,
   writeStored,
@@ -41,11 +49,23 @@ const KEYS: Array<[string[], string]> = [
 ];
 if (process.env.NODE_ENV === "development") KEYS.push([["E"], "edit text, dev only"]);
 
+/** A stable ref, so only the dialog's mount opens it: an inline one runs on every render and
+ *  would reopen it between Esc and its queued `close` event. */
+const openModal = (dialog: HTMLDialogElement | null) => dialog?.showModal();
+
+/** Whether a press or click lies outside the panel: the backdrop's reach the dialog element. */
+function onBackdrop(event: ReactMouseEvent<HTMLDialogElement>) {
+  const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect();
+  const { clientX: x, clientY: y } = event;
+  return x < left || x > right || y < top || y > bottom;
+}
+
 export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) {
   const goToSlide = useGoToSlide();
   const [help, setHelp] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
+  const pressedBackdrop = useRef(false);
   const currentIndexRef = useRef(currentIndex);
   // The last slide still takes Next while it holds a reveal step.
   const pending = usePendingReveal();
@@ -95,7 +115,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
     /** Capture phase, consumes nothing. Once the press has run through every handler, reports
      *  whether the slide took it as a step, which the other windows of the deck replay. */
     function observeArrow(event: KeyboardEvent) {
-      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      if ((event.key !== "ArrowRight" && event.key !== "ArrowLeft") || ignoredKey(event)) return;
       // The slide on screen, which is the one that may consume the press: after a navigation
       // from here the deck's state already names the next one while this one is still mounted.
       setTimeout(() => deckSync.pressed(event, currentIndex, event.defaultPrevented));
@@ -121,8 +141,9 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
       // slide consumed is checked here too: Chrome runs this listener after a consuming capture
       // listener's stopPropagation when the press was dispatched on window itself.
       if (follows || deckSync.isReplayed(event) || event.defaultPrevented) return;
-      if (ignoredKey(event)) return;
       const { key, shiftKey } = event;
+      if (key === "?" && dialogOpen()) return setHelp(false);
+      if (ignoredKey(event)) return;
       const asArrow =
         key === "PageDown" || (key === " " && !shiftKey)
           ? "ArrowRight"
@@ -149,7 +170,8 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
     }
 
     function handleTouchEnd(event: TouchEvent) {
-      if (follows || touchStartX.current === null || touchStartY.current === null) return;
+      if (follows || dialogOpen()) return;
+      if (touchStartX.current === null || touchStartY.current === null) return;
 
       const deltaX = event.changedTouches[0].clientX - touchStartX.current;
       const deltaY = event.changedTouches[0].clientY - touchStartY.current;
@@ -179,24 +201,20 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
   return (
     <>
       {help && (
-        // The backdrop's clicks reach the dialog, outside its panel.
+        // Closes on a press and release both on the backdrop: a selection that starts in the panel
+        // and ends outside it is no click on the backdrop.
         <dialog
-          ref={(dialog) => {
-            if (dialog && !dialog.open) dialog.showModal();
-          }}
+          ref={openModal}
           className="hw-dialog"
           data-hw-scale="dense"
           data-size="large"
           aria-label="Keyboard shortcuts"
           onClose={() => setHelp(false)}
+          onMouseDown={(event) => {
+            pressedBackdrop.current = onBackdrop(event);
+          }}
           onClick={(event) => {
-            const panel = event.currentTarget.getBoundingClientRect();
-            const inside =
-              event.clientX >= panel.left &&
-              event.clientX <= panel.right &&
-              event.clientY >= panel.top &&
-              event.clientY <= panel.bottom;
-            if (!inside) setHelp(false);
+            if (pressedBackdrop.current && onBackdrop(event)) setHelp(false);
           }}
         >
           <div className="hw-dialog-body [--hw-field-size:var(--text-sm)]">

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { deckSync } from "./presenter-sync";
-import { directionKey, readStored, writeStored } from "./slide-utils";
+import { dialogOpen, directionKey, readStored, writeStored } from "./slide-utils";
 import { useMounted } from "./use-mounted";
 
 /** Edit mode, local development only: E toggles it, a click on a text opens that text's source
@@ -61,7 +61,7 @@ export function DeckEdit({ deck }: { deck: string }) {
     if (!active) return;
     const toggle = (event: KeyboardEvent) => {
       if (event.key !== "e" && event.key !== "E") return;
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.metaKey || event.ctrlKey || event.altKey || dialogOpen()) return;
       if ((event.target as Element | null)?.closest?.("input, textarea, [contenteditable]")) return;
       setChoice((was) => {
         const next = !(was ?? readStored("session", STORAGE_KEY) === "on");
