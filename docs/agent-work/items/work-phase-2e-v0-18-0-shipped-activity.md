@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 3
-order: 430
+order: 600
 owner: Agent (slides session)
 evidence: "slides v1.22.0, 07.11.2026: the type-list round, the parts round and the media merge shipped, scores in `docs/agent-work/2026-11-06-review-round.md` (Phase 2e rounds); avatar per brand `docs/agent-work/2026-11-01-shared-elements.md`"
 ---
