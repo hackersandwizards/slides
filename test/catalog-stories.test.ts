@@ -17,9 +17,11 @@ const types = [...registry.matchAll(/^\s*"?([\w-]+)"?: (\w+) as SlideComponent/g
   .map(([, type, component]) => ({ type, component }));
 
 describe("catalog stories", () => {
-  it("has a story file per slide type and per part, and no other", () => {
+  it("has a story file per slide type, per part and per deck component, and no other", () => {
     expect(files("Types").sort()).toEqual(types.map((t) => t.component).sort());
     expect(files("Parts").sort()).toEqual(Object.keys(PARTS).sort());
+    const deck = readdirSync(join(import.meta.dirname, "..", "components", "deck"));
+    expect(files("Deck").sort()).toEqual(deck.map((f) => f.replace(/\.tsx$/, "")).sort());
   });
 
   it.each(types)("shows every specimen slide of $type as a state", ({ type, component }) => {

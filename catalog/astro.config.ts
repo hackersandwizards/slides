@@ -62,7 +62,7 @@ export default defineConfig({
       lead: "Every slide type of the h&w slide engine, each state a slide of the specimen deck, and the parts the types are built from, each with its variants. All content is made up.",
       css: ["../styles/slides.css"],
       previewSize: [1440, 810],
-      groupOrder: ["Types", "Parts"],
+      groupOrder: ["Types", "Parts", "Deck"],
       head: "./Head.astro",
       home: "./Home.astro",
       admin: true,

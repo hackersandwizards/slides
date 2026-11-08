@@ -306,7 +306,7 @@ const USES: Record<string, () => ReactNode> = {
 export const usesTiles = Object.entries(USES)
   .map(
     ([name, render]) =>
-      `<figure class="element"><figcaption><strong>${name}</strong> <span class="from">from brand v${brandVersion}</span> <code>hw-${name}</code> <a href="https://hackersandwizards.github.io/brand/catalogue.html#hw-${name}">catalogue</a></figcaption><div data-hw-tile="${name}" data-hw-version="${brandVersion}" data-hw-scale="stage">${renderToStaticMarkup(h(Fragment, null, onDay(render()), onNight(render())))}</div></figure>`,
+      `<figure class="element"><figcaption><strong>${name}</strong> <span class="from">from brand v${brandVersion}</span> <code>hw-${name}</code> <a href="https://hackersandwizards.github.io/brand/#elements/hw-${name}">catalogue</a></figcaption><div data-hw-tile="${name}" data-hw-version="${brandVersion}" data-hw-scale="stage">${renderToStaticMarkup(h(Fragment, null, onDay(render()), onNight(render())))}</div></figure>`,
   )
   .join("\n");
 const EXCEPTION_SHOWN: Record<string, () => ReactNode> = {

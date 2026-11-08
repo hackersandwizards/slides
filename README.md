@@ -22,18 +22,20 @@ the same way, so a consumer copies nothing into `public/` for the engine. Both r
 "@hackersandwizards/slides": "git+https://github.com/hackersandwizards/slides.git#v<version>"
 ```
 
-| Import                                                   | What                                                                                                                 |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `@hackersandwizards/slides/styles/slides.css`            | the slide stylesheet, Tailwind 4                                                                                     |
-| `@hackersandwizards/slides/styles/tokens.css`            | every value a slide draws, as custom properties                                                                      |
-| `@hackersandwizards/slides/types/slide`                  | `Presentation`, `Slide` and the blocks                                                                               |
-| `@hackersandwizards/slides/components/slides/<Name>`     | a slide component                                                                                                    |
-| `@hackersandwizards/slides/lib/<module>`                 | a module `exports` in `package.json` names                                                                           |
-| `@hackersandwizards/slides/lib/next-adapter`             | `NextSlidesAdapter`                                                                                                  |
-| `@hackersandwizards/slides/components/slides/PrintSlide` | `PrintDeck`, a deck's print route, and `PrintSlide`, one printed page                                                |
-| `@hackersandwizards/slides/scripts/render-pdf`           | `renderPdf` for an export script                                                                                     |
-| `@hackersandwizards/slides/specimen/slide-catalog`       | the fictional specimen deck, and `specimenImages`, its images' URLs by file name                                     |
-| `@hackersandwizards/slides/catalog/SlideFrame.astro`     | a story's frame in a catalog on scaffolding's shell: `decorators: [{ component: SlideFrame, props: { component } }]` |
+| Import                                                   | What                                                                                                                          |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `@hackersandwizards/slides/styles/slides.css`            | the slide stylesheet, Tailwind 4                                                                                              |
+| `@hackersandwizards/slides/styles/tokens.css`            | every value a slide draws, as custom properties                                                                               |
+| `@hackersandwizards/slides/types/slide`                  | `Presentation`, `Slide` and the blocks                                                                                        |
+| `@hackersandwizards/slides/components/slides/<Name>`     | a slide component                                                                                                             |
+| `@hackersandwizards/slides/lib/<module>`                 | a module `exports` in `package.json` names                                                                                    |
+| `@hackersandwizards/slides/lib/next-adapter`             | `NextSlidesAdapter`                                                                                                           |
+| `@hackersandwizards/slides/components/slides/PrintSlide` | `PrintDeck`, a deck's print route, and `PrintSlide`, one printed page                                                         |
+| `@hackersandwizards/slides/components/deck/DeckView`     | `DeckView`, a deck page's one island: `presentation`, `index`, `basePath`, and `documentTitle` to keep the title on the slide |
+| `@hackersandwizards/slides/components/deck/DeckTile`     | `DeckTile`, one deck on a deck list, brand's linked card; React, which an Astro page renders without `client:`                |
+| `@hackersandwizards/slides/scripts/render-pdf`           | `renderPdf` for an export script                                                                                              |
+| `@hackersandwizards/slides/specimen/slide-catalog`       | the fictional specimen deck, and `specimenImages`, its images' URLs by file name                                              |
+| `@hackersandwizards/slides/catalog/SlideFrame.astro`     | a story's frame in a catalog on scaffolding's shell: `decorators: [{ component: SlideFrame, props: { component } }]`          |
 
 `SlideFrame` takes `part: true` for a part, `css`, the slides' stylesheet linked on the story page
 (a URL with the site's base), and `light`, which keeps that page light.

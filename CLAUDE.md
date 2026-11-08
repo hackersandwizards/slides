@@ -24,6 +24,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   route renders, which the print page renders too. A CSS rule one component owns lives in a `.css`
   beside it, which `slides.css` imports where the rule stands in the cascade, never the component
   itself: trainer-hub's hub pages render components without `slides.css`.
+- `components/deck/`: what a deck site draws round the slides, `DeckView` (a deck page's one
+  island) and `DeckTile` (one deck on a deck list); the list itself stays each site's.
 - `components/ui/`: effects and `image.tsx`, the engine's image.
 - `lib/`: hooks, navigation, presenter sync, the edit mode, themes and section styles.
   `lib/brand-logos.ts` is the h&w marks as `?url` imports of brand's exports, which `Image` draws
@@ -79,8 +81,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   - The stories: `stories/Types/` a story file per slide type, each specimen slide of the type a
     state (`state.ts`), drawn by `StorySlide.tsx` as its deck shows it, strip, corner mark and
     page counter included, and entering as a slide reached from the one before; `stories/Parts/`
-    one per part, drawing its sheet of variants from `parts.ts`. `test/catalog-stories.test.ts` fails on a type, specimen slide or part without its
-    story. `Home.astro` renders the shell's home with the foundations.
+    one per part, drawing its sheet of variants from `parts.ts`; `stories/Deck/` one per
+    component of `components/deck/`. `test/catalog-stories.test.ts` fails on a type, specimen
+    slide, part or deck component without its story. `Home.astro` renders the shell's home with the foundations.
   - The print pages, `pages/catalog/print/` over `print.ts`: `index.html`, a Parts section (every
     part of `primitives.tsx` and `SlideChrome.tsx`, and the chart's `AxisTick`, in each variant, with the slide types using it),
     the Shared elements section (each brand element the slides use as a tile, each exception with
