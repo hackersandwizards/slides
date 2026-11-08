@@ -303,7 +303,7 @@ export function NumberTile({
 
 /** The mat round a portrait, in the person's accent. */
 const PORTRAIT_MATS = {
-  neutral: "bg-ink/7",
+  neutral: "bg-border",
   primary: "bg-primary/15",
   secondary: "bg-secondary/15",
 };
@@ -333,9 +333,9 @@ export function Portrait({
     <Image
       src={src}
       alt={alt}
-      width={288}
-      height={288}
-      className={`slide-portrait object-cover ${shape}`.trim()}
+      width={480}
+      height={480}
+      className={`object-cover ${shape}`.trim()}
     />
   );
 }

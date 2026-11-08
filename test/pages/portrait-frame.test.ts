@@ -3,8 +3,10 @@ import { pathToFileURL } from "node:url";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
-// Every portrait on the print page's slides, read off its box: the picture sits in its frame at the
-// same inset on every side, and its corners follow the frame's at that inset. The closing slide's
+// Every portrait on the print page's slides, read off its box: the picture sits in a frame at the
+// same inset on every side, and its corners follow the frame's at that inset. Drawn as one element,
+// the browser clips the picture to the frame's radius less the inset, so the corner half guards
+// against a picture nested in a frame of its own. The closing slide's
 // speakers drew a ring round a box with the brand corner, and the picture inside took the small
 // corner by brand's nesting rule, so it poked out at two corners and left gaps at the others
 // (2026-11-08). A portrait is any picture of the specimen deck's portraits.
@@ -100,6 +102,7 @@ it("fits every portrait in its frame at one inset with the frame's corners", asy
   expect(fits.length).toBeGreaterThanOrEqual(5);
   const off = fits.filter(
     ({ insets, corners }) =>
+      Math.min(...insets) <= 0 ||
       Math.max(...insets) - Math.min(...insets) > TOLERANCE ||
       corners.some(([own, target]) => Math.abs(own - target) > TOLERANCE),
   );
