@@ -244,9 +244,10 @@ Blind panels, Claude (opus) and Codex (gpt-6.1-sol), two personas (workshop part
 designer), two runs each, shuffled neutral letters, 1000 px. Noise = mean |run 1 − run 2| of the
 same reviewer on the same image.
 
-| Finding                 | Variants (overall)                                                       | Noise | Shipped                                 |
-| ----------------------- | ------------------------------------------------------------------------ | ----- | --------------------------------------- |
-| `vs` drawbacks          | A green plus 4.00, B specimen marks them `-` 8.50, C neutral square 7.25 | 0.00  | B, in the specimen                      |
-| Phased-pills hues       | A amber, teal, green 6.12, B purple and teal 6.25, C teal alone 7.88     | 0.33  | C, in the specimen                      |
-| Six stages in one phase | A two rows of three 6.50, B one row 7.50                                 | 0.00  | B, up to six pills stay on one row      |
-| One portrait of three   | A one portrait 5.12, B none 8.50, C all three, two faces repeated 6.38   | 0.33  | B, and a two-quote slide with portraits |
+| Finding                                      | Variants (overall)                                                                                           | Noise | Shipped                                                                                                 |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----- | ------------------------------------------------------------------------------------------------------- |
+| `vs` drawbacks                               | A green plus 4.00, B specimen marks them `-` 8.50, C neutral square 7.25                                     | 0.00  | B, in the specimen                                                                                      |
+| Phased-pills hues                            | A amber, teal, green 6.12, B purple and teal 6.25, C teal alone 7.88                                         | 0.33  | C, in the specimen                                                                                      |
+| Six stages in one phase                      | A two rows of three 6.50, B one row 7.50                                                                     | 0.00  | B, up to six pills stay on one row                                                                      |
+| One portrait of three                        | A one portrait 5.12, B none 8.50, C all three, two faces repeated 6.38                                       | 0.33  | B, and a two-quote slide with portraits                                                                 |
+| Text slides (paragraph, bullets, two-column) | A muted list text 6.88, B list and column items in ink 7.62, C B with a larger, medium-weight paragraph 8.04 | 0.31  | B: C leads B only with Claude (7.83 : 6.83); Codex 8.25 : 8.42, a tie, which goes to the smaller change |

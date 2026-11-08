@@ -371,7 +371,7 @@ function ContentBlockRenderer({
             const text = isNested ? item.text : item;
             return (
               <li key={i}>
-                <div className="flex items-baseline gap-4 text-2xl text-text-muted">
+                <div className="flex items-baseline gap-4 text-2xl text-text">
                   {block.ordered ? (
                     <span className="w-8 shrink-0 font-semibold text-primary tabular-nums">
                       {i + 1}.
@@ -477,7 +477,7 @@ function ContentBlockRenderer({
               {data.items && (
                 <ul className="space-y-4">
                   {data.items.map((item, j) => (
-                    <li key={j} className="flex items-baseline gap-3 text-xl text-text-muted">
+                    <li key={j} className="flex items-baseline gap-3 text-xl text-text">
                       <span className={`hw-marker ${style.dot}`} />
                       <span>{renderMarkdown(item)}</span>
                     </li>
