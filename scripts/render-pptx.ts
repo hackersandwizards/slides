@@ -54,6 +54,8 @@ const SIDE = 96 / 144;
 const TOP = 117 / 144;
 const BOTTOM = H - 123 / 144;
 const CW = W - 2 * SIDE;
+/** Ends the name of a marked trend's planned series, as on the web slide. */
+const PLANNED = " (planned)";
 const cardText = (card: { text?: string; items?: string[] }) =>
   [card.text, ...(card.items ?? []).map((item) => `• ${item}`)].filter(Boolean).join("\n");
 
@@ -2849,26 +2851,39 @@ const RENDER: {
       valAxisLineShow: false,
     };
     if ((d.variant === "trend" || d.variant === "bar") && d.data?.length) {
-      const labels = d.data.map((p) => p.name);
-      const series = [
-        { name: d.seriesLabel ?? d.yLabel ?? "", labels, values: d.data.map((p) => p.value) },
+      const data = d.data;
+      const labels = data.map((p) => p.name);
+      // A marked trend is measured up to the point and planned from it, both holding the point,
+      // as on the web slide; `finishPlanned` dashes the planned half once the chart is written.
+      const now = d.variant === "trend" ? data.findIndex((p) => p.name === d.currentMarker) : -1;
+      const halves = (name: string, pick: (p: (typeof data)[number]) => number) => [
+        { name, labels, values: data.map((p, i) => (now < 0 || i <= now ? pick(p) : null)) },
+        ...(now < 0
+          ? []
+          : [
+              {
+                name: `${name}${PLANNED}`,
+                labels,
+                values: data.map((p, i) => (i >= now ? pick(p) : null)),
+              },
+            ]),
       ];
-      if (d.data.some((p) => p.value2 !== undefined))
-        series.push({
-          name: d.series2Label ?? "",
-          labels,
-          values: d.data.map((p) => p.value2 ?? 0),
-        });
+      const two = data.some((p) => p.value2 !== undefined);
+      const series = [
+        ...halves(d.seriesLabel ?? d.yLabel ?? "", (p) => p.value),
+        ...(two ? halves(d.series2Label ?? "", (p) => p.value2 ?? 0) : []),
+      ] as { name: string; labels: string[]; values: number[] }[];
+      const hues = two ? [c.teal, c.purple] : [c.teal];
       s.addChart(d.variant === "trend" ? pptx.ChartType.line : pptx.ChartType.bar, series, {
         x: a.x + 0.5,
         y: a.y,
         w: a.w - 1,
         h: a.h,
-        chartColors: [c.teal, c.purple],
+        chartColors: now < 0 ? hues : hues.flatMap((hue) => [hue, hue]),
         lineSize: 2.5,
         lineDataSymbol: "none",
         barDir: "col",
-        showLegend: series.length > 1,
+        showLegend: two,
         legendPos: "t",
         legendFontFace: SANS,
         legendFontSize: PT.sm,
@@ -3880,6 +3895,26 @@ function pillPhases(
 }
 
 /** Builds the deck and writes it; returns the warnings for images or videos it could not place. */
+// pptxgenjs sets a line's dash and its data markers per chart. A marked trend's planned series get
+// the dash here, and its first measured series the dot on the marked point, the first point its
+// planned half holds.
+function finishPlanned(xml: string, name: string) {
+  if (!/^ppt\/charts\/chart\d+\.xml$/.test(name) || !xml.includes(`${PLANNED}</c:v>`)) return xml;
+  const series = (ser: string) => /<c:tx>.*?<c:v>(.*?)<\/c:v>/s.exec(ser)?.[1] ?? "";
+  const all = xml.match(/<c:ser>.*?<\/c:ser>/gs) ?? [];
+  const planned = all.find((ser) => series(ser).endsWith(PLANNED))!;
+  const now = /<c:val>.*?<c:pt idx="(\d+)"><c:v>[^<]/s.exec(planned)?.[1];
+  const hue = /srgbClr val="(\w+)"/.exec(planned)?.[1];
+  const dot = `<c:dPt><c:idx val="${now}"/><c:marker><c:symbol val="circle"/><c:size val="11"/><c:spPr><a:solidFill><a:srgbClr val="${hue}"/></a:solidFill><a:ln w="19050"><a:solidFill><a:srgbClr val="${hex("--color-white")}"/></a:solidFill></a:ln></c:spPr></c:marker><c:bubble3D val="0"/></c:dPt>`;
+  return xml.replace(/<c:ser>.*?<\/c:ser>/gs, (ser) =>
+    series(ser).endsWith(PLANNED)
+      ? ser.replace('<a:prstDash val="solid"/>', '<a:prstDash val="dash"/>')
+      : ser === all[0]
+        ? ser.replace(/(<c:dLbls>.*?<\/c:dLbls>)\s*(<c:marker>.*?<\/c:marker>)/s, `$2${dot}$1`)
+        : ser,
+  );
+}
+
 export async function renderPptx(
   deck: Presentation,
   out: string,
@@ -3914,7 +3949,7 @@ export async function renderPptx(
   const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
   const fallback: Record<string, string> = { [SANS]: "34", [MONO]: "49" };
   for (const name of Object.keys(zip.files).filter((f) => /^ppt\/.+\.xml$/.test(f))) {
-    const xml = await zip.file(name)!.async("string");
+    const xml = finishPlanned(await zip.file(name)!.async("string"), name);
     const n = /^ppt\/slides\/slide(\d+)\.xml$/.exec(name);
     const teal = ctxOf(n ? deck.slides[Number(n[1]) - 1] : undefined).c.teal;
     zip.file(

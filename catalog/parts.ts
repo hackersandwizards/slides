@@ -2,7 +2,7 @@ import { createElement as h, type ReactNode } from "react";
 import * as primitives from "../components/slides/primitives";
 import { AxisTick, TICK_GAP, tickLayout } from "../components/slides/ChartPlots";
 import * as chrome from "../components/slides/SlideChrome";
-import { highlightLines } from "../lib/code-highlight";
+import { CodeLines } from "../lib/use-code-highlight";
 import { qrAlt } from "../lib/slide-utils";
 import { specimenImages } from "../specimen/slide-catalog";
 
@@ -31,6 +31,10 @@ export const tones = ["neutral", "primary", "secondary", "accent", "success", "e
 export const looks = ["tint", "soft", "outline", "line"] as const;
 
 /** A part missing here fails the build (print.ts). */
+export const CODE_SAMPLE = 'claude --print "fix the failing test" # one run';
+export const codePanel = (lines: ReactNode) =>
+  h(CodePanel, { as: "pre", className: "p-8 font-code text-xl" }, lines);
+
 export const PARTS: Record<string, () => ReactNode> = {
   DisplayHeading: () =>
     h(
@@ -147,12 +151,7 @@ export const PARTS: Record<string, () => ReactNode> = {
   SlideSubtitle: () => h(SlideSubtitle, null, "The line under a headline, in muted ink."),
   SlideCaption: () => h(SlideCaption, null, "The caption under a diagram, its last step."),
   SlideFooter: () => h(SlideFooter, null, "The one line under a slide's body, such as its source."),
-  CodePanel: () =>
-    h(
-      CodePanel,
-      { as: "pre", className: "p-8 font-code text-xl" },
-      highlightLines('claude --print "fix the failing test" # one run', "bash"),
-    ),
+  CodePanel: () => codePanel(h(CodeLines, { code: CODE_SAMPLE, language: "bash" })),
   TitledContent: () =>
     label("The column of a titled slide: headline, then the body under the fit guard."),
   // Measured at 10 px a character, "Spec review" wraps in an 80 px band and angles in a 40 px one,

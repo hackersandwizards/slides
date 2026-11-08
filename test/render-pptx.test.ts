@@ -202,6 +202,33 @@ describe("slides-pptx on the specimen deck", () => {
     });
   });
 
+  it("dashes a marked trend's planned half and dots the marked point", async () => {
+    const charts = await Promise.all(
+      Object.keys(zip.files)
+        .filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
+        .map((f) => zip.file(f)!.async("string")),
+    );
+    const marked = charts.find((xml) => xml.includes("(planned)</c:v>"))!;
+    const [measured, planned] = marked.match(/<c:ser>.*?<\/c:ser>/gs)!;
+    const specimen = slideCatalog.slides.find(
+      (s) => s.type === "chart" && s.variant === "trend" && s.currentMarker,
+    ) as { data: { name: string }[]; currentMarker: string };
+    const now = specimen.data.findIndex((p) => p.name === specimen.currentMarker);
+    expect(planned).toContain('<a:prstDash val="dash"/>');
+    expect(measured).toContain('<a:prstDash val="solid"/>');
+    expect(measured).toMatch(
+      new RegExp(`<c:dPt><c:idx val="${now}"/><c:marker><c:symbol val="circle"/>`),
+    );
+    // In the schema's order: the series' marker, its points, then its labels.
+    expect(measured.indexOf("<c:dPt>")).toBeLessThan(measured.indexOf("<c:dLbls>"));
+    // The planned half starts at the marked point, the measured one ends there.
+    expect(planned).not.toMatch(new RegExp(`<c:pt idx="${now - 1}"><c:v>\\d`));
+    expect(measured).not.toMatch(new RegExp(`<c:val>.*<c:pt idx="${now + 1}"><c:v>\\d`, "s"));
+    expect(charts.filter((xml) => xml !== marked).some((xml) => xml.includes("<c:dPt>"))).toBe(
+      false,
+    );
+  });
+
   it("spells out a linked image's link and covers a video with its poster", async () => {
     const at = (type: string) =>
       slideCatalog.slides.findIndex(

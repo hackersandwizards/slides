@@ -15,7 +15,7 @@ import * as chrome from "../components/slides/SlideChrome";
 import { DeckTile } from "../components/deck/DeckTile";
 import { brandHref, placeBrandUrls } from "./brand-urls";
 import { classesIn, compileSlides } from "./print-css";
-import { PARTS, inRow } from "./parts";
+import { CODE_SAMPLE, PARTS, codePanel, inRow } from "./parts";
 import exceptions from "../brand-elements.json";
 import { version as brandVersion } from "@hackersandwizards/brand/package.json";
 import registry from "../lib/slide-components.ts?raw";
@@ -90,12 +90,16 @@ const slideMarkup = (index: number) =>
   renderToStaticMarkup(
     h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalog, index })),
   );
-const bundled = `"${import.meta.env.BASE_URL.replace(/\/$/, "")}/_astro/`;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const bundled = `"${base}/_astro/`;
 const besidePage = (markup: string) => {
   for (const [file, url] of Object.entries(brandLogos))
     markup = markup.replaceAll(`"${url}"`, `"${brandHref}/logos/${file}.svg"`);
   return markup.replaceAll(bundled, '"../../_astro/');
 };
+// A static render never runs CodeLines' lazy highlighter, so this page's tile colours its code here.
+const staticPart = (name: string) =>
+  name === "CodePanel" ? codePanel(highlightLines(CODE_SAMPLE, "bash")) : PARTS[name]();
 const partMarkup = (name: string) =>
   renderToStaticMarkup(
     h(
@@ -108,7 +112,7 @@ const partMarkup = (name: string) =>
           "data-hw-scale": "stage",
           "data-theme": "light",
         },
-        h("div", { className: "p-24" }, h(Fragment, null, PARTS[name]())),
+        h("div", { className: "p-24" }, h(Fragment, null, staticPart(name))),
       ),
     ),
   );
@@ -508,13 +512,22 @@ const anchor = (name: string, prefix = "") => {
   ids.add(id);
   return id;
 };
+// Recharts draws in the browser only, so a static tile of a trend or bar chart has an empty plot:
+// these two tiles frame the variant's story page, which hydrates. Its state is named as the variant.
+const plotStory = (index: number) => {
+  const slide = deck[index];
+  return slide.type === "chart" && (slide.variant === "trend" || slide.variant === "bar")
+    ? `src="${base}/stories/Types/chart-slide/${slide.variant}/"`
+    : undefined;
+};
 const tile = (
   { name, markup, index }: { name: string; markup: string; index: number },
   prefix = "",
 ) => {
   const id = anchor(name, prefix);
   const { jobs, search } = entryOf(index);
-  return `<figure id="${id}" data-jobs="${jobs.join(" ")}" data-search="${attr(`${name.toLowerCase()} ${search}`)}"><figcaption><a href="#${id}">${name}</a></figcaption><div class="frame"><iframe loading="lazy" title="${attr(name)}" srcdoc="${attr(frameDoc(markup))}"></iframe></div><p class="meta">${jobs.map((j) => JOBS[j]).join(" · ")}</p></figure>`;
+  const content = plotStory(index) ?? `srcdoc="${attr(frameDoc(markup))}"`;
+  return `<figure id="${id}" data-jobs="${jobs.join(" ")}" data-search="${attr(`${name.toLowerCase()} ${search}`)}"><figcaption><a href="#${id}">${name}</a></figcaption><div class="frame"><iframe loading="lazy" title="${attr(name)}" ${content}></iframe></div><p class="meta">${jobs.map((j) => JOBS[j]).join(" · ")}</p></figure>`;
 };
 const partTile = ({ name, markup }: { name: string; markup: string }) => {
   const id = anchor(name, "part-");
