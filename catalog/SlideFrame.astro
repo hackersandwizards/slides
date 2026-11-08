@@ -38,8 +38,9 @@ const src = path.replace("/dashboard/", "/stories/");
         const pane = embed.parentElement;
         const fit = () => {
           // The pane's height under the stage's top, less the link and padding below the stage.
-          const top = stage.getBoundingClientRect().top - pane.getBoundingClientRect().top;
-          const below = embed.getBoundingClientRect().bottom - stage.getBoundingClientRect().bottom;
+          const box = stage.getBoundingClientRect();
+          const top = box.top - pane.getBoundingClientRect().top;
+          const below = embed.getBoundingClientRect().bottom - box.bottom;
           const height = pane.clientHeight - top - pane.scrollTop - below;
           stage.style.width = `${(Math.max(height, 0) * 16) / 9}px`;
           frame.style.transform = `scale(${stage.clientWidth / frame.offsetWidth})`;

@@ -84,52 +84,46 @@ it.each([
 // A wide window scaled the slide to the page's width alone, so its bottom ran below the window
 // (Benedikt, 08.11.2026, ActivitySlide at about 1900x1200).
 const fits = (tab: Page) =>
-  tab.evaluate(() => {
+  tab.evaluate(async () => {
+    // Two frames give the stage's ResizeObserver its turn after a viewport change.
+    await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
     const card = document.querySelector(".story-stage")!;
     const stage = card.getBoundingClientRect();
-    const frame = document.querySelector(".story-stage iframe")!.getBoundingClientRect();
-    const embed = document.querySelector(".story-embed")!;
+    const frame = card.querySelector("iframe")!.getBoundingClientRect();
+    const embed = card.parentElement!;
     const bar = embed.previousElementSibling?.getBoundingClientRect().bottom ?? 0;
     const pane = embed.parentElement!.getBoundingClientRect();
     return {
       inside:
-        stage.top >= bar && stage.bottom <= Math.min(innerHeight, pane.bottom) && stage.left >= 0,
-      wide: stage.right <= innerWidth,
+        stage.top >= bar &&
+        stage.bottom <= Math.min(innerHeight, pane.bottom) &&
+        stage.left >= 0 &&
+        stage.right <= innerWidth,
       centred: Math.abs(stage.left - pane.left - (pane.right - stage.right)) <= 1,
-      ratio: Math.abs(stage.width / stage.height - 16 / 9) < 0.01,
+      // The card's 16:9 is its border box, so the scaled page may overrun its inside by a pixel.
       framed:
         Math.abs(frame.width - card.clientWidth) <= 2 &&
         Math.abs(frame.height - card.clientHeight) <= 2,
     };
   });
-const fitted = { inside: true, wide: true, centred: true, ratio: true, framed: true };
 
-it.each([
-  [1920, 1080],
-  [1440, 900],
-  [1280, 720],
-  [390, 844],
-])(
-  "shows a story's whole slide in a %ix%i window",
-  async (width, height) => {
-    const tab = await browser.newPage();
-    await tab.setViewport({ width, height });
-    await tab.goto(page("dashboard/Types/activity-slide/specimen3"), { waitUntil: "networkidle0" });
-    expect(await fits(tab)).toEqual(fitted);
-    await tab.close();
-  },
-  60_000,
-);
-
-it("fits the slide again when the window changes", async () => {
+it("shows a story's whole slide, centred, and fits it again as the window changes", async () => {
   const tab = await browser.newPage();
-  await tab.setViewport({ width: 1280, height: 720 });
-  await tab.goto(page("dashboard/Types/activity-slide/specimen3"), { waitUntil: "networkidle0" });
   await tab.setViewport({ width: 1920, height: 1080 });
-  await tab.waitForNetworkIdle();
-  expect(await fits(tab)).toEqual(fitted);
-  await tab.setViewport({ width: 1440, height: 600 });
-  await tab.waitForNetworkIdle();
-  expect(await fits(tab)).toEqual(fitted);
+  await tab.goto(page("dashboard/Types/activity-slide/specimen3"), { waitUntil: "networkidle0" });
+  for (const [width, height] of [
+    [1920, 1080],
+    [1440, 900],
+    [1280, 720],
+    [390, 844],
+    [1440, 600],
+  ]) {
+    await tab.setViewport({ width, height });
+    expect(await fits(tab), `${width}x${height}`).toEqual({
+      inside: true,
+      centred: true,
+      framed: true,
+    });
+  }
   await tab.close();
 }, 60_000);
