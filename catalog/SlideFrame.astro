@@ -42,10 +42,13 @@ const src = path.replace("/dashboard/", "/stories/");
           const top = box.top - pane.getBoundingClientRect().top;
           const below = embed.getBoundingClientRect().bottom - box.bottom;
           const height = pane.clientHeight - top - pane.scrollTop - below;
-          stage.style.width = `${(Math.max(height, 0) * 16) / 9}px`;
+          // With no height left the card takes the page's width and the pane scrolls.
+          stage.style.width = height > 0 ? `${(height * 16) / 9}px` : "";
           frame.style.transform = `scale(${stage.clientWidth / frame.offsetWidth})`;
         };
         new ResizeObserver(fit).observe(pane);
+        // A face that loads late changes the story bar's height but not the pane's.
+        document.fonts.ready.then(fit);
       }
     </script>
     <a href={src} target="_blank" rel="noreferrer">

@@ -116,7 +116,10 @@ let browser: Browser;
 let frames: { title: string; doc: string }[];
 let dir: string;
 beforeAll(async () => {
-  browser = await puppeteer.launch({ headless: true });
+  browser = await puppeteer.launch({
+    headless: true,
+    args: ["--use-mock-keychain", "--password-store=basic"],
+  });
   const page = await browser.newPage();
   await page.goto(`file://${join(PRINT, "index.html")}`);
   frames = await page.$$eval("iframe", (all) =>

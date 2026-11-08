@@ -8,7 +8,11 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 // Served under the Pages base, since a built state page loads its stylesheets from /slides/.
 const dist = join(import.meta.dirname, "..", "..", "dist");
 const NIGHT = "rgb(11, 17, 24)";
-const TYPES: Record<string, string> = { ".css": "text/css", ".js": "text/javascript" };
+const TYPES: Record<string, string> = {
+  ".css": "text/css",
+  ".js": "text/javascript",
+  ".svg": "image/svg+xml",
+};
 
 let browser: Browser;
 let server: Server;
@@ -32,7 +36,10 @@ beforeAll(async () => {
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address() as AddressInfo;
   page = (path) => `http://127.0.0.1:${port}/slides/${path}/`;
-  browser = await puppeteer.launch({ headless: true, args: ["--use-mock-keychain"] });
+  browser = await puppeteer.launch({
+    headless: true,
+    args: ["--use-mock-keychain", "--password-store=basic"],
+  });
 });
 afterAll(async () => {
   await browser?.close();
@@ -100,6 +107,10 @@ const fits = (tab: Page) =>
         stage.left >= 0 &&
         stage.right <= innerWidth,
       centred: Math.abs(stage.left - pane.left - (pane.right - stage.right)) <= 1,
+      // The card is as large as the window allows: as wide as the page or as tall as the pane.
+      filled:
+        Math.abs(embed.getBoundingClientRect().bottom - pane.bottom) <= 1 ||
+        stage.width >= embed.clientWidth - 2 * parseFloat(getComputedStyle(embed).paddingLeft) - 1,
       // The card's 16:9 is its border box, so the scaled page may overrun its inside by a pixel.
       framed:
         Math.abs(frame.width - card.clientWidth) <= 2 &&
@@ -122,6 +133,7 @@ it("shows a story's whole slide, centred, and fits it again as the window change
     expect(await fits(tab), `${width}x${height}`).toEqual({
       inside: true,
       centred: true,
+      filled: true,
       framed: true,
     });
   }

@@ -13,7 +13,10 @@ const FRAMES = pathToFileURL(
 
 let browser: Browser;
 beforeAll(async () => {
-  browser = await puppeteer.launch({ headless: true, args: ["--use-mock-keychain"] });
+  browser = await puppeteer.launch({
+    headless: true,
+    args: ["--use-mock-keychain", "--password-store=basic"],
+  });
 });
 afterAll(() => browser?.close());
 
