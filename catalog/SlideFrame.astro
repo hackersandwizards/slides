@@ -1,6 +1,8 @@
 ---
 // A slide fills its window, so the dashboard frames its preview page at brand's slide page size,
-// scaled to the card: at the card's own size a phone's window was too short for the slide.
+// scaled to the card: at the card's own size a phone's window was too short for the slide. The card
+// takes the largest 16:9 box that fits both the page's width and the scroll pane's height under
+// the story bar, so the whole slide shows without scrolling.
 // `?revealed` opens a slide with every build step shown.
 interface Props {
   component: string;
@@ -32,9 +34,17 @@ const src = path.replace("/dashboard/", "/stories/");
       {
         const stage = document.currentScript.previousElementSibling;
         const frame = stage.firstElementChild;
-        new ResizeObserver(() => {
+        const embed = stage.parentElement;
+        const pane = embed.parentElement;
+        const fit = () => {
+          // The pane's height under the stage's top, less the link and padding below the stage.
+          const top = stage.getBoundingClientRect().top - pane.getBoundingClientRect().top;
+          const below = embed.getBoundingClientRect().bottom - stage.getBoundingClientRect().bottom;
+          const height = pane.clientHeight - top - pane.scrollTop - below;
+          stage.style.width = `${(Math.max(height, 0) * 16) / 9}px`;
           frame.style.transform = `scale(${stage.clientWidth / frame.offsetWidth})`;
-        }).observe(stage);
+        };
+        new ResizeObserver(fit).observe(pane);
       }
     </script>
     <a href={src} target="_blank" rel="noreferrer">
@@ -60,6 +70,8 @@ const src = path.replace("/dashboard/", "/stories/");
   }
   .story-stage {
     position: relative;
+    max-width: 100%;
+    margin-inline: auto;
     aspect-ratio: 16 / 9;
     overflow: hidden;
     --hw-card-pad: 0;
