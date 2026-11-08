@@ -502,8 +502,8 @@ function picture(
   o: {
     alt?: string;
     href?: string;
-    /** Cropped to a square that it fills, as a portrait. */
-    square?: boolean;
+    /** Cropped to a circle that it fills, as a portrait. */
+    round?: boolean;
     align?: "center" | "left";
     /** Never drawn larger than the file at 144 px to the inch, as the slide never scales one up. */
     native?: boolean;
@@ -526,18 +526,20 @@ function picture(
     return { x, y, w, h };
   }
   const [iw, ih] = size;
-  if (o.square) {
+  if (o.round) {
     const d = Math.min(w, h);
+    const [px, py] = [x + (w - d) / 2, y + (h - d) / 2];
     s.addImage({
       path,
-      x: x + (w - d) / 2,
-      y,
+      x: px,
+      y: py,
       w: d,
       h: d,
       sizing: { type: "cover", w: d, h: d },
+      rounding: true,
       altText: o.alt,
     });
-    return { x: x + (w - d) / 2, y, w: d, h: d };
+    return { x: px, y: py, w: d, h: d };
   }
   const k = Math.min(w / iw, h / ih, o.native ? 1 / 144 : Infinity);
   const pw = iw * k;
@@ -1884,10 +1886,17 @@ function portrait(
   d: number,
   tone: string,
 ) {
-  // The web's brand corner; pptxgenjs crops a picture to a circle only, so a portrait stays square.
-  if (src) picture(s, ctx, src, x, y, d, d, { square: true, alt: name });
+  // Round, as the web's hw-avatar.
+  if (src) picture(s, ctx, src, x, y, d, d, { round: true, alt: name });
   else {
-    card(s, x, y, d, d, mix(tone, ctx.c.bg, 0.25));
+    s.addShape("ellipse", {
+      x,
+      y,
+      w: d,
+      h: d,
+      fill: { color: mix(tone, ctx.c.bg, 0.25) },
+      line: { type: "none" },
+    });
     box(
       s,
       ctx.c,
@@ -2277,6 +2286,8 @@ const RENDER: {
       picture(s, ctx, side.src, SIDE + w + 0.4, TOP, imgW, BOTTOM - TOP - footH, {
         alt: side.alt,
         href: side.href,
+        // A quotation's portrait, round as on the web.
+        round: !!d.attribution && side.src === d.imageSrc,
       });
   },
 

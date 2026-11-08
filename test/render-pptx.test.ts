@@ -183,6 +183,14 @@ describe("slides-pptx on the specimen deck", () => {
     });
   });
 
+  it("crops every portrait to a circle, as the slides' avatar", () => {
+    const portraits = slideCatalog.slides.flatMap((slide: Slide, i) =>
+      /"imageSrc":"[^"]*portrait-/.test(JSON.stringify(slide)) ? [slideXml[i]] : [],
+    );
+    expect(portraits.length).toBeGreaterThanOrEqual(5);
+    for (const xml of portraits) expect(xml).toMatch(/<p:pic>(?:(?!<\/p:pic>).)*prst="ellipse"/s);
+  });
+
   it("draws tables as tables and trend and bar charts as charts", () => {
     slideCatalog.slides.forEach((slide: Slide, i) => {
       if (slide.type === "content" && slide.content.some((b) => b.type === "table")) {
