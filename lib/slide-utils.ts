@@ -326,10 +326,12 @@ export function guidanceAsComparison({
   return { ...slide, type: "comparison", variant: "guidance" };
 }
 
-/** A `pipeline` block as the `flow` block that replaces it. Its inner loops (`showLoops`) and
- *  stage logos are not drawn. */
+/** A `pipeline` block as the `flow` block that replaces it, lit at its first `new` stage (the one
+ *  in focus; `active` marked those covered before it), else its first `active` one. Its inner
+ *  loops (`showLoops`) and stage logos are not drawn. */
 export function pipelineAsFlow(block: Block<"pipeline">): Block<"flow"> {
-  const lit = block.stages.findIndex((s) => s.state === "new" || s.state === "active");
+  const fresh = block.stages.findIndex((s) => s.state === "new");
+  const lit = fresh < 0 ? block.stages.findIndex((s) => s.state === "active") : fresh;
   const framed =
     block.containerLabel ||
     block.containerLogos?.length ||

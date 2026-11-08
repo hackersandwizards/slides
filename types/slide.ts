@@ -75,7 +75,8 @@ export type ContentBlock =
   | { type: "hooks"; items: { name: string; description: string }[] }
   | {
       /** @deprecated A `flow` block, which draws it: the container is its `frame`, the first new
-       *  or active stage its `highlight`. Stage logos, `showLoops` and `showArrows` are not read. */
+       *  stage its `highlight`, else the first active one. Stage logos, `showLoops` and
+       *  `showArrows` are not read. */
       type: "pipeline";
       stages: { title: string; state?: StageState; logo?: string }[];
       showLoops?: boolean;

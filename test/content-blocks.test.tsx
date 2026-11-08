@@ -338,6 +338,28 @@ describe("pipeline into flow (merge-flow)", () => {
     expect(c.querySelector("h2")?.className).toContain("text-xl");
   });
 
+  // A pipeline marks the stage in focus `new` and the stages covered before it `active`: the
+  // flow lights the new one, wherever it stands.
+  it("lights the first new stage over an earlier active one", () => {
+    const c = content([
+      {
+        type: "pipeline",
+        stages: [
+          { title: "Plan", state: "active" },
+          { title: "Build", state: "new" },
+        ],
+      },
+    ]);
+    expect(c.querySelector("h2.text-primary")?.textContent).toBe("Build");
+  });
+
+  it("lights the first active stage where none is new", () => {
+    const c = content([
+      { type: "pipeline", stages: [{ title: "Plan" }, { title: "Build", state: "active" }] },
+    ]);
+    expect(c.querySelector("h2.text-primary")?.textContent).toBe("Build");
+  });
+
   it("keeps a plain flow's large tiles", () => {
     const c = content([{ type: "flow", steps: [{ title: "A" }, { title: "B" }] }]);
     expect(c.querySelector("h2")?.previousElementSibling?.className).toContain("h-24");
