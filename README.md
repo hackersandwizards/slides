@@ -11,7 +11,7 @@ that the public may not see.
 
 Add the dependency in exactly this form, pinned to the newest tag
 (`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
-`@hackersandwizards/brand` v1.32.0 or later, whose static faces (`static-fonts.css`), shared
+`@hackersandwizards/brand` v1.42.0 or later, whose static faces (`static-fonts.css`), shared
 elements (`elements.css`, the stage button, the label box and the accent rule among them), text
 base (`text-base.css`), slide pointer (`cursor.svg`) and small corner the stylesheet imports, whose `verbal.json` gives the closing its claim and whose logos the
 slides draw through its exports, as `?url` imports the bundler serves: a deck names a mark as

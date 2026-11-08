@@ -26,3 +26,5 @@ transform, an unrounded lift, a whole-pixel line height, `text-rendering: geomet
 Next: find what adds the rest on the print route (its 1920 layout in a 1280 window and the fit
 guard's wider layout are untested), then decide whether brand's whole-pixel marker needs a scaled
 form. Raise `check:markers` to width 1920 once it passes.
+
+Then drop the marker case of `test/pages/marker-position.test.ts` (it measures the same frames at 1920) and keep its other cases.
