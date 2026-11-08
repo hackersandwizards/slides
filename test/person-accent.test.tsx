@@ -29,7 +29,7 @@ describe("person accents", () => {
     expect(getByText(c.second).className).toContain("text-secondary");
   });
 
-  it("closing contact mats the first speaker's portrait teal, the second's purple", () => {
+  it("closing contact grounds the first speaker's portrait teal, the second's purple", () => {
     const SlideComponent = slideComponents.closing;
     const slide: Slide = {
       type: "closing",
@@ -39,7 +39,7 @@ describe("person accents", () => {
     };
     const { getAllByRole } = render(<SlideComponent slide={slide} />);
     const [first, second] = getAllByRole("img", { name: /Mara|Jonas/ });
-    expect(first!.className).toContain("bg-primary/15");
-    expect(second!.className).toContain("bg-secondary/15");
+    expect(first!.parentElement!.className).toContain("--color-primary");
+    expect(second!.parentElement!.className).toContain("--color-secondary");
   });
 });

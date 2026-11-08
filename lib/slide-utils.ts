@@ -460,7 +460,6 @@ export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlid
         ? [
             {
               type: "two-column",
-              variant: "neutral",
               left: {
                 title: titled[0].title,
                 items: titled[0].items,

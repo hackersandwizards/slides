@@ -351,6 +351,7 @@ const USES: Record<string, () => ReactNode> = {
       },
       "A vote option",
     ),
+  avatar: () => h(primitives.Portrait, { alt: "", tone: "primary" }, "ML"),
 };
 export const usesTiles = Object.entries(USES)
   .map(

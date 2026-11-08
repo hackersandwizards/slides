@@ -23,7 +23,8 @@
     "table",
     "kbd",
     "empty",
-    "dialog"
+    "dialog",
+    "avatar"
   ],
   "markers": {
     "**/content-slide/density/": {

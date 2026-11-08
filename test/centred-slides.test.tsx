@@ -86,7 +86,7 @@ describe("statement slide", () => {
   it("sets a quotation beside its portrait, behind brand's rule without one", () => {
     const portrait = statement({ attribution: "Mara", imageSrc: "/mara.png" });
     expect(portrait.querySelector(".hw-quote")).toBeNull();
-    expect(portrait.querySelector("img.size-72")).not.toBeNull();
+    expect(portrait.querySelector(".hw-avatar > img")).not.toBeNull();
     const plain = statement({ attribution: "Mara" });
     expect(plain.querySelector(".hw-quote")?.textContent).toContain("Mara");
   });

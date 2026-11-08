@@ -307,18 +307,16 @@ export function NumberTile({
   );
 }
 
-/** The mat round a portrait, in the person's accent. */
-const PORTRAIT_MATS = {
-  neutral: "bg-border",
-  primary: "bg-primary/15",
-  secondary: "bg-secondary/15",
+/** The ground behind a portrait without a picture, in the person's accent; brand's teal-dark
+ *  where none is named. */
+const PORTRAIT_HUES = {
+  neutral: "",
+  primary: "[--hw-avatar-hue:var(--color-primary)]",
+  secondary: "[--hw-avatar-hue:var(--color-secondary)]",
 };
 
-/** A person's picture on its mat. One element draws both: the mat is the picture's own padding,
- *  so the picture sits at the same inset on every side and the browser clips it to the mat's inner
- *  curve, one corner shape for both. The corner is brand's: the brand corner where the portrait
- *  stands alone, the small corner inside a block with the brand corner (brand's nesting rule). The
- *  size is the caller's, in `className`. Without a picture it draws `children` on the mat. */
+/** A person's picture as brand's round `hw-avatar`. The size is the caller's, an `--hw-avatar-size`
+ *  setting in `className`. Without a picture it draws `children` on the person's hue. */
 export function Portrait({
   src,
   alt,
@@ -328,21 +326,14 @@ export function Portrait({
 }: {
   src?: string;
   alt: string;
-  tone?: keyof typeof PORTRAIT_MATS;
+  tone?: keyof typeof PORTRAIT_HUES;
   className?: string;
   children?: ReactNode;
 }) {
-  const shape = `box-border shrink-0 rounded-brand p-1 ${PORTRAIT_MATS[tone]} ${className}`;
-  if (!src)
-    return <span className={`flex items-center justify-center ${shape}`.trim()}>{children}</span>;
   return (
-    <Image
-      src={src}
-      alt={alt}
-      width={480}
-      height={480}
-      className={`object-cover ${shape}`.trim()}
-    />
+    <span className={`hw-avatar ${PORTRAIT_HUES[tone]} ${className}`.trim()}>
+      {src ? <Image src={src} alt={alt} width={480} height={480} /> : children}
+    </span>
   );
 }
 

@@ -69,9 +69,9 @@ export function ProfilesSlide({ slide }: Props) {
                         src={profile.imageSrc}
                         alt={profile.name}
                         tone={a.tone}
-                        className="size-32"
+                        className="[--hw-avatar-size:--spacing(32)]"
                       >
-                        <User className={`h-16 w-16 ${a.text}`} />
+                        <User className="h-16 w-16" />
                       </Portrait>
 
                       <div className="min-w-0">

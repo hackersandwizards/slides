@@ -20,8 +20,12 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
   return (
     <div className="flex flex-col items-center gap-4 text-center">
       <BlurFade delay={0.15} duration={0.5}>
-        <Portrait src={profile.imageSrc} alt={profile.name} className="size-36 md:size-44">
-          <User className="h-16 w-16 text-teal/40 md:h-20 md:w-20" />
+        <Portrait
+          src={profile.imageSrc}
+          alt={profile.name}
+          className="[--hw-avatar-size:--spacing(36)] md:[--hw-avatar-size:--spacing(44)]"
+        >
+          <User className="h-16 w-16 md:h-20 md:w-20" />
         </Portrait>
       </BlurFade>
 
