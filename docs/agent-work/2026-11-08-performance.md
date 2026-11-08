@@ -107,3 +107,12 @@ Sidebar and step links reload the page fully. Home tile to story takes 445 ms wh
 right at home's load event, while the tile previews are still loading. Clicked once the network is
 idle, the same tile takes 40 ms (one control, the wait condition). Home's cold load event measured
 224 ms before and 234 ms after, interleaved in one browser at a load of 3.8–3.9.
+
+## Open
+
+- **Part frames still load every part.** `Part.tsx` reads `catalog/parts.ts`, which imports Shiki's
+  `highlightLines` statically for the CodePanel tile, so every part frame loads
+  `code-highlight.*.js` (462 KB raw, 84 KB gzip), PulseDot and NumberTile included. Swapping in
+  `CodeLines` would load it lazily, but the print page renders `PARTS` to static markup that never
+  hydrates, so its CodePanel tile would lose its highlighting. The fix splits `parts.ts`, so each
+  part story imports only its own render; not built or measured yet.
