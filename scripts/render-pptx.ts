@@ -19,6 +19,7 @@ import type {
   TitleSlide,
 } from "../types/slide";
 import { BRAND_MARK, cornerMark, resolveSlideLogo } from "../lib/logo";
+import { INLINE_MARKDOWN } from "../lib/markdown";
 import {
   isDeepDive,
   isHighlightPhase,
@@ -158,11 +159,9 @@ function breaks(runs: Run[]): Run[] {
   );
 }
 
-/** Inline markdown as the engine reads it (lib/markdown.tsx): links, bold, *accent* and code. */
+/** Inline markdown as the engine reads it. */
 function md(text: string, c: Palette, base: TextProps = {}): Run[] {
-  const parts = String(text).split(
-    /(\[[^\]]+\]\([^)\s]+\)|\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?!\s)[^*]+(?<!\s)\*|`[^`]+`)/g,
-  );
+  const parts = String(text).split(INLINE_MARKDOWN);
   return parts.flatMap((part, i): Run[] => {
     if (!part) return [];
     if (i % 2 === 0) return [{ text: part, options: { ...base } }];
@@ -994,7 +993,7 @@ function gallery(s: PSlide, ctx: Ctx, b: Extract<ContentBlock, { type: "gallery"
   const tagH = b.tags?.length ? 0.4 : 0;
   const a = { ...area, h: area.h - tagH };
   const n = b.items.length;
-  const cols = b.layout === "row" ? n : Math.min(n, n === 4 ? 2 : 3);
+  const cols = b.layout === "row" ? n : Math.min(n, 3);
   const rows = Math.ceil(n / cols);
   const cw = (a.w - (cols - 1) * 0.25) / cols;
   const rh = (a.h - (rows - 1) * 0.25) / rows;
@@ -2217,7 +2216,6 @@ const RENDER: {
         rel: PT.label / PT.base,
         after: 16,
       });
-    // What the slide says under its lines.
     const support: Para[] = [];
     if (d.subtitle)
       support.push({
@@ -2250,8 +2248,8 @@ const RENDER: {
         ]
       : [];
     if (d.attribution) {
-      // The name follows the words said, the lines and a quoted closing, in ink and bold, what
-      // follows the first comma muted, as the slide sets it; the slide's own words come after it.
+      // The name follows the words said, the lines and a quoted closing; the slide's own words
+      // come after it.
       const name = d.attribution.split(",")[0];
       const attribution: Para = {
         runs: [
@@ -3043,8 +3041,7 @@ const RENDER: {
   closing(s, ctx, d, deck) {
     const { c } = ctx;
     if (d.variant === "discussion") {
-      // A titled slide, as on the web: the headline where a content slide has its own, the
-      // questions under it.
+      // A titled slide, as on the web.
       const y = header(s, ctx, { headline: d.headline ?? d.line1 ?? "Discussion" });
       const questions = (d.seedQuestions ?? []).map((q): Para => ({
         runs: md(q, c),

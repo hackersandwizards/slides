@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { OverviewSlide } from "../components/slides/OverviewSlide";
 import type { OverviewSlide as OverviewSlideType } from "../types/slide";
 
-// The overview draws as phased pills: two phases, unnumbered, its `new` stage the one active pill.
 describe("OverviewSlide, as phased pills", () => {
   it("marks only the new stage, numbers nothing and drops the descriptions", () => {
     const slide: OverviewSlideType = {

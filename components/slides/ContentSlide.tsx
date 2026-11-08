@@ -112,8 +112,6 @@ function VideoBlock({ block }: { block: Extract<ContentBlock, { type: "video" }>
   );
 }
 
-/** One picture or video of a gallery over its caption. A row sets each picture at its own height;
- *  a grid cell fits the picture to the cell. */
 function GalleryFigure({ item, row }: { item: GalleryItem; row: boolean }) {
   const caption = item.caption && (
     <figcaption className="slide-media-caption text-center">
@@ -122,7 +120,6 @@ function GalleryFigure({ item, row }: { item: GalleryItem; row: boolean }) {
   );
   const frame = "rounded-brand border border-border";
   if (isVideo(item))
-    // The bottom padding holds the lower half of the player's play button.
     return (
       <figure className="m-0 flex min-w-0 flex-col gap-(--slide-media-gap) pb-10">
         <VideoPlayer
@@ -160,9 +157,7 @@ function GalleryFigure({ item, row }: { item: GalleryItem; row: boolean }) {
   );
 }
 
-/** The image block's gallery form: a row or grid of pictures and videos, each under its caption,
- *  and the tags they share as brand's outline pills under them. */
-// As many columns as pictures, up to three. Tailwind sees each class whole.
+// Tailwind sees each class whole.
 const GALLERY_COLUMNS: Record<number, string> = { 2: "grid-cols-2", 3: "grid-cols-3" };
 
 function Gallery({ block }: { block: Extract<ContentBlock, { type: "gallery" }> }) {
@@ -452,7 +447,6 @@ function ContentBlockRenderer({
                       key={cellIndex}
                       className={`border-b border-border py-4 text-left text-text ${block.compact ? "px-4" : "px-6"} ${cellIndex === 0 ? "font-bold" : ""}`}
                     >
-                      {/* A word breaks only at a space: "Self-serve" never splits at its hyphen. */}
                       {renderMarkdown(keepHyphenatedWords(cell))}
                     </td>
                   ))}
@@ -564,8 +558,6 @@ function ContentBlockRenderer({
       return (
         <div className="grid grid-cols-[2fr_3fr] items-center gap-10">
           {block.image.sketch ? (
-            // A sketch stands on the ground without a frame and fills the height of the cards
-            // beside it, centred, never less than a framed image's height.
             <div className="relative min-h-(--slide-picture-max) self-stretch">
               <Image
                 src={block.image.src}

@@ -67,10 +67,9 @@ export function SlideSubtitle({ children, delay = 0.15 }: { children: ReactNode;
   );
 }
 
-/** A link spelled out under a picture or a QR code, an arrow before it, opening in a new tab: the
- *  address's one link for the keyboard and screen readers. `linkedin`: a person's profile on a
- *  profile card, the LinkedIn glyph before the short address (`in/name`) on one line in muted body
- *  text, not the word "LinkedIn" in teal or an outlined button. */
+/** A link spelled out under a picture or a QR code: the address's one link for the keyboard and
+ *  screen readers. `linkedin`: a profile card's short address (`in/name`) behind the LinkedIn
+ *  glyph, not the word "LinkedIn" in teal or an outlined button. */
 export function LinkCaption({ href, variant }: { href: string; variant?: "linkedin" }) {
   return (
     <a
@@ -280,8 +279,7 @@ const TILE_TONES = {
   none: "",
 };
 
-/** A number or an icon on a square tile: a step's number, a pillar's badge, a phase's mark. Four
- *  sizes and four tones; the tile's corner is the slide's small radius. */
+/** A number or an icon on a square tile: a step's number, a pillar's badge, a phase's mark. */
 export function NumberTile({
   children,
   size = "md",
@@ -414,11 +412,6 @@ export function VideoPlayer({
           </div>
         )}
       </div>
-      {/* The brand's round icon control over a picture (hw-icon-button, solid teal), at the
-            stage scale's size. It straddles the recording's bottom edge, centred, as on the
-            website, so it covers no corner of the picture; the frame's bottom padding holds its
-            lower half. Playing, it stays as the pause control, shown only to the keyboard that
-            holds focus on it. */}
       <button
         type="button"
         onClick={toggle}

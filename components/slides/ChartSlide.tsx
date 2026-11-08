@@ -330,6 +330,8 @@ function TrendVariant({ slide }: { slide: ChartSlideType }) {
                 yLabel={slide.yLabel}
                 currentMarker={slide.currentMarker}
                 futureNote={slide.futureNote}
+                seriesLabel={slide.seriesLabel}
+                series2Label={slide.series2Label}
               />
             </Suspense>
           )}

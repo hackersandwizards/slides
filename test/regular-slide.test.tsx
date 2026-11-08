@@ -5,8 +5,6 @@ import { profileLabel } from "../lib/slide-utils";
 import type { Slide } from "../types/slide";
 
 describe("regular slide", () => {
-  // A regular slide renders as a content slide (merge-content), `align` included: the headline
-  // keeps the title style.
   it("keeps the title class when it renders as content", () => {
     const SlideComponent = slideComponents.regular;
     const slide = { type: "regular", headline: "Headline", align: "center", sections: [] };

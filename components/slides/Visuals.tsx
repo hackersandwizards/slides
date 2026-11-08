@@ -20,7 +20,6 @@ import { BeforeAfterSides } from "./ComparisonSlide";
 const CARD = "rounded-brand";
 // The brand's muted grey: 7:1 on the page, so a context bar or a connector in it reads.
 const GREY = "var(--color-muted)";
-// A card's title and a diagram's label: the card-title utility (slides.css), as on every slide type.
 const LABEL = "card-title text-4xl leading-tight text-balance";
 // The smallest running text a visual sets: 36px at 1920, the checklist's floor.
 const CAPTION = "text-xl leading-snug";
@@ -62,9 +61,8 @@ const TILE_LABEL = 4;
 // On a phone a row of steps holds a title's longest word only where it fits a column: a mono
 // glyph is 0.6em of the title's `--type-body-size` (1rem there, Visuals.css), the narrowest phone
 // leaves the row 20rem inside `--slide-phone-padding`, and a column pads 0.5rem (`--spacing` each
-// side). A word
-// wider than its column, which the hyphenator cannot always split ("Autocomplete"), stands the
-// steps one under another instead, as five and more do (Visuals.css).
+// side). A word wider than its column, which the hyphenator cannot always split ("Autocomplete"),
+// stands the steps one under another instead, as five and more do (Visuals.css).
 function fitsPhoneRow(steps: FlowStep[]) {
   const word = Math.max(
     ...steps.flatMap((step) =>
@@ -109,8 +107,6 @@ export function FlowSteps({
   const show = (on: boolean) =>
     `transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`;
   return (
-    // On a phone (Visuals.css) up to four steps keep their row at a smaller size where their words
-    // fit it, and the rest stand one under another.
     <div
       className={`slide-flow relative w-full ${n >= 5 || !fitsPhoneRow(steps) ? "slide-flow-long" : ""}`}
     >
@@ -141,8 +137,6 @@ export function FlowSteps({
         </div>
       )}
       <div className="relative">
-        {/* The line from each node's centre to the next one's, with its arrowhead, shown with
-            the step it leads to. */}
         {steps.slice(1).map((_, i) => (
           <div key={i} className={`slide-flow-link ${show(i + 1 < revealed)}`} aria-hidden>
             <div
@@ -299,7 +293,6 @@ function Layers({ block }: { block: Of<"layers"> }) {
   return (
     <div className="flex w-full flex-col gap-5">
       {block.layers.map((layer, i) => {
-        // The highlighted layer keeps the white card and takes the teal edge and number.
         const on = block.highlight === i;
         return (
           <div
@@ -367,8 +360,8 @@ function RowLabel({
 }
 
 // A segment's label, such as a duration, set on the line it labels: the line breaks for it, so it
-// reads as the time between two events, never as a point in time. Above the line it would read less
-// clearly as a duration, and set as the event's date it would read as a point in time.
+// reads as the time between two events. Above the line it reads less clearly as a duration, and
+// set as the event's date it reads as a point in time.
 function SegmentLabel({ text, tight }: { text: string; tight?: boolean }) {
   return (
     <span
@@ -563,7 +556,6 @@ function Staggered({
             >
               <Dot on={block.highlight === i} future={i > now} />
             </div>
-            {/* A segment's label on the line between the previous stage's dot and this one's. */}
             {i > 0 && e.segment && (
               <div
                 className="relative row-start-5 flex items-center justify-center"
@@ -579,7 +571,6 @@ function Staggered({
   );
 }
 
-// Drawn as a comparison's before-after without the strike: the before side stays.
 function Transform({ block }: { block: Of<"transform"> }) {
   return (
     <div className="flex w-full justify-center">
@@ -677,8 +668,6 @@ function Bars({ block }: { block: Of<"bars"> }) {
               >
                 {renderMarkdown(bar.label)}
               </span>
-              {/* A track shows the scale's full length when the block names one; the value
-                  stands in its own column right of the track, level with its bar. */}
               <div className="mt-3 grid grid-cols-[minmax(0,1fr)_--spacing(56)] items-center gap-8">
                 {track(bar)}
                 {value(bar)}
@@ -939,7 +928,6 @@ function Cards({ block }: { block: Of<"cards"> }) {
   const text = dense ? "card-text-lg text-text-muted" : `${CAPTION} text-text`;
   const entry = dense ? "card-text-base text-text-muted" : `${CAPTION} text-text`;
   const pad = dense ? (wide ? "card-pad-5" : "card-pad-6") : wide ? "card-pad-6" : "card-pad-8/9";
-  // With `reveal`, the cards appear one per arrow key; otherwise all show at once.
   const { revealedCount } = useProgressiveReveal({ totalSteps: n, startFull: !block.reveal });
   const from = block.numberFrom ?? 1;
   return (

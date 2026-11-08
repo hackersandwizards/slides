@@ -89,8 +89,6 @@ const slideMarkup = (index: number) =>
   renderToStaticMarkup(
     h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalogue, index })),
   );
-// The pages are read as files from dist/: brand's logos by its copies there, the deck's images by
-// the bundler's files, relative to the page.
 const bundled = `"${import.meta.env.BASE_URL.replace(/\/$/, "")}/_astro/`;
 const besidePage = (markup: string) => {
   for (const [file, url] of Object.entries(brandLogos))

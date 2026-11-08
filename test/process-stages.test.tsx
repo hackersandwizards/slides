@@ -23,7 +23,6 @@ function printed(stages: EvolutionSlideType["stages"]) {
   );
 }
 
-// The deprecated evolution type renders as a process slide with `loop: false`.
 describe("evolution, through the process slide", () => {
   it("sets short multipliers in the tiles", () => {
     const { getByText } = printed([stage("1x", "Chat"), stage("10x", "Harness")]);

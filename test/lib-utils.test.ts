@@ -216,6 +216,16 @@ describe("merges of 06.11.", () => {
     ).toEqual({ to: "comparison split" });
   });
 
+  it("names the block a media slide renders as", () => {
+    const one = { src: "/a.png", alt: "A" };
+    expect(replacedBy({ type: "media", sources: [one] })).toEqual({
+      to: "image",
+      form: "media, one image",
+    });
+    expect(replacedBy({ type: "media", sources: [{ src: "/a.mp4", alt: "A" }] })?.to).toBe("video");
+    expect(replacedBy({ type: "media", sources: [one, one] })).toEqual({ to: "gallery" });
+  });
+
   it("draws a deep-dive divider as a night transition", () => {
     expect(
       deepDiveAsTransition({

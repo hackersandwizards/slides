@@ -12,7 +12,7 @@ it("names each deck image under the base, in the markup and in the props", () =>
     .filter((page) => page.endsWith(".html"))
     .flatMap((page) => [
       ...readFileSync(join(stories, page), "utf8").matchAll(
-        /(?:="|&quot;)(\/[\w/.-]*\/_astro\/[\w.-]+\.(?:png|mp4))/g,
+        /(?:="|&quot;)(\/(?:[\w.-]+\/)*_astro\/[\w.-]+\.(?:png|mp4))/g,
       ),
     ])
     .map(([, path]) => path);

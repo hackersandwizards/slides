@@ -4,8 +4,6 @@ import { slideComponents } from "../lib/slide-components";
 import { slideCatalogue } from "../specimen/slide-catalogue";
 import type { Slide } from "../types/slide";
 
-// Title, section divider, contact closing, statement and centred content slide centre their headline on the ground, with no gradient
-// field and no decoration: no particle canvas, no gradient, no glow.
 const cases: { slide: Slide; headline: string }[] = [
   {
     slide: { type: "title", title: "Agentic Coding", subtitle: "Two days" },
@@ -65,8 +63,7 @@ describe("statement slide", () => {
     render(<slideComponents.statement slide={{ type: "statement", lines: ["L"], ...slide }} />)
       .container;
 
-  // The name follows the words said, the lines and a closing set as a quote; the slide's own
-  // subtitle comes after it, outside the rule, so it never reads as said.
+  // The subtitle stands outside the rule so it never reads as said.
   it("sets the attribution after the words said, the subtitle after it outside the rule", () => {
     const c = statement({
       lines: ["Said"],
@@ -104,7 +101,6 @@ describe("statement slide", () => {
     expect(c.querySelector("p.border-t-2")?.textContent).toBe("Source line");
   });
 
-  // The frame takes the picture's own shape once its file has loaded.
   it("sizes a linked image's frame by the picture's own ratio", () => {
     const c = statement({ linkedImage: { src: "/shot.png", href: "https://example.com" } });
     const img = c.querySelector<HTMLImageElement>("figure img")!;
@@ -124,7 +120,6 @@ describe("statement slide", () => {
     expect(c.querySelector(".slide-qr")?.textContent).toContain("example.com/board");
   });
 
-  // Every field a statement carries survives the left layouts.
   it.each(["quotation", "qr"] as const)("keeps every field in the %s layout", (kind) => {
     const text =
       statement({

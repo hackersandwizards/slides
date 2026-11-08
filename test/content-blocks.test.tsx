@@ -13,7 +13,6 @@ const content = (blocks: unknown[]) =>
   ).container;
 
 describe("content blocks", () => {
-  // A callout beside bars runs the full width, as on any other slide (code.talks panel 02.11.).
   it("gives a full-width callout beside bars the full width", () => {
     const c = content([
       { type: "bars", bars: [{ label: "a", value: 50, display: "50%" }] },
@@ -60,7 +59,6 @@ describe("content blocks", () => {
     expect(grid?.style.gridTemplateColumns.startsWith("auto")).toBe(false);
   });
 
-  // A segment's label stands on the line before its event, a figure under the event's text.
   it("sets a timeline's segment labels and an event's figure", () => {
     for (const extra of [0, 4]) {
       const events = [
@@ -89,7 +87,7 @@ describe("content blocks", () => {
   });
 
   // A video carries the engine's play button and no browser controls: their grey bar, spinner and
-  // timestamp read as a broken embed on a projected slide. Its poster stands before it plays.
+  // timestamp read as a broken embed on a projected slide.
   it("plays a video from its own button, without browser controls", () => {
     const c = content([{ type: "video", src: "/a.mp4", alt: "Demo", poster: "/a.png" }]);
     const video = c.querySelector("video");
@@ -144,7 +142,6 @@ describe("content blocks", () => {
 });
 
 describe("inline code", () => {
-  // A phone may break long inline code; only from md does a chip stay on one line.
   it("keeps inline code wrappable below md", () => {
     const { container } = render(<p>{renderMarkdown("run `a b c`")}</p>);
     const cls = container.querySelector("code")?.className.split(" ") ?? [];
@@ -228,7 +225,6 @@ describe("merged card and number shapes", () => {
     expect(row.querySelector(".border-t-4")).not.toBeNull();
   });
 
-  // Grid stats render as the numbers block, the description as its line (merge-numbers).
   it("draws grid stats as numbers", () => {
     const c = grid({
       variant: "stats",
@@ -246,8 +242,6 @@ describe("merged card and number shapes", () => {
     expect(c.querySelector(".hw-card h2")?.className).toContain("text-xl");
   });
 
-  // Pillars render as cards: numbered from `numberFrom` where no card names an icon, with no card
-  // colour of its own (merge-cards).
   it("draws grid pillars as cards", () => {
     const c = grid({
       allActive: true,
@@ -282,8 +276,7 @@ describe("merged card and number shapes", () => {
 
   // The replacements keep the density of the blocks they replace (v0.27.1): drawn at the plain
   // cards' sizes, a four-column slide of lists fell from 0.84 to 0.75 and a seven-item
-  // labeled grid from 0.81 to 0.74 in talks' density guard. Dense cards carry no mark above the
-  // title, the old blocks' title size and padding, and the body in the muted card text.
+  // labeled grid from 0.81 to 0.74 in talks' density guard.
   it("draws labeled grid and four-column blocks as dense cards", () => {
     const c = content([
       { type: "labeled-grid", items: [{ title: "Low", subtitle: "a" }] },
@@ -309,8 +302,6 @@ describe("merged card and number shapes", () => {
 describe("pipeline into flow (merge-flow)", () => {
   const stages = [{ title: "Plan" }, { title: "Build", state: "new" }, { title: "Ship" }];
 
-  // A pipeline flow can draw renders as the flow: the first new stage lit, the container its
-  // frame with label, logos, notes and footer.
   it("draws a pipeline as a framed flow", () => {
     const c = content([
       {
@@ -382,8 +373,6 @@ describe("statement and content merges (merge-statement, merge-content)", () => 
       </PrintProvider>,
     ).container;
 
-  // A centered content slide whose blocks fit renders as a statement: its label the kicker, a
-  // callout the closing, a linked image under the lines with its link spelled out.
   it("renders a centered content slide as a statement", () => {
     const c = one({
       type: "content",
@@ -402,7 +391,6 @@ describe("statement and content merges (merge-statement, merge-content)", () => 
     expect(c.querySelector(".hw-card")).toBeNull();
   });
 
-  // A block a statement cannot hold keeps the centered content slide.
   it("keeps a centered slide with a terminal as content", () => {
     const c = one({
       type: "content",
@@ -413,8 +401,6 @@ describe("statement and content merges (merge-statement, merge-content)", () => 
     expect(c.textContent).toContain("terminal");
   });
 
-  // Regular: two titled sections are a two-column block, three cards, a last untitled section the
-  // callout; the cards layout is an agenda; a profile keeps the regular slide.
   it("renders regular slides through content blocks", () => {
     const two = one({
       type: "regular",

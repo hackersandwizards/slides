@@ -13,8 +13,6 @@ interface Props {
   slide: ClosingSlideType;
 }
 
-/** Partners shown as a logo beside the h&w lockup when one of them speaks, `className` sizing it
- *  in the centred layout. */
 const PARTNERS = [
   {
     company: "inoio gmbh",

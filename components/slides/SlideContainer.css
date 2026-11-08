@@ -1,5 +1,5 @@
-/* The player's viewport and its corner row (SlideContainer), imported by styles/slides.css after
-   the phone layout, whose `.slide-content` padding the control bar's below `sm` overrides. */
+/* Imported by styles/slides.css after the phone layout, whose `.slide-content` padding the rule
+   below `sm` overrides. */
 @layer base {
   .slide-viewport {
     overflow: hidden;
@@ -15,10 +15,8 @@
 
 @media screen and (width < 48rem) {
   /* The corner row follows the slide's content instead of standing over it while it scrolls: it
-     takes the foot of the content's bottom padding, `--slide-phone-corner-below` above the
-     slide's end, so it adds no height, and a slide that fits the screen shows it where a fixed
-     corner would stand. It passes under the ground behind the player's controls. A deck's partner
-     logo (`.slide-corner-start`) shares its row on the left. Each takes the content's side. */
+     takes the foot of the content's bottom padding, so it adds no height, and passes under the
+     ground behind the player's controls. */
   .slide-viewport {
     --slide-phone-corner-below: var(--slide-footer-inset);
   }
@@ -46,7 +44,7 @@
   .slide-viewport > .slide-corner-start + .slide-corner {
     margin-top: 0;
   }
-  /* Two logos share a phone's row: the partner logo stands at three quarters of its height. */
+  /* Two logos share a phone's row. */
   .slide-corner-start img {
     height: calc(var(--slide-footer-mark) * 0.75);
   }

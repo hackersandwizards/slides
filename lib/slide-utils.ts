@@ -548,8 +548,10 @@ export function replacedBy(slide: Slide): { to: string; form?: string } | undefi
       return { to: "transition night" };
     case "overview":
       return { to: "phased-pills" };
-    case "media":
-      return { to: "gallery" };
+    case "media": {
+      const to = mediaAsContent(slide).content[0].type;
+      return to === "gallery" ? { to } : { to, form: `media, one ${to}` };
+    }
     case "regular": {
       const to = regularAsContent(slide);
       if (!to) return undefined;

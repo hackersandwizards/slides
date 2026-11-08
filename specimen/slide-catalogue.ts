@@ -17,12 +17,6 @@ import sketchNextToken from "./slide-catalogue/sketch-next-token.png?url&no-inli
 import stripBoard from "./slide-catalogue/strip-board.png?url&no-inline";
 import stripPullRequest from "./slide-catalogue/strip-pull-request.png?url&no-inline";
 
-// The specimen deck: every slide type the engine registers, each in the variants that change its
-// layout (theme, density, with and without media, the longest content a slide is built to hold).
-// All names, companies and figures are fictional: this repo is public. talks shows it as
-// `slide-catalogue`, and `test/specimen-coverage.test.ts` fails when a slide type, content block
-// or variant has no slide here. Each slide's `notes` name the variant it shows.
-
 /** The deck's images in `slide-catalogue/` beside this file, keyed by file name: each the URL the
  *  consumer's bundler gives the file, as for brand's logos. */
 export const specimenImages = {

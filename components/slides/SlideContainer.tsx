@@ -35,14 +35,12 @@ export function PageCounter({ label }: { label: string }) {
 }
 
 /**
- * The h&w mark in the slide corner, from brand's exports (`lib/brand-logos.ts`), the Night cut on a
- * dark theme (`slides.css`). `lockup`, wizard and wordmark,
- * goes on a title and a closing slide, `wordmark` alone on every other slide. Both keep the
- * wordmark at `--slide-corner-wordmark`: the lockup's box is the wizard's, taller than the
- * letters and taller again in the Night cut, so each cut takes its own height, overhangs the row
- * above and below without moving it, and carries the brand's `--logo-wizard-lift` so its letters
- * centre on the page counter beside it. Both cuts load lazily, so the one `slides.css` hides is
- * never fetched (the Night lockup alone is 59 KB); print loads both (`components/ui/image.tsx`).
+ * The h&w corner mark: `lockup` on a title and a closing slide, `wordmark` on every other. The
+ * lockup's box is the wizard's, taller than the letters and taller again in the Night cut, so each
+ * cut takes its own height, overhangs the row without moving it, and carries the brand's
+ * `--logo-wizard-lift` so its letters centre on the page counter. Both cuts load lazily, so the one
+ * `slides.css` hides is never fetched (the Night lockup alone is 59 KB); print loads both
+ * (`components/ui/image.tsx`).
  */
 export function HwWordmark({ mark = "lockup" }: { mark?: CornerMark }) {
   if (mark === "wordmark") {

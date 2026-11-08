@@ -3,24 +3,34 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { importsOf, slidesOptimizeDeps } from "../lib/vite";
 
-/** The bare packages the browser code imports, read by a second, plainer scan than `importsOf`:
- *  one `from` per statement, no comment or string handling. lib/deck-edit-server.ts runs in the dev
- *  server's Node middleware and lib/vite.ts in the config, never in the browser; a type-only import
- *  never reaches it either. */
-function bareImports(): string[] {
+/** The browser code: lib/deck-edit-server.ts runs in the dev server's Node middleware and
+ *  lib/vite.ts in the config, never in the browser. */
+function browserSources(): string[] {
   const root = join(import.meta.dirname, "..");
   return ["components", "lib"].flatMap((dir) =>
     readdirSync(join(root, dir), { recursive: true, encoding: "utf8" })
       .filter((file) => /\.tsx?$/.test(file) && !/(^|\/)(deck-edit-server|vite)\.ts$/.test(file))
-      .flatMap((file) =>
-        [
-          ...readFileSync(join(root, dir, file), "utf8").matchAll(
-            /^(?:import|export) (?!type )[^;]*?from "([^./][^"]*)"/gm,
-          ),
-        ].map(([, spec]) => spec!),
-      ),
+      .map((file) => readFileSync(join(root, dir, file), "utf8")),
   );
 }
+
+/** The bare packages the browser code imports, read by a second, plainer scan than `importsOf`:
+ *  one `from` per statement, no comment or string handling; a type-only import never reaches the
+ *  browser. */
+function bareImports(): string[] {
+  return browserSources().flatMap((source) =>
+    [...source.matchAll(/^(?:import|export) (?!type )[^;]*?from "([^./][^"]*)"/gm)].map(
+      ([, spec]) => spec!,
+    ),
+  );
+}
+
+// Safari before 16.4 rejects a lookbehind as the module parses, so no slide renders there.
+it("ships no regex lookbehind to the browser", () => {
+  const sources = browserSources();
+  expect(sources.some((source) => source.includes("INLINE_MARKDOWN"))).toBe(true);
+  expect(sources.filter((source) => /\(\?<[=!]/.test(source))).toEqual([]);
+});
 
 describe("slidesOptimizeDeps", () => {
   // An excluded package is not scanned, so a client import missing from the list is found on first

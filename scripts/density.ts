@@ -50,7 +50,6 @@ try {
       "--disable-backgrounding-occluded-windows",
     ],
   });
-  // Decks render on PAGES pages at once; each deck's lines print together, in the URLs' order.
   const reports: string[][] = [];
   let next = 0;
   await Promise.all(
@@ -74,7 +73,6 @@ process.exit(failed || broken ? 1 : 0);
 async function check(browser: Browser, url: string): Promise<string[]> {
   const deck = new URL(url).pathname.replace(/\/print$/, "").replace(/^\//, "");
   const page = await browser.newPage();
-  // A deck that fails to render or to measure fails alone; the other decks' lines still print.
   try {
     await page.setViewport({ width: 1920, height: 1080 });
     await settle(page, url);
@@ -92,7 +90,8 @@ async function check(browser: Browser, url: string): Promise<string[]> {
     broken++;
     return [`FAIL ${deck} did not render: ${(e as Error).message}`];
   } finally {
-    await page.close();
+    // A crashed page rejects close: its deck is already counted as broken.
+    await page.close().catch(() => {});
   }
 }
 

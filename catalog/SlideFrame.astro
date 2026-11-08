@@ -1,8 +1,7 @@
 ---
-// A slide fills its window (fixed, vh type, the stage rem from its width), so the dashboard frames
-// the story's preview page in brand's card; `?revealed` opens a slide with every build step shown.
-// The frame's page is brand's slide page (1920x1080) scaled to the card's width: at the card's
-// own size a phone's card gave the slide a window too short for it, its corner logo over the title.
+// A slide fills its window, so the dashboard frames its preview page at brand's slide page size,
+// scaled to the card: at the card's own size a phone's window was too short for the slide.
+// `?revealed` opens a slide with every build step shown.
 interface Props {
   component: string;
   part?: boolean;

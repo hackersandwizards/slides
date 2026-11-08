@@ -31,7 +31,6 @@ const types: Record<string, string> = {
   ".ico": "image/x-icon",
 };
 
-// The print pages, read as files: brand's files they link, under brand/.
 const files: AstroIntegration = {
   name: "slide-files",
   hooks: {

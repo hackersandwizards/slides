@@ -1,6 +1,4 @@
-/* The flow and framed-flow visuals on a phone (Visuals), below Tailwind's `md`. */
 @media screen and (width < 48rem) {
-  /* A framed flow's notes go under its steps, which take the frame's whole width. */
   .slide-framed-steps,
   .slide-framed-notes {
     flex-basis: 100%;
@@ -10,7 +8,6 @@
     height: var(--slide-layout-border);
   }
 
-  /* Up to four steps keep their row, with tiles and words cut to the phone's columns. */
   .slide-flow-step {
     padding-inline: var(--spacing);
   }
@@ -45,8 +42,6 @@
     font-size: var(--type-body-size);
   }
 
-  /* Five and more steps, or a title wider than its column, stand one under another, each tile beside its words and joined by the line
-     to the next step once that one shows, a loop back named under the last. */
   .slide-flow-long {
     display: flex;
     flex-direction: column;

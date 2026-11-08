@@ -70,15 +70,12 @@ export function SlideShell({
   );
 }
 
-/** A slide never clips: when its content holds more than fits, it shrinks until it fits, instead
- *  of spilling past the bottom edge where a projector cuts it off. A slide that fits is left
- *  untouched. On a titled slide only the body below the title shrinks, from its top, laid out
- *  wider by the same factor where that fits, so it still spans the slide's full width and rewraps
- *  into fewer lines; elsewhere the whole `.slide-content` shrinks to fill the space between its
- *  top and bottom edges. There is no floor
- *  here: a body that needs less than 0.8 belongs on two slides, which `slides-density` fails in the
- *  consumer's gate, but in the browser it shows whole.
- *  Measured top-aligned, because centred overflow above the box does not count in `scrollHeight`. */
+/** A slide never clips: content that holds more than fits shrinks until it fits, rather than
+ *  spilling past the bottom edge where a projector cuts it off. On a titled slide only the body
+ *  shrinks, from its top, laid out wider by the same factor where that fits, so it rewraps into
+ *  fewer lines; elsewhere the whole `.slide-content` shrinks. No floor here: `slides-density` owns
+ *  it. Measured top-aligned, because centred overflow above the box does not count in
+ *  `scrollHeight`. */
 function useFitToSlide() {
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -90,8 +87,6 @@ function useFitToSlide() {
       ? content.querySelector<HTMLElement>(":scope > .slide-body")
       : null;
     const box = body ?? content;
-    // The top and bottom distances the content keeps from the slide's edges: the padding, and at
-    // least 5% of the slide's height.
     const edges = () => {
       const cs = getComputedStyle(box);
       const margin = box.clientHeight * 0.05;
@@ -108,10 +103,8 @@ function useFitToSlide() {
       box.style.translate = "";
       box.style.width = "";
       if (!body) {
-        // The content fits inside the padding, whose bottom is the footer band, and an unpadded
-        // edge keeps a margin of 5% of the slide's height. Measured from the children, laid out
-        // from the top: `scrollHeight` never reads less than the box, so it misses content that
-        // reaches into the bottom padding without passing the box's edge.
+        // Measured from the children: `scrollHeight` never reads less than the box, so it misses
+        // content that reaches into the bottom padding without passing the box's edge.
         const [top, bottom] = edges();
         const start = parseFloat(getComputedStyle(box).paddingTop) || 0;
         let end = start;

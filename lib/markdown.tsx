@@ -1,11 +1,13 @@
 import React from "react";
 
+/** Splits text into plain runs and its links, bold, *accent* and code, the latter at odd indices.
+ *  Single-asterisk emphasis needs non-whitespace just inside the markers, so "2 * 3 * 4" stays
+ *  plain. */
+export const INLINE_MARKDOWN =
+  /(\[[^\]]+\]\([^)\s]+\)|\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?!\s)[^*]*[^\s*]\*|`[^`]+`)/g;
+
 export function renderMarkdown(text: string): React.ReactNode {
-  // Single-asterisk emphasis requires non-whitespace immediately inside the
-  // markers so arithmetic like "2 * 3 * 4" is not mistaken for emphasis.
-  const parts = text.split(
-    /(\[[^\]]+\]\([^)\s]+\)|\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?!\s)[^*]+(?<!\s)\*|`[^`]+`)/g,
-  );
+  const parts = text.split(INLINE_MARKDOWN);
   return parts.map((part, i) => {
     if (i % 2 === 0) return part;
     const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);
@@ -36,11 +38,13 @@ export function renderMarkdown(text: string): React.ReactNode {
     // In teal's text colour: base teal on the chip's tint over a striped table row falls under
     // 4.5:1.
     const chip = "hw-inline-code text-teal-dark";
-    // A path or file name breaks only after a slash or before a dot, so a narrow column or a table
-    // of paths never splits `my-skill` at its hyphen or `settings.json` mid-word. Each piece is
-    // whole unless it alone is wider than the column.
+    // A path or file name breaks only after a slash or before a dot, so a table of paths never
+    // splits `my-skill` at its hyphen or `settings.json` mid-word.
     if (/[/.]/.test(text) && !text.includes(" ")) {
-      const pieces = text.split(/(?<=\/)|(?=\.)/);
+      const pieces = text
+        .replace(/\/|(?=\.)/g, "$&\0")
+        .split("\0")
+        .filter(Boolean);
       return (
         <code key={i} className={chip}>
           {pieces.map((piece, j) => (

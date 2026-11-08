@@ -38,9 +38,7 @@ function HighlightedLine({ line, highlighted }: { line: string; highlighted?: st
   );
 }
 
-/** A linked screenshot under the statement, at most 11/24 (46%) of the slide wide (wider, it would
- *  push the headline under the top strip), its link spelled out under it. Once the file has
- *  loaded, the frame takes the picture's own shape at the slide's picture height. */
+/** At most 11/24 (46%) of the slide wide: wider, it would push the headline under the top strip. */
 function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linkedImage"]> }) {
   const ref = useRef<HTMLSpanElement>(null);
   // Kept with the file it was measured on, so the next picture never takes the last one's shape.
@@ -80,7 +78,6 @@ function LinkedPicture({ image }: { image: NonNullable<StatementSlideType["linke
   );
 }
 
-/** A claim the statement replaces, struck through above its lines. */
 function CrossedOut({ text }: { text: string }) {
   return (
     <BlurFade delay={0.05} duration={0.4}>
@@ -109,8 +106,6 @@ function Lines({ slide, size }: { slide: StatementSlideType; size: "xl" | "lg" |
   );
 }
 
-/** When the parts enter: the lines one by one, then the subtitle and the points, then the closing,
- *  and what follows it after the closing. */
 function delaysOf(slide: StatementSlideType) {
   const afterLines = 0.1 + slide.lines.length * 0.08;
   return { afterLines, closing: afterLines + (slide.points?.length ?? 0) * 0.06 + 0.05 };
@@ -129,7 +124,6 @@ function Points({ points, delay }: { points: string[]; delay: number }) {
   ));
 }
 
-/** The statement's own lines at the left edge, with the label and the claim it replaces. */
 function LeftLines({ slide, size }: { slide: StatementSlideType; size: "lg" | "md" }) {
   return (
     <>
@@ -144,7 +138,6 @@ function LeftLines({ slide, size }: { slide: StatementSlideType; size: "lg" | "m
   );
 }
 
-/** The closing at the left edge, in quote marks where it is a quotation. */
 function LeftClosing({ slide, delay }: { slide: StatementSlideType; delay: number }) {
   const quoted = slide.closingStyle === "quote";
   return (
@@ -158,18 +151,19 @@ function LeftClosing({ slide, delay }: { slide: StatementSlideType; delay: numbe
   );
 }
 
-/** What a statement says under its lines, at the left edge, entering from `start`;
- *  `closing: false` leaves the closing to the caller. */
+/** What a statement says under its lines, at the left edge, entering `shift` seconds later than
+ *  after its lines; `closing: false` leaves the closing to the caller. */
 function LeftSupport({
   slide,
   closing = true,
-  start = delaysOf(slide).afterLines,
+  shift = 0,
 }: {
   slide: StatementSlideType;
   closing?: boolean;
-  start?: number;
+  shift?: number;
 }) {
-  const shift = start - delaysOf(slide).afterLines;
+  const delays = delaysOf(slide);
+  const start = delays.afterLines + shift;
   return (
     <>
       {slide.subtitle && (
@@ -185,14 +179,11 @@ function LeftSupport({
           <Points points={slide.points} delay={start} />
         </div>
       )}
-      {closing && slide.closing && (
-        <LeftClosing slide={slide} delay={delaysOf(slide).closing + shift} />
-      )}
+      {closing && slide.closing && <LeftClosing slide={slide} delay={delays.closing + shift} />}
     </>
   );
 }
 
-/** A statement in a titled slide's column, centred above the footer. */
 function LeftStatement({ slide, children }: { slide: StatementSlideType; children: ReactNode }) {
   return (
     <SlideShell direction="col" overflowHidden ground={groundOf(slide)}>
@@ -247,7 +238,6 @@ function QrStatement({
   );
 }
 
-/** Who said it: the name in ink, what follows the first comma in grey. */
 function Attribution({ text }: { text: string }) {
   const name = text.split(",")[0];
   return (
@@ -265,14 +255,13 @@ function Attribution({ text }: { text: string }) {
  *  it, outside the rule, so none of them reads as said. */
 function Quotation({ slide, attribution }: { slide: StatementSlideType; attribution: string }) {
   const quotedClosing = !!slide.closing && slide.closingStyle === "quote";
-  // The name enters after the words said, the slide's own words after the name.
   const { afterLines } = delaysOf(slide);
-  const named = afterLines + (quotedClosing ? 0.1 : 0.05);
+  const lead = quotedClosing ? 0.1 : 0.05;
   const said = (
     <>
       <LeftLines slide={slide} size={slide.imageSrc ? "md" : "lg"} />
       {quotedClosing && <LeftClosing slide={slide} delay={afterLines} />}
-      <BlurFade delay={named} duration={0.4}>
+      <BlurFade delay={afterLines + lead} duration={0.4}>
         <Attribution text={attribution} />
       </BlurFade>
     </>
@@ -281,7 +270,7 @@ function Quotation({ slide, attribution }: { slide: StatementSlideType; attribut
   // without any, the empty box takes no space.
   const own = (
     <div className="mt-10 empty:hidden">
-      <LeftSupport slide={slide} closing={!quotedClosing} start={named + 0.1} />
+      <LeftSupport slide={slide} closing={!quotedClosing} shift={lead + 0.1} />
     </div>
   );
   return (
@@ -354,8 +343,8 @@ export function StatementSlide({ slide }: Props) {
 
           {slide.subtitle && (
             <BlurFade delay={0.1 + slide.lines.length * 0.08} duration={0.4}>
-              {/* Sans in ink: since font-heading became the mono face, a multi-line subtitle set in
-                  teal mono was the hardest text in a deck to read at a distance. */}
+              {/* Sans: since font-heading became the mono face, a multi-line subtitle set in teal
+                  mono was the hardest text in a deck to read at a distance. */}
               <p className="mx-auto mt-8 max-w-5xl font-sans text-2xl leading-snug font-medium text-balance whitespace-pre-line text-text-muted sm:text-3xl md:text-4xl md:leading-snug">
                 {renderMarkdown(slide.subtitle)}
               </p>

@@ -20,7 +20,6 @@ const fromPackage = createRequire(import.meta.url);
 export const brandFile = (name: string) => fromPackage.resolve(`@hackersandwizards/brand/${name}`);
 
 const bareName = /^@hackersandwizards\/brand\/(.+)$/;
-/** The file a URL names: a URL naming a brand export by its package becomes its path. */
 const resolved = (token: string, url: string) => {
   const name = bareName.exec(url)?.[1];
   if (!name) return url;

@@ -44,8 +44,6 @@ describe("MediaSlide", () => {
   });
 });
 
-// The media slide draws as a content slide: several sources as a gallery, each under its caption,
-// the shared tags as brand's outline pills.
 describe("MediaSlide, as a gallery", () => {
   it("captions each picture and sets the tags as pills", () => {
     const slide: MediaSlideType = {

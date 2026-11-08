@@ -32,8 +32,7 @@ const ACCENT = {
 } satisfies Record<Accent, Record<string, string>>;
 
 export function ProfilesSlide({ slide }: Props) {
-  // Starts at -1 (no profile highlighted); ArrowRight walks through, ArrowLeft
-  // backs off and eventually falls through to the previous slide.
+  // At -1 no profile is highlighted.
   const [highlightIndex] = useCarousel({ count: slide.profiles.length, min: -1 });
 
   return (

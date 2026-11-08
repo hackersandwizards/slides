@@ -21,8 +21,8 @@ function QuoteCard({ card, isRevealed }: { card: GridCard; isRevealed: boolean }
         isRevealed ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
-      {/* Brand's quote, upright behind its rule, on the ground. Every attribution row is a portrait
-          high, so a quote with a portrait lines up with one without. */}
+      {/* Every attribution row is a portrait high, so a quote with a portrait lines up with one
+          without. */}
       <figure className="m-0 flex h-full flex-col">
         <blockquote className="hw-quote card-text-lg mb-6 leading-relaxed">
           {card.description ?? card.title}

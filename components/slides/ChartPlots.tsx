@@ -16,12 +16,7 @@ import {
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { ChartSlide } from "../../types/slide";
 
-/** The recharts plots of the chart slide, split from it so a deck page loads recharts only when it
- *  shows one of them. `still` stops the growth animation: a PDF would freeze it mid-way, and the
- *  slide a page load opens on shows at once, as every other entrance on it does.
- *  Series take the brand's chart order (teal, then purple), never a status colour; ticks and axis
- *  labels stay in muted ink at body size, the grid is a recessive horizontal rule, and an area is
- *  a flat 7 % tint under a single series, none under two. */
+/** `still` stops the growth animation, which a PDF would freeze mid-way. */
 interface PlotProps {
   data: ChartSlide["data"];
   still: boolean;
@@ -61,8 +56,6 @@ function Axes({
   );
 }
 
-/** `currentMarker` names the data point that is now: it gets a dot and its name above, and each
- *  line runs on from it dashed and without its area, as planned rather than measured. */
 export function TrendPlot({
   data = [],
   still,
@@ -70,7 +63,9 @@ export function TrendPlot({
   yLabel,
   currentMarker,
   futureNote,
-}: PlotProps & Pick<ChartSlide, "currentMarker" | "futureNote">) {
+  seriesLabel = yLabel,
+  series2Label,
+}: PlotProps & Pick<ChartSlide, "currentMarker" | "futureNote" | "seriesLabel" | "series2Label">) {
   const two = data.some((d) => d.value2 !== undefined);
   const now = data.findIndex((d) => d.name === currentMarker);
   const rows = data.map((d, i) => ({
@@ -81,8 +76,24 @@ export function TrendPlot({
     plan2: now >= 0 && i >= now ? d.value2 : undefined,
   }));
   const series = [
-    { key: "value", plan: "plan", stroke: "var(--color-teal)", fill: two ? 0 : 0.07 },
-    ...(two ? [{ key: "value2", plan: "plan2", stroke: "var(--color-secondary)", fill: 0 }] : []),
+    {
+      key: "value",
+      plan: "plan",
+      name: seriesLabel,
+      stroke: "var(--color-teal)",
+      fill: two ? 0 : 0.07,
+    },
+    ...(two
+      ? [
+          {
+            key: "value2",
+            plan: "plan2",
+            name: series2Label,
+            stroke: "var(--color-secondary)",
+            fill: 0,
+          },
+        ]
+      : []),
   ];
   const line = {
     isAnimationActive: still ? false : ("auto" as const),
@@ -93,7 +104,7 @@ export function TrendPlot({
     <Axes xLabel={xLabel} yLabel={yLabel} note={futureNote}>
       <ResponsiveContainer width="100%" height="100%">
         {/* A marked plot keeps room above it for the marker's name on the highest point. */}
-        <AreaChart data={rows} margin={{ top: now < 0 ? 12 : 48, right: 30, left: 8, bottom: 8 }}>
+        <AreaChart data={rows} margin={{ top: now < 0 ? 12 : 48, ...SIDE, bottom: 8 }}>
           <CartesianGrid stroke="var(--color-border)" vertical={false} />
           <XAxis
             dataKey="name"
@@ -104,13 +115,19 @@ export function TrendPlot({
             height={56}
             padding={{ left: 24, right: 8 }}
           />
-          <YAxis tick={tick} axisLine={false} tickLine={false} width={64} />
-          <Tooltip {...tooltip} itemStyle={{ color: "var(--color-text)" }} />
+          <YAxis tick={tick} axisLine={false} tickLine={false} width={Y_WIDTH} />
+          {/* The marked point is both measured and planned: it lists once, as measured. */}
+          <Tooltip
+            {...tooltip}
+            itemStyle={{ color: "var(--color-text)" }}
+            payloadUniqBy={(entry) => String(entry.dataKey).replace("plan", "value")}
+          />
           {series.map((s) => (
             <Area
               key={s.key}
               {...line}
               dataKey={s.key}
+              name={s.name}
               stroke={s.stroke}
               fill={s.stroke}
               fillOpacity={s.fill}
@@ -122,7 +139,7 @@ export function TrendPlot({
                 key={`${s.key}-plan`}
                 {...line}
                 dataKey={s.plan}
-                name={`${s.key} (planned)`}
+                name={`${s.name ?? s.key} (planned)`}
                 stroke={s.stroke}
                 strokeDasharray="12 10"
                 fillOpacity={0}
@@ -153,10 +170,9 @@ export function TrendPlot({
   );
 }
 
-// A tick label's font steps, down to the brand's label size, each taken when a word of the one
-// before is wider than its bar's band.
 const TICK_STEPS = [tick.fontSize, "var(--text-sm)", "var(--text-xs)"];
-// The bars' gap, a share of each band; the labels keep half of it between them.
+// Recharts takes this share of each band from either side of its bar; a label's band keeps
+// one side's share of the gap between two bars.
 const BAR_GAP = 0.1;
 const Y_WIDTH = 64;
 const SIDE = { left: 8, right: 30 };
@@ -216,7 +232,8 @@ function useTickLayout(labels: string[], left: number, right: number) {
       const px = probes.map((probe) => parseFloat(getComputedStyle(probe).fontSize));
       for (const probe of probes) probe.remove();
       const names: string[] = JSON.parse(key);
-      const band = ((el.clientWidth - left - right) / names.length) * (1 - BAR_GAP / 2);
+      const category = (el.clientWidth - left - right) / names.length;
+      const band = category * (1 - BAR_GAP);
       const next = tickLayout(names, band, (text, step) => {
         ctx.font = `${fontWeight} ${px[step]}px ${fontFamily}`;
         return ctx.measureText(text).width;
@@ -235,11 +252,10 @@ function useTickLayout(labels: string[], left: number, right: number) {
         overhang: next.angled
           ? Math.max(
               0,
-              (widths[0] * Math.cos(angle) - band / 2 - left) / (1 - 1 / (2 * names.length)),
+              (widths[0] * Math.cos(angle) - category / 2 - left) / (1 - 1 / (2 * names.length)),
             )
           : 0,
       };
-      // A resize that leaves the labels as they were re-renders nothing.
       setLayout((prev) => (JSON.stringify(prev) === JSON.stringify(measured) ? prev : measured));
     };
     // The observer reports the element's size once as it starts, which lays the labels out.
@@ -312,7 +328,6 @@ export function BarPlot({
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={margin} barCategoryGap={`${BAR_GAP * 100}%`}>
             {!labelled && <CartesianGrid stroke="var(--color-border)" vertical={false} />}
-            {/* Each label wraps inside its bar's band, so long names side by side never overlap. */}
             <XAxis
               dataKey="name"
               tick={<WrappedTick layout={layout} />}

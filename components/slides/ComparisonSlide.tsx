@@ -18,8 +18,6 @@ import { keepHyphenatedWords } from "../../lib/slide-utils";
 import { SlideTitle, SlideCard, DisplayHeading } from "./primitives";
 import { renderMarkdown } from "../../lib/markdown";
 
-/** A list item behind its mark: plus or minus in the tone of its side, or without a `mark` the
- *  square list marker every other list uses. */
 function MarkedItem({
   mark,
   tone = "",
@@ -330,8 +328,6 @@ export function Positions({
   );
 }
 
-/** Examples, each a bad and a good version, one at a time live and all on a page, with an
- *  intro and points above them. */
 function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
   const { intro, points, examples } = slide;
   const printMode = usePrintMode();

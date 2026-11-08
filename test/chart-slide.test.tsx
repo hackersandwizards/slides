@@ -85,7 +85,6 @@ describe("chart draw-in", () => {
 
 // Long names side by side overlapped: each bar's label kept one line at any width.
 describe("bar tick layout", () => {
-  // Ten units a character at the first step, eight at the second, seven at the third.
   const widthAt = (text: string, step: number) => text.length * [10, 8, 7][step];
 
   it("wraps each label at its band", () => {

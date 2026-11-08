@@ -17,10 +17,8 @@ import type {
   Slide,
 } from "../types/slide";
 
-// The catalogue is the engine's visual inventory: a slide type, content block or variant missing
-// from it is never seen in review. Each `Record` below is checked by the type checker against the
-// union it names, so a new block type or variant fails typecheck here until it is listed, and this
-// test until the catalogue shows it.
+// Each `Record` below is typed against the union it names, so a new block type or variant fails
+// typecheck here until it is listed.
 const BLOCKS: Record<ContentBlock["type"], true> = {
   paragraph: true,
   bullets: true,

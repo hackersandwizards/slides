@@ -306,7 +306,6 @@ function Frame({ name, src, title }: { name: string; src: string; title: string 
   );
 }
 
-/** Presses an arrow in this window, exactly as the keyboard does. */
 function StepButton({
   label,
   keyName,
@@ -323,9 +322,8 @@ function StepButton({
   );
 }
 
-/** Round, as every control that holds only an icon (brand tokens, radius-pill). Space keeps
- *  stepping the deck while a button has focus, rather than pressing the button too; Enter presses
- *  it. */
+/** Space keeps stepping the deck while a button has focus, rather than pressing the button too;
+ *  Enter presses it. */
 function IconButton({
   label,
   onClick,
@@ -434,10 +432,8 @@ function useNotesEdit(notes: Array<string | undefined>, basePath: string) {
   };
 }
 
-/** The divider between slides and notes: drag it, or focus it and press Up, Down, Home or End.
- *  Those keys stop here, so they neither scroll the notes nor reach the deck; Left, Right and the
- *  clicker keep stepping the deck while the divider has focus. Double-click resets it. The split
- *  is kept in localStorage, for the next talk too. */
+/** The divider between slides and notes: Up, Down, Home and End stop here, so they neither scroll
+ *  the notes nor reach the deck; Left, Right and the clicker keep stepping the deck. */
 function useSplit(region: React.RefObject<HTMLDivElement | null>) {
   const [split, setSplit] = useState(() => {
     const stored = Number(readStored("local", SPLIT_KEY));
