@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView } from "motion/react";
+import { domAnimation, LazyMotion, m, useInView } from "motion/react";
 import type { MotionProps, Variants } from "motion/react";
 import { usePrintMode } from "../../lib/print-context";
 import { useMounted } from "../../lib/use-mounted";
@@ -10,7 +10,11 @@ const MAX_DELAY = 0.3;
 const MAX_DURATION = 0.45;
 const OFFSET = 6;
 
-interface BlurFadeProps extends MotionProps {
+// No layout or drag: the fade draws with the DOM animations alone (LazyMotion below).
+interface BlurFadeProps extends Omit<
+  MotionProps,
+  `layout${string}` | "layout" | `drag${string}` | "drag"
+> {
   children: React.ReactNode;
   className?: string;
   duration?: number;
@@ -62,25 +66,29 @@ export function BlurFade({
     },
   };
 
-  const Motion = Tag === "li" ? motion.li : motion.div;
+  const Motion = Tag === "li" ? m.li : m.div;
+  // m with the DOM animations alone: the full motion component carries layout and drag, which
+  // no slide uses.
   return (
-    <Motion
-      ref={ref}
-      initial={hydrating ? false : "hidden"}
-      animate={isInView ? "visible" : "hidden"}
-      variants={variants}
-      // A slide's text is fully in within 0.8s, whatever its stagger: a later delay or a longer
-      // fade read as a slow slide in a video call.
-      transition={{
-        delay: 0.04 + Math.min(delay, MAX_DELAY),
-        duration: Math.min(duration, MAX_DURATION),
-        ease: "easeOut",
-      }}
-      className={className}
-      data-entrance=""
-      {...props}
-    >
-      {children}
-    </Motion>
+    <LazyMotion features={domAnimation}>
+      <Motion
+        ref={ref}
+        initial={hydrating ? false : "hidden"}
+        animate={isInView ? "visible" : "hidden"}
+        variants={variants}
+        // A slide's text is fully in within 0.8s, whatever its stagger: a later delay or a longer
+        // fade read as a slow slide in a video call.
+        transition={{
+          delay: 0.04 + Math.min(delay, MAX_DELAY),
+          duration: Math.min(duration, MAX_DURATION),
+          ease: "easeOut",
+        }}
+        className={className}
+        data-entrance=""
+        {...props}
+      >
+        {children}
+      </Motion>
+    </LazyMotion>
   );
 }

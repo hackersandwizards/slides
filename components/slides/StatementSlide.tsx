@@ -279,11 +279,7 @@ function Quotation({ slide, attribution }: { slide: StatementSlideType; attribut
       {slide.imageSrc ? (
         <div className="flex items-center gap-16">
           <BlurFade delay={0.05} duration={0.4} className="shrink-0">
-            <Portrait
-              src={slide.imageSrc}
-              alt={slide.imageAlt ?? ""}
-              className="[--hw-avatar-size:--spacing(72)]"
-            />
+            <Portrait src={slide.imageSrc} alt={slide.imageAlt ?? ""} size="2xl" />
           </BlurFade>
           <div className="min-w-0 flex-1">
             {said}

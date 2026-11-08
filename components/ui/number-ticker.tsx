@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { animate, useMotionValue, useTransform, motion } from "motion/react";
+import { animate, useMotionValue, useTransform } from "motion/react";
 import { usePrintMode } from "../../lib/print-context";
 
 interface NumberTickerProps {
@@ -31,14 +31,10 @@ export function NumberTicker({ value, className, duration = 0.5 }: NumberTickerP
     });
   }, [rounded, printMode]);
 
-  if (printMode) {
-    return <span className={className}>{value}</span>;
-  }
-
-  // Starts at the motion value's 0, which a count of 0 never moves from.
+  // On screen it starts at the motion value's 0, which a count of 0 never moves from.
   return (
-    <motion.span ref={ref} className={className}>
-      0
-    </motion.span>
+    <span ref={ref} className={className}>
+      {printMode ? value : 0}
+    </span>
   );
 }

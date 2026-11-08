@@ -123,11 +123,11 @@ export const PARTS: Record<string, () => ReactNode> = {
             tone,
             src: specimenImages["portrait-a.png"],
             alt: "",
-            className: "[--hw-avatar-size:--spacing(36)]",
+            size: "lg",
           }),
         ),
       ),
-      cell("no picture", h(Portrait, { alt: "", className: "[--hw-avatar-size:--spacing(36)]" })),
+      cell("no picture", h(Portrait, { alt: "", size: "lg" })),
       cell(
         "in a card",
         h(
@@ -136,9 +136,12 @@ export const PARTS: Record<string, () => ReactNode> = {
           h(Portrait, {
             src: specimenImages["portrait-b.png"],
             alt: "",
-            className: "[--hw-avatar-size:--spacing(32)]",
+            size: "md",
           }),
         ),
+      ),
+      ...(["sm", "xl", "2xl"] as const).map((size) =>
+        cell(size, h(Portrait, { src: specimenImages["portrait-a.png"], alt: "", size })),
       ),
     ),
   SlideSubtitle: () => h(SlideSubtitle, null, "The line under a headline, in muted ink."),

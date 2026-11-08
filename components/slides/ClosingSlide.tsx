@@ -114,7 +114,8 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                           src={speaker.imageSrc}
                           alt={speaker.name}
                           tone={personAccent(index)}
-                          className="mb-8 [--hw-avatar-size:--spacing(36)]"
+                          size="lg"
+                          className="mb-8"
                         />
                       )}
                       <p className="font-heading text-3xl font-bold tracking-tight text-text md:text-4xl">

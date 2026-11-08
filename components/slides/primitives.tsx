@@ -315,17 +315,28 @@ const PORTRAIT_HUES = {
   secondary: "[--hw-avatar-hue:var(--color-secondary)]",
 };
 
-/** A person's picture as brand's round `hw-avatar`. The size is the caller's, an `--hw-avatar-size`
- *  setting in `className`. Without a picture it draws `children` on the person's hue. */
+/** A portrait's diameter; brand's own where none is named. */
+const PORTRAIT_SIZES = {
+  sm: "[--hw-avatar-size:--spacing(14)]",
+  md: "[--hw-avatar-size:--spacing(32)]",
+  lg: "[--hw-avatar-size:--spacing(36)]",
+  xl: "[--hw-avatar-size:--spacing(36)] md:[--hw-avatar-size:--spacing(44)]",
+  "2xl": "[--hw-avatar-size:--spacing(72)]",
+};
+
+/** A person's picture as brand's round `hw-avatar`. Without a picture it draws `children` on the
+ *  person's hue. */
 export function Portrait({
   src,
   alt,
+  size,
   tone = "neutral",
   className = "",
   children,
 }: {
   src?: string;
   alt: string;
+  size?: keyof typeof PORTRAIT_SIZES;
   tone?: keyof typeof PORTRAIT_HUES;
   className?: string;
   children?: ReactNode;
@@ -333,7 +344,14 @@ export function Portrait({
   return (
     // Top-aligned, so a block parent's line adds no descent below the circle.
     <span
-      className={`hw-avatar align-top ${PORTRAIT_HUES[tone]} ${className}`.trim()}
+      className={[
+        "hw-avatar align-top",
+        size && PORTRAIT_SIZES[size],
+        PORTRAIT_HUES[tone],
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...(!src && alt ? { role: "img", "aria-label": alt } : {})}
     >
       {src ? <Image src={src} alt={alt} width={480} height={480} /> : children}

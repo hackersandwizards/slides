@@ -65,12 +65,7 @@ export function ProfilesSlide({ slide }: Props) {
                     className="flex w-full flex-col transition-all duration-300 card-pad-10"
                   >
                     <div className="flex items-center gap-8">
-                      <Portrait
-                        src={profile.imageSrc}
-                        alt={profile.name}
-                        tone={a.tone}
-                        className="[--hw-avatar-size:--spacing(32)]"
-                      >
+                      <Portrait src={profile.imageSrc} alt={profile.name} tone={a.tone} size="md">
                         <User className="h-16 w-16" />
                       </Portrait>
 

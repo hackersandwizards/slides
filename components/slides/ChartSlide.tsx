@@ -1,7 +1,7 @@
 "use client";
 
 import { lazy, Suspense, useId, useMemo, useState, type ReactNode } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { domAnimation, LazyMotion, m, useReducedMotion } from "motion/react";
 import { usePrintMode } from "../../lib/print-context";
 import type { ChartSlide as ChartSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
@@ -49,14 +49,16 @@ function DrawIn({
   return (
     <>
       <clipPath id={id}>
-        <motion.rect
-          x={-width / 2}
-          y={-height}
-          height={height * 3}
-          initial={hydrating || reduced ? false : { width: width / 2 }}
-          animate={{ width: width * 2 }}
-          transition={{ delay: 0.2, duration: 1.5, ease: "easeInOut" }}
-        />
+        <LazyMotion features={domAnimation}>
+          <m.rect
+            x={-width / 2}
+            y={-height}
+            height={height * 3}
+            initial={hydrating || reduced ? false : { width: width / 2 }}
+            animate={{ width: width * 2 }}
+            transition={{ delay: 0.2, duration: 1.5, ease: "easeInOut" }}
+          />
+        </LazyMotion>
       </clipPath>
       <g clipPath={`url(#${id})`}>{children}</g>
     </>

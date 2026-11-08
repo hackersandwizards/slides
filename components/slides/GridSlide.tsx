@@ -27,13 +27,7 @@ function QuoteCard({ card, isRevealed }: { card: GridCard; isRevealed: boolean }
           {card.description ?? card.title}
         </blockquote>
         <figcaption className="mt-auto flex min-h-14 items-center gap-4">
-          {card.imageSrc && (
-            <Portrait
-              src={card.imageSrc}
-              alt={card.author ?? ""}
-              className="[--hw-avatar-size:--spacing(14)]"
-            />
-          )}
+          {card.imageSrc && <Portrait src={card.imageSrc} alt={card.author ?? ""} size="sm" />}
           {card.author && <span className="text-base font-bold text-primary">{card.author}</span>}
         </figcaption>
       </figure>
