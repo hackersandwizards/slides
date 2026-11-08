@@ -9,7 +9,7 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 // Every step number on the print page's slides, measured on the pixels Chrome paints at
 // 1920x1080. Markers drifted 1.2 to 3.4 px off for months while every check passed, since only a
 // render shows where they land. The squares are the brand's .hw-marker, which `check:markers`
-// measures with brand's `brand-markers` at 1920 on frames.html and every story; this file holds its
+// measures with brand's `brand-markers` on frames.html and every story; this file holds its
 // control on each slide frame written to a file of its own. A step number's baseline on its line's
 // baseline, which brand-markers does not measure, is measured here.
 const TOLERANCE = 0.6; // CSS px at 1920x1080; step numbers measured within it at 4x (2026-11-01)

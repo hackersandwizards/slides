@@ -299,3 +299,14 @@ it("draws a shrunk slide at the slide's full width or height", async () => {
   expect(content.drawn.left).toBeCloseTo(content.drawn.right, 0);
   await tab.close();
 }, 60_000);
+
+it("keeps the deck's shortcut dialog inside a phone's width", async () => {
+  const tab = await newTab();
+  await tab.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  await tab.goto(page("stories/Deck/deck-view/specimen-deck"), { waitUntil: "networkidle0" });
+  await tab.keyboard.type("?");
+  await tab.waitForSelector("dialog[open]");
+  const [scroll, client] = await tab.$eval("dialog[open]", (d) => [d.scrollWidth, d.clientWidth]);
+  expect(scroll).toBeLessThanOrEqual(client);
+  await tab.close();
+}, 60_000);

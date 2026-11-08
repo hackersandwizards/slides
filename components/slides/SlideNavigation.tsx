@@ -199,8 +199,8 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
             if (!inside) setHelp(false);
           }}
         >
-          <div className="hw-dialog-body">
-            <dl className="grid gap-y-4 text-sm [--hw-kbd-size:var(--text-sm)] sm:grid-cols-[auto_auto] sm:items-center sm:gap-x-6 sm:gap-y-2">
+          <div className="hw-dialog-body [--hw-field-size:var(--text-sm)]">
+            <dl className="grid gap-y-4 [--hw-kbd-size:var(--text-sm)] sm:grid-cols-[auto_auto] sm:items-center sm:gap-x-6 sm:gap-y-2">
               {KEYS.map(([keys, what]) => (
                 <div key={what} className="grid gap-y-1 sm:contents">
                   <dt className="flex flex-wrap gap-1">
