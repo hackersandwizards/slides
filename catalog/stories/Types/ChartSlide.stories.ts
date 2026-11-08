@@ -1,7 +1,8 @@
-import { StorySlide } from "../../StorySlide";
+import { ChartSlide } from "../../../components/slides/ChartSlide";
+import { storySlide } from "../../StorySlide";
 import { state } from "../../state";
 
-export default { component: StorySlide };
+export default { component: storySlide(ChartSlide) };
 
 export const Cycle = state("chart", 0, "ChartSlide");
 export const Graph = state("chart", 1, "ChartSlide");

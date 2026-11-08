@@ -1,7 +1,8 @@
-import { StorySlide } from "../../StorySlide";
+import { GridSlide } from "../../../components/slides/GridSlide";
+import { storySlide } from "../../StorySlide";
 import { state } from "../../state";
 
-export default { component: StorySlide };
+export default { component: storySlide(GridSlide) };
 
 export const ReplacedByCards = state("grid", 0, "GridSlide");
 export const ReplacedByCards2 = state("grid", 1, "GridSlide");

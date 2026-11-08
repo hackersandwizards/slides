@@ -24,7 +24,7 @@ describe("catalog stories", () => {
 
   it.each(types)("shows every specimen slide of $type as a state", ({ type, component }) => {
     const source = readFileSync(join(STORIES, "Types", `${component}.stories.ts`), "utf8");
-    expect(source).toContain("export default { component: StorySlide };");
+    expect(source).toContain(`export default { component: storySlide(${component}) };`);
     const states = [...source.matchAll(/state\("([\w-]+)", (\d+), "(\w+)"\)/g)];
     const count = slideCatalogue.slides.filter((s) => s.type === type).length;
     expect(states.map(([, t, n, c]) => `${t} ${n} ${c}`)).toEqual(

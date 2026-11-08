@@ -1,7 +1,8 @@
-import { StorySlide } from "../../StorySlide";
+import { ContentSlide } from "../../../components/slides/ContentSlide";
+import { storySlide } from "../../StorySlide";
 import { state } from "../../state";
 
-export default { component: StorySlide };
+export default { component: storySlide(ContentSlide) };
 
 export const PrimaryTheme = state("content", 0, "ContentSlide");
 export const SecondaryTheme = state("content", 1, "ContentSlide");

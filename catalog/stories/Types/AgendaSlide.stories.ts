@@ -1,7 +1,8 @@
-import { StorySlide } from "../../StorySlide";
+import { AgendaSlide } from "../../../components/slides/AgendaSlide";
+import { storySlide } from "../../StorySlide";
 import { state } from "../../state";
 
-export default { component: StorySlide };
+export default { component: storySlide(AgendaSlide) };
 
 export const Specimen = state("agenda", 0, "AgendaSlide");
 export const Specimen2 = state("agenda", 1, "AgendaSlide");
