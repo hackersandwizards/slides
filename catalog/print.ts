@@ -348,7 +348,7 @@ export const exceptionSections = Object.entries(
   })
   .join("\n");
 
-// The 13 jobs of docs/agent-work/2026-11-01-catalogue-program.md
+// The 13 jobs of docs/agent-work/2026-11-01-catalog-program.md
 // ("Abdeckung je Kommunikationsaufgabe").
 export const JOBS = {
   open: "Open and close",

@@ -1,7 +1,8 @@
-# `styles/slides.css`: what is still open, 07.11.2026
+# `styles/slides.css`: where its rules live
 
-The analysis of 06.11. (read at v1.8.0) is carried out as far as a change leaves every page's
-pixels unchanged (v1.19.0). This file keeps the measurement and what is still open.
+The analysis of 06.11. (read at v1.8.0), carried out as far as a change leaves every page's pixels
+unchanged (v1.19.0); the rules brand took over left in v1.23.0 (brand v1.32.1). This file keeps the
+measurement and why the rest stays.
 
 ## Measured at v1.18.0, before the change
 
@@ -32,7 +33,6 @@ the cascade order.
 | ----------------------------------------- | ------------------------------------------------------------------- | --------------: |
 | `components/slides/Visuals.css`           | the flow and framed flow on a phone                                 |             117 |
 | `components/slides/SlideContainer.css`    | the viewport, the corner row on a phone, the control bar below `sm` |              73 |
-| `components/slides/ContentSlide.css`      | the pipeline's steps                                                |              47 |
 | `components/slides/PrintSlide.css`        | the printed page and its watermark                                  |              28 |
 | `components/slides/TeamTopologySlide.css` | the octagon                                                         |              18 |
 | `components/slides/ProcessSlide.css`      | the cycle's canvas hidden from `md` up                              |               6 |
@@ -61,34 +61,17 @@ the cascade order.
   first after-shot was a state the before build never showed in 4 shots, and the after build never
   showed again. Control: the octagon's cut set to 0 in a copy of the build differs at both sizes.
 
-## Still open
+## Why the rest stays in `slides.css`
 
-- **Group C, brand** (brief below): until brand ships these, `slides.css` keeps them.
-- **The pill (group A)**: the stage scale's pill takes the kicker's step here (`--hw-pill-size`,
-  `--hw-pill-pad`), against brand's stage preset. Aligning it is visible on every slide pill, so it
-  is brand's decision with a blind panel (a deck author and a participant).
 - **`.bg-section-*`**: trainer-hub's `src/lib/__tests__/deck-assets.test.ts` reads the class names
   from the text of `slides.css`; they move to `lib/section-styles.ts`' owner only after that test
   reads an exported list. The `--slide-ground` in `.bg-section-intro` is not dead: it resolves
   `--background` on its own element, which a night element redefines.
-- **Kept in `slides.css` on purpose** (both reviewers): the slide body with its media, timeline
-  and growing-child `:has()` rules, whose spacers compete at equal specificity; `.slide-title`,
-  which the phone rule also sets; the hairline overlay; the phone layout over every slide type,
-  until each type carries `max-md:` variants.
-- **The player's cursor** (`SlideContainer.css`) retypes brand teal as `%231A7285` in a data URI,
-  which no custom property can reach and the colour scan cannot read. A cursor file in brand's
-  exports would let the engine name it by URL.
-
-## Brief for brand (nothing sent)
-
-1. `elements/scales.css`: add `--hw-marker-size` to `[data-hw-scale="stage"]` (the engine's
-   `--slide-marker`, 0.5625rem), so a stage surface needs no rule of its own.
-2. `marker.css`: set `--hw-marker-mid: 0.5cap` for `.hw-label > .hw-marker`, the capitals case it
-   already names.
-3. Decide whether the stage pill takes the kicker's step (1.6875rem at the stage, padding 0
-   1.25rem), as the engine sets it today.
-4. Decide whether brand ships a heading and paragraph base (`text-wrap: balance` on h1 to h3,
-   `pretty` on p and li, the heading family and weight 700), which os, documents and the engine
-   each write today, and a `::selection` colour (the engine: white on teal).
-
-After each brand release the engine raises its brand pin and drops its own copy.
+- **Kept on purpose** (both reviewers): the slide body with its media, timeline and growing-child
+  `:has()` rules, whose spacers compete at equal specificity; `.slide-title`, which the phone rule
+  also sets; the hairline overlay; the phone layout over every slide type, until each type carries
+  `max-md:` variants.
+- **Brand's since v1.23.0**: the stage marker size and the capitals marker (brand's stage scale
+  and `marker.css`), the stage pill (brand's preset), the heading and paragraph base
+  (`text-base.css`), the selection colour (the browser's) and the player's cursor
+  (`@hackersandwizards/brand/cursor.svg`).

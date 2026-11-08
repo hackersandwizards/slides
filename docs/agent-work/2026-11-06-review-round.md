@@ -64,8 +64,8 @@ categories with long labels).
 
 ## Still open
 
-- The two-column block's grey item text reads lower in contrast than split's (split panel finding).
-- Media vs the image blocks: a merge, filed in `work-phase-2e-v0-18-0-shipped-activity`.
+- The two-column block's grey item text reads lower in contrast than split's (split panel finding),
+  in item `work-panel-text-blocks`.
 
 ## Overlaps after v1.1.0: blind type-list panel (06.11.2026, slides v1.1.1)
 
@@ -79,7 +79,7 @@ Claude per persona.
 | process slide vs pipeline block                | 7.33                 | 6 keep                                           | 0     | kept                      |
 | timeline block vs roadmap slide                | 6.83                 | 6 keep                                           | 0     | kept                      |
 | content slide vs regular with profile          | 9.50                 | 6 keep                                           | 0–1   | kept                      |
-| media slide vs image, linked-image, image-grid | 2.67                 | 6 merge, image block survives, gallery its form  | 0     | filed (phase 2e)          |
+| media slide vs image, linked-image, image-grid | 2.67                 | 6 merge, image block survives, gallery its form  | 0     | merged in v1.22.0         |
 | code and annotated code vs terminal and hooks  | 5.17                 | Claude 3 merge, 1 unsure (3–4); Codex 2 keep (8) | 0–1   | kept: the models disagree |
 
 Beside the pairs, regular with profile vs the profiles slide scored 5.67 (Claude unsure or keep at 4
@@ -207,10 +207,10 @@ lanes overview (Claude 4.67 to 6.67, Codex 6.3 to 7.82), the quotes and the capt
 Claude 5.33 to 8.0, Codex 6.63 to 8.53). In round 1 every reviewer read the media slide's tags as
 labels of single pictures; round 2 tested that reading as a caption per picture.
 
-Left for a later round, named by most reviewers: green plus marks on the specimen's drawbacks in the
-comparison `vs` slide; the phased-pills specimen's amber and green phases read as status colours; a
-pipeline of six wraps into two rows of three and loses its order; one portrait among three quotes
-reads as an exception.
+Left for a later round, named by most reviewers, in item `work-four-specimen-panel-findings`: green
+plus marks on the specimen's drawbacks in the comparison `vs` slide; the phased-pills specimen's
+amber and green phases read as status colours; a pipeline of six wraps into two rows of three and
+loses its order; one portrait among three quotes reads as an exception.
 
 One reviewer prompt, verbatim (round 1, presenter, Claude, run 1; image paths left out):
 

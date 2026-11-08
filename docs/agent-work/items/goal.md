@@ -5,7 +5,7 @@ status: open
 
 # Goal
 
-Open work on the engine's slide catalogue: the `work-*` items beside this file.
+Open work on the engine's slide catalog: the `work-*` and `decide-*` items beside this file.
 
 ## Goal
 
@@ -41,5 +41,6 @@ Assumption (agent, 01.11.2026, not Benedikt's words):
 
 ## Open work
 
-As of 01.11.2026. Analysis, plan and results of phases 2 and 2b:
-[docs/agent-work/2026-11-01-catalogue-program.md](../2026-11-01-catalogue-program.md).
+Analysis and the results of phases 2 and 2b:
+[docs/agent-work/2026-11-01-catalog-program.md](../2026-11-01-catalog-program.md); the later panel
+rounds: [docs/agent-work/2026-11-06-review-round.md](../2026-11-06-review-round.md).

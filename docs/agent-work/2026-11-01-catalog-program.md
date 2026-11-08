@@ -1,11 +1,11 @@
 # Slide-Katalog: Duplikate, Lücken und Programm
 
-Stand 2026-11-01, Phase 1 (Analyse und Plan) und Phase 2 ohne offene Entscheidung (Basis-Runde,
-vier Typen bis zum Plateau, Sketch-Variante, v0.12.0), dazu Phase 2b mit `video`, `image` und
-`linked-image` (v0.14.0). Seit v0.27.0 (02.11.) sind sechs der sieben Duplikat-Gruppen
-zusammengelegt (Gruppe 4 bleibt nach Blind-Review), und die Specimen-Seite ordnet jeden Eintrag nach
-den 13 Kommunikationsaufgaben, mit Suche. Seit v1.1.0 (06.11.) zeichnet `deep-dive-divider` als
-`transition` mit `night`. Was offen ist, steht nur in den `work-phase-*`-Items in [items/](items/).
+Gemessen am 01.11.2026 (Phase 1: Analyse; Phase 2 und 2b: Basis-Runde und Typen bis zum
+Plateau, v0.12.0 und v0.14.0). Stand 08.11.2026 (v1.25.0): sechs der sieben Duplikat-Gruppen sind
+zusammengelegt (v0.27.0), Gruppe 4 seit v1.22.0 auch (`overview` zeichnet als `phased-pills`), und
+die Druckseite ordnet jeden Eintrag nach den 13 Kommunikationsaufgaben, mit Suche. Die späteren
+Panel-Runden stehen in [2026-11-06-review-round.md](2026-11-06-review-round.md). Was offen ist,
+steht nur in den Items in [items/](items/).
 
 Benedikt am 01.11. (von Ada weitergegeben): «Wir scheinen da auch bei den Folien gerade ziemlich
 viele Duplikate zu haben, also einfach Folientypen, die super ähnlich zueinander sind. Dafür
@@ -38,10 +38,6 @@ Datendiagrammen bei Bedarf bis 47. Die Agenda als Zeitplan ist eine Variante und
   den drei Code-Blöcken, aber keine Variante und keine Suche. Seit v0.27.0 zeigt sie jeden Typ, jede
   Variante und jeden Block nach Kommunikationsaufgabe, mit Suche.
 
-Plan: Phase 2 legt die Duplikate zusammen und optimiert die schwächsten und meistgenutzten
-Einträge bis zum Plateau, Phase 3 baut die Katalogseite nach Kommunikationsaufgabe, Phase 4 stellt
-jede Deckfolie um. Geschätzt 4 bis 6 Tage Wanduhr mit drei parallelen Sessions.
-
 ## Phase 2: Ergebnis
 
 Ausgeliefert als slides v0.12.0. Panel je Runde: drei Personas aus dem Publikum (Teilnehmerin im
@@ -73,7 +69,7 @@ Deko 7,33, plus Kicker 7,43 (Rauschen 0,53). Runde 2: Kicker 7,64 gegen Spaltenv
 Gleichstand. Runde 3: plus `balance` 7,75 gegen 7,51 (Rauschen je Bild 0,49, je Variante 0,02);
 eine echte Folie mit einzelnem Wort in der letzten Zeile gewann in beiden Läufen +1,25.
 
-![statement vorher und nachher](2026-11-01-catalogue-program/phase2-statement.jpg)
+![statement vorher und nachher](2026-11-01-catalog-program/phase2-statement.jpg)
 
 **`team-topology`.** Gebaut nach den Team Shape Templates: Stream-Teams waagerecht in Teal,
 Enabling senkrecht links in Purple, Subsystem als Achteck in Neutral, Plattform über die volle
@@ -81,7 +77,7 @@ Breite mit gepunktetem Teal-Rand und Markenecke, kein Rot, kein Fußband. Runde 
 Plattform mit eckigem Rand 7,26, mit Markenecke 7,51 (Rauschen 0,29). Runde 2: zwei weitere
 Varianten (7,07 und 6,86) lagen im Rauschen (0,63), Plateau, die Markenecke bleibt.
 
-![team-topology vorher und nachher](2026-11-01-catalogue-program/phase2-team-topology.jpg)
+![team-topology vorher und nachher](2026-11-01-catalog-program/phase2-team-topology.jpg)
 
 **`chart`.** Zweite Reihe Purple statt einer zweiten Teal-Stufe, flache Füllung 7 % statt
 Verlauf, Achsentitel über und unter dem Plot, horizontales Raster, Balken mit Wert direkt darüber
@@ -90,20 +86,20 @@ und ohne Y-Achse, beim Graphen kein pulsierender Halo. Runde 1: heute 5,96, neue
 (Rauschen 0,43), knapp, ausgeliefert, weil die Kritik der Runde 1 (Achsentitel fehlen,
 Verlaufsfläche) damit wegfällt. Was bleibt, ist vor allem Inhalt und die Abschnittsfläche.
 
-![chart vorher und nachher](2026-11-01-catalogue-program/phase2-chart.jpg)
+![chart vorher und nachher](2026-11-01-catalog-program/phase2-chart.jpg)
 
 **`wheel`.** Segmente in Teal bei 40 % statt Vollfarbe, Ringzahlen in Tinte, quadratische
 Nummernfelder, größere Titel. Runde 1: Vollfarbe 7,42 gegen Teal-Rand 15 % 7,42, beide weit über
 heute 5,36 (Rauschen 0,33). Runde 2: 40 % 7,64 gegen 7,18 und 7,08 (Rauschen 0,38).
 
-![wheel vorher und nachher](2026-11-01-catalogue-program/phase2-wheel.jpg)
+![wheel vorher und nachher](2026-11-01-catalog-program/phase2-wheel.jpg)
 
 **Sketch-Variante.** Das Specimen-Deck hat eine Folie `image-and-grid` mit `sketch: true` und dem
 Sketch `sketch-example-next-token.png` aus dem Brand-Repo (`applications/slide-visuals/`, v0.20.0,
 dort nicht exportiert, deshalb als Kopie mit Herkunft im Kommentar). Kein Panel: die Engine
 ändert sich nicht, die rahmenlose Darstellung beruht auf den Panels vom 31.10.
 
-![Specimen-Seite mit Sketch-Variante](2026-11-01-catalogue-program/phase2-specimen-sketch.jpg)
+![Specimen-Seite mit Sketch-Variante](2026-11-01-catalog-program/phase2-specimen-sketch.jpg)
 
 **Specimen-Seite.** Nach den 26 Typen folgt der Abschnitt "Content blocks": jede Inhaltsfolie des
 Specimen-Decks mit Bereichsbeschriftung `Block:` oder `Visual:`, außer `code`, `code-and-text` und
@@ -237,7 +233,7 @@ Agenten-Sitzung als echte Bildschirmaufnahme, keine generierte Szene. Runde 1: h
 Aufnahme in alter Engine 4,21, neu 8,25 (Rauschen 0,48). Runde 2: Play unten links 8,50 gegen Play
 in der Mitte 6,92, das in der Mitte verdeckte die Ausgabe.
 
-![video vorher und nachher](2026-11-01-catalogue-program/phase2b-video.jpg)
+![video vorher und nachher](2026-11-01-catalog-program/phase2b-video.jpg)
 
 **`image`.** Runde 1: zentriert in Dateigröße 7,44 gegen heute 4,75, aber kleine Dateien blieben
 klein (ein Diagramm mit 767 px stand bei 40 % der Breite). Runde 2: mit Wachsen bis zur doppelten
@@ -245,7 +241,7 @@ Dateibreite 7,74 gegen 4,51. Zwei gestapelte Bilder verloren in beiden Runden ge
 jedes nur die halbe Höhe bekam und sie verschieden breit wurden. Runde 3 nur dieser Folie: heute
 7,33, gleiche Breite 7,00, Rauschen 0,56, also gleichauf. Plateau.
 
-![image vorher und nachher](2026-11-01-catalogue-program/phase2b-image.jpg)
+![image vorher und nachher](2026-11-01-catalog-program/phase2b-image.jpg)
 
 **`linked-image`.** Unter dem Bild steht der Link als Text, ohne `https://` und `www.`, mit
 Pfeil, in Mono und Teal. Projiziert oder gedruckt ist ein Link sonst unsichtbar. Runde 2: 7,35
@@ -254,7 +250,7 @@ gegen 4,46. Ein weißer Rand im Rahmen, damit die Markenecke keinen QR-Code ansc
 sagt schon "hycle.org", jetzt steht die Adresse zweimal da. Ohne die Fußzeile kommt sie auf 7,50
 und gewinnt in 11 von 12 Wertungen.
 
-![linked-image vorher und nachher](2026-11-01-catalogue-program/phase2b-linked-image.jpg)
+![linked-image vorher und nachher](2026-11-01-catalog-program/phase2b-linked-image.jpg)
 
 **PPTX.** Bild und verlinktes Bild wachsen dort nicht über ihre Dateigröße bei 144 px je Zoll.
 Unter dem verlinkten Bild steht der Link als verlinkter Text, und ein Video nimmt sein `poster` als
@@ -299,7 +295,7 @@ die Zielform auf echten Deckfolien der aufgelösten Typen im Blind-Panel mindest
 
 ### 1. Karten: fünf Formen, Ziel `cards`
 
-![Karten](2026-11-01-catalogue-program/merge-karten.jpg)
+![Karten](2026-11-01-catalog-program/merge-karten.jpg)
 
 | Eintrag          | Deckfolien | Was anders ist                                                                |
 | ---------------- | ---------: | ----------------------------------------------------------------------------- |
@@ -317,7 +313,7 @@ prüft Phase 2 mit. Zeile `merge-cards`.
 
 ### 2. Vergleich: vier Formen, Ziel `comparison`
 
-![Vergleich](2026-11-01-catalogue-program/merge-vergleich.jpg)
+![Vergleich](2026-11-01-catalog-program/merge-vergleich.jpg)
 
 | Eintrag             | Deckfolien | Wertung | Was anders ist                                               |
 | ------------------- | ---------: | ------: | ------------------------------------------------------------ |
@@ -332,7 +328,7 @@ Inhaltsfolie, `comparison` füllt die ganze Folie. Zeile `merge-comparison`.
 
 ### 3. Ablauf: drei Formen, Ziel `flow`
 
-![Ablauf](2026-11-01-catalogue-program/merge-ablauf.jpg)
+![Ablauf](2026-11-01-catalog-program/merge-ablauf.jpg)
 
 | Eintrag       | Deckfolien | Wertung | Was anders ist                                                       |
 | ------------- | ---------: | ------: | -------------------------------------------------------------------- |
@@ -348,7 +344,7 @@ Zeile `merge-flow`.
 
 ### 4. Deck-Übersicht: drei Formen, Ziel `phased-pills`
 
-![Übersicht](2026-11-01-catalogue-program/merge-uebersicht.jpg)
+![Übersicht](2026-11-01-catalog-program/merge-uebersicht.jpg)
 
 | Eintrag               | Deckfolien | Wertung | Was anders ist                                                   |
 | --------------------- | ---------: | ------: | ---------------------------------------------------------------- |
@@ -364,7 +360,7 @@ Spalten entscheidet dd- (Deep-Dive-Look), deshalb wartete diese Gruppe auf dd-. 
 
 ### 5. Zahlen: zwei Formen, Ziel `numbers`
 
-![Zahlen](2026-11-01-catalogue-program/merge-zahlen.jpg)
+![Zahlen](2026-11-01-catalog-program/merge-zahlen.jpg)
 
 `numbers` (9 Folien) setzt Wert, Bezeichnung und Quelle. `grid` `stats` (7) setzt dieselben Werte in
 Karten mit Icon und Beschreibung. Die Quelle, die `numbers` mitbringt, fehlt `grid` `stats`. Zeile
@@ -372,7 +368,7 @@ Karten mit Icon und Beschreibung. Die Quelle, die `numbers` mitbringt, fehlt `gr
 
 ### 6. Textfolie: zwei Formen, Ziel `content`
 
-![Textfolie](2026-11-01-catalogue-program/merge-textfolie.jpg)
+![Textfolie](2026-11-01-catalog-program/merge-textfolie.jpg)
 
 `regular` (60 Folien, 54 davon in talks) setzt Abschnitte mit Titel, Liste, Text, Link und Icon,
 optional eine Profil-Seitenleiste. `content` (1.033) setzt dasselbe aus Blöcken. Die Seitenleiste
@@ -380,7 +376,7 @@ wird eine Option von `content`. Größte Umstellung in Phase 4. Zeile `merge-con
 
 ### 7. Einzelaussage: zwei Formen, Ziel `statement`
 
-![Einzelaussage](2026-11-01-catalogue-program/merge-aussage.jpg)
+![Einzelaussage](2026-11-01-catalog-program/merge-aussage.jpg)
 
 `content` `centered` (7 Folien) zentriert beliebige Blöcke als Hero. Vier der sieben tragen einen
 verlinkten QR-Code (`linked-image`), je eine `positions`, `terminal` und Text mit Hinweis. `statement` (96, Wertung 5,75)
@@ -533,7 +529,7 @@ Abweichungen sind Stellschrauben und Behelfe:
 
 ### Was die Specimen-Seite heute zeigt
 
-![Specimen-Seite heute](2026-11-01-catalogue-program/specimen-page-heute.jpg)
+![Specimen-Seite heute](2026-11-01-catalog-program/specimen-page-heute.jpg)
 
 `scripts/specimen.ts` rendert je registriertem Typ die erste Folie des Specimen-Decks: 26 Kacheln,
 alphabetisch nach Registrierung, ohne Beschreibung, darunter die Blöcke. Daraus folgt:
@@ -545,7 +541,7 @@ alphabetisch nach Registrierung, ohne Beschreibung, darunter die Blöcke. Daraus
 - Das Specimen-Deck füllt `image-and-grid` mit einem gezeichneten Screenshot ohne `sketch: true`;
   seit v0.12.0 steht die Sketch-Variante als eigene Folie daneben:
 
-![image-and-grid im Specimen-Deck](2026-11-01-catalogue-program/image-and-grid-im-specimen.jpg)
+![image-and-grid im Specimen-Deck](2026-11-01-catalog-program/image-and-grid-im-specimen.jpg)
 
 ## Recherche
 
@@ -614,7 +610,7 @@ Ein Eintrag ist ein Typ, ein Block oder eine Variante. Ein Eintrag kann in zwei 
 
 ## Katalogseite: Vorschlag
 
-![Mockup der Katalogseite](2026-11-01-catalogue-program/katalog-mockup.jpg)
+![Mockup der Katalogseite](2026-11-01-catalog-program/katalog-mockup.jpg)
 
 Die Seite ist seit v0.28.0 die Druckseite `catalog/pages/catalog/print/`, aus dem Specimen-Deck
 gebaut und nicht eingecheckt. Neu:
@@ -636,86 +632,6 @@ gebaut und nicht eingecheckt. Neu:
   `coupling.md`). Die Zählung je Deckfamilie liefert jeder Verbraucher selbst, als Befehl im
   eigenen Gate. Auf der öffentlichen Seite stehen nur Zahlen ohne Decknamen, oder gar nichts
   davon. Das entscheidet Phase 3, die Zahlen im Mockup kommen aus dieser Zählung.
-
-## Plan
-
-### Phase 2: Typen optimieren und ergänzen
-
-1. **Basis-Runde.** Jeder Eintrag einmal im Blind-Panel, mit einer Folie aus dem Specimen und bis
-   zu drei echten Deckfolien je Eintrag (die längste, die dichteste, eine typische), damit
-   Grenzfälle zählen. Personas wie am 31.10.: Engineering-Leitung im Raum, Vorstand, Teilnehmer
-   in der letzten Reihe, Meet-Teilnehmer bei 960 x 540, dazu ein Brand-Designer. Claude und Codex,
-   zwei Läufe, Rauschen gemessen. Kriterien vorher fest: Glance-Test (5), Klarheit, Lesbarkeit,
-   Ruhe und Platz, Markentreue nach Design Guide, AI-Anmutung. Der Prompt nennt alle
-   Markenfarben samt Rollen, nicht nur Teal und Purple (tm- nennt das als Grenze seines Panels).
-   Vor jeder Runde der
-   Markencheck je Kandidat: Farbrollen, Deckkraftleiter, kleine Ecken quadratisch, Verlauf als
-   begrenztes Feld.
-2. **Reihenfolge** = niedrige Wertung mal Nutzung. Für die 26 Typen liegt die Wertung schon vor
-   (tm-, siehe unten), die Basis-Runde bewertet nur noch die 26 Blöcke und echte Deckfolien. Die
-   Reihenfolge nach heutigem Stand: `statement` (5,75, 96 Folien), `team-topology` (5,83),
-   `phased-pills` mit Gruppe 4 (5,58, 43 Folien, nach dd-), `chart` (6,33), `wheel` (6,42), dann
-   die Zusammenlegungen nach Folienzahl (Gruppen 1, 3, 6, 2, 5, 7) und `content` mit Text (386
-   reine Textfolien). `dual-pill-overview` (4,92) und `deep-dive-divider` (5,08) liegen ganz unten,
-   gehören aber zu dd-.
-3. **Optimieren bis zum Plateau,** je Eintrag zwei bis drei Runden, nach der Stoppregel aus
-   `blind-review`.
-4. **Neue Einträge:** Übung, Agenda als Zeitplan, Demo, Nächste Schritte, Sketch-Variante im
-   Specimen. Jeder landet zuerst im Specimen-Deck.
-5. **Zusammenlegen,** je Gruppe nach Benedikts Antwort auf ihre `merge-*`-Zeile: die Zielform
-   gegen die Originale auf echten Deckfolien. Gleichauf im Rauschen reicht, der Gleichstand geht an die
-   Form mit weniger Ausnahmen.
-6. **Release** je Batch: Version, Tag, Verbraucher heben den Pin in Phase 4.
-
-### Phase 3: Katalogseite
-
-Der Vorschlag oben, gebaut in `scripts/specimen.ts` (seit v0.28.0 `catalog/print.ts`). Prüfung: kleines Panel aus Trainerin, die
-eine Folie sucht, und Designer, mit Suchaufgaben ("eine Folie für einen Zeitplan") und gemessener
-Zeit bis zum Treffer, alte Seite gegen neue.
-
-### Phase 4: Decks umstellen
-
-Je zusammengelegtem oder neuem Typ ein Codemod über alle Decks in talks, trainer-hub und hycle,
-jeweils in deren Repo. Dazu: die 56 Übungsfolien, 13 Agenda-Tabellen und 6 Agenda-Zeitleisten auf die neuen Typen, die
-6 Sketch-Flags, die 8 `background`-Overrides, `accentColor` und `dotColor` auf Abschnittsrollen,
-hycle auf den aktuellen Pin. Fertig, wenn jede Folie einen Katalogeintrag nutzt, keine
-Stellschraube außerhalb des Katalogs mehr steht und `slides-density` in allen drei Gates grün ist.
-Ein Typ, der aus der Union fällt, bricht den Typecheck jedes Decks, das ihn nutzt. Deshalb zieht
-Phase 4 alle Decks um, ausgelieferte eingeschlossen (`catalogue-migration-scope`). Verschickte PDFs
-bleiben, wie sie sind.
-
-### Aufwand
-
-Methode 1, Einheiten: 26 Blöcke und Deckfolien in der Basis-Runde (eine Session, etwa 3 h), dann etwa 20
-Einträge mit Arbeit (die Schwächsten, die Neuen, die Zusammenlegungen) zu je etwa 2 h für Bau und
-zwei Panelrunden. Das sind rund 40 h Agentenzeit, mit drei parallelen Sessions in eigenen Worktrees
-etwa 14 h Wanduhr. Phase 3 eine Session von 4 bis 6 h. Phase 4 rund ein Tag, weil die Gates der
-Verbraucher mit Build und Dichte-Guard lange laufen.
-
-Methode 2, gemessene Geschwindigkeit: slides hat vom 30.10. 21:37 bis 01.11. 05:59 rund 20
-Releases veröffentlicht. Titel- und Schlussfolie samt Panels liefen von v0.4.2 (08:12) bis v0.5.1
-(13:31), gut 5 h für ein Typenpaar. Bei 2,5 bis 5 h je Eintrag und 20 Einträgen sind das 50 bis
-100 h, mit drei Sessions 17 bis 33 h Wanduhr.
-
-Beide Methoden zusammen: Phase 2 dauert 2 bis 4 Tage Wanduhr, das Programm 4 bis 6 Tage. Alle Zahlen
-sind meine Schätzung, gemessen sind nur die Release-Zeiten und die Folienzahlen.
-
-### Wie die anderen Läufe einfließen
-
-- **gd-** (Richtung der Abschnittsfläche) ist mit v0.10.1 ausgeliefert. Die Basis-Runde rendert
-  auf diesem Stand, die Richtung wird nicht neu verhandelt.
-- **dd-** (Deep-Dive-Look) hat die drei schwächsten Typen im Auftrag: `dual-pill-overview` 4,92,
-  `deep-dive-divider` 5,08, `phased-pills` 5,58. Gruppe 4 wartet auf sein Ergebnis und baut auf
-  ihm auf.
-- **tm-** (os `docs/agent-work/2026-11-01-title-closing-max.md`): Wertung je Typ für alle 26 Typen,
-  eine Runde, zwei Läufe, Rauschen 0,33. Schwächste: die drei von dd-, dann `statement` 5,75,
-  `team-topology` 5,83, `overview` 6,17, `chart` 6,33, `wheel` 6,42, `gantt`, `guidance` und
-  `roadmap` je 6,50. Oben: `title` 8,42, `agenda` 8,00. Diese Wertungen ersetzen die Basis-Runde
-  für die Typen. Sein Brand-Absatz nannte nur Teal und Purple als Akzente, die Kritik "Grün außerhalb
-  der Palette" an `wheel` und `phased-pills` ist deshalb teils ein Artefakt des Prompts. Titel und
-  Abschluss optimiert Phase 2 nicht: tm- empfiehlt beide auf Night, das wartet auf Benedikt
-  (os-Zeile `title-closing-dark`).
-- **pc-** (v0.10.0: Personenfarben, Tabellen, rahmenlose Sketches) ist der Ausgangsstand.
 
 ## Annahmen
 
