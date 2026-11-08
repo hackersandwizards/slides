@@ -237,3 +237,16 @@ One reviewer prompt, verbatim (round 1, presenter, Claude, run 1; image paths le
 > - for each rendering: {"slide":"s01","r":"A","glance":0,"clarity":0,"legibility":0,"breathing":0,"calm":0,"brand":0,"human":0,"overall":0,"below_max":"what keeps overall below 10, in at most 12 words"}
 > - for each slide: {"slide":"s01","best":"A"}
 > - for the pair: {"pair":"XY","distinct":0,"verdict":"keep|merge|unsure","survivor":"X|Y|none","why":"at most 20 words"}
+
+## Specimen findings of the 07.11. panels (08.11.2026, slides v2.7.0)
+
+Blind panels, Claude (opus) and Codex (gpt-6.1-sol), two personas (workshop participant, brand
+designer), two runs each, shuffled neutral letters, 1000 px. Noise = mean |run 1 − run 2| of the
+same reviewer on the same image.
+
+| Finding                 | Variants (overall)                                                       | Noise | Shipped                                 |
+| ----------------------- | ------------------------------------------------------------------------ | ----- | --------------------------------------- |
+| `vs` drawbacks          | A green plus 4.00, B specimen marks them `-` 8.50, C neutral square 7.25 | 0.00  | B, in the specimen                      |
+| Phased-pills hues       | A amber, teal, green 6.12, B purple and teal 6.25, C teal alone 7.88     | 0.33  | C, in the specimen                      |
+| Six stages in one phase | A two rows of three 6.50, B one row 7.50                                 | 0.00  | B, up to six pills stay on one row      |
+| One portrait of three   | A one portrait 5.12, B none 8.50, C all three, two faces repeated 6.38   | 0.33  | B, and a two-quote slide with portraits |

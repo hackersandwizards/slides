@@ -40,6 +40,7 @@ const hasCode = (s: Slide) =>
   (s.type === "content" && !!s.content?.some((b) => codeBlocks.has(b.type))) ||
   (s.type === "lanes" && !!s.codeSnippet);
 const variantOf = (s: Slide) =>
+  (s.type === "grid" && s.cards.some((c) => c.imageSrc) && "quotes with portraits") ||
   ("variant" in s && s.variant) ||
   ("layout" in s && s.layout) ||
   ("kind" in s && s.kind) ||
@@ -438,6 +439,7 @@ const JOB_OF: Record<string, Job[]> = {
   "content:centered": ["statement"],
   regular: ["people", "explain"],
   "grid:quotes": ["statement", "people"],
+  "grid:quotes with portraits": ["statement", "people"],
   comparison: ["compare"],
   process: ["process"],
   lanes: ["process"],

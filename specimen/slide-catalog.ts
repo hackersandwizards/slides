@@ -971,14 +971,29 @@ const slides: Slide[] = [
     columns: 3,
     cards: [
       { title: "I review plans now, not just diffs.", author: "Engineer, fictional" },
-      {
-        title: "The checks caught what I missed.",
-        author: "Team lead, fictional",
-        imageSrc: specimenImages["portrait-a.png"],
-      },
+      { title: "The checks caught what I missed.", author: "Team lead, fictional" },
       { title: "Monday metrics changed our backlog.", author: "Product lead, fictional" },
     ],
-    notes: "grid: quotes, one with an image.",
+    notes: "grid: quotes.",
+  },
+  {
+    type: "grid",
+    variant: "quotes",
+    headline: "Two who changed how they review",
+    columns: 2,
+    cards: [
+      {
+        title: "I read the plan before the diff.",
+        author: "Mara Lindqvist, fictional",
+        imageSrc: specimenImages["portrait-a.png"],
+      },
+      {
+        title: "The agent's first draft no longer surprises me.",
+        author: "Jonas Okafor, fictional",
+        imageSrc: specimenImages["portrait-b.png"],
+      },
+    ],
+    notes: "grid: quotes, every author with a portrait.",
   },
 
   {
@@ -987,7 +1002,7 @@ const slides: Slide[] = [
     headline: "Prompting against a harness",
     left: {
       label: "Prompting",
-      items: ["Ad hoc", "Hard to review", "Knowledge in heads"],
+      items: ["- Ad hoc", "- Hard to review", "- Knowledge in heads"],
       highlight: "Fast to start",
     },
     right: {
@@ -1241,7 +1256,7 @@ const slides: Slide[] = [
     phases: [
       {
         label: "Plan",
-        theme: "accent",
+        theme: "primary",
         items: [
           { number: 1, title: "Ideate", state: "new" },
           { number: 2, title: "Refine", state: "active" },
@@ -1257,7 +1272,7 @@ const slides: Slide[] = [
       },
       {
         label: "Ship",
-        theme: "success",
+        theme: "primary",
         items: [
           { number: 5, title: "Review" },
           { number: 6, title: "Deploy" },

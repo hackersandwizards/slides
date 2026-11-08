@@ -144,12 +144,15 @@ describe("slides-pptx on the specimen deck", () => {
     expect(norm(unescape(xml.replace(/<[^>]+>/g, "")))).toContain(norm(verbal.claim.de));
   });
 
+  const unmarked = (item: string) => item.replace(/^[-+]\s*/, "");
+
   it("sets every text of a slide as text on that slide", () => {
     const missing = slideCatalog.slides.flatMap((slide: Slide, i) => {
       const shown = norm(unescape(slideText[i]));
       // A stats card shows its label in place of its title, as the web card does.
       // A closing whose mark stands centred shows the h&w lockup in place of the company's name.
       // An overview draws as phased pills, its stage descriptions gone, as on the web.
+      // A comparison item's leading + or - is its mark, not its text.
       const data =
         slide.type === "grid" && slide.variant === "stats"
           ? { ...slide, cards: slide.cards.map((cd) => (cd.label ? { ...cd, title: "" } : cd)) }
@@ -162,7 +165,13 @@ describe("slides-pptx on the specimen deck", () => {
                     sp.company.toLowerCase() === "hackers&wizards" ? { ...sp, company: "" } : sp,
                   ),
                 }
-              : slide;
+              : slide.type === "comparison" && "left" in slide && slide.variant !== "positions"
+                ? {
+                    ...slide,
+                    left: { ...slide.left, items: slide.left.items.map(unmarked) },
+                    right: { ...slide.right, items: slide.right.items.map(unmarked) },
+                  }
+                : slide;
       return texts(data)
         .filter((t) => !shown.includes(norm(t)))
         .map((t) => `slide ${i + 1} (${slide.type}): ${t}`);

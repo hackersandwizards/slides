@@ -44,11 +44,11 @@ function PillBox({
 export function PhasedPillsSlide({ slide }: Props) {
   const { phases, title } = slide;
   const columns = Math.max(
-    ...phases.map(({ items }) => (items.length > 3 ? Math.ceil(items.length / 2) : items.length)),
+    ...phases.map(({ items }) => (items.length > 6 ? Math.ceil(items.length / 2) : items.length)),
   );
 
-  // A phase of more than six pills no longer fits shared columns across the slide: each phase then
-  // wraps its pills in rows of their own width.
+  // A phase of more than three pills no longer fits shared columns across the slide: each phase
+  // then wraps its pills in rows of their own width.
   const wrap = columns > 3;
 
   let itemIndex = 0;
@@ -73,7 +73,7 @@ export function PhasedPillsSlide({ slide }: Props) {
           )}
 
           {/* One grid for every phase, so the pills share columns, every column as wide as the
-              widest pill, and a long phase breaks into even rows (six as 3 + 3) rather than wrapping where it runs out. */}
+              widest pill. Up to six stay on one row, since a split loses their order. */}
           <div
             className={wrap ? "flex flex-col gap-y-4" : "grid gap-y-4"}
             style={
