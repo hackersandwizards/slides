@@ -6,7 +6,14 @@ import Mail from "lucide-react/icons/mail";
 import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { DeckLang, SlideShell, groundOf } from "./SlideShell";
-import { DisplayHeading, LinkCaption, SlideCard, SlideTitle, TitledContent } from "./primitives";
+import {
+  DisplayHeading,
+  LinkCaption,
+  Portrait,
+  SlideCard,
+  SlideTitle,
+  TitledContent,
+} from "./primitives";
 import { claimParts, closingClaim, personAccent, profileLabel } from "../../lib/slide-utils";
 
 interface Props {
@@ -62,10 +69,7 @@ function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
   );
 }
 
-const ACCENT = {
-  primary: { ring: "ring-primary/40", hue: undefined },
-  secondary: { ring: "ring-secondary/40", hue: "purple" },
-} as const;
+const HUE = { primary: undefined, secondary: "purple" } as const;
 
 /** A line under the speakers: brand's claim or a quote. */
 function ClosingLine({ children }: { children: ReactNode }) {
@@ -98,7 +102,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
             <div className="mx-auto flex max-w-5xl flex-col items-stretch gap-10 md:flex-row md:gap-14">
               {slide.speakers!.map((speaker, index) => {
                 const isLast = index === slide.speakers!.length - 1;
-                const a = ACCENT[personAccent(index)];
+                const hue = HUE[personAccent(index)];
                 return (
                   <div
                     key={index}
@@ -106,17 +110,12 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                   >
                     <div className="flex flex-col items-center text-center">
                       {speaker.imageSrc && (
-                        <div
-                          className={`relative mb-8 rounded-brand ring-2 ring-offset-4 ring-offset-transparent ${a.ring}`}
-                        >
-                          <Image
-                            src={speaker.imageSrc}
-                            alt={speaker.name}
-                            width={160}
-                            height={160}
-                            className="h-36 w-36 rounded-brand object-cover"
-                          />
-                        </div>
+                        <Portrait
+                          src={speaker.imageSrc}
+                          alt={speaker.name}
+                          tone={personAccent(index)}
+                          className="mb-8 size-36"
+                        />
                       )}
                       <p className="font-heading text-3xl font-bold tracking-tight text-text md:text-4xl">
                         {speaker.name}
@@ -124,7 +123,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                       {speaker.company && (
                         <p
                           className="hw-label mt-3 [--hw-label-size:var(--text-xs)] md:[--hw-label-size:var(--text-sm)]"
-                          data-hue={a.hue}
+                          data-hue={hue}
                         >
                           {speaker.company}
                         </p>
@@ -135,7 +134,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                             href={`mailto:${speaker.contact}`}
                             className="hw-button gap-2"
                             data-variant="secondary"
-                            data-hue={a.hue}
+                            data-hue={hue}
                           >
                             <Mail className="size-6" />
                             <span>{speaker.contact}</span>

@@ -11,6 +11,7 @@ import {
   DisplayHeading,
   LinkCaption,
   PictureLink,
+  Portrait,
   SlideCard,
   SlideFooter,
   TitledContent,
@@ -278,13 +279,7 @@ function Quotation({ slide, attribution }: { slide: StatementSlideType; attribut
       {slide.imageSrc ? (
         <div className="flex items-center gap-16">
           <BlurFade delay={0.05} duration={0.4} className="shrink-0">
-            <Image
-              src={slide.imageSrc}
-              alt={slide.imageAlt ?? ""}
-              width={480}
-              height={480}
-              className="size-72 rounded-brand object-cover"
-            />
+            <Portrait src={slide.imageSrc} alt={slide.imageAlt ?? ""} className="size-72" />
           </BlurFade>
           <div className="min-w-0 flex-1">
             {said}

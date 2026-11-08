@@ -12,6 +12,7 @@ const {
   LinkCaption,
   PictureLink,
   NumberTile,
+  Portrait,
   SlideCaption,
   SlideCard,
   SlideFooter,
@@ -112,6 +113,29 @@ export const PARTS: Record<string, () => ReactNode> = {
         className: "size-48 rounded-brand",
       }),
     }),
+  Portrait: () =>
+    inRow(
+      ...(["neutral", "primary", "secondary"] as const).map((tone) =>
+        cell(
+          tone,
+          h(Portrait, {
+            tone,
+            src: specimenImages["portrait-a.png"],
+            alt: "",
+            className: "size-36",
+          }),
+        ),
+      ),
+      cell("no picture", h(Portrait, { alt: "", className: "size-36" })),
+      cell(
+        "in a card",
+        h(
+          SlideCard,
+          { className: "card-pad-4/6" },
+          h(Portrait, { src: specimenImages["portrait-b.png"], alt: "", className: "size-32" }),
+        ),
+      ),
+    ),
   SlideSubtitle: () => h(SlideSubtitle, null, "The line under a headline, in muted ink."),
   SlideCaption: () => h(SlideCaption, null, "The caption under a diagram, its last step."),
   SlideFooter: () => h(SlideFooter, null, "The one line under a slide's body, such as its source."),

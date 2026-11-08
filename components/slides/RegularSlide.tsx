@@ -1,13 +1,12 @@
 "use client";
 
 import type { RegularSlide as RegularSlideType } from "../../types/slide";
-import Image from "../ui/image";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import User from "lucide-react/icons/user";
 import { regularAsContent } from "../../lib/slide-utils";
 import { AgendaSlide } from "./AgendaSlide";
-import { LinkCaption } from "./primitives";
+import { LinkCaption, Portrait } from "./primitives";
 import { ContentSlide } from "./ContentSlide";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { usePrintMode } from "../../lib/print-context";
@@ -22,19 +21,9 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
     <div className="flex flex-col items-center gap-4 text-center">
       <BlurFade delay={0.15} duration={0.5}>
         <div className="relative flex-shrink-0">
-          {profile.imageSrc ? (
-            <Image
-              src={profile.imageSrc}
-              alt={profile.name}
-              width={208}
-              height={208}
-              className="h-36 w-36 rounded-brand border-4 border-border object-cover md:h-44 md:w-44"
-            />
-          ) : (
-            <div className="flex h-36 w-36 items-center justify-center rounded-brand border-4 border-border bg-teal/7 md:h-44 md:w-44">
-              <User className="h-16 w-16 text-teal/40 md:h-20 md:w-20" />
-            </div>
-          )}
+          <Portrait src={profile.imageSrc} alt={profile.name} className="size-36 md:size-44">
+            <User className="h-16 w-16 text-teal/40 md:h-20 md:w-20" />
+          </Portrait>
         </div>
       </BlurFade>
 

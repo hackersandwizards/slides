@@ -1,13 +1,12 @@
 "use client";
 
-import Image from "../ui/image";
 import type { GridSlide as GridSlideType, GridCard } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell, groundOf } from "./SlideShell";
 import { gridAsContent, isDeepDive } from "../../lib/slide-utils";
 import { ContentSlide } from "./ContentSlide";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { TitledContent, SlideTitle } from "./primitives";
+import { Portrait, TitledContent, SlideTitle } from "./primitives";
 
 interface Props {
   slide: GridSlideType;
@@ -29,13 +28,7 @@ function QuoteCard({ card, isRevealed }: { card: GridCard; isRevealed: boolean }
         </blockquote>
         <figcaption className="mt-auto flex min-h-14 items-center gap-4">
           {card.imageSrc && (
-            <Image
-              src={card.imageSrc}
-              alt={card.author ?? ""}
-              width={56}
-              height={56}
-              className="h-14 w-14 rounded-brand border border-border object-cover"
-            />
+            <Portrait src={card.imageSrc} alt={card.author ?? ""} className="size-14" />
           )}
           {card.author && <span className="text-base font-bold text-primary">{card.author}</span>}
         </figcaption>

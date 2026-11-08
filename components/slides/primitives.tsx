@@ -15,6 +15,7 @@ import { usePrintMode } from "../../lib/print-context";
 import { DEFAULT_SECTION_STYLE } from "../../lib/section-styles";
 import { linkLabel, profileLabel } from "../../lib/slide-utils";
 import { BlurFade } from "../ui/blur-fade";
+import Image from "../ui/image";
 import { Linkedin } from "../../lib/icons";
 
 /** A titled slide's column: headline on top, `.slide-body` below, both under the fit guard. */
@@ -297,6 +298,45 @@ export function NumberTile({
     >
       {children}
     </span>
+  );
+}
+
+/** The mat round a portrait, in the person's accent. */
+const PORTRAIT_MATS = {
+  neutral: "bg-ink/7",
+  primary: "bg-primary/15",
+  secondary: "bg-secondary/15",
+};
+
+/** A person's picture on its mat. One element draws both: the mat is the picture's own padding,
+ *  so the picture sits at the same inset on every side and the browser clips it to the mat's inner
+ *  curve, one corner shape for both. The corner is brand's: the brand corner where the portrait
+ *  stands alone, the small corner inside a block with the brand corner (brand's nesting rule). The
+ *  size is the caller's, in `className`. Without a picture it draws `children` on the mat. */
+export function Portrait({
+  src,
+  alt,
+  tone = "neutral",
+  className = "",
+  children,
+}: {
+  src?: string;
+  alt: string;
+  tone?: keyof typeof PORTRAIT_MATS;
+  className?: string;
+  children?: ReactNode;
+}) {
+  const shape = `box-border shrink-0 rounded-brand p-1 ${PORTRAIT_MATS[tone]} ${className}`;
+  if (!src)
+    return <span className={`flex items-center justify-center ${shape}`.trim()}>{children}</span>;
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={288}
+      height={288}
+      className={`slide-portrait object-cover ${shape}`.trim()}
+    />
   );
 }
 

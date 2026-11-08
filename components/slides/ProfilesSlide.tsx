@@ -1,12 +1,18 @@
 "use client";
 
 import type { ProfilesSlide as ProfilesSlideType } from "../../types/slide";
-import Image from "../ui/image";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { useCarousel } from "../../lib/use-carousel";
 import User from "lucide-react/icons/user";
-import { TitledContent, SlideTitle, SlideCard, SlideFooter, LinkCaption } from "./primitives";
+import {
+  TitledContent,
+  SlideTitle,
+  SlideCard,
+  SlideFooter,
+  LinkCaption,
+  Portrait,
+} from "./primitives";
 import { personAccent } from "../../lib/slide-utils";
 import { renderMarkdown } from "../../lib/markdown";
 
@@ -21,13 +27,11 @@ const ACCENT = {
     text: "text-primary",
     tone: "primary" as const,
     dot: "bg-primary",
-    avatarFrame: "bg-primary/15",
   },
   secondary: {
     text: "text-secondary",
     tone: "secondary" as const,
     dot: "bg-secondary",
-    avatarFrame: "bg-secondary/15",
   },
 } satisfies Record<Accent, Record<string, string>>;
 
@@ -61,21 +65,14 @@ export function ProfilesSlide({ slide }: Props) {
                     className="flex w-full flex-col transition-all duration-300 card-pad-10"
                   >
                     <div className="flex items-center gap-8">
-                      <div
-                        className={`flex h-32 w-32 shrink-0 items-center justify-center rounded-brand ${a.avatarFrame} p-1`}
+                      <Portrait
+                        src={profile.imageSrc}
+                        alt={profile.name}
+                        tone={a.tone}
+                        className="size-32"
                       >
-                        {profile.imageSrc ? (
-                          <Image
-                            src={profile.imageSrc}
-                            alt={profile.name}
-                            width={128}
-                            height={128}
-                            className="h-full w-full rounded-brand object-cover"
-                          />
-                        ) : (
-                          <User className={`h-16 w-16 ${a.text}`} />
-                        )}
-                      </div>
+                        <User className={`h-16 w-16 ${a.text}`} />
+                      </Portrait>
 
                       <div className="min-w-0">
                         <h2 className="card-title text-3xl text-text">{profile.name}</h2>
