@@ -275,6 +275,11 @@ export const GUIDANCE: Record<string, Guidance> = {
     "Group related figures next to each other.",
     "Use it where three say enough.",
   ),
+  "block-numbers-one-figure": g(
+    "One figure that is the whole point of the slide.",
+    "Put what it counts and its source right under it.",
+    "Pick one figure out of several that belong together.",
+  ),
   "block-flow-framed": g(
     "A chain of steps that belongs to one named system.",
     "Name the system in the frame.",

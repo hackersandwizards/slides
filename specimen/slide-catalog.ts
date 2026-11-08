@@ -730,6 +730,25 @@ const slides: Slide[] = [
   },
   {
     type: "content",
+    sectionLabel: "Visual: numbers, one figure",
+    headline: "One figure carries the slide",
+    content: [
+      {
+        type: "numbers",
+        items: [
+          {
+            value: "87,3 %",
+            label: "of teams review every plan",
+            text: "A decimal comma and a spaced unit, as a German deck writes them",
+          },
+        ],
+        source: "Fictional figures",
+      },
+    ],
+    notes: "visual blocks: one figure beside its label, with a description line.",
+  },
+  {
+    type: "content",
     sectionLabel: "Visual: flow, framed",
     headline: "A flow in a frame, a badge under a step",
     content: [
@@ -1152,7 +1171,7 @@ const slides: Slide[] = [
       {
         name: "Mara Lindqvist",
         title: "Platform lead",
-        company: "Lumen Freight",
+        company: "Lumen&Freightworks",
         imageSrc: specimenImages["portrait-a.png"],
         bullets: ["Built the harness", "Ten years of platform work"],
         linkedIn: "https://www.linkedin.com/in/example",

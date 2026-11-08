@@ -149,7 +149,7 @@ const blockFrames = blockPicks.map((index) => {
   );
 });
 
-const { CodePanel, DashedFrame, NumberTile, SlideCard } = primitives;
+const { DashedFrame, NumberTile, SlideCard } = primitives;
 
 const partSources: Record<string, string> = {
   primitives: sourceOf("primitives"),

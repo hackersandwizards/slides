@@ -41,6 +41,10 @@ the same way, so a consumer copies nothing into `public/` for the engine. Both r
 `SlideFrame` takes `part: true` for a part, `css`, the slides' stylesheet linked on the story page
 (a URL with the site's base), and `light`, which keeps that page light.
 
+A deck page's root carries brand's `hw-focus-ring` class, as in `<html class="hw-focus-ring">`.
+It gives every control on the page the brand's focus ring. Without it, the browser draws its own
+ring round the keyboard shortcut dialog that `?` opens.
+
 The command `slides-pins` belongs in each consumer's gate, after scaffolding's shared steps: it
 fails when `package.json` pins no brand, which bun lets pass because the brand peer is optional.
 That the install matches each pin, scaffolding's install and `coupling` steps check.

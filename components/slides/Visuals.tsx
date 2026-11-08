@@ -1,5 +1,5 @@
 import Image from "../ui/image";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { FlowFrame, VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { useHighlightLines } from "../../lib/use-code-highlight";
@@ -697,6 +697,23 @@ const minus = (v: string) => v.replace(/^-(?=\d)/, "−");
 // sets them in the label's face, where six figures on a slide would otherwise compete with them.
 const leadingWords = (value: string) => /^((?:[a-z]+\s+)+)(?=[^a-z\s])/.exec(value)?.[1] ?? "";
 
+// A grid of n equal columns. The count is a custom property, never an inline column template,
+// which would outrank the phone rule in slides.css that stacks every grid into one column.
+const COLUMNS = "grid-cols-[repeat(var(--slide-cols),minmax(0,1fr))]";
+const columns = (n: number) => ({ "--slide-cols": n }) as CSSProperties;
+// A figure's width in mono characters (0.6em each), leading words set at about half size counting
+// half. The cap on a figure's size, in % of its container's width, at which a figure that wide fits
+// on one line: one character more where leading words stand, for their gap and their true size
+// (0.55em), which a half undercounts.
+const figureChars = (value: string) => {
+  const lead = leadingWords(value);
+  return value.length - lead.length + 0.5 * lead.trim().length;
+};
+const fitWidth = (value: string) => {
+  const chars = figureChars(value) + (leadingWords(value) ? 1 : 0);
+  return `${+(100 / (chars * 0.6)).toFixed(2)}cqi`;
+};
+
 function Figure({ value, quiet }: { value: string; quiet?: boolean }) {
   const lead = leadingWords(value);
   if (!lead) return <>{minus(value)}</>;
@@ -721,9 +738,10 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
     const item = block.items[0];
     return (
       <div className="w-full">
-        <div className="flex items-center gap-16">
+        <div className="slide-figure-row @container flex items-center gap-16">
           <span
-            className={`font-heading text-(length:--slide-figure-hero) leading-none font-bold tracking-tight text-primary`}
+            className="font-heading leading-none font-bold tracking-tight text-primary"
+            style={{ fontSize: `min(var(--slide-figure-hero), ${fitWidth(item.value)})` }}
           >
             <Figure value={item.value} />
           </span>
@@ -744,14 +762,8 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
   // never narrows below a quarter of the slide.
   const cols = n <= 4 ? n : n <= 6 ? 3 : 4;
   // One size for every figure, set by the longest, so the row shares a baseline and none wraps:
-  // a column is about 1650/cols px wide at 1920, a mono digit 0.6em, a rem 21.333px. Leading
-  // words are set at about half size, so each of their characters counts half.
-  const longest = Math.max(
-    ...block.items.map((i) => {
-      const lead = leadingWords(i.value);
-      return i.value.length - lead.length + 0.5 * lead.trim().length;
-    }),
-  );
+  // a column is about 1650/cols px wide at 1920, a rem 21.333px.
+  const longest = Math.max(...block.items.map((i) => figureChars(i.value)));
   // Wrapped figures read as one grid at a glance: no rule, the label bold against its line, each
   // pair close to its figure, and in three columns the rows far apart, so a note never reads as
   // the next figure's. Open space groups them better than a card or a rule per figure, which crowd
@@ -773,17 +785,16 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
         source: undefined,
       };
   const size = Math.min(look.cap, (1650 / cols - 60) / (longest * 0.6) / 21.333);
+  // A column narrower than the stage's, a phone's above all, caps the size at its width.
+  const fit = block.items.map((i) => fitWidth(i.value)).join(", ");
   return (
     <div className="w-full">
-      <div
-        className={`grid w-full ${look.grid}`}
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-      >
+      <div className={`grid w-full ${COLUMNS} ${look.grid}`} style={columns(cols)}>
         {block.items.map((item, i) => (
-          <div key={i} className="flex flex-col">
+          <div key={i} className="@container flex flex-col">
             <span
               className="font-heading leading-none font-bold tracking-tight whitespace-nowrap text-primary"
-              style={{ fontSize: `${size}rem` }}
+              style={{ fontSize: `min(${size}rem, ${fit})` }}
             >
               <Figure value={item.value} quiet={wrapped} />
             </span>
@@ -934,10 +945,7 @@ function Cards({ block }: { block: Of<"cards"> }) {
   const { revealedCount } = useProgressiveReveal({ totalSteps: n, startFull: !block.reveal });
   const from = block.numberFrom ?? 1;
   return (
-    <div
-      className={`grid w-full ${dense ? "gap-5" : "gap-6"}`}
-      style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-    >
+    <div className={`grid w-full ${COLUMNS} ${dense ? "gap-5" : "gap-6"}`} style={columns(cols)}>
       {block.items.map((item, i) => {
         const on = block.highlight === i;
         const shown = i < revealedCount;

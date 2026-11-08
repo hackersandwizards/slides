@@ -191,7 +191,9 @@ describe("numbers block", () => {
     expect(figure.querySelector("span")?.textContent).toBe("up to ");
     expect(figure.textContent).toBe("up to +70%");
     // A column is 1650/3 - 60 px wide at 1920, a mono digit 0.6em, a rem 21.333px.
-    const width = parseFloat(figure.style.fontSize) * 21.333 * 0.6 * ("+70%".length + 0.5 * 5);
+    // The size is `min(<stage size>rem, <phone cap>cqi)`; the stage size is the first argument.
+    const stage = parseFloat(figure.style.fontSize.replace("min(", ""));
+    const width = stage * 21.333 * 0.6 * ("+70%".length + 0.5 * 5);
     // The style serializes the size to six significant digits, which may round it up.
     expect(width).toBeLessThanOrEqual(1650 / 3 - 60 + 0.001);
   });
@@ -210,9 +212,9 @@ describe("merged card and number shapes", () => {
     }));
     const c = content([{ type: "numbers", items }]);
     const row = [...c.querySelectorAll<HTMLElement>("div")].find((d) =>
-      d.style.gridTemplateColumns.includes("repeat("),
+      d.style.getPropertyValue("--slide-cols"),
     );
-    expect(row?.style.gridTemplateColumns).toBe("repeat(3, minmax(0px, 1fr))");
+    expect(row?.style.getPropertyValue("--slide-cols")).toBe("3");
     expect(c.textContent).toContain("d5");
   });
 
@@ -230,7 +232,10 @@ describe("merged card and number shapes", () => {
       variant: "stats",
       cards: [{ title: "Teams", value: "12", description: "Across sites" }],
     });
-    expect(c.querySelector(".text-\\(length\\:--slide-figure-hero\\)")?.textContent).toBe("12");
+    const hero = [...c.querySelectorAll<HTMLElement>("span")].find((s) =>
+      s.style.fontSize.includes("--slide-figure-hero"),
+    );
+    expect(hero?.textContent).toBe("12");
     expect(c.textContent).toContain("Across sites");
   });
 

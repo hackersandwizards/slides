@@ -1,4 +1,11 @@
 @media screen and (width < 48rem) {
+  /* A lone figure stands above its label, the label taking the full width. */
+  .slide-figure-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 4);
+  }
+
   .slide-framed-steps,
   .slide-framed-notes {
     flex-basis: 100%;

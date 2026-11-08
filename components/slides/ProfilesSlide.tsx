@@ -64,12 +64,14 @@ export function ProfilesSlide({ slide }: Props) {
                     tone={isHighlighted ? a.tone : "neutral"}
                     className="flex w-full flex-col transition-all duration-300 card-pad-10"
                   >
-                    <div className="flex items-center gap-8">
+                    {/* On a phone the portrait stands above the name, so name, role and company
+                        get the card's full width; a word still too long breaks rather than overflow. */}
+                    <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:gap-8">
                       <Portrait src={profile.imageSrc} alt={profile.name} tone={a.tone} size="md">
                         <User className="h-16 w-16" />
                       </Portrait>
 
-                      <div className="min-w-0">
+                      <div className="min-w-0 break-words">
                         <h2 className="card-title text-3xl text-text">{profile.name}</h2>
                         <p className={`mt-2 text-xl font-semibold ${a.text}`}>{profile.title}</p>
                         <p className="text-lg text-text-muted">{profile.company}</p>
