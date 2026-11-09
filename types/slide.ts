@@ -439,6 +439,10 @@ export interface ComparisonSidesSlide extends ComparisonBase {
    *  before that stays rather than goes ("Stays from stage 3"), and shows the slide whole on
    *  arrival; a struck slide brings in the after side and the punchline on the next press. */
   strike?: boolean;
+  /** `before-after` with `strike: false` only: the right side is added to a left side that stays
+   *  ("Stays" and "Needs building"), so a plus stands between them in place of the arrow, which
+   *  says the left turns into the right, and the right side carries no check mark. */
+  adds?: boolean;
 }
 
 /** Examples, each a bad and a good version, with an optional intro and points above them. */

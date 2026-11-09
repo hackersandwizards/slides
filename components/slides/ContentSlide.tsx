@@ -18,8 +18,7 @@ import { renderMarkdown } from "../../lib/markdown";
 import { CodeLines } from "../../lib/use-code-highlight";
 import { getSectionStyle } from "../../lib/section-styles";
 import {
-  centeredAsStatement,
-  twoColumnAsSplit,
+  contentRedrawnAs,
   fourColumnAsCards,
   isDeepDive,
   isVideo,
@@ -772,12 +771,9 @@ function StandardContentSlide({ slide }: Props) {
 }
 
 export function ContentSlide({ slide }: Props) {
-  const split = twoColumnAsSplit(slide);
-  if (split) return <ComparisonSlide slide={split} />;
-  if (slide.layout === "centered") {
-    const statement = centeredAsStatement(slide);
-    if (statement) return <StatementSlide slide={statement} />;
-    return <CenteredContentSlide slide={slide} />;
-  }
+  const redrawn = contentRedrawnAs(slide);
+  if (redrawn?.type === "comparison") return <ComparisonSlide slide={redrawn} />;
+  if (redrawn) return <StatementSlide slide={redrawn} />;
+  if (slide.layout === "centered") return <CenteredContentSlide slide={slide} />;
   return <StandardContentSlide slide={slide} />;
 }

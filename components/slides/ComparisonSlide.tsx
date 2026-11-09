@@ -161,11 +161,13 @@ export function BeforeAfterSides({
   right,
   after,
   strike = true,
+  adds = false,
 }: {
   left: Pick<ComparisonSide, "label" | "items" | "highlight">;
   right: Pick<ComparisonSide, "label" | "items" | "highlight">;
   after: boolean;
   strike?: boolean;
+  adds?: boolean;
 }) {
   const struck = after && strike;
   return (
@@ -198,9 +200,13 @@ export function BeforeAfterSides({
 
       <div
         inert={!after}
-        className={`flex items-center transition-all duration-500 ${after ? "opacity-100" : "opacity-0"}`}
+        className={`flex items-center justify-center transition-all duration-500 ${after ? "opacity-100" : "opacity-0"}`}
       >
-        <span className="rotate-90 text-3xl font-bold text-primary md:rotate-0">&rarr;</span>
+        {adds ? (
+          <span className="text-5xl font-bold text-primary">+</span>
+        ) : (
+          <span className="rotate-90 text-3xl font-bold text-primary md:rotate-0">&rarr;</span>
+        )}
       </div>
 
       <SlideCard
@@ -212,7 +218,7 @@ export function BeforeAfterSides({
         }`}
       >
         <div className="mb-6 flex items-center gap-3">
-          <CheckCircle className="h-6 w-6 text-primary" />
+          {!adds && <CheckCircle className="h-6 w-6 text-primary" />}
           <h2 className="card-title text-2xl text-primary">{right.label}</h2>
         </div>
         <Highlight text={right.highlight} />
@@ -240,7 +246,13 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSidesSlide }) {
 
   return (
     <>
-      <BeforeAfterSides left={slide.left} right={slide.right} after={after} strike={strike} />
+      <BeforeAfterSides
+        left={slide.left}
+        right={slide.right}
+        after={after}
+        strike={strike}
+        adds={slide.adds}
+      />
 
       {slide.punchline && (
         <div

@@ -285,6 +285,7 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
           </text>
         )}
       </svg>
+      {slide.annotation && <Annotation text={slide.annotation} />}
     </BlurFade>
   );
 }

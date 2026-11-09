@@ -7,8 +7,8 @@ import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { centredMark, renderPptx } from "../scripts/render-pptx";
 import { slideCatalog } from "../specimen/slide-catalog";
-import type { Slide } from "../types/slide";
-import { overviewAsPhases, twoColumnAsSplit } from "../lib/slide-utils";
+import type { ContentSlide, Slide } from "../types/slide";
+import { contentRedrawnAs, overviewAsPhases, twoColumnAsSplit } from "../lib/slide-utils";
 
 const NOT_TEXT = new Set([
   "type",
@@ -329,6 +329,101 @@ describe("slides-pptx on the specimen deck", () => {
     const xml = await zipped.file(chart)!.async("string");
     expect(xml.match(/<c:legendEntry>/g)).toHaveLength(2);
     expect(xml.match(/<a:prstDash val="dash"\/>/g)).toHaveLength(2);
+  });
+
+  const chartXml = async (out: string) => {
+    const zipped = await JSZip.loadAsync(readFileSync(out));
+    const chart = Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))!;
+    return zipped.file(chart)!.async("string");
+  };
+
+  it("leaves an unnamed series out of the legend, as the web does", async () => {
+    const out = join(dir, "unnamed.pptx");
+    await renderPptx(
+      {
+        name: "T",
+        slides: [
+          {
+            type: "chart",
+            variant: "trend",
+            headline: "H",
+            series2Label: "B",
+            data: [
+              { name: "a", value: 1, value2: 2 },
+              { name: "b", value: 2, value2: 3 },
+            ],
+          },
+        ],
+      },
+      out,
+      dir,
+    );
+    const xml = await chartXml(out);
+    expect(xml).toContain('<c:legendEntry><c:idx val="0"/><c:delete val="1"/></c:legendEntry>');
+    expect(xml.match(/<c:legendEntry>/g)).toHaveLength(1);
+  });
+
+  const onlySlide = async (name: string, slide: Slide) => {
+    const out = join(dir, name);
+    await renderPptx({ name: "T", slides: [slide] }, out, dir);
+    return (await JSZip.loadAsync(readFileSync(out)))
+      .file("ppt/slides/slide1.xml")!
+      .async("string");
+  };
+
+  it("draws a centered content slide the statement type takes as that statement", async () => {
+    const slide: Slide = {
+      type: "content",
+      layout: "centered",
+      headline: "One claim",
+      content: [{ type: "paragraph", text: "Under it." }],
+    };
+    expect(await onlySlide("centered.pptx", slide)).toBe(
+      await onlySlide("statement.pptx", contentRedrawnAs(slide as ContentSlide)! as Slide),
+    );
+  });
+
+  it("draws a toned two-column's markers in its hues and a neutral one's in teal", async () => {
+    const column = { title: "T", items: ["one"] };
+    const xml = await onlySlide("toned.pptx", {
+      type: "content",
+      headline: "H",
+      content: [
+        { type: "two-column", variant: "success-error", left: column, right: column },
+        { type: "two-column", left: column, right: column },
+      ],
+    });
+    const hues = [...xml.matchAll(/<a:buClr><a:srgbClr val="(\w+)"\/>/g)].map((m) => m[1]);
+    const hex = (v: string) => v.replace("#", "").toUpperCase();
+    expect(new Set(hues)).toEqual(
+      new Set([
+        hex(tokens["--color-green-dark"]),
+        hex(tokens["--color-red"]),
+        hex(tokens["--color-teal"]),
+      ]),
+    );
+    expect(xml).not.toMatch(/&#xE00|<a:t>\+ {2}<\/a:t>/);
+  });
+
+  it("shrinks a transform's gap with its text", async () => {
+    const items = Array.from({ length: 12 }, () => "A line of a long list, written out in full");
+    const side = (label: string, list: string[]) => ({ label, items: list });
+    const gap = async (name: string, list: string[]) => {
+      const xml = await onlySlide(name, {
+        type: "content",
+        headline: "H",
+        content: [{ type: "transform", before: side("B", list), after: side("A", list) }],
+      });
+      return Number(/<a:ext cx="(\d+)" cy="914"\/>/.exec(xml)?.[1]);
+    };
+    expect(await gap("dense.pptx", items)).toBeLessThan(await gap("sparse.pptx", ["One"]));
+  });
+
+  it("puts a plus between the sides of a before-after that adds", async () => {
+    const at = slideCatalog.slides.findIndex((s) => s.type === "comparison" && "adds" in s);
+    expect(at).toBeGreaterThanOrEqual(0);
+    expect(slideXml[at]).toContain("<a:t>+</a:t>");
+    expect(slideXml[at]).not.toContain("tailEnd");
   });
 
   it("marks only a vs comparison's items, bullets a split's and strikes only a struck before side", () => {

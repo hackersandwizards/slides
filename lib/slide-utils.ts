@@ -399,6 +399,15 @@ export function centeredAsStatement(slide: ContentSlide): StatementSlide | undef
   };
 }
 
+/** The other slide type a content slide draws as, on the web and in the export, or undefined
+ *  where it draws as content. */
+export function contentRedrawnAs(slide: ContentSlide) {
+  return (
+    twoColumnAsSplit(slide) ??
+    (slide.layout === "centered" ? centeredAsStatement(slide) : undefined)
+  );
+}
+
 /** A content slide holding nothing but one or two short bullets as the statement that carries
  *  them, or undefined: as bullets they leave the slide empty around them. Short is one line at
  *  body size. */

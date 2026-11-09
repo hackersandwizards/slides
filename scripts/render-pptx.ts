@@ -41,7 +41,7 @@ import {
   profileLabel,
   qrAlt,
   speakerLine,
-  twoColumnAsSplit,
+  contentRedrawnAs,
 } from "../lib/slide-utils";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
@@ -59,6 +59,12 @@ const BOTTOM = H - 123 / 144;
 const CW = W - 2 * SIDE;
 /** Ends the name of a marked trend's planned series, as on the web slide. */
 const PLANNED = " (planned)";
+
+/** A list marker in its own hue, written as a private character, which the post-processing turns
+ *  into the brand marker in that hue: pptxgenjs writes no bullet colour. */
+const MARKER_CODES = { green: "E001", red: "E002" } as const;
+type MarkerHue = keyof typeof MARKER_CODES;
+const HUE_OF_MARKER: Record<string, MarkerHue> = { E001: "green", E002: "red" };
 const cardText = (card: { text?: string; items?: string[] }) =>
   [card.text, ...(card.items ?? []).map((item) => `• ${item}`)].filter(Boolean).join("\n");
 
@@ -199,6 +205,7 @@ interface Para {
   mono?: boolean;
   bold?: boolean;
   bullet?: boolean | "number";
+  marker?: MarkerHue;
   indent?: number;
   after?: number;
   align?: "left" | "center" | "right";
@@ -335,7 +342,10 @@ function box(
           paraSpaceAfter: last ? 0 : (p.after ?? 0) * k,
           ...(p.bullet
             ? {
-                bullet: p.bullet === "number" ? { type: "number" } : { code: "25AA", indent: 16 },
+                bullet:
+                  p.bullet === "number"
+                    ? { type: "number" }
+                    : { code: p.marker ? MARKER_CODES[p.marker] : "25AA", indent: 16 },
                 indentLevel: p.indent ?? 0,
               }
             : {}),
@@ -476,8 +486,9 @@ function brandLogo(name: string): string {
   return createRequire(import.meta.url).resolve(`@hackersandwizards/brand/logos/${name}.png`);
 }
 
-/** A trend's marked point, -1 for none, or whether a bar's names stay level. */
-type ChartFix = { now: number } | { level: boolean };
+/** A trend's marked point, -1 for none, and the series its legend leaves out, or whether a bar's
+ *  names stay level. */
+type ChartFix = { now: number; unnamed: number[] } | { level: boolean };
 
 interface Ctx {
   pptx: Pptx;
@@ -788,7 +799,7 @@ function itemCard(
     items?: string[];
     text?: string;
     tone?: string;
-    mark?: string;
+    marker?: MarkerHue;
   },
 ) {
   const { c } = ctx;
@@ -805,14 +816,7 @@ function itemCard(
   if (o.subtitle) paras.push({ runs: md(o.subtitle, c, { color: c.muted }), rel: 0.9, after: 6 });
   if (o.text) paras.push({ runs: md(o.text, c), after: 6 });
   for (const it of o.items ?? []) {
-    paras.push(
-      o.mark
-        ? {
-            runs: [{ text: `${o.mark}  `, options: { color: o.tone, bold: true } }, ...md(it, c)],
-            after: 5,
-          }
-        : { runs: md(it, c), bullet: true, after: 5 },
-    );
+    paras.push({ runs: md(it, c), bullet: true, marker: o.marker, after: 5 });
   }
   box(s, c, paras, a.x + pad, a.y + pad, a.w - 2 * pad, a.h - 2 * pad, bodyO(c, k));
 }
@@ -862,9 +866,11 @@ function beforeAfterSide(
   strike: boolean,
   w: number,
   o: BoxOpts,
+  k: number,
+  adds: boolean,
 ) {
   const tone = i ? c.teal : c.muted;
-  const icon = i || strike ? (o.size * 1.3) / 72 : 0;
+  const icon = (i && !adds) || (!i && strike) ? (o.size * 1.3) / 72 : 0;
   const indent = icon && icon + 0.12;
   const item = !i && strike ? { color: c.muted, strike: "sngStrike" as const } : {};
   // The web prints a before-after label as typed.
@@ -877,7 +883,7 @@ function beforeAfterSide(
     ...(sd.highlight ? [highlightPara(sd.highlight, tone)] : []),
     ...sd.items.map((it) => ({ runs: md(it, c, item), after: 6 })),
   ];
-  const inner = w - 2 * BA_PAD;
+  const inner = w - 2 * BA_PAD * k;
   return {
     tone,
     icon,
@@ -899,11 +905,13 @@ function beforeAfterHeight(
   strike: boolean,
   w: number,
   o: BoxOpts,
+  k = 1,
+  adds = false,
 ) {
   return Math.max(
     ...sides.map((sd, i) => {
-      const l = beforeAfterSide(c, sd, i, strike, (w - BA_GAP) / 2, o);
-      return 2 * BA_PAD + l.labelH + 0.15 + l.restH + 0.1;
+      const l = beforeAfterSide(c, sd, i, strike, (w - BA_GAP * k) / 2, o, k, adds);
+      return (2 * BA_PAD + 0.25) * k + l.labelH + l.restH;
     }),
   );
 }
@@ -918,25 +926,39 @@ function beforeAfter(
   o: BoxOpts,
   sides: BeforeAfterSide[],
   strike: boolean,
+  k = 1,
+  adds = false,
 ) {
   const { c } = ctx;
-  const half = (a.w - BA_GAP) / 2;
+  // The web shrinks a block whole: its paddings and gap with its text.
+  const pad = BA_PAD * k;
+  const gap = BA_GAP * k;
+  const half = (a.w - gap) / 2;
   sides.forEach((sd, i) => {
-    const x = a.x + i * (half + BA_GAP);
-    const l = beforeAfterSide(c, sd, i, strike, half, o);
+    const x = a.x + i * (half + gap);
+    const l = beforeAfterSide(c, sd, i, strike, half, o, k, adds);
     if (i) card(s, x, a.y, half, a.h, c.tealTint, c.teal);
     else card(s, x, a.y, half, a.h, strike ? mix(c.muted, c.bg, 0.07) : c.card, c.border);
-    const top = a.y + BA_PAD;
-    if (l.icon) circleMark(s, x + BA_PAD, top + (l.labelH - l.icon) / 2, l.icon, l.tone, i === 1);
-    box(s, c, l.label, x + BA_PAD + l.indent, top, half - 2 * BA_PAD - l.indent, l.labelH, {
+    const top = a.y + pad;
+    if (l.icon) circleMark(s, x + pad, top + (l.labelH - l.icon) / 2, l.icon, l.tone, i === 1);
+    box(s, c, l.label, x + pad + l.indent, top, half - 2 * pad - l.indent, l.labelH, {
       ...o,
       valign: "middle",
     });
-    const ry = top + l.labelH + 0.15;
-    box(s, c, l.rest, x + BA_PAD, ry, half - 2 * BA_PAD, a.y + a.h - BA_PAD - ry, o);
+    const ry = top + l.labelH + 0.15 * k;
+    box(s, c, l.rest, x + pad, ry, half - 2 * pad, a.y + a.h - pad - ry, o);
   });
   const ay = a.y + a.h / 2;
-  arrow(s, c, a.x + half + 0.12, ay, a.x + half + BA_GAP - 0.12, ay, c.teal);
+  if (adds)
+    box(s, c, "+", a.x + half, ay - gap / 2, gap, gap, {
+      size: PT.s8 * k,
+      mono: true,
+      bold: true,
+      color: c.teal,
+      align: "center",
+      valign: "middle",
+    });
+  else arrow(s, c, a.x + half + 0.12 * k, ay, a.x + half + gap - 0.12 * k, ay, c.teal);
 }
 
 /** A two-sided comparison's punchline under its sides, ending at y, and its footnotes. */
@@ -969,7 +991,7 @@ function comparisonFoot(
     );
 }
 
-const VARIANT_TONES: Record<string, [string, string]> = {
+const VARIANT_TONES: Record<string, [MarkerHue | "muted", MarkerHue | "muted"]> = {
   "success-error": ["green", "red"],
   "error-success": ["red", "green"],
   error: ["red", "red"],
@@ -1021,7 +1043,7 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
       );
     }
     case "transform":
-      return beforeAfterHeight(c, [b.before, b.after], false, w, o);
+      return beforeAfterHeight(c, [b.before, b.after], false, w, o, k);
     case "two-column":
     case "positions": {
       const sides =
@@ -1377,19 +1399,11 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
     }
     case "two-column": {
       const [lt, rt] = (VARIANT_TONES[b.variant ?? "neutral"] ?? ["muted", "muted"]).map((t) =>
-        t === "muted" ? undefined : (c[t as keyof Palette] as string),
+        t === "muted" ? {} : { tone: c[t], marker: t },
       );
       const half = a.w / 2 - 0.15;
-      itemCard(s, ctx, { ...a, w: half }, k, {
-        ...b.left,
-        tone: lt,
-        mark: lt ? (lt === c.green ? "+" : "−") : undefined,
-      });
-      itemCard(s, ctx, { ...a, x: a.x + half + 0.3, w: half }, k, {
-        ...b.right,
-        tone: rt,
-        mark: rt ? (rt === c.green ? "+" : "−") : undefined,
-      });
+      itemCard(s, ctx, { ...a, w: half }, k, { ...b.left, ...lt });
+      itemCard(s, ctx, { ...a, x: a.x + half + 0.3, w: half }, k, { ...b.right, ...rt });
       return;
     }
     case "four-column": {
@@ -1401,7 +1415,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "transform":
-      return beforeAfter(s, ctx, a, bodyO(c, k), [b.before, b.after], false);
+      return beforeAfter(s, ctx, a, bodyO(c, k), [b.before, b.after], false, k);
     case "positions": {
       const half = a.w / 2 - 0.15;
       const ch = a.h - 0.6;
@@ -2208,9 +2222,9 @@ const RENDER: {
   },
 
   content(s, ctx, d, deck) {
-    // A lone neutral two-column draws as the comparison's split, as on the web.
-    const split = twoColumnAsSplit(d);
-    if (split) return RENDER.comparison(s, ctx, split, deck);
+    const redrawn = contentRedrawnAs(d);
+    if (redrawn?.type === "comparison") return RENDER.comparison(s, ctx, redrawn, deck);
+    if (redrawn) return RENDER.statement(s, ctx, redrawn, deck);
     const centered = d.layout === "centered";
     let y = header(s, ctx, d, centered);
     if (d.badge)
@@ -2666,8 +2680,8 @@ const RENDER: {
     const o = { size: PT.base, color: c.ink };
     if (variant === "before-after") {
       const strike = d.strike !== false;
-      const ch = Math.min(a.h, beforeAfterHeight(c, sides, strike, a.w, o));
-      beforeAfter(s, ctx, { ...a, h: ch }, o, sides, strike);
+      const ch = Math.min(a.h, beforeAfterHeight(c, sides, strike, a.w, o, 1, d.adds));
+      beforeAfter(s, ctx, { ...a, h: ch }, o, sides, strike, 1, d.adds);
       return comparisonFoot(s, c, d, a.y + ch, noteH);
     }
     // The print route shows both sides of a `vs` slide active, as its last reveal step does: a vs
@@ -3088,7 +3102,12 @@ const RENDER: {
       const band = (plot.w / data.length) * 0.9;
       const word = Math.max(...labels.flatMap((l) => l.split(" ").map((w) => w.length)));
       const step = TICK_STEPS.find((pt) => (word * pt * ADVANCE.sans) / 72 <= band);
-      ctx.charts.set(ctx.charts.size + 1, trend ? { now } : { level: step !== undefined });
+      // The web's legend has an entry for a named series only.
+      const unnamed = [
+        ...(d.seriesLabel ? [] : [0]),
+        ...(two && !d.series2Label ? [now < 0 ? 1 : 2] : []),
+      ];
+      ctx.charts.set(ctx.charts.size + 1, trend ? { now, unnamed } : { level: step !== undefined });
       s.addChart(trend ? pptx.ChartType.line : pptx.ChartType.bar, series, {
         ...r,
         chartColors: now < 0 ? hues : hues.flatMap((hue) => [hue, hue]),
@@ -4115,21 +4134,26 @@ function finishChart(xml: string, fix: ChartFix) {
     return fix.level
       ? xml.replace(/(<c:catAx>.*?)<a:bodyPr\/>/s, '$1<a:bodyPr rot="0" vert="horz"/>')
       : xml;
-  const { now } = fix;
+  const { now, unnamed } = fix;
+  const hideEntries = (out: string, hidden: number[]) =>
+    out.replace(
+      '<c:legendPos val="t"/>',
+      `<c:legendPos val="t"/>${hidden
+        .sort((a, b) => a - b)
+        .map((i) => `<c:legendEntry><c:idx val="${i}"/><c:delete val="1"/></c:legendEntry>`)
+        .join("")}`,
+    );
   const edged = xml.replace('<c:crossBetween val="between"/>', '<c:crossBetween val="midCat"/>');
-  if (now < 0) return edged;
+  if (now < 0) return hideEntries(edged, unnamed);
   const all = edged.match(/<c:ser>.*?<\/c:ser>/gs) ?? [];
   const planned = all.filter((_, i) => i % 2 === 1);
   const hue = /srgbClr val="(\w+)"/.exec(all[0] ?? "")?.[1];
   const dot = `<c:dPt><c:idx val="${now}"/><c:marker><c:symbol val="circle"/><c:size val="11"/><c:spPr><a:solidFill><a:srgbClr val="${hue}"/></a:solidFill><a:ln w="19050"><a:solidFill><a:srgbClr val="${hex("--color-white")}"/></a:solidFill></a:ln></c:spPr></c:marker><c:bubble3D val="0"/></c:dPt>`;
   // The web's `text-lg` heading label, 34.67 px at 600.
   const name = `<c:dLbl><c:idx val="${now}"/><c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr><c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="1733" b="1"><a:solidFill><a:srgbClr val="${hue}"/></a:solidFill><a:latin typeface="${MONO}"/></a:defRPr></a:pPr><a:endParaRPr lang="en-US"/></a:p></c:txPr><c:dLblPos val="t"/><c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="1"/><c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/></c:dLbl>`;
-  const entries = planned
-    .map((_, i) => `<c:legendEntry><c:idx val="${2 * i + 1}"/><c:delete val="1"/></c:legendEntry>`)
-    .join("");
-  return edged
-    .replace('<c:legendPos val="t"/>', `<c:legendPos val="t"/>${entries}`)
-    .replace(/<c:ser>.*?<\/c:ser>/gs, (ser) =>
+  return hideEntries(edged, [...planned.map((_, i) => 2 * i + 1), ...unnamed]).replace(
+    /<c:ser>.*?<\/c:ser>/gs,
+    (ser) =>
       planned.includes(ser)
         ? ser.replace('<a:prstDash val="solid"/>', '<a:prstDash val="dash"/>')
         : ser === all[0]
@@ -4138,7 +4162,7 @@ function finishChart(xml: string, fix: ChartFix) {
               `$2${dot}<c:dLbls>${name}$1`,
             )
           : ser,
-    );
+  );
 }
 
 /** Builds the deck and writes it; returns the warnings for images or videos it could not place. */
@@ -4191,7 +4215,7 @@ export async function renderPptx(
     const fix = deckCtx.charts.get(chartFiles.indexOf(name) + 1);
     const xml = fix ? finishChart(raw, fix) : raw;
     const n = /^ppt\/slides\/slide(\d+)\.xml$/.exec(name);
-    const teal = ctxOf(n ? deck.slides[Number(n[1]) - 1] : undefined).c.teal;
+    const slideC = ctxOf(n ? deck.slides[Number(n[1]) - 1] : undefined).c;
     zip.file(
       name,
       xml
@@ -4205,10 +4229,11 @@ export async function renderPptx(
         .replaceAll('lang="en-US"', `lang="${lang}"`)
         // A bullet in the brand colour at four fifths of the text, as the web's square marker;
         // pptxgenjs writes no bullet colour.
-        .replace(
-          /<a:buSzPct val="100000"\/><a:buChar/g,
-          `<a:buClr><a:srgbClr val="${teal}"/></a:buClr><a:buSzPct val="80000"/><a:buChar`,
-        ),
+        .replace(/<a:buSzPct val="100000"\/><a:buChar char="&#x(\w+);"\/>/g, (_, code: string) => {
+          const hue = HUE_OF_MARKER[code];
+          const marked = hue ? slideC[hue] : slideC.teal;
+          return `<a:buClr><a:srgbClr val="${marked}"/></a:buClr><a:buSzPct val="80000"/><a:buChar char="&#x${hue ? "25AA" : code};"/>`;
+        }),
     );
   }
   writeFileSync(out, await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));

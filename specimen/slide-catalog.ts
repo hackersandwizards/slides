@@ -1058,6 +1058,7 @@ const slides: Slide[] = [
     type: "comparison",
     variant: "before-after",
     strike: false,
+    adds: true,
     sectionLabel: "Going unattended",
     headline: "What stays, what needs building",
     subtitle: "A small step for the process, a large one for the build.",
@@ -1065,7 +1066,7 @@ const slides: Slide[] = [
     right: { label: "Needs building", items: ["Ticket intake", "Isolated environment", "Gates"] },
     punchline: "The build is transport and environment.",
     notes:
-      "comparison: before-after without strike, for a before that stays, with a section label, a lead and a punchline.",
+      "comparison: before-after without strike and with adds, for a before that stays and a right side added to it, with a section label, a lead and a punchline.",
   },
   {
     type: "comparison",
