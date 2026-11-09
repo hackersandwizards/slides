@@ -100,10 +100,12 @@ it.each([820, 1024])(
 it("shows the buttons to the keyboard's focus, not to a drag with the mouse", async () => {
   const page = await deck(1440);
   await page.mouse.move(700, 300);
+  await shown(page);
   await shown(page, "0");
   await page.mouse.down();
   await page.mouse.move(760, 340);
   await page.mouse.up();
+  await new Promise((resolve) => setTimeout(resolve, 400));
   expect((await bar(page)).opacity).toBe(0);
   for (let i = 0; i < 12; i++) {
     await page.keyboard.press("Tab");

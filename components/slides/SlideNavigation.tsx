@@ -7,10 +7,12 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import ChevronLeft from "lucide-react/icons/chevron-left";
 import ChevronRight from "lucide-react/icons/chevron-right";
 import { MotionGlobalConfig } from "motion/react";
+import { useMounted } from "../../lib/use-mounted";
 import { useGoToSlide } from "../../lib/navigate";
 import { usePendingReveal } from "../../lib/use-progressive-reveal";
 import { arrowEvent, deckSync, ROLE_NAMES } from "../../lib/presenter-sync";
@@ -19,6 +21,7 @@ import {
   dialogOpen,
   directionKey,
   ignoredKey,
+  revealedUrl,
   writeStored,
 } from "../../lib/slide-utils";
 
@@ -84,30 +87,40 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
   const [arrivedBackwards] = useState(readArrivedBackwards);
   useEffect(() => writeStored("session", directionKey(), null), []);
 
+  // As for the hints: the frames that mirror a slide, an audience window with a speaker window
+  // open and a `?revealed` page show the slide alone.
+  const mounted = useMounted();
+  const speakerOpen = useSyncExternalStore(deckSync.subscribe, deckSync.speakerOpen, () => false);
+  const slideAlone = mounted && (speakerOpen || deckSync.follows() || revealedUrl());
   const [awake, setAwake] = useState(pointerActive);
   useEffect(() => {
     let sleep: ReturnType<typeof setTimeout>;
     const arm = () => {
       clearTimeout(sleep);
-      sleep = setTimeout(() => setAwake(false), POINTER_IDLE_MS);
+      sleep = setTimeout(
+        () => setAwake(false),
+        Math.max(0, POINTER_IDLE_MS - (performance.now() - pointerMovedAt)),
+      );
     };
     function wake() {
       pointerMovedAt = performance.now();
       setAwake(true);
       arm();
     }
-    function onPointerMove(event: PointerEvent) {
-      // A drag with the mouse is the laser pointer or the highlighter.
-      if (event.pointerType !== "mouse" || !event.buttons) wake();
+    function onPointer(event: PointerEvent) {
+      // A drag with the mouse is the laser pointer or the highlighter; a mouse wakes the bar only
+      // by moving.
+      if (event.pointerType === "mouse" && (event.type !== "pointermove" || event.buttons)) return;
+      wake();
     }
     arm();
-    window.addEventListener("pointermove", onPointerMove);
-    // After the click, so a tap that wakes a sleeping bar lands on the slide and steps nothing.
-    window.addEventListener("click", wake);
+    window.addEventListener("pointermove", onPointer);
+    // A tap wakes on its click, so one that lands on a sleeping bar steps nothing.
+    window.addEventListener("click", onPointer);
     return () => {
       clearTimeout(sleep);
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("click", wake);
+      window.removeEventListener("pointermove", onPointer);
+      window.removeEventListener("click", onPointer);
     };
   }, []);
 
@@ -274,41 +287,43 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
           </div>
         </dialog>
       )}
-      <div
-        data-hw-scale="screen"
-        data-awake={awake || undefined}
-        className="slide-controls fixed bottom-4 left-1/2 z-50 flex w-max -translate-x-1/2 items-center gap-3 transition-opacity print:hidden"
-      >
-        <button
-          onClick={stepBack}
-          disabled={atStart}
-          className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
-          data-on="picture"
-          aria-label="Previous slide"
-        >
-          <ChevronLeft />
-        </button>
-
+      {!slideAlone && (
         <div
-          className="box-content rounded-full border border-night-ink/15 bg-night-2 p-(--slide-position-pad) text-center text-(length:--slide-position-size) leading-(--type-label-line-height) whitespace-nowrap text-night-muted tabular-nums"
-          // Both numbers at the total's length, and the " / " about as wide as 1.5 digits.
-          style={{
-            minWidth: `calc(var(--slide-position-digit) * ${2 * String(totalSlides).length + 1.5})`,
-          }}
+          data-hw-scale="screen"
+          data-awake={awake || undefined}
+          className="slide-controls fixed z-50 flex w-max items-center gap-3 transition-opacity print:hidden"
         >
-          {currentIndex + 1} / {totalSlides}
-        </div>
+          <button
+            onClick={stepBack}
+            disabled={atStart}
+            className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
+            data-on="picture"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft />
+          </button>
 
-        <button
-          onClick={stepForward}
-          disabled={atEnd}
-          className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
-          data-on="picture"
-          aria-label="Next slide"
-        >
-          <ChevronRight />
-        </button>
-      </div>
+          <div
+            className="box-content rounded-full border border-night-ink/15 bg-night-2 p-[calc(var(--hw-control-size)*6/44)_calc(var(--hw-control-size)*12/44)] text-center text-[length:calc(var(--hw-control-size)*21/44)] leading-(--type-label-line-height) whitespace-nowrap text-night-muted tabular-nums"
+            // Both numbers at the total's length, and the " / " about as wide as 1.5 digits.
+            style={{
+              minWidth: `calc(var(--slide-position-digit) * ${2 * String(totalSlides).length + 1.5})`,
+            }}
+          >
+            {currentIndex + 1} / {totalSlides}
+          </div>
+
+          <button
+            onClick={stepForward}
+            disabled={atEnd}
+            className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
+            data-on="picture"
+            aria-label="Next slide"
+          >
+            <ChevronRight />
+          </button>
+        </div>
+      )}
     </>
   );
 }

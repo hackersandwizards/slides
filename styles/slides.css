@@ -113,6 +113,7 @@ html:has(.print-slide) {
 
 /* Tailwind inlines each import below in place, so a component's rules keep their cascade position. */
 @import "../components/slides/ClosingSlide.css";
+@import "../components/slides/SlideNavigation.css";
 
 .slide-titled > .slide-body {
   flex: 1 1 auto;

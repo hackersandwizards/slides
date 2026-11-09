@@ -117,9 +117,9 @@ With the metric-matched faces drawing, as on a device that has Arial:
 | prose story, 1440    | 0/30                    | 0/30     | 0         | 0        | 2328 ms           | 1876 ms  |
 
 Brand's fallback faces name `local("Arial")` and `local("Courier New")` only. On a device without
-them, stock Android among them, the face is skipped and the next family in the stack draws. Simulated
+them the face is skipped and the next family in the stack draws. Simulated
 on this Mac by renaming those `local()` sources in the served CSS, 412 px, 30 runs per cell (the
-generic that draws here is the Mac's system font, not Android's):
+generic that draws here is the Mac's system font, which another device's need not match):
 
 | Page, width, slow 4G | Runs with a shift, kept | Stripped | CLS, kept | Stripped | First paint, kept | Stripped |
 | -------------------- | ----------------------- | -------- | --------- | -------- | ----------------- | -------- |
