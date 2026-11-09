@@ -5,7 +5,7 @@ import { expect, it } from "vitest";
 // A slide drawn from the server's markup painted in the fallback face, and the web font swapping in
 // after the first paint moved its blocks: Lighthouse counted a layout shift in 7 of 12 mobile loads
 // of the deck page. Preloaded, the faces mostly arrive before that paint
-// (docs/agent-work/2026-11-09-font-swap-cls.md).
+// (commit 4a66c0b).
 const dist = join(import.meta.dirname, "..", "..", "dist");
 const FACES = [
   "inter-latin-400-normal",
