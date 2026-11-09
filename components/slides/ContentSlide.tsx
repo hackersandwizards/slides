@@ -388,7 +388,8 @@ function ContentBlockRenderer({
       );
 
     case "two-column": {
-      const [left, right] = TWO_COLUMN_TONES[block.variant ?? "neutral"];
+      const [left, right] =
+        TWO_COLUMN_TONES[block.variant ?? "neutral"] ?? TWO_COLUMN_TONES.neutral;
       const sides = [
         { data: block.left, style: SIDE_STYLES[left] },
         { data: block.right, style: SIDE_STYLES[right] },

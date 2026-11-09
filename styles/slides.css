@@ -29,16 +29,19 @@
   }
   /* A boxed heading's long word breaks at a syllable, with a hyphen, by the dictionary of the
      slide's `lang`: "Entscheidungsfreiheit" ran 100 px out of its card. Only words of
-     14 letters and more, so a heading's shorter words stay whole. A phone hyphenates the slide's
-     title too, set there at a size a long compound outgrows. */
-  [data-hw-scale="stage"] :is(h2, h3) {
-    hyphens: auto;
-    hyphenate-limit-chars: 14 6 6;
-  }
-  @media screen and (width < 48rem) {
-    [data-hw-scale="stage"] h1 {
+     14 letters and more, so a heading's shorter words stay whole, and only where a browser keeps
+     that limit (Safari does not). A phone hyphenates the slide's title too, set there at a size a
+     long compound outgrows. */
+  @supports (hyphenate-limit-chars: 14 6 6) {
+    [data-hw-scale="stage"] :is(h2, h3, .card-title):not(.slide-title) {
       hyphens: auto;
       hyphenate-limit-chars: 14 6 6;
+    }
+    @media screen and (width < 48rem) {
+      [data-hw-scale="stage"] .slide-title {
+        hyphens: auto;
+        hyphenate-limit-chars: 14 6 6;
+      }
     }
   }
 }

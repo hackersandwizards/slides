@@ -16,8 +16,8 @@ interface Props {
   /** The h&w corner mark, `cornerMark()`: the lockup by default. */
   mark?: CornerMark;
   /** The deck's language, `deckLang()`: the slide's `lang`, by which a long word hyphenates, and
-   *  brand's claim on a contact closing take it. English by default, as `deckLang` is for a deck
-   *  whose title slide names none. */
+   *  brand's claim on a contact closing take it. Without it the slide keeps the page's `lang` and
+   *  the claim is English, as `deckLang` is for a deck whose title slide names none. */
   lang?: "en" | "de";
 }
 
@@ -97,10 +97,10 @@ export function BrandStrip() {
   );
 }
 
-export function SlideContainer({ children, logo, theme, page, mark, lang = "en" }: Props) {
+export function SlideContainer({ children, logo, theme, page, mark, lang }: Props) {
   const slides = (
     <DeckNight.Provider value={!!theme}>
-      <DeckLang.Provider value={lang}>{children}</DeckLang.Provider>
+      <DeckLang.Provider value={lang ?? "en"}>{children}</DeckLang.Provider>
     </DeckNight.Provider>
   );
   const viewportClassName = `slide-viewport fixed inset-0 overflow-hidden${theme ? ` theme-${theme}` : ""}`;

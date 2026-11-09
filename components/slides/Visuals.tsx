@@ -402,8 +402,8 @@ function EventBody({
   );
 }
 
-// The line between two stages, solid up to now and dashed after. A variable rather than the border
-// itself, so the phone's vertical timeline (Visuals.css) draws it on the left side.
+// The line between two stages, solid up to now and dashed after: a variable Visuals.css draws as
+// the top border, and on a phone, where the timeline stands upright, as the left one.
 const timelineRule = (dashed: boolean) =>
   ({
     "--slide-timeline-rule": `var(--slide-rule-heavy) ${dashed ? "dashed" : "solid"} ${GREY}`,
@@ -418,7 +418,7 @@ const BLEED = "calc(-1 * (var(--slide-side) + 100%))";
 function Lead({ side, dashed }: { side: "in" | "out"; dashed: boolean }) {
   return (
     <div
-      className="slide-timeline-lead absolute top-1/2 -translate-y-1/2 [border-top:var(--slide-timeline-rule)]"
+      className="slide-timeline-lead absolute top-1/2 -translate-y-1/2"
       data-side={side}
       aria-hidden
       style={{
@@ -489,7 +489,7 @@ function Stages({
                 {i === n - 1 && onward && <Lead side="out" dashed={i >= now} />}
                 {i < n - 1 && (
                   <div
-                    className="slide-timeline-link absolute top-1/2 -right-8 left-6 -translate-y-1/2 [border-top:var(--slide-timeline-rule)]"
+                    className="slide-timeline-link absolute top-1/2 -right-8 left-6 -translate-y-1/2"
                     style={timelineRule(i >= now)}
                   />
                 )}

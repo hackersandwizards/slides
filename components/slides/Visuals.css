@@ -1,3 +1,9 @@
+/* A timeline's line between two stages, as its stage sets it (`timelineRule`). */
+.slide-timeline-link,
+.slide-timeline-lead {
+  border-top: var(--slide-timeline-rule, none);
+}
+
 @media screen and (width < 48rem) {
   /* A timeline turns upright: each stage a row, its dot on a line down the left and its title and
      text beside it, a duration in the gap to the next stage. Its columns left a title 85 px at

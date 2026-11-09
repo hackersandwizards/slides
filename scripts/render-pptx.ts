@@ -1402,9 +1402,13 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "two-column": {
-      const [lt, rt] = TWO_COLUMN_TONES[b.variant ?? "neutral"]
-        .map((tone) => SIDE_HUES[tone])
-        .map((t) => (t === "muted" ? {} : { tone: c[t], marker: t }));
+      // A deck's JSON is read unchecked: a variant the map lacks draws neutral, as on the web.
+      const [lt, rt] = (TWO_COLUMN_TONES[b.variant ?? "neutral"] ?? TWO_COLUMN_TONES.neutral).map(
+        (tone) => {
+          const hue = SIDE_HUES[tone];
+          return hue === "muted" ? {} : { tone: c[hue], marker: hue };
+        },
+      );
       const half = a.w / 2 - 0.15;
       itemCard(s, ctx, { ...a, w: half }, k, { ...b.left, ...lt });
       itemCard(s, ctx, { ...a, x: a.x + half + 0.3, w: half }, k, { ...b.right, ...rt });
@@ -2554,8 +2558,7 @@ const RENDER: {
 
   grid(s, ctx, d, deck) {
     // Pillars and stats are a content slide's cards or numbers, as on the web (`gridAsContent`).
-    if ((d.variant ?? "pillars") !== "quotes")
-      return RENDER.content(s, ctx, gridAsContent(d), deck);
+    if (d.variant !== "quotes") return RENDER.content(s, ctx, gridAsContent(d), deck);
     // Quotes as the web's QuoteCard: the brand quote, upright ink behind a purple rule with no
     // card, and under it the author in teal, a round portrait beside, in the web's columns.
     const { c } = ctx;
@@ -3012,13 +3015,14 @@ const RENDER: {
         );
         const lo = ticks[0];
         const hi = ticks[ticks.length - 1];
-        const margin = CHART.top;
         const g = {
           x: plot.x + CHART.left,
-          y: plot.y + margin,
+          y: plot.y + CHART.top,
           w: plot.w - CHART.left - CHART.right,
-          h: plot.h - margin - CHART.bottom,
+          h: plot.h - CHART.top - CHART.bottom,
         };
+        const xAt = (i: number) => (i / Math.max(1, data.length - 1)) * g.w;
+        const yAt = (v: number) => ((hi - v) / (hi - lo)) * g.h;
         scale = {
           layout: { x: (g.x - r.x) / r.w, y: (g.y - r.y) / r.h, w: g.w / r.w, h: g.h / r.h },
           valAxisMinVal: lo,
@@ -3032,18 +3036,18 @@ const RENDER: {
         // down to the axis.
         if (now >= 0)
           names = () => {
-            const at = (i: number) => g.x + (i / Math.max(1, data.length - 1)) * g.w;
             const wide = g.w / Math.max(1, data.length - 1);
-            const dot = g.y + ((hi - data[now].value) / (hi - lo)) * g.h;
+            // From under the dot, a marker of 11 pt, so the guide stays behind it as on the web.
+            const dot = g.y + yAt(data[now].value) + 11 / 72 / 2;
             s.addShape("line", {
-              x: at(now),
+              x: g.x + xAt(now),
               y: dot,
               w: 0.001,
-              h: g.y + g.h - dot,
+              h: Math.max(0, g.y + g.h - dot),
               line: { color: c.teal, width: 1.5, dashType: "dash" },
             });
             labels.forEach((name, i) =>
-              box(s, c, name, at(i) - wide / 2, g.y + g.h + CHART.tick, wide, CHART.line, {
+              box(s, c, name, g.x + xAt(i) - wide / 2, g.y + g.h + CHART.tick, wide, CHART.line, {
                 size: PT.sm,
                 color: i === now ? c.teal : c.muted,
                 bold: i === now,
@@ -3053,8 +3057,6 @@ const RENDER: {
           };
         const filled = now < 0 ? data.length : now + 1;
         if (!two && filled > 1) {
-          const xAt = (i: number) => (i / (data.length - 1)) * g.w;
-          const yAt = (v: number) => ((hi - v) / (hi - lo)) * g.h;
           s.addShape("custGeom" as PptxGenJS.SHAPE_NAME, {
             ...g,
             fill: { color: mix(c.teal, c.card, 0.07) },

@@ -108,7 +108,7 @@ export function TrendPlot({
   // width: the axis pads each end by what the margin beside it leaves over.
   const [first, last] = layout?.edges ?? [0, 0];
   const padding = {
-    left: Math.max(24, Math.ceil(first / 2 - Y_WIDTH - SIDE.left)),
+    left: Math.max(POINT_PAD, Math.ceil(first / 2 - Y_WIDTH - SIDE.left)),
     right: Math.max(8, Math.ceil(last / 2 - SIDE.right)),
   };
   const line = {
@@ -173,25 +173,25 @@ export function TrendPlot({
             {/* The marked point names itself on the axis, in its own colour, and a guide runs
                 down to its name: a name over the point ran into the value axis at the first. */}
             {now >= 0 && (
-              <ReferenceLine
-                segment={[
-                  { x: data[now].name, y: Math.min(0, ...data.map((d) => d.value)) },
-                  { x: data[now].name, y: data[now].value },
-                ]}
-                stroke="var(--color-teal)"
-                strokeWidth={2}
-                strokeDasharray="4 4"
-              />
-            )}
-            {now >= 0 && (
-              <ReferenceDot
-                x={data[now].name}
-                y={data[now].value}
-                r={8}
-                fill="var(--color-teal)"
-                stroke="var(--color-white)"
-                strokeWidth={3}
-              />
+              <>
+                <ReferenceLine
+                  segment={[
+                    { x: data[now].name, y: Math.min(0, ...data.map((d) => d.value)) },
+                    { x: data[now].name, y: data[now].value },
+                  ]}
+                  stroke="var(--color-teal)"
+                  strokeWidth={2}
+                  strokeDasharray="4 4"
+                />
+                <ReferenceDot
+                  x={data[now].name}
+                  y={data[now].value}
+                  r={8}
+                  fill="var(--color-teal)"
+                  stroke="var(--color-white)"
+                  strokeWidth={3}
+                />
+              </>
             )}
           </AreaChart>
         </ResponsiveContainer>
@@ -205,6 +205,8 @@ const TICK_STEPS = [tick.fontSize, "var(--text-sm)", "var(--text-xs)"];
 // one side's share of the gap between two bars.
 const BAR_GAP = 0.1;
 const Y_WIDTH = 64;
+/** The room a trend's x axis keeps before its first point. */
+const POINT_PAD = 24;
 const SIDE = { left: 8, right: 30 };
 const LINE = 1.2;
 const ANGLE = 40;
@@ -277,28 +279,28 @@ function useTickLayout(labels: string[], left: number, right: number, points = f
       ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
       const angle = (ANGLE * Math.PI) / 180;
       const widths = next.lines.map(([l]) => ctx.measureText(l).width);
-      // The widest line of the first and the last label, which a plot of points centres on its ends.
-      const widest = (lines: string[]) => Math.max(...lines.map((l) => ctx.measureText(l).width));
+      // The widest line of the first and the last label, which a plot of points centres on its
+      // ends; an angled label ends on its point, so only the overhang below moves the plot.
+      const widest = (lines: string[] = []) =>
+        Math.max(0, ...lines.map((l) => ctx.measureText(l).width));
+      const edges: [number, number] = next.angled
+        ? [0, 0]
+        : [widest(next.lines[0]), widest(next.lines[next.lines.length - 1])];
+      const reach = (widths[0] ?? 0) * Math.cos(angle);
       const measured = {
         ...next,
         height: next.angled
           ? Math.max(...widths) * Math.sin(angle) + size * 2
           : Math.max(...next.lines.map((l) => l.length)) * size * LINE + size,
-        // An angled first label runs left of its bar: the plot moves right to keep it whole.
-        // The overhang narrows every band by its share, so the first one is measured narrowed.
-        overhang: next.angled
-          ? Math.max(
-              0,
-              (widths[0] * Math.cos(angle) - category / 2 - left) / (1 - 1 / (2 * names.length)),
-            )
-          : 0,
-        // An angled label ends on its point, so only the overhang above moves the plot.
-        edges: next.angled
-          ? ([0, 0] as [number, number])
-          : ([widest(next.lines[0]), widest(next.lines[next.lines.length - 1])] as [
-              number,
-              number,
-            ]),
+        // An angled first label runs left of its bar or point: the plot moves right to keep it
+        // whole. A bar's overhang narrows every band by its share, so the first one is measured
+        // narrowed; a first point stands the axis's padding in from the plot's edge.
+        overhang: !next.angled
+          ? 0
+          : points
+            ? Math.max(0, reach - left - POINT_PAD)
+            : Math.max(0, (reach - category / 2 - left) / (1 - 1 / (2 * names.length))),
+        edges,
       };
       setLayout((prev) => (JSON.stringify(prev) === JSON.stringify(measured) ? prev : measured));
     };

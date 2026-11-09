@@ -18,6 +18,7 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
   const logos: LogoConfig[] =
     slideLogo == null ? [HW_LOGO] : Array.isArray(slideLogo) ? slideLogo : [slideLogo];
   const page = pageLabel(presentation.slides, index);
+  const lang = deckLang(presentation);
 
   return (
     <div
@@ -25,10 +26,10 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
       data-theme={presentation.theme ? "dark" : "light"}
       data-hw-night={presentation.theme ? "" : undefined}
       data-use={slide.type === "content" && bulletsAsStatement(slide) ? "statement" : undefined}
-      lang={deckLang(presentation)}
+      lang={lang}
     >
       <DeckNight.Provider value={!!presentation.theme}>
-        <DeckLang.Provider value={deckLang(presentation)}>
+        <DeckLang.Provider value={lang}>
           <SlideComponent slide={slide} />
         </DeckLang.Provider>
       </DeckNight.Provider>
