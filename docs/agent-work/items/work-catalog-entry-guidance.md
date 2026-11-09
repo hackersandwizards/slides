@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 2
-order: 720
+order: 600
 owner: Agent (slides session)
 evidence: "every print-page entry carries its when, do and don't since this commit (`catalog/guidance.ts`, a page test); blind panel 08.11.2026 on the page with and without them: 8.00 to 5.38, noise 0.12, two personas, Claude and Codex, two runs; screenshots taken before seven entries' text was corrected against the real slide types"
 ---

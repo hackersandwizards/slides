@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 2
-order: 730
+order: 610
 owner: Agent (slides session)
 evidence: "sweep of every `stories/Types` page of the v2.8.1 build at 390 x 844 px on 08.11.2026: text whose box ends right of the viewport, read by a script; not yet checked by eye, so a part drawn inside a scroller on purpose may be among them"
 ---
