@@ -151,7 +151,6 @@
     flex-direction: column;
   }
   .slide-flow-long .slide-flow-link,
-  .slide-flow-long > .slide-flow-loop:not(:has(> span)),
   .slide-flow-long > .slide-flow-loop > :not(span) {
     display: none;
   }
@@ -168,9 +167,16 @@
     background: none;
     text-align: start;
   }
-  .slide-flow-long > .slide-flow-loop > span::before {
+  .slide-flow-long > .slide-flow-loop > span::before,
+  .slide-flow-long > .slide-flow-loop:not(:has(> span))::before {
     content: "\21BA  ";
     color: var(--color-muted);
+  }
+  /* A loop without a label still shows where the list returns to. */
+  .slide-flow-long > .slide-flow-loop:not(:has(> span))::before {
+    content: "\21BA  " attr(data-back);
+    font-size: var(--type-body-size);
+    white-space: pre;
   }
   .slide-flow-long .slide-flow-steps {
     display: flex;

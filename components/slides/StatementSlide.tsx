@@ -213,14 +213,14 @@ function QrStatement({
   const alt = qrAlt(qr.href, useContext(DeckLang));
   return (
     <LeftStatement slide={slide}>
-      <div className="flex items-start gap-20">
+      <div className="flex items-start gap-20 max-md:flex-col max-md:items-stretch max-md:gap-8">
         <div className="min-w-0 flex-1">
           <LeftLines slide={slide} size="lg" />
           <LeftSupport slide={slide} />
         </div>
         <BlurFade delay={delaysOf(slide).afterLines} duration={0.4}>
           <figure className="slide-qr flex shrink-0 flex-col items-center gap-4">
-            <SlideCard className="size-(--slide-qr) bg-white card-pad-10">
+            <SlideCard className="size-(--slide-qr) bg-white card-pad-10 max-md:size-48">
               <PictureLink href={qr.href}>
                 <Image
                   src={qr.src}
@@ -277,7 +277,7 @@ function Quotation({ slide, attribution }: { slide: StatementSlideType; attribut
   return (
     <LeftStatement slide={slide}>
       {slide.imageSrc ? (
-        <div className="flex items-center gap-16">
+        <div className="flex items-center gap-16 max-md:flex-col max-md:items-start max-md:gap-8">
           <BlurFade delay={0.05} duration={0.4} className="shrink-0">
             <Portrait src={slide.imageSrc} alt={slide.imageAlt ?? ""} size="2xl" />
           </BlurFade>

@@ -325,7 +325,7 @@ const PORTRAIT_SIZES = {
   md: "[--hw-avatar-size:--spacing(32)]",
   lg: "[--hw-avatar-size:--spacing(36)]",
   xl: "[--hw-avatar-size:--spacing(36)] md:[--hw-avatar-size:--spacing(44)]",
-  "2xl": "[--hw-avatar-size:--spacing(72)]",
+  "2xl": "[--hw-avatar-size:--spacing(36)] md:[--hw-avatar-size:--spacing(72)]",
 };
 
 /** A person's picture as brand's round `hw-avatar`. Without a picture it draws `children` on the

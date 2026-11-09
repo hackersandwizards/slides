@@ -29,11 +29,11 @@ export function AgendaSlide({ slide }: Props) {
                 delay={0.15 + i * 0.04}
                 duration={0.4}
                 as="li"
-                className="flex items-baseline gap-4 md:gap-8"
+                className={`flex items-baseline gap-4 md:gap-8 ${timed ? "max-md:flex-col max-md:gap-1" : ""}`}
               >
                 {timed ? (
                   <span
-                    className="shrink-0 font-mono text-xl font-bold text-primary md:text-3xl"
+                    className="shrink-0 font-mono text-xl font-bold text-primary empty:hidden md:text-3xl"
                     style={{ width: whenWidth }}
                   >
                     {item.when !== items[i - 1]?.when ? item.when : ""}

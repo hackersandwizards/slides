@@ -223,6 +223,144 @@ it.each([1440, 390])(
   600_000,
 );
 
+const PROCESS = ALL.filter((story) => story.startsWith("process-slide/"));
+
+// Side-by-side layouts kept their columns on a phone: a quotation's portrait left its words one
+// letter a line, a QR card and an annotated picture pushed their text 100 to 700 px off the screen.
+/** Runs in the page: the visible text past the screen's edge or squeezed into a sliver of a column. */
+function runaways() {
+  const width = document.documentElement.clientWidth;
+  const found: { text: string; over?: number; sliver?: number }[] = [];
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    const element = node.parentElement!;
+    const text = node.textContent!.trim();
+    if (!text || element.closest("script, style, noscript, svg")) continue;
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const rects = [...range.getClientRects()].filter((r) => r.width);
+    if (!rects.length || getComputedStyle(element).visibility === "hidden") continue;
+    const left = Math.min(...rects.map((r) => r.left));
+    const right = Math.max(...rects.map((r) => r.right));
+    const over = Math.max(right - width, -left);
+    if (over > 1) found.push({ text: text.slice(0, 40), over: Math.round(over) });
+    else if (text.length >= 12 && right - left < 40)
+      found.push({ text: text.slice(0, 40), sliver: Math.round(right - left) });
+  }
+  return found;
+}
+
+it("keeps all text of every story on a phone's screen, in columns wide enough to read", async () => {
+  const bad: unknown[] = [];
+  for (let i = 0; i < ALL.length; i += 8)
+    await Promise.all(
+      ALL.slice(i, i + 8).map(async (story) => {
+        const page = await open(story, 390);
+        const found = await page.evaluate(runaways);
+        await page.close();
+        if (found.length) bad.push({ story, found });
+      }),
+    );
+  expect(ALL.length).toBeGreaterThan(100);
+  expect(bad).toEqual([]);
+}, 600_000);
+
+// Eight long names leave 30 px a band on a phone: angled, they crossed each other and took the
+// plot's whole height. There each bar stands as a row under its whole name; short names keep the plot.
+it("draws a bar chart of long names as rows on a phone, as a plot on the stage", async () => {
+  const page = await open("chart-slide/bar-long-names", 390);
+  await page.waitForSelector("[data-chart-plot] li");
+  const rows = await page.$$eval("[data-chart-plot] li", (all) =>
+    all.map((li) => ({
+      name: li.querySelector("span")!.textContent,
+      lines: li.querySelector("span")!.getClientRects().length,
+      bar: li.lastElementChild!.getBoundingClientRect().width,
+    })),
+  );
+  const axis = await page.$(".recharts-xAxis");
+  await page.close();
+  expect(axis).toBeNull();
+  expect(rows).toHaveLength(8);
+  expect(rows[0]).toMatchObject({ name: "Waiting for a reviewer" });
+  // The 31 is the longest and the 6 about a fifth of it.
+  expect(rows[0].bar).toBeGreaterThan(rows[3].bar * 4.5);
+  expect(rows[0].bar).toBeLessThan(rows[3].bar * 5.8);
+
+  const stage = await open("chart-slide/bar-long-names", 1440);
+  await stage.waitForSelector(".recharts-xAxis");
+  expect(await stage.$("[data-chart-plot] li")).toBeNull();
+  await stage.close();
+}, 60_000);
+
+// Boxes the text sweep cannot see: an annotated picture's number tiles stood on each other in the
+// picture's short gutter, and the six cards of a loop's circle covered one another's text.
+const overlapping = (boxes: DOMRect[]) =>
+  boxes.flatMap((a, i) =>
+    boxes
+      .slice(i + 1)
+      .filter((b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom),
+  );
+
+it("keeps an annotated picture's number tiles apart on a phone", async () => {
+  const page = await open("content-slide/visual-annotated-image", 390);
+  const tiles = await page.$$eval(".slide-content .absolute.left-0 > span", (all) =>
+    all.map((t) => t.getBoundingClientRect().toJSON() as DOMRect),
+  );
+  await page.close();
+  expect(tiles).toHaveLength(2);
+  expect(overlapping(tiles)).toEqual([]);
+}, 60_000);
+
+it.each(PROCESS)(
+  "keeps the cards of %s apart on a phone",
+  async (story) => {
+    const page = await open(story, 390);
+    const { cards, steps } = await page.evaluate(() => ({
+      cards: [...document.querySelectorAll(".process-canvas > div")].map(
+        (c) => c.getBoundingClientRect().toJSON() as DOMRect,
+      ),
+      steps: [...document.querySelectorAll<HTMLElement>(".slide-flow-step")].filter(
+        (s) => s.offsetParent,
+      ).length,
+    }));
+    await page.close();
+    expect(cards.length + steps).toBeGreaterThan(2);
+    expect(overlapping(cards)).toEqual([]);
+  },
+  60_000,
+);
+
+it("shows where a phone's upright loop returns to", async () => {
+  const page = await open("process-slide/specimen5", 390);
+  const back = await page.$eval(".slide-flow-loop", (l) => getComputedStyle(l, "::before").content);
+  await page.close();
+  expect(back).toContain("Ideate");
+}, 60_000);
+
+// A QR card filled the phone that would have to scan it, and code at the stage's size broke
+// identifiers every dozen letters; both read better at a phone's own size.
+it("keeps the QR card small on a phone, its link in reach", async () => {
+  const page = await open("statement-slide/qr-code", 390);
+  const card = await page.$eval(".slide-qr .hw-card", (c) => c.getBoundingClientRect().width);
+  const link = await page.$(".slide-qr a[href]");
+  await page.close();
+  expect(card).toBeLessThanOrEqual(200);
+  expect(link).not.toBeNull();
+}, 60_000);
+
+it("wraps annotated code at most once a line on a phone", async () => {
+  const page = await open("content-slide/block-annotated-code", 390);
+  const lines = await page.$$eval(".slide-content code span.min-w-0", (all) =>
+    all.map((s) =>
+      Math.round(s.getBoundingClientRect().height / parseFloat(getComputedStyle(s).lineHeight)),
+    ),
+  );
+  await page.close();
+  expect(lines.length).toBeGreaterThan(2);
+  expect(Math.max(...lines)).toBeLessThanOrEqual(2);
+}, 60_000);
+
 // A seven-line note beside the value axis left the trend 88 px of plot on a phone (talks),
 // where the plot drew 296 px without the note: there the note stands below the chart
 // and the plot keeps that height.

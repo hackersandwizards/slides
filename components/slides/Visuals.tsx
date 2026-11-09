@@ -112,6 +112,7 @@ export function FlowSteps({
       {loop !== undefined && (
         <div
           className={`slide-flow-loop relative mb-2 ${loop ? "h-24" : "h-16"} ${show(revealed >= n)}`}
+          data-back={steps[0]?.title}
           aria-hidden
         >
           <div
@@ -295,18 +296,22 @@ function Layers({ block }: { block: Of<"layers"> }) {
         return (
           <div
             key={i}
-            className={`flex items-center gap-10 border-4 bg-white px-10 py-7 ${CARD} ${on ? "border-primary" : "border-border"}`}
+            className={`flex items-center gap-10 border-4 bg-white px-10 py-7 max-md:flex-wrap max-md:gap-x-4 max-md:gap-y-3 max-md:px-6 max-md:py-5 ${CARD} ${on ? "border-primary" : "border-border"}`}
           >
             {block.ordered && (
               <NumberTile size="lg" tone={on ? "solid" : "ink"}>
                 {i + 1}
               </NumberTile>
             )}
-            <h2 className={`w-96 shrink-0 ${LABEL} ${on ? "text-primary" : "text-text"}`}>
+            <h2
+              className={`min-w-0 flex-1 md:w-96 md:flex-none ${LABEL} ${on ? "text-primary" : "text-text"}`}
+            >
               {renderMarkdown(layer.title)}
             </h2>
             {layer.text && (
-              <p className={`flex-1 ${CAPTION} text-text`}>{renderMarkdown(layer.text)}</p>
+              <p className={`flex-1 max-md:basis-full ${CAPTION} text-text`}>
+                {renderMarkdown(layer.text)}
+              </p>
             )}
           </div>
         );
@@ -659,7 +664,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
       {[0, 25, 50, 75, 100].map((q) => (
         <span
           key={q}
-          className={`${q ? "absolute" : "inline-block"} -translate-x-1/2`}
+          className={`${q ? "absolute" : "inline-block"} -translate-x-1/2 ${q === 100 ? "max-md:-translate-x-full" : ""}`}
           style={q ? { left: `${q}%` } : undefined}
         >
           {Math.round((max * q) / 100)}
@@ -843,6 +848,8 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
   );
 }
 
+const BESIDE_NOTES = "flex w-full items-center gap-12 max-md:flex-col max-md:items-stretch";
+
 /** The numbered notes beside an annotated picture or code. A note of one line centres on its tile,
  *  a longer one starts level with it. */
 function Notes({ notes }: { notes: { text: string }[] }) {
@@ -869,13 +876,13 @@ function Annotated({ block }: { block: Of<"annotated"> }) {
   // A note's y is a fraction of the whole image; inside the crop it is a fraction of the window.
   const at = (y: number) => `${((y - top) / span) * 100}%`;
   return (
-    <div className="flex w-full items-center gap-12">
+    <div className={BESIDE_NOTES}>
       {/* The numbers stand in a gutter left of the frame, level with their bands, off the code. */}
-      <div className="relative flex shrink-0 pl-16">
+      <div className="relative flex shrink-0 pl-16 max-md:pl-9">
         {/* The frame takes the crop's shape at the largest size that fits 50rem by 38rem, which
             leaves the notes room for a line of a few words. */}
         <div
-          className={`relative shrink-0 overflow-hidden border-4 border-text bg-text ${CARD}`}
+          className={`relative max-w-full shrink-0 overflow-hidden border-4 border-text bg-text ${CARD}`}
           style={{
             width: `${Math.min(50, (38 * w * right) / (h * span))}rem`,
             aspectRatio: `${w * right} / ${h * span}`,
@@ -899,7 +906,7 @@ function Annotated({ block }: { block: Of<"annotated"> }) {
         </div>
         {block.notes.map((n, i) => (
           <span key={i} className="absolute left-0 -translate-y-1/2" style={{ top: at(n.y) }}>
-            <NumberTile>{i + 1}</NumberTile>
+            <NumberTile className="max-md:size-7 max-md:text-sm">{i + 1}</NumberTile>
           </span>
         ))}
       </div>
@@ -924,9 +931,9 @@ function AnnotatedCode({ block }: { block: Of<"annotated-code"> }) {
   const highlightLines = useHighlightLines();
   const tokens = highlightLines(lines.map((l) => l.slice(indent)).join("\n"), block.language);
   return (
-    <div className="flex w-full items-center gap-12">
+    <div className={BESIDE_NOTES}>
       <CodePanel as="pre" className="min-w-0 flex-[1.4] overflow-hidden py-6">
-        <code className="block font-code text-xl leading-snug">
+        <code className="block font-code text-xl leading-snug max-md:text-(length:--type-small-size)">
           {lines.map((line, i) => {
             const n = marked.get(i + 1);
             // Under a marked line's teal a comment in night-subtle falls to 4.3:1 (dark theme):

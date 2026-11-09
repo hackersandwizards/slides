@@ -24,15 +24,11 @@ const CENTER_Y = 50;
 const RADIUS_X = 32;
 const RADIUS_Y = 32;
 
-// Canvas units are sixteenths of a rem, so the canvas scales with the slide; a loop of more than
-// four nodes stacks two cards per side and gets a taller canvas so they don't collide.
+// Canvas units are sixteenths of a rem, so the canvas scales with the slide.
 const CANVAS_W = 960;
+const CANVAS_H = 520;
 const NODE_HALF_W = 120;
 const NODE_HALF_H = 80;
-function canvasHeight(count: number) {
-  return count > 4 ? 640 : 520;
-}
-
 function nodePositions(count: number) {
   return Array.from({ length: count }, (_, i) => {
     const angle = (-90 + (360 / count) * i) * (Math.PI / 180);
@@ -45,6 +41,9 @@ function nodePositions(count: number) {
 
 export function ProcessSlide({ slide }: Props) {
   const loop = slide.loop !== false;
+  // Five nodes and more overlap on a phone's circle, whose cards grow with their wrapped text: there
+  // they stand as the flow block's upright list.
+  const circle = loop && slide.nodes.length <= 4;
   const { revealedCount, footerVisible } = useProgressiveReveal({
     totalSteps: slide.nodes.length,
     startFull: !!slide.static,
@@ -54,7 +53,6 @@ export function ProcessSlide({ slide }: Props) {
   // The named phase stays lit once every step shows; while stepping, the step just revealed is.
   const named = slide.nodes.findIndex((node) => isHighlightPhase(node.title, slide.highlightPhase));
   const positions = nodePositions(slide.nodes.length);
-  const canvasH = canvasHeight(slide.nodes.length);
 
   const arrowPaths = slide.nodes.map((_, i) => ({
     from: i,
@@ -69,8 +67,8 @@ export function ProcessSlide({ slide }: Props) {
         <div className="slide-body items-center">
           <div className="flex w-full flex-col items-center gap-10">
             {/* Desktop and print: the steps on one line as the flow block draws them, the loop
-                back above. Phones keep the circle (ProcessSlide.css). */}
-            <div className={`w-full ${loop ? "hidden md:block" : ""}`}>
+                back above. Phones keep a short loop's circle (ProcessSlide.css). */}
+            <div className={`w-full ${circle ? "hidden md:block" : ""}`}>
               <FlowSteps
                 steps={slide.nodes.map((node) => ({
                   title: node.title,
@@ -86,14 +84,14 @@ export function ProcessSlide({ slide }: Props) {
                 revealed={revealedCount}
               />
             </div>
-            {loop && (
+            {circle && (
               <div
                 className="process-canvas relative max-md:[zoom:0.44]"
-                style={{ width: `${CANVAS_W / 16}rem`, height: `${canvasH / 16}rem` }}
+                style={{ width: `${CANVAS_W / 16}rem`, height: `${CANVAS_H / 16}rem` }}
               >
                 <svg
                   className="absolute inset-0 h-full w-full"
-                  viewBox={`0 0 ${CANVAS_W} ${canvasH}`}
+                  viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
@@ -129,9 +127,9 @@ export function ProcessSlide({ slide }: Props) {
                     const fromPos = positions[arrow.from];
                     const toPos = positions[arrow.to];
                     const fx = (fromPos.x / 100) * CANVAS_W;
-                    const fy = (fromPos.y / 100) * canvasH;
+                    const fy = (fromPos.y / 100) * CANVAS_H;
                     const tx = (toPos.x / 100) * CANVAS_W;
-                    const ty = (toPos.y / 100) * canvasH;
+                    const ty = (toPos.y / 100) * CANVAS_H;
 
                     const dx = tx - fx;
                     const dy = ty - fy;

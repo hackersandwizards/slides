@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { ChartDataPoint, ChartSlide } from "../../types/slide";
+import { NARROW } from "../../lib/slide-utils";
 
 /** `still` stops the growth animation, which a PDF would freeze mid-way. */
 interface PlotProps {
@@ -47,8 +48,9 @@ function Axes({
   xLabel,
   yLabel,
   note,
+  rows,
   children,
-}: Pick<PlotProps, "xLabel" | "yLabel"> & { note?: string; children: ReactNode }) {
+}: Pick<PlotProps, "xLabel" | "yLabel"> & { note?: string; rows?: boolean; children: ReactNode }) {
   return (
     <div className="flex h-full flex-col">
       {(yLabel || note) && (
@@ -59,7 +61,9 @@ function Axes({
           )}
         </div>
       )}
-      <div className="min-h-0 flex-1 max-md:h-82 max-md:flex-none">{children}</div>
+      <div className={`min-h-0 flex-1 max-md:flex-none ${rows ? "" : "max-md:h-82"}`}>
+        {children}
+      </div>
       {xLabel && <p className="mt-1 text-center text-base text-text-muted">{xLabel}</p>}
     </div>
   );
@@ -269,7 +273,7 @@ export function tickLayout(
 function useTickLayout(labels: string[], left: number, right: number, points = false) {
   const ref = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState<
-    TickLayout & { height: number; overhang: number; edges: [number, number] }
+    TickLayout & { height: number; overhang: number; edges: [number, number]; narrow: boolean }
   >();
   const key = JSON.stringify(labels);
   useLayoutEffect(() => {
@@ -322,6 +326,7 @@ function useTickLayout(labels: string[], left: number, right: number, points = f
             ? Math.max(0, reach - left - POINT_PAD)
             : Math.max(0, (reach - category / 2 - left) / (1 - 1 / (2 * names.length))),
         edges,
+        narrow: !!window.matchMedia?.(NARROW).matches,
       };
       setLayout((prev) => (JSON.stringify(prev) === JSON.stringify(measured) ? prev : measured));
     };
@@ -374,6 +379,28 @@ export function AxisTick({
   );
 }
 
+/** A phone's bar chart whose names would only fit its bands angled: each bar a row under its whole
+ *  name, the value at the row's end, since eight angled names took the plot's whole height. */
+function BarRows({ data = [] }: Pick<PlotProps, "data">) {
+  const max = Math.max(1, ...data.map((d) => d.value));
+  return (
+    <ul className="flex flex-col gap-3">
+      {data.map((d) => (
+        <li key={String(d.name)} className="flex flex-col gap-1">
+          <p className="flex items-baseline justify-between gap-4 text-base text-text">
+            <span>{d.name}</span>
+            <span className="font-heading font-bold tabular-nums">{d.value}</span>
+          </p>
+          <div
+            className="h-3 rounded-r-sm bg-primary"
+            style={{ width: `${(Math.max(0, d.value) / max) * 100}%` }}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function BarPlot({
   data,
   still,
@@ -389,6 +416,14 @@ export function BarPlot({
     SIDE.left + (labelled ? 0 : Y_WIDTH),
     SIDE.right,
   );
+  if (layout?.angled && layout.narrow)
+    return (
+      <Axes xLabel={xLabel} yLabel={labelled ? undefined : yLabel} rows>
+        <div ref={ref}>
+          <BarRows data={data} />
+        </div>
+      </Axes>
+    );
   const margin = {
     top: labelled ? 40 : 12,
     right: SIDE.right,

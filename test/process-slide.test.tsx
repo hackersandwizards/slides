@@ -19,19 +19,19 @@ describe("ProcessSlide", () => {
     const titles = Array.from({ length: count }, (_, i) => `Step ${i + 1}`);
     const { getAllByText } = render(<ProcessSlide slide={makeSlide(titles)} />);
     for (const title of titles) {
-      // Once in the desktop row, once on the circle that phones show.
-      expect(getAllByText(title)).toHaveLength(2);
+      // Once in the desktop row, and up to four nodes once more on the circle that phones show.
+      expect(getAllByText(title)).toHaveLength(count <= 4 ? 2 : 1);
     }
   });
 
   it("renders one connecting arrow per node (a closed loop)", () => {
-    const { container } = render(<ProcessSlide slide={makeSlide(["A", "B", "C", "D", "E"])} />);
+    const { container } = render(<ProcessSlide slide={makeSlide(["A", "B", "C", "D"])} />);
     // Each node gets an outgoing arrow back to the next (last → first). Scope to
     // the arrows canvas so lucide icon <path>s inside the nodes don't count. Matched in code:
     // jsdom 30 misses `svg[viewBox^="..."]` on the mixed-case SVG attribute.
     const arrowSvg = [...container.querySelectorAll("svg")].find((svg) =>
       svg.getAttribute("viewBox")?.startsWith("0 0 960"),
     );
-    expect(arrowSvg?.querySelectorAll("path").length).toBe(5);
+    expect(arrowSvg?.querySelectorAll("path").length).toBe(4);
   });
 });
