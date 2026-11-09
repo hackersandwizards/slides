@@ -174,7 +174,7 @@ describe("inline code", () => {
 
 describe("numbers block", () => {
   // Every leading word of a figure is set small, and the size of the row counts those words at
-  // half a digit's width, so "up to +70%" stays inside its column (blind review 02.11.).
+  // half a digit's width, so "up to +70%" stays inside its column.
   it("sets every leading word small and sizes the figure with it", () => {
     const c = content([
       {
@@ -244,7 +244,7 @@ describe("merged card and number shapes", () => {
     expect(c.textContent).toContain("Across sites");
   });
 
-  // Pillars keep their density as dense cards (v0.27.2): drawn as plain cards, two four-pillar
+  // Pillars keep their density as dense cards: drawn as plain cards, two four-pillar
   // slides fell from above 0.9 to 0.82 and 0.86 in trainer-hub's guard.
   it("draws grid pillars as dense cards", () => {
     const c = grid({ allActive: true, cards: [{ title: "A", description: "a" }] });
@@ -284,7 +284,7 @@ describe("merged card and number shapes", () => {
     expect([...c.querySelectorAll(".hw-card li")].map((li) => li.textContent)).toEqual(["x", "y"]);
   });
 
-  // The replacements keep the density of the blocks they replace (v0.27.1): drawn at the plain
+  // The replacements keep the density of the blocks they replace: drawn at the plain
   // cards' sizes, a four-column slide of lists fell from 0.84 to 0.75 and a seven-item
   // labeled grid from 0.81 to 0.74 in talks' density guard.
   it("draws labeled grid and four-column blocks as dense cards", () => {
@@ -330,7 +330,7 @@ describe("pipeline into flow (merge-flow)", () => {
     expect(c.textContent).toContain("Foot");
   });
 
-  // A pipeline's flow keeps the pipeline's height (v0.27.2): drawn with the plain flow's tiles
+  // A pipeline's flow keeps the pipeline's height: drawn with the plain flow's tiles
   // and titles, a slide of two pipelines fell from above 0.9 to 0.79 in trainer-hub's guard.
   it("draws a pipeline as a dense flow", () => {
     const c = content([{ type: "pipeline", stages }]);

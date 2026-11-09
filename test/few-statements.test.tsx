@@ -49,12 +49,22 @@ describe("PrintSlide", () => {
       <PrintDeck
         presentation={{
           name: "Deck",
-          slides: [few(["One.", "Two."]), few(["One.", "Two.", "Three."])],
+          slides: [
+            few(["One.", "Two."]),
+            few(["One.", "Two.", "Three."]),
+            {
+              type: "regular",
+              headline: "Play before plan",
+              sections: [{ items: ["One.", "Two."] }],
+            },
+          ],
         }}
       />,
     );
     const pages = container.querySelectorAll<HTMLElement>(".print-slide");
     expect(pages[0].dataset.use).toBe("statement");
     expect(pages[1].dataset.use).toBeUndefined();
+    // A regular slide draws as the content slide regularAsContent makes of it.
+    expect(pages[2].dataset.use).toBe("statement");
   });
 });

@@ -1,12 +1,12 @@
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { serveDist } from "./serve-dist";
+import { type Served, serveDist } from "./serve-dist";
 
 // The dashboard's card on a phone draws a slide's text unreadably small: below 40rem it offers an
 // enlarged view across the turned phone.
 const STORY = "/slides/dashboard/Types/content-slide/density/";
 let browser: Browser;
-let dist: Awaited<ReturnType<typeof serveDist>>;
+let dist: Served;
 beforeAll(async () => {
   dist = await serveDist();
   browser = await puppeteer.launch({

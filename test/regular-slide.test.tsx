@@ -29,7 +29,7 @@ describe("regular slide", () => {
     expect(container.querySelector(".opacity-0")).toBeNull();
   });
 
-  // Three and more titled sections are dense cards, five in three columns (v0.27.1): drawn as
+  // Three and more titled sections are dense cards, five in three columns: drawn as
   // plain cards in four columns, a five-section slide fell from above 0.9 to 0.75 in talks.
   it("draws five titled sections as dense cards in three columns", () => {
     const SlideComponent = slideComponents.regular;

@@ -1,11 +1,11 @@
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { serveDist } from "./serve-dist";
+import { type Served, serveDist } from "./serve-dist";
 
 // Recharts draws in the browser only, so these two tiles frame a story page, which needs the
 // `/slides` base a file:// read does not give.
 let browser: Browser;
-let dist: Awaited<ReturnType<typeof serveDist>>;
+let dist: Served;
 beforeAll(async () => {
   dist = await serveDist();
   browser = await puppeteer.launch({

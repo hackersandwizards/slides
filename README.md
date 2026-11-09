@@ -50,8 +50,8 @@ That the install matches each pin, scaffolding's install and `coupling` steps ch
 
 The command `slides-density [--serve "<command>"] <print-url> ...` belongs in each consumer's gate:
 it renders each deck's print route and fails on a slide the fit guard shrinks below 0.8, and lists
-those below 0.9, a heading it shrinks so that its widest word fits included. It fails too on a content slide holding only one or two short bullets, which a
-`statement` carries (`bulletsAsStatement` in `lib/slide-utils`). `--serve` starts the consumer's
+those below 0.9, a heading it shrinks so that its widest word fits included. It fails too on a content slide holding only one or two short bullets, a regular slide drawn as
+one included, which a `statement` carries (`bulletsAsStatement` in `lib/slide-utils`). `--serve` starts the consumer's
 server for the run and stops it afterwards.
 
 The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]` writes a deck as a native

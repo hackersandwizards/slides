@@ -15,6 +15,7 @@ import {
   Tooltip,
 } from "recharts";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { trendTicks } from "../../lib/slide-utils";
 import type { ChartSlide } from "../../types/slide";
 
 /** `still` stops the growth animation, which a PDF would freeze mid-way. */
@@ -116,6 +117,7 @@ export function TrendPlot({
     left: Math.max(POINT_PAD, Math.ceil(first / 2 - Y_WIDTH - SIDE.left)),
     right: Math.max(8, Math.ceil(last / 2 - SIDE.right)),
   };
+  const ticks = trendTicks(data);
   const line = {
     isAnimationActive: still ? false : ("auto" as const),
     type: "monotone" as const,
@@ -145,7 +147,14 @@ export function TrendPlot({
               padding={padding}
               interval={0}
             />
-            <YAxis tick={tick} axisLine={false} tickLine={false} width={Y_WIDTH} />
+            <YAxis
+              tick={tick}
+              ticks={ticks}
+              domain={[ticks[0], ticks[ticks.length - 1]]}
+              axisLine={false}
+              tickLine={false}
+              width={Y_WIDTH}
+            />
             {/* The marked point is both measured and planned: it lists once, as measured. */}
             <Tooltip
               {...tooltip}
@@ -181,7 +190,7 @@ export function TrendPlot({
               <>
                 <ReferenceLine
                   segment={[
-                    { x: data[now].name, y: Math.min(0, ...data.map((d) => d.value)) },
+                    { x: data[now].name, y: ticks[0] },
                     { x: data[now].name, y: data[now].value },
                   ]}
                   stroke="var(--color-teal)"

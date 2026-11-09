@@ -2,7 +2,7 @@ import type { LogoConfig, Presentation } from "../../types/slide";
 import { slideComponents } from "../../lib/slide-components";
 import { HW_LOGO, cornerMark, resolveSlideLogo } from "../../lib/logo";
 import { PrintProvider } from "../../lib/print-context";
-import { bulletsAsStatement, deckLang, pageLabel } from "../../lib/slide-utils";
+import { bulletsAsStatement, deckLang, pageLabel, regularAsContent } from "../../lib/slide-utils";
 import Image from "../ui/image";
 import { BrandStrip, HwWordmark, PageCounter } from "./SlideContainer";
 import { DeckLang, DeckNight } from "./SlideShell";
@@ -19,13 +19,14 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
     slideLogo == null ? [HW_LOGO] : Array.isArray(slideLogo) ? slideLogo : [slideLogo];
   const page = pageLabel(presentation.slides, index);
   const lang = deckLang(presentation);
+  const drawn = slide.type === "regular" ? regularAsContent(slide) : slide;
 
   return (
     <div
       className={`print-slide${presentation.theme ? ` theme-${presentation.theme}` : ""}`}
       data-theme={presentation.theme ? "dark" : "light"}
       data-hw-night={presentation.theme ? "" : undefined}
-      data-use={slide.type === "content" && bulletsAsStatement(slide) ? "statement" : undefined}
+      data-use={drawn?.type === "content" && bulletsAsStatement(drawn) ? "statement" : undefined}
       lang={lang}
     >
       <DeckNight.Provider value={!!presentation.theme}>

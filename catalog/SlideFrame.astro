@@ -90,7 +90,6 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
               : `translate(${(w - slideW * scale) / 2}px, ${(h - slideH * scale) / 2}px) scale(${scale})`;
             return;
           }
-          // The pane's height under the stage's top, less the padding below the stage.
           const box = stage.getBoundingClientRect();
           const top = box.top - pane.getBoundingClientRect().top;
           const below = embed.getBoundingClientRect().bottom - box.bottom;

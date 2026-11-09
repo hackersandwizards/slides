@@ -28,21 +28,18 @@ it("bun run preview serves the built catalog", async () => {
   let output = "";
   server.stdout.on("data", (chunk) => (output += chunk));
   server.stderr.on("data", (chunk) => (output += chunk));
-  const exited = new Promise<null>((resolve) => server.on("exit", () => resolve(null)));
+  const running = () => server.exitCode === null && server.signalCode === null;
   try {
-    let status: number | null = null;
-    for (let attempt = 0; attempt < 60 && status === null; attempt++) {
-      status = await Promise.race([
-        exited,
-        fetch(`http://127.0.0.1:${port}/slides/catalog/print/`).then(
-          (response) => response.status,
-          () => new Promise<null>((resolve) => setTimeout(() => resolve(null), 250)),
-        ),
-      ]);
-      if (server.exitCode !== null) break;
-    }
+    let status: number | undefined;
+    for (const deadline = Date.now() + 20_000; !status && running() && Date.now() < deadline;)
+      status = await fetch(`http://127.0.0.1:${port}/slides/catalog/print/`, {
+        signal: AbortSignal.timeout(2_000),
+      }).then(
+        (response) => response.status,
+        () => new Promise<undefined>((resolve) => setTimeout(resolve, 250)),
+      );
     expect(status, output).toBe(200);
   } finally {
-    if (server.exitCode === null) process.kill(-server.pid!);
+    if (running()) process.kill(-server.pid!);
   }
 }, 30_000);

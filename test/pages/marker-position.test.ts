@@ -12,7 +12,7 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 // measures with brand's `brand-markers` on frames.html and every story; this file holds its
 // control on each slide frame written to a file of its own. A step number's baseline on its line's
 // baseline, which brand-markers does not measure, is measured here.
-const TOLERANCE = 0.6; // CSS px at 1920x1080; step numbers measured within it at 4x (2026-11-01)
+const TOLERANCE = 0.6; // CSS px at 1920x1080; step numbers measured within it at 4x
 const SCALE = 4;
 const PRINT = join(import.meta.dirname, "..", "..", "dist", "catalog", "print");
 
@@ -152,7 +152,7 @@ const brandMarkers = (files: string[]) =>
   spawnSync("bun", ["run", "brand-markers", "--width", "1920", ...files], { encoding: "utf8" });
 
 // A marker class no stylesheet defines draws nothing, and brand-markers cannot see what is not
-// drawn: comparison's split and activity's demo kept `slide-marker` after v0.18.0 removed it.
+// drawn: comparison's split and activity's demo kept `slide-marker` after its rule was removed.
 it("every marker class in the components is defined", () => {
   const css = [
     join(import.meta.dirname, "..", "..", "styles", "slides.css"),

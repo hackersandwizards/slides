@@ -5,9 +5,8 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 
 // Every portrait on the print page's slides, read off its box: a picture fills brand's round
 // hw-avatar, a circle, with no mat or ring round it. A mat drawn round a picture with the brand
-// corner once poked out at two corners and left gaps at the others (2026-11-08); the blind panel
-// of 08.11. took the round avatar on every slide. A portrait is any picture of the specimen deck's
-// portraits.
+// corner once poked out at two corners and left gaps at the others; a blind panel took the round
+// avatar on every slide. A portrait is any picture of the specimen deck's portraits.
 const FRAMES = pathToFileURL(
   join(import.meta.dirname, "..", "..", "dist", "catalog", "print", "frames.html"),
 ).href;

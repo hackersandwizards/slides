@@ -4,8 +4,8 @@
 // FAIL a slide fails the run; below NOTICE it is listed without failing. Body text stands at 36 px
 // (18 pt on a 960 pt slide) at factor 1 and shrinks with it, so 0.8 keeps it at 29 px. Each listed
 // slide gets a split suggestion: its blocks laid out at full size, grouped into slides that fit.
-// A slide the printed page marks with `data-use` (a content slide of one or two short bullets)
-// fails too, naming the type that carries it.
+// A slide the printed page marks with `data-use` (a content slide of one or two short bullets, or
+// a regular slide drawn as one) fails too, naming the type that carries it.
 //
 //   slides-density [--serve "<command>"] <print-url> ...
 //
@@ -76,7 +76,7 @@ try {
   server?.kill();
 }
 console.log(
-  `[slides-density] ${urls.length} decks: ${failed} slides below ${FAIL} or of the wrong type (fail), ${noticed} below ${NOTICE} (notice)${broken ? `, ${broken} decks did not render` : ""}`,
+  `[slides-density] ${urls.length} decks: ${failed} findings below ${FAIL} or of the wrong type (fail), ${noticed} below ${NOTICE} (notice)${broken ? `, ${broken} decks did not render` : ""}`,
 );
 process.exit(failed || broken ? 1 : 0);
 

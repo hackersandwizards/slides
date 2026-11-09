@@ -83,7 +83,7 @@ export default defineConfig({
             if (!file || !statSync(file, { throwIfNoEntry: false })?.isFile()) return next();
             response.setHeader("Content-Type", types[extname(file)] ?? "application/octet-stream");
             // Each of the print page's 80 frames asks for the same faces and images: uncached,
-            // every frame fetched them again (6 MB of faces per load, 03.11.2026).
+            // every frame fetched them again (6 MB of faces per load).
             response.setHeader("Cache-Control", "max-age=3600");
             createReadStream(file).pipe(response);
           });

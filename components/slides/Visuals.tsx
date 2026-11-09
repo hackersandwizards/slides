@@ -12,7 +12,7 @@ import { BeforeAfterSides, CodePanel, DashedFrame, NumberTile, SlideCard } from 
 // the structure before the words. Shared rules, from the deck checklist:
 // - one emphasis colour (the brand teal); everything else is ink or the brand's muted grey;
 // - every element labelled where it sits, never through a legend;
-// - labels 45px and captions 37px at 1920 (22 and 18px in a 960px Meet window), sources 32px;
+// - labels 48px, captions and sources 36px at 1920 (24 and 18px in a 960px Meet window);
 // - strokes 4px and up, so video compression keeps them;
 // - the brand corner (large top-left and bottom-right) on every card.
 
@@ -22,7 +22,6 @@ const GREY = "var(--color-muted)";
 const LABEL = "card-title text-4xl leading-tight text-balance";
 // The smallest running text a visual sets: 36px at 1920, the checklist's floor.
 const CAPTION = "text-xl leading-snug";
-// Context marks (a bar that is not the point): tokens.css `--slide-context`.
 const CONTEXT = "var(--slide-context)";
 
 type Of<T extends VisualBlock["type"]> = Extract<VisualBlock, { type: T }>;
@@ -965,7 +964,7 @@ function Cards({ block }: { block: Of<"cards"> }) {
   const wide = cols >= 4;
   const dense = !!block.dense;
   // Four columns leave a card about a quarter of the slide: the title steps down one size. Dense
-  // cards keep the sizes of the four-column and labeled-grid blocks they replace (v0.26).
+  // cards keep the sizes of the four-column and labeled-grid blocks they replace.
   const label = dense
     ? `card-title ${wide ? "text-lg" : "text-xl"}`
     : wide

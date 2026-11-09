@@ -9,7 +9,6 @@ import { createRequire } from "node:module";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { tokens } from "@hackersandwizards/brand/tokens";
-import { getNiceTickValues } from "recharts";
 import type {
   ComparisonSide,
   ContentBlock,
@@ -45,6 +44,7 @@ import {
   gridAsContent,
   regularAsContent,
   TWO_COLUMN_TONES,
+  trendTicks,
   type SideTone,
 } from "../lib/slide-utils";
 
@@ -723,7 +723,7 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
   const kicker = h.sectionLabel ?? h.preText;
   if (kicker || h.principle) {
     let x = SIDE;
-    // Teal in every section, the website's mono caps (os br-slide-kicker-colour, br-label-style).
+    // Teal in every section, the website's mono caps.
     if (kicker) {
       box(s, c, { runs: [{ text: kicker.toUpperCase() }] }, x, y, 6, 45 / 144, {
         size: PT.base,
@@ -3006,13 +3006,8 @@ const RENDER: {
       let names = () => {};
       if (trend) {
         // The plot where recharts draws it, less its x axis's padding, which a chart's categories
-        // cannot take; the value axis on recharts' ticks over its [0, auto] domain.
-        const values = data.flatMap((p) => (two ? [p.value, p.value2 ?? 0] : [p.value]));
-        const ticks: number[] = getNiceTickValues(
-          [Math.min(0, ...values), Math.max(0, ...values)],
-          5,
-          true,
-        );
+        // cannot take; the value axis on the web's ticks.
+        const ticks = trendTicks(data);
         const lo = ticks[0];
         const hi = ticks[ticks.length - 1];
         const g = {

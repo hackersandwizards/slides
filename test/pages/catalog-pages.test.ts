@@ -1,12 +1,12 @@
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { TICK_GAP } from "../../components/slides/ChartPlots";
-import { serveDist } from "./serve-dist";
+import { type Served, serveDist } from "./serve-dist";
 
 // Served under the Pages base, since a built state page loads its stylesheets from /slides/.
 const NIGHT = "rgb(11, 17, 24)";
 let browser: Browser;
-let served: Awaited<ReturnType<typeof serveDist>>;
+let served: Served;
 let page: (path: string) => string;
 beforeAll(async () => {
   served = await serveDist();
@@ -31,7 +31,7 @@ const newTab = async () => {
   return tab;
 };
 
-// Since scaffolding v2.22.0 a tile's frame loads once the home has painted and the tile is within
+// A tile's frame loads once the home has painted and the tile is within
 // 200 px of the view, so a check reading the tiles without scrolling them in sees none.
 it("loads every tile on the catalog home, with no failed request", async () => {
   const tab = await newTab();
@@ -135,7 +135,7 @@ it("links no stylesheet on a state's page beyond the shell's on the home", async
 }, 60_000);
 
 // A wide window scaled the slide to the page's width alone, so its bottom ran below the window
-// (Benedikt, 08.11.2026, ActivitySlide at about 1900x1200).
+// (ActivitySlide at about 1900x1200).
 const fits = (tab: Page) =>
   tab.evaluate(async () => {
     // Two frames give the stage's ResizeObserver its turn after a viewport change.
@@ -168,7 +168,6 @@ it("shows a story's whole slide, centred, and fits it again as the window change
   const tab = await newTab();
   await tab.setViewport({ width: 1920, height: 1080 });
   await tab.goto(page("dashboard/Types/activity-slide/specimen3"), { waitUntil: "networkidle0" });
-  // The frame measured is the story's own page, loaded.
   expect(
     await tab.$eval(".story-stage iframe", (frame) =>
       Boolean(frame.contentDocument?.querySelector(".slide-story")),

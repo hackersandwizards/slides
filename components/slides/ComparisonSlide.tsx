@@ -22,7 +22,7 @@ import {
 } from "./primitives";
 import { SectionHeader } from "./SectionHeader";
 
-/** A part of primitives.tsx since v2.14.0; this path, which consumers import, keeps it. */
+/** Consumers import it from this path. */
 export { BeforeAfterSides } from "./primitives";
 import { renderMarkdown } from "../../lib/markdown";
 

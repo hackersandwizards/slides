@@ -72,7 +72,7 @@ describe("comparison variants (merge-comparison)", () => {
   const punchline = "Same team";
 
   it("brings in a struck before-after's after side and punchline on the next press", () => {
-    const { container, getByText, unmount } = live({
+    const { container, getByText } = live({
       variant: "before-after",
       punchline,
       ...sides,
@@ -86,7 +86,6 @@ describe("comparison variants (merge-comparison)", () => {
     expect(container.querySelector("[inert]")).toBeNull();
     expect(container.querySelector(".line-through")).not.toBeNull();
     expect(container.querySelector(".bg-text-subtle\\/7")).not.toBeNull();
-    unmount();
   });
 
   it("shows a before-after without strike whole, its kept side on a white card", () => {

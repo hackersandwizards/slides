@@ -2,11 +2,11 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { serveDist } from "./serve-dist";
+import { type Served, serveDist } from "./serve-dist";
 
 // On a phone (390 px) every numbers and cards grid stacks into one column and every figure fits its
 // column on one line. An inline column template once outranked the phone rule, so a two-figure row
-// kept its columns and "87,3 %", sized for the stage, ran over the figure beside it (2026-11-08).
+// kept its columns and "87,3 %", sized for the stage, ran over the figure beside it.
 const STORIES = [
   "content-slide/visual-numbers",
   "content-slide/visual-numbers-one",
@@ -19,7 +19,7 @@ const STORIES = [
 ];
 
 let browser: Browser;
-let dist: Awaited<ReturnType<typeof serveDist>>;
+let dist: Served;
 beforeAll(async () => {
   dist = await serveDist();
   browser = await puppeteer.launch({
@@ -68,8 +68,8 @@ it.each(STORIES)(
   60_000,
 );
 
-// A profile's company ran past its card beside the portrait on a phone (209 px of text in 148 px,
-// 2026-11-08): there the portrait stands above, and one company in the specimen is one long word.
+// A profile's company ran past its card beside the portrait on a phone (209 px of text in 148 px):
+// there the portrait stands above, and one company in the specimen is one long word.
 it.each(["profiles-slide/specimen", "profiles-slide/specimen2"])(
   "keeps every line of %s inside its card on a phone",
   async (story) => {
@@ -86,7 +86,7 @@ it.each(["profiles-slide/specimen", "profiles-slide/specimen2"])(
   60_000,
 );
 
-// Three defects consumers found on v2.12 (2026-11-09): a card title of one long word ran 100 px out
+// Three defects consumers found: a card title of one long word ran 100 px out
 // of its card, a timeline's columns left 85 px for a title on a phone, and a trend marked at its
 // first point set the point's name on the value axis while its last category lost a digit.
 
@@ -188,7 +188,7 @@ it.each([1440, 390])(
   60_000,
 );
 
-// "Architecture" broke as "Architectur / e" in a team card (trainer-hub, 2026-11-09): Chrome
+// "Architecture" broke as "Architectur / e" in a team card (trainer-hub): Chrome
 // hyphenates no capitalised English word and Safari none under the limit, so `break-word` cut it
 // without a hyphen. Measured with `overflow-wrap: normal`, a word wider than its heading overflows.
 const TYPES = join(import.meta.dirname, "..", "..", "dist", "stories", "Types");
@@ -223,8 +223,8 @@ it.each([1440, 390])(
   600_000,
 );
 
-// A seven-line note beside the value axis left the trend 88 px of plot on a phone (talks,
-// 2026-11-09), where the plot drew 296 px without the note: there the note stands below the chart
+// A seven-line note beside the value axis left the trend 88 px of plot on a phone (talks),
+// where the plot drew 296 px without the note: there the note stands below the chart
 // and the plot keeps that height.
 it("keeps trend-marked's plot tall on a phone, its note below the chart", async () => {
   const page = await open("chart-slide/trend-marked", 390);

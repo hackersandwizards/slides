@@ -64,7 +64,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   fails when `package.json` pins no brand.
 - `scripts/density.ts`: the `slides-density` command each consumer runs in its gate: fails on a
   slide the fit guard shrinks below 0.8, or whose heading it shrinks below 0.8 to fit a word, and on one `PrintSlide` marks with `data-use` (a content
-  slide a statement carries), lists those below 0.9. The engine's own regression decks
+  slide a statement carries, or a regular slide drawn as one), lists those below 0.9. The engine's own regression decks
   are covered where talks runs it over the specimen deck.
 - `scripts/render-pptx.ts`: the `slides-pptx` command, a deck JSON to a native PowerPoint file in
   the h&w design with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
@@ -96,7 +96,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
     over all (a trend or bar tile frames its story page, since recharts draws no static plot); `frames.html`, every frame inline, since
     `brand-elements` reads no frame; and `build/slides.css`, compiled by Tailwind. The build copies
     each brand file the pages link to `dist/brand/` under its export name, and the pages name the
-    deck's images by the bundler's files relative to them, so `brand-elements` and the page tests (`test/pages/`) read them from `dist/` as files, with no server.
+    deck's images by the bundler's files relative to them, so `brand-elements` reads them from `dist/` as files, with no server. The page tests
+    (`test/pages/`) read them as files too, or through `test/pages/serve-dist.ts`, which serves `dist/`
+    under the `/slides` base the story pages load their assets from.
   - The routes `/slides/specimen/` and `/slides/design-system/` forward old links, anchor kept, to the
     print page and the catalog.
 - `test/`: the engine's unit tests.
@@ -119,7 +121,8 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
   reads `stylelint.config.js`), then the `scaffolding.check` steps in
   `package.json`: `check:pins`, `check:colours` (`brand-colours.json` holds the exceptions), `check:copies`
   (`brand-copies`) and `check:retired` (`brand-retired` over `dist`), then `check:pages`
-  (the tests in `test/pages/` over the built print pages), then `check:elements`
+  (the tests in `test/pages/` over the build: the print pages, the story pages and `bun run
+preview`), then `check:elements`
   (`brand-elements` over the print pages, `brand-elements.json`), then `check:markers` (`brand-markers` over `frames.html` and every
   story page at 1920, the stage width, and at 1280, served from a `slides` link to `dist/` in `node_modules/.cache`,
   since the pages load their assets from the `/slides` base). No hook runs it:

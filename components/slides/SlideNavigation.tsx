@@ -53,7 +53,7 @@ if (process.env.NODE_ENV === "development") KEYS.push([["E"], "edit text, dev on
  *  would reopen it between Esc and its queued `close` event. */
 const openModal = (dialog: HTMLDialogElement | null) => dialog?.showModal();
 
-/** Whether a press or click lies outside the panel: the backdrop's reach the dialog element. */
+/** Whether a press or click lies outside the panel: the backdrop's events reach the dialog element. */
 function onBackdrop(event: ReactMouseEvent<HTMLDialogElement>) {
   const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect();
   const { clientX: x, clientY: y } = event;

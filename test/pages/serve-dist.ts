@@ -7,6 +7,11 @@ const TYPES: Record<string, string> = {
   ".css": "text/css",
   ".js": "text/javascript",
   ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".webp": "image/webp",
+  ".woff2": "font/woff2",
+  ".json": "application/json",
 };
 
 /** Serves dist/ under the `/slides` base, for the pages that hydrate. */
@@ -30,3 +35,5 @@ export async function serveDist() {
   const { port } = server.address() as { port: number };
   return { origin: `http://127.0.0.1:${port}`, close: () => server.close() };
 }
+
+export type Served = Awaited<ReturnType<typeof serveDist>>;
