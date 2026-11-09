@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { centredMark, renderPptx } from "../scripts/render-pptx";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
-import { overviewAsPhases } from "../lib/slide-utils";
+import { overviewAsPhases, twoColumnAsSplit } from "../lib/slide-utils";
 
 const NOT_TEXT = new Set([
   "type",
@@ -270,20 +270,29 @@ describe("slides-pptx on the specimen deck", () => {
     expect(xml.match(/<a:prstDash val="dash"\/>/g)).toHaveLength(2);
   });
 
-  it("marks only a vs comparison's items and strikes only a struck before side", () => {
-    slideCatalog.slides.forEach((slide: Slide, i) => {
-      if (
-        slide.type !== "comparison" ||
-        slide.variant === "positions" ||
-        slide.variant === "guidance"
-      )
-        return;
-      const variant = slide.variant ?? "vs";
-      expect(slideXml[i].includes("<a:t>+  </a:t>"), `slide ${i + 1}`).toBe(variant === "vs");
-      expect(slideXml[i].includes('strike="sngStrike"'), `slide ${i + 1}`).toBe(
-        variant === "before-after" && slide.strike !== false,
-      );
+  it("marks only a vs comparison's items, bullets a split's and strikes only a struck before side", () => {
+    const sided = slideCatalog.slides.flatMap((slide: Slide, i) => {
+      const sides = slide.type === "content" ? twoColumnAsSplit(slide) : slide;
+      return sides?.type === "comparison" &&
+        sides.variant !== "positions" &&
+        sides.variant !== "guidance"
+        ? [{ sides, xml: slideXml[i], at: `slide ${i + 1}`, converted: slide !== sides }]
+        : [];
     });
+    expect(sided.map((s) => s.sides.variant ?? "vs")).toEqual(
+      expect.arrayContaining(["vs", "before-after", "split"]),
+    );
+    // A lone neutral two-column exports as the split it reads as on the web.
+    expect(sided.some((s) => s.converted)).toBe(true);
+    for (const { sides, xml, at } of sided) {
+      const variant = sides.variant ?? "vs";
+      expect(xml.includes("<a:t>+  </a:t>"), at).toBe(variant === "vs");
+      expect(xml.includes("<a:t>−  </a:t>"), at).toBe(variant === "vs");
+      expect(xml.includes("<a:buChar"), at).toBe(variant === "split");
+      expect(xml.includes('strike="sngStrike"'), at).toBe(
+        variant === "before-after" && sides.strike !== false,
+      );
+    }
   });
 
   it("spells out a linked image's link and covers a video with its poster", async () => {
