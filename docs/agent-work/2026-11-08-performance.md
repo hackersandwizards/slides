@@ -124,3 +124,32 @@ Not split further: 37 KB is the most a split could defer, a deck needs its types
 anyway, and a lazy slide type shows nothing until its chunk arrives, which would blank the first
 press on each new type. The stylesheet (`slides.css`, 231 KB raw, 53 KB gzip) stays render-blocking
 on a deck page, since every slide's first paint needs it.
+
+## A state page's LCP after 6bcd794, 09.11.2026
+
+Reported at b69f517: 4726–5926 ms median on a dashboard state page, the header logo with a 1.3–4.7 s
+render delay. Lighthouse 13.6.0 mobile, Chrome for Testing 156, on
+`/slides/dashboard/Types/title-slide/opening/`, both builds served by a Bun server under `/slides`
+with gzip and `max-age=600`, runs interleaved, median of 5 (range), 1-minute load per batch.
+
+| Build, server          | Throttling | 6bcd794          | b69f517          | Load    |
+| ---------------------- | ---------- | ---------------- | ---------------- | ------- |
+| gzip                   | simulated  | 2404 (1802–2705) | 1878 (1804–2409) | 8.7–17  |
+| gzip                   | devtools   | 1520 (1504–1521) | 1859 (1510–1877) | 2.5–11  |
+| no compression         | simulated  | 6376 (5025–6526) | 5475 (5250–6676) | 2.4–3.0 |
+| live Pages site (gzip) | simulated  | –                | 1169 (1052–1351) | 2.1–3.1 |
+
+- **The 5 s reading is a setup difference, not a regression.** Changing only compression on the
+  b69f517 build: gzip 1878 (1878–2778), none 6676 (5250–6841), at a load of 2.0–2.8. Uncompressed,
+  under devtools throttling (two runs, 2288 and 2267 ms), the logo has loaded at 1581 ms but the
+  render-blocking `elements.css`, 125 KB raw, arrives at 2184 ms: about 700 ms of the logo's render
+  delay. `astro preview` (from `catalog/` with `--root .`) and Pages both send gzip.
+- **What did regress, by 350 ms under devtools throttling, is a stylesheet.** ed4dfb6 imported
+  brand's `stage.css`, `card.css` and `button.css` into `SlideFrame.astro`'s scoped style, 6.9 KB, past Astro's
+  4 KB inline limit, so every state page loaded a render-blocking `state.*.css`. Controls on the
+  b69f517 page, one factor each, devtools: the page as built 1872 (1498–1892), the `state.css` link
+  removed 1512 (1489–1531), the story iframe removed 1872 (1863–1889). The page itself loads no web
+  font; the faces load inside the iframe.
+- v2.14.2 reads the page size out of `stage.css` instead, and the style inlines at 3984 bytes. After:
+  devtools 1527 (1521–1554), simulated 2103 (1802–2855) at a load of 9–20. A page test fails when a
+  state's page links a stylesheet the home does not.
