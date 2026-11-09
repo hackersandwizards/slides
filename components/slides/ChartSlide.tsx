@@ -6,6 +6,7 @@ import { usePrintMode } from "../../lib/print-context";
 import type { ChartSlide as ChartSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
+import { SectionHeader } from "./SectionHeader";
 import { useMounted } from "../../lib/use-mounted";
 import { ChartFrame, SlideTitle } from "./primitives";
 // recharts is most of a deck page's script and only the trend and bar charts use it, after mount:
@@ -376,6 +377,7 @@ export function ChartSlide({ slide }: Props) {
       <div
         className={`slide-content relative z-10 flex flex-col items-center justify-center px-12 ${slide.headline ? "slide-titled" : ""}`}
       >
+        <SectionHeader label={slide.sectionLabel} />
         {slide.headline && (
           <SlideTitle as="h2" duration={0.6}>
             {slide.headline}

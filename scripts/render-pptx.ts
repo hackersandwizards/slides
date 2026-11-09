@@ -2807,6 +2807,8 @@ const RENDER: {
         s,
         ctx,
         {
+          // header() reads the label off any slide; the deprecated evolution type has none.
+          ...{ sectionLabel: d.sectionLabel },
           type: "evolution",
           headline: d.headline,
           footer: d.footer,

@@ -3,6 +3,7 @@
 import type { ProfilesSlide as ProfilesSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
+import { SectionHeader } from "./SectionHeader";
 import { useCarousel } from "../../lib/use-carousel";
 import User from "lucide-react/icons/user";
 import {
@@ -42,6 +43,7 @@ export function ProfilesSlide({ slide }: Props) {
   return (
     <SlideShell>
       <TitledContent>
+        <SectionHeader label={slide.sectionLabel} />
         <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
         <div className="slide-body items-center">
           {/* Each card runs as wide as its share of the row, the portrait beside the name, so the

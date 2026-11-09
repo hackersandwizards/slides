@@ -33,3 +33,34 @@ describe("the kicker above a slide title", () => {
     },
   );
 });
+
+// Every titled slide type a talk shows between its section dividers carries the section label in
+// the same kicker as a content slide, so a deck labels each slide of a stop alike.
+describe("the section label on every titled slide type", () => {
+  const branch = { label: "Y", title: "T", text: "x", team: "platform" } as const;
+  const slides = [
+    {
+      type: "decision",
+      headline: "H",
+      need: "n",
+      question: "q",
+      yes: branch,
+      no: { ...branch, team: "enabling" },
+      outcome: "o",
+    },
+    { type: "team-topology", headline: "H", streamAligned: [], platform: [], enabling: [] },
+    { type: "process", headline: "H", nodes: [{ title: "A" }, { title: "B" }] },
+    { type: "process", headline: "H", loop: false, nodes: [{ title: "A" }, { title: "B" }] },
+    { type: "wheel", headline: "H", center: "C", segments: [{ title: "A", text: "a" }] },
+    { type: "profiles", headline: "H", profiles: [] },
+    { type: "chart", headline: "H", variant: "cycle", segments: [] },
+  ];
+
+  it.each(slides.map((s) => [s.type, { ...s, sectionLabel: "K" } as Slide]))(
+    "%s draws its section label as the kicker",
+    (_, slide) => {
+      const kicker = [...draw(slide).querySelectorAll(".slide-kicker .hw-label")];
+      expect(kicker.map((el) => el.textContent)).toEqual(["K"]);
+    },
+  );
+});

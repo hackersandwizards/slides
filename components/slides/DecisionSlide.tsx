@@ -5,8 +5,10 @@ import type {
   DecisionSlide as DecisionSlideType,
   DecisionTeam,
 } from "../../types/slide";
+import { keepCompounds } from "../../lib/markdown";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
+import { SectionHeader } from "./SectionHeader";
 import { TitledContent, SlideTitle, SlideSubtitle, SlideCard } from "./primitives";
 
 interface Props {
@@ -67,8 +69,8 @@ function GridBranch({ branch, row }: { branch: DecisionBranch; row: 1 | 2 }) {
     <div
       className={`col-start-5 ${row === 1 ? "row-start-1" : "row-start-2"} flex flex-col justify-center rounded-brand border px-6 py-5 ${TEAM[branch.team]}`}
     >
-      <p className="card-title text-2xl leading-tight">{branch.title}</p>
-      <p className="mt-2 text-xl leading-snug text-text">{branch.text}</p>
+      <p className="card-title text-2xl leading-tight">{keepCompounds(branch.title)}</p>
+      <p className="mt-2 text-xl leading-snug text-text">{keepCompounds(branch.text)}</p>
     </div>
   );
 }
@@ -78,6 +80,7 @@ export function DecisionSlide({ slide }: Props) {
   return (
     <SlideShell>
       <TitledContent>
+        <SectionHeader label={slide.sectionLabel} />
         <SlideTitle>{slide.headline}</SlideTitle>
         {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
         <div className="slide-body items-center">
@@ -88,14 +91,14 @@ export function DecisionSlide({ slide }: Props) {
                 tone="primary"
                 className="text-base leading-tight font-bold text-text card-pad-3/4"
               >
-                {slide.need}
+                {keepCompounds(slide.need)}
               </SlideCard>
               <SlideCard
                 tone="primary"
                 look="outline"
                 className="text-center text-sm leading-tight font-bold text-text card-pad-3/4"
               >
-                {slide.question}
+                {keepCompounds(slide.question)}
               </SlideCard>
               {[slide.yes, slide.no].map((branch) => (
                 <div
@@ -105,15 +108,15 @@ export function DecisionSlide({ slide }: Props) {
                   <p className="hw-label [--hw-label-size:var(--text-sm)]" data-tone="muted">
                     {branch.label}
                   </p>
-                  <p className="card-title text-lg leading-tight">{branch.title}</p>
-                  <p className="text-sm leading-snug text-text">{branch.text}</p>
+                  <p className="card-title text-lg leading-tight">{keepCompounds(branch.title)}</p>
+                  <p className="text-sm leading-snug text-text">{keepCompounds(branch.text)}</p>
                 </div>
               ))}
               <SlideCard
                 tone="quiet"
                 className="text-base leading-tight font-bold text-text card-pad-3/4"
               >
-                {slide.outcome}
+                {keepCompounds(slide.outcome)}
               </SlideCard>
             </div>
             {/* Desktop: the same flow left to right in a grid, so every box grows with its text.
@@ -124,14 +127,14 @@ export function DecisionSlide({ slide }: Props) {
                 tone="primary"
                 className="col-start-1 row-span-2 row-start-1 self-center text-2xl leading-tight font-bold text-text card-pad-4/5"
               >
-                {slide.need}
+                {keepCompounds(slide.need)}
               </SlideCard>
               <div className="relative col-start-2 row-span-2 row-start-1 h-1 self-center bg-primary">
                 <Head />
               </div>
               <div className="relative col-start-3 row-span-2 row-start-1 self-center rounded-brand border border-primary bg-white px-5 py-5 text-center text-2xl leading-tight font-bold text-text">
                 <span className="absolute top-1/2 -right-8 h-1 w-8 -translate-y-1/2 bg-primary" />
-                {slide.question}
+                {keepCompounds(slide.question)}
               </div>
               <Elbow side="in" half="top" label={slide.yes.label} />
               <GridBranch branch={slide.yes} row={1} />
@@ -140,7 +143,7 @@ export function DecisionSlide({ slide }: Props) {
                 <span className="absolute top-1/2 -left-8 h-1 w-8 -translate-y-1/2 bg-primary">
                   <Head />
                 </span>
-                {slide.outcome}
+                {keepCompounds(slide.outcome)}
               </div>
               <Elbow side="in" half="bottom" label={slide.no.label} />
               <GridBranch branch={slide.no} row={2} />
@@ -148,7 +151,9 @@ export function DecisionSlide({ slide }: Props) {
             </div>
           </BlurFade>
 
-          {slide.caption && <p className="mt-6 text-xl text-text-muted">{slide.caption}</p>}
+          {slide.caption && (
+            <p className="mt-6 text-xl text-text-muted">{keepCompounds(slide.caption)}</p>
+          )}
         </div>
       </TitledContent>
     </SlideShell>

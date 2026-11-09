@@ -3,6 +3,7 @@
 import type { WheelSlide as WheelSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
+import { SectionHeader } from "./SectionHeader";
 import { TitledContent, SlideTitle, SlideSubtitle, NumberTile } from "./primitives";
 
 interface Props {
@@ -56,6 +57,7 @@ export function WheelSlide({ slide }: Props) {
   return (
     <SlideShell>
       <TitledContent>
+        <SectionHeader label={slide.sectionLabel} />
         <SlideTitle>{slide.headline}</SlideTitle>
         {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
         <div className="slide-body">

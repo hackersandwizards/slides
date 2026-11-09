@@ -60,3 +60,26 @@ describe("renderMarkdown", () => {
     expect(renderMd("*").textContent).toBe("*");
   });
 });
+
+// A hyphenated compound never breaks at its hyphen into a lone fragment ("Self-" over
+// "Service?"): from md up a short one stays whole on its line; a long one may still break.
+describe("hyphenated compounds", () => {
+  const whole = (el: HTMLElement) =>
+    [...el.querySelectorAll("span")]
+      .filter((s) => s.className.includes("md:whitespace-nowrap"))
+      .map((s) => s.textContent);
+
+  it.each([
+    ["Can it be offered as Self-Service?", ["Self-Service"]],
+    ["**On-call** for e-mail and pen-test prep", ["On-call", "e-mail", "pen-test"]],
+    ["Zero-Trust-Plattform", ["Zero-Trust-Plattform"]],
+  ])("keeps the compounds of %s whole", (text, compounds) => {
+    const el = renderMd(text);
+    expect(whole(el)).toEqual(compounds);
+    expect(el.textContent).toBe(text.replace(/\*\*/g, ""));
+  });
+
+  it("lets a compound longer than a short line break", () => {
+    expect(whole(renderMd("Kundenservice-Eskalationsmanagement-Prozess"))).toEqual([]);
+  });
+});

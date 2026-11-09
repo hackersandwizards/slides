@@ -527,6 +527,7 @@ export interface Profile {
 
 export interface ProfilesSlide {
   type: "profiles";
+  sectionLabel?: string;
   headline: string;
   profiles: Profile[];
   /** One line under the portraits, such as who else belongs to the group shown. */
@@ -585,6 +586,7 @@ export interface ProcessNode {
  *  first; `loop: false` for stages that run once, such as a progression from 1x to 10x. */
 export interface ProcessSlide extends Grounded {
   type: "process";
+  sectionLabel?: string;
   headline: string;
   nodes: ProcessNode[];
   /** The title of the step that stays lit. */
@@ -626,6 +628,7 @@ export interface ChartDataPoint {
 
 export interface ChartSlide {
   type: "chart";
+  sectionLabel?: string;
   headline?: string;
   variant: "cycle" | "graph" | "trend" | "bar";
   segments?: ChartSegment[];
@@ -793,6 +796,7 @@ export interface GanttSlide {
 // their own blocks the stream teams consume.
 export interface TeamTopologySlide {
   type: "team-topology";
+  sectionLabel?: string;
   headline: string;
   subtitle?: string;
   streamAligned: { name: string; roles: string[] }[];
@@ -826,6 +830,7 @@ export interface AgendaSlide {
 // Areas around a central disc: six in practice, four or five still lay out.
 export interface WheelSlide {
   type: "wheel";
+  sectionLabel?: string;
   headline: string;
   subtitle?: string;
   center: string;
@@ -846,6 +851,7 @@ export interface DecisionBranch {
 // joining on the outcome.
 export interface DecisionSlide {
   type: "decision";
+  sectionLabel?: string;
   headline: string;
   subtitle?: string;
   need: string;

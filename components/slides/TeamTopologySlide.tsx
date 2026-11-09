@@ -3,6 +3,7 @@
 import type { TeamTopologySlide as TeamTopologySlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
+import { SectionHeader } from "./SectionHeader";
 import { TitledContent, SlideTitle, SlideSubtitle } from "./primitives";
 
 interface Props {
@@ -33,6 +34,7 @@ export function TeamTopologySlide({ slide }: Props) {
   return (
     <SlideShell>
       <TitledContent>
+        <SectionHeader label={slide.sectionLabel} />
         <SlideTitle>{slide.headline}</SlideTitle>
         {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
         <div className="slide-body">

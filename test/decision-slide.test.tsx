@@ -16,7 +16,11 @@ describe("DecisionSlide", () => {
       ...[yes, no].flatMap((b) => [b.label, b.title, b.text]),
     ]) {
       // In the stacked phone flow and the desktop grid; CSS shows one of them.
-      expect(getAllByText(text)).toHaveLength(2);
+      // A compound sits in its own span, so match the innermost element holding the whole text.
+      const holds = (el: Element | null) => el?.textContent === text;
+      expect(
+        getAllByText((_, el) => holds(el) && ![...(el?.children ?? [])].some(holds)),
+      ).toHaveLength(2);
     }
   });
 });

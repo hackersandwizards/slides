@@ -2,6 +2,7 @@
 
 import type { ProcessSlide as ProcessSlideType } from "../../types/slide";
 import { SlideShell, groundOf } from "./SlideShell";
+import { SectionHeader } from "./SectionHeader";
 import { iconMap, type LucideIcon } from "../../lib/icons";
 import { LONG_FLOW, isHighlightPhase } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
@@ -62,6 +63,7 @@ export function ProcessSlide({ slide }: Props) {
   return (
     <SlideShell ground={groundOf(slide)}>
       <TitledContent>
+        <SectionHeader label={slide.sectionLabel} />
         <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
 
         <div className="slide-body items-center">

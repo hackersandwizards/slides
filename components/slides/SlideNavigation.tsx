@@ -41,6 +41,14 @@ interface Props {
 const stepForward = () => document.body.dispatchEvent(arrowEvent("ArrowRight"));
 const stepBack = () => document.body.dispatchEvent(arrowEvent("ArrowLeft"));
 
+/** A click with a pointer leaves the button: a Next that only revealed a step stays mounted, and
+ *  focused it turned visible at the presenter's next arrow key and held the bar drawn. A press of
+ *  Enter or Space (`detail` 0) keeps the keyboard's place. */
+const press = (step: () => void) => (event: ReactMouseEvent<HTMLButtonElement>) => {
+  if (event.detail > 0) event.currentTarget.blur();
+  step();
+};
+
 /** How long the controls stay after the pointer last moved. A module's, as each slide mounts its
  *  navigation anew and a click on Next must find them still there. */
 const POINTER_IDLE_MS = 3000;
@@ -294,7 +302,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
           className="slide-controls fixed z-50 flex w-max items-center gap-3 transition-opacity print:hidden"
         >
           <button
-            onClick={stepBack}
+            onClick={press(stepBack)}
             disabled={atStart}
             className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
             data-on="picture"
@@ -314,7 +322,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
           </div>
 
           <button
-            onClick={stepForward}
+            onClick={press(stepForward)}
             disabled={atEnd}
             className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
             data-on="picture"

@@ -19,7 +19,7 @@ import { linkLabel, profileLabel } from "../../lib/slide-utils";
 import { BlurFade } from "../ui/blur-fade";
 import Image from "../ui/image";
 import { Linkedin } from "../../lib/icons";
-import { renderMarkdown } from "../../lib/markdown";
+import { keepCompounds, renderMarkdown } from "../../lib/markdown";
 import type { ComparisonSide } from "../../types/slide";
 
 /** A titled slide's column: headline on top, `.slide-body` below, both under the fit guard. */
@@ -56,7 +56,9 @@ export function SlideTitle({
 }) {
   return (
     <BlurFade delay={delay} duration={duration}>
-      <Tag className={`slide-title ${className}`.trim()}>{children}</Tag>
+      <Tag className={`slide-title ${className}`.trim()}>
+        {typeof children === "string" ? keepCompounds(children) : children}
+      </Tag>
     </BlurFade>
   );
 }
@@ -66,7 +68,7 @@ export function SlideSubtitle({ children, delay = 0.15 }: { children: ReactNode;
   return (
     <BlurFade delay={delay} duration={0.5}>
       <p className="mt-4 max-w-6xl text-2xl leading-snug whitespace-pre-line text-text-muted">
-        {children}
+        {typeof children === "string" ? keepCompounds(children) : children}
       </p>
     </BlurFade>
   );

@@ -1,5 +1,6 @@
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
+import { slideCatalog } from "../../specimen/slide-catalog";
 import { type Served, serveDist } from "./serve-dist";
 
 // Between 40rem and 48rem no control and no counter showed: the bar ended at `sm` and the counter
@@ -154,5 +155,25 @@ it("draws nothing over a projected slide once the mouse rests, and keeps the cou
   });
   expect(counter.text).toMatch(/^\d+ \/ \d+$/);
   expect(counter.width).toBeGreaterThan(0);
+  await page.close();
+}, 30_000);
+
+// A click on Next that reveals a step leaves Next mounted and focused; the arrow key after it made
+// the focus visible, and the bar stayed drawn over the slide for good.
+it("lets the bar sleep once the presenter goes back to the keys after clicking Next", async () => {
+  const target =
+    slideCatalog.slides.findIndex((s) => JSON.stringify(s).includes('"reveal":true')) + 1;
+  const page = await deck(1440);
+  for (let i = 1; i < target; i++) await page.keyboard.press("ArrowRight");
+  await reached(page, target);
+  await page.mouse.move(700, 300);
+  await shown(page);
+  const { x, y } = await bar(page);
+  await page.mouse.click(x, y);
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  expect((await bar(page)).position).toMatch(new RegExp(`^${target} /`));
+  await page.mouse.move(700, 300);
+  await page.keyboard.press("ArrowRight");
+  await shown(page, "0");
   await page.close();
 }, 30_000);

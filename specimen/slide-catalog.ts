@@ -877,6 +877,7 @@ const slides: Slide[] = [
 
   {
     type: "process",
+    sectionLabel: "Stop 2: tooling",
     headline: "From autocomplete to delivery harness",
     loop: false,
     highlightPhase: "Harness",
@@ -1184,6 +1185,7 @@ const slides: Slide[] = [
 
   {
     type: "profiles",
+    sectionLabel: "Who runs the day",
     headline: "Your trainers",
     profiles: [
       {
@@ -1266,6 +1268,7 @@ const slides: Slide[] = [
 
   {
     type: "process",
+    sectionLabel: "Stop 3: rhythm",
     headline: "The weekly loop",
     highlightPhase: "Review",
     nodes: [
@@ -1455,6 +1458,7 @@ const slides: Slide[] = [
   },
   {
     type: "chart",
+    sectionLabel: "Board snapshot",
     variant: "bar",
     headline: "Build holds the most tickets",
     data: [
@@ -1624,6 +1628,7 @@ const slides: Slide[] = [
 
   {
     type: "team-topology",
+    sectionLabel: "Proposal",
     headline: "Four team types",
     subtitle: "Stream-aligned teams deliver, the other three make them faster.",
     streamAligned: [
@@ -1646,9 +1651,34 @@ const slides: Slide[] = [
     enabling: [{ name: "Enabling: Data", experts: ["Analytics"] }],
     notes: "team-topology: minimal.",
   },
+  {
+    type: "team-topology",
+    headline: "A proposal to discuss",
+    subtitle: "The team builds. Platform, enabling and subsystems make it faster.",
+    streamAligned: [
+      {
+        name: "Team: Booking portal for two markets",
+        roles: ["Business lead", "Product lead", "Embedded field engineer", "Factory engineer"],
+      },
+    ],
+    platform: [
+      { name: "Platform: Environments", description: "Cloud, firewall, gateways" },
+      { name: "Platform: Storefront", description: "Catalogue, checkout, orders" },
+      { name: "Platform: Identity", description: "Login, roles, hierarchy" },
+    ],
+    enabling: [{ name: "Enabling: Security", experts: ["Guardrails", "Pen-test preparation"] }],
+    complicatedSubsystem: [
+      { name: "Subsystem: CRM", description: "Leads, routing, activities" },
+      { name: "Subsystem: Legacy portal", description: "Data for the migration" },
+    ],
+    caption:
+      "Not today's picture. The question for the afternoon: what would have to become platform so the team never waits?",
+    notes: "team-topology: a full proposal, every team type, three platforms and two subsystems.",
+  },
 
   {
     type: "wheel",
+    sectionLabel: "Operating model",
     headline: "Six areas of autonomy",
     subtitle: "Each area is a decision the team makes itself.",
     center: "Autonomous team",
@@ -1678,6 +1708,7 @@ const slides: Slide[] = [
 
   {
     type: "decision",
+    sectionLabel: "Routing a need",
     headline: "Service or enablement",
     subtitle: "Where a stream team's need goes.",
     need: "The team needs what it cannot do today",
@@ -1712,6 +1743,31 @@ const slides: Slide[] = [
     no: { label: "No", title: "Enabling team", text: "Coaches the stream team", team: "enabling" },
     outcome: "Routes ship weekly",
     notes: "decision: complicated-subsystem branch.",
+  },
+  {
+    type: "decision",
+    sectionLabel: "Stop 4: steering",
+    headline: "Who is in the team, who outside?",
+    subtitle:
+      "What the team needs every day belongs in the team. The rest takes one of two routes.",
+    need: "The team needs something it cannot do itself today",
+    question: "Can it be offered to the team as self-service?",
+    yes: {
+      label: "Yes",
+      title: "Platform",
+      text: "The team uses it without a ticket or a queue",
+      team: "platform",
+    },
+    no: {
+      label: "No",
+      title: "Enabling",
+      text: "Specialists enable for a while, until the team can do it itself",
+      team: "enabling",
+    },
+    outcome: "The team delivers without waiting",
+    caption:
+      "Two exceptions: deep specialist knowledge stays a subsystem, independent audits stay outside. Both come early rather than at the end.",
+    notes: "decision: a section label, a hyphenated compound in the question, long branch texts.",
   },
 
   {
@@ -2036,6 +2092,25 @@ const slides: Slide[] = [
     ],
     notes:
       "content blocks: a gallery grid with a video among the pictures and the tags they share.",
+  },
+  {
+    type: "content",
+    sectionLabel: "Connections",
+    headline: "More people, many more connections",
+    content: [
+      {
+        type: "bars",
+        order: "given",
+        bars: [
+          { label: "5 people", value: 10, display: "10" },
+          { label: "15 people", value: 105, display: "105" },
+          { label: "50 people", value: 1225, display: "1,225" },
+          { label: "150 people", value: 11175, display: "11,175", highlight: true },
+        ],
+      },
+    ],
+    footer: "n people have n(n-1)/2 possible connections.",
+    notes: "visual blocks: bars three orders of magnitude apart, the smallest still visible.",
   },
   {
     type: "statement",

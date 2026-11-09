@@ -50,6 +50,7 @@ const NOT_TEXT = new Set([
   "highlightPhase",
   "contact",
   "continues",
+  "order",
 ]);
 
 function texts(value: unknown, key = ""): string[] {

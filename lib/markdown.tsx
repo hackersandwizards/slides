@@ -6,10 +6,29 @@ import React from "react";
 export const INLINE_MARKDOWN =
   /(\[[^\]]+\]\([^)\s]+\)|\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?!\s)[^*]*[^\s*]\*|`[^`]+`)/g;
 
+// A browser breaks a line after any hyphen, so "Self-Service" in a narrow box ends one line on
+// "Self-" with "Service?" alone below. From md up a compound that fits a short line stays whole;
+// a longer one, or any on a phone, still breaks where it must.
+const COMPOUND = /([\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)+)/u;
+
+export function keepCompounds(text: string): React.ReactNode {
+  const pieces = text.split(COMPOUND);
+  if (pieces.length === 1) return text;
+  return pieces.map((piece, i) =>
+    i % 2 && piece.length <= 24 ? (
+      <span key={i} className="md:whitespace-nowrap">
+        {piece}
+      </span>
+    ) : (
+      piece
+    ),
+  );
+}
+
 export function renderMarkdown(text: string): React.ReactNode {
   const parts = text.split(INLINE_MARKDOWN);
   return parts.map((part, i) => {
-    if (i % 2 === 0) return part;
+    if (i % 2 === 0) return <React.Fragment key={i}>{keepCompounds(part)}</React.Fragment>;
     const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);
     // Only web, mail and relative targets become links; any other scheme stays plain text.
     if (link && !/^(https?:|mailto:|[/#.]|[^:]*$)/i.test(link[2])) return link[1];
@@ -23,14 +42,14 @@ export function renderMarkdown(text: string): React.ReactNode {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
         <strong key={i} className="font-bold text-text">
-          {part.slice(2, -2)}
+          {keepCompounds(part.slice(2, -2))}
         </strong>
       );
     }
     if (part.startsWith("*") && !part.startsWith("**")) {
       return (
         <span key={i} className="font-semibold text-slide-accent">
-          {part.slice(1, -1)}
+          {keepCompounds(part.slice(1, -1))}
         </span>
       );
     }

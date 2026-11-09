@@ -52,3 +52,4 @@ export const VisualTimelineStaggered = state("content", 44, "ContentSlide");
 export const BlockTwoImages = state("content", 45, "ContentSlide");
 export const BlockGallery = state("content", 46, "ContentSlide");
 export const BlockGallery2 = state("content", 47, "ContentSlide");
+export const VisualBarsFarApart = state("content", 48, "ContentSlide");
