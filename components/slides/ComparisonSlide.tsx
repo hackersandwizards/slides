@@ -15,7 +15,8 @@ import { SlideShell } from "./SlideShell";
 import XCircle from "lucide-react/icons/circle-x";
 import CheckCircle from "lucide-react/icons/circle-check-big";
 import { keepHyphenatedWords } from "../../lib/slide-utils";
-import { SlideTitle, SlideCard, DisplayHeading } from "./primitives";
+import { SlideTitle, SlideSubtitle, SlideCard, DisplayHeading } from "./primitives";
+import { SectionHeader } from "./SectionHeader";
 import { renderMarkdown } from "../../lib/markdown";
 
 function MarkedItem({
@@ -415,10 +416,14 @@ export function ComparisonSlide({ slide }: Props) {
       <div
         className={`slide-content relative z-10 flex flex-col items-center justify-center px-16 ${slide.headline ? "slide-titled" : ""}`}
       >
+        <SectionHeader label={slide.sectionLabel} />
         {slide.headline && (
           <SlideTitle as="h2" duration={0.6}>
             {slide.headline}
           </SlideTitle>
+        )}
+        {slide.subtitle && (
+          <SlideSubtitle delay={0.22}>{renderMarkdown(slide.subtitle)}</SlideSubtitle>
         )}
 
         <div className="slide-body items-center">

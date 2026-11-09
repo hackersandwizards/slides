@@ -2482,7 +2482,9 @@ const RENDER: {
         ctx,
         {
           type: "content",
+          sectionLabel: d.sectionLabel,
           headline: d.headline ?? "",
+          subtitle: d.subtitle,
           content: [{ type: "positions", left, right, middle, resolution }],
         },
         deck,

@@ -419,7 +419,11 @@ export interface ComparisonSide {
 
 interface ComparisonBase {
   type: "comparison";
+  /** The kicker above the headline, as on a content slide. */
+  sectionLabel?: string;
   headline?: string;
+  /** A lead line under the headline. */
+  subtitle?: string;
   punchline?: string;
   /** On a `vs` slide, the punchline waits for one more arrow key instead of showing on arrival. */
   revealPunchline?: boolean;
