@@ -1,5 +1,6 @@
 ---
 import brand from "@hackersandwizards/brand/tokens.json";
+import stage from "@hackersandwizards/brand/stage.css?raw";
 
 // A slide fills its window, so the dashboard frames its preview page at brand's slide page size,
 // scaled to the card: at the card's own size a phone's window was too short for the slide. The card
@@ -19,9 +20,14 @@ const { component, part, css, light } = Astro.props;
 const path = Astro.url.pathname;
 const preview = path.includes("/stories/");
 const src = path.replace("/dashboard/", "/stories/");
-// The dashboard page's own stylesheet need carry no slide token: the frame imports the page size
-// and its card below. The card's line is the catalog's own colour, its corner the site's.
-const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]}`;
+// The dashboard page's own stylesheet need carry no slide token: the frame reads the page size out
+// of brand's stage and imports its card below. The card's line is the catalog's own colour, its
+// corner the site's. Two values rather than all of stage.css keep the frame's style under Astro's
+// 4 KB inline limit: above it the style becomes a render-blocking request that delays the LCP.
+const size = ["--slide-page-width", "--slide-page-height"]
+  .map((name) => `${name}:${stage.match(new RegExp(`${name}:\\s*([^;]+);`))![1]}`)
+  .join(";");
+const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
 ---
 
 {preview ? (
@@ -101,7 +107,6 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]}`;
 )}
 
 <style>
-  @import "@hackersandwizards/brand/stage.css";
   @import "@hackersandwizards/brand/elements/card.css";
 
   /* A deck's page stays light behind a light slide when the catalog is dark. */
