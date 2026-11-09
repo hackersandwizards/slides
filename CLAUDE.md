@@ -68,6 +68,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   slide the fit guard shrinks below 0.8, or whose heading it shrinks below 0.8 to fit a word, and on one `PrintSlide` marks with `data-use` (a content
   slide a statement carries, or a regular slide drawn as one), lists those below 0.9. The engine's own regression decks
   are covered where talks runs it over the specimen deck.
+- `scripts/usage.ts`: the `slides-usage` command, a deck JSON's slides counted per catalogue entry (the anchors in `catalog/guidance.ts`), which the consumer publishes: the public engine reads no client deck.
 - `scripts/render-pptx.ts`: the `slides-pptx` command, a deck JSON to a native PowerPoint file in
   the h&w design with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
   Its lengths and sizes are measured off the print route at 1920x1080.
@@ -77,7 +78,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `test/specimen-coverage.test.ts` fails on a slide type, content block or variant it does not show.
 - `catalog/`: the catalog (decision repo-uniformity-plan, hub-max), one Astro app in scaffolding's
   catalog shell (`catalog({...})` in `catalog/astro.config.ts`), never shipped but for
-  `SlideFrame.astro`, the story frame a consumer's catalog takes too, which imports its own page
+  `guidance.ts`, which `slides-usage` reads, and `SlideFrame.astro`, the story frame a consumer's catalog takes too, which imports its own page
   size and card and below 40rem offers the slide enlarged across the turned phone: Astrobook, `@astrojs/react`
   and scaffolding are dev dependencies, outside `files` and `exports`. Its base is
   the Pages path `/slides`, so the gate reads the build that ships. The catalog's `css` is brand's
@@ -107,7 +108,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
 consumer imports, `types/slide`, the three stylesheets (`slides.css`, `sources.css`, and `tokens.css`, which a consumer's design-system page reads), `scripts/render-pdf`, the specimen deck and its
-images, the catalog's `SlideFrame.astro`, and the `slides-density`, `slides-pins` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is
+images, the catalog's `SlideFrame.astro`, and the `slides-density`, `slides-pins`, `slides-usage` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is
 a release. Consumers import by those names, `@hackersandwizards/slides/types/slide`, and ship the source: Next lists
 the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest config in
 `server.deps.inline`. React, motion, lucide-react, recharts, shiki, Tailwind and the brand package

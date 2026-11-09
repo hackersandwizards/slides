@@ -10,7 +10,7 @@ import type { Slide } from "../types/slide";
 import * as primitives from "../components/slides/primitives";
 import { highlightLines } from "../lib/code-highlight";
 import { renderMarkdown } from "../lib/markdown";
-import { isOpening, replacedBy } from "../lib/slide-utils";
+import { replacedBy, variantOf } from "../lib/slide-utils";
 import * as chrome from "../components/slides/SlideChrome";
 import { DeckTile } from "../components/deck/DeckTile";
 import { brandHref, placeBrandUrls } from "./brand-urls";
@@ -40,18 +40,6 @@ const codeBlocks = new Set(["code", "code-and-text", "annotated-code"]);
 const hasCode = (s: Slide) =>
   (s.type === "content" && !!s.content?.some((b) => codeBlocks.has(b.type))) ||
   (s.type === "lanes" && !!s.codeSnippet);
-const variantOf = (s: Slide) =>
-  (s.type === "grid" &&
-    s.variant === "quotes" &&
-    s.cards.every((c) => c.imageSrc) &&
-    "quotes with portraits") ||
-  ("variant" in s && s.variant) ||
-  ("layout" in s && s.layout) ||
-  ("kind" in s && s.kind) ||
-  ("strike" in s && s.strike === false ? "without strike" : "") ||
-  (s.type === "statement" && (s.attribution ? "quotation" : s.qr ? "qr" : "")) ||
-  (s.type === "title" && isOpening(s) ? "opening" : "");
-
 // A deprecated form stays in the specimen deck, which the consumers test, but leaves the catalogue
 // for the one list of replaced forms: a new slide picks the entry that draws it.
 const offered = (s: Slide) => !replacedBy(s);

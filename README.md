@@ -56,6 +56,10 @@ those below 0.9, a heading it shrinks so that its widest word fits included. It 
 one included, which a `statement` carries (`bulletsAsStatement` in `lib/slide-utils`). `--serve` starts the consumer's
 server for the run and stops it afterwards.
 
+The command `slides-usage <deck.json|-> ...` prints, as JSON, how many slides of those decks use each
+entry of the catalogue's print page, and which entries none uses, for a consumer to publish. A slide
+drawn through a replaced form counts for the entry that replaces it. It fails on a slide no entry draws.
+
 The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]` writes a deck as a native
 PowerPoint file in the h&w design: text as text boxes, tables as tables, trend and bar charts as
 charts, diagrams as shapes, and only the deck's own images and the h&w logos as pictures. A chart's

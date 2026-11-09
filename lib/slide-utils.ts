@@ -610,6 +610,19 @@ export const closingClaim = (slide: ClosingSlide, lang: "en" | "de") =>
 export const isHighlightPhase = (title: string, phase?: string) =>
   !!phase && title.toLowerCase() === phase.toLowerCase();
 
+/** The variant a slide is catalogued under; empty for a type's plain form. */
+export const variantOf = (s: Slide) =>
+  (s.type === "grid" &&
+    s.variant === "quotes" &&
+    s.cards.every((c) => c.imageSrc) &&
+    "quotes with portraits") ||
+  ("variant" in s && s.variant) ||
+  ("layout" in s && s.layout) ||
+  ("kind" in s && s.kind) ||
+  ("strike" in s && s.strike === false ? "without strike" : "") ||
+  (s.type === "statement" && (s.attribution ? "quotation" : s.qr ? "qr" : "")) ||
+  (s.type === "title" && isOpening(s) ? "opening" : "");
+
 /** The entry that draws a deprecated form, or undefined for a form the catalogue offers: an alias
  *  type, `regular` without a profile, a `grid` other than quotes, a centered content slide a
  *  statement carries, one holding only one or two short bullets, a content slide holding a
