@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ContentSlide, Presentation } from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
@@ -14,6 +14,7 @@ import {
   gridAsContent,
   ignoredKey,
   replacedBy,
+  slideTitle,
   twoColumnAsSplit,
 } from "../lib/slide-utils";
 
@@ -87,6 +88,22 @@ describe("deckLang", () => {
     const untitled = { type: "title", title: "T" };
     expect(deckLang(deck([untitled, { ...untitled, lang: "de" }]))).toBe("de");
     expect(deckLang(deck([{ type: "statement" }]))).toBe("en");
+  });
+
+  it("warns once for a deck whose title slide names no language", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const unnamed = { name: "Unnamed", slides: [{ type: "title", title: "T" }] } as Presentation;
+    deckLang(unnamed);
+    deckLang(unnamed);
+    deckLang({ name: "Named", slides: [{ type: "title", title: "T", lang: "de" }] });
+    expect(warn.mock.calls).toEqual([[expect.stringContaining('"Unnamed"')]]);
+    warn.mockRestore();
+  });
+});
+
+describe("slideTitle", () => {
+  it("is the deck's name and the slide's number", () => {
+    expect(slideTitle({ name: "D", slides: [] }, 0)).toBe("D - 1");
   });
 });
 

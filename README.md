@@ -12,12 +12,14 @@ that the public may not see.
 Add the dependency in exactly this form, pinned to the newest tag
 (`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
 `@hackersandwizards/brand` v1.62.0 or later, whose static faces (`static-fonts.css`), shared
-elements (`elements.css`, the stage button, the label box and the accent rule among them), text
+elements (only those a slide draws, each from `elements/<name>.css`), text
 base (`text-base.css`), slide pointer (`cursor.svg`) and small corner the stylesheet imports, whose
 list marker takes `--hw-zoom`, which the fit guard sets beside the `zoom` it shrinks a slide with, whose dialog draws no browser focus ring, whose `verbal.json` gives the closing its claim and whose logos the
 slides draw through its exports, as `?url` imports the bundler serves: a deck names a mark as
 `/hw-lockup.svg`, `/hw-wordmark.svg` or their `-night` cuts. The specimen deck imports its images
-the same way, so a consumer copies nothing into `public/` for the engine. Both repos are public: Bun fetches the `git+https://` form through GitHub's tarball API without any GitHub access.
+the same way, so a consumer copies nothing into `public/` for the engine. A page that draws
+another brand element, such as a catalog shell's rail and search, imports brand's `elements.css`
+itself: put it in the catalog's `css` beside `slides.css`. Both repos are public: Bun fetches the `git+https://` form through GitHub's tarball API without any GitHub access.
 
 ```json
 "@hackersandwizards/slides": "git+https://github.com/hackersandwizards/slides.git#v<version>"

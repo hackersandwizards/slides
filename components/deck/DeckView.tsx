@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import type { Presentation } from "../../types/slide";
 import { slideComponents } from "../../lib/slide-components";
-import { slideFrame } from "../../lib/slide-utils";
+import { slideFrame, slideTitle } from "../../lib/slide-utils";
 import { usePathname } from "../../lib/navigate";
 import { SlideContainer } from "../slides/SlideContainer";
 import { SlideNavigation } from "../slides/SlideNavigation";
@@ -20,7 +20,7 @@ interface Props {
   index: number;
   /** The deck's path; slide n lives at `${basePath}/${n}`. */
   basePath: string;
-  /** Keep the document's title `<deck name> - <slide number>` as the deck moves. */
+  /** Keep the document's title `slideTitle` as the deck moves. */
   documentTitle?: boolean;
 }
 
@@ -40,8 +40,8 @@ export function DeckView({ presentation, index: initial, basePath, documentTitle
   const SlideComponent = slideComponents[slide.type];
 
   useEffect(() => {
-    if (documentTitle) document.title = `${presentation.name} - ${index + 1}`;
-  }, [documentTitle, presentation.name, index]);
+    if (documentTitle) document.title = slideTitle(presentation, index);
+  }, [documentTitle, presentation, index]);
 
   return (
     <>

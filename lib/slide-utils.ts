@@ -162,14 +162,25 @@ export function slideFrame(deck: Presentation, index: number) {
   };
 }
 
+const unnamedLang = new WeakSet<Presentation>();
+
 /** The deck's language, for the `lang` of the page and the file that show it: the first title
- *  slide's that sets one, else English. */
+ *  slide's that sets one, else English, with a warning once per deck, so a German deck missing it
+ *  shows in the build log rather than as English pages. */
 export function deckLang(deck: Presentation): "en" | "de" {
-  return (
-    deck.slides.find((slide): slide is TitleSlide => slide.type === "title" && !!slide.lang)
-      ?.lang ?? "en"
-  );
+  const lang = deck.slides.find(
+    (slide): slide is TitleSlide => slide.type === "title" && !!slide.lang,
+  )?.lang;
+  if (lang) return lang;
+  if (!unnamedLang.has(deck)) {
+    unnamedLang.add(deck);
+    console.warn(`deck "${deck.name}": no title slide names its lang, so it is set as English`);
+  }
+  return "en";
 }
+
+/** A deck page's document title, the deck's name and the slide's number. */
+export const slideTitle = (deck: Presentation, index: number) => `${deck.name} - ${index + 1}`;
 
 /** A title slide's speakers in one line: in the slide's `lang` ("A and B", "A und B"), else
  *  joined with " & ". */

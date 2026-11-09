@@ -2,7 +2,30 @@
 @import "./tokens.css";
 /* The brand's list marker, in the components layer so a marker's colour utility still wins. */
 @import "@hackersandwizards/brand/marker.css" layer(components);
-@import "@hackersandwizards/brand/elements.css" layer(components);
+/* Only the elements a slide or the deck around it draws, in brand's elements.css order: the whole
+   set added 76 KB of dialogs, toasts and form fields no slide shows to every slide page's
+   render-blocking stylesheet. test/brand-elements.test.ts holds the list to the classes used. */
+@import "@hackersandwizards/brand/elements/scales.css" layer(components);
+@import "@hackersandwizards/brand/elements/label.css" layer(components);
+@import "@hackersandwizards/brand/elements/label-box.css" layer(components);
+@import "@hackersandwizards/brand/elements/pill.css" layer(components);
+@import "@hackersandwizards/brand/elements/card.css" layer(components);
+@import "@hackersandwizards/brand/elements/callout.css" layer(components);
+@import "@hackersandwizards/brand/elements/quote.css" layer(components);
+@import "@hackersandwizards/brand/elements/link.css" layer(components);
+@import "@hackersandwizards/brand/elements/focus.css" layer(components);
+@import "@hackersandwizards/brand/elements/icon-button.css" layer(components);
+@import "@hackersandwizards/brand/elements/strip.css" layer(components);
+@import "@hackersandwizards/brand/elements/rule.css" layer(components);
+@import "@hackersandwizards/brand/elements/code.css" layer(components);
+@import "@hackersandwizards/brand/elements/inline-code.css" layer(components);
+@import "@hackersandwizards/brand/elements/kbd.css" layer(components);
+@import "@hackersandwizards/brand/elements/button.css" layer(components);
+@import "@hackersandwizards/brand/elements/arrow-link.css" layer(components);
+@import "@hackersandwizards/brand/elements/status.css" layer(components);
+@import "@hackersandwizards/brand/elements/frame.css" layer(components);
+@import "@hackersandwizards/brand/elements/dialog.css" layer(components);
+@import "@hackersandwizards/brand/elements/avatar.css" layer(components);
 /* Headings in their level's face and weight, balanced; paragraphs and list items pretty. */
 @import "@hackersandwizards/brand/text-base.css";
 /* The brand's static faces: a PDF export embeds them as TrueType, never a variable font's Type 3. */
