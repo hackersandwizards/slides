@@ -21,6 +21,8 @@ import { FIT_STYLE } from "../lib/slide-utils";
 const FAIL = 0.8;
 const NOTICE = 0.9;
 const PAGES = 4;
+const WORD =
+  "a heading's word is wider than its box and shrinks the heading: shorten the word or give it a wider box";
 const STATEMENT =
   "one or two short bullets leave the slide empty: make it the statement slide bulletsAsStatement in lib/slide-utils returns";
 
@@ -89,6 +91,12 @@ async function check(browser: Browser, url: string): Promise<string[]> {
         failed++;
         return `FAIL ${deck}/${r.i} "${r.title}": ${STATEMENT}`;
       }
+      if ("word" in r) {
+        const fail = r.word < FAIL;
+        if (fail) failed++;
+        else noticed++;
+        return `${fail ? "FAIL" : "NOTICE"} ${deck}/${r.i} heading scale ${r.word.toFixed(2)} "${r.title}": ${WORD}`;
+      }
       const level = r.scale < FAIL ? "FAIL" : "NOTICE";
       if (level === "FAIL") failed++;
       else noticed++;
@@ -152,15 +160,29 @@ async function settle(page: import("puppeteer").Page, url: string) {
   await new Promise((r) => setTimeout(r, 500));
 }
 
+/** A slide of the wrong type, one with a heading shrunk to fit a word, or one the fit guard shrank. */
+type Row =
+  | { i: number; title: string; use: true }
+  | { i: number; title: string; word: number }
+  | { i: number; title: string; scale: number; label: string; groups: number; split: string };
+
 function measure(nodes: Element[], notice: number, fitStyle: string[]) {
-  return nodes.flatMap((slide, i) => {
+  return nodes.flatMap((slide, i): Row[] => {
     const title = slide.querySelector("h1, h2")?.textContent?.trim().slice(0, 60) ?? "";
     const misused = (slide as HTMLElement).dataset.use ? [{ i, title, use: true as const }] : [];
+    // A heading the fit guard shrank so that its widest word fits (SlideShell's fitWords).
+    const word = Math.min(
+      1,
+      ...[...slide.querySelectorAll<HTMLElement>("[data-word-scale]")].map(
+        (h) => parseFloat(h.dataset.wordScale!) || 1,
+      ),
+    );
+    const words = word < notice ? [{ i, title, word }] : [];
     const box = slide.querySelector<HTMLElement>(
       ".slide-body[style*='zoom'], .slide-content[style*='zoom']",
     );
     const scale = box ? parseFloat(box.style.zoom) || 1 : 1;
-    if (misused.length || !box || scale >= notice) return misused;
+    if (misused.length || !box || scale >= notice) return [...misused, ...words];
     // Lay the box out at full size and natural width, as the fit guard measures it, to see where
     // its blocks fall.
     const kept = fitStyle.map((p) => box.style.getPropertyValue(p));
@@ -185,6 +207,6 @@ function measure(nodes: Element[], notice: number, fitStyle: string[]) {
     fitStyle.forEach((p, k) => box.style.setProperty(p, kept[k]));
     const label = parent.tagName === "UL" ? "list item" : "block";
     const split = groups.map((g) => (g.length > 1 ? `${g[0]}-${g.at(-1)}` : `${g[0]}`)).join(" | ");
-    return [...misused, { i, scale, title, label, groups: groups.length, split }];
+    return [...words, { i, scale, title, label, groups: groups.length, split }];
   });
 }

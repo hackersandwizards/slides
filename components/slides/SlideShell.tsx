@@ -74,29 +74,39 @@ export function SlideShell({
  *  hyphenates no capitalised English word and Safari none under the limit `slides.css` sets. Such a
  *  heading shrinks until its widest word fits, and every heading of its size on the slide with it,
  *  so the cards of one row keep one size. Not below `WORD_FLOOR`, where a title still stands above
- *  its card's text: past that the word breaks. "Internationalization" in a phone's card needs 0.78. */
+ *  its card's text: past that the word breaks. "Internationalization" in a phone's card needs 0.78.
+ *  A shrunk heading carries its factor as `data-word-scale`, which `slides-density` reads. A brand
+ *  element (`hw-*`) keeps the size its own setting gives it. */
 const WORD_FLOOR = 0.7;
-function fitWords(shell: HTMLElement) {
-  const headings = [...shell.querySelectorAll<HTMLElement>(":is(h1, h2, h3, .card-title)")];
-  for (const h of headings) h.style.removeProperty("font-size");
+function fitWords(root: HTMLElement) {
+  const headings = [
+    ...root.querySelectorAll<HTMLElement>(":is(h1, h2, h3, .card-title):not([class*='hw-'])"),
+  ];
+  for (const h of headings.filter((h) => h.dataset.wordScale)) {
+    h.style.removeProperty("font-size");
+    delete h.dataset.wordScale;
+  }
   const sizes = headings.map((h) => getComputedStyle(h).fontSize);
-  // Each heading's scale so far; a width does not follow its size exactly, so it is measured again.
-  const scales = headings.map(() => 1);
+  // The factor so far for each size; a width does not follow its size exactly, so it is measured
+  // again. Every heading is measured in one layout, with no break inside a word.
+  const scales = new Map<string, number>();
   for (let pass = 0; pass < 3; pass++) {
+    for (const h of headings) h.style.overflowWrap = "normal";
+    const fits = headings.map((h) => (h.clientWidth ? h.clientWidth / h.scrollWidth : 1));
+    for (const h of headings) h.style.removeProperty("overflow-wrap");
     const need = new Map<string, number>();
-    headings.forEach((h, i) => {
-      if (!h.clientWidth || scales[i] <= WORD_FLOOR) return;
-      h.style.overflowWrap = "normal";
-      const fits = h.clientWidth / h.scrollWidth;
-      h.style.removeProperty("overflow-wrap");
-      if (fits < 1) need.set(sizes[i], Math.min(fits, need.get(sizes[i]) ?? 1));
+    fits.forEach((fit, i) => {
+      if (fit < 1 && (scales.get(sizes[i]) ?? 1) > WORD_FLOOR)
+        need.set(sizes[i], Math.min(fit, need.get(sizes[i]) ?? 1));
     });
     if (!need.size) return;
+    for (const [size, fit] of need)
+      scales.set(size, Math.max(WORD_FLOOR, (scales.get(size) ?? 1) * fit * 0.995));
     headings.forEach((h, i) => {
-      const fits = need.get(sizes[i]);
-      if (!fits) return;
-      scales[i] = Math.max(WORD_FLOOR, scales[i] * fits * 0.995);
-      h.style.fontSize = `calc(${sizes[i]} * ${scales[i].toFixed(3)})`;
+      if (!need.has(sizes[i])) return;
+      const scale = scales.get(sizes[i])!.toFixed(3);
+      h.style.fontSize = `calc(${sizes[i]} * ${scale})`;
+      h.dataset.wordScale = scale;
     });
   }
 }
@@ -176,7 +186,7 @@ function useFitToSlide() {
     const fit = () => {
       box.style.removeProperty("--card-boost");
       reset();
-      fitWords(ref.current!);
+      fitWords(content);
       if (narrow?.matches) {
         box.style.justifyContent = "";
         return;

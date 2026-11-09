@@ -52,7 +52,7 @@ function Axes({
     <div className="flex h-full flex-col">
       {(yLabel || note) && (
         <div className="mb-2 flex justify-between gap-8 text-base text-text-muted max-md:contents">
-          <p className="max-md:mb-2">{yLabel}</p>
+          <p className="max-md:mb-2 max-md:empty:hidden">{yLabel}</p>
           {note && (
             <p className="text-right max-md:order-last max-md:mt-2 max-md:text-left">{note}</p>
           )}
