@@ -1,10 +1,11 @@
 "use client";
 
+import { useContext } from "react";
 import Image from "../ui/image";
 import type { TitleSlide as TitleSlideType } from "../../types/slide";
 import { isOpening, qrAlt, speakerLine } from "../../lib/slide-utils";
 import { BlurFade } from "../ui/blur-fade";
-import { SlideShell } from "./SlideShell";
+import { DeckLang, SlideShell } from "./SlideShell";
 import { DisplayHeading, LinkCaption, PictureLink } from "./primitives";
 
 /** Inline, because the `white-space` shorthand of `whitespace-pre-line` resets the class's
@@ -20,6 +21,8 @@ interface Props {
  *  of the slide's height, and the title block stands 2rem above the bottom row: a 16rem code would
  *  crowd a three-line title and shrink the whole slide. */
 function Opening({ slide }: Props) {
+  const deckLang = useContext(DeckLang);
+  const lang = slide.lang ?? deckLang;
   return (
     <SlideShell direction="col" overflowHidden>
       <div className="slide-content relative z-10 flex flex-col items-stretch justify-between px-(--slide-side) pt-(--slide-top)">
@@ -51,7 +54,9 @@ function Opening({ slide }: Props) {
         >
           <div>
             {slide.speakers && slide.speakers.length > 0 && (
-              <p className="font-heading text-4xl font-bold text-text">{speakerLine(slide)}</p>
+              <p className="font-heading text-4xl font-bold text-text">
+                {speakerLine(slide, lang)}
+              </p>
             )}
             {slide.event && <p className="mt-3 text-2xl text-text-muted">{slide.event}</p>}
           </div>
@@ -60,7 +65,7 @@ function Opening({ slide }: Props) {
               <PictureLink href={slide.qr.href}>
                 <Image
                   src={slide.qr.src}
-                  alt={qrAlt(slide.qr.href, slide.lang)}
+                  alt={qrAlt(slide.qr.href, lang)}
                   width={360}
                   height={360}
                   className="size-48 rounded-brand"

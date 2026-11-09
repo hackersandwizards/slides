@@ -85,12 +85,14 @@ opens at its last step; only print shows them all.
 A story frame sets it on its own page, as `SlideFrame.astro` does. In a frame the plain
 `slide-direction` key no longer reaches the slide, since each frame keeps its own. The print route needs none: `PrintProvider` opens every slide full.
 
-A deck's language is its title slide's `lang`, else English. A consumer's deck and print
+A deck's language is its own `lang`, a deck without a title slide's one place to name it, else
+its first title slide's, else English, which the build warns about. A consumer's deck and print
 layouts set `<html lang={deckLang(presentation)}>` with `deckLang` from
 `@hackersandwizards/slides/lib/slide-utils`, so screen readers and hyphenation read the
 deck's language; `slides-pptx` marks its text with it. The screen route passes it to
 `SlideContainer` as `lang`, English when left out, which `PrintSlide` reads from the deck itself: a
-contact closing shows brand's claim in that language unless it sets `claim: false`.
+contact closing shows brand's claim in that language unless it sets `claim: false`, and a title
+slide without a `lang` of its own joins its speakers and words its QR code's alt text in it.
 
 The package ships TypeScript source. Let the build transpile it: Next
 `transpilePackages: ["@hackersandwizards/slides"]`, Astro `vite.ssr.noExternal`, vitest

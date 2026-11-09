@@ -164,17 +164,20 @@ export function slideFrame(deck: Presentation, index: number) {
 
 const unnamedLang = new WeakSet<Presentation>();
 
-/** The deck's language, for the `lang` of the page and the file that show it: the first title
- *  slide's that sets one, else English, with a warning once per deck outside a browser, so a German
- *  deck missing it shows in the build log rather than as English pages. */
+/** The deck's language, for the `lang` of the page and the file that show it: the deck's own
+ *  `lang`, else the first title slide's that sets one, else English, with a warning once per deck
+ *  outside a browser, so a German deck missing it shows in the build log rather than as English
+ *  pages. */
 export function deckLang(deck: Presentation): "en" | "de" {
-  const lang = deck.slides.find(
-    (slide): slide is TitleSlide => slide.type === "title" && !!slide.lang,
-  )?.lang;
+  const lang =
+    deck.lang ??
+    deck.slides.find((slide): slide is TitleSlide => slide.type === "title" && !!slide.lang)?.lang;
   if (lang) return lang;
   if (typeof document === "undefined" && !unnamedLang.has(deck)) {
     unnamedLang.add(deck);
-    console.warn(`deck "${deck.name}": no title slide names its lang, so it is set as English`);
+    console.warn(
+      `deck "${deck.name}": neither the deck nor a title slide names its lang, so it is set as English`,
+    );
   }
   return "en";
 }
@@ -182,13 +185,12 @@ export function deckLang(deck: Presentation): "en" | "de" {
 /** A deck page's document title, the deck's name and the slide's number. */
 export const slideTitle = (deck: Presentation, index: number) => `${deck.name} - ${index + 1}`;
 
-/** A title slide's speakers in one line: in the slide's `lang` ("A and B", "A und B"), else
- *  joined with " & ". */
-export function speakerLine(slide: TitleSlide): string {
-  const speakers = slide.speakers ?? [];
-  return slide.lang
-    ? new Intl.ListFormat(slide.lang, { type: "conjunction" }).format(speakers)
-    : speakers.join(" & ");
+/** A title slide's speakers in one line, in the slide's `lang`, else the deck's ("A and B",
+ *  "A und B"). */
+export function speakerLine(slide: TitleSlide, deckLang: "en" | "de"): string {
+  return new Intl.ListFormat(slide.lang ?? deckLang, { type: "conjunction" }).format(
+    slide.speakers ?? [],
+  );
 }
 
 /** The alt text of a slide's QR code, in the deck's language. */

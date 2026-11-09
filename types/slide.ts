@@ -36,9 +36,10 @@ export interface TitleSlide {
   event?: string;
   /** A QR code and the link it encodes, small in the lower right, the link spelled out under it. */
   qr?: { src: string; href: string };
-  /** The deck's language (`deckLang`), which joins `speakers` ("A and B", "A und B"), words the QR
-   *  code's alt text and marks the page and the .pptx. Without it the deck is English, the build
-   *  warns, and the speakers are joined with " & ": an English deck names `"en"` too. */
+  /** The slide's language, else the deck's: it joins `speakers` ("A and B", "A und B") and words
+   *  the QR code's alt text. The first title slide's is the deck's (`deckLang`) where the deck names
+   *  none: it marks the page and the .pptx. Where neither names one the deck is English and the
+   *  build warns. */
   lang?: "en" | "de";
 }
 
@@ -913,6 +914,8 @@ export type Slide = SlideBase &
 
 export interface Presentation {
   name: string;
+  /** The deck's language (`deckLang`), ahead of its title slide's: for a deck with no title slide. */
+  lang?: "en" | "de";
   subtitle?: string;
   date?: string;
   speakers?: string[];

@@ -157,6 +157,30 @@ describe("slides-pptx on the specimen deck", () => {
     expect(norm(unescape(xml.replace(/<[^>]+>/g, "")))).toContain(norm(verbal.claim.de));
   });
 
+  it("sets a title slide's speakers and QR alt text in the deck's language", async () => {
+    const out = join(dir, "deck-lang.pptx");
+    await renderPptx(
+      {
+        name: "D",
+        lang: "de",
+        slides: [
+          {
+            type: "title",
+            title: "T",
+            speakers: ["A", "B"],
+            qr: { src: "/specimen/slide-catalog/qr-example.png", href: "https://example.com/" },
+          },
+        ],
+      },
+      out,
+      join(import.meta.dirname, ".."),
+    );
+    const de = await JSZip.loadAsync(readFileSync(out));
+    const xml = await de.file("ppt/slides/slide1.xml")!.async("string");
+    expect(norm(unescape(xml.replace(/<[^>]+>/g, "")))).toContain(norm("A und B"));
+    expect(unescape(xml)).toContain('descr="QR-Code: example.com"');
+  });
+
   const unmarked = (item: string) => item.replace(/^[-+]\s*/, "");
 
   it("sets every text of a slide as text on that slide", () => {

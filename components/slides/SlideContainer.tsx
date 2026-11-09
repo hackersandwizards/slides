@@ -17,7 +17,7 @@ interface Props {
   mark?: CornerMark;
   /** The deck's language, `deckLang()`: the slide's `lang`, by which a long word hyphenates, and
    *  brand's claim on a contact closing take it. Without it the slide keeps the page's `lang` and
-   *  the claim is English, as `deckLang` is for a deck whose title slide names none. */
+   *  the claim is English, as `deckLang` is for a deck that names none. */
   lang?: "en" | "de";
 }
 

@@ -2118,7 +2118,8 @@ type Render = (s: PSlide, ctx: Ctx, slide: never, deck: Presentation) => void;
 /** A talk's opening as TitleSlide draws it, measured off the print route: kicker, name and title on
  *  the left, centred above the bottom row and kept 2rem clear of it, where speakers and event stand
  *  beside the QR code and its link. */
-function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
+function opening(s: PSlide, ctx: Ctx, d: TitleSlide, deck: Presentation) {
+  const lang = d.lang ?? deckLang(deck);
   const { c } = ctx;
   const qr = 256 / 144;
   const rowH = d.qr ? 324 / 144 : 119 / 144;
@@ -2162,7 +2163,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   const label = d.qr && `↗ ${linkLabel(d.qr.href)}`;
   const colW = label ? Math.max(qr, (label.length * PT.base * ADVANCE.mono) / 72 + 0.1) : 0;
   const textW = CW - (colW && colW + 0.5);
-  const speakers = d.speakers?.length ? literal(speakerLine(d)) : undefined;
+  const speakers = d.speakers?.length ? literal(speakerLine(d, lang)) : undefined;
   const left = (speakers ? 53 / 144 : 0) + (d.event ? (speakers ? 17 / 144 : 0) + 49 / 144 : 0);
   let ly = mid - left / 2;
   if (speakers) {
@@ -2179,7 +2180,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   if (d.qr && label) {
     const colX = W - SIDE - colW;
     picture(s, ctx, d.qr.src, colX + (colW - qr) / 2, rowY, qr, qr, {
-      alt: qrAlt(d.qr.href, d.lang),
+      alt: qrAlt(d.qr.href, lang),
       href: d.qr.href,
     });
     box(
@@ -2203,8 +2204,8 @@ const RENDER: {
     deck: Presentation,
   ) => void;
 } = {
-  title(s, ctx, d) {
-    if (isOpening(d)) return opening(s, ctx, d);
+  title(s, ctx, d, deck) {
+    if (isOpening(d)) return opening(s, ctx, d, deck);
     const { c } = ctx;
     const o: BoxOpts = {
       size: PT.display,
