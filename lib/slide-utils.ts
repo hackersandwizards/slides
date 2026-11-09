@@ -1,10 +1,8 @@
 // Named, never the default: the whole file would bundle verbal.json's retired lines, which brand-retired fails on.
 import { claim } from "@hackersandwizards/brand/verbal.json";
-import { getNiceTickValues } from "recharts";
 import { cornerMark, resolveSlideLogo } from "./logo";
 import type {
   AgendaSlide,
-  ChartDataPoint,
   ClosingSlide,
   ContentSection,
   ComparisonGuidanceSlide,
@@ -668,10 +666,3 @@ export const TWO_COLUMN_TONES: Record<NonNullable<TwoColumn["variant"]>, [SideTo
   success: ["success", "success"],
   neutral: ["neutral", "neutral"],
 };
-
-/** A trend's value axis, both series on recharts' nice ticks over [0, auto]: TrendPlot draws its
- *  axis on them and the PowerPoint export its chart, so the two agree. */
-export function trendTicks(data: ChartDataPoint[]): number[] {
-  const values = data.flatMap((d) => [d.value, d.value2 ?? 0]);
-  return getNiceTickValues([Math.min(0, ...values), Math.max(0, ...values)], 5, true);
-}

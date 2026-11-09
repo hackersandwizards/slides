@@ -9,14 +9,14 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  getNiceTickValues,
   ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { trendTicks } from "../../lib/slide-utils";
-import type { ChartSlide } from "../../types/slide";
+import type { ChartDataPoint, ChartSlide } from "../../types/slide";
 
 /** `still` stops the growth animation, which a PDF would freeze mid-way. */
 interface PlotProps {
@@ -63,6 +63,13 @@ function Axes({
       {xLabel && <p className="mt-1 text-center text-base text-text-muted">{xLabel}</p>}
     </div>
   );
+}
+
+/** A trend's value axis, both series on recharts' nice ticks over [0, auto]: TrendPlot draws its
+ *  axis on them and the PowerPoint export its chart, so the two agree. */
+export function trendTicks(data: ChartDataPoint[]): number[] {
+  const values = data.flatMap((d) => [d.value, d.value2 ?? 0]);
+  return getNiceTickValues([Math.min(0, ...values), Math.max(0, ...values)], 5, true);
 }
 
 export function TrendPlot({

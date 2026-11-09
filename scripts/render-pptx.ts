@@ -19,6 +19,7 @@ import type {
   SectionTheme,
   TitleSlide,
 } from "../types/slide";
+import { trendTicks } from "../components/slides/ChartPlots";
 import { BRAND_MARK, cornerMark, resolveSlideLogo } from "../lib/logo";
 import { INLINE_MARKDOWN } from "../lib/markdown";
 import {
@@ -44,7 +45,6 @@ import {
   gridAsContent,
   regularAsContent,
   TWO_COLUMN_TONES,
-  trendTicks,
   type SideTone,
 } from "../lib/slide-utils";
 

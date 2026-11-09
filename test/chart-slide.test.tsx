@@ -2,7 +2,7 @@ import { act, render } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { AxisTick, tickLayout } from "../components/slides/ChartPlots";
+import { AxisTick, tickLayout, trendTicks } from "../components/slides/ChartPlots";
 import { slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import type { Slide } from "../types/slide";
@@ -127,5 +127,23 @@ describe("axis tick", () => {
     expect(lines).toHaveLength(2);
     for (const line of lines)
       expect(line.getAttribute("dominant-baseline")).toBe("text-before-edge");
+  });
+});
+
+// The marked point's guide runs down to the first tick, the axis floor.
+describe("trendTicks", () => {
+  it("spans both series and zero", () => {
+    expect(
+      trendTicks([
+        { name: "a", value: 2 },
+        { name: "b", value: 8 },
+      ]),
+    ).toEqual([0, 2, 4, 6, 8]);
+    expect(
+      trendTicks([
+        { name: "a", value: -3, value2: -7 },
+        { name: "b", value: 12, value2: 4 },
+      ]),
+    ).toEqual([-12, -6, 0, 6, 12]);
   });
 });

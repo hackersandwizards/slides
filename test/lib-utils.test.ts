@@ -6,7 +6,6 @@ import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
 import { deprecated } from "../lib/slide-components";
 import {
-  trendTicks,
   arrivedBackwards,
   closingClaim,
   deckLang,
@@ -268,23 +267,5 @@ describe("deprecated", () => {
     for (const prop of ["variant", "claim"] as const)
       for (const value of deprecated.values[prop])
         expect(source).toMatch(new RegExp(`${prop}\\?: [^;]*"${value}"`));
-  });
-});
-
-// The marked point's guide runs down to the first tick, the axis floor.
-describe("trendTicks", () => {
-  it("spans both series and zero", () => {
-    expect(
-      trendTicks([
-        { name: "a", value: 2 },
-        { name: "b", value: 8 },
-      ]),
-    ).toEqual([0, 2, 4, 6, 8]);
-    expect(
-      trendTicks([
-        { name: "a", value: -3, value2: -7 },
-        { name: "b", value: 12, value2: 4 },
-      ]),
-    ).toEqual([-12, -6, 0, 6, 12]);
   });
 });
