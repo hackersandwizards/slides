@@ -13,9 +13,7 @@ Phase 4 of the slide catalog program. Done in trainer-hub and hycle-private: tra
 holds no replaced form outside `slide-master` (which shows 19 on purpose), across 47 decks;
 hycle-private's one deck holds none.
 
-Left: talks, 52 slides in 2 of its 13 decks, both client decks: `regular` to `content` 30,
-`grid` to `cards` 11, `regular` to comparison `split` 7, `four-column` to `cards` 4. talks owns
-that move in its own work item on those decks' deprecated forms: they wait on their client
-PowerPoint export learning the `cards` and `numbers` blocks.
+Left: talks, 52 slides in 2 of its 13 decks, both client decks waiting on their client PowerPoint
+export; talks' own work item on those decks holds the forms and the plan.
 
 Done when talks' decks hold no replaced form and its gate is green.

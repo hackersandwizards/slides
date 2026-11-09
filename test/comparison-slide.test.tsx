@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
@@ -67,16 +67,43 @@ describe("comparison variants (merge-comparison)", () => {
     expect(kept.querySelector(".lucide-circle-x")).toBeNull();
   });
 
-  it("steps a struck before-after and shows one without strike whole", () => {
-    const live = (s: object) =>
-      render(<slideComponents.comparison slide={{ type: "comparison", ...s } as Slide} />)
-        .container;
-    expect(
-      live({ variant: "before-after", ...sides }).querySelectorAll("[inert]"),
-    ).not.toHaveLength(0);
-    expect(
-      live({ variant: "before-after", strike: false, ...sides }).querySelector("[inert]"),
-    ).toBeNull();
+  const live = (s: object) =>
+    render(<slideComponents.comparison slide={{ type: "comparison", ...s } as Slide} />);
+  const punchline = "Same team";
+
+  it("brings in a struck before-after's after side and punchline on the next press", () => {
+    const { container, getByText, unmount } = live({
+      variant: "before-after",
+      punchline,
+      ...sides,
+    });
+    expect(getByText("New").closest("[inert]")).not.toBeNull();
+    expect(getByText(punchline).closest("[inert]")).not.toBeNull();
+    expect(container.querySelector(".line-through")).toBeNull();
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", cancelable: true }));
+    });
+    expect(container.querySelector("[inert]")).toBeNull();
+    expect(container.querySelector(".line-through")).not.toBeNull();
+    expect(container.querySelector(".bg-text-subtle\\/7")).not.toBeNull();
+    unmount();
+  });
+
+  it("shows a before-after without strike whole, its kept side on a white card", () => {
+    const { container, getByText } = live({
+      variant: "before-after",
+      strike: false,
+      punchline,
+      ...sides,
+    });
+    expect(container.querySelector("[inert]")).toBeNull();
+    expect(getByText("Stays").closest(".bg-white")).not.toBeNull();
+  });
+
+  it("prints a struck before-after whole", () => {
+    const c = draw({ variant: "before-after", punchline, ...sides });
+    expect(c.querySelector("[inert]")).toBeNull();
+    expect(c.querySelector(".line-through")).not.toBeNull();
   });
 
   it("draws a transform block as before-after without strike", () => {

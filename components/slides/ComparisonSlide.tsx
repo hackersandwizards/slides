@@ -153,8 +153,9 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
 }
 
 /** The before and the after side by side, the after shown once `after` is set. With `strike`
- *  (the default) the before side is struck through and crossed out; without it, it stays as
- *  plain text, for a before that stays. The transform block draws with it too. */
+ *  (the default) the before side is crossed out, then struck through and greyed once the after
+ *  shows; without it, it stays as plain text on a white card, for a before that stays. The
+ *  transform block draws with it too. */
 export function BeforeAfterSides({
   left,
   right,
@@ -166,11 +167,12 @@ export function BeforeAfterSides({
   after: boolean;
   strike?: boolean;
 }) {
+  const struck = after && strike;
   return (
     <div className="grid w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-stretch gap-6">
       <div
         className={`rounded-brand border p-8 transition-all duration-500 ${
-          after && strike ? "border-border bg-text-subtle/7" : "border-border bg-white"
+          struck ? "border-border bg-text-subtle/7" : "border-border bg-white"
         }`}
       >
         <div className="mb-6 flex items-center gap-3">
@@ -183,7 +185,7 @@ export function BeforeAfterSides({
             <li
               key={i}
               className={`text-xl transition-all duration-300 ${
-                after && strike
+                struck
                   ? "text-text-muted line-through decoration-text-subtle/70 decoration-2"
                   : "text-text"
               }`}
@@ -231,13 +233,14 @@ export function BeforeAfterSides({
  *  its before side stays. */
 function BeforeAfterVariant({ slide }: { slide: ComparisonSidesSlide }) {
   const printMode = usePrintMode();
-  const stepped = !printMode && slide.strike !== false;
-  const [phase] = useCarousel({ count: 2, initial: stepped ? 0 : 1, enabled: stepped });
-  const after = phase === 1;
+  const strike = slide.strike !== false;
+  const stepped = !printMode && strike;
+  const [phase] = useCarousel({ count: 2, enabled: stepped });
+  const after = !stepped || phase === 1;
 
   return (
     <>
-      <BeforeAfterSides left={slide.left} right={slide.right} after={after} strike={slide.strike} />
+      <BeforeAfterSides left={slide.left} right={slide.right} after={after} strike={strike} />
 
       {slide.punchline && (
         <div
