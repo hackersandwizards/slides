@@ -6,7 +6,7 @@ order: 900
 area: security
 owner: Benedikt
 recommended: leave
-evidence: "slides bd66c48 (fixture added), 8c99e8c (names replaced); this repository is public"
+evidence: "slides bd66c48 (fixture added), 8c99e8c (names replaced), 636039b (this item quoted them, removed in the next commit); this repository is public; the names are in the os deliverable records"
 options:
   - key: leave
     label: Leave the history as it is
@@ -18,9 +18,8 @@ options:
 
 # Remove two client project names from the public slides history?
 
-`test/fixtures/team-topology.ts` named two stream-aligned teams after a client's projects ("Advisor
-Portal Frankreich", "One Frontstage Checkout") from commit `bd66c48` on. The slides-deck-fixes run
-replaced them with neutral names in `8c99e8c`, so the current files are clean. Neither name states
+`test/fixtures/team-topology.ts` named two stream-aligned teams after a client's projects from commit `bd66c48` on, and the first version of this item quoted them (`636039b`). The slides-deck-fixes run
+replaced them with neutral names in `8c99e8c`, so the current files are clean; the names themselves stay in Company OS. Neither name states
 the client's company name, but someone who knows the engagements could recognise it.
 
 The recommendation is to leave the history: a rewrite moves every tag that consumers pin, and
