@@ -66,7 +66,7 @@
     "dev": "ASTRO_DEV_BACKGROUND=1 bun --bun astro dev --root catalog",
     "catalog": "bun run dev --open /",
     "build": "check-lock astro build --root catalog",
-    "preview": "ASTRO_PREVIEW_BACKGROUND=1 bun --bun astro preview --root catalog",
+    "preview": "ASTRO_PREVIEW_BACKGROUND=1 astro preview --root catalog",
     "check:markers": "mkdir -p node_modules/.cache/slides-markers && ln -sfn \"$PWD/dist\" node_modules/.cache/slides-markers/slides && for w in 1920 1280; do brand-markers --width $w --site node_modules/.cache/slides-markers --catalog dist --catalog-at /slides /slides/catalog/print/frames.html || exit 1; done"
   },
   "peerDependencies": {
