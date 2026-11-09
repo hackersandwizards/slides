@@ -25,7 +25,6 @@ const run = (...decks: unknown[]) => {
 describe("slides-usage", () => {
   it("finds a catalogue entry for every slide of the specimen deck", () => {
     expect(slideCatalog.slides.filter((s) => !entriesOf(s).length)).toEqual([]);
-    for (const id of slideCatalog.slides.flatMap(entriesOf)) expect(GUIDANCE).toHaveProperty(id);
   });
 
   // Every entry a deck can use is reached by a specimen slide; a "-2" is a specimen's second tile.
@@ -55,7 +54,39 @@ describe("slides-usage", () => {
 
   it("counts a replaced form for the entry that replaces it", () => {
     const grid = { type: "grid", variant: "stats", cards: [] } as unknown as Slide;
-    expect(entriesOf(grid)).toEqual(["block-numbers"]);
+    expect(entriesOf(grid)).toEqual(["content", "block-numbers"]);
+    const block = (b: object) =>
+      entriesOf({ type: "content", headline: "h", content: [b, { type: "table" }] } as never);
+    expect(block({ type: "labeled-grid", items: [] })).toContain("block-cards-dense");
+    expect(block({ type: "four-column", columns: [] })).toContain("block-cards-dense");
+    expect(block({ type: "pipeline", stages: [] })).toEqual([
+      "content",
+      "block-flow",
+      "block-table",
+    ]);
+    expect(block({ type: "positions", axis: {}, items: [] })).toContain("comparison-positions");
+  });
+
+  it("counts a slide as the form it is drawn in", () => {
+    const content = (blocks: object[], extra: object = {}) =>
+      entriesOf({ type: "content", headline: "h", content: blocks, ...extra } as never);
+    const side = { title: "t", items: ["a"] };
+    expect(content([{ type: "bullets", items: ["a"] }])).toEqual(["statement"]);
+    expect(content([{ type: "two-column", left: side, right: side }])).toEqual([
+      "comparison-split",
+    ]);
+    expect(
+      content([
+        { type: "image", src: "a" },
+        { type: "image", src: "b" },
+      ]),
+    ).toEqual(["content", "block-two-images"]);
+    const regular = {
+      type: "regular",
+      headline: "h",
+      sections: ["a", "b", "c"].map((title) => ({ title, text: "t" })),
+    } as never;
+    expect(entriesOf(regular)).toContain("block-cards-dense");
   });
 
   it("prints counts over all decks and lists the unused entries", () => {
@@ -65,6 +96,7 @@ describe("slides-usage", () => {
     expect(json).toMatchObject({ decks: 2, slides: 2, entries: { agenda: 2 } });
     expect(json.unused).toContain("wheel");
     expect(json.unused).not.toContain("agenda");
+    expect(json.unused.filter((id: string) => /-\d+$/.test(id))).toEqual([]);
   });
 
   it("fails on a slide no entry draws, naming it, and on a file that is no deck", () => {
@@ -72,5 +104,8 @@ describe("slides-usage", () => {
     expect(code).toBe(1);
     expect(err).toContain("slide 1: type nope");
     expect(run({ headline: "x" }).code).toBe(1);
+    const malformed = run({ slides: [{ type: "content", headline: "x" }] });
+    expect(malformed.code).toBe(1);
+    expect(malformed.err).toContain("slide 1: malformed");
   });
 });

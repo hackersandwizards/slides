@@ -610,6 +610,12 @@ export const closingClaim = (slide: ClosingSlide, lang: "en" | "de") =>
 export const isHighlightPhase = (title: string, phase?: string) =>
   !!phase && title.toLowerCase() === phase.toLowerCase();
 
+/** A step count from which a flow stands upright on a phone, and a process loop leaves its circle. */
+export const LONG_FLOW = 5;
+
+/** A catalogue entry's anchor from its name. */
+export const anchorSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
 /** The variant a slide is catalogued under; empty for a type's plain form. */
 export const variantOf = (s: Slide) =>
   (s.type === "grid" &&

@@ -382,7 +382,7 @@ export function AxisTick({
 /** A phone's bar chart whose names would only fit its bands angled: each bar a row under its whole
  *  name, the value at the row's end, since eight angled names took the plot's whole height. */
 function BarRows({ data = [] }: Pick<PlotProps, "data">) {
-  const max = Math.max(1, ...data.map((d) => d.value));
+  const max = Math.max(...data.map((d) => d.value)) || 1;
   return (
     <ul className="flex flex-col gap-3">
       {data.map((d) => (

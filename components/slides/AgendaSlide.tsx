@@ -33,7 +33,7 @@ export function AgendaSlide({ slide }: Props) {
               >
                 {timed ? (
                   <span
-                    className="shrink-0 font-mono text-xl font-bold text-primary empty:hidden md:text-3xl"
+                    className="shrink-0 font-mono text-xl font-bold text-primary max-md:empty:hidden md:text-3xl"
                     style={{ width: whenWidth }}
                   >
                     {item.when !== items[i - 1]?.when ? item.when : ""}

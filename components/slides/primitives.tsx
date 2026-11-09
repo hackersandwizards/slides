@@ -272,6 +272,8 @@ const TILE_SIZES = {
   sm: "size-10 text-lg",
   md: "size-12 text-xl",
   lg: "size-16 text-3xl",
+  /** A number in an annotated picture's gutter, which a phone draws short. */
+  gutter: "size-12 text-xl max-md:size-7 max-md:text-sm",
   xl: "h-24 min-w-24 px-3 text-4xl",
 };
 

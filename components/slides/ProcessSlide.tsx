@@ -3,7 +3,7 @@
 import type { ProcessSlide as ProcessSlideType } from "../../types/slide";
 import { SlideShell, groundOf } from "./SlideShell";
 import { iconMap, type LucideIcon } from "../../lib/icons";
-import { isHighlightPhase } from "../../lib/slide-utils";
+import { LONG_FLOW, isHighlightPhase } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { TitledContent, SlideTitle, SlideCaption } from "./primitives";
 import { FlowSteps } from "./Visuals";
@@ -43,7 +43,7 @@ export function ProcessSlide({ slide }: Props) {
   const loop = slide.loop !== false;
   // Five nodes and more overlap on a phone's circle, whose cards grow with their wrapped text: there
   // they stand as the flow block's upright list.
-  const circle = loop && slide.nodes.length <= 4;
+  const circle = loop && slide.nodes.length < LONG_FLOW;
   const { revealedCount, footerVisible } = useProgressiveReveal({
     totalSteps: slide.nodes.length,
     startFull: !!slide.static,

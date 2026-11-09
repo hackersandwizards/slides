@@ -167,14 +167,14 @@
     background: none;
     text-align: start;
   }
-  .slide-flow-long > .slide-flow-loop > span::before,
-  .slide-flow-long > .slide-flow-loop:not(:has(> span))::before {
+  .slide-flow-long > .slide-flow-loop > span::before {
     content: "\21BA  ";
     color: var(--color-muted);
   }
   /* A loop without a label still shows where the list returns to. */
   .slide-flow-long > .slide-flow-loop:not(:has(> span))::before {
     content: "\21BA  " attr(data-back);
+    color: var(--color-muted);
     font-size: var(--type-body-size);
     white-space: pre;
   }

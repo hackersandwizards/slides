@@ -4,7 +4,7 @@ import type { FlowFrame, VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { useHighlightLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
-import { continuation } from "../../lib/slide-utils";
+import { LONG_FLOW, continuation } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { BeforeAfterSides, CodePanel, DashedFrame, NumberTile, SlideCard } from "./primitives";
 
@@ -106,13 +106,13 @@ export function FlowSteps({
     `transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`;
   return (
     <div
-      className={`slide-flow relative w-full ${n >= 5 || !fitsPhoneRow(steps) ? "slide-flow-long" : ""}`}
+      className={`slide-flow relative w-full ${n >= LONG_FLOW || !fitsPhoneRow(steps) ? "slide-flow-long" : ""}`}
     >
       {/* The loop runs above the nodes, out of the last one and down into the first. */}
       {loop !== undefined && (
         <div
           className={`slide-flow-loop relative mb-2 ${loop ? "h-24" : "h-16"} ${show(revealed >= n)}`}
-          data-back={steps[0]?.title}
+          data-back={steps[0]?.title.replace(/[*_`]/g, "")}
           aria-hidden
         >
           <div
@@ -906,7 +906,7 @@ function Annotated({ block }: { block: Of<"annotated"> }) {
         </div>
         {block.notes.map((n, i) => (
           <span key={i} className="absolute left-0 -translate-y-1/2" style={{ top: at(n.y) }}>
-            <NumberTile className="max-md:size-7 max-md:text-sm">{i + 1}</NumberTile>
+            <NumberTile size="gutter">{i + 1}</NumberTile>
           </span>
         ))}
       </div>

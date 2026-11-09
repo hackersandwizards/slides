@@ -196,28 +196,36 @@ const ALL = readdirSync(TYPES).flatMap((type) =>
   readdirSync(join(TYPES, type)).map((story) => `${type}/${story}`),
 );
 
+/** Each story at `width`, eight at a time: the stories whose `read` found anything. */
+async function sweep(width: number, read: (page: Page) => Promise<unknown[]>) {
+  const bad: unknown[] = [];
+  for (let i = 0; i < ALL.length; i += 8)
+    await Promise.all(
+      ALL.slice(i, i + 8).map(async (story) => {
+        const page = await open(story, width);
+        const found = await read(page);
+        await page.close();
+        if (found.length) bad.push({ story, found });
+      }),
+    );
+  expect(ALL.length).toBeGreaterThan(100);
+  return bad;
+}
+
 it.each([1440, 390])(
   "breaks no heading word without a hyphen in any story at %i px",
   async (width) => {
-    const broken: unknown[] = [];
-    for (let i = 0; i < ALL.length; i += 8)
-      await Promise.all(
-        ALL.slice(i, i + 8).map(async (story) => {
-          const page = await open(story, width);
-          const over = await page.$$eval(".slide-content :is(h1, h2, h3, .card-title)", (all) =>
-            (all as HTMLElement[])
-              .filter((h) => h.clientWidth > 0)
-              .map((h) => {
-                h.style.overflowWrap = "normal";
-                return { text: h.textContent, over: h.scrollWidth - h.clientWidth };
-              })
-              .filter(({ over }) => over > 1),
-          );
-          await page.close();
-          if (over.length) broken.push({ story, over });
-        }),
-      );
-    expect(ALL.length).toBeGreaterThan(100);
+    const broken = await sweep(width, (page) =>
+      page.$$eval(".slide-content :is(h1, h2, h3, .card-title)", (all) =>
+        (all as HTMLElement[])
+          .filter((h) => h.clientWidth > 0)
+          .map((h) => {
+            h.style.overflowWrap = "normal";
+            return { text: h.textContent, over: h.scrollWidth - h.clientWidth };
+          })
+          .filter(({ over }) => over > 1),
+      ),
+    );
     expect(broken).toEqual([]);
   },
   600_000,
@@ -252,19 +260,20 @@ function runaways() {
 }
 
 it("keeps all text of every story on a phone's screen, in columns wide enough to read", async () => {
-  const bad: unknown[] = [];
-  for (let i = 0; i < ALL.length; i += 8)
-    await Promise.all(
-      ALL.slice(i, i + 8).map(async (story) => {
-        const page = await open(story, 390);
-        const found = await page.evaluate(runaways);
-        await page.close();
-        if (found.length) bad.push({ story, found });
-      }),
-    );
-  expect(ALL.length).toBeGreaterThan(100);
-  expect(bad).toEqual([]);
+  expect(await sweep(390, (page) => page.evaluate(runaways))).toEqual([]);
 }, 600_000);
+
+// A repeated time leaves its cell empty: on the stage the empty cell keeps the column, so every
+// title starts level; on a phone, where the time stands above its title, it takes no line.
+it("keeps an agenda's titles level on the stage under a repeated time", async () => {
+  const page = await open("agenda-slide/specimen4", 1440);
+  const lefts = await page.$$eval(".slide-content ol > li > span:last-child", (all) =>
+    all.map((t) => Math.round(t.getBoundingClientRect().left)),
+  );
+  await page.close();
+  expect(lefts.length).toBeGreaterThan(2);
+  expect(new Set(lefts).size).toBe(1);
+}, 60_000);
 
 // Eight long names leave 30 px a band on a phone: angled, they crossed each other and took the
 // plot's whole height. There each bar stands as a row under its whole name; short names keep the plot.
@@ -274,7 +283,6 @@ it("draws a bar chart of long names as rows on a phone, as a plot on the stage",
   const rows = await page.$$eval("[data-chart-plot] li", (all) =>
     all.map((li) => ({
       name: li.querySelector("span")!.textContent,
-      lines: li.querySelector("span")!.getClientRects().length,
       bar: li.lastElementChild!.getBoundingClientRect().width,
     })),
   );

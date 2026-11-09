@@ -10,7 +10,7 @@ import type { Slide } from "../types/slide";
 import * as primitives from "../components/slides/primitives";
 import { highlightLines } from "../lib/code-highlight";
 import { renderMarkdown } from "../lib/markdown";
-import { replacedBy, variantOf } from "../lib/slide-utils";
+import { anchorSlug, replacedBy, variantOf } from "../lib/slide-utils";
 import * as chrome from "../components/slides/SlideChrome";
 import { DeckTile } from "../components/deck/DeckTile";
 import { brandHref, placeBrandUrls } from "./brand-urls";
@@ -495,7 +495,7 @@ const entryOf = (index: number) => {
 
 const ids = new Set<string>();
 const anchor = (name: string, prefix = "") => {
-  const base = prefix + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const base = prefix + anchorSlug(name);
   let id = base;
   for (let n = 2; ids.has(id); n++) id = `${base}-${n}`;
   ids.add(id);
