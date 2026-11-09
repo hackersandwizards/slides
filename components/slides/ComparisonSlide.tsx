@@ -410,11 +410,15 @@ function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
 
 export function ComparisonSlide({ slide }: Props) {
   const variant = slide.variant ?? "vs";
+  // A guidance slide's line under the headline is its `intro`, drawn in the body.
+  const subtitle = slide.variant === "guidance" ? undefined : slide.subtitle;
+  // A kicker or lead without a headline still stands at the top, as on a content slide.
+  const titled = slide.headline || slide.sectionLabel || subtitle;
 
   return (
     <SlideShell>
       <div
-        className={`slide-content relative z-10 flex flex-col items-center justify-center px-16 ${slide.headline ? "slide-titled" : ""}`}
+        className={`slide-content relative z-10 flex flex-col items-center justify-center px-16 ${titled ? "slide-titled" : ""}`}
       >
         <SectionHeader label={slide.sectionLabel} />
         {slide.headline && (
@@ -422,9 +426,7 @@ export function ComparisonSlide({ slide }: Props) {
             {slide.headline}
           </SlideTitle>
         )}
-        {slide.subtitle && (
-          <SlideSubtitle delay={0.22}>{renderMarkdown(slide.subtitle)}</SlideSubtitle>
-        )}
+        {subtitle && <SlideSubtitle delay={0.22}>{renderMarkdown(subtitle)}</SlideSubtitle>}
 
         <div className="slide-body items-center">
           {slide.variant === "guidance" ? (

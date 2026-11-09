@@ -422,8 +422,6 @@ interface ComparisonBase {
   /** The kicker above the headline, as on a content slide. */
   sectionLabel?: string;
   headline?: string;
-  /** A lead line under the headline. */
-  subtitle?: string;
   punchline?: string;
   /** On a `vs` slide, the punchline waits for one more arrow key instead of showing on arrival. */
   revealPunchline?: boolean;
@@ -433,6 +431,8 @@ interface ComparisonBase {
 /** Two sides: `vs` pros against cons, `before-after` the old against the new, `split` two lists. */
 export interface ComparisonSidesSlide extends ComparisonBase {
   variant?: "vs" | "before-after" | "split";
+  /** A lead line under the headline. */
+  subtitle?: string;
   left: ComparisonSide;
   right: ComparisonSide;
   /** `before-after` only: `false` keeps the before side unstruck and without its cross, for a
@@ -457,6 +457,8 @@ export interface PositionSide {
 /** Two named stances with a quote each, and the resolution under them. */
 export interface ComparisonPositionsSlide extends ComparisonBase {
   variant: "positions";
+  /** A lead line under the headline. */
+  subtitle?: string;
   left: PositionSide;
   right: PositionSide;
   middle?: string;
