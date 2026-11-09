@@ -105,19 +105,33 @@ it.each([
   60_000,
 );
 
+const stylesheets = async (url: string) => {
+  const tab = await newTab();
+  await tab.goto(url, { waitUntil: "load" });
+  const links = await tab.$$eval('link[rel="stylesheet"]', (all) =>
+    all.map((link) => (link as HTMLLinkElement).href),
+  );
+  await tab.close();
+  return links;
+};
+
 it("links slides.css on a slide's page alone, never on the state's page framing it", async () => {
-  const stylesheets = async (path: string) => {
-    const tab = await newTab();
-    await tab.goto(page(path), { waitUntil: "load" });
-    const links = await tab.$$eval('link[rel="stylesheet"]', (all) =>
-      all.map((link) => (link as HTMLLinkElement).href),
-    );
-    await tab.close();
-    return links;
-  };
   const isSlidesCss = (href: string) => /\/slides\.[^/]+\.css$/.test(href);
-  expect((await stylesheets("dashboard/Types/title-slide/specimen")).some(isSlidesCss)).toBe(false);
-  expect((await stylesheets("stories/Types/title-slide/specimen")).some(isSlidesCss)).toBe(true);
+  expect((await stylesheets(page("dashboard/Types/title-slide/specimen"))).some(isSlidesCss)).toBe(
+    false,
+  );
+  expect((await stylesheets(page("stories/Types/title-slide/specimen"))).some(isSlidesCss)).toBe(
+    true,
+  );
+}, 60_000);
+
+// SlideFrame's style inlines only under Astro's 4 KB limit: above it every state's page waits on a
+// stylesheet of its own before the header's logo paints, the LCP element.
+it("links no stylesheet on a state's page beyond the shell's on the home", async () => {
+  const home = await stylesheets(`${served.origin}/slides/`);
+  expect(home.length).toBeGreaterThan(0);
+  for (const path of ["dashboard/Types/title-slide/specimen", "dashboard/Parts/axis-tick/variants"])
+    expect(home).toEqual(expect.arrayContaining(await stylesheets(page(path))));
 }, 60_000);
 
 // A wide window scaled the slide to the page's width alone, so its bottom ran below the window

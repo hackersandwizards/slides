@@ -24,8 +24,14 @@ const src = path.replace("/dashboard/", "/stories/");
 // of brand's stage and imports its card below. The card's line is the catalog's own colour, its
 // corner the site's. Two values rather than all of stage.css keep the frame's style under Astro's
 // 4 KB inline limit: above it the style becomes a render-blocking request that delays the LCP.
+// A value naming another stage token would resolve to nothing here, so only a literal passes.
 const size = ["--slide-page-width", "--slide-page-height"]
-  .map((name) => `${name}:${stage.match(new RegExp(`${name}:\\s*([^;]+);`))![1]}`)
+  .map((name) => {
+    const value = stage.match(new RegExp(`[{;\\s]${name}\\s*:\\s*([^;}]+)`))?.[1].trim();
+    if (!value || value.includes("var("))
+      throw new Error(`SlideFrame: brand's stage.css sets no literal ${name}`);
+    return `${name}:${value}`;
+  })
   .join(";");
 const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
 ---
