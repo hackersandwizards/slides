@@ -1,0 +1,63 @@
+# Layout shift on a slide's first paint, 09.11.2026
+
+A consumer measured a layout shift of 0.084 on a story page, always on a block with
+`data-entrance`, in 2 of 14 Lighthouse runs on one build and 5 of 14 on the next. This report
+names the cause and what slides v2.17.1 changes.
+
+## Cause: the web font swaps in after the first paint
+
+The block is the entrance wrapper, but the entrance never runs there: a slide drawn from the
+server's markup opens with `initial={false}`. What moves is the text inside it. `slides.css` loads
+brand's static faces with `font-display: swap`, so a page painted before a face arrived draws the
+fallback face first, and the swap changes its line breaks.
+
+Setup: the catalog's prose story, rendered on the server as a consumer's story page renders it
+(the catalog's own stories mount the slide after hydration and never shift), puppeteer with Chrome
+for Testing 156, 412 × 823 px at 1.75, the size Lighthouse's mobile preset uses. One factor
+changed per series, 30 runs each:
+
+| Series                       | Runs with a shift | CLS   | Load      |
+| ---------------------------- | ----------------- | ----- | --------- |
+| unchanged                    | 19/30             | 0.034 | 15.7–20.0 |
+| hydration script blocked     | 15/30             | 0.034 | 19.0–22.2 |
+| web fonts blocked            | 0/30              | 0     | 13.0–22.2 |
+| Inter on a metric fallback\* | 0/30              | 0     | 4.3–8.9   |
+| beside it, unchanged         | 8/30              | 0.034 | 4.5–11.6  |
+
+\* An Arial face with `size-adjust: 107.06%`, `ascent-override: 90.49%`,
+`descent-override: 22.56%`, `line-gap-override: 0%`, injected into the page.
+
+The entrance, hydration and the shell's fit are ruled out: with no script the shift stays. The
+rate follows the machine's load (8/30 at load 5, 19/30 at load 16 to 20), which can explain 2 of
+14 against 5 of 14 without any change between the two builds. That part is not controlled.
+
+On the deck page (`DeckView`) the moving block holds a JetBrains Mono heading: the Inter fallback
+leaves its rate as it was (9/30 against 6/30).
+
+## What v2.17.1 changes
+
+`SlideContainer` preloads four of the static faces: Inter 400 and 500, JetBrains Mono 500 and 700.
+Across the 115 specimen story states with no preload, these four are every face of 59 (1440 px) and
+61 (412 px) slides, more than any other four. Three faces cover 44, six cover 95 but leave 2.3 to
+2.4 preloaded faces unused per page.
+
+Preloads kept against stripped on one build, alternating blocks of 10. Rows marked † ran with an
+earlier set, Inter 400, 500 and 700 with JetBrains Mono 700, which covers those pages as well:
+
+| Page                                   | Kept  | Stripped | Load      |
+| -------------------------------------- | ----- | -------- | --------- |
+| deck page, puppeteer                   | 3/30  | 12/30    | 8.0–23.3  |
+| deck page, Lighthouse 13.6.0 mobile †  | 2/12  | 7/12     | 7.6–17.1  |
+| prose story, all its faces preloaded † | 2/30  | 14/30    | 10.5–15.5 |
+| prose story, Inter 700 not in the set  | 14/30 | 9/30     | 9.6–23.3  |
+
+A slide drawing a face outside the set gains nothing; the difference on the last row is within
+chance (p ≈ 0.3). A preload only moves the race. The swap stops moving text only where the fallback
+face has the web face's metrics, which is brand's to set.
+
+## Open
+
+- Brand: a metric-matched fallback face for Inter and for JetBrains Mono in the font stacks, so a
+  late swap keeps every line. The values above are a starting point for Inter only.
+- Whether the dev server fetches a preloaded face twice: not checked, the catalog's dev server did
+  not start within its 30 s limit at load 20.

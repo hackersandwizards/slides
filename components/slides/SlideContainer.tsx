@@ -1,7 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { preload } from "react-dom";
 import { MotionConfig } from "motion/react";
+import inter400 from "@hackersandwizards/brand/fonts/inter-latin-400-normal.woff2?url&no-inline";
+import inter500 from "@hackersandwizards/brand/fonts/inter-latin-500-normal.woff2?url&no-inline";
+import mono500 from "@hackersandwizards/brand/fonts/jetbrains-mono-latin-500-normal.woff2?url&no-inline";
+import mono700 from "@hackersandwizards/brand/fonts/jetbrains-mono-latin-700-normal.woff2?url&no-inline";
 import Image from "../ui/image";
 import type { LogoConfig, SlideLogo } from "../../types/slide";
 import { HW_LOGO } from "../../lib/logo";
@@ -97,7 +102,13 @@ export function BrandStrip() {
   );
 }
 
+// A slide painted from the server's markup before its face arrived moved its blocks when the face
+// swapped in. These four of slides.css's static faces are every face of about half the specimen
+// slides, more than any other four; each further face covers fewer and goes unused on most pages.
+const FACES = [inter400, inter500, mono500, mono700];
+
 export function SlideContainer({ children, logo, theme, page, mark, lang }: Props) {
+  for (const href of FACES) preload(href, { as: "font", type: "font/woff2", crossOrigin: "" });
   const slides = (
     <DeckNight.Provider value={!!theme}>
       <DeckLang.Provider value={lang ?? "en"}>{children}</DeckLang.Provider>
