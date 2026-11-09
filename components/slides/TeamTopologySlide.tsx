@@ -26,7 +26,8 @@ function Chips({ labels, className }: { labels: string[]; className: string }) {
 
 // The Team Shape Templates of Team Topologies, in brand colours, with the brand corner rather than
 // the templates' square corners. Change flows left to right, so the enabling teams stand on the
-// left, never between a stream team and its users on the right.
+// left, never between a stream team and its users on the right. An enabling team widens to its
+// longest word rather than breaking it.
 export function TeamTopologySlide({ slide }: Props) {
   const subsystems = slide.complicatedSubsystem ?? [];
   return (
@@ -43,7 +44,7 @@ export function TeamTopologySlide({ slide }: Props) {
                 {slide.enabling.map((team) => (
                   <div
                     key={team.name}
-                    className="flex shrink-0 flex-col gap-1 rounded-brand border-(length:--slide-rule-strong) border-secondary bg-secondary/7 px-4 py-3 md:w-52"
+                    className="flex shrink-0 flex-col gap-1 rounded-brand border-(length:--slide-rule-strong) border-secondary bg-secondary/7 px-4 py-3 md:w-52 md:min-w-min"
                   >
                     <span className="card-title text-lg leading-tight text-secondary">
                       {team.name}

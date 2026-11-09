@@ -411,10 +411,10 @@ export function CodePanel({
   );
 }
 
-/** A chart's plot area: a card of fixed height the chart fills. */
+/** A chart's plot area: a card of fixed height the chart fills, on a phone as high as its chart. */
 export function ChartFrame({ children }: { children: ReactNode }) {
   return (
-    <SlideCard className="h-(--slide-chart-height) card-pad-8" data-chart-plot>
+    <SlideCard className="h-(--slide-chart-height) card-pad-8 max-md:h-auto" data-chart-plot>
       {children}
     </SlideCard>
   );

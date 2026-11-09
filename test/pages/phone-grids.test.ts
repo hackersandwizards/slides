@@ -1,3 +1,5 @@
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { serveDist } from "./serve-dist";
@@ -185,3 +187,67 @@ it.each([1440, 390])(
   },
   60_000,
 );
+
+// "Architecture" broke as "Architectur / e" in a team card (trainer-hub, 2026-11-09): Chrome
+// hyphenates no capitalised English word and Safari none under the limit, so `break-word` cut it
+// without a hyphen. Measured with `overflow-wrap: normal`, a word wider than its heading overflows.
+const TYPES = join(import.meta.dirname, "..", "..", "dist", "stories", "Types");
+const ALL = readdirSync(TYPES).flatMap((type) =>
+  readdirSync(join(TYPES, type)).map((story) => `${type}/${story}`),
+);
+
+it.each([1440, 390])(
+  "breaks no heading word without a hyphen in any story at %i px",
+  async (width) => {
+    const broken: unknown[] = [];
+    for (let i = 0; i < ALL.length; i += 8)
+      await Promise.all(
+        ALL.slice(i, i + 8).map(async (story) => {
+          const page = await open(story, width);
+          const over = await page.$$eval(".slide-content :is(h1, h2, h3, .card-title)", (all) =>
+            (all as HTMLElement[])
+              .filter((h) => h.clientWidth > 0)
+              .map((h) => {
+                h.style.overflowWrap = "normal";
+                return { text: h.textContent, over: h.scrollWidth - h.clientWidth };
+              })
+              .filter(({ over }) => over > 1),
+          );
+          await page.close();
+          if (over.length) broken.push({ story, over });
+        }),
+      );
+    expect(ALL.length).toBeGreaterThan(100);
+    expect(broken).toEqual([]);
+  },
+  600_000,
+);
+
+// A seven-line note beside the value axis left the trend 88 px of plot on a phone (talks,
+// 2026-11-09), where the plot drew 296 px without the note: there the note stands below the chart
+// and the plot keeps that height.
+it("keeps trend-marked's plot tall on a phone, its note below the chart", async () => {
+  const page = await open("chart-slide/trend-marked", 390);
+  await page.waitForSelector(".recharts-surface");
+  const { plot, note, labels, dot } = await page.evaluate(() => {
+    const box = (e: Element | null | undefined) => e?.getBoundingClientRect().toJSON() as DOMRect;
+    const frame = document.querySelector("[data-chart-plot]")!;
+    return {
+      plot: box(frame.querySelector("svg.recharts-surface")),
+      note: box(
+        [...frame.querySelectorAll("p")].find((p) => p.textContent?.startsWith("Baseline")),
+      ),
+      labels: [...frame.querySelectorAll(".recharts-xAxis-tick-labels text")].map((t) => box(t)!),
+      dot: box(frame.querySelector(".recharts-reference-dot circle")),
+    };
+  });
+  await page.close();
+  expect(plot!.height).toBeGreaterThanOrEqual(296);
+  expect(note!.top).toBeGreaterThan(Math.max(...labels.map((l) => l.bottom)));
+  expect(
+    labels.filter(
+      (l) =>
+        dot && l.top < dot.bottom && dot.top < l.bottom && l.left < dot.right && dot.left < l.right,
+    ),
+  ).toEqual([]);
+}, 60_000);

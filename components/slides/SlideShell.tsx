@@ -70,6 +70,37 @@ export function SlideShell({
   );
 }
 
+/** A heading's word wider than its box broke without a hyphen ("Architectur / e"): Chrome
+ *  hyphenates no capitalised English word and Safari none under the limit `slides.css` sets. Such a
+ *  heading shrinks until its widest word fits, and every heading of its size on the slide with it,
+ *  so the cards of one row keep one size. Not below `WORD_FLOOR`, where a title still stands above
+ *  its card's text: past that the word breaks. "Internationalization" in a phone's card needs 0.78. */
+const WORD_FLOOR = 0.7;
+function fitWords(shell: HTMLElement) {
+  const headings = [...shell.querySelectorAll<HTMLElement>(":is(h1, h2, h3, .card-title)")];
+  for (const h of headings) h.style.removeProperty("font-size");
+  const sizes = headings.map((h) => getComputedStyle(h).fontSize);
+  // Each heading's scale so far; a width does not follow its size exactly, so it is measured again.
+  const scales = headings.map(() => 1);
+  for (let pass = 0; pass < 3; pass++) {
+    const need = new Map<string, number>();
+    headings.forEach((h, i) => {
+      if (!h.clientWidth || scales[i] <= WORD_FLOOR) return;
+      h.style.overflowWrap = "normal";
+      const fits = h.clientWidth / h.scrollWidth;
+      h.style.removeProperty("overflow-wrap");
+      if (fits < 1) need.set(sizes[i], Math.min(fits, need.get(sizes[i]) ?? 1));
+    });
+    if (!need.size) return;
+    headings.forEach((h, i) => {
+      const fits = need.get(sizes[i]);
+      if (!fits) return;
+      scales[i] = Math.max(WORD_FLOOR, scales[i] * fits * 0.995);
+      h.style.fontSize = `calc(${sizes[i]} * ${scales[i].toFixed(3)})`;
+    });
+  }
+}
+
 /** A slide never clips: content that holds more than fits shrinks until it fits, rather than
  *  spilling past the bottom edge where a projector cuts it off. On a titled slide only the body
  *  shrinks, from its top, laid out wider by the same factor where that fits, so it rewraps into
@@ -144,8 +175,9 @@ function useFitToSlide() {
     const narrow = window.matchMedia?.(NARROW);
     const fit = () => {
       box.style.removeProperty("--card-boost");
+      reset();
+      fitWords(ref.current!);
       if (narrow?.matches) {
-        reset();
         box.style.justifyContent = "";
         return;
       }

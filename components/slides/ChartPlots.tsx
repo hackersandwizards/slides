@@ -39,6 +39,9 @@ const tooltip = {
   labelStyle: { color: "var(--color-text)" },
 };
 
+/** The value axis's name above the plot, a note beside it, the category axis's name below. On a
+ *  phone, where the frame grows with its text, the note stands below the chart and the plot keeps
+ *  its height: beside the axis's name it took seven lines and left 88 px of plot. */
 function Axes({
   xLabel,
   yLabel,
@@ -48,12 +51,14 @@ function Axes({
   return (
     <div className="flex h-full flex-col">
       {(yLabel || note) && (
-        <div className="mb-2 flex justify-between gap-8 text-base text-text-muted">
-          <p>{yLabel}</p>
-          {note && <p className="text-right">{note}</p>}
+        <div className="mb-2 flex justify-between gap-8 text-base text-text-muted max-md:contents">
+          <p className="max-md:mb-2">{yLabel}</p>
+          {note && (
+            <p className="text-right max-md:order-last max-md:mt-2 max-md:text-left">{note}</p>
+          )}
         </div>
       )}
-      <div className="min-h-0 flex-1">{children}</div>
+      <div className="min-h-0 flex-1 max-md:h-82 max-md:flex-none">{children}</div>
       {xLabel && <p className="mt-1 text-center text-base text-text-muted">{xLabel}</p>}
     </div>
   );

@@ -1497,7 +1497,7 @@ const slides: Slide[] = [
     xLabel: "Time",
     yLabel: "Teams on the harness",
     currentMarker: "Month 0",
-    futureNote: "Months 3 to 12 planned",
+    futureNote: "Baseline → repeat run → progress view → adoption over time",
     annotation: "Fictional figures.",
     notes: "chart: trend with one series, the current point marked and a note on what lies ahead.",
   },
@@ -1634,7 +1634,7 @@ const slides: Slide[] = [
     platform: [
       { name: "Platform team", description: "Pipelines and harness", roles: ["Harness engineers"] },
     ],
-    enabling: [{ name: "Enabling: Quality", experts: ["Testing", "Review"] }],
+    enabling: [{ name: "Enabling: Architecture", experts: ["Integration", "Data"] }],
     caption: "Fictional organisation.",
     notes: "team-topology: with complicated subsystem and caption.",
   },
