@@ -7,9 +7,9 @@
       "devDependencies": {
         "@astrojs/react": "7.1.4",
         "@eslint/js": "10.0.1",
-        "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.20.0",
+        "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.20.1",
         "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v1.64.0",
-        "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.5.0",
+        "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.5.1",
         "@tailwindcss/node": "4.3.5",
         "@tailwindcss/oxide": "4.3.5",
         "@tailwindcss/vite": "4.3.5",
@@ -19,7 +19,7 @@
         "@types/react": "19.3.0",
         "@types/react-dom": "19.3.0",
         "@typescript/native": "npm:typescript@7.0.2",
-        "@vitejs/plugin-react": "6.2.1",
+        "@vitejs/plugin-react": "6.3.0",
         "astro": "7.4.7",
         "astrobook": "0.13.3",
         "eslint": "10.14.0",
@@ -223,11 +223,11 @@
 
     "@exodus/bytes": ["@exodus/bytes@1.16.0", "", { "peerDependencies": { "@noble/hashes": "^1.8.0 || ^2.0.0" }, "optionalPeers": ["@noble/hashes"] }, "sha512-IcpW84uEn3N7ETtNZMlxKhfl6Pec8rUNGOTBtWbK1FKhJxIFAptZyVrvVRVBimAJxJCgc3PxepxkdWWG4DVzfA=="],
 
-    "@hackersandwizards/admin": ["@hackersandwizards/admin@github:hackersandwizards/admin#261ede4", { "peerDependencies": { "@hackersandwizards/brand": ">=1.54.0", "@tailwindcss/typography": "^0.5.20", "@tailwindcss/vite": "^4.3.3", "astro": "^7.4.4", "tailwindcss": "^4.3.3" }, "optionalPeers": ["@hackersandwizards/brand", "@tailwindcss/typography", "@tailwindcss/vite", "astro", "tailwindcss"], "hasInstallScript": true, "bin": { "admin-serve": "bin/admin-serve.ts", "admin-check": "bin/admin-check.ts" } }, "hackersandwizards-admin-261ede4", "sha512-B34y34VwRXB3RItSCZIE6g+4LJb6p34RpJXoSLY6Z5DlNNUH0LziPRQdZgWSYqVr7N+hE6TvcAXqSi2bkfj2Zw=="],
+    "@hackersandwizards/admin": ["@hackersandwizards/admin@github:hackersandwizards/admin#fc3a89b", { "peerDependencies": { "@hackersandwizards/brand": ">=1.54.0", "@tailwindcss/typography": "^0.5.20", "@tailwindcss/vite": "^4.3.3", "astro": "^7.4.4", "tailwindcss": "^4.3.3" }, "optionalPeers": ["@hackersandwizards/brand", "@tailwindcss/typography", "@tailwindcss/vite", "astro", "tailwindcss"], "hasInstallScript": true, "bin": { "admin-serve": "bin/admin-serve.ts", "admin-check": "bin/admin-check.ts" } }, "hackersandwizards-admin-fc3a89b", "sha512-y0KH27h8T9GGDhoMSjExwh6Ff3Pdr9j33mYKBj5qiDZXkP/9mF+K3BELg4ikRe3iWj0lSi/5t05UiNfEaUaPIw=="],
 
     "@hackersandwizards/brand": ["@hackersandwizards/brand@github:hackersandwizards/brand#febcea2", { "dependencies": { "puppeteer-core": "25.16.0" }, "hasInstallScript": true, "bin": { "brand-colours": "scan/colours.ts", "brand-copies": "scan/copies.ts", "brand-scan": "scan/components.ts", "brand-markers": "scan/markers.ts", "brand-elements": "scan/elements.ts", "brand-retired": "scan/retired.ts", "brand-linkedin-frame": "applications/linkedin-visuals/frame.ts", "brand-linkedin-terminal": "applications/linkedin-visuals/terminal.ts", "brand-linkedin-sketch-prompt": "applications/linkedin-visuals/sketch-prompt.ts", "brand-slide-sketch-prompt": "applications/slide-visuals/sketch-prompt.ts", "brand-mail-signature": "applications/mail-signature/cli.ts" } }, "hackersandwizards-brand-febcea2", "sha512-etqNuNsRLSdNpwl1V6dYXUMxIVQ3AGHNrfBtEd8blBpFXL8Fivcz3LwnB6Vq4LUZs4/6WpQY2I62RfXxCgDj+g=="],
 
-    "@hackersandwizards/scaffolding": ["@hackersandwizards/scaffolding@github:hackersandwizards/scaffolding#59b9383", { "dependencies": { "@eslint/js": "10.0.1", "@typescript/typescript6": "6.0.2", "eslint-config-prettier": "10.1.8", "globals": "17.14.0", "postcss-html": "2.0.0", "prettier-plugin-astro": "1.1.2", "stylelint-value-no-unknown-custom-properties": "6.1.1", "typescript-eslint": "8.72.1" }, "peerDependencies": { "astro": ">=7", "astrobook": ">=0.13", "eslint": ">=10", "eslint-plugin-astro": ">=1", "prettier": ">=3", "stylelint": ">=16", "typescript": ">=5 <6.1" }, "optionalPeers": ["astro", "astrobook", "eslint", "eslint-plugin-astro", "prettier", "stylelint", "typescript"], "hasInstallScript": true, "bin": { "scaffold": "bin/scaffold.ts", "check-structure": "bin/check-structure.ts", "check-confidential": "bin/check-confidential.ts", "check-staged": "bin/check-staged.ts", "check-lock": "bin/check-lock.ts", "scaffolding": "bin/scaffolding.ts" } }, "hackersandwizards-scaffolding-59b9383", "sha512-8CaiLN/n+zmBFwuGqoQRZNiAIcVO3ZIzfhfJwFrJJzOivIz4z7WZebSTtA6Q1+8pG6sRPjAnrH6MB5c7rOqrZg=="],
+    "@hackersandwizards/scaffolding": ["@hackersandwizards/scaffolding@github:hackersandwizards/scaffolding#d62e134", { "dependencies": { "@eslint/js": "10.0.1", "@typescript/typescript6": "6.0.2", "eslint-config-prettier": "10.1.8", "globals": "17.14.0", "postcss-html": "2.0.0", "prettier-plugin-astro": "1.1.2", "stylelint-value-no-unknown-custom-properties": "6.1.1", "typescript-eslint": "8.72.1" }, "peerDependencies": { "astro": ">=7", "astrobook": ">=0.13", "eslint": ">=10", "eslint-plugin-astro": ">=1", "prettier": ">=3", "stylelint": ">=16", "typescript": ">=5 <6.1" }, "optionalPeers": ["astro", "astrobook", "eslint", "eslint-plugin-astro", "prettier", "stylelint", "typescript"], "hasInstallScript": true, "bin": { "scaffold": "bin/scaffold.ts", "check-structure": "bin/check-structure.ts", "check-confidential": "bin/check-confidential.ts", "check-staged": "bin/check-staged.ts", "check-lock": "bin/check-lock.ts", "scaffolding": "bin/scaffolding.ts" } }, "hackersandwizards-scaffolding-d62e134", "sha512-lLg4ZGCYI+F8I/XathONOVhJ4HYbokNH9pRGDpb9dGvVM0ooQRxe3Ror76F6wX2Bmt+x9RH6utQeA+wgyL7jjA=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.2", "", { "dependencies": { "@humanfs/types": "^0.15.0" } }, "sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA=="],
 
@@ -549,7 +549,7 @@
 
     "@ungap/structured-clone": ["@ungap/structured-clone@1.4.0", "", {}, "sha512-1mEZtMKPM09vDmQt5y7YvmN2+DFTP7Tg0EWXdic8/C6VRnpb33e4ghisCIE3WZjsE2N8mf+QV1Zqh7ZFYLWInQ=="],
 
-    "@vitejs/plugin-react": ["@vitejs/plugin-react@6.2.1", "", { "dependencies": { "@rolldown/pluginutils": "^1.0.1" }, "peerDependencies": { "@rolldown/plugin-babel": "^0.1.7 || ^0.2.0 || ^0.3.0", "babel-plugin-react-compiler": "^1.0.0", "oxc-transform-react": ">=0.152.0 <0.157.0", "vite": "^8.0.0" }, "optionalPeers": ["@rolldown/plugin-babel", "babel-plugin-react-compiler", "oxc-transform-react"] }, "sha512-9KyWCij3r0+qLG3Q62vBmv0VyevmYibAtxaCIVK9o0k6CXgaajZRIe8tpfchQcdZArJ5b/7OrIz4W3b2uxVRDA=="],
+    "@vitejs/plugin-react": ["@vitejs/plugin-react@6.3.0", "", { "dependencies": { "@rolldown/pluginutils": "^1.0.1" }, "peerDependencies": { "@rolldown/plugin-babel": "^0.1.7 || ^0.2.0 || ^0.3.0", "babel-plugin-react-compiler": "^1.0.0", "oxc-transform-react": ">=0.152.0 <0.157.0", "vite": "^8.0.0" }, "optionalPeers": ["@rolldown/plugin-babel", "babel-plugin-react-compiler", "oxc-transform-react"] }, "sha512-H9E955aVvD2F4zNHCw4eIZbIfF6xKldlh7MNu+hSU7xwQzh65lI/N+CJWqmfhi0PEjDXIt/H7T7J/4wU63KJiw=="],
 
     "@vitest/mocker": ["@vitest/mocker@5.1.0", "", { "dependencies": { "@jridgewell/trace-mapping": "0.3.31", "@vitest/spy": "5.1.0", "estree-walker": "^3.0.3", "magic-string": "^1.4.3" }, "peerDependencies": { "msw": "^2.4.9 || ^3.0.0", "vite": "^6.0.0 || ^7.0.0 || ^8.0.0" }, "optionalPeers": ["msw", "vite"] }, "sha512-5umB9/jlWcqVS6fsrFmv5Gdnpu6wAUio/lEOwAmvB7v+lFo/IW2B9FhAD0p19GCULTgMzLCdUmuCDCnAzWgppQ=="],
 
