@@ -152,7 +152,7 @@ describe("slides-pptx on the specimen deck", () => {
       // A stats card shows its label in place of its title, as the web card does.
       // A closing whose mark stands centred shows the h&w lockup in place of the company's name.
       // An overview draws as phased pills, its stage descriptions gone, as on the web.
-      // A comparison item's leading + or - is its mark, not its text.
+      // A vs comparison item's leading + or - is its mark, not its text.
       const data =
         slide.type === "grid" && slide.variant === "stats"
           ? { ...slide, cards: slide.cards.map((cd) => (cd.label ? { ...cd, title: "" } : cd)) }
@@ -165,7 +165,8 @@ describe("slides-pptx on the specimen deck", () => {
                     sp.company.toLowerCase() === "hackers&wizards" ? { ...sp, company: "" } : sp,
                   ),
                 }
-              : slide.type === "comparison" && "left" in slide && slide.variant !== "positions"
+              : slide.type === "comparison" &&
+                  (slide.variant === undefined || slide.variant === "vs")
                 ? {
                     ...slide,
                     left: { ...slide.left, items: slide.left.items.map(unmarked) },
@@ -267,6 +268,22 @@ describe("slides-pptx on the specimen deck", () => {
     const xml = await zipped.file(chart)!.async("string");
     expect(xml.match(/<c:legendEntry>/g)).toHaveLength(2);
     expect(xml.match(/<a:prstDash val="dash"\/>/g)).toHaveLength(2);
+  });
+
+  it("marks only a vs comparison's items and strikes only a struck before side", () => {
+    slideCatalog.slides.forEach((slide: Slide, i) => {
+      if (
+        slide.type !== "comparison" ||
+        slide.variant === "positions" ||
+        slide.variant === "guidance"
+      )
+        return;
+      const variant = slide.variant ?? "vs";
+      expect(slideXml[i].includes("<a:t>+  </a:t>"), `slide ${i + 1}`).toBe(variant === "vs");
+      expect(slideXml[i].includes('strike="sngStrike"'), `slide ${i + 1}`).toBe(
+        variant === "before-after" && slide.strike !== false,
+      );
+    });
   });
 
   it("spells out a linked image's link and covers a video with its poster", async () => {

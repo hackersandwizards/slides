@@ -39,6 +39,7 @@ import {
   profileLabel,
   qrAlt,
   speakerLine,
+  twoColumnAsSplit,
 } from "../lib/slide-utils";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
@@ -812,6 +813,141 @@ function itemCard(
   box(s, c, paras, a.x + pad, a.y + pad, a.w - 2 * pad, a.h - 2 * pad, bodyO(c, k));
 }
 
+/** The web's circle-x or circle-check icon at x, y in diameter d, drawn in lines. */
+function circleMark(s: PSlide, x: number, y: number, d: number, color: string, check: boolean) {
+  const line = { color, width: 1.5 };
+  s.addShape("ellipse", { x, y, w: d, h: d, fill: { type: "none" }, line });
+  const strokes = check
+    ? [
+        [0.3, 0.52, 0.45, 0.67],
+        [0.45, 0.67, 0.72, 0.36],
+      ]
+    : [
+        [0.35, 0.35, 0.65, 0.65],
+        [0.65, 0.35, 0.35, 0.65],
+      ];
+  for (const [x1, y1, x2, y2] of strokes)
+    s.addShape("line", {
+      x: x + d * Math.min(x1, x2),
+      y: y + d * Math.min(y1, y2),
+      w: d * Math.abs(x2 - x1),
+      h: d * Math.abs(y2 - y1),
+      flipV: (x2 - x1) * (y2 - y1) < 0,
+      line,
+    });
+}
+
+type BeforeAfterSide = { label: string; items: string[]; highlight?: string };
+
+/** A before-after side's paragraphs: its label, highlight and plain items, as the web lists them. */
+function beforeAfterParas(c: Palette, sd: BeforeAfterSide, tone: string, item: TextProps): Para[] {
+  return [
+    { runs: md(sd.label, c, { color: tone }), ...TITLE, rel: PT.h4 / PT.base },
+    ...(sd.highlight
+      ? [
+          {
+            runs: [{ text: sd.highlight.toUpperCase(), options: { color: tone } }],
+            mono: true,
+            bold: true,
+            rel: 0.8,
+            after: 8,
+          },
+        ]
+      : []),
+    ...sd.items.map((it) => ({ runs: md(it, c, item), after: 6 })),
+  ];
+}
+
+/** The height beforeAfter needs in width w for both sides' highlight, items and label row. */
+function beforeAfterHeight(c: Palette, sides: BeforeAfterSide[], w: number, o: BoxOpts) {
+  const inner = w / 2 - 0.85;
+  return (
+    Math.max(...sides.map((sd) => need(beforeAfterParas(c, sd, c.ink, {}).slice(1), c, inner, o))) +
+    (o.size * 1.3) / 72 +
+    0.75
+  );
+}
+
+/** The before and the after side by side with an arrow between, as the web's BeforeAfterSides
+ *  draws a comparison's `before-after` and the transform block: plain items, the before side
+ *  muted on white and, with `strike`, crossed out, struck through and greyed. */
+function beforeAfter(
+  s: PSlide,
+  ctx: Ctx,
+  a: Area,
+  o: BoxOpts,
+  before: BeforeAfterSide,
+  after: BeforeAfterSide,
+  strike: boolean,
+) {
+  const { c } = ctx;
+  const half = a.w / 2 - 0.35;
+  const icon = (o.size * 1.3) / 72;
+  const sides = [
+    {
+      sd: before,
+      x: a.x,
+      fill: strike ? mix(c.muted, c.bg, 0.07) : c.card,
+      line: c.border,
+      tone: c.muted,
+      item: strike ? { color: c.muted, strike: "sngStrike" as const } : {},
+      mark: strike ? false : undefined,
+    },
+    {
+      sd: after,
+      x: a.x + half + 0.7,
+      fill: c.tealTint,
+      line: c.teal,
+      tone: c.teal,
+      item: {},
+      mark: true,
+    },
+  ];
+  for (const { sd, x, fill, line, tone, item, mark } of sides) {
+    card(s, x, a.y, half, a.h, fill, line);
+    const [label, ...rest] = beforeAfterParas(c, sd, tone, item);
+    const indent = mark === undefined ? 0 : icon + 0.12;
+    if (mark !== undefined)
+      circleMark(s, x + 0.25, a.y + 0.27, icon, mark ? c.teal : c.muted, mark);
+    box(s, c, label, x + 0.25 + indent, a.y + 0.25, half - 0.5 - indent, icon + 0.04, {
+      ...o,
+      valign: "middle",
+    });
+    box(s, c, rest, x + 0.25, a.y + 0.4 + icon, half - 0.5, a.h - 0.65 - icon, o);
+  }
+  arrow(s, c, a.x + half + 0.12, a.y + a.h / 2, a.x + half + 0.58, a.y + a.h / 2, c.teal);
+}
+
+/** A two-sided comparison's punchline under its sides, ending at y, and its footnotes. */
+function comparisonFoot(
+  s: PSlide,
+  c: Palette,
+  d: { punchline?: string; footnotes?: string[] },
+  y: number,
+  noteH: number,
+) {
+  if (d.punchline)
+    box(s, c, d.punchline, SIDE, y + 0.15, CW, 0.45, {
+      size: PT.lead,
+      mono: true,
+      bold: true,
+      color: c.teal,
+      align: "center",
+      valign: "middle",
+    });
+  if (d.footnotes?.length)
+    box(
+      s,
+      c,
+      d.footnotes.map((f) => ({ runs: md(f, c) })),
+      SIDE,
+      BOTTOM - noteH,
+      CW,
+      noteH,
+      { size: PT.label, color: c.muted, align: "center" },
+    );
+}
+
 const VARIANT_TONES: Record<string, [string, string]> = {
   "success-error": ["green", "red"],
   "error-success": ["red", "green"],
@@ -863,15 +999,14 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
         0.4
       );
     }
+    case "transform":
+      return beforeAfterHeight(c, [b.before, b.after], w, o);
     case "two-column":
-    case "positions":
-    case "transform": {
+    case "positions": {
       const sides =
         b.type === "two-column"
           ? [b.left, b.right]
-          : b.type === "transform"
-            ? [{ items: b.before.items }, { items: b.after.items }]
-            : [{ text: b.left.quote }, { text: b.right.quote }];
+          : [{ text: b.left.quote }, { text: b.right.quote }];
       return (
         Math.max(
           ...sides.map((sd) =>
@@ -1244,22 +1379,8 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       );
       return;
     }
-    case "transform": {
-      const half = a.w / 2 - 0.35;
-      itemCard(s, ctx, { ...a, w: half }, k, {
-        title: b.before.label,
-        items: b.before.items,
-        tone: c.muted,
-      });
-      arrow(s, c, a.x + half + 0.12, a.y + a.h / 2, a.x + half + 0.58, a.y + a.h / 2, c.teal);
-      itemCard(s, ctx, { ...a, x: a.x + half + 0.7, w: half }, k, {
-        title: b.after.label,
-        items: b.after.items,
-        tone: c.teal,
-        fill: c.tealTint,
-      });
-      return;
-    }
+    case "transform":
+      return beforeAfter(s, ctx, a, bodyO(c, k), b.before, b.after, false);
     case "positions": {
       const half = a.w / 2 - 0.15;
       const ch = a.h - 0.6;
@@ -2044,7 +2165,10 @@ const RENDER: {
       });
   },
 
-  content(s, ctx, d) {
+  content(s, ctx, d, deck) {
+    // A lone neutral two-column draws as the comparison's split, as on the web.
+    const split = twoColumnAsSplit(d);
+    if (split) return RENDER.comparison(s, ctx, split, deck);
     const centered = d.layout === "centered";
     let y = header(s, ctx, d, centered);
     if (d.badge)
@@ -2496,7 +2620,14 @@ const RENDER: {
     const noteH = d.footnotes?.length ? 0.3 * d.footnotes.length : 0;
     const a = { ...BODY(y), h: BOTTOM - y - punchH - noteH };
     const sides = [d.left, d.right];
-    const tones = d.variant === "before-after" ? [c.muted, c.teal] : [c.ink, c.ink];
+    const variant = d.variant ?? "vs";
+    const o = { size: PT.base, color: c.ink };
+    if (variant === "before-after") {
+      const ch = Math.min(a.h, beforeAfterHeight(c, sides, a.w, o));
+      beforeAfter(s, ctx, { ...a, h: ch }, o, d.left, d.right, d.strike !== false);
+      return comparisonFoot(s, c, d, a.y + ch, noteH);
+    }
+    const vs = variant === "vs";
     const ch = Math.min(
       a.h,
       Math.max(
@@ -2509,45 +2640,23 @@ const RENDER: {
             ],
             c,
             a.w / 2 - 0.7,
-            { size: PT.base, color: c.ink },
+            o,
           ),
         ),
       ) + 0.5,
     );
-    // The print route shows both sides of a `vs` slide active, as its last reveal step does.
-    const active = (i: number) =>
-      (d.variant ?? "vs") === "vs" || (i === 1 && d.variant === "before-after");
-    row(sides, { ...a, h: ch }, 0.3, (sd, r, i) => {
-      card(s, r.x, r.y, r.w, r.h, active(i) ? c.tealTint : c.card, active(i) ? c.teal : c.border);
+    // The print route shows both sides of a `vs` slide active, as its last reveal step does; a
+    // `split` slide draws two plain cards of listed items.
+    row(sides, { ...a, h: ch }, 0.3, (sd, r) => {
+      card(s, r.x, r.y, r.w, r.h, vs ? c.tealTint : c.card, vs ? c.teal : c.border);
       let ty = r.y + 0.25;
       if (sd.logo) {
         picture(s, ctx, sd.logo, r.x + 0.25, ty, 1.4, 0.4, { align: "left" });
         ty += 0.5;
       }
-      box(
-        s,
-        c,
-        [
-          {
-            runs: md(sd.label, c, { color: tones[i] }),
-            mono: true,
-            bold: true,
-            rel: PT.h4 / PT.base,
-            after: 6,
-          },
-          ...(sd.highlight
-            ? [
-                {
-                  runs: [{ text: sd.highlight, options: { color: c.teal } }],
-                  mono: true,
-                  bold: true,
-                  rel: 0.8,
-                  after: 8,
-                },
-              ]
-            : []),
-          // Items starting with "-" are the side's minus points, listed after its plus points.
-          ...[
+      // A vs side lists its plus points, then the items starting with "-" as its minus points.
+      const items = vs
+        ? [
             ...sd.items.filter((it) => !it.startsWith("-")),
             ...sd.items.filter((it) => it.startsWith("-")),
           ].map((it) => {
@@ -2562,35 +2671,34 @@ const RENDER: {
               ],
               after: 6,
             };
-          }),
+          })
+        : sd.items.map((it) => ({ runs: md(it, c), bullet: true as const, after: 6 }));
+      box(
+        s,
+        c,
+        [
+          { runs: md(sd.label, c), ...TITLE, rel: PT.h4 / PT.base, after: 6 },
+          ...(sd.highlight
+            ? [
+                {
+                  runs: [{ text: sd.highlight.toUpperCase(), options: { color: c.teal } }],
+                  mono: true,
+                  bold: true,
+                  rel: 0.8,
+                  after: 8,
+                },
+              ]
+            : []),
+          ...items,
         ],
         r.x + 0.25,
         ty,
         r.w - 0.5,
         r.y + r.h - ty - 0.2,
-        { size: PT.base, color: c.ink },
+        o,
       );
     });
-    if (d.punchline)
-      box(s, c, d.punchline, SIDE, a.y + ch + 0.15, CW, 0.45, {
-        size: PT.lead,
-        mono: true,
-        bold: true,
-        color: c.teal,
-        align: "center",
-        valign: "middle",
-      });
-    if (d.footnotes?.length)
-      box(
-        s,
-        c,
-        d.footnotes.map((f) => ({ runs: md(f, c) })),
-        SIDE,
-        BOTTOM - noteH,
-        CW,
-        noteH,
-        { size: PT.label, color: c.muted, align: "center" },
-      );
+    comparisonFoot(s, c, d, a.y + ch, noteH);
   },
 
   guidance(s, ctx, d) {

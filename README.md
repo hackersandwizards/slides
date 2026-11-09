@@ -11,10 +11,10 @@ that the public may not see.
 
 Add the dependency in exactly this form, pinned to the newest tag
 (`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
-`@hackersandwizards/brand` v1.52.0 or later, whose static faces (`static-fonts.css`), shared
+`@hackersandwizards/brand` v1.58.0 or later, whose static faces (`static-fonts.css`), shared
 elements (`elements.css`, the stage button, the label box and the accent rule among them), text
 base (`text-base.css`), slide pointer (`cursor.svg`) and small corner the stylesheet imports, whose
-list marker takes `--hw-zoom`, which the fit guard sets beside the `zoom` it shrinks a slide with, whose `verbal.json` gives the closing its claim and whose logos the
+list marker takes `--hw-zoom`, which the fit guard sets beside the `zoom` it shrinks a slide with, whose dialog draws no browser focus ring, whose `verbal.json` gives the closing its claim and whose logos the
 slides draw through its exports, as `?url` imports the bundler serves: a deck names a mark as
 `/hw-lockup.svg`, `/hw-wordmark.svg` or their `-night` cuts. The specimen deck imports its images
 the same way, so a consumer copies nothing into `public/` for the engine. Both repos are public: Bun fetches the `git+https://` form through GitHub's tarball API without any GitHub access.
@@ -42,8 +42,7 @@ the same way, so a consumer copies nothing into `public/` for the engine. Both r
 (a URL with the site's base), and `light`, which keeps that page light.
 
 A deck page's root carries brand's `hw-focus-ring` class, as in `<html class="hw-focus-ring">`.
-It gives every control on the page the brand's focus ring. Without it, the browser draws its own
-ring round the keyboard shortcut dialog that `?` opens.
+It gives every control on the page the brand's focus ring.
 
 The command `slides-pins` belongs in each consumer's gate, after scaffolding's shared steps: it
 fails when `package.json` pins no brand, which bun lets pass because the brand peer is optional.
