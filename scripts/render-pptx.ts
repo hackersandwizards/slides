@@ -64,7 +64,10 @@ const PLANNED = " (planned)";
  *  into the brand marker in that hue: pptxgenjs writes no bullet colour. */
 const MARKER_CODES = { green: "E001", red: "E002" } as const;
 type MarkerHue = keyof typeof MARKER_CODES;
-const HUE_OF_MARKER: Record<string, MarkerHue> = { E001: "green", E002: "red" };
+const HUE_OF_MARKER = Object.fromEntries(
+  Object.entries(MARKER_CODES).map(([hue, code]) => [code, hue as MarkerHue]),
+);
+const MARKER_SQUARE = "25AA";
 const cardText = (card: { text?: string; items?: string[] }) =>
   [card.text, ...(card.items ?? []).map((item) => `• ${item}`)].filter(Boolean).join("\n");
 
@@ -345,7 +348,7 @@ function box(
                 bullet:
                   p.bullet === "number"
                     ? { type: "number" }
-                    : { code: p.marker ? MARKER_CODES[p.marker] : "25AA", indent: 16 },
+                    : { code: p.marker ? MARKER_CODES[p.marker] : MARKER_SQUARE, indent: 16 },
                 indentLevel: p.indent ?? 0,
               }
             : {}),
@@ -856,8 +859,8 @@ const highlightPara = (text: string, color: string): Para => ({
   after: 8,
 });
 
-/** Side i of a before-after in width w: its label row, with the web's circle icon on the after
- *  side and on a struck before side, and its highlight and plain items under it, struck through
+/** Side i of a before-after in width w: its label row, with the web's circle icon on an after
+ *  side that does not add and on a struck before side, and its highlight and plain items under it, struck through
  *  on a struck before side, with the heights both need. */
 function beforeAfterSide(
   c: Palette,
@@ -911,7 +914,7 @@ function beforeAfterHeight(
   return Math.max(
     ...sides.map((sd, i) => {
       const l = beforeAfterSide(c, sd, i, strike, (w - BA_GAP * k) / 2, o, k, adds);
-      return (2 * BA_PAD + 0.25) * k + l.labelH + l.restH;
+      return (2 * BA_PAD + 0.15 + 0.1) * k + l.labelH + l.restH;
     }),
   );
 }
@@ -951,8 +954,7 @@ function beforeAfter(
   const ay = a.y + a.h / 2;
   if (adds)
     box(s, c, "+", a.x + half, ay - gap / 2, gap, gap, {
-      size: PT.s8 * k,
-      mono: true,
+      size: PT.title * k,
       bold: true,
       color: c.teal,
       align: "center",
@@ -2680,8 +2682,9 @@ const RENDER: {
     const o = { size: PT.base, color: c.ink };
     if (variant === "before-after") {
       const strike = d.strike !== false;
-      const ch = Math.min(a.h, beforeAfterHeight(c, sides, strike, a.w, o, 1, d.adds));
-      beforeAfter(s, ctx, { ...a, h: ch }, o, sides, strike, 1, d.adds);
+      const adds = !strike && d.adds;
+      const ch = Math.min(a.h, beforeAfterHeight(c, sides, strike, a.w, o, 1, adds));
+      beforeAfter(s, ctx, { ...a, h: ch }, o, sides, strike, 1, adds);
       return comparisonFoot(s, c, d, a.y + ch, noteH);
     }
     // The print route shows both sides of a `vs` slide active, as its last reveal step does: a vs
@@ -3103,10 +3106,10 @@ const RENDER: {
       const word = Math.max(...labels.flatMap((l) => l.split(" ").map((w) => w.length)));
       const step = TICK_STEPS.find((pt) => (word * pt * ADVANCE.sans) / 72 <= band);
       // The web's legend has an entry for a named series only.
-      const unnamed = [
-        ...(d.seriesLabel ? [] : [0]),
-        ...(two && !d.series2Label ? [now < 0 ? 1 : 2] : []),
-      ];
+      const perSeries = now < 0 ? 1 : 2;
+      const unnamed = [d.seriesLabel, ...(two ? [d.series2Label] : [])].flatMap((name, i) =>
+        name ? [] : [i * perSeries],
+      );
       ctx.charts.set(ctx.charts.size + 1, trend ? { now, unnamed } : { level: step !== undefined });
       s.addChart(trend ? pptx.ChartType.line : pptx.ChartType.bar, series, {
         ...r,
@@ -4232,7 +4235,7 @@ export async function renderPptx(
         .replace(/<a:buSzPct val="100000"\/><a:buChar char="&#x(\w+);"\/>/g, (_, code: string) => {
           const hue = HUE_OF_MARKER[code];
           const marked = hue ? slideC[hue] : slideC.teal;
-          return `<a:buClr><a:srgbClr val="${marked}"/></a:buClr><a:buSzPct val="80000"/><a:buChar char="&#x${hue ? "25AA" : code};"/>`;
+          return `<a:buClr><a:srgbClr val="${marked}"/></a:buClr><a:buSzPct val="80000"/><a:buChar char="&#x${hue ? MARKER_SQUARE : code};"/>`;
         }),
     );
   }

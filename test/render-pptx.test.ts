@@ -372,14 +372,14 @@ describe("slides-pptx on the specimen deck", () => {
   };
 
   it("draws a centered content slide the statement type takes as that statement", async () => {
-    const slide: Slide = {
+    const slide: ContentSlide = {
       type: "content",
       layout: "centered",
       headline: "One claim",
       content: [{ type: "paragraph", text: "Under it." }],
     };
     expect(await onlySlide("centered.pptx", slide)).toBe(
-      await onlySlide("statement.pptx", contentRedrawnAs(slide as ContentSlide)! as Slide),
+      await onlySlide("statement.pptx", contentRedrawnAs(slide)!),
     );
   });
 

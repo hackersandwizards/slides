@@ -251,7 +251,7 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSidesSlide }) {
         right={slide.right}
         after={after}
         strike={strike}
-        adds={slide.adds}
+        adds={!strike && slide.adds}
       />
 
       {slide.punchline && (

@@ -369,11 +369,17 @@ export function pipelineAsFlow(block: Block<"pipeline">): Block<"flow"> {
   };
 }
 
-/** A centered content slide as the statement slide that replaces it, or undefined where its
- *  blocks do not fit one: more than a subtitle and a closing of text, a block other than a
+/** A centered content slide as the statement slide that replaces it, or undefined where it is not
+ *  centered or its blocks do not fit one: more than a subtitle and a closing of text, a block other than a
  *  paragraph, callout or linked image, a footer, markdown in the headline, or a deep-dive part. */
 export function centeredAsStatement(slide: ContentSlide): StatementSlide | undefined {
-  if (slide.footer || slide.sectionTheme === "deepdive" || /[`*[]/.test(slide.headline)) return;
+  if (
+    slide.layout !== "centered" ||
+    slide.footer ||
+    slide.sectionTheme === "deepdive" ||
+    /[`*[]/.test(slide.headline)
+  )
+    return;
   const texts: string[] = [];
   let closing: string | undefined;
   let linkedImage: StatementSlide["linkedImage"];
@@ -402,10 +408,7 @@ export function centeredAsStatement(slide: ContentSlide): StatementSlide | undef
 /** The other slide type a content slide draws as, on the web and in the export, or undefined
  *  where it draws as content. */
 export function contentRedrawnAs(slide: ContentSlide) {
-  return (
-    twoColumnAsSplit(slide) ??
-    (slide.layout === "centered" ? centeredAsStatement(slide) : undefined)
-  );
+  return twoColumnAsSplit(slide) ?? centeredAsStatement(slide);
 }
 
 /** A content slide holding nothing but one or two short bullets as the statement that carries
@@ -613,8 +616,7 @@ export function replacedBy(slide: Slide): { to: string; form?: string } | undefi
         ? undefined
         : { to: slide.variant === "stats" ? "numbers" : "cards" };
     case "content": {
-      if (slide.layout === "centered" && centeredAsStatement(slide))
-        return { to: "statement", form: "content, centered" };
+      if (centeredAsStatement(slide)) return { to: "statement", form: "content, centered" };
       if (bulletsAsStatement(slide)) return { to: "statement", form: "one or two short bullets" };
       if (twoColumnAsSplit(slide))
         return { to: "comparison split", form: "two-column, neutral, alone on a slide" };
