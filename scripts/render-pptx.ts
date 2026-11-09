@@ -476,14 +476,17 @@ function brandLogo(name: string): string {
   return createRequire(import.meta.url).resolve(`@hackersandwizards/brand/logos/${name}.png`);
 }
 
+/** A trend's marked point, -1 for none, or whether a bar's names stay level. */
+type ChartFix = { now: number } | { level: boolean };
+
 interface Ctx {
   pptx: Pptx;
   c: Palette;
   assets: string;
   dark: boolean;
   warnings: string[];
-  /** The deck's chart count, and per chart number of a trend its marked point, -1 for none. */
-  charts: { count: number; trends: Map<number, number> };
+  /** Per chart number, what `finishChart` sets on it. */
+  charts: Map<number, ChartFix>;
 }
 
 /** A deck file's path: a root path under the consumer's public directory, else a file path as it
@@ -2035,6 +2038,8 @@ const CHART = {
   topMarked: 48 / 144,
   bottom: (8 + 56) / 144,
 };
+/** A bar's name sizes, `TICK_STEPS` in `ChartPlots`: the web's text-base, text-sm and text-xs. */
+const TICK_STEPS = [PT.sm, 13.33, 12];
 
 function row<T>(items: T[], a: Area, gap: number, draw: (it: T, r: Area, i: number) => void) {
   const w = (a.w - (items.length - 1) * gap) / items.length;
@@ -2995,12 +3000,12 @@ const RENDER: {
       ] as { name: string; labels: string[]; values: number[] }[];
       const hues = two ? [c.teal, c.purple] : [c.teal];
       // The card as `ChartFrame` draws it, the legend above it and the annotation below, centred
-      // in the body as the web centres them.
+      // in the body as the web centres them; a long annotation may take two lines.
       const a = BODY(y);
       const legend = trend && !!(d.seriesLabel || d.series2Label);
       const above = legend ? CHART.legend : 0;
       const below = d.annotation ? CHART.note + CHART.noteLine : 0;
-      const h = Math.min(CHART.h, a.h - above - below);
+      const h = Math.min(CHART.h, a.h - above - below - (d.annotation ? CHART.noteLine : 0));
       const f = {
         x: (W - CHART.w) / 2,
         y: a.y + above + Math.max(0, (a.h - above - h - below) / 2),
@@ -3010,8 +3015,12 @@ const RENDER: {
       card(s, f.x, f.y, f.w, f.h, c.card, c.border);
       annotate(f.x, f.y + f.h + CHART.note, f.w, 2 * CHART.noteLine);
       // `Axes`: the y label and the note over the plot, the x label under it.
-      const inner = { x: f.x + CHART.pad, y: f.y + CHART.pad, w: f.w - 2 * CHART.pad };
-      const bottom = f.y + f.h - CHART.pad;
+      const inner = {
+        x: f.x + CHART.pad,
+        y: f.y + CHART.pad,
+        w: f.w - 2 * CHART.pad,
+        h: f.h - 2 * CHART.pad,
+      };
       const label = (
         text: string | undefined,
         x: number,
@@ -3025,49 +3034,61 @@ const RENDER: {
         label(d.futureNote, inner.x + inner.w / 2, inner.y, inner.w / 2, "right");
       }
       const foot = d.xLabel ? CHART.line + CHART.overFoot : 0;
-      label(d.xLabel, inner.x, bottom - CHART.line, inner.w, "center");
+      label(d.xLabel, inner.x, inner.y + inner.h - CHART.line, inner.w, "center");
       // The chart reaches up over the card for its legend, which PowerPoint sets at its top.
-      const plot = { x: inner.x, y: inner.y + head, w: inner.w, h: bottom - foot - inner.y - head };
+      const plot = { x: inner.x, y: inner.y + head, w: inner.w, h: inner.h - head - foot };
       const top = legend ? f.y - CHART.legend : plot.y;
       const r = { ...plot, y: top, h: plot.y + plot.h - top };
-      // A trend's plot where recharts draws it, its value axis on recharts' ticks.
-      const values = data.flatMap((p) => (two ? [p.value, p.value2 ?? 0] : [p.value]));
-      const ticks: number[] = getNiceTickValues(
-        [Math.min(0, ...values), Math.max(...values)],
-        5,
-        true,
-      );
-      const lo = ticks[0];
-      const hi = ticks[ticks.length - 1];
-      const g = {
-        x: plot.x + CHART.left,
-        y: plot.y + (now < 0 ? CHART.top : CHART.topMarked),
-        w: plot.w - CHART.left - CHART.right,
-        h: plot.h - (now < 0 ? CHART.top : CHART.topMarked) - CHART.bottom,
-      };
-      // recharts fills a lone series' measured part; a chart's area series would fall to zero
-      // after its last value, so the fill is a shape under the chart's plot.
-      const filled = now < 0 ? data.length : now + 1;
-      if (trend && !two && filled > 1) {
-        const at = (i: number, v: number) => ({
-          x: (i / (data.length - 1)) * g.w,
-          y: ((hi - v) / (hi - lo)) * g.h,
-        });
-        const base = at(0, Math.max(lo, 0)).y;
-        s.addShape("custGeom" as PptxGenJS.SHAPE_NAME, {
-          ...g,
-          fill: { color: mix(c.teal, c.card, 0.07) },
-          line: { type: "none" },
-          points: [
-            { x: 0, y: base, moveTo: true },
-            ...data.slice(0, filled).map((p, i) => at(i, p.value)),
-            { x: at(filled - 1, 0).x, y: base },
-            { close: true },
-          ],
-        });
+      let scale = {};
+      if (trend) {
+        // The plot where recharts draws it, less its x axis's padding, which a chart's categories
+        // cannot take; the value axis on recharts' ticks over its [0, auto] domain.
+        const values = data.flatMap((p) => (two ? [p.value, p.value2 ?? 0] : [p.value]));
+        const ticks: number[] = getNiceTickValues(
+          [Math.min(0, ...values), Math.max(0, ...values)],
+          5,
+          true,
+        );
+        const lo = ticks[0];
+        const hi = ticks[ticks.length - 1];
+        const margin = now < 0 ? CHART.top : CHART.topMarked;
+        const g = {
+          x: plot.x + CHART.left,
+          y: plot.y + margin,
+          w: plot.w - CHART.left - CHART.right,
+          h: plot.h - margin - CHART.bottom,
+        };
+        scale = {
+          layout: { x: (g.x - r.x) / r.w, y: (g.y - r.y) / r.h, w: g.w / r.w, h: g.h / r.h },
+          valAxisMinVal: lo,
+          valAxisMaxVal: hi,
+          valAxisMajorUnit: ticks[1] - lo,
+        };
+        // recharts fills a lone series' measured part down to 0; a chart's area series would
+        // fall to zero after its last value, so the fill is a shape under the chart's plot.
+        const filled = now < 0 ? data.length : now + 1;
+        if (!two && filled > 1) {
+          const xAt = (i: number) => (i / (data.length - 1)) * g.w;
+          const yAt = (v: number) => ((hi - v) / (hi - lo)) * g.h;
+          s.addShape("custGeom" as PptxGenJS.SHAPE_NAME, {
+            ...g,
+            fill: { color: mix(c.teal, c.card, 0.07) },
+            line: { type: "none" },
+            points: [
+              { x: 0, y: yAt(0), moveTo: true },
+              ...data.slice(0, filled).map((p, i) => ({ x: xAt(i), y: yAt(p.value) })),
+              { x: xAt(filled - 1), y: yAt(0) },
+              { close: true },
+            ],
+          });
+        }
       }
-      ctx.charts.count += 1;
-      if (trend) ctx.charts.trends.set(ctx.charts.count, now);
+      // A bar's names wrap level at their band in the first of the web's steps where every word
+      // fits it, else tilt at the last, as `tickLayout` sets them.
+      const band = (plot.w / data.length) * 0.9;
+      const word = Math.max(...labels.flatMap((l) => l.split(" ").map((w) => w.length)));
+      const step = TICK_STEPS.find((pt) => (word * pt * ADVANCE.sans) / 72 <= band);
+      ctx.charts.set(ctx.charts.size + 1, trend ? { now } : { level: step !== undefined });
       s.addChart(trend ? pptx.ChartType.line : pptx.ChartType.bar, series, {
         ...r,
         chartColors: now < 0 ? hues : hues.flatMap((hue) => [hue, hue]),
@@ -3083,17 +3104,12 @@ const RENDER: {
         valAxisLabelFontFace: SANS,
         catAxisLabelColor: c.muted,
         valAxisLabelColor: c.muted,
-        catAxisLabelFontSize: PT.sm,
+        catAxisLabelFontSize: trend ? PT.sm : (step ?? TICK_STEPS[TICK_STEPS.length - 1]),
         valAxisLabelFontSize: PT.sm,
         valGridLine: { color: c.border, size: 0.5 },
         catAxisLineShow: true,
         valAxisLineShow: false,
-        ...(trend && {
-          layout: { x: (g.x - r.x) / r.w, y: (g.y - r.y) / r.h, w: g.w / r.w, h: g.h / r.h },
-          valAxisMinVal: lo,
-          valAxisMaxVal: hi,
-          valAxisMajorUnit: ticks[1] - lo,
-        }),
+        ...scale,
         // Bars carry their value on top instead of a value axis, as on the web slide.
         ...(!trend && {
           showValue: true,
@@ -3109,7 +3125,6 @@ const RENDER: {
       return;
     }
     const a = { ...BODY(y), h: BOTTOM - y - (d.annotation ? 0.4 : 0) };
-    annotate(SIDE, BOTTOM - 0.35, CW, 0.35);
     if (d.variant === "cycle") {
       // The adoption curve as the web draws it: a bell curve, its area split into the segments'
       // shares, each segment's label and share under it.
@@ -3195,6 +3210,7 @@ const RENDER: {
         });
       }
     }
+    annotate(SIDE, BOTTOM - 0.35, CW, 0.35);
   },
 
   question(s, ctx, d) {
@@ -4093,12 +4109,13 @@ function pillPhases(
 // A trend's categories stand on the plot's edges, as recharts draws them. A marked trend's series
 // alternate measured and planned: the planned ones get the dash and leave the legend, its first
 // measured one the dot on the marked point and the point's name over it.
-function finishChart(xml: string, now: number | undefined) {
-  // A bar's names stay level and wrap at their band, as `tickLayout` sets them on the web;
+function finishChart(xml: string, fix: ChartFix) {
   // pptxgenjs writes no angle of 0, and without one PowerPoint tilts long names.
-  if (xml.includes("<c:barChart>"))
-    return xml.replace(/(<c:catAx>.*?)<a:bodyPr\/>/s, '$1<a:bodyPr rot="0" vert="horz"/>');
-  if (now === undefined) return xml;
+  if ("level" in fix)
+    return fix.level
+      ? xml.replace(/(<c:catAx>.*?)<a:bodyPr\/>/s, '$1<a:bodyPr rot="0" vert="horz"/>')
+      : xml;
+  const { now } = fix;
   const edged = xml.replace('<c:crossBetween val="between"/>', '<c:crossBetween val="midCat"/>');
   if (now < 0) return edged;
   const all = edged.match(/<c:ser>.*?<\/c:ser>/gs) ?? [];
@@ -4143,7 +4160,7 @@ export async function renderPptx(
     assets,
     dark,
     warnings: [],
-    charts: { count: 0, trends: new Map() },
+    charts: new Map(),
   };
   // A deep-dive slide stands on night, as on the web (`isDeepDive`).
   const nightCtx: Ctx = { ...deckCtx, c: palette(true), dark: true };
@@ -4170,10 +4187,9 @@ export async function renderPptx(
     .filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
     .sort((a, b) => parseInt(a.match(/\d+/)![0]) - parseInt(b.match(/\d+/)![0]));
   for (const name of Object.keys(zip.files).filter((f) => /^ppt\/.+\.xml$/.test(f))) {
-    const xml = finishChart(
-      await zip.file(name)!.async("string"),
-      deckCtx.charts.trends.get(chartFiles.indexOf(name) + 1),
-    );
+    const raw = await zip.file(name)!.async("string");
+    const fix = deckCtx.charts.get(chartFiles.indexOf(name) + 1);
+    const xml = fix ? finishChart(raw, fix) : raw;
     const n = /^ppt\/slides\/slide(\d+)\.xml$/.exec(name);
     const teal = ctxOf(n ? deck.slides[Number(n[1]) - 1] : undefined).c.teal;
     zip.file(

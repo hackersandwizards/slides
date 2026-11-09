@@ -58,7 +58,7 @@ The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]` writes a dec
 PowerPoint file in the h&w design: text as text boxes, tables as tables, trend and bar charts as
 charts, diagrams as shapes, and only the deck's own images and the h&w logos as pictures. A chart's
 labels and card, and the fill under a trend's measured part, are shapes beside the chart, so the
-fill keeps its shape when someone edits the chart's data in PowerPoint. The deck
+fill does not follow data someone edits in the chart in PowerPoint. The deck
 is the `Presentation` as JSON, `-` reads it from stdin. `--assets` is the folder a deck's `/…`
 image paths resolve against, `./public` by default; a path to an existing file, as Bun gives the
 specimen's imported images, is read as it stands. It needs `pptxgenjs` and `jszip`, optional

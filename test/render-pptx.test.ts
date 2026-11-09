@@ -74,6 +74,11 @@ let dir: string;
 let zip: JSZip;
 const slideXml: string[] = [];
 const slideText: string[] = [];
+const slideCharts: string[][] = [];
+const allCharts = () => slideCharts.flat();
+const markedAt = slideCatalog.slides.findIndex(
+  (s) => s.type === "chart" && s.variant === "trend" && s.currentMarker,
+);
 
 beforeAll(async () => {
   dir = mkdtempSync(join(tmpdir(), "slides-pptx-"));
@@ -91,6 +96,7 @@ beforeAll(async () => {
       ),
     );
     slideXml.push(xml);
+    slideCharts.push(charts);
     slideText.push(
       [xml, ...charts]
         .flatMap((x) => [...x.matchAll(/<(?:a:t|c:v)>([^<]*)<\/(?:a:t|c:v)>/g)].map((m) => m[1]))
@@ -213,17 +219,14 @@ describe("slides-pptx on the specimen deck", () => {
     });
   });
 
-  it("dashes a marked trend's planned half and dots the marked point", async () => {
-    const charts = await Promise.all(
-      Object.keys(zip.files)
-        .filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
-        .map((f) => zip.file(f)!.async("string")),
-    );
-    const marked = charts.find((xml) => xml.includes("(planned)</c:v>"))!;
+  it("dashes a marked trend's planned half and dots the marked point", () => {
+    const charts = allCharts();
+    const [marked] = slideCharts[markedAt];
     const [measured, planned] = marked.match(/<c:ser>.*?<\/c:ser>/gs)!;
-    const specimen = slideCatalog.slides.find(
-      (s) => s.type === "chart" && s.variant === "trend" && s.currentMarker,
-    ) as { data: { name: string }[]; currentMarker: string };
+    const specimen = slideCatalog.slides[markedAt] as {
+      data: { name: string }[];
+      currentMarker: string;
+    };
     const now = specimen.data.findIndex((p) => p.name === specimen.currentMarker);
     expect(planned).toContain('<a:prstDash val="dash"/>');
     expect(measured).toContain('<a:prstDash val="solid"/>');
@@ -240,16 +243,10 @@ describe("slides-pptx on the specimen deck", () => {
     );
   });
 
-  it("labels a marked trend as the web does: names, scale, fill, card and annotation", async () => {
-    const at = slideCatalog.slides.findIndex(
-      (s) => s.type === "chart" && s.variant === "trend" && s.currentMarker,
-    );
-    const slide = slideCatalog.slides[at] as Slide & { type: "chart" };
-    const rels = await zip.file(`ppt/slides/_rels/slide${at + 1}.xml.rels`)!.async("string");
-    const chart = await zip
-      .file(`ppt/charts/${/charts\/(chart\d+\.xml)/.exec(rels)![1]}`)!
-      .async("string");
-    const xml = slideXml[at];
+  it("labels a marked trend as the web does: names, scale, fill, card and annotation", () => {
+    const slide = slideCatalog.slides[markedAt] as Slide & { type: "chart" };
+    const [chart] = slideCharts[markedAt];
+    const xml = slideXml[markedAt];
     const now = slide.data!.findIndex((p) => p.name === slide.currentMarker);
     // The marked point's name over it, in the heading face.
     expect(chart).toMatch(
@@ -277,15 +274,30 @@ describe("slides-pptx on the specimen deck", () => {
     expect(xml).toContain('prst="roundRect"');
   });
 
-  it("keeps a bar's names level so they wrap at their band", async () => {
-    const charts = await Promise.all(
-      Object.keys(zip.files)
-        .filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
-        .map((f) => zip.file(f)!.async("string")),
-    );
-    const bars = charts.filter((xml) => xml.includes("<c:barChart>"));
+  it("keeps a bar's names level where every word fits its band, else lets them tilt", async () => {
+    const bars = allCharts().filter((xml) => xml.includes("<c:barChart>"));
     expect(bars.length).toBeGreaterThan(0);
     for (const xml of bars) expect(xml).toMatch(/<c:catAx>.*?<a:bodyPr rot="0" vert="horz"\/>/s);
+    const out = join(dir, "long.pptx");
+    const name = "Implementierungsphasenabschlussbericht";
+    await renderPptx(
+      {
+        name: "B",
+        slides: [
+          {
+            type: "chart",
+            variant: "bar",
+            headline: "H",
+            data: Array.from({ length: 8 }, (_, i) => ({ name: `${name} ${i}`, value: i + 1 })),
+          },
+        ],
+      },
+      out,
+      dir,
+    );
+    const zipped = await JSZip.loadAsync(readFileSync(out));
+    const chart = Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))!;
+    expect(await zipped.file(chart)!.async("string")).not.toContain('rot="0"');
   });
 
   it("keeps a marked two-series trend's planned halves out of the legend", async () => {
