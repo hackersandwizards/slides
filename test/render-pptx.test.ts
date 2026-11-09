@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import JSZip from "jszip";
 import verbal from "@hackersandwizards/brand/verbal.json";
+import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { centredMark, renderPptx } from "../scripts/render-pptx";
 import { slideCatalog } from "../specimen/slide-catalog";
@@ -237,6 +238,54 @@ describe("slides-pptx on the specimen deck", () => {
     expect(charts.filter((xml) => xml !== marked).some((xml) => xml.includes("<c:dPt>"))).toBe(
       false,
     );
+  });
+
+  it("labels a marked trend as the web does: names, scale, fill, card and annotation", async () => {
+    const at = slideCatalog.slides.findIndex(
+      (s) => s.type === "chart" && s.variant === "trend" && s.currentMarker,
+    );
+    const slide = slideCatalog.slides[at] as Slide & { type: "chart" };
+    const rels = await zip.file(`ppt/slides/_rels/slide${at + 1}.xml.rels`)!.async("string");
+    const chart = await zip
+      .file(`ppt/charts/${/charts\/(chart\d+\.xml)/.exec(rels)![1]}`)!
+      .async("string");
+    const xml = slideXml[at];
+    const now = slide.data!.findIndex((p) => p.name === slide.currentMarker);
+    // The marked point's name over it, in the heading face.
+    expect(chart).toMatch(
+      new RegExp(
+        `<c:dLbls><c:dLbl><c:idx val="${now}"/>.*?typeface="JetBrains Mono".*?<c:dLblPos val="t"/>.*?<c:showCatName val="1"/>`,
+      ),
+    );
+    // recharts' ticks for 0 to 8, categories on the plot's edges, no axis titles in the chart.
+    expect(chart).toContain('<c:max val="8"/>');
+    expect(chart).toContain('<c:min val="0"/>');
+    expect(chart).toContain('<c:majorUnit val="2"/>');
+    expect(chart).toContain('<c:crossBetween val="midCat"/>');
+    expect(chart).not.toContain("<c:title>");
+    // The y label and the note over the plot as text, the note no longer in the annotation.
+    const texts = [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((m) => m[1]);
+    expect(texts).toEqual(
+      expect.arrayContaining([slide.yLabel, slide.futureNote, slide.xLabel, slide.annotation]),
+    );
+    // The annotation in the secondary colour, the measured half filled, the plot on a card.
+    const run = xml.slice(0, xml.indexOf(`<a:t>${slide.annotation}`));
+    expect(run.slice(run.lastIndexOf("<a:rPr"))).toContain(
+      `<a:srgbClr val="${tokens["--color-purple"].slice(1).toUpperCase()}"/>`,
+    );
+    expect(xml).toContain("<a:custGeom>");
+    expect(xml).toContain('prst="roundRect"');
+  });
+
+  it("keeps a bar's names level so they wrap at their band", async () => {
+    const charts = await Promise.all(
+      Object.keys(zip.files)
+        .filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
+        .map((f) => zip.file(f)!.async("string")),
+    );
+    const bars = charts.filter((xml) => xml.includes("<c:barChart>"));
+    expect(bars.length).toBeGreaterThan(0);
+    for (const xml of bars) expect(xml).toMatch(/<c:catAx>.*?<a:bodyPr rot="0" vert="horz"\/>/s);
   });
 
   it("keeps a marked two-series trend's planned halves out of the legend", async () => {

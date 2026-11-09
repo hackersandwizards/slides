@@ -9,6 +9,7 @@ import { createRequire } from "node:module";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { tokens } from "@hackersandwizards/brand/tokens";
+import { getNiceTickValues } from "recharts";
 import type {
   ComparisonSide,
   ContentBlock,
@@ -481,8 +482,8 @@ interface Ctx {
   assets: string;
   dark: boolean;
   warnings: string[];
-  /** The deck's chart count, and per chart number of a marked trend its marked point. */
-  charts: { count: number; marked: Map<number, number> };
+  /** The deck's chart count, and per chart number of a trend its marked point, -1 for none. */
+  charts: { count: number; trends: Map<number, number> };
 }
 
 /** A deck file's path: a root path under the consumer's public directory, else a file path as it
@@ -2015,6 +2016,25 @@ function blocks(s: PSlide, ctx: Ctx, list: ContentBlock[], a: Area, centered = f
 }
 
 const BODY = (y: number): Area => ({ x: SIDE, y, w: CW, h: BOTTOM - y });
+/** A trend or bar chart as the print route draws it (`ChartFrame`, `Axes` and recharts' margins in
+ *  `ChartPlots`): the card, its padding, a 16 pt label's line and the gaps round it, the legend's
+ *  row over the card, the annotation under it, and the plot's edges inside its container. */
+const CHART = {
+  w: 1365 / 144,
+  h: 560 / 144,
+  pad: 42.67 / 144,
+  line: 46 / 144,
+  underHead: 10.67 / 144,
+  overFoot: 5.33 / 144,
+  legend: (46 + 21.33) / 144,
+  note: 32 / 144,
+  noteLine: 49 / 144,
+  left: (8 + 64) / 144,
+  right: 30 / 144,
+  top: 12 / 144,
+  topMarked: 48 / 144,
+  bottom: (8 + 56) / 144,
+};
 
 function row<T>(items: T[], a: Area, gap: number, draw: (it: T, r: Area, i: number) => void) {
   const w = (a.w - (items.length - 1) * gap) / items.length;
@@ -2941,25 +2961,21 @@ const RENDER: {
   chart(s, ctx, d) {
     const { c, pptx } = ctx;
     const y = header(s, ctx, d);
-    const noteH = d.annotation || d.futureNote ? 0.4 : 0;
-    const a = { ...BODY(y), h: BOTTOM - y - noteH };
-    const axis = {
-      catAxisLabelFontFace: SANS,
-      valAxisLabelFontFace: SANS,
-      catAxisLabelColor: c.muted,
-      valAxisLabelColor: c.muted,
-      catAxisLabelFontSize: PT.sm,
-      valAxisLabelFontSize: PT.sm,
-      valGridLine: { color: c.border, size: 0.5 },
-      catAxisLineShow: true,
-      valAxisLineShow: false,
-    };
+    // The web's `Annotation`, under the card or the drawing.
+    const annotate = (x: number, top: number, w: number, h: number) =>
+      d.annotation &&
+      box(s, c, d.annotation, x, top, w, h, {
+        size: PT.base,
+        color: c.purple,
+        align: "center",
+      });
     if ((d.variant === "trend" || d.variant === "bar") && d.data?.length) {
       const data = d.data;
+      const trend = d.variant === "trend";
       const labels = data.map((p) => p.name);
       // A marked trend is measured up to the point and planned from it, both holding the point,
-      // as on the web slide; `finishPlanned` dashes the planned half once the chart is written.
-      const now = d.variant === "trend" ? data.findIndex((p) => p.name === d.currentMarker) : -1;
+      // as on the web slide; `finishChart` dashes the planned half once the chart is written.
+      const now = trend ? data.findIndex((p) => p.name === d.currentMarker) : -1;
       const halves = (name: string, pick: (p: (typeof data)[number]) => number) => [
         { name, labels, values: data.map((p, i) => (now < 0 || i <= now ? pick(p) : null)) },
         ...(now < 0
@@ -2978,33 +2994,108 @@ const RENDER: {
         ...(two ? halves(d.series2Label ?? "", (p) => p.value2 ?? 0) : []),
       ] as { name: string; labels: string[]; values: number[] }[];
       const hues = two ? [c.teal, c.purple] : [c.teal];
+      // The card as `ChartFrame` draws it, the legend above it and the annotation below, centred
+      // in the body as the web centres them.
+      const a = BODY(y);
+      const legend = trend && !!(d.seriesLabel || d.series2Label);
+      const above = legend ? CHART.legend : 0;
+      const below = d.annotation ? CHART.note + CHART.noteLine : 0;
+      const h = Math.min(CHART.h, a.h - above - below);
+      const f = {
+        x: (W - CHART.w) / 2,
+        y: a.y + above + Math.max(0, (a.h - above - h - below) / 2),
+        w: CHART.w,
+        h,
+      };
+      card(s, f.x, f.y, f.w, f.h, c.card, c.border);
+      annotate(f.x, f.y + f.h + CHART.note, f.w, 2 * CHART.noteLine);
+      // `Axes`: the y label and the note over the plot, the x label under it.
+      const inner = { x: f.x + CHART.pad, y: f.y + CHART.pad, w: f.w - 2 * CHART.pad };
+      const bottom = f.y + f.h - CHART.pad;
+      const label = (
+        text: string | undefined,
+        x: number,
+        top: number,
+        w: number,
+        align: BoxOpts["align"],
+      ) => box(s, c, text ?? "", x, top, w, CHART.line, { size: PT.sm, color: c.muted, align });
+      const head = trend && (d.yLabel || d.futureNote) ? CHART.line + CHART.underHead : 0;
+      if (trend) {
+        label(d.yLabel, inner.x, inner.y, inner.w / 2, "left");
+        label(d.futureNote, inner.x + inner.w / 2, inner.y, inner.w / 2, "right");
+      }
+      const foot = d.xLabel ? CHART.line + CHART.overFoot : 0;
+      label(d.xLabel, inner.x, bottom - CHART.line, inner.w, "center");
+      // The chart reaches up over the card for its legend, which PowerPoint sets at its top.
+      const plot = { x: inner.x, y: inner.y + head, w: inner.w, h: bottom - foot - inner.y - head };
+      const top = legend ? f.y - CHART.legend : plot.y;
+      const r = { ...plot, y: top, h: plot.y + plot.h - top };
+      // A trend's plot where recharts draws it, its value axis on recharts' ticks.
+      const values = data.flatMap((p) => (two ? [p.value, p.value2 ?? 0] : [p.value]));
+      const ticks: number[] = getNiceTickValues(
+        [Math.min(0, ...values), Math.max(...values)],
+        5,
+        true,
+      );
+      const lo = ticks[0];
+      const hi = ticks[ticks.length - 1];
+      const g = {
+        x: plot.x + CHART.left,
+        y: plot.y + (now < 0 ? CHART.top : CHART.topMarked),
+        w: plot.w - CHART.left - CHART.right,
+        h: plot.h - (now < 0 ? CHART.top : CHART.topMarked) - CHART.bottom,
+      };
+      // recharts fills a lone series' measured part; a chart's area series would fall to zero
+      // after its last value, so the fill is a shape under the chart's plot.
+      const filled = now < 0 ? data.length : now + 1;
+      if (trend && !two && filled > 1) {
+        const at = (i: number, v: number) => ({
+          x: (i / (data.length - 1)) * g.w,
+          y: ((hi - v) / (hi - lo)) * g.h,
+        });
+        const base = at(0, Math.max(lo, 0)).y;
+        s.addShape("custGeom" as PptxGenJS.SHAPE_NAME, {
+          ...g,
+          fill: { color: mix(c.teal, c.card, 0.07) },
+          line: { type: "none" },
+          points: [
+            { x: 0, y: base, moveTo: true },
+            ...data.slice(0, filled).map((p, i) => at(i, p.value)),
+            { x: at(filled - 1, 0).x, y: base },
+            { close: true },
+          ],
+        });
+      }
       ctx.charts.count += 1;
-      if (now >= 0) ctx.charts.marked.set(ctx.charts.count, now);
-      s.addChart(d.variant === "trend" ? pptx.ChartType.line : pptx.ChartType.bar, series, {
-        x: a.x + 0.5,
-        y: a.y,
-        w: a.w - 1,
-        h: a.h,
+      if (trend) ctx.charts.trends.set(ctx.charts.count, now);
+      s.addChart(trend ? pptx.ChartType.line : pptx.ChartType.bar, series, {
+        ...r,
         chartColors: now < 0 ? hues : hues.flatMap((hue) => [hue, hue]),
         lineSize: 2.5,
         lineDataSymbol: "none",
         barDir: "col",
-        showLegend: two,
+        showLegend: legend,
         legendPos: "t",
         legendFontFace: SANS,
         legendFontSize: PT.sm,
         legendColor: c.ink,
-        showCatAxisTitle: !!d.xLabel,
-        catAxisTitle: d.xLabel,
-        showValAxisTitle: !!d.yLabel,
-        valAxisTitle: d.yLabel,
-        catAxisTitleColor: c.muted,
-        valAxisTitleColor: c.muted,
-        catAxisTitleFontSize: PT.sm,
-        valAxisTitleFontSize: PT.sm,
-        ...axis,
+        catAxisLabelFontFace: SANS,
+        valAxisLabelFontFace: SANS,
+        catAxisLabelColor: c.muted,
+        valAxisLabelColor: c.muted,
+        catAxisLabelFontSize: PT.sm,
+        valAxisLabelFontSize: PT.sm,
+        valGridLine: { color: c.border, size: 0.5 },
+        catAxisLineShow: true,
+        valAxisLineShow: false,
+        ...(trend && {
+          layout: { x: (g.x - r.x) / r.w, y: (g.y - r.y) / r.h, w: g.w / r.w, h: g.h / r.h },
+          valAxisMinVal: lo,
+          valAxisMaxVal: hi,
+          valAxisMajorUnit: ticks[1] - lo,
+        }),
         // Bars carry their value on top instead of a value axis, as on the web slide.
-        ...(d.variant === "bar" && {
+        ...(!trend && {
           showValue: true,
           dataLabelPosition: "outEnd",
           dataLabelFontFace: MONO,
@@ -3013,10 +3104,13 @@ const RENDER: {
           dataLabelColor: c.ink,
           valAxisHidden: true,
           valGridLine: { style: "none" },
-          showValAxisTitle: false,
         }),
       });
-    } else if (d.variant === "cycle") {
+      return;
+    }
+    const a = { ...BODY(y), h: BOTTOM - y - (d.annotation ? 0.4 : 0) };
+    annotate(SIDE, BOTTOM - 0.35, CW, 0.35);
+    if (d.variant === "cycle") {
       // The adoption curve as the web draws it: a bell curve, its area split into the segments'
       // shares, each segment's label and share under it.
       const segs = d.segments ?? [];
@@ -3078,6 +3172,8 @@ const RENDER: {
           align: "right",
           valign: "middle",
         });
+      if (d.futureNote)
+        box(s, c, d.futureNote, g.x + 0.1, g.y, g.w / 2, 0.3, { size: PT.sm, color: c.muted });
       if (d.currentMarker) {
         const t = 60 / 99;
         const mx = g.x + t * g.w;
@@ -3099,13 +3195,6 @@ const RENDER: {
         });
       }
     }
-    const note = [d.annotation, d.futureNote].filter(Boolean).join("   ");
-    if (note)
-      box(s, c, note, SIDE, BOTTOM - 0.35, CW, 0.35, {
-        size: PT.sm,
-        color: c.muted,
-        align: "center",
-      });
   },
 
   question(s, ctx, d) {
@@ -4000,25 +4089,37 @@ function pillPhases(
   });
 }
 
-// pptxgenjs sets a line's dash and its data markers per chart. A marked trend's series alternate
-// measured and planned: the planned ones get the dash and leave the legend, its first measured one
-// the dot on the marked point.
-function finishPlanned(xml: string, now: number | undefined) {
+// pptxgenjs sets a line's dash, its data markers and labels and where categories stand per chart.
+// A trend's categories stand on the plot's edges, as recharts draws them. A marked trend's series
+// alternate measured and planned: the planned ones get the dash and leave the legend, its first
+// measured one the dot on the marked point and the point's name over it.
+function finishChart(xml: string, now: number | undefined) {
+  // A bar's names stay level and wrap at their band, as `tickLayout` sets them on the web;
+  // pptxgenjs writes no angle of 0, and without one PowerPoint tilts long names.
+  if (xml.includes("<c:barChart>"))
+    return xml.replace(/(<c:catAx>.*?)<a:bodyPr\/>/s, '$1<a:bodyPr rot="0" vert="horz"/>');
   if (now === undefined) return xml;
-  const all = xml.match(/<c:ser>.*?<\/c:ser>/gs) ?? [];
+  const edged = xml.replace('<c:crossBetween val="between"/>', '<c:crossBetween val="midCat"/>');
+  if (now < 0) return edged;
+  const all = edged.match(/<c:ser>.*?<\/c:ser>/gs) ?? [];
   const planned = all.filter((_, i) => i % 2 === 1);
   const hue = /srgbClr val="(\w+)"/.exec(all[0] ?? "")?.[1];
   const dot = `<c:dPt><c:idx val="${now}"/><c:marker><c:symbol val="circle"/><c:size val="11"/><c:spPr><a:solidFill><a:srgbClr val="${hue}"/></a:solidFill><a:ln w="19050"><a:solidFill><a:srgbClr val="${hex("--color-white")}"/></a:solidFill></a:ln></c:spPr></c:marker><c:bubble3D val="0"/></c:dPt>`;
+  // The web's `text-lg` heading label, 34.67 px at 600.
+  const name = `<c:dLbl><c:idx val="${now}"/><c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr><c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="1733" b="1"><a:solidFill><a:srgbClr val="${hue}"/></a:solidFill><a:latin typeface="${MONO}"/></a:defRPr></a:pPr><a:endParaRPr lang="en-US"/></a:p></c:txPr><c:dLblPos val="t"/><c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="1"/><c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/></c:dLbl>`;
   const entries = planned
     .map((_, i) => `<c:legendEntry><c:idx val="${2 * i + 1}"/><c:delete val="1"/></c:legendEntry>`)
     .join("");
-  return xml
+  return edged
     .replace('<c:legendPos val="t"/>', `<c:legendPos val="t"/>${entries}`)
     .replace(/<c:ser>.*?<\/c:ser>/gs, (ser) =>
       planned.includes(ser)
         ? ser.replace('<a:prstDash val="solid"/>', '<a:prstDash val="dash"/>')
         : ser === all[0]
-          ? ser.replace(/(<c:dLbls>.*?<\/c:dLbls>)\s*(<c:marker>.*?<\/c:marker>)/s, `$2${dot}$1`)
+          ? ser.replace(
+              /<c:dLbls>(.*?<\/c:dLbls>)\s*(<c:marker>.*?<\/c:marker>)/s,
+              `$2${dot}<c:dLbls>${name}$1`,
+            )
           : ser,
     );
 }
@@ -4042,7 +4143,7 @@ export async function renderPptx(
     assets,
     dark,
     warnings: [],
-    charts: { count: 0, marked: new Map() },
+    charts: { count: 0, trends: new Map() },
   };
   // A deep-dive slide stands on night, as on the web (`isDeepDive`).
   const nightCtx: Ctx = { ...deckCtx, c: palette(true), dark: true };
@@ -4069,9 +4170,9 @@ export async function renderPptx(
     .filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
     .sort((a, b) => parseInt(a.match(/\d+/)![0]) - parseInt(b.match(/\d+/)![0]));
   for (const name of Object.keys(zip.files).filter((f) => /^ppt\/.+\.xml$/.test(f))) {
-    const xml = finishPlanned(
+    const xml = finishChart(
       await zip.file(name)!.async("string"),
-      deckCtx.charts.marked.get(chartFiles.indexOf(name) + 1),
+      deckCtx.charts.trends.get(chartFiles.indexOf(name) + 1),
     );
     const n = /^ppt\/slides\/slide(\d+)\.xml$/.exec(name);
     const teal = ctxOf(n ? deck.slides[Number(n[1]) - 1] : undefined).c.teal;
