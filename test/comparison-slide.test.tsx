@@ -67,6 +67,18 @@ describe("comparison variants (merge-comparison)", () => {
     expect(kept.querySelector(".lucide-circle-x")).toBeNull();
   });
 
+  it("steps a struck before-after and shows one without strike whole", () => {
+    const live = (s: object) =>
+      render(<slideComponents.comparison slide={{ type: "comparison", ...s } as Slide} />)
+        .container;
+    expect(
+      live({ variant: "before-after", ...sides }).querySelectorAll("[inert]"),
+    ).not.toHaveLength(0);
+    expect(
+      live({ variant: "before-after", strike: false, ...sides }).querySelector("[inert]"),
+    ).toBeNull();
+  });
+
   it("draws a transform block as before-after without strike", () => {
     const c = render(
       <slideComponents.content

@@ -3,28 +3,19 @@ kind: work
 status: open
 priority: 2
 order: 730
-owner: "Agent per repo (talks, trainer-hub, hycle-private)"
-evidence: "measured 07.11.2026 on slides v1.23.2 (talks, trainer-hub) and v1.23.1 (hycle-private), commit 24b1c3a"
+owner: "Agent in talks"
+evidence: "measured 09.11.2026 through the engine's `replacedBy` on slides v2.9.0 (commit aec7bdc), every registered deck but the specimen: talks origin/main a19563b, hycle-private origin/main 87ed1a2, both pinned to v2.8.1; trainer-hub v1.4.0 measured 09.11. by its own session"
 ---
 
-# Move every deck slide onto a catalog entry
+# Move the last deck slides onto catalog entries
 
-Phase 4 of the slide catalog program: in each consumer, a codemod moves every slide that still
-uses a replaced form onto the type that draws it, then `slides-density` stays green in that
-repo's gate. Scope: every deck, delivered client decks included; PDFs already sent stay as they are. Starts once
-`work-catalog-entry-guidance` is done, so the codemods target the final entries.
+Phase 4 of the slide catalog program. Done in trainer-hub and hycle-private: trainer-hub v1.4.0
+holds no replaced form outside `slide-master` (which shows 19 on purpose), across 47 decks;
+hycle-private's one deck holds none.
 
-Replaced forms, each slide read through the engine's `replacedBy` and `deprecated` list on
-07.11.2026, every registered deck but the specimen:
+Left: talks, 52 slides in 2 of its 13 decks, both client decks: `regular` to `content` 30,
+`grid` to `cards` 11, `regular` to comparison `split` 7, `four-column` to `cards` 4. talks owns
+that move in its own work item on those decks' deprecated forms: they wait on their client
+PowerPoint export learning the `cards` and `numbers` blocks.
 
-| Repo          | Slides in replaced forms | Decks    | Alias types among them                                                                                     |
-| ------------- | -----------------------: | -------- | ---------------------------------------------------------------------------------------------------------- |
-| talks         |                      115 | 9 of 15  | 22 (`evolution` 17, `media` 5)                                                                             |
-| trainer-hub   |                      173 | 25 of 47 | 80 (`media` 39, `overview` 29, `evolution` 7, `guidance` 2, `deep-dive-divider` 2, `dual-pill-overview` 1) |
-| hycle-private |                        1 | n/a      | none                                                                                                       |
-
-14 of trainer-hub's are `slide-master`'s, which shows the replaced forms on purpose. The print
-page lists each form under "Replaced forms" with its target. `background`, `accentColor`,
-`dotColor` and a `claim` language appear on no deck slide any more.
-
-Done when each consumer's decks hold no replaced form outside `slide-master`, and its gate is green.
+Done when talks' decks hold no replaced form and its gate is green.

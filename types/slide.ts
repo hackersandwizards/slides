@@ -435,8 +435,9 @@ export interface ComparisonSidesSlide extends ComparisonBase {
   subtitle?: string;
   left: ComparisonSide;
   right: ComparisonSide;
-  /** `before-after` only: `false` keeps the before side unstruck and without its cross, for a
-   *  before that stays rather than goes ("Stays from stage 3"). */
+  /** `before-after` only: `false` keeps the before side unstruck, uncrossed and untinted, for a
+   *  before that stays rather than goes ("Stays from stage 3"), and shows the slide whole on
+   *  arrival; a struck slide brings in the after side and the punchline on the next press. */
   strike?: boolean;
 }
 

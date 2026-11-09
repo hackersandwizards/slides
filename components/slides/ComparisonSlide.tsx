@@ -170,7 +170,7 @@ export function BeforeAfterSides({
     <div className="grid w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-stretch gap-6">
       <div
         className={`rounded-brand border p-8 transition-all duration-500 ${
-          after ? "border-border bg-text-subtle/7" : "border-border bg-white"
+          after && strike ? "border-border bg-text-subtle/7" : "border-border bg-white"
         }`}
       >
         <div className="mb-6 flex items-center gap-3">
@@ -226,29 +226,24 @@ export function BeforeAfterSides({
   );
 }
 
+/** A struck slide opens on the before side and brings in the after side and the punchline on the
+ *  next press, so the strike lands as it is said; one with `strike: false` shows at once, since
+ *  its before side stays. */
 function BeforeAfterVariant({ slide }: { slide: ComparisonSidesSlide }) {
   const printMode = usePrintMode();
-  const [phase] = useCarousel({
-    count: 3,
-    min: 1,
-    initial: printMode ? 2 : 1,
-    enabled: !printMode,
-  });
+  const stepped = !printMode && slide.strike !== false;
+  const [phase] = useCarousel({ count: 2, initial: stepped ? 0 : 1, enabled: stepped });
+  const after = phase === 1;
 
   return (
     <>
-      <BeforeAfterSides
-        left={slide.left}
-        right={slide.right}
-        after={phase >= 2}
-        strike={slide.strike}
-      />
+      <BeforeAfterSides left={slide.left} right={slide.right} after={after} strike={slide.strike} />
 
       {slide.punchline && (
         <div
-          inert={phase < 2}
+          inert={!after}
           className={`mt-10 text-center transition-all duration-500 ${
-            phase >= 2 ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+            after ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
           }`}
         >
           <p className="font-heading text-2xl font-bold text-primary">{slide.punchline}</p>
