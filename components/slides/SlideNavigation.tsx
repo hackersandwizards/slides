@@ -70,6 +70,8 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
   // The last slide still takes Next while it holds a reveal step.
   const pending = usePendingReveal();
   const atEnd = currentIndex === totalSlides - 1 && !pending;
+  // Both numbers at the total's length, and the " / " about as wide as one and a half digits.
+  const positionDigits = 2 * String(totalSlides).length + 1.5;
   // The first slide still takes Previous while it holds a step to take back.
   const undoable = usePendingReveal("behind");
   const atStart = currentIndex === 0 && !undoable;
@@ -255,7 +257,10 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
           <ChevronLeft />
         </button>
 
-        <div className="rounded-full border border-night-ink/15 bg-night-2 px-3 py-1.5 text-xs whitespace-nowrap text-night-muted backdrop-blur-sm">
+        <div
+          className="box-content rounded-full border border-night-ink/15 bg-night-2 px-3 py-1.5 text-center text-xs whitespace-nowrap text-night-muted tabular-nums backdrop-blur-sm"
+          style={{ width: `calc(var(--slide-position-digit) * ${positionDigits})` }}
+        >
           {currentIndex + 1} / {totalSlides}
         </div>
 

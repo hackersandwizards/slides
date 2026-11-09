@@ -103,8 +103,10 @@ export function BrandStrip() {
 }
 
 // A slide painted from the server's markup before its face arrived moved its blocks when the face
-// swapped in. These four of slides.css's static faces are every face of about half the specimen
-// slides, more than any other four; each further face covers fewer and goes unused on most pages.
+// swapped in; brand's metric-matched fallback faces leave only a changed line break to move one,
+// which the preload still avoids. These four of slides.css's static faces are every face of about
+// half the specimen slides, more than any other four; each further face covers fewer and goes
+// unused on most pages.
 const FACES = [inter400, inter500, mono500, mono700];
 
 export function SlideContainer({ children, logo, theme, page, mark, lang }: Props) {

@@ -55,9 +55,52 @@ A slide drawing a face outside the set gains nothing; the difference on the last
 chance (p ≈ 0.3). A preload only moves the race. The swap stops moving text only where the fallback
 face has the web face's metrics, which is brand's to set.
 
+## Re-measured on brand v2.2.0
+
+Brand v2.2.0 puts metric-matched fallback faces for both families in the stacks. Setup as above, on
+the deck page, the first slide, 30 runs per cell in alternating blocks of 10, every cell a fresh
+browser context. "Slow 4G" is 1.6 Mbit/s and 150 ms latency.
+
+The phone's position pill ("1 / 125") was 94.8 px wide in the fallback and 87.8 px in Inter, which
+moved the next-slide button 3.5 px. Its width now follows the digit count of the deck: the button
+reads the same x in both faces (282.2 px at 412).
+
+Preload kept against stripped, with the pill fixed:
+
+| Width, network | Runs with a shift, kept | Stripped | CLS, kept | Stripped | First paint, kept | Stripped |
+| -------------- | ----------------------- | -------- | --------- | -------- | ----------------- | -------- |
+| 412, slow 4G   | 0/30                    | 30/30    | 0         | 0.0039   | 2860 ms           | 2388 ms  |
+| 1440, slow 4G  | 0/30                    | 0/30     | 0         | 0        | 2852 ms           | 2376 ms  |
+| 412, local     | 0/30                    | 0/30     | 0         | 0        | 40 ms             | 40 ms    |
+| 1440, local    | 0/30                    | 0/30     | 0         | 0        | 40 ms             | 40 ms    |
+
+The preload stays: it removes the one shift the run still finds. It costs about 470 ms of first
+paint on slow 4G (why is not controlled). The prose story at 1440 shows the same cost (2412 against 1944 ms). At 412 the prose story often had
+not painted when the run read it, so its zeros say nothing.
+
+The shift left without the preload is the title's subtitle, whose `text-wrap: balance` picks a
+different break in the two faces. Against the same page with the font delayed 600 ms, 412 px:
+
+| `text-wrap` | Runs with a shift | CLS    |
+| ----------- | ----------------- | ------ |
+| `balance`   | 30/30             | 0.0039 |
+| `pretty`    | 0/30              | 0      |
+| `wrap`      | 0/30              | 0      |
+
+That shows one string, and at 1440 all three are 0/30. Four subtitles at 55 widths from 360 to
+1440 px, comparing the lines in the fallback with the lines in the web face:
+
+| `text-wrap` | Breaks differ | Line count differs | Last line a single word, web |
+| ----------- | ------------- | ------------------ | ---------------------------- |
+| `balance`   | 6 of 220      | 2                  | 0                            |
+| `pretty`    | 5 of 220      | 2                  | 0                            |
+| `wrap`      | 5 of 220      | 2                  | 19                           |
+
+`balance` stays. A changed break comes from the faces' small width difference, under any of the
+three settings, on a different string each time. Dropping it would trade this string's shift for
+another's, and plain `wrap` brings back the lone last word the setting was added against.
+
 ## Open
 
-- Brand: a metric-matched fallback face for Inter and for JetBrains Mono in the font stacks, so a
-  late swap keeps every line. The values above are a starting point for Inter only.
 - Whether the dev server fetches a preloaded face twice: not checked, the catalog's dev server did
   not start within its 30 s limit at load 20.
