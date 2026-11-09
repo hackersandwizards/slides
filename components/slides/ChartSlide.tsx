@@ -21,9 +21,12 @@ interface Props {
   slide: ChartSlideType;
 }
 
+/** What the chart shows, in a line under it whatever its variant. */
 function Annotation({ text }: { text: string }) {
   return (
-    <p className="mt-6 text-center text-2xl font-medium text-balance text-secondary">{text}</p>
+    <p className="mt-6 max-w-5xl text-center text-2xl font-medium text-balance text-secondary">
+      {text}
+    </p>
   );
 }
 
@@ -183,7 +186,6 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
           })}
         </DrawIn>
       </svg>
-      {slide.annotation && <Annotation text={slide.annotation} />}
     </BlurFade>
   );
 }
@@ -285,7 +287,6 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
           </text>
         )}
       </svg>
-      {slide.annotation && <Annotation text={slide.annotation} />}
     </BlurFade>
   );
 }
@@ -299,7 +300,7 @@ function usePlot() {
 }
 
 function TrendVariant({ slide }: { slide: ChartSlideType }) {
-  const { data, annotation, seriesLabel, series2Label } = slide;
+  const { data, seriesLabel, series2Label } = slide;
   const { mounted, still } = usePlot();
 
   return (
@@ -340,18 +341,12 @@ function TrendVariant({ slide }: { slide: ChartSlideType }) {
           )}
         </ChartFrame>
       </BlurFade>
-
-      {annotation && (
-        <BlurFade delay={0.5} duration={0.6}>
-          <Annotation text={annotation} />
-        </BlurFade>
-      )}
     </div>
   );
 }
 
 function BarVariant({ slide }: { slide: ChartSlideType }) {
-  const { data, annotation } = slide;
+  const { data } = slide;
   const { mounted, still } = usePlot();
 
   return (
@@ -371,12 +366,6 @@ function BarVariant({ slide }: { slide: ChartSlideType }) {
           )}
         </ChartFrame>
       </BlurFade>
-
-      {annotation && (
-        <BlurFade delay={0.5} duration={0.6}>
-          <Annotation text={annotation} />
-        </BlurFade>
-      )}
     </div>
   );
 }
@@ -398,6 +387,11 @@ export function ChartSlide({ slide }: Props) {
           {slide.variant === "graph" && <GraphVariant slide={slide} />}
           {slide.variant === "trend" && <TrendVariant slide={slide} />}
           {slide.variant === "bar" && <BarVariant slide={slide} />}
+          {slide.annotation && (
+            <BlurFade delay={0.5} duration={0.6}>
+              <Annotation text={slide.annotation} />
+            </BlurFade>
+          )}
         </div>
       </div>
     </SlideShell>

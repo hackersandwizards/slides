@@ -15,8 +15,9 @@ interface Props {
   page?: string;
   /** The h&w corner mark, `cornerMark()`: the lockup by default. */
   mark?: CornerMark;
-  /** The deck's language, `deckLang()`: brand's claim on a contact closing takes it. English by
-   *  default, as `deckLang` is for a deck whose title slide names none. */
+  /** The deck's language, `deckLang()`: the slide's `lang`, by which a long word hyphenates, and
+   *  brand's claim on a contact closing take it. English by default, as `deckLang` is for a deck
+   *  whose title slide names none. */
   lang?: "en" | "de";
 }
 
@@ -128,6 +129,7 @@ export function SlideContainer({ children, logo, theme, page, mark, lang = "en" 
     return (
       <div
         className={viewportClassName}
+        lang={lang}
         data-theme={theme ? "dark" : "light"}
         data-hw-night={theme ? "" : undefined}
       >
@@ -152,6 +154,7 @@ export function SlideContainer({ children, logo, theme, page, mark, lang = "en" 
   return (
     <div
       className={viewportClassName}
+      lang={lang}
       data-theme={theme ? "dark" : "light"}
       data-hw-night={theme ? "" : undefined}
     >

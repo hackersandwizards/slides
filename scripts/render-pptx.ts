@@ -42,6 +42,10 @@ import {
   qrAlt,
   speakerLine,
   contentRedrawnAs,
+  gridAsContent,
+  regularAsContent,
+  TWO_COLUMN_TONES,
+  type SideTone,
 } from "../lib/slide-utils";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
@@ -993,13 +997,11 @@ function comparisonFoot(
     );
 }
 
-const VARIANT_TONES: Record<string, [MarkerHue | "muted", MarkerHue | "muted"]> = {
-  "success-error": ["green", "red"],
-  "error-success": ["red", "green"],
-  error: ["red", "red"],
-  "error-neutral": ["red", "muted"],
-  success: ["green", "green"],
-  neutral: ["muted", "muted"],
+/** The hue a two-column side's tone (`TWO_COLUMN_TONES`) takes. */
+const SIDE_HUES: Record<SideTone, MarkerHue | "muted"> = {
+  success: "green",
+  error: "red",
+  neutral: "muted",
 };
 
 /** The height of each row of a table at scale k in width w, its header first. */
@@ -1400,9 +1402,9 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "two-column": {
-      const [lt, rt] = (VARIANT_TONES[b.variant ?? "neutral"] ?? ["muted", "muted"]).map((t) =>
-        t === "muted" ? {} : { tone: c[t], marker: t },
-      );
+      const [lt, rt] = TWO_COLUMN_TONES[b.variant ?? "neutral"]
+        .map((tone) => SIDE_HUES[tone])
+        .map((t) => (t === "muted" ? {} : { tone: c[t], marker: t }));
       const half = a.w / 2 - 0.15;
       itemCard(s, ctx, { ...a, w: half }, k, { ...b.left, ...lt });
       itemCard(s, ctx, { ...a, x: a.x + half + 0.3, w: half }, k, { ...b.right, ...rt });
@@ -2051,7 +2053,8 @@ const CHART = {
   left: (8 + 64) / 144,
   right: 30 / 144,
   top: 12 / 144,
-  topMarked: 48 / 144,
+  /** recharts' `tickMargin`, `TICK_GAP` in `ChartPlots`. */
+  tick: 12 / 144,
   bottom: (8 + 56) / 144,
 };
 /** A bar's name sizes, `TICK_STEPS` in `ChartPlots`: the web's text-base, text-sm and text-xs. */
@@ -2261,7 +2264,12 @@ const RENDER: {
     footer(s, ctx, d.footer, footH, centered);
   },
 
-  regular(s, ctx, d) {
+  regular(s, ctx, d, deck) {
+    // As on the web, a regular slide is the content or agenda slide that replaces it
+    // (`regularAsContent`); one with a profile keeps its sidebar.
+    const replaced = regularAsContent(d);
+    if (replaced?.type === "agenda") return RENDER.agenda(s, ctx, replaced, deck);
+    if (replaced) return RENDER.content(s, ctx, replaced, deck);
     const { c } = ctx;
     const y = header(s, ctx, d, d.align === "center");
     let a = BODY(y);
@@ -2317,39 +2325,20 @@ const RENDER: {
           ]
         : []),
     ];
-    if (d.layout === "cards" || (!d.profile && secs.length > 1 && secs.length <= 4)) {
-      const card_h = Math.min(
-        a.h,
-        Math.max(
-          ...secs.map((sec) =>
-            need(paras(sec, true), c, a.w / secs.length - 0.6, { size: PT.base, color: c.ink }),
-          ),
-        ) + 0.5,
-      );
-      row(secs, { ...a, h: card_h }, 0.25, (sec, r, i) => {
-        const active = d.activeSection === i;
-        card(s, r.x, r.y, r.w, r.h, active ? c.tealTint : c.card, active ? c.teal : c.border);
-        box(s, c, paras(sec, active), r.x + 0.25, r.y + 0.25, r.w - 0.5, r.h - 0.5, {
-          size: PT.base,
-          color: c.ink,
-        });
-      });
-    } else {
-      box(
-        s,
-        c,
-        secs.flatMap((sec, i) =>
-          paras(sec, d.activeSection === i).map((p, j, arr) =>
-            j === arr.length - 1 ? { ...p, after: 14 } : p,
-          ),
+    box(
+      s,
+      c,
+      secs.flatMap((sec, i) =>
+        paras(sec, d.activeSection === i).map((p, j, arr) =>
+          j === arr.length - 1 ? { ...p, after: 14 } : p,
         ),
-        a.x,
-        a.y,
-        a.w,
-        a.h,
-        { size: PT.base, color: c.ink, align: d.align === "center" ? "center" : "left" },
-      );
-    }
+      ),
+      a.x,
+      a.y,
+      a.w,
+      a.h,
+      { size: PT.base, color: c.ink, align: d.align === "center" ? "center" : "left" },
+    );
   },
 
   statement(s, ctx, d, deck) {
@@ -2563,95 +2552,47 @@ const RENDER: {
     }
   },
 
-  grid(s, ctx, d) {
+  grid(s, ctx, d, deck) {
+    // Pillars and stats are a content slide's cards or numbers, as on the web (`gridAsContent`).
+    if ((d.variant ?? "pillars") !== "quotes")
+      return RENDER.content(s, ctx, gridAsContent(d), deck);
+    // Quotes as the web's QuoteCard: the brand quote, upright ink behind a purple rule with no
+    // card, and under it the author in teal, a round portrait beside, in the web's columns.
     const { c } = ctx;
     const y = header(s, ctx, d);
-    const cols =
-      d.columns ??
-      (d.variant === "stats"
-        ? 2
-        : d.cards.length <= 5
-          ? d.cards.length
-          : Math.ceil(d.cards.length / 2));
+    const cols = d.columns === 2 ? 2 : d.columns === 4 ? 4 : 3;
     const rows = Math.ceil(d.cards.length / cols);
     const a = BODY(y);
-    const cw = (a.w - (cols - 1) * 0.25) / cols;
-    const paras = (cd: (typeof d.cards)[number]): Para[] =>
-      d.variant === "stats"
-        ? [
-            {
-              runs: [{ text: cd.value ?? cd.title }],
-              mono: true,
-              bold: true,
-              rel: PT.s6 / PT.base,
-              after: 6,
-            },
-            { runs: md(cd.label ?? cd.title, c, { color: c.muted }) },
-            ...(cd.description ? [{ runs: md(cd.description, c) }] : []),
-          ]
-        : d.variant === "quotes"
-          ? [
-              { runs: md(`“${cd.title}”`, c, { italic: true }), after: 8 },
-              ...(cd.author
-                ? [{ runs: [{ text: `— ${cd.author}`, options: { color: c.muted } }], rel: 0.9 }]
-                : []),
-              ...(cd.description ? [{ runs: md(cd.description, c, { color: c.muted }) }] : []),
-            ]
-          : [
-              { runs: md(cd.title, c), ...TITLE, rel: PT.h4 / PT.base, after: 6 },
-              ...(cd.description ? [{ runs: md(cd.description, c, { color: c.muted }) }] : []),
-            ];
-    const ch = Math.min(
-      (a.h - (rows - 1) * 0.25) / rows,
-      Math.max(
-        ...d.cards.map((cd) => need(paras(cd), c, cw - 0.5, { size: PT.lead, color: c.ink })),
-      ) + 0.9,
-    );
-    const top = a.y + Math.max(0, (a.h - rows * ch - (rows - 1) * 0.25) / 2);
+    const gap = 42.67 / 144;
+    const w = Math.min(a.w, 1365 / 144);
+    const cw = (w - (cols - 1) * gap) / cols;
+    const rule = 2 / 144;
+    const indent = rule + 26.67 / 144;
+    const who = 74.67 / 144;
+    const o: BoxOpts = { size: PT.lead, color: c.ink };
+    const quote = (cd: (typeof d.cards)[number]) => ({ runs: md(cd.description ?? cd.title, c) });
+    const qh = Math.max(...d.cards.map((cd) => need(quote(cd), c, cw - indent, o)));
+    const ch = Math.min((a.h - (rows - 1) * gap) / rows, qh + 0.25 + who);
+    const left = a.x + (a.w - w) / 2;
+    const top = a.y + Math.max(0, (a.h - rows * ch - (rows - 1) * gap) / 2);
     d.cards.forEach((cd, i) => {
-      const x = a.x + (i % cols) * (cw + 0.25);
-      const yy = top + Math.floor(i / cols) * (ch + 0.25);
-      const cardTone = cd.tone ?? cd.accentColor;
-      const tone =
-        cardTone && cardTone !== "neutral"
-          ? (c[THEME[cardTone]] as string)
-          : [c.teal, c.purple, c.amber, c.green][i % 4];
-      const active = d.allActive || cd.highlight || d.variant !== "pillars";
-      card(
-        s,
-        x,
-        yy,
-        cw,
-        ch,
-        d.variant === "pillars" && active ? mix(tone, c.bg, 0.07) : c.card,
-        d.variant === "pillars" && active ? tone : c.border,
-      );
-      let ty = yy + 0.25;
-      if (d.variant === "pillars" || !d.variant) {
-        rect(s, x + cw / 2 - 0.15, yy - 0.15, 0.3, 0.3, tone);
-        box(
-          s,
-          c,
-          { runs: [{ text: String((d.numberFrom ?? 1) + i) }] },
-          x + cw / 2 - 0.15,
-          yy - 0.15,
-          0.3,
-          0.3,
-          { size: PT.sm, mono: true, bold: true, color: c.card, align: "center", valign: "middle" },
-        );
-        ty += 0.2;
-      }
+      const x = left + (i % cols) * (cw + gap);
+      const yy = top + Math.floor(i / cols) * (ch + gap);
+      const h = ch - 0.25 - who;
+      rect(s, x, yy, rule, h, c.purple);
+      box(s, c, quote(cd), x + indent, yy, cw - indent, h, o);
+      let ax = x;
       if (cd.imageSrc) {
-        portrait(s, ctx, cd.imageSrc, cd.author ?? cd.title, x + cw / 2 - 0.4, ty, 0.8, tone);
-        ty += 0.95;
+        portrait(s, ctx, cd.imageSrc, cd.author ?? "", x, yy + ch - who, who, c.teal);
+        ax += who + 0.11;
       }
-      box(s, c, paras(cd), x + 0.25, ty, cw - 0.5, yy + ch - ty - 0.2, {
-        size: PT.lead,
-        color: d.variant === "stats" ? c.ink : c.ink,
-        align: d.variant === "quotes" ? "left" : "center",
-        valign: d.variant === "stats" ? "middle" : "top",
-      });
-      if (d.variant === "stats") s.addText("", { x: 0, y: 0, w: 0.01, h: 0.01 });
+      if (cd.author)
+        box(s, c, cd.author, ax, yy + ch - who, cw - (ax - x), who, {
+          size: PT.base,
+          bold: true,
+          color: c.teal,
+          valign: "middle",
+        });
     });
   },
 
@@ -2742,9 +2683,10 @@ const RENDER: {
       ...(d.intro ? [{ runs: md(d.intro, c), after: 6 }] : []),
       ...bulletParas(d.points ?? [], c),
     ];
+    // The intro, the points and the examples in the muted grey, as on the web.
     if (intro.length) {
-      const ih = need(intro, c, CW, { size: PT.base, color: c.ink }, 1.6);
-      box(s, c, intro, SIDE, y, CW, ih, { size: PT.base, color: c.ink });
+      const ih = need(intro, c, CW, { size: PT.base, color: c.muted }, 1.6);
+      box(s, c, intro, SIDE, y, CW, ih, { size: PT.base, color: c.muted });
       y += ih + 0.2;
     }
     const a = BODY(y);
@@ -2788,7 +2730,7 @@ const RENDER: {
             r.y + 0.15,
             r.w - 0.4,
             r.h - 0.25,
-            { size: PT.sm, mono: true, color: c.ink, line: 1.3 },
+            { size: PT.sm, mono: true, color: c.muted, line: 1.3 },
           );
         },
       );
@@ -3057,6 +2999,8 @@ const RENDER: {
       const top = legend ? f.y - CHART.legend : plot.y;
       const r = { ...plot, y: top, h: plot.y + plot.h - top };
       let scale = {};
+      // A marked trend's names, set under its points once the chart is drawn.
+      let names = () => {};
       if (trend) {
         // The plot where recharts draws it, less its x axis's padding, which a chart's categories
         // cannot take; the value axis on recharts' ticks over its [0, auto] domain.
@@ -3068,7 +3012,7 @@ const RENDER: {
         );
         const lo = ticks[0];
         const hi = ticks[ticks.length - 1];
-        const margin = now < 0 ? CHART.top : CHART.topMarked;
+        const margin = CHART.top;
         const g = {
           x: plot.x + CHART.left,
           y: plot.y + margin,
@@ -3083,6 +3027,30 @@ const RENDER: {
         };
         // recharts fills a lone series' measured part down to 0; a chart's area series would
         // fall to zero after its last value, so the fill is a shape under the chart's plot.
+        // A chart's category names take one style, so a marked trend sets each as text under its
+        // point, the marked one in teal and bold as the web's tick, and a dashed guide from the dot
+        // down to the axis.
+        if (now >= 0)
+          names = () => {
+            const at = (i: number) => g.x + (i / Math.max(1, data.length - 1)) * g.w;
+            const wide = g.w / Math.max(1, data.length - 1);
+            const dot = g.y + ((hi - data[now].value) / (hi - lo)) * g.h;
+            s.addShape("line", {
+              x: at(now),
+              y: dot,
+              w: 0.001,
+              h: g.y + g.h - dot,
+              line: { color: c.teal, width: 1.5, dashType: "dash" },
+            });
+            labels.forEach((name, i) =>
+              box(s, c, name, at(i) - wide / 2, g.y + g.h + CHART.tick, wide, CHART.line, {
+                size: PT.sm,
+                color: i === now ? c.teal : c.muted,
+                bold: i === now,
+                align: "center",
+              }),
+            );
+          };
         const filled = now < 0 ? data.length : now + 1;
         if (!two && filled > 1) {
           const xAt = (i: number) => (i / (data.length - 1)) * g.w;
@@ -3144,6 +3112,7 @@ const RENDER: {
           valGridLine: { style: "none" },
         }),
       });
+      names();
       return;
     }
     const a = { ...BODY(y), h: BOTTOM - y - (d.annotation ? 0.4 : 0) };
@@ -4130,7 +4099,8 @@ function pillPhases(
 // pptxgenjs sets a line's dash, its data markers and labels and where categories stand per chart.
 // A trend's categories stand on the plot's edges, as recharts draws them. A marked trend's series
 // alternate measured and planned: the planned ones get the dash and leave the legend, its first
-// measured one the dot on the marked point and the point's name over it.
+// measured one the dot on the marked point. Its category names leave the axis for the text boxes
+// the slide sets under the points.
 function finishChart(xml: string, fix: ChartFix) {
   // pptxgenjs writes no angle of 0, and without one PowerPoint tilts long names.
   if ("level" in fix)
@@ -4152,20 +4122,18 @@ function finishChart(xml: string, fix: ChartFix) {
   const planned = all.filter((_, i) => i % 2 === 1);
   const hue = /srgbClr val="(\w+)"/.exec(all[0] ?? "")?.[1];
   const dot = `<c:dPt><c:idx val="${now}"/><c:marker><c:symbol val="circle"/><c:size val="11"/><c:spPr><a:solidFill><a:srgbClr val="${hue}"/></a:solidFill><a:ln w="19050"><a:solidFill><a:srgbClr val="${hex("--color-white")}"/></a:solidFill></a:ln></c:spPr></c:marker><c:bubble3D val="0"/></c:dPt>`;
-  // The web's `text-lg` heading label, 34.67 px at 600.
-  const name = `<c:dLbl><c:idx val="${now}"/><c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr><c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="1733" b="1"><a:solidFill><a:srgbClr val="${hue}"/></a:solidFill><a:latin typeface="${MONO}"/></a:defRPr></a:pPr><a:endParaRPr lang="en-US"/></a:p></c:txPr><c:dLblPos val="t"/><c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="1"/><c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/></c:dLbl>`;
-  return hideEntries(edged, [...planned.map((_, i) => 2 * i + 1), ...unnamed]).replace(
-    /<c:ser>.*?<\/c:ser>/gs,
-    (ser) =>
+  return hideEntries(edged, [...planned.map((_, i) => 2 * i + 1), ...unnamed])
+    .replace(/(<c:catAx>.*?<c:tickLblPos val=")\w+("\/>)/s, "$1none$2")
+    .replace(/<c:ser>.*?<\/c:ser>/gs, (ser) =>
       planned.includes(ser)
         ? ser.replace('<a:prstDash val="solid"/>', '<a:prstDash val="dash"/>')
         : ser === all[0]
           ? ser.replace(
               /<c:dLbls>(.*?<\/c:dLbls>)\s*(<c:marker>.*?<\/c:marker>)/s,
-              `$2${dot}<c:dLbls>${name}$1`,
+              `$2${dot}<c:dLbls>$1`,
             )
           : ser,
-  );
+    );
 }
 
 /** Builds the deck and writes it; returns the warnings for images or videos it could not place. */

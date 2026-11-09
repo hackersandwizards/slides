@@ -1,5 +1,4 @@
-import { cornerMark, resolveSlideLogo } from "../lib/logo";
-import { deckLang, pageLabel } from "../lib/slide-utils";
+import { slideFrame } from "../lib/slide-utils";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
 import slidesCss from "../styles/slides.css?url";
@@ -12,14 +11,7 @@ export const state = (type: Slide["type"], nth: number, component: string) => {
   if (!slide) throw new Error(`the specimen deck has no ${type} slide number ${nth + 1}`);
   const index = slideCatalog.slides.indexOf(slide);
   return {
-    args: {
-      slide,
-      logo: resolveSlideLogo(slideCatalog, index),
-      theme: slideCatalog.theme,
-      page: pageLabel(slideCatalog.slides, index),
-      mark: cornerMark(slideCatalog, index),
-      lang: deckLang(slideCatalog),
-    },
+    args: { slide, ...slideFrame(slideCatalog, index) },
     decorators: [{ component: SlideFrame, props: { component, css: slidesCss } }],
   };
 };

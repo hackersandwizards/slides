@@ -25,6 +25,8 @@ import {
   keepHyphenatedWords,
   labeledGridAsCards,
   pipelineAsFlow,
+  TWO_COLUMN_TONES,
+  type SideTone,
 } from "../../lib/slide-utils";
 import {
   LinkCaption,
@@ -189,82 +191,11 @@ function Gallery({ block }: { block: Extract<ContentBlock, { type: "gallery" }> 
   );
 }
 
-const TWO_COL_VARIANTS: Record<
-  string,
-  Record<"left" | "right", { card: CardTone; title: string; dot: string }>
-> = {
-  "success-error": {
-    left: {
-      card: "success",
-      title: "text-green-dark",
-      dot: "bg-green-dark",
-    },
-    right: {
-      card: "error",
-      title: "text-red",
-      dot: "bg-red",
-    },
-  },
-  "error-success": {
-    left: {
-      card: "error",
-      title: "text-red",
-      dot: "bg-red",
-    },
-    right: {
-      card: "success",
-      title: "text-green-dark",
-      dot: "bg-green-dark",
-    },
-  },
-  error: {
-    left: {
-      card: "error",
-      title: "text-red",
-      dot: "bg-red",
-    },
-    right: {
-      card: "error",
-      title: "text-red",
-      dot: "bg-red",
-    },
-  },
-  "error-neutral": {
-    left: {
-      card: "error",
-      title: "text-red",
-      dot: "bg-red",
-    },
-    right: {
-      card: "neutral",
-      title: "text-text",
-      dot: "",
-    },
-  },
-  success: {
-    left: {
-      card: "success",
-      title: "text-green-dark",
-      dot: "bg-green-dark",
-    },
-    right: {
-      card: "success",
-      title: "text-green-dark",
-      dot: "bg-green-dark",
-    },
-  },
-  neutral: {
-    left: {
-      card: "neutral",
-      title: "text-text",
-      dot: "",
-    },
-    right: {
-      card: "neutral",
-      title: "text-text",
-      dot: "",
-    },
-  },
+/** How a two-column side draws its tone (`TWO_COLUMN_TONES`). */
+const SIDE_STYLES: Record<SideTone, { card: CardTone; title: string; dot: string }> = {
+  success: { card: "success", title: "text-green-dark", dot: "bg-green-dark" },
+  error: { card: "error", title: "text-red", dot: "bg-red" },
+  neutral: { card: "neutral", title: "text-text", dot: "" },
 };
 
 function renderColumnContent(text: string) {
@@ -457,10 +388,10 @@ function ContentBlockRenderer({
       );
 
     case "two-column": {
-      const v = TWO_COL_VARIANTS[block.variant ?? "neutral"];
+      const [left, right] = TWO_COLUMN_TONES[block.variant ?? "neutral"];
       const sides = [
-        { data: block.left, style: v.left },
-        { data: block.right, style: v.right },
+        { data: block.left, style: SIDE_STYLES[left] },
+        { data: block.right, style: SIDE_STYLES[right] },
       ] as const;
 
       return (

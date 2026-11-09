@@ -677,7 +677,12 @@ const slides: Slide[] = [
         items: [
           { title: "Plan", text: "Written before code", icon: "compass" },
           { title: "Check", text: "Same checks everywhere", icon: "shield" },
-          { title: "Learn", text: "Conventions grow", icon: "book" },
+          // One word wider than its card, which hyphenates rather than run out of it.
+          {
+            title: "Internationalization",
+            text: "Every screen in four languages",
+            icon: "browser",
+          },
         ],
       },
       {
@@ -1481,17 +1486,18 @@ const slides: Slide[] = [
   {
     type: "chart",
     variant: "trend",
-    headline: "Every quarter measures against the first",
+    headline: "Every run measures against the first",
+    // Marked at its first point, by the value axis, and a last name wider than the plot's margin.
     data: [
-      { name: "Q1", value: 2 },
-      { name: "Q2", value: 3 },
-      { name: "Q3", value: 5 },
-      { name: "Q4", value: 8 },
+      { name: "Month 0", value: 2 },
+      { name: "Month 3", value: 3 },
+      { name: "Month 6", value: 5 },
+      { name: "Month 12", value: 8 },
     ],
-    xLabel: "Quarter",
+    xLabel: "Time",
     yLabel: "Teams on the harness",
-    currentMarker: "Q2",
-    futureNote: "Q3 and Q4 planned",
+    currentMarker: "Month 0",
+    futureNote: "Months 3 to 12 planned",
     annotation: "Fictional figures.",
     notes: "chart: trend with one series, the current point marked and a note on what lies ahead.",
   },

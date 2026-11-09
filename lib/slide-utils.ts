@@ -1,5 +1,6 @@
 // Named, never the default: the whole file would bundle verbal.json's retired lines, which brand-retired fails on.
 import { claim } from "@hackersandwizards/brand/verbal.json";
+import { cornerMark, resolveSlideLogo } from "./logo";
 import type {
   AgendaSlide,
   ClosingSlide,
@@ -147,6 +148,18 @@ export function isDeepDive(slide: {
 /** Whether a title slide carries a talk's opening, which TitleSlide draws left-aligned. */
 export function isOpening(slide: TitleSlide): boolean {
   return !!(slide.kicker || slide.name || slide.speakers?.length || slide.event || slide.qr);
+}
+
+/** What a deck's slide `index` hands its SlideContainer: the logos, the deck's theme, the page
+ *  counter, the corner mark and the language. A deck page and a catalog story frame a slide alike. */
+export function slideFrame(deck: Presentation, index: number) {
+  return {
+    logo: resolveSlideLogo(deck, index),
+    theme: deck.theme,
+    page: pageLabel(deck.slides, index),
+    mark: cornerMark(deck, index),
+    lang: deckLang(deck),
+  };
 }
 
 /** The deck's language, for the `lang` of the page and the file that show it: the first title
@@ -639,3 +652,17 @@ export const continuation = ({ continues }: { continues?: "in" | "out" | "both" 
   into: continues === "in" || continues === "both",
   onward: continues === "out" || continues === "both",
 });
+
+type TwoColumn = Extract<ContentBlock, { type: "two-column" }>;
+export type SideTone = "success" | "error" | "neutral";
+
+/** The tone of a two-column block's left and right side by its variant, which the slide and the
+ *  .pptx both draw. */
+export const TWO_COLUMN_TONES: Record<NonNullable<TwoColumn["variant"]>, [SideTone, SideTone]> = {
+  "success-error": ["success", "error"],
+  "error-success": ["error", "success"],
+  error: ["error", "error"],
+  "error-neutral": ["error", "neutral"],
+  success: ["success", "success"],
+  neutral: ["neutral", "neutral"],
+};

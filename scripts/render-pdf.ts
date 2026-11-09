@@ -3,8 +3,12 @@ import puppeteer from "puppeteer";
 /** Prints a deck's print route to a PDF through Chrome's own print pipeline, one slide per page
  *  with selectable text; a raster PDF stitched from screenshots has no text, takes about a hundred
  *  times as long and ran to 30 MB for a 74-slide deck. Each repo's `export-pdf.ts` resolves the
- *  deck, the URL and the file name, and calls this. */
+ *  deck, the URL and the file name, and calls this, which refuses any URL but http(s). */
 export async function renderPdf(url: string, out: string, title: string, slideCount: number) {
+  // A deck's print route, served: a file:// or other local URL would print whatever file it names.
+  const { protocol } = new URL(url);
+  if (protocol !== "http:" && protocol !== "https:")
+    throw new Error(`renderPdf prints an http(s) page, not a ${protocol} URL: ${url}`);
   const browser = await puppeteer.launch({
     headless: true,
     protocolTimeout: 300_000,

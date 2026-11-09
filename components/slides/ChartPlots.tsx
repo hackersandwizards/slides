@@ -10,6 +10,7 @@ import {
   YAxis,
   CartesianGrid,
   ReferenceDot,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
@@ -97,6 +98,19 @@ export function TrendPlot({
         ]
       : []),
   ];
+  const { ref, layout } = useTickLayout(
+    data.map((d) => String(d.name)),
+    SIDE.left + Y_WIDTH,
+    SIDE.right,
+    true,
+  );
+  // A point's label centres on it, so the first and last labels overhang the plot by half their
+  // width: the axis pads each end by what the margin beside it leaves over.
+  const [first, last] = layout?.edges ?? [0, 0];
+  const padding = {
+    left: Math.max(24, Math.ceil(first / 2 - Y_WIDTH - SIDE.left)),
+    right: Math.max(8, Math.ceil(last / 2 - SIDE.right)),
+  };
   const line = {
     isAnimationActive: still ? false : ("auto" as const),
     type: "monotone" as const,
@@ -104,70 +118,84 @@ export function TrendPlot({
   };
   return (
     <Axes xLabel={xLabel} yLabel={yLabel} note={futureNote}>
-      <ResponsiveContainer width="100%" height="100%">
-        {/* A marked plot keeps room above it for the marker's name on the highest point. */}
-        <AreaChart data={rows} margin={{ top: now < 0 ? 12 : 48, ...SIDE, bottom: 8 }}>
-          <CartesianGrid stroke="var(--color-border)" vertical={false} />
-          <XAxis
-            dataKey="name"
-            tick={<AxisTick />}
-            axisLine={{ stroke: "var(--color-border-strong)" }}
-            tickLine={false}
-            tickMargin={TICK_GAP}
-            height={56}
-            padding={{ left: 24, right: 8 }}
-          />
-          <YAxis tick={tick} axisLine={false} tickLine={false} width={Y_WIDTH} />
-          {/* The marked point is both measured and planned: it lists once, as measured. */}
-          <Tooltip
-            {...tooltip}
-            itemStyle={{ color: "var(--color-text)" }}
-            payloadUniqBy={(entry) => String(entry.dataKey).replace("plan", "value")}
-          />
-          {series.map((s) => (
-            <Area
-              key={s.key}
-              {...line}
-              dataKey={s.key}
-              name={s.name}
-              stroke={s.stroke}
-              fill={s.stroke}
-              fillOpacity={s.fill}
+      <div ref={ref} className="h-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={rows}
+            margin={{
+              top: 12,
+              ...SIDE,
+              left: SIDE.left + (layout?.overhang ?? 0),
+              bottom: 8,
+            }}
+          >
+            <CartesianGrid stroke="var(--color-border)" vertical={false} />
+            <XAxis
+              dataKey="name"
+              tick={<AxisTick layout={layout} marked={now} />}
+              axisLine={{ stroke: "var(--color-border-strong)" }}
+              tickLine={false}
+              tickMargin={TICK_GAP}
+              height={Math.max(56, Math.ceil((layout?.height ?? 0) + TICK_GAP))}
+              padding={padding}
+              interval={0}
             />
-          ))}
-          {now >= 0 &&
-            series.map((s) => (
+            <YAxis tick={tick} axisLine={false} tickLine={false} width={Y_WIDTH} />
+            {/* The marked point is both measured and planned: it lists once, as measured. */}
+            <Tooltip
+              {...tooltip}
+              itemStyle={{ color: "var(--color-text)" }}
+              payloadUniqBy={(entry) => String(entry.dataKey).replace("plan", "value")}
+            />
+            {series.map((s) => (
               <Area
-                key={`${s.key}-plan`}
+                key={s.key}
                 {...line}
-                dataKey={s.plan}
-                name={`${s.name ?? s.key} (planned)`}
+                dataKey={s.key}
+                name={s.name}
                 stroke={s.stroke}
-                strokeDasharray="12 10"
-                fillOpacity={0}
+                fill={s.stroke}
+                fillOpacity={s.fill}
               />
             ))}
-          {now >= 0 && (
-            <ReferenceDot
-              x={data[now].name}
-              y={data[now].value}
-              r={8}
-              fill="var(--color-teal)"
-              stroke="var(--color-white)"
-              strokeWidth={3}
-              label={{
-                value: data[now].name,
-                position: "top",
-                offset: 16,
-                fill: "var(--color-teal)",
-                fontSize: "var(--text-lg)",
-                fontWeight: 600,
-                className: "font-heading",
-              }}
-            />
-          )}
-        </AreaChart>
-      </ResponsiveContainer>
+            {now >= 0 &&
+              series.map((s) => (
+                <Area
+                  key={`${s.key}-plan`}
+                  {...line}
+                  dataKey={s.plan}
+                  name={`${s.name ?? s.key} (planned)`}
+                  stroke={s.stroke}
+                  strokeDasharray="12 10"
+                  fillOpacity={0}
+                />
+              ))}
+            {/* The marked point names itself on the axis, in its own colour, and a guide runs
+                down to its name: a name over the point ran into the value axis at the first. */}
+            {now >= 0 && (
+              <ReferenceLine
+                segment={[
+                  { x: data[now].name, y: Math.min(0, ...data.map((d) => d.value)) },
+                  { x: data[now].name, y: data[now].value },
+                ]}
+                stroke="var(--color-teal)"
+                strokeWidth={2}
+                strokeDasharray="4 4"
+              />
+            )}
+            {now >= 0 && (
+              <ReferenceDot
+                x={data[now].name}
+                y={data[now].value}
+                r={8}
+                fill="var(--color-teal)"
+                stroke="var(--color-white)"
+                strokeWidth={3}
+              />
+            )}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </Axes>
   );
 }
@@ -213,10 +241,13 @@ export function tickLayout(
 }
 
 /** The tick layout for the plot's width, measured in the browser; one line at the first step
- *  until then. `left` and `right` are the plot's widths beside the bars' bands. */
-function useTickLayout(labels: string[], left: number, right: number) {
+ *  until then. `left` and `right` are the plot's widths beside the bars' bands; `points` spaces
+ *  the labels a trend's points apart, one gap fewer than its labels, instead of a band each. */
+function useTickLayout(labels: string[], left: number, right: number, points = false) {
   const ref = useRef<HTMLDivElement>(null);
-  const [layout, setLayout] = useState<TickLayout & { height: number; overhang: number }>();
+  const [layout, setLayout] = useState<
+    TickLayout & { height: number; overhang: number; edges: [number, number] }
+  >();
   const key = JSON.stringify(labels);
   useLayoutEffect(() => {
     const el = ref.current;
@@ -234,8 +265,10 @@ function useTickLayout(labels: string[], left: number, right: number) {
       const px = probes.map((probe) => parseFloat(getComputedStyle(probe).fontSize));
       for (const probe of probes) probe.remove();
       const names: string[] = JSON.parse(key);
-      const category = (el.clientWidth - left - right) / names.length;
-      const band = category * (1 - BAR_GAP);
+      const category =
+        (el.clientWidth - left - right) / Math.max(1, names.length - (points ? 1 : 0));
+      // Points have no bar between their labels: a gap's share on either side keeps them apart.
+      const band = category * (1 - (points ? 2 : 1) * BAR_GAP);
       const next = tickLayout(names, band, (text, step) => {
         ctx.font = `${fontWeight} ${px[step]}px ${fontFamily}`;
         return ctx.measureText(text).width;
@@ -244,6 +277,8 @@ function useTickLayout(labels: string[], left: number, right: number) {
       ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
       const angle = (ANGLE * Math.PI) / 180;
       const widths = next.lines.map(([l]) => ctx.measureText(l).width);
+      // The widest line of the first and the last label, which a plot of points centres on its ends.
+      const widest = (lines: string[]) => Math.max(...lines.map((l) => ctx.measureText(l).width));
       const measured = {
         ...next,
         height: next.angled
@@ -257,6 +292,13 @@ function useTickLayout(labels: string[], left: number, right: number) {
               (widths[0] * Math.cos(angle) - category / 2 - left) / (1 - 1 / (2 * names.length)),
             )
           : 0,
+        // An angled label ends on its point, so only the overhang above moves the plot.
+        edges: next.angled
+          ? ([0, 0] as [number, number])
+          : ([widest(next.lines[0]), widest(next.lines[next.lines.length - 1])] as [
+              number,
+              number,
+            ]),
       };
       setLayout((prev) => (JSON.stringify(prev) === JSON.stringify(measured) ? prev : measured));
     };
@@ -266,7 +308,7 @@ function useTickLayout(labels: string[], left: number, right: number) {
     // A web font still loading measures wider once it arrives.
     if (document.fonts?.status === "loading") void document.fonts.ready.then(update);
     return () => observer.disconnect();
-  }, [key, left, right]);
+  }, [key, left, right, points]);
   return { ref, layout };
 }
 
@@ -278,13 +320,17 @@ export function AxisTick({
   index,
   payload,
   layout,
+  marked,
 }: {
   x?: number;
   y?: number;
   index?: number;
   payload?: { value: string };
   layout?: TickLayout;
+  /** The index of the marked category, which takes the marker's colour and weight. */
+  marked?: number;
 }) {
+  const on = marked !== undefined && marked === index;
   const lines = (layout && index !== undefined && layout.lines[index]) || [payload?.value ?? ""];
   return (
     <text
@@ -292,7 +338,8 @@ export function AxisTick({
       y={y}
       textAnchor={layout?.angled ? "end" : "middle"}
       transform={layout?.angled ? `rotate(-${ANGLE} ${x} ${y})` : undefined}
-      fill={tick.fill}
+      fill={on ? "var(--color-teal)" : tick.fill}
+      fontWeight={on ? 700 : undefined}
       fontSize={TICK_STEPS[layout?.step ?? 0]}
     >
       {lines.map((line, i) => (

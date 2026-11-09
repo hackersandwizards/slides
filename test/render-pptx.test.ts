@@ -8,7 +8,13 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { centredMark, renderPptx } from "../scripts/render-pptx";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
-import { contentRedrawnAs, overviewAsPhases, twoColumnAsSplit } from "../lib/slide-utils";
+import {
+  contentRedrawnAs,
+  gridAsContent,
+  overviewAsPhases,
+  regularAsContent,
+  twoColumnAsSplit,
+} from "../lib/slide-utils";
 
 const NOT_TEXT = new Set([
   "type",
@@ -248,12 +254,18 @@ describe("slides-pptx on the specimen deck", () => {
     const [chart] = slideCharts[markedAt];
     const xml = slideXml[markedAt];
     const now = slide.data!.findIndex((p) => p.name === slide.currentMarker);
-    // The marked point's name over it, in the heading face.
-    expect(chart).toMatch(
-      new RegExp(
-        `<c:dLbls><c:dLbl><c:idx val="${now}"/>.*?typeface="JetBrains Mono".*?<c:dLblPos val="t"/>.*?<c:showCatName val="1"/>`,
-      ),
-    );
+    // The names leave the chart's axis for text under the points, the marked one teal and bold
+    // as the web's tick, nothing over the point, and a dashed guide from the dot to the axis.
+    expect(chart).toMatch(/<c:catAx>.*?<c:tickLblPos val="none"\/>/s);
+    expect(chart).not.toContain("<c:dLbl>");
+    const teal = tokens["--color-teal"].slice(1).toUpperCase();
+    for (const [i, { name }] of slide.data!.entries()) {
+      const run = xml.slice(0, xml.indexOf(`<a:t>${name}</a:t>`));
+      expect(run, name).not.toBe(xml);
+      const props = run.slice(run.lastIndexOf("<a:rPr"));
+      expect(props.includes(`val="${teal}"`) && props.includes('b="1"'), name).toBe(i === now);
+    }
+    expect(xml).toMatch(/<a:prstDash val="dash"\/>/);
     // recharts' ticks for 0 to 8, categories on the plot's edges, no axis titles in the chart.
     expect(chart).toContain('<c:max val="8"/>');
     expect(chart).toContain('<c:min val="0"/>');
@@ -265,13 +277,74 @@ describe("slides-pptx on the specimen deck", () => {
     expect(texts).toEqual(
       expect.arrayContaining([slide.yLabel, slide.futureNote, slide.xLabel, slide.annotation]),
     );
-    // The annotation in the secondary colour, the measured half filled, the plot on a card.
+    // The annotation in the secondary colour, the measured half filled where it has two points
+    // or more, the plot on a card.
     const run = xml.slice(0, xml.indexOf(`<a:t>${slide.annotation}`));
     expect(run.slice(run.lastIndexOf("<a:rPr"))).toContain(
       `<a:srgbClr val="${tokens["--color-purple"].slice(1).toUpperCase()}"/>`,
     );
-    expect(xml).toContain("<a:custGeom>");
+    expect(xml.includes("<a:custGeom>")).toBe(now > 0);
     expect(xml).toContain('prst="roundRect"');
+  });
+
+  it("draws a regular and a pillars grid slide as the content slides the web redraws them as", async () => {
+    const regular = slideCatalog.slides.find(
+      (x) => x.type === "regular" && !x.profile && x.layout !== "cards",
+    ) as Extract<Slide, { type: "regular" }>;
+    const grid = slideCatalog.slides.find(
+      (x) => x.type === "grid" && (x.variant ?? "pillars") === "pillars",
+    ) as Extract<Slide, { type: "grid" }>;
+    const out = join(dir, "redrawn.pptx");
+    await renderPptx(
+      {
+        name: "R",
+        slides: [regular, regularAsContent(regular)!, grid, gridAsContent(grid)] as Slide[],
+      },
+      out,
+      dir,
+    );
+    const zipped = await JSZip.loadAsync(readFileSync(out));
+    const xmlOf = (n: number) => zipped.file(`ppt/slides/slide${n}.xml`)!.async("string");
+    // Each pair is one drawing, but for the shapes' ids and names and the page counter.
+    const shapes = (xml: string) =>
+      xml.replace(/ id="\d+"| name="[^"]*"|<a:t>\d+ \/ \d+<\/a:t>/g, "");
+    expect(shapes(await xmlOf(1))).toBe(shapes(await xmlOf(2)));
+    expect(shapes(await xmlOf(3))).toBe(shapes(await xmlOf(4)));
+  });
+
+  it("sets a quote grid as the web's brand quote: upright, no quotation marks, the author in teal", () => {
+    const at = slideCatalog.slides.findIndex((x) => x.type === "grid" && x.variant === "quotes");
+    const xml = slideXml[at];
+    const slide = slideCatalog.slides[at] as Extract<Slide, { type: "grid" }>;
+    expect(xml).not.toContain("“");
+    expect(xml).not.toContain(' i="1"');
+    const teal = tokens["--color-teal"].slice(1).toUpperCase();
+    for (const { author } of slide.cards) {
+      const run = xml.slice(0, xml.indexOf(`<a:t>${author}</a:t>`));
+      expect(run.slice(run.lastIndexOf("<a:rPr"))).toMatch(new RegExp(`b="1".*val="${teal}"`, "s"));
+    }
+  });
+
+  it("fills a lone series' measured part when it holds two points or more", async () => {
+    const out = join(dir, "fill.pptx");
+    await renderPptx(
+      {
+        name: "F",
+        slides: [
+          {
+            type: "chart",
+            variant: "trend",
+            headline: "H",
+            data: [1, 2, 4, 5].map((value, i) => ({ name: `M${i}`, value })),
+            currentMarker: "M2",
+          },
+        ],
+      },
+      out,
+      dir,
+    );
+    const zipped = await JSZip.loadAsync(readFileSync(out));
+    expect(await zipped.file("ppt/slides/slide1.xml")!.async("string")).toContain("<a:custGeom>");
   });
 
   it("keeps a bar's names level where every word fits its band, else lets them tilt", async () => {

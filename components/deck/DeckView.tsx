@@ -1,8 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import type { Presentation } from "../../types/slide";
 import { slideComponents } from "../../lib/slide-components";
-import { cornerMark, resolveSlideLogo } from "../../lib/logo";
-import { deckLang, pageLabel } from "../../lib/slide-utils";
+import { slideFrame } from "../../lib/slide-utils";
 import { usePathname } from "../../lib/navigate";
 import { SlideContainer } from "../slides/SlideContainer";
 import { SlideNavigation } from "../slides/SlideNavigation";
@@ -46,14 +45,7 @@ export function DeckView({ presentation, index: initial, basePath, documentTitle
 
   return (
     <>
-      <SlideContainer
-        key={index}
-        logo={resolveSlideLogo(presentation, index)}
-        theme={presentation.theme}
-        page={pageLabel(presentation.slides, index)}
-        mark={cornerMark(presentation, index)}
-        lang={deckLang(presentation)}
-      >
+      <SlideContainer key={index} {...slideFrame(presentation, index)}>
         <SlideNavigation
           currentIndex={index}
           totalSlides={presentation.slides.length}

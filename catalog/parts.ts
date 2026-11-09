@@ -7,6 +7,7 @@ import { qrAlt } from "../lib/slide-utils";
 import { specimenImages } from "../specimen/slide-catalog";
 
 const {
+  BeforeAfterSides,
   CodePanel,
   DashedFrame,
   DisplayHeading,
@@ -17,6 +18,7 @@ const {
   SlideCaption,
   SlideCard,
   SlideFooter,
+  SideHighlight,
   SlideSubtitle,
   SlideTitle,
   VideoPlayer,
@@ -172,6 +174,25 @@ export const PARTS: Record<string, () => ReactNode> = {
         );
       }),
     ),
+  SideHighlight: () =>
+    inRow(
+      cell("the point", h(SideHighlight, { text: "Ships every day" })),
+      cell("muted", h(SideHighlight, { text: "Ships every quarter", muted: true })),
+    ),
+  BeforeAfterSides: () => {
+    const before = { label: "Today", items: ["Ticket", "Code", "Hope"] };
+    const after = { label: "Tomorrow", items: ["Ticket", "Plan", "Code", "Review"] };
+    return h(
+      "div",
+      { className: "space-y-10" },
+      cell("struck", h(BeforeAfterSides, { left: before, right: after, after: true })),
+      cell("kept", h(BeforeAfterSides, { left: before, right: after, after: true, strike: false })),
+      cell(
+        "adds",
+        h(BeforeAfterSides, { left: before, right: after, after: true, strike: false, adds: true }),
+      ),
+    );
+  },
   ChartFrame: () => label("A chart's plot area: a SlideCard of fixed height the chart fills."),
   FrameTitle: () => h(FrameTitle, null, "The Factory"),
   PulseDot: () =>

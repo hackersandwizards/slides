@@ -25,6 +25,7 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
       data-theme={presentation.theme ? "dark" : "light"}
       data-hw-night={presentation.theme ? "" : undefined}
       data-use={slide.type === "content" && bulletsAsStatement(slide) ? "statement" : undefined}
+      lang={deckLang(presentation)}
     >
       <DeckNight.Provider value={!!presentation.theme}>
         <DeckLang.Provider value={deckLang(presentation)}>

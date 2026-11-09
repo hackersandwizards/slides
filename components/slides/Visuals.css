@@ -1,4 +1,81 @@
 @media screen and (width < 48rem) {
+  /* A timeline turns upright: each stage a row, its dot on a line down the left and its title and
+     text beside it, a duration in the gap to the next stage. Its columns left a title 85 px at
+     390 px, where "Ausgangslage" needs 212. The grid's and the leads' inline positions are the
+     projector's, hence the `!important`. The rule is the one each line sets (`timelineRule`). */
+  .slide-content .slide-timeline-continued {
+    padding-top: calc(var(--spacing) * 8);
+  }
+  .slide-content .slide-timeline-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .slide-content .slide-timeline-row-label {
+    display: none;
+  }
+  .slide-content .slide-timeline-stage {
+    grid-row: auto;
+    grid-template-rows: none;
+    grid-template-columns: calc(var(--spacing) * 12) minmax(0, 1fr);
+    column-gap: calc(var(--spacing) * 4);
+    padding: 0 0 calc(var(--spacing) * 16);
+  }
+  .slide-content .slide-timeline-stage:last-child {
+    padding-bottom: 0;
+  }
+  .slide-content .slide-timeline-stage > * {
+    grid-column: 2;
+    margin-top: 0;
+  }
+  .slide-content .slide-timeline-stage > :first-child:empty {
+    display: none;
+  }
+  .slide-content .slide-timeline-stage > h2 {
+    margin-top: var(--spacing);
+  }
+  .slide-content .slide-timeline-stage > h2 + * {
+    margin-top: calc(var(--spacing) * 2);
+  }
+  .slide-content .slide-timeline-stage > .slide-timeline-axis {
+    position: static;
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    height: auto;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .slide-content .slide-timeline-axis > :last-child {
+    z-index: 1;
+  }
+  .slide-content :is(.slide-timeline-link, .slide-timeline-lead) {
+    right: auto !important;
+    left: calc(var(--spacing) * 6 - var(--slide-rule-heavy) / 2) !important;
+    translate: none;
+    border-top: 0;
+    border-left: var(--slide-timeline-rule, none);
+  }
+  .slide-content .slide-timeline-link {
+    top: 0;
+    bottom: 0;
+  }
+  .slide-content .slide-timeline-lead[data-side="in"] {
+    top: calc(var(--spacing) * -8);
+    height: calc(var(--spacing) * 8);
+  }
+  .slide-content .slide-timeline-lead[data-side="out"] {
+    top: 0;
+    bottom: calc(var(--spacing) * -8);
+  }
+  .slide-content .slide-timeline-segment {
+    top: auto;
+    bottom: calc(var(--spacing) * 8);
+    left: calc(var(--spacing) * 16);
+    margin-left: 0;
+    translate: 0 50%;
+  }
+  .slide-content .slide-timeline-segment > * {
+    padding-inline: 0;
+  }
+
   /* A lone figure stands above its label, the label taking the full width, and each figure is
      capped at the size that fits its column on one line (`--slide-figure-fit`, in cqi). */
   .slide-figure-row {
