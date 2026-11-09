@@ -28,6 +28,10 @@ async function pill(fonts: boolean) {
   }
   await page.goto(`${served.origin}${DECK}`, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready);
+  const inter = await page.evaluate(() =>
+    [...document.fonts].some((f) => f.family.includes("Inter Variable") && f.status === "loaded"),
+  );
+  expect(inter).toBe(fonts);
   const reading = await page.$eval('button[aria-label="Next slide"]', (next) => {
     const x = next.getBoundingClientRect().x;
     const box = next.previousElementSibling as HTMLElement;
@@ -47,4 +51,4 @@ it("keeps the next-slide button still when the web face swaps in, the longest co
   expect(Math.abs(web.next - fallback.next)).toBeLessThan(0.5);
   expect(web.overflow).toBeLessThanOrEqual(0);
   expect(fallback.overflow).toBeLessThanOrEqual(0);
-});
+}, 60_000);

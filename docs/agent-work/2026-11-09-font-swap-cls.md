@@ -52,14 +52,13 @@ earlier set, Inter 400, 500 and 700 with JetBrains Mono 700, which covers those 
 | prose story, Inter 700 not in the set  | 14/30 | 9/30     | 9.6–23.3  |
 
 A slide drawing a face outside the set gains nothing; the difference on the last row is within
-chance (p ≈ 0.3). A preload only moves the race. The swap stops moving text only where the fallback
-face has the web face's metrics, which is brand's to set.
+chance (p ≈ 0.3). A preload only moves the race.
 
 ## Re-measured on brand v2.2.0
 
 Brand v2.2.0 puts metric-matched fallback faces for both families in the stacks. Setup as above, on
 the deck page, the first slide, 30 runs per cell in alternating blocks of 10, every cell a fresh
-browser context. "Slow 4G" is 1.6 Mbit/s and 150 ms latency.
+browser context. "Slow 4G" is 1.6 Mbit/s and 150 ms latency. The phone rows are Chrome's emulation on a Mac, which has Arial: a device without the fallback's local font skips the face.
 
 The phone's position pill ("1 / 125") was 94.8 px wide in the fallback and 87.8 px in Inter, which
 moved the next-slide button 3.5 px. Its width now follows the digit count of the deck: the button
