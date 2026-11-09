@@ -48,6 +48,10 @@
   /* One digit of the position pill: above Inter's and its fallback's tabular figure, so the pill's
      width follows the deck's length and never the face drawing it. */
   --slide-position-digit: 0.65em;
+  /* The pill stands between two buttons of 44 CSS px, so it keeps its size whatever the stage's
+     rem: from 48rem up that rem shrinks with the viewport, to about 9 px on a tablet. */
+  --slide-position-size: 21px;
+  --slide-position-pad: 6px 12px;
   --background: var(--color-bg);
   --foreground: var(--color-ink);
   --slide-chart-tooltip-border: 2px solid var(--color-primary-border);

@@ -38,6 +38,12 @@ interface Props {
 const stepForward = () => document.body.dispatchEvent(arrowEvent("ArrowRight"));
 const stepBack = () => document.body.dispatchEvent(arrowEvent("ArrowLeft"));
 
+/** How long the controls stay after the pointer last moved. A module's, as each slide mounts its
+ *  navigation anew and a click on Next must find them still there. */
+const POINTER_IDLE_MS = 3000;
+let pointerMovedAt = -Infinity;
+const pointerActive = () => performance.now() - pointerMovedAt < POINTER_IDLE_MS;
+
 /** What a presenter can press, for the "?" overlay. A clicker sends PageDown and PageUp. */
 const KEYS: Array<[string[], string]> = [
   [["→", "PageDown", "Space"], "next step or slide"],
@@ -77,6 +83,33 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
   // so a reload or a browser Forward onto the next slide does not open it revealed.
   const [arrivedBackwards] = useState(readArrivedBackwards);
   useEffect(() => writeStored("session", directionKey(), null), []);
+
+  const [awake, setAwake] = useState(pointerActive);
+  useEffect(() => {
+    let sleep: ReturnType<typeof setTimeout>;
+    const arm = () => {
+      clearTimeout(sleep);
+      sleep = setTimeout(() => setAwake(false), POINTER_IDLE_MS);
+    };
+    function wake() {
+      pointerMovedAt = performance.now();
+      setAwake(true);
+      arm();
+    }
+    function onPointerMove(event: PointerEvent) {
+      // A drag with the mouse is the laser pointer or the highlighter.
+      if (event.pointerType !== "mouse" || !event.buttons) wake();
+    }
+    arm();
+    window.addEventListener("pointermove", onPointerMove);
+    // After the click, so a tap that wakes a sleeping bar lands on the slide and steps nothing.
+    window.addEventListener("click", wake);
+    return () => {
+      clearTimeout(sleep);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("click", wake);
+    };
+  }, []);
 
   useEffect(() => {
     currentIndexRef.current = currentIndex;
@@ -243,7 +276,8 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
       )}
       <div
         data-hw-scale="screen"
-        className="fixed bottom-4 left-1/2 z-50 flex w-max -translate-x-1/2 items-center gap-3 sm:hidden"
+        data-awake={awake || undefined}
+        className="slide-controls fixed bottom-4 left-1/2 z-50 flex w-max -translate-x-1/2 items-center gap-3 transition-opacity print:hidden"
       >
         <button
           onClick={stepBack}
@@ -256,7 +290,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
         </button>
 
         <div
-          className="box-content rounded-full border border-night-ink/15 bg-night-2 px-3 py-1.5 text-center text-xs whitespace-nowrap text-night-muted tabular-nums"
+          className="box-content rounded-full border border-night-ink/15 bg-night-2 p-(--slide-position-pad) text-center text-(length:--slide-position-size) leading-(--type-label-line-height) whitespace-nowrap text-night-muted tabular-nums"
           // Both numbers at the total's length, and the " / " about as wide as 1.5 digits.
           style={{
             minWidth: `calc(var(--slide-position-digit) * ${2 * String(totalSlides).length + 1.5})`,

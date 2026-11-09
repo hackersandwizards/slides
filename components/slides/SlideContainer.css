@@ -1,5 +1,5 @@
-/* Imported by styles/slides.css after the phone layout, whose `.slide-content` padding the rule
-   below `sm` overrides. */
+/* Imported by styles/slides.css after the phone layout, whose `.slide-content` padding the player's
+   rule below overrides. */
 @layer base {
   .slide-viewport {
     overflow: hidden;
@@ -15,11 +15,8 @@
 
 @media screen and (width < 48rem) {
   /* The corner row follows the slide's content instead of standing over it while it scrolls: it
-     takes the foot of the content's bottom padding, so it adds no height, and passes under the
-     ground behind the player's controls. */
-  .slide-viewport {
-    --slide-phone-corner-below: var(--slide-footer-inset);
-  }
+     takes the foot of the content's bottom padding, so it adds no height, and stands above the
+     player's control bar in the bottom band. */
   .slide-viewport > :is(.slide-corner, .slide-corner-start) {
     position: relative;
     inset: auto;
@@ -30,15 +27,15 @@
   }
   .slide-viewport > .slide-corner {
     justify-content: flex-end;
-    margin: calc(-1 * (var(--slide-footer-mark) + var(--slide-phone-corner-below))) 0
-      var(--slide-phone-corner-below);
+    margin: calc(-1 * (var(--slide-footer-mark) + var(--slide-phone-nav-band))) 0
+      var(--slide-phone-nav-band);
   }
   .slide-viewport > .slide-corner-start {
     display: flex;
     align-items: center;
     width: max-content;
     height: var(--slide-footer-mark);
-    margin: calc(-1 * (var(--slide-footer-mark) + var(--slide-phone-corner-below))) 0
+    margin: calc(-1 * (var(--slide-footer-mark) + var(--slide-phone-nav-band))) 0
       calc(-1 * var(--slide-footer-mark));
   }
   .slide-viewport > .slide-corner-start + .slide-corner {
@@ -48,14 +45,7 @@
   .slide-corner-start img {
     height: calc(var(--slide-footer-mark) * 0.75);
   }
-}
-
-/* Below `sm` the player's control bar takes the bottom band: the corner row stands above it, and
-   the slide's ground fades in behind the controls, so no line of text runs under them. */
-@media screen and (width < 40rem) {
-  .slide-viewport {
-    --slide-phone-corner-below: var(--slide-phone-nav-band);
-  }
+  /* The slide's ground fades in behind the controls, so no line of text runs under them. */
   .slide-content {
     padding: var(--slide-phone-padding-nav);
   }
@@ -67,6 +57,37 @@
     z-index: 30;
     height: var(--slide-phone-nav-band);
     background: linear-gradient(transparent, var(--slide-ground) 20%);
+    pointer-events: none;
+  }
+}
+
+/* From `md` the slide keeps its stage and the bar stands bottom left; a deck with a partner's logo
+   in that corner centres it, over the key hints. */
+@media screen and (width >= 48rem) {
+  .slide-controls {
+    bottom: var(--slide-footer-inset);
+    left: var(--slide-footer-side);
+    translate: none;
+  }
+  .slide-viewport:has(> .slide-corner-start) .slide-controls {
+    left: 50%;
+    translate: -50%;
+    z-index: 60;
+  }
+}
+
+/* Drawn only while a pointer moves, where a mouse rests over a projected slide and on a landscape
+   phone, whose footer band is too short to hold it. A touch screen tall enough keeps it drawn. */
+@media screen and (width >= 48rem) and (pointer: fine),
+  screen and (width >= 48rem) and (height < 30rem) {
+  .slide-controls:not([data-awake], :hover, :has(:focus-visible)) {
+    opacity: 0;
+  }
+}
+
+/* A tap on a sleeping bar wakes it and steps nothing. */
+@media screen and (width >= 48rem) and (height < 30rem) and (pointer: coarse) {
+  .slide-controls:not([data-awake], :has(:focus-visible)) {
     pointer-events: none;
   }
 }

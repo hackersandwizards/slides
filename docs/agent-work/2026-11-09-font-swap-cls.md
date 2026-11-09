@@ -99,6 +99,41 @@ That shows one string, and at 1440 all three are 0/30. Four subtitles at 55 widt
 three settings, on a different string each time. Dropping it would trade this string's shift for
 another's, and plain `wrap` brings back the lone last word the setting was added against.
 
+## Preload measured against the 0.01 bar: kept
+
+A real build with the preload and one without, every story server-rendered as a consumer's is, 30
+runs per cell in alternating blocks of 10, each in a fresh browser context with the cache off, Chrome
+for Testing on a Mac at load 7 to 54. CLS is the sum of the layout-shift entries once the page has
+painted, its fonts have loaded and 1.2 s have passed. Slow 4G as above; 240 runs on the local network
+show no shift anywhere.
+
+With the metric-matched faces drawing, as on a device that has Arial:
+
+| Page, width, slow 4G | Runs with a shift, kept | Stripped | CLS, kept | Stripped | First paint, kept | Stripped |
+| -------------------- | ----------------------- | -------- | --------- | -------- | ----------------- | -------- |
+| deck, 412            | 0/30                    | 30/30    | 0         | 0.0039   | 2728 ms           | 2280 ms  |
+| deck, 1440           | 0/30                    | 0/30     | 0         | 0        | 2730 ms           | 2280 ms  |
+| prose story, 412     | 0/30                    | 0/30     | 0         | 0        | 2328 ms           | 1884 ms  |
+| prose story, 1440    | 0/30                    | 0/30     | 0         | 0        | 2328 ms           | 1876 ms  |
+
+Brand's fallback faces name `local("Arial")` and `local("Courier New")` only. On a device without
+them, stock Android among them, the face is skipped and the next family in the stack draws. Simulated
+on this Mac by renaming those `local()` sources in the served CSS, 412 px, 30 runs per cell (the
+generic that draws here is the Mac's system font, not Android's):
+
+| Page, width, slow 4G | Runs with a shift, kept | Stripped | CLS, kept | Stripped | First paint, kept | Stripped |
+| -------------------- | ----------------------- | -------- | --------- | -------- | ----------------- | -------- |
+| deck, 412            | 0/30                    | 30/30    | 0         | 0.0052   | 2728 ms           | 2280 ms  |
+| prose story, 412     | 30/30                   | 30/30    | 0.0013    | 0.0323   | 2328 ms           | 1882 ms  |
+
+Control of the same shape, the fallback faces kept but their metric overrides removed: the story at
+412 px reaches 0.0311 stripped against 0 kept, the deck 0.0054 against 0, 1440 px 0.0014 to 0.0015
+against 0 (30 runs per cell). The zero in the Arial table is a measurement that can fail.
+
+Over the 0.01 bar stands only the story at 412 px on a device without Arial, 0.0323. The preload
+stays, at a cost of 444 to 452 ms of first paint on slow 4G. It can go once brand's fallback stack
+names metric-matched faces for the fonts such a device has.
+
 ## Open
 
 - Whether the dev server fetches a preloaded face twice: not checked, the catalog's dev server did

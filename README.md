@@ -47,7 +47,8 @@ A deck page's root carries brand's `hw-focus-ring` class, as in `<html class="hw
 It gives every control on the page the brand's focus ring.
 
 The command `slides-pins` belongs in each consumer's gate, after scaffolding's shared steps: it
-fails when `package.json` pins no brand, which bun lets pass because the brand peer is optional.
+fails when `package.json` pins no brand, which bun lets pass because the brand peer is optional, or
+a brand below the minimum above.
 That the install matches each pin, scaffolding's install and `coupling` steps check.
 
 The command `slides-density [--serve "<command>"] <print-url> ...` belongs in each consumer's gate:
