@@ -1,11 +1,12 @@
 ---
 kind: decision
-status: open
+status: assumed
 priority: 3
 order: 1495
 owner: Benedikt
 evidence: "blind panel 08.11.2026: 3 personas (L&D lead, engineer attending a training, brand designer) x Claude and Codex x 2 runs, 9 surfaces, each as rendered today and with every person image round; noise 0.40 on a 10-point scale"
 recommended: keep-frame-on-grids
+assumption: "The two card grids keep the square portrait with the brand corner: the frame won on both, in both runs and with both models, by more than the noise. Every other person image goes round."
 options:
   - key: keep-frame-on-grids
     label: Keep the brand-corner frame on the two card grids
@@ -16,6 +17,8 @@ options:
 ---
 
 # Should the website's team grid and the practitioners list keep their square portraits?
+
+Blocks nothing. The blind review settled it; the assumption stands unless you veto it.
 
 Brand has a round person image (`hw-avatar`) since v1.49.0. A blind panel compared, on nine
 surfaces, each surface as it is today with the same surface where every person image is round.
