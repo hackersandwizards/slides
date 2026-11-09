@@ -77,3 +77,21 @@ preview under Bun is not yet explained. Scaffolding's documented script keeps `b
   LCP.
 - Part frames other than `CodePanel` load no highlighter since 3d00ec7, which closed the open point
   of 08.11.
+
+## Code-splitting per slide type, 10.11.2026
+
+`lib/slide-components.ts` imports all 25 slide types statically. Measured with `Bun.build`
+(minified, browser target, React, motion, recharts, shiki, lucide and brand external), JavaScript
+only:
+
+| Entry                                                 | Minified | Gzip   |
+| ----------------------------------------------------- | -------- | ------ |
+| All 25 types                                          | 159,041  | 41,840 |
+| The 9 types one real 22-slide talk uses (09.11.)      | 110,579  | 28,491 |
+| Saved per deck page by loading only the types it uses | 48,462   | 13,349 |
+
+13 KB gzip is about 4 % of the 349 KB a story frame transfers (table above). Splitting would load
+each type's chunk on the slide change that first needs it, behind a Suspense boundary, in the deck,
+the speaker view and the print route. Not done: the threshold set before measuring was 10 % of a
+deck page's transfer. Worth it once a type brings a heavy dependency of its own, as the chart's
+plots already load lazily.

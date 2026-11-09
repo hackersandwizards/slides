@@ -13,7 +13,7 @@ The print page shows each entry's when, do and don't, and `slides-usage` counts 
 entry. Left:
 
 1. Each consumer (`talks`, `trainer-hub`, `hycle-private`) runs `slides-usage` over its decks in its
-   own gate and publishes the JSON. The public engine reads no client deck, so the print page can
-   show the numbers only from what the consumers publish.
+   own gate and commits the JSON; where it lives and whether the print page shows it waits on
+   `decide-slide-usage-location`. Since v2.21.0 `slides-usage -` takes an array of decks.
 2. The time to the right entry, measured with people on real search tasks. The panel gave the nine
    search words as hit counts; it measured no time. No agent can run this.

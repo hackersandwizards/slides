@@ -18,6 +18,12 @@
     translate: -50%;
     z-index: 60;
   }
+  /* The slide's corner already counts the slides: the bar keeps its buttons, and the count stays
+     for a screen reader, which the corner's is hidden from. A title slide has no counter. */
+  .slide-viewport:has([data-page-counter]) .slide-position {
+    @apply sr-only;
+    min-width: 0;
+  }
 }
 
 /* Drawn only while a pointer moves, where a mouse rests over a projected slide and on a landscape

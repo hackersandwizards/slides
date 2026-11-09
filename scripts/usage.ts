@@ -92,33 +92,40 @@ export function entriesOf(slide: Slide): string[] {
 if (import.meta.main) {
   const paths = process.argv.slice(2);
   if (!paths.length) {
-    console.error("usage: slides-usage <deck.json|-> ...");
+    console.error("usage: slides-usage <deck.json|-> ...   (- reads a deck or an array of decks)");
     process.exit(2);
   }
+  // A file holds one deck; `-` reads one deck or an array of decks from standard input, so a
+  // consumer whose decks are code pipes them all in one call.
+  const decks = paths.flatMap((path) => {
+    const read = JSON.parse(readFileSync(path === "-" ? 0 : path, "utf8")) as
+      Presentation | Presentation[];
+    const list = path === "-" && Array.isArray(read) ? read : [read as Presentation];
+    return list.map((deck, i) => ({ deck, name: list.length > 1 ? `${path}[${i}]` : path }));
+  });
   const counts = new Map<string, number>();
   const unknown: string[] = [];
   let slides = 0;
-  for (const path of paths) {
-    const deck = JSON.parse(readFileSync(path === "-" ? 0 : path, "utf8")) as Presentation;
-    if (!Array.isArray(deck.slides)) {
-      console.error(`slides-usage: ${path} is no deck: it has no slides list`);
+  for (const { deck, name } of decks) {
+    if (!Array.isArray(deck?.slides)) {
+      console.error(`slides-usage: ${name} is no deck: it has no slides list`);
       process.exit(1);
     }
     deck.slides.forEach((slide, i) => {
       slides++;
       try {
         const ids = entriesOf(slide);
-        if (!ids.length) unknown.push(`${path} slide ${i + 1}: type ${slide.type}`);
+        if (!ids.length) unknown.push(`${name} slide ${i + 1}: type ${slide.type}`);
         for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
       } catch (e) {
-        unknown.push(`${path} slide ${i + 1}: malformed, ${(e as Error).message}`);
+        unknown.push(`${name} slide ${i + 1}: malformed, ${(e as Error).message}`);
       }
     });
   }
   const entries = Object.fromEntries([...counts].sort(([, a], [, b]) => b - a));
   // A "-2" anchor is a second tile of one entry in the specimen deck; no slide can reach it.
   const unused = Object.keys(GUIDANCE).filter((id) => !counts.has(id) && !/-\d+$/.test(id));
-  console.log(JSON.stringify({ decks: paths.length, slides, entries, unused }, null, 2));
+  console.log(JSON.stringify({ decks: decks.length, slides, entries, unused }, null, 2));
   for (const line of unknown) console.error(`slides-usage: no catalogue entry for ${line}`);
   process.exit(unknown.length ? 1 : 0);
 }

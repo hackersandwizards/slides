@@ -1777,6 +1777,8 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const rh = (a.h - (b.source ? 0.3 : 0)) / rows;
       const lw = a.w * 0.3;
       const tw = a.w - lw - 1;
+      // As on the web slide: without a named scale a figure follows its bar's end.
+      const follow = !b.max && bars.every((x) => x.from == null);
       bars.forEach((bar, i) => {
         const y = a.y + i * rh;
         const bh = Math.min(0.32, rh * 0.6);
@@ -1787,7 +1789,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
           s,
           a.x + lw + ((bar.from ?? 0) / max) * tw,
           y + (rh - bh) / 2,
-          Math.max(0.02, ((bar.value - (bar.from ?? 0)) / max) * tw),
+          Math.max(0.04, ((bar.value - (bar.from ?? 0)) / max) * tw),
           bh,
           // As on the web slide: every bar teal, or with a highlight the rest in the context grey.
           bar.highlight || !bars.some((x) => x.highlight) ? c.teal : mix(c.ink, c.bg, 0.4),
@@ -1804,7 +1806,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
               },
             ],
           },
-          a.x + lw + tw + 0.1,
+          a.x + lw + (follow ? Math.max(0.04, (bar.value / max) * tw) : tw) + 0.1,
           y,
           0.9,
           rh,

@@ -108,4 +108,14 @@ describe("slides-usage", () => {
     expect(malformed.code).toBe(1);
     expect(malformed.err).toContain("slide 1: malformed");
   });
+
+  it("reads an array of decks from standard input, counting each deck", () => {
+    const deck = { slides: [{ type: "agenda", headline: "h", items: [] }] };
+    const out = spawnSync("bun", [script, "-"], {
+      encoding: "utf8",
+      input: JSON.stringify([deck, deck, deck]),
+    });
+    expect(out.status).toBe(0);
+    expect(JSON.parse(out.stdout)).toMatchObject({ decks: 3, slides: 3, entries: { agenda: 3 } });
+  });
 });

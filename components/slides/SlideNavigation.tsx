@@ -2,6 +2,7 @@
 
 import {
   Fragment,
+  type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   useCallback,
   useEffect,
@@ -312,11 +313,13 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
           </button>
 
           <div
-            className="box-content rounded-full border border-night-ink/15 bg-night-2 p-[calc(var(--hw-control-size)*6/44)_calc(var(--hw-control-size)*12/44)] text-center text-[length:calc(var(--hw-control-size)*21/44)] leading-(--type-label-line-height) whitespace-nowrap text-night-muted tabular-nums"
+            className="slide-position box-content min-w-(--slide-position-min) rounded-full border border-night-ink/15 bg-night-2 p-[calc(var(--hw-control-size)*6/44)_calc(var(--hw-control-size)*12/44)] text-center text-[length:calc(var(--hw-control-size)*21/44)] leading-(--type-label-line-height) whitespace-nowrap text-night-muted tabular-nums"
             // Both numbers at the total's length, and the " / " about as wide as 1.5 digits.
-            style={{
-              minWidth: `calc(var(--slide-position-digit) * ${2 * String(totalSlides).length + 1.5})`,
-            }}
+            style={
+              {
+                "--slide-position-min": `calc(var(--slide-position-digit) * ${2 * String(totalSlides).length + 1.5})`,
+              } as CSSProperties
+            }
           >
             {currentIndex + 1} / {totalSlides}
           </div>

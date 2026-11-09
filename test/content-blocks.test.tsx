@@ -13,6 +13,19 @@ const content = (blocks: unknown[]) =>
   ).container;
 
 describe("content blocks", () => {
+  // 10 beside 11,175 drew a sliver with its figure a column away: a bar without a named scale
+  // keeps a visible minimum and carries its figure at its end.
+  it.each([4, 6])("sets each figure at the end of its bar, %i bars", (n) => {
+    const values = [10, 105, 1225, 11175, 20000, 30000].slice(0, n);
+    const c = content([
+      { type: "bars", order: "given", bars: values.map((v) => ({ label: `l${v}`, value: v })) },
+    ]);
+    const figure = [...c.querySelectorAll("span")].find((e) => e.textContent === "10")!;
+    const bar = figure.previousElementSibling as HTMLElement;
+    expect(bar.className).toContain("min-w-1");
+    expect(bar.style.width).toContain("var(--bar-room)");
+  });
+
   it("gives a full-width callout beside bars the full width", () => {
     const c = content([
       { type: "bars", bars: [{ label: "a", value: 50, display: "50%" }] },

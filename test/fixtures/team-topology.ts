@@ -9,11 +9,11 @@ export const teamTopologySlide: TeamTopologySlide = {
   subtitle: "Stream-aligned Teams liefern, Plattform, Enabling und Subsysteme machen sie schneller",
   streamAligned: [
     {
-      name: "Stream-aligned Team: Advisor Portal Frankreich",
+      name: "Stream-aligned Team: Buchungsportal Frankreich",
       roles: ["Product Lead", "Product Engineer", "Factory Engineer", "Business Lead"],
     },
     {
-      name: "Stream-aligned Team: One Frontstage Checkout",
+      name: "Stream-aligned Team: Checkout",
       roles: ["Product Lead", "Product Engineer", "Factory Engineer", "Business Lead"],
     },
     {

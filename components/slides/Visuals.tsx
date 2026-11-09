@@ -638,7 +638,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
         ))}
       {/* A range starts at its low end, rounded at both ends since neither is the axis. */}
       <div
-        className={`relative h-full ${bar.from != null ? "rounded-sm" : "rounded-r-sm"}`}
+        className={`relative h-full ${bar.from != null ? "rounded-sm" : "min-w-1 rounded-r-sm"}`}
         style={{
           marginLeft: `${((bar.from ?? 0) / max) * 100}%`,
           width: `${Math.max(((bar.value - (bar.from ?? 0)) / max) * 100, 0.5)}%`,
@@ -672,6 +672,21 @@ function Bars({ block }: { block: Of<"bars"> }) {
       ))}
     </div>
   );
+  // Without a named scale the value follows its bar's end, so a short bar carries its figure beside
+  // it; the longest bar still ends where the value column would start.
+  const follow = block.max == null && bars.every((b) => b.from == null);
+  const followRow = (bar: (typeof bars)[number]) => (
+    <div className="flex items-center gap-8 [--bar-room:--spacing(64)] max-md:gap-4 max-md:[--bar-room:--spacing(36)]">
+      <div
+        className={`${inline ? "h-12" : tall ? "h-20" : "h-14"} min-w-1 shrink-0 rounded-r-sm`}
+        style={{
+          width: `calc((100% - var(--bar-room)) * ${bar.value / max})`,
+          background: bar.highlight || !anyHighlight ? "var(--color-primary)" : CONTEXT,
+        }}
+      />
+      {value(bar)}
+    </div>
+  );
   const value = (bar: (typeof bars)[number]) => (
     <span
       className={`font-heading ${inline ? "text-4xl" : "text-5xl"} whitespace-nowrap ${tone(bar, "font-bold")}`}
@@ -693,8 +708,14 @@ function Bars({ block }: { block: Of<"bars"> }) {
               >
                 {renderMarkdown(bar.label)}
               </span>
-              {track(bar)}
-              {value(bar)}
+              {follow ? (
+                <div className="col-span-2">{followRow(bar)}</div>
+              ) : (
+                <>
+                  {track(bar)}
+                  {value(bar)}
+                </>
+              )}
             </div>
           ) : (
             <div key={i}>
@@ -703,10 +724,14 @@ function Bars({ block }: { block: Of<"bars"> }) {
               >
                 {renderMarkdown(bar.label)}
               </span>
-              <div className="mt-3 grid grid-cols-[minmax(0,1fr)_--spacing(56)] items-center gap-8">
-                {track(bar)}
-                {value(bar)}
-              </div>
+              {follow ? (
+                <div className="mt-3">{followRow(bar)}</div>
+              ) : (
+                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_--spacing(56)] items-center gap-8">
+                  {track(bar)}
+                  {value(bar)}
+                </div>
+              )}
             </div>
           ),
         )}

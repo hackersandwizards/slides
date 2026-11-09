@@ -177,3 +177,32 @@ it("lets the bar sleep once the presenter goes back to the keys after clicking N
   await shown(page, "0");
   await page.close();
 }, 30_000);
+
+// The position once: from md the slide's corner counts the slides and the bar holds only its
+// buttons; a phone hides the corner counter, and a title slide has none, so both keep the pill.
+const counted = slideCatalog.slides.findIndex((s) => s.type !== "title") + 1;
+it.each([
+  [390, counted, true],
+  [1440, counted, false],
+  [1440, 1, true],
+])(
+  "%i px, slide %i: the bar shows the position: %s",
+  async (width, slide, inBar) => {
+    const page = await deck(width);
+    for (let i = 1; i < slide; i++) await page.keyboard.press("ArrowRight");
+    await reached(page, slide);
+    const seen = await page.$eval(NEXT, (next) => {
+      const pill = next.previousElementSibling as HTMLElement;
+      const corner = document.querySelector<HTMLElement>("[data-page-counter]");
+      const drawn = (e: HTMLElement | null) => !!e && e.getBoundingClientRect().width > 1;
+      return { pill: drawn(pill), corner: drawn(corner), read: pill.textContent };
+    });
+    expect(seen).toEqual({
+      pill: inBar,
+      corner: !inBar && width >= 768,
+      read: `${slide} / ${slideCatalog.slides.length}`,
+    });
+    await page.close();
+  },
+  30_000,
+);
