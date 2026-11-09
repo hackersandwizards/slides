@@ -14,6 +14,6 @@ entry. Left:
 
 1. Each consumer (`talks`, `trainer-hub`, `hycle-private`) runs `slides-usage` over its decks in its
    own gate and commits the JSON; where it lives and whether the print page shows it waits on
-   `decide-slide-usage-location`. Since v2.21.0 `slides-usage -` takes an array of decks.
+   `decide-slide-usage-location`. Since v2.21.0 `slides-usage` takes an array of decks.
 2. The time to the right entry, measured with people on real search tasks. The panel gave the nine
    search words as hit counts; it measured no time. No agent can run this.

@@ -372,6 +372,7 @@ export interface EvolutionStage {
  *  engine still renders it, through `evolutionAsProcess` in `lib/slide-utils.ts`. */
 export interface EvolutionSlide extends Grounded {
   type: "evolution";
+  sectionLabel?: string;
   headline: string;
   stages: EvolutionStage[];
   static?: boolean;

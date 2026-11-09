@@ -1772,16 +1772,17 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
     }
     case "bars": {
       const bars = b.order === "given" ? b.bars : [...b.bars].sort((p, q) => q.value - p.value);
-      const max = b.max ?? Math.max(...bars.map((x) => x.value));
+      const max = b.max ?? (Math.max(...bars.map((x) => x.value), 0) || 1);
       const rows = bars.length;
       const rh = (a.h - (b.source ? 0.3 : 0)) / rows;
       const lw = a.w * 0.3;
       const tw = a.w - lw - 1;
       // As on the web slide: without a named scale a figure follows its bar's end.
-      const follow = !b.max && bars.every((x) => x.from == null);
+      const follow = b.max == null && bars.every((x) => x.from == null);
       bars.forEach((bar, i) => {
         const y = a.y + i * rh;
         const bh = Math.min(0.32, rh * 0.6);
+        const bw = Math.max(0.04, ((bar.value - (bar.from ?? 0)) / max) * tw);
         box(s, c, bar.label, a.x, y, lw - 0.15, rh, { ...o, align: "right", valign: "middle" });
         if (b.max) rect(s, a.x + lw, y + (rh - bh) / 2, tw, bh, c.tint);
         // A range starts at its low end, as on the web slide.
@@ -1789,7 +1790,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
           s,
           a.x + lw + ((bar.from ?? 0) / max) * tw,
           y + (rh - bh) / 2,
-          Math.max(0.04, ((bar.value - (bar.from ?? 0)) / max) * tw),
+          bw,
           bh,
           // As on the web slide: every bar teal, or with a highlight the rest in the context grey.
           bar.highlight || !bars.some((x) => x.highlight) ? c.teal : mix(c.ink, c.bg, 0.4),
@@ -1806,7 +1807,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
               },
             ],
           },
-          a.x + lw + (follow ? Math.max(0.04, (bar.value / max) * tw) : tw) + 0.1,
+          a.x + lw + (follow ? bw : tw) + 0.1,
           y,
           0.9,
           rh,
@@ -2809,9 +2810,8 @@ const RENDER: {
         s,
         ctx,
         {
-          // header() reads the label off any slide; the deprecated evolution type has none.
-          ...{ sectionLabel: d.sectionLabel },
           type: "evolution",
+          sectionLabel: d.sectionLabel,
           headline: d.headline,
           footer: d.footer,
           stages: d.nodes.map((n) => ({
@@ -3696,9 +3696,22 @@ const RENDER: {
         gh - 0.1,
         { size: PT.sm, color: c.ink, valign: "middle" },
       );
-      let cx = x + w * 0.47;
-      for (const role of g.roles)
-        cx += chip(s, c, role, cx, gy + gh / 2 - 0.12, PT.label, c.card, c.ink, false) + 0.08;
+      // As on the web slide: the roles as one line of bullets, each role whole.
+      if (g.roles.length)
+        box(
+          s,
+          c,
+          {
+            runs: [
+              { text: g.roles.map((r) => `•\u00a0${r}`).join("   "), options: { bold: true } },
+            ],
+          },
+          x + w * 0.47,
+          gy + 0.05,
+          w * 0.5,
+          gh - 0.1,
+          { size: PT.sm, color: c.teal, valign: "middle" },
+        );
     });
     const enRows = groups.filter((g) => g.shape !== "platform").length;
     d.enabling.forEach((e, i) => {

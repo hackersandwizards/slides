@@ -4,7 +4,7 @@ status: open
 priority: 3
 order: 610
 owner: Benedikt
-evidence: "slides-usage since v2.18.0; `slides-usage -` takes an array of decks since v2.21.0; hycle-private commits its counts at talks/slides-usage.json (00f4ba9)"
+evidence: "slides-usage since v2.18.0; `slides-usage` takes an array of decks since v2.21.0; hycle-private commits its counts at talks/slides-usage.json (00f4ba9)"
 recommended: consumer-file-local-overlay
 options:
   - key: consumer-file-local-overlay
@@ -25,7 +25,8 @@ waits on it.
 
 `slides-usage` counts a consumer's deck slides per catalogue entry. The engine is public and reads
 no client deck, so the counts can only come from the consumers. Since v2.21.0 a consumer whose
-decks are code pipes them in one call: `slides-usage -` reads a JSON array of decks.
+decks are code pipes them in one call: `slides-usage -` reads a JSON array of decks from
+standard input.
 
 The question is direction: whether figures derived from client decks may appear on the public
 Pages site. The recommended option keeps them inside the company and still shows them on the print

@@ -92,17 +92,21 @@ export function entriesOf(slide: Slide): string[] {
 if (import.meta.main) {
   const paths = process.argv.slice(2);
   if (!paths.length) {
-    console.error("usage: slides-usage <deck.json|-> ...   (- reads a deck or an array of decks)");
+    console.error("usage: slides-usage <deck.json|-> ...   (each a deck or an array of decks)");
     process.exit(2);
   }
-  // A file holds one deck; `-` reads one deck or an array of decks from standard input, so a
-  // consumer whose decks are code pipes them all in one call.
+  // A file, or `-` for standard input, holds one deck or an array of decks, so a consumer whose
+  // decks are code pipes them all in one call.
   const decks = paths.flatMap((path) => {
     const read = JSON.parse(readFileSync(path === "-" ? 0 : path, "utf8")) as
       Presentation | Presentation[];
-    const list = path === "-" && Array.isArray(read) ? read : [read as Presentation];
-    return list.map((deck, i) => ({ deck, name: list.length > 1 ? `${path}[${i}]` : path }));
+    const list = Array.isArray(read) ? read : [read];
+    return list.map((deck, i) => ({ deck, name: Array.isArray(read) ? `${path}[${i}]` : path }));
   });
+  if (!decks.length) {
+    console.error("slides-usage: no deck to count");
+    process.exit(1);
+  }
   const counts = new Map<string, number>();
   const unknown: string[] = [];
   let slides = 0;

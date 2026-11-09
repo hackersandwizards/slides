@@ -19,8 +19,9 @@
     z-index: 60;
   }
   /* The slide's corner already counts the slides: the bar keeps its buttons, and the count stays
-     for a screen reader, which the corner's is hidden from. A title slide has no counter. */
-  .slide-viewport:has([data-page-counter]) .slide-position {
+     for a screen reader, which the corner's is hidden from. A title slide has no counter, and a
+     closing slide's lockup hides the corner. */
+  .slide-viewport:has([data-page-counter]):not(:has(.slide-closing-mark)) .slide-position {
     @apply sr-only;
     min-width: 0;
   }

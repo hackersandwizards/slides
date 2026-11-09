@@ -2,6 +2,7 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "../lib/slide-components";
 import type { Slide } from "../types/slide";
+import { wholeText } from "./fixtures/whole-text";
 import { teamTopologySlide } from "./fixtures/team-topology";
 
 describe("TeamTopologySlide", () => {
@@ -17,11 +18,7 @@ describe("TeamTopologySlide", () => {
       ...enabling.flatMap((t) => t.experts),
       ...complicatedSubsystem.map((t) => t.description ?? ""),
     ]) {
-      // A compound sits in its own span, so match the innermost element holding the whole text.
-      const holds = (el: Element | null) => el?.textContent === label;
-      expect(
-        getAllByText((_, el) => holds(el) && ![...(el?.children ?? [])].some(holds)).length,
-      ).toBeGreaterThan(0);
+      expect(getAllByText(wholeText(label)).length).toBeGreaterThan(0);
     }
   });
 });

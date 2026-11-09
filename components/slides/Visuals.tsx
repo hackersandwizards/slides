@@ -623,9 +623,13 @@ function Bars({ block }: { block: Of<"bars"> }) {
   // Five bars and more set each label left of its track, one row per bar, so six ranges and a
   // callout fit one slide above the fit guard's 0.8.
   const inline = bars.length > 4;
+  const height = inline ? "h-12" : tall ? "h-20" : "h-14";
+  // Grey is context for a highlighted bar; with none highlighted every bar is data.
+  const fill = (bar: (typeof bars)[number]) =>
+    bar.highlight || !anyHighlight ? "var(--color-primary)" : CONTEXT;
   const track = (bar: (typeof bars)[number]) => (
     <div
-      className={`relative ${inline ? "h-12" : tall ? "h-20" : "h-14"} ${block.max != null ? "border-r-4 border-text/25 bg-text/[0.07]" : ""} rounded-r-sm`}
+      className={`relative ${height} ${block.max != null ? "border-r-4 border-text/25 bg-text/[0.07]" : ""} rounded-r-sm`}
     >
       {/* A named scale marks its quarters, so a bar's ends read against it. */}
       {block.max != null &&
@@ -642,8 +646,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
         style={{
           marginLeft: `${((bar.from ?? 0) / max) * 100}%`,
           width: `${Math.max(((bar.value - (bar.from ?? 0)) / max) * 100, 0.5)}%`,
-          // Grey is context for a highlighted bar; with none highlighted every bar is data.
-          background: bar.highlight || !anyHighlight ? "var(--color-primary)" : CONTEXT,
+          background: fill(bar),
         }}
       />
     </div>
@@ -673,20 +676,27 @@ function Bars({ block }: { block: Of<"bars"> }) {
     </div>
   );
   // Without a named scale the value follows its bar's end, so a short bar carries its figure beside
-  // it; the longest bar still ends where the value column would start.
+  // it; the longest bar still ends where the value column would start. On a phone a figure wider
+  // than the room left wraps under its bar.
   const follow = block.max == null && bars.every((b) => b.from == null);
-  const followRow = (bar: (typeof bars)[number]) => (
-    <div className="flex items-center gap-8 [--bar-room:--spacing(64)] max-md:gap-4 max-md:[--bar-room:--spacing(36)]">
-      <div
-        className={`${inline ? "h-12" : tall ? "h-20" : "h-14"} min-w-1 shrink-0 rounded-r-sm`}
-        style={{
-          width: `calc((100% - var(--bar-room)) * ${bar.value / max})`,
-          background: bar.highlight || !anyHighlight ? "var(--color-primary)" : CONTEXT,
-        }}
-      />
-      {value(bar)}
-    </div>
-  );
+  const figure = (bar: (typeof bars)[number]) =>
+    follow ? (
+      <div className="flex items-center gap-8 [--bar-room:--spacing(64)] max-md:flex-wrap max-md:gap-x-4 max-md:gap-y-2 max-md:[--bar-room:--spacing(36)]">
+        <div
+          className={`${height} min-w-1 shrink-0 rounded-r-sm`}
+          style={{
+            width: `calc((100% - var(--bar-room)) * ${bar.value / max})`,
+            background: fill(bar),
+          }}
+        />
+        {value(bar)}
+      </div>
+    ) : (
+      <>
+        {track(bar)}
+        {value(bar)}
+      </>
+    );
   const value = (bar: (typeof bars)[number]) => (
     <span
       className={`font-heading ${inline ? "text-4xl" : "text-5xl"} whitespace-nowrap ${tone(bar, "font-bold")}`}
@@ -708,14 +718,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
               >
                 {renderMarkdown(bar.label)}
               </span>
-              {follow ? (
-                <div className="col-span-2">{followRow(bar)}</div>
-              ) : (
-                <>
-                  {track(bar)}
-                  {value(bar)}
-                </>
-              )}
+              {follow ? <div className="col-span-2">{figure(bar)}</div> : figure(bar)}
             </div>
           ) : (
             <div key={i}>
@@ -724,14 +727,11 @@ function Bars({ block }: { block: Of<"bars"> }) {
               >
                 {renderMarkdown(bar.label)}
               </span>
-              {follow ? (
-                <div className="mt-3">{followRow(bar)}</div>
-              ) : (
-                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_--spacing(56)] items-center gap-8">
-                  {track(bar)}
-                  {value(bar)}
-                </div>
-              )}
+              <div
+                className={`mt-3 ${follow ? "" : "grid grid-cols-[minmax(0,1fr)_--spacing(56)] items-center gap-8"}`}
+              >
+                {figure(bar)}
+              </div>
             </div>
           ),
         )}

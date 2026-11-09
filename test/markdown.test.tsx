@@ -62,11 +62,11 @@ describe("renderMarkdown", () => {
 });
 
 // A hyphenated compound never breaks at its hyphen into a lone fragment ("Self-" over
-// "Service?"): from md up a short one stays whole on its line; a long one may still break.
+// "Service?"): a short one is an inline block, which moves whole and never overflows its box.
 describe("hyphenated compounds", () => {
   const whole = (el: HTMLElement) =>
     [...el.querySelectorAll("span")]
-      .filter((s) => s.className.includes("md:whitespace-nowrap"))
+      .filter((s) => s.className === "inline-block")
       .map((s) => s.textContent);
 
   it.each([

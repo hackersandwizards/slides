@@ -48,6 +48,12 @@ const bar = (page: Page) =>
     };
   });
 
+/** Presses the arrow until the bar reads `position`; no slide before it may hold a reveal step. */
+async function goTo(page: Page, position: number) {
+  for (let i = 1; i < position; i++) await page.keyboard.press("ArrowRight");
+  await reached(page, position);
+}
+
 const shown = (page: Page, opacity = "1") =>
   page.waitForFunction(
     (next, want) => getComputedStyle(document.querySelector(next)!.parentElement!).opacity === want,
@@ -164,8 +170,7 @@ it("lets the bar sleep once the presenter goes back to the keys after clicking N
   const target =
     slideCatalog.slides.findIndex((s) => JSON.stringify(s).includes('"reveal":true')) + 1;
   const page = await deck(1440);
-  for (let i = 1; i < target; i++) await page.keyboard.press("ArrowRight");
-  await reached(page, target);
+  await goTo(page, target);
   await page.mouse.move(700, 300);
   await shown(page);
   const { x, y } = await bar(page);
@@ -206,3 +211,17 @@ it.each([
   },
   30_000,
 );
+
+// A closing slide's lockup hides the whole corner, its counter included, so the bar keeps the count.
+it("keeps the count in the bar where a closing slide hides the corner", async () => {
+  const page = await deck(1440);
+  await goTo(page, counted);
+  const pill = await page.$eval(NEXT, (next) => {
+    const mark = document.createElement("span");
+    mark.className = "slide-closing-mark";
+    document.querySelector(".slide-viewport")!.append(mark);
+    return next.previousElementSibling!.getBoundingClientRect().width;
+  });
+  expect(pill).toBeGreaterThan(1);
+  await page.close();
+}, 30_000);

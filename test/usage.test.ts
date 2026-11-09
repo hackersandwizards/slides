@@ -118,4 +118,12 @@ describe("slides-usage", () => {
     expect(out.status).toBe(0);
     expect(JSON.parse(out.stdout)).toMatchObject({ decks: 3, slides: 3, entries: { agenda: 3 } });
   });
+
+  it("reads an array of decks from a file too, and fails on no deck at all", () => {
+    const deck = { slides: [{ type: "agenda", headline: "h", items: [] }] };
+    expect(run([deck, deck]).json).toMatchObject({ decks: 2, entries: { agenda: 2 } });
+    const empty = spawnSync("bun", [script, "-"], { encoding: "utf8", input: "[]" });
+    expect(empty.status).toBe(1);
+    expect(empty.stderr).toContain("no deck");
+  });
 });

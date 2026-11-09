@@ -56,9 +56,7 @@ export function SlideTitle({
 }) {
   return (
     <BlurFade delay={delay} duration={duration}>
-      <Tag className={`slide-title ${className}`.trim()}>
-        {typeof children === "string" ? keepCompounds(children) : children}
-      </Tag>
+      <Tag className={`slide-title ${className}`.trim()}>{keepCompounds(children)}</Tag>
     </BlurFade>
   );
 }
@@ -68,7 +66,7 @@ export function SlideSubtitle({ children, delay = 0.15 }: { children: ReactNode;
   return (
     <BlurFade delay={delay} duration={0.5}>
       <p className="mt-4 max-w-6xl text-2xl leading-snug whitespace-pre-line text-text-muted">
-        {typeof children === "string" ? keepCompounds(children) : children}
+        {keepCompounds(children)}
       </p>
     </BlurFade>
   );

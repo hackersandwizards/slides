@@ -1654,7 +1654,7 @@ const slides: Slide[] = [
   {
     type: "team-topology",
     headline: "A proposal to discuss",
-    subtitle: "The team builds. Platform, enabling and subsystems make it faster.",
+    subtitle: "One stream team, and the teams that make it faster.",
     streamAligned: [
       {
         name: "Team: Booking portal for two markets",
@@ -1671,8 +1671,7 @@ const slides: Slide[] = [
       { name: "Subsystem: CRM", description: "Leads, routing, activities" },
       { name: "Subsystem: Legacy portal", description: "Data for the migration" },
     ],
-    caption:
-      "Not today's picture. The question for the afternoon: what would have to become platform so the team never waits?",
+    caption: "Fictional organisation: a target picture with every team type.",
     notes: "team-topology: a full proposal, every team type, three platforms and two subsystems.",
   },
 
@@ -1747,9 +1746,8 @@ const slides: Slide[] = [
   {
     type: "decision",
     sectionLabel: "Stop 4: steering",
-    headline: "Who is in the team, who outside?",
-    subtitle:
-      "What the team needs every day belongs in the team. The rest takes one of two routes.",
+    headline: "Where a need goes",
+    subtitle: "A stream team routes what it cannot do itself.",
     need: "The team needs something it cannot do itself today",
     question: "Can it be offered to the team as self-service?",
     yes: {
@@ -1766,7 +1764,7 @@ const slides: Slide[] = [
     },
     outcome: "The team delivers without waiting",
     caption:
-      "Two exceptions: deep specialist knowledge stays a subsystem, independent audits stay outside. Both come early rather than at the end.",
+      "Fictional routing rule. A need that fits neither branch goes to the next planning round.",
     notes: "decision: a section label, a hyphenated compound in the question, long branch texts.",
   },
 
@@ -2096,7 +2094,7 @@ const slides: Slide[] = [
   {
     type: "content",
     sectionLabel: "Connections",
-    headline: "More people, many more connections",
+    headline: "Connections grow with the square of the team",
     content: [
       {
         type: "bars",
