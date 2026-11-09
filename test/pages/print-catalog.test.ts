@@ -68,3 +68,20 @@ it("names every linked picture by its alt text", () => {
   expect(pictures.length).toBeGreaterThan(0);
   for (const link of pictures) expect(link, link).toMatch(/<img [^>]*alt="[^"]*\S[^"]*"/);
 });
+
+it("links a stylesheet defining each brand element class the print pages draw", () => {
+  for (const page of ["index.html", "frames.html"]) {
+    const markup = readFileSync(join(print, page), "utf8");
+    const css = [...markup.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)]
+      .map(([, href]) => readFileSync(resolve(print, href), "utf8"))
+      .join("\n");
+    const classes = new Set(
+      [...markup.matchAll(/class="([^"]*)"/g)].flatMap(([, list]) =>
+        list.split(/\s+/).filter((c) => /^hw-[a-z-]+$/.test(c)),
+      ),
+    );
+    expect(classes.size, page).toBeGreaterThan(0);
+    const missing = [...classes].filter((c) => !new RegExp(`\\.${c}(?![\\w-])`).test(css));
+    expect(missing, page).toEqual([]);
+  }
+});

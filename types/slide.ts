@@ -37,7 +37,8 @@ export interface TitleSlide {
   /** A QR code and the link it encodes, small in the lower right, the link spelled out under it. */
   qr?: { src: string; href: string };
   /** The deck's language (`deckLang`), which joins `speakers` ("A and B", "A und B"), words the QR
-   *  code's alt text and marks the page and the .pptx. Without it the speakers are joined with " & ". */
+   *  code's alt text and marks the page and the .pptx. Without it the deck is English, the build
+   *  warns, and the speakers are joined with " & ": an English deck names `"en"` too. */
   lang?: "en" | "de";
 }
 

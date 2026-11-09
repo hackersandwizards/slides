@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { DeckTile } from "../components/deck/DeckTile";
 import { DeckView } from "../components/deck/DeckView";
+import { slideTitle } from "../lib/slide-utils";
 import { slideCatalog } from "../specimen/slide-catalog";
 
 const press = (key: string) =>
@@ -45,7 +46,7 @@ describe("DeckView", () => {
     history.replaceState(null, "", "/specimen/0");
     render(<DeckView presentation={slideCatalog} index={0} basePath="/specimen" documentTitle />);
     advance();
-    expect(document.title).toBe(`${slideCatalog.name} - 2`);
+    expect(document.title).toBe(slideTitle(slideCatalog, 1));
   });
 });
 

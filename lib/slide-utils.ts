@@ -165,14 +165,14 @@ export function slideFrame(deck: Presentation, index: number) {
 const unnamedLang = new WeakSet<Presentation>();
 
 /** The deck's language, for the `lang` of the page and the file that show it: the first title
- *  slide's that sets one, else English, with a warning once per deck, so a German deck missing it
- *  shows in the build log rather than as English pages. */
+ *  slide's that sets one, else English, with a warning once per deck outside a browser, so a German
+ *  deck missing it shows in the build log rather than as English pages. */
 export function deckLang(deck: Presentation): "en" | "de" {
   const lang = deck.slides.find(
     (slide): slide is TitleSlide => slide.type === "title" && !!slide.lang,
   )?.lang;
   if (lang) return lang;
-  if (!unnamedLang.has(deck)) {
+  if (typeof document === "undefined" && !unnamedLang.has(deck)) {
     unnamedLang.add(deck);
     console.warn(`deck "${deck.name}": no title slide names its lang, so it is set as English`);
   }

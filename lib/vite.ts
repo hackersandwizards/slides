@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 const engine = join(import.meta.dirname, "..");
 /** A string literal, kept, or a comment, dropped: a comment marker inside a string stays text. */
-const STRINGS_OR_COMMENTS =
+export const STRINGS_OR_COMMENTS =
   /("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g;
 
 /** Vite's `optimizeDeps` for a consumer that serves the engine as source, as an Astro app's

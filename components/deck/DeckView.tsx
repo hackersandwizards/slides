@@ -20,7 +20,7 @@ interface Props {
   index: number;
   /** The deck's path; slide n lives at `${basePath}/${n}`. */
   basePath: string;
-  /** Keep the document's title `slideTitle` as the deck moves. */
+  /** Keep `document.title` at `slideTitle(presentation, index)` as the deck moves. */
   documentTitle?: boolean;
 }
 

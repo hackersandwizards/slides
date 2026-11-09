@@ -90,14 +90,19 @@ describe("deckLang", () => {
     expect(deckLang(deck([{ type: "statement" }]))).toBe("en");
   });
 
-  it("warns once for a deck whose title slide names no language", () => {
+  it("warns once outside a browser for a deck whose title slide names no language", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const unnamed = { name: "Unnamed", slides: [{ type: "title", title: "T" }] } as Presentation;
-    deckLang(unnamed);
-    deckLang(unnamed);
-    deckLang({ name: "Named", slides: [{ type: "title", title: "T", lang: "de" }] });
-    expect(warn.mock.calls).toEqual([[expect.stringContaining('"Unnamed"')]]);
-    warn.mockRestore();
+    vi.stubGlobal("document", undefined);
+    try {
+      const unnamed = { name: "Unnamed", slides: [{ type: "title", title: "T" }] } as Presentation;
+      deckLang(unnamed);
+      deckLang(unnamed);
+      deckLang({ name: "Named", slides: [{ type: "title", title: "T", lang: "de" }] });
+      expect(warn.mock.calls).toEqual([[expect.stringContaining('"Unnamed"')]]);
+    } finally {
+      vi.unstubAllGlobals();
+      warn.mockRestore();
+    }
   });
 });
 
