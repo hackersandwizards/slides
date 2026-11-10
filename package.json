@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -54,8 +54,8 @@
   "scripts": {
     "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks || true",
     "check": "scaffolding check",
-    "test": "bun --bun vitest run --exclude 'test/pages/**'",
-    "check:pages": "bun --bun vitest run test/pages",
+    "test": "bun --bun vitest run --testTimeout=${SCAFFOLDING_TEST_TIMEOUT_MS:-5000} --exclude 'test/pages/**'",
+    "check:pages": "bun --bun vitest run --testTimeout=${SCAFFOLDING_TEST_TIMEOUT_MS:-5000} test/pages",
     "check:pins": "bun scripts/pins.ts",
     "check:colours": "brand-colours",
     "check:copies": "brand-copies",
@@ -116,7 +116,7 @@
     "@astrojs/react": "7.1.4",
     "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.20.9",
     "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v2.7.0",
-    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.11.0",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.12.1",
     "@tailwindcss/node": "4.3.5",
     "@tailwindcss/oxide": "4.3.5",
     "@tailwindcss/vite": "4.3.5",

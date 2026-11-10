@@ -165,5 +165,8 @@ bun run build    # the catalog to dist/, as https://hackersandwizards.github.io/
 bun run check    # the gate: scaffolding's shared steps, then pins, colours, copies and retired lines, the print pages, brand elements, list markers
 ```
 
-A release is a tag `v<version>` matching `version` in `package.json`; consumers then raise the tag
-in their dependency line. The rest: [CLAUDE.md](CLAUDE.md).
+A release raises `version` in `package.json`, commits and pushes `main` first
+(`git push origin main`). Only once that push has landed does it tag `v<version>` to match and push
+the tag (`git tag v<version> && git push origin v<version>`): a tag pushed with a rejected `main`
+points at a commit `main` never holds. Consumers then raise the tag in their dependency line. The
+rest: [CLAUDE.md](CLAUDE.md).
