@@ -917,11 +917,13 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
       x += kw + 0.18;
     }
     if (h.principle) {
-      if (x + chipWidth(h.principle, PT.sm, false) > W - SIDE) {
-        wrapped = (45 + 20) / 144;
+      // On the print route a wrapped pill stands 65 px below the label's row, the title 76 px.
+      const row = x + chipWidth(h.principle, PT.sm, false) > W - SIDE ? 65 / 144 : 0;
+      if (row) {
+        wrapped = 76 / 144;
         x = SIDE;
       }
-      chip(s, c, h.principle, x, y + wrapped + 0.02, PT.sm, c.tint, c.ink, false);
+      chip(s, c, h.principle, x, y + row + 0.02, PT.sm, c.tint, c.ink, false);
     }
   }
   y = TOP + wrapped;
@@ -4598,86 +4600,108 @@ const RENDER: {
     const { c } = ctx;
     const y = header(s, ctx, d);
     const footH = footerHeight(ctx, d.footer);
-    const msH = d.milestones?.length ? 0.5 : 0;
-    const lw = 2;
-    const gx = SIDE + lw;
-    const gw = CW - lw;
-    const colW = gw / d.columns.length;
-    d.columns.forEach((col, i) =>
-      box(s, c, { runs: [{ text: col }] }, gx + i * colW, y, colW, 0.25, {
+    // GanttSlide's grid, in the spacing scale: a 20 rem label column, 0.25 rem between columns, and
+    // per row a label line over a bar that fills the row, the row at most 7 rem tall.
+    const sp = (v: number) => v * 0.25 * REM;
+    const gx = SIDE + sp(84);
+    const gap = sp(1);
+    const colW = (W - SIDE - gx - gap * (d.columns.length - 1)) / d.columns.length;
+    const cx = (col: number) => gx + (col - 1) * (colW + gap);
+    const span = (n: number) => n * colW + (n - 1) * gap;
+    const radius = (0.46875 * W) / 90;
+    const lh = (PT.label * 1.25) / 72;
+    const head = (PT.label * 1.4) / 72;
+    d.columns.forEach((col, i) => {
+      box(s, c, { runs: [caps(col)] }, cx(i + 1), y, colW, head, {
         size: PT.label,
         mono: true,
-        bold: true,
         color: c.muted,
+        tracking: 0.06,
         align: "center",
-      }),
+      });
+      rect(s, cx(i + 1), y + head + sp(1.5), colW, 2 / 144, c.border);
+    });
+    const top = y + head + sp(1.5) + 2 / 144 + sp(2);
+    const stack = Math.max(
+      0,
+      ...[...Map.groupBy(d.milestones ?? [], (m) => m.column).values()].map((ms) => ms.length),
     );
-    const rh = rowShare(ctx, "gantt", BOTTOM - y - 0.35 - footH - msH, d.rows.length, 0.75);
+    const msH = stack ? sp(3) + 2 / 144 + sp(1.5) + stack * lh : 0;
+    const pitch = rowShare(ctx, "gantt", BOTTOM - top - footH - msH + sp(2), d.rows.length, sp(30));
+    // Rows squeezed below their gap and label line keep a share of each.
+    const rh = pitch - Math.min(sp(2), pitch / 4);
     d.rows.forEach((r, i) => {
-      const ry = y + 0.35 + i * rh;
+      const ry = top + i * pitch;
       box(
         s,
         c,
         [
           { runs: [{ text: r.label }] },
           ...(r.sublabel
-            ? [{ runs: [{ text: r.sublabel, options: { color: c.muted } }], rel: 0.8 }]
+            ? [
+                {
+                  runs: [{ text: r.sublabel, options: { color: c.muted } }],
+                  rel: PT.label / PT.base,
+                },
+              ]
             : []),
         ],
         SIDE,
         ry,
-        lw - 0.15,
-        rh - 0.1,
-        { size: PT.sm, color: c.ink, align: "right", valign: "middle" },
+        sp(80),
+        rh,
+        { size: PT.base, color: c.ink, align: "right", valign: "middle", line: 1.25 },
       );
-      rect(s, gx, ry, gw, rh - 0.1, c.card, c.border);
+      const by = ry + Math.min(lh + sp(1.5), rh / 2);
+      d.columns.forEach((_, k) =>
+        card(s, cx(k + 1), by, colW, ry + rh - by, c.card, undefined, radius),
+      );
       for (const bar of r.bars) {
         // One data hue, as on the web slide; continuous work at the ladder's 40 % with a 70 % edge.
         const tone = c.teal;
-        const bx = gx + (bar.start - 1) * colW;
-        rect(
+        card(
           s,
-          bx,
-          ry,
-          bar.span * colW,
-          rh - 0.1,
+          cx(bar.start),
+          by,
+          span(bar.span),
+          ry + rh - by,
           bar.continuous ? mix(tone, c.card, 0.4) : tone,
           bar.continuous ? mix(tone, c.card, 0.7) : undefined,
+          radius,
         );
-        box(s, c, bar.label, bx + 0.05, ry - 0.2, bar.span * colW, 0.2, {
-          size: PT.label * 0.9,
+        // Each label on the line above its bar, from the bar's start.
+        box(s, c, bar.label, cx(bar.start), ry, span(bar.span), lh, {
+          size: PT.label,
           bold: true,
           color: tone,
+          valign: "bottom",
+          line: 1.25,
         });
       }
     });
-    if (d.milestones?.length) {
-      const my = y + 0.35 + d.rows.length * rh + 0.1;
-      box(
-        s,
-        c,
-        { runs: [caps(d.milestonesLabel ?? ctx.words.milestones)] },
-        SIDE,
-        my,
-        lw - 0.15,
-        0.3,
-        {
-          size: PT.label,
-          mono: true,
-          bold: true,
-          color: c.muted,
-          align: "right",
-        },
-      );
+    if (stack) {
+      const my = top + d.rows.length * pitch - (pitch - rh) + sp(3);
+      box(s, c, { runs: [caps(d.milestonesLabel ?? ctx.words.milestones)] }, SIDE, my, sp(80), lh, {
+        size: PT.label,
+        mono: true,
+        color: c.muted,
+        tracking: 0.06,
+        align: "right",
+      });
       // Milestones of one column stack under one rule, as on the web.
-      for (const [column, ms] of Map.groupBy(d.milestones, (m) => m.column)) {
-        const mx = gx + (column - 1) * colW;
-        rect(s, mx, my + 0.02, colW * 0.9, 0.025, c.purple);
+      for (const [column, ms] of Map.groupBy(d.milestones!, (m) => m.column)) {
+        rect(s, cx(column), my, colW, 2 / 144, c.purple);
         ms.forEach((m, k) =>
-          box(s, c, m.label, mx, my + 0.08 + k * 0.25, Math.min(colW * 1.5, W - SIDE - mx), 0.25, {
-            size: PT.label,
-            color: c.purple,
-          }),
+          box(
+            s,
+            c,
+            m.label,
+            cx(column),
+            my + 2 / 144 + sp(1.5) + k * lh,
+            Math.min(colW * 1.5, W - SIDE - cx(column)),
+            lh,
+            { size: PT.label, bold: true, color: c.purple, line: 1.25 },
+          ),
         );
       }
     }

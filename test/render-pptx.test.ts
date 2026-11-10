@@ -749,6 +749,35 @@ describe("slides-pptx on the specimen deck", () => {
       .async("string");
   };
 
+  it("sets the headline a row below a principle that wraps to the kicker's second row", () => {
+    const at = slideCatalog.slides.findLastIndex((s) => s.type === "gantt" && s.principle);
+    const s = slideCatalog.slides[at] as Slide & { principle: string; headline: string };
+    const shape = (text: string) => {
+      const sp = slideXml[at].split("<p:sp>").find((x) => x.includes(`>${text}<`))!;
+      const [, y, cy] = /<a:off x="\d+" y="(\d+)"\/><a:ext cx="\d+" cy="(\d+)"/.exec(sp)!;
+      return { top: +y, bottom: +y + +cy };
+    };
+    // The pill keeps the print route's place; the title's box starts below it.
+    expect(shape(s.headline).top).toBeGreaterThan(shape(s.principle).bottom);
+  });
+
+  it("gives a Gantt bar's label its own line, under the months and the row above", () => {
+    const at = slideCatalog.slides.findIndex((s) => s.type === "gantt");
+    const d = slideCatalog.slides[at] as Extract<Slide, { type: "gantt" }>;
+    const box = (text: string) => {
+      const sp = slideXml[at].split("<p:sp>").find((x) => x.includes(`>${text}<`))!;
+      const [, y, cy] = /<a:off x="\d+" y="(\d+)"\/><a:ext cx="\d+" cy="(\d+)"/.exec(sp)!;
+      return { top: +y, bottom: +y + +cy };
+    };
+    const months = Math.max(...d.columns.map((c) => box(c).bottom));
+    d.rows.forEach((r, i) => {
+      for (const bar of r.bars) {
+        expect(box(bar.label).top).toBeGreaterThanOrEqual(months);
+        if (i) expect(box(bar.label).top).toBeGreaterThanOrEqual(box(d.rows[i - 1].label).bottom);
+      }
+    });
+  });
+
   it("stacks milestones that share a column, as the web does", async () => {
     const xml = await onlySlide("milestones.pptx", {
       type: "gantt",
