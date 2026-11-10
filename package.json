@@ -119,7 +119,7 @@
     "@astrojs/react": "7.1.4",
     "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.20.9",
     "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v2.7.0",
-    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.7.7",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.11.0",
     "@tailwindcss/node": "4.3.5",
     "@tailwindcss/oxide": "4.3.5",
     "@tailwindcss/vite": "4.3.5",
@@ -191,6 +191,16 @@
         "path": "test/brand-urls.test.ts",
         "text": "node_modules/@hackersandwizards/brand/",
         "reason": "input for placeBrandUrls: the url() Tailwind writes into the compiled stylesheet for an imported brand file, which the test expects it to place or refuse, not a path the test reads"
+      },
+      {
+        "check": "confidential",
+        "path": "specimen/slide-catalog/agent-session.mp4",
+        "reason": "the specimen's video, a fictional terminal session in a repository named acme/payments (an agent adds a CSV header option, runs 214 tests, opens a pull request): 10.6 s, no audio, read at two frames a second of its 266"
+      },
+      {
+        "check": "confidential",
+        "path": "specimen/slide-catalog/demo.mp4",
+        "reason": "the specimen's video, a teal block on a light ground with no text: 4 s, no audio, read at four frames a second of its 96"
       },
       {
         "check": "history",
