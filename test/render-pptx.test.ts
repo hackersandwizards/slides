@@ -1423,7 +1423,7 @@ describe("slides-pptx draws what the slide shows", () => {
   it("never leaves one word alone on a paragraph's last line, as brand's text-wrap: pretty", () => {
     const spans = [
       {
-        text: "In our experience: own data, logic and UI, end to end",
+        text: "A team owns its code, its tests and its deployment, end to end",
         size: 18,
         mono: false,
         bold: false,
