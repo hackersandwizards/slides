@@ -1,5 +1,5 @@
-import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, fireEvent, render } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import type { ActivitySlide } from "../types/slide";
@@ -40,5 +40,72 @@ describe("ActivitySlide", () => {
     expect(queryByText("1.")).toBeNull();
     expect(container.querySelector(".hw-marker")).not.toBeNull();
     expect(container.querySelector(".rounded-brand")).toBeNull();
+  });
+
+  it("draws no timer on paper", () => {
+    const { container } = printed({
+      type: "activity",
+      kind: "exercise",
+      headline: "P",
+      items: ["a"],
+    });
+    expect(container.querySelector("[data-activity-timer]")).toBeNull();
+  });
+});
+
+describe("the activity timer", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    localStorage.clear();
+  });
+  const slide: ActivitySlide = {
+    type: "activity",
+    kind: "exercise",
+    headline: "Think first",
+    items: ["Think"],
+    duration: "3 min",
+  };
+  const time = (container: HTMLElement) =>
+    container.querySelector("[data-activity-timer] .font-mono")?.textContent;
+
+  it("starts from the slide's minutes, else two", () => {
+    expect(time(render(<Activity slide={slide} />).container)).toBe("3:00");
+    const bare = render(<Activity slide={{ ...slide, headline: "Bare", duration: undefined }} />);
+    expect(time(bare.container)).toBe("2:00");
+  });
+
+  it("counts down on a click, pauses on the next, and changes by a minute either way", () => {
+    vi.useFakeTimers();
+    const { container, getByLabelText } = render(<Activity slide={slide} />);
+    fireEvent.click(getByLabelText("One minute more"));
+    fireEvent.click(getByLabelText("One minute more"));
+    fireEvent.click(getByLabelText("One minute less"));
+    expect(time(container)).toBe("4:00");
+    fireEvent.click(getByLabelText(/^Start timer/));
+    act(() => vi.advanceTimersByTime(61_000));
+    expect(time(container)).toBe("2:59");
+    fireEvent.click(getByLabelText(/^Pause timer/));
+    act(() => vi.advanceTimersByTime(10_000));
+    expect(time(container)).toBe("2:59");
+    fireEvent.click(getByLabelText(/^Start timer/));
+    act(() => vi.advanceTimersByTime(180_000));
+    expect(time(container)).toBe("0:00");
+    expect(getByLabelText(/^Restart timer/).dataset.variant).toBeUndefined();
+    fireEvent.click(getByLabelText(/^Restart timer/));
+    expect(time(container)).toBe("4:00");
+  });
+
+  it("follows a timer another window of the deck saved", () => {
+    const { container } = render(<Activity slide={slide} />);
+    const saved = { minutes: 1, endsAt: null, left: 42_000, at: Date.now() };
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "hw-activity-timer:Think first",
+          newValue: JSON.stringify(saved),
+        }),
+      );
+    });
+    expect(time(container)).toBe("0:42");
   });
 });

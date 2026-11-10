@@ -1,7 +1,8 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LaserPointer } from "../components/slides/LaserPointer";
-import { formatDuration, PresenterView } from "../components/slides/PresenterView";
+import { PresenterView } from "../components/slides/PresenterView";
+import { formatDuration } from "../lib/slide-utils";
 import { SlideNavigation } from "../components/slides/SlideNavigation";
 import { DeckEdit } from "../lib/deck-edit-mode";
 import { deckSync, ROLE_NAMES } from "../lib/presenter-sync";

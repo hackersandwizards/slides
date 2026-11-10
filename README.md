@@ -137,7 +137,10 @@ the headline the `lines`, the statements that lead up the `subtitle` (one per li
 lead to the `closing`.
 
 An exercise, a live demo and a debrief are an `activity` slide (`kind`): the steps, watch points or
-questions, the exact instruction as `prompt`, and the timebox, mode and outcome in one card.
+questions, the exact instruction as `prompt`, and the timebox, mode and outcome in one card. On
+screen a countdown stands under the items, set to the `duration`'s minutes (else 2): a click on the
+time starts, pauses and, at zero, restarts it; minus and plus change it by a minute. The speaker
+window's frame counts along; paper and PowerPoint draw no timer.
 
 `evolution`, `dual-pill-overview`, `overview` and `media` still render, as a `process` slide with
 `loop: false`, a `roadmap` whose columns carry `phases`, a `phased-pills` slide and a `content`
