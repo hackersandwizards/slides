@@ -48,8 +48,8 @@
   /* One digit of the position pill: above Inter's and its fallback's tabular figure, so the pill's
      width follows the deck's length and never the face drawing it. */
   --slide-position-digit: 0.65em;
-  /* The most of the screen a whole inline code chip holds its box open to (markdown.tsx): a
-     table column or a flow step grows to the chip up to here, a narrower chip's box wraps it. */
+  /* The most of the screen a whole inline code chip claims as its minimum width (markdown.tsx):
+     a table column or a flow step grows to the chip up to here; a longer chip wraps inside. */
   --slide-chip-hold: 60vw;
   --background: var(--color-bg);
   --foreground: var(--color-ink);

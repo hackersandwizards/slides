@@ -72,10 +72,11 @@ export function renderMarkdown(text: string): React.ReactNode {
     const path = /[/.]/.test(text) && !text.includes(" ");
     const whole = keepsWhole(text);
     // In teal's text colour: base teal on the chip's tint over a striped table row falls under
-    // 4.5:1. A whole chip moves to the next line whole and holds its box open to its own width,
-    // one `ch` per character of the mono face and one for the padding, up to
-    // --slide-chip-hold: a table column or a phone's flow step grows to hold it. A box narrower
-    // than that wraps it inside itself. A long chip runs with the line and may break anywhere.
+    // 4.5:1. A whole chip moves to the next line whole and is at least its own width, one `ch`
+    // per character of the mono face and one for the padding, up to --slide-chip-hold: a table
+    // column or a phone's flow step grows to hold it, a fixed box narrower than that lets it
+    // stand past its edge (a percentage in the hold undoes both), and a chip wider than the hold
+    // wraps inside its box. A long chip runs with the line and may break anywhere.
     const chip = `hw-inline-code text-teal-dark ${
       whole ? "inline-block max-w-full whitespace-normal" : path ? "" : "[overflow-wrap:anywhere]"
     }`;
