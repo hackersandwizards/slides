@@ -325,6 +325,7 @@ const rectOf = (xml: string): Rect | undefined => {
 function bodyHeight(body: string, width: number) {
   let h = 0;
   let widest = 0;
+  let line = 0;
   const paras = [...body.matchAll(/<a:p>(.*?)<\/a:p>/gs)].map((m) => m[1]);
   paras.forEach((p, i) => {
     const pPr = /<a:pPr[^>]*?(?:\/>|>.*?<\/a:pPr>)/s.exec(p)?.[0] ?? "";
@@ -357,12 +358,14 @@ function bodyHeight(body: string, width: number) {
       : (pct ? +pct[1] / 100000 : 1) *
         Math.max(...spans.map((sp) => face(sp.mono, sp.bold).line * sp.size));
     const after = /<a:spcAft><a:spcPts val="(\d+)"\/>/.exec(pPr);
-    h += wrap(spans, (width - marL) * 72).length * lineH;
+    const lines = wrap(spans, (width - marL) * 72);
+    h += lines.length * lineH;
+    line = Math.max(line, ...lines.map((l) => l.width / 72 + marL));
     if (i < paras.length - 1 && after) h += +after[1] / 100;
     widest = Math.max(widest, longest(spans) / 72 + marL);
     void size;
   });
-  return { h: h / 72, widest };
+  return { h: h / 72, widest, line };
 }
 
 /** What a written slide draws wrong: a text box whose measured text is taller or wider than the
@@ -415,6 +418,14 @@ export function checkSlide(xml: string, w: number, h: number): string[] {
         : anchor === "b"
           ? r.y + r.h - b - m.h
           : r.y + t;
+    // And across: the longest line, from the side its alignment sets it.
+    const algn = xmlAttr(s.body, "algn") ?? "l";
+    const left =
+      algn === "ctr"
+        ? r.x + l + (inner - m.line) / 2
+        : algn === "r"
+          ? r.x + r.w - rt - m.line
+          : r.x + l;
     const [cx, cy] = [r.x + r.w / 2, r.y + r.h / 2];
     const holder = shapes
       .filter(
@@ -440,8 +451,8 @@ export function checkSlide(xml: string, w: number, h: number): string[] {
       holder &&
       (top < holder.y - tol ||
         top + m.h > holder.y + holder.h + tol ||
-        r.x + l < holder.x - tol ||
-        r.x + r.w - rt > holder.x + holder.w + tol)
+        left < holder.x - tol ||
+        left + Math.min(m.line, inner) > holder.x + holder.w + tol)
     )
       found.push(`${label}: text crosses the edge of the shape it stands in`);
   }

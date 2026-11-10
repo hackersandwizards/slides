@@ -1280,20 +1280,43 @@ describe("slides-pptx draws what the slide shows", () => {
     expect(figure.xml).toContain('typeface="JetBrains Mono"');
   });
 
-  it("draws a team picture's shapes as the web: octagon subsystems, a dotted platform, roles beside a stream team's name", () => {
+  it("draws a team picture as the web lays it out: enabling columns side by side, subsystem octagons in one row, the platform teams in one dotted frame, roles beside a stream team's name", () => {
     const i = specimenAt(
       (x) =>
-        x.type === "team-topology" && !!x.complicatedSubsystem?.length && x.platform.length > 0,
+        x.type === "team-topology" &&
+        (x.complicatedSubsystem?.length ?? 0) > 1 &&
+        x.platform.length > 1 &&
+        x.enabling.length > 0,
     );
     const slide = slideCatalog.slides[i] as Extract<Slide, { type: "team-topology" }>;
     const shapes = shapesOf(slideXml[i]);
-    expect(shapes.filter((sh) => sh.prst === "octagon")).toHaveLength(
-      slide.complicatedSubsystem!.length,
+    const top = (sh: { y?: number }) => +sh.y!.toFixed(2);
+    const octagons = shapes.filter((sh) => sh.prst === "octagon");
+    expect(octagons).toHaveLength(slide.complicatedSubsystem!.length);
+    expect(new Set(octagons.map(top)).size).toBe(1);
+    const frames = shapes.filter((sh) => sh.dash === "sysDot" && sh.w! > 2);
+    expect(frames).toHaveLength(1);
+    for (const t of slide.platform) {
+      const name = shapes.find((sh) => sh.texts.join("") === t.name)!;
+      expect(name.x!).toBeGreaterThanOrEqual(frames[0].x!);
+      expect(name.y!).toBeGreaterThanOrEqual(frames[0].y!);
+      expect(name.y! + name.h!).toBeLessThanOrEqual(frames[0].y! + frames[0].h!);
+    }
+    const purple = tokens["--color-purple"].slice(1).toUpperCase();
+    const enabling = shapes.filter(
+      (sh) =>
+        sh.xml.includes(`<a:ln w="`) &&
+        sh.xml.includes(`val="${purple}"/></a:solidFill><a:prstDash`) &&
+        sh.h! > 1,
     );
-    expect(shapes.some((sh) => sh.dash === "sysDot")).toBe(true);
-    const team = slide.streamAligned[0];
-    const name = shapes.find((sh) => sh.texts.join("") === team.name)!;
-    const roles = shapes.find((sh) =>
+    expect(enabling.length).toBe(slide.enabling.length);
+    expect(new Set(enabling.map(top)).size).toBe(1);
+    // A short team's roles follow its name on its line, on the first team picture.
+    const j = specimenAt((x) => x.type === "team-topology");
+    const team = (slideCatalog.slides[j] as typeof slide).streamAligned[0];
+    const first = shapesOf(slideXml[j]);
+    const name = first.find((sh) => sh.texts.join("") === team.name)!;
+    const roles = first.find((sh) =>
       sh.texts
         .join("")
         .replace(/\u00a0/g, " ")
@@ -1309,6 +1332,56 @@ describe("slides-pptx draws what the slide shows", () => {
     expect(shapesOf(slideXml[i]).filter((sh) => sh.prst === "blockArc")).toHaveLength(
       slide.segments.length,
     );
+  });
+
+  it("sets a statement's QR code in a white card with its address under it, as QrStatement", () => {
+    const i = specimenAt((x) => x.type === "statement" && !!x.qr && !x.attribution);
+    const shapes = shapesOf(slideXml[i]);
+    const card = shapes.find((sh) => sh.fill === "FFFFFF" && Math.abs(sh.w! - sh.h!) < 0.01)!;
+    expect(card.w).toBeGreaterThan(3);
+    const address = shapes.find((sh) => sh.texts.join("").startsWith("↗"))!;
+    expect(address.y!).toBeGreaterThan(card.y! + card.h!);
+  });
+
+  it("numbers a named scale's ends and quarters under its last track, as the web's Bars", () => {
+    const i = specimenAt(
+      (x) =>
+        x.type === "content" &&
+        x.content.some(
+          (b) => b.type === "bars" && b.max === 100 && b.bars.some((r) => r.from != null),
+        ),
+    );
+    const ticks = shapesOf(slideXml[i]).filter((sh) =>
+      /^(0|25|50|75|100)$/.test(sh.texts.join("")),
+    );
+    expect(ticks.map((sh) => sh.texts.join(""))).toEqual(["0", "25", "50", "75", "100"]);
+    expect(new Set(ticks.map((sh) => sh.y!.toFixed(2))).size).toBe(1);
+  });
+
+  it("gives each of a question's options its count, as the printed QuestionSlide", () => {
+    const i = specimenAt((x) => x.type === "question");
+    const slide = slideCatalog.slides[i] as Extract<Slide, { type: "question" }>;
+    const counts = shapesOf(slideXml[i]).filter(
+      (sh) => sh.texts.join("") === "0" && sh.xml.includes(`val="${TEAL}"`),
+    );
+    expect(counts).toHaveLength(slide.options.length);
+  });
+
+  it("centres a contact closing's column in the slide, as ContactVariant", () => {
+    const i = specimenAt(
+      (x) =>
+        x.type === "closing" && x.variant !== "discussion" && !x.speakers?.some((p) => p.imageSrc),
+    );
+    const texts = shapesOf(slideXml[i]).filter((sh) => sh.texts.join("").trim() && sh.y! < 6.8);
+    const top = Math.min(...texts.map((sh) => sh.y!));
+    const bottom = Math.max(...texts.map((sh) => sh.y! + sh.h!));
+    expect(Math.abs((top + bottom) / 2 - 3.75)).toBeLessThan(0.1);
+  });
+
+  it("draws a bullet as the web's square marker in a face every machine has", () => {
+    const bullets = slideXml.filter((x) => x.includes("<a:buChar"));
+    expect(bullets.length).toBeGreaterThan(0);
+    for (const x of bullets) expect(x).toMatch(/<a:buFont typeface="Arial"/);
   });
 
   it("gives a card brand's corner: the large radius at top left and bottom right, a quarter of it at the others", () => {

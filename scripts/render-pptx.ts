@@ -13,6 +13,7 @@ import type {
   ComparisonSide,
   ContentBlock,
   MarkerTone,
+  Grounded,
   Presentation,
   RoadmapItem,
   Slide,
@@ -20,6 +21,7 @@ import type {
   TitleSlide,
 } from "../types/slide";
 import { trendTicks } from "../components/slides/ChartPlots";
+import { groundOf } from "../components/slides/SlideShell";
 import { BRAND_MARK, cornerMark, resolveSlideLogo } from "../lib/logo";
 import { INLINE_MARKDOWN } from "../lib/markdown";
 import {
@@ -137,6 +139,7 @@ function palette(dark: boolean) {
     code: dark ? hex("--color-night-2") : night,
     codeInk: mix("FFFFFF", night, 0.92),
     codeGreen: hex("--color-green"),
+    chip: mix(dark ? mix("FFFFFF", night, 0.92) : hex("--color-ink"), bg, dark ? 0.08 : 0.07),
     tealDark: dark ? mix(hex("--color-teal-night"), "FFFFFF", 0.7) : hex("--color-teal-dark"),
     tealTint: mix(teal, bg, 0.12),
     purpleTint: mix(purple, bg, 0.12),
@@ -217,7 +220,13 @@ function md(text: string, c: Palette, base: TextProps = {}): Run[] {
     if (part.startsWith("*")) {
       return [{ text: part.slice(1, -1), options: { ...base, bold: true, color: c.amber } }];
     }
-    return [{ text: part.slice(1, -1), options: { ...base, fontFace: MONO, color: c.teal } }];
+    // brand's inline code: teal's text colour, regular, on the ink's tint.
+    return [
+      {
+        text: part.slice(1, -1),
+        options: { ...base, fontFace: MONO, color: c.tealDark, bold: false, highlight: c.chip },
+      },
+    ];
   });
 }
 
@@ -259,6 +268,8 @@ interface BoxOpts {
   tracking?: number;
   /** Lines broken as `text-wrap: balance` breaks them, as the web's headings. */
   balance?: boolean;
+  /** A share of every line height, which the fit sets. */
+  lineScale?: number;
 }
 
 /** A run drawn in capitals whatever its case, as the web's caps labels: pptxgenjs writes no `cap`,
@@ -270,10 +281,12 @@ const caps = (text: string, options: TextProps = {}): Run => ({
   options: { ...options, lang: CAPS },
 });
 
-/** Width in inches of `text` set in one face. */
+/** Width in inches of `text` set in one face, with 1 % to spare: LibreOffice sets a line up to
+ *  0.7 % wider than the faces' advances add up to, so a box sized to its text keeps it on a line. */
 const textWidth = (text: string, size: number, mono = false, bold = false, tracking = 0) =>
-  wrap([{ text: plain(text), size, mono, bold, tracking: tracking * size }], Infinity)[0].width /
-  72;
+  (wrap([{ text: plain(text), size, mono, bold, tracking: tracking * size }], Infinity)[0].width /
+    72) *
+  1.01;
 
 /** The size a paragraph is drawn at, at scale k: pptxgenjs writes half points. */
 const drawnSize = (p: Para, o: BoxOpts, k: number) => Math.round(o.size * (p.rel ?? 1) * k * 2) / 2;
@@ -297,7 +310,7 @@ const BULLET_INDENT = 16;
 
 /** A paragraph's line height in points at scale k: the web's leading for its size, exact. */
 const lineOf = (p: Para, o: BoxOpts, k: number) =>
-  drawnSize(p, o, k) * (p.line ?? o.line ?? LEADING.body);
+  drawnSize(p, o, k) * (p.line ?? o.line ?? LEADING.body) * (o.lineScale ?? 1);
 
 function parasHeight(paras: Para[], o: BoxOpts, w: number, k: number) {
   return paras.reduce((sum, p, i) => {
@@ -374,7 +387,18 @@ function box(
 ) {
   const paras = asParas(content, c).filter((p) => p.runs.some((r) => r.text));
   if (!paras.length) return;
-  const k = fitScale(paras, o, w, h);
+  // A box too short for its lines keeps their size and closes their leading first, down to the
+  // size itself: a box cut to a label's height on the web holds the label at its size.
+  let k = fitScale(paras, o, w, h);
+  if (k < 1) {
+    const base = Math.min(...paras.map((p) => p.line ?? o.line ?? LEADING.body));
+    for (let sc = 0.98; sc * base >= 1; sc -= 0.02)
+      if (fitScale(paras, { ...o, lineScale: sc }, w, h) === 1) {
+        o = { ...o, lineScale: sc };
+        k = 1;
+        break;
+      }
+  }
   const runs: Run[] = [];
   paras.forEach((p, i) => {
     const last = i === paras.length - 1;
@@ -415,10 +439,16 @@ function box(
       });
     });
   });
+  // The box 1 % wider than the width its lines were measured at, on the side its text runs to:
+  // LibreOffice sets a line up to 0.7 % wider than the faces' advances add up to, and would wrap
+  // a line the measure fills. A filled box keeps its size.
+  const spare = o.fill ? 0 : w * 0.01;
+  const align = paras.some((p) => p.align === "center") ? "center" : (o.align ?? "left");
+  const dx = align === "center" ? spare / 2 : align === "right" ? spare : 0;
   s.addText(runs, {
-    x,
+    x: x - dx,
     y,
-    w,
+    w: w + spare,
     h,
     margin: 0,
     valign: o.valign ?? "top",
@@ -1115,34 +1145,47 @@ function beforeAfter(
   else arrow(s, c, a.x + half + 0.12 * k, ay, a.x + half + gap - 0.12 * k, ay, c.teal);
 }
 
-/** A two-sided comparison's punchline under its sides, ending at y, and its footnotes. */
+/** A two-sided comparison's punchline and footnotes under its sides from y, as the web sets them:
+ *  the punchline 2.5 rem under in a 48 rem column, balanced, the footnotes 1.5 rem under that in a
+ *  56 rem column. Draws where `s` is given; returns the height. */
 function comparisonFoot(
-  s: PSlide,
+  s: PSlide | undefined,
   c: Palette,
   d: { punchline?: string; footnotes?: string[] },
   y: number,
-  noteH: number,
 ) {
-  if (d.punchline)
-    box(s, c, d.punchline, SIDE, y + 0.15, CW, 0.45, {
-      size: PT.lead,
-      mono: true,
-      bold: true,
-      color: c.teal,
-      align: "center",
-      valign: "middle",
-    });
-  if (d.footnotes?.length)
-    box(
-      s,
-      c,
-      d.footnotes.map((f) => ({ runs: md(f, c) })),
-      SIDE,
-      BOTTOM - noteH,
-      CW,
-      noteH,
-      { size: PT.label, color: c.muted, align: "center" },
-    );
+  const punchO: BoxOpts = {
+    size: PT.h4,
+    mono: true,
+    bold: true,
+    color: c.teal,
+    align: "center",
+    line: 1.35,
+  };
+  const noteO: BoxOpts = { size: 13.33, color: c.muted, line: 1.4 };
+  const pw = Math.min(CW, 48 * REM);
+  // The footnotes' column shrinks to their longest line, centred, as the web's.
+  const nw = Math.min(
+    CW,
+    56 * REM,
+    Math.max(0, ...(d.footnotes ?? []).map((f) => textWidth(f, 13.33) + 0.02)),
+  );
+  const punch: Para = { runs: md(d.punchline ?? "", c), balance: true };
+  const notes = (d.footnotes ?? []).map((f) => ({ runs: md(f, c) }));
+  const ph = d.punchline ? need(punch, c, pw, punchO) : 0;
+  const nh = notes.length ? need(notes, c, nw, noteO) : 0;
+  let h = 0;
+  if (ph) {
+    h += 2.5 * REM;
+    if (s) box(s, c, punch, (W - pw) / 2, y + h, pw, ph, punchO);
+    h += ph;
+  }
+  if (nh) {
+    h += 1.5 * REM;
+    if (s) box(s, c, notes, (W - nw) / 2, y + h, nw, nh, noteO);
+    h += nh;
+  }
+  return h;
 }
 
 /** The hue a two-column side's tone (`TWO_COLUMN_TONES`) takes. */
@@ -1214,12 +1257,10 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
     }
     case "transform":
       return beforeAfterHeight(c, [b.before, b.after], false, w, o, k);
-    case "two-column":
-    case "positions": {
-      const sides =
-        b.type === "two-column"
-          ? [b.left, b.right]
-          : [{ text: b.left.quote }, { text: b.right.quote }];
+    case "positions":
+      return positions(undefined, c, b, { x: 0, y: 0, w }, k);
+    case "two-column": {
+      const sides = [b.left, b.right];
       return (
         Math.max(
           ...sides.map((sd) =>
@@ -1238,9 +1279,7 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
               o,
             ),
           ),
-        ) +
-        0.45 +
-        (b.type === "positions" ? 0.6 : 0)
+        ) + 0.45
       );
     }
     case "four-column":
@@ -1566,59 +1605,9 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
     }
     case "transform":
       return beforeAfter(s, ctx, a, bodyO(c, k), [b.before, b.after], false, k);
-    case "positions": {
-      const half = a.w / 2 - 0.15;
-      const ch = a.h - 0.6;
-      for (const [side, x] of [
-        [b.left, a.x],
-        [b.right, a.x + half + 0.3],
-      ] as const) {
-        // The web's neutral card: the name as a muted caps label, the stance in ink, the quote muted.
-        card(s, x, a.y, half, ch, c.card, c.border);
-        box(
-          s,
-          c,
-          [
-            {
-              runs: [caps(side.name, { color: c.muted })],
-              mono: true,
-              bold: true,
-              rel: 0.7,
-              after: 4,
-            },
-            { runs: [{ text: side.stance }], mono: true, bold: true, rel: 1.6, after: 8 },
-            { runs: md(`“${side.quote}”`, c, { color: c.muted }) },
-          ],
-          x + 0.2,
-          a.y + 0.2,
-          half - 0.4,
-          ch - 0.4,
-          o,
-        );
-      }
-      box(
-        s,
-        c,
-        [
-          ...(b.middle
-            ? [
-                {
-                  runs: [caps(b.middle, { color: c.muted })],
-                  mono: true,
-                  after: 4,
-                },
-              ]
-            : []),
-          { runs: md(b.resolution, c), mono: true, bold: true },
-        ],
-        a.x,
-        a.y + ch + 0.1,
-        a.w,
-        0.5,
-        { ...o, align: "center" },
-      );
+    case "positions":
+      positions(s, c, b, a, k);
       return;
-    }
     case "hooks": {
       // The web's hook list: one row per event, its name as a mono chip before the description.
       const rh = Math.min(
@@ -1840,11 +1829,23 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         const y = a.y + r.y;
         box(s, c, r.label, a.x, y + r.labelY, L.labelW, r.labelH, L.labelO);
         const ty = y + r.barY;
-        if (b.max != null) rect(s, a.x + L.trackX, ty, L.trackW, L.barH, mix(c.ink, c.bg, 0.07));
+        if (b.max != null) {
+          // The track ends on a rule and marks its quarters in the ground, under the bar.
+          rect(s, a.x + L.trackX, ty, L.trackW, L.barH, mix(c.ink, c.bg, 0.07));
+          rect(s, a.x + L.trackX + L.trackW - 4 / 144, ty, 4 / 144, L.barH, mix(c.ink, c.bg, 0.25));
+          for (const q of [0.25, 0.5, 0.75])
+            rect(s, a.x + L.trackX + q * L.trackW - 1 / 144, ty, 2 / 144, L.barH, c.bg);
+        }
         // A range starts at its low end, as on the web slide.
         rect(s, a.x + L.trackX + r.from, ty, r.barW, L.barH, r.fill);
         box(s, c, r.value, a.x + r.valueX, ty, L.valueW, L.barH, r.valueO);
       }
+      if (b.max != null)
+        for (const t of L.ticks) {
+          const tw = 4 * REM * k;
+          const x = a.x + L.trackX + (t.q / 100) * L.trackW - tw / 2;
+          box(s, c, literal(t.text), x, a.y + L.scaleY, tw, L.h - L.sourceH - L.scaleY, L.scaleO);
+        }
       if (b.source)
         box(
           s,
@@ -2121,8 +2122,16 @@ function barsLayout(b: Extract<ContentBlock, { type: "bars" }>, ctx: Ctx, w: num
   const sourceH = b.source
     ? 2.5 * REM * k + need(b.source, c, w, { size: PT.sm * k, color: c.muted })
     : 0;
-  const h = y - (inline ? 1.25 : 3) * REM * k + sourceH;
-  return { rows, barH, labelW, labelO, trackX, trackW, valueW, sourceH, h };
+  // A named scale is numbered under the last track at its ends and quarters.
+  const scaleO: BoxOpts = { size: PT.h4 * k, color: c.muted, line: 1.375, align: "center" };
+  const scaleY = y - (inline ? 1.25 : 3) * REM * k + 0.75 * REM * k;
+  const scaleH = b.max == null ? 0 : 0.75 * REM * k + need("0", c, w, scaleO);
+  const h = y - (inline ? 1.25 : 3) * REM * k + scaleH + sourceH;
+  const ticks = [0, 25, 50, 75, 100].map((q) => ({
+    q,
+    text: ctx.words.figure((max * q) / 100),
+  }));
+  return { rows, barH, labelW, labelO, trackX, trackW, valueW, sourceH, h, scaleO, scaleY, ticks };
 }
 
 /** A step of `FlowSteps`: the flow block's, a pipeline's or a process slide's node. */
@@ -2228,8 +2237,7 @@ function topology(
   // The stream teams, a row each: the roles after the name where both fit one line.
   const sIn = mw - 2 * sp(5) - 2 * bd;
   const streams = d.streamAligned.map((t) => {
-    // Measured untracked: LibreOffice draws the name without its negative tracking.
-    const nw = textWidth(t.name, titleO.size, TITLE.mono, TITLE.bold) + 0.02;
+    const nw = textWidth(t.name, titleO.size, TITLE.mono, TITLE.bold, -0.015) + 0.02;
     const r = roles(t.roles);
     const rw = textWidth(r.runs.map((x) => x.text).join(""), textO.size, false, true);
     const beside = t.roles.length > 0 && nw + sp(6) + rw <= sIn;
@@ -2377,6 +2385,71 @@ function topology(
   return total;
 }
 
+/** Two stances and their resolution as the web's `Positions`: in a 72 rem column, each stance on
+ *  a card under its holder's name, its quote under it, then the middle word and the resolution as
+ *  a display line, centred. Draws where `s` is given; returns the height at scale k. */
+function positions(
+  s: PSlide | undefined,
+  c: Palette,
+  b: Extract<ContentBlock, { type: "positions" }>,
+  a: { x: number; y: number; w: number },
+  k: number,
+): number {
+  const rem = REM * k;
+  const w = Math.min(a.w, 72 * rem);
+  const x0 = a.x + (a.w - w) / 2;
+  const [gap, pad] = [2 * rem, 2 * rem];
+  const cw = (w - gap) / 2;
+  const inner = cw - 2 * pad;
+  const nameO: BoxOpts = { size: PT.sm * k, mono: true, color: c.muted, tracking: 0.06, line: 1.4 };
+  const stanceO: BoxOpts = { size: 32 * k, ...TITLE, color: c.ink, line: 1.25, tracking: -0.015 };
+  const quoteO: BoxOpts = { size: PT.h4 * k, color: c.muted, line: 1.375 };
+  const parts = (sd: typeof b.left): [Para, BoxOpts, number][] => [
+    [{ runs: [caps(sd.name)] }, nameO, 0],
+    [{ runs: [{ text: sd.stance }] }, stanceO, rem],
+    [{ runs: md(`“${sd.quote}”`, c) }, quoteO, 1.5 * rem],
+  ];
+  // A column of paragraphs in width pw, drawn at x, y where both are given; returns its height.
+  const stack = (list: [Para, BoxOpts, number][], pw: number, x?: number, y = 0) =>
+    list.reduce((h, [p, o, g]) => {
+      const ph = need(p, c, pw, o);
+      if (s && x !== undefined) box(s, c, p, x, y + h + g, pw, ph, o);
+      return h + g + ph;
+    }, 0);
+  const ch = Math.max(...[b.left, b.right].map((sd) => stack(parts(sd), inner))) + 2 * pad;
+  const resO: BoxOpts = {
+    size: 32 * k,
+    mono: true,
+    bold: true,
+    color: c.ink,
+    line: LEADING.display,
+    tracking: -0.04,
+    align: "center",
+  };
+  const res: [Para, BoxOpts, number][] = [
+    ...(b.middle
+      ? [
+          [{ runs: [caps(b.middle)] }, { ...nameO, align: "center" as const }, 0] as [
+            Para,
+            BoxOpts,
+            number,
+          ],
+        ]
+      : []),
+    [{ runs: md(b.resolution, c), balance: true }, resO, b.middle ? rem : 0],
+  ];
+  const resH = stack(res, w);
+  if (s) {
+    [b.left, b.right].forEach((sd, i) => {
+      const x = x0 + i * (cw + gap);
+      card(s, x, a.y, cw, ch, c.card, c.border);
+      stack(parts(sd), inner, x + pad, a.y + pad);
+    });
+    stack(res, w, x0, a.y + ch + 3 * rem);
+  }
+  return ch + 3 * rem + resH;
+}
+
 /** Steps on one line as the web's `FlowSteps` draws them: a tile each, numbered unless a label
  *  counts already, a grey line with an arrowhead from tile to tile, the title, subtitle, text and
  *  badge centred under the tile, and a `loop` back above, labelled when non-empty. Draws where `s`
@@ -2417,7 +2490,6 @@ function flowSteps(
     const on = o.highlight === i;
     const tone = st.dim ? c.muted : st.tone ? c[st.tone] : c.ink;
     const accent = st.dim ? c.muted : c.teal;
-    const x = centre(i) - inner / 2;
     let y = tileY + tile;
     const parts: [Para, BoxOpts, number][] = [];
     if (st.label && !inTile)
@@ -2442,9 +2514,12 @@ function flowSteps(
     if (st.badge)
       parts.push([{ runs: md(st.badge, c, { color: accent }), bold: true }, textO, sp(3)]);
     for (const [p, po, gap] of parts) {
-      const ph = need(p, c, inner, po);
+      // A word wider than the text column, such as a path in a chip, stands past it into the
+      // step's padding, as the web's chip does.
+      const pw = Math.min(colW, Math.max(inner, longest(spansOf(p, po, 1)) / 72 + 0.02));
+      const ph = need(p, c, pw, po);
       y += gap;
-      if (s) box(s, c, p, x, y, inner, ph, po);
+      if (s) box(s, c, p, centre(i) - pw / 2, y, pw, ph, po);
       y += ph;
     }
     h = Math.max(h, y - a.y);
@@ -2514,14 +2589,16 @@ function flowSteps(
     });
     if (o.loop) {
       const lw = textWidth(o.loop, PT.h4 * k, false, true) + sp(12);
+      // At least a line high, so the fit keeps the label at its size.
+      const lh = Math.max(sp(7), (PT.h4 * k * 1.4) / 72);
       box(
         s,
         c,
         { runs: [{ text: o.loop }], bold: true },
         (x0 + x1) / 2 - lw / 2,
-        top - sp(3.5),
+        top - lh / 2,
         lw,
-        sp(7),
+        lh,
         {
           size: PT.h4 * k,
           color: c.ink,
@@ -2992,6 +3069,9 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide, deck: Presentation) {
   }
 }
 
+/** A slide that draws nothing, to measure a layout drawn top-down before placing it. */
+const DRY = new Proxy({}, { get: () => () => undefined }) as PSlide;
+
 const RENDER: {
   [K in Slide["type"]]: (
     s: PSlide,
@@ -3175,6 +3255,186 @@ const RENDER: {
       }
       return out;
     };
+    if (!side && !d.attribution) {
+      // As the web's centred statement: the kicker, each line a display heading balanced on its
+      // own, 64 pt where nothing else stands, 48 pt otherwise, the subtitle in its narrower column,
+      // the points and closing under it, all centred in the slide or above its footer.
+      const footH = footerHeight(ctx, d.footer);
+      const simple =
+        !d.points?.length && !d.closing && !d.subtitle && !d.highlighted && !d.crossedOut;
+      const w = d.footer ? CW : W - 2 * 4 * REM;
+      const parts: [Para[], BoxOpts, number, number][] = [];
+      if (d.kicker)
+        parts.push([
+          [{ runs: [caps(d.kicker, { color: c.tealDark })] }],
+          {
+            size: PT.sm,
+            mono: true,
+            color: c.tealDark,
+            tracking: 0.06,
+            line: 1.4,
+            align: "center",
+          },
+          w,
+          0,
+        ]);
+      if (d.crossedOut && !d.lines.some((l) => l.includes(d.crossedOut!)))
+        parts.push([
+          [{ runs: [{ text: d.crossedOut, options: { strike: "sngStrike", color: c.muted } }] }],
+          { size: PT.h3, mono: true, bold: true, color: c.muted, align: "center", line: 1.25 },
+          w,
+          parts.length ? 2 * REM : 0,
+        ]);
+      parts.push([
+        d.lines.map((l) => ({ runs: lineRuns(l), balance: true })),
+        {
+          size: simple ? 64 : PT.s8,
+          mono: true,
+          bold: true,
+          color: c.ink,
+          tracking: -0.04,
+          line: LEADING.display,
+          align: "center",
+        },
+        w,
+        parts.length ? 2 * REM : 0,
+      ]);
+      if (d.subtitle)
+        parts.push([
+          [{ runs: md(d.subtitle, c, { color: c.muted }), balance: true }],
+          { size: PT.h3, color: c.muted, line: 1.375, align: "center" },
+          Math.min(w, 64 * REM),
+          2 * REM,
+        ]);
+      const support: Para[] = [
+        ...(d.points ?? []).map((pt, i) => ({
+          runs: [
+            {
+              text: `${String(i + 1).padStart(2, "0")}  `,
+              options: { color: c.teal, bold: true, fontFace: MONO },
+            },
+            ...md(pt, c, { color: c.muted }),
+          ],
+          after: 1.25 * REM * 72,
+        })),
+        ...(d.closing
+          ? [
+              {
+                runs: md(
+                  d.closingStyle === "quote" ? `“${d.closing}”` : d.closing,
+                  c,
+                  d.closingStyle === "quote" ? { italic: true } : {},
+                ),
+                bold: d.closingStyle !== "quote",
+                align: "center" as const,
+                balance: true,
+              },
+            ]
+          : []),
+      ];
+      if (support.length)
+        parts.push([
+          support,
+          { size: PT.h3, color: c.ink, line: 1.375, align: d.points?.length ? "left" : "center" },
+          Math.min(w, 56 * REM),
+          2.5 * REM,
+        ]);
+      const heights = parts.map(([p, o, pw]) => need(p, c, pw, o));
+      const total = heights.reduce((sum, h, i) => sum + h + parts[i][3], 0);
+      const [top, bottom] = d.footer ? [TOP, BOTTOM - footH - 0.1] : [0, BOTTOM];
+      let y = top + Math.max(0, (bottom - top - total) / 2);
+      parts.forEach(([p, o, pw, gap], i) => {
+        y += gap;
+        box(s, c, p, (W - pw) / 2, y, pw, heights[i], o);
+        y += heights[i];
+      });
+      footer(s, ctx, d.footer, footH);
+      return;
+    }
+    if (qr) {
+      // As QrStatement: the words at the left, the code on the right in a white card whose padding
+      // is its quiet zone, its address under it, the row top-aligned and centred above the footer.
+      const footH = footerHeight(ctx, d.footer);
+      const q = (0.45 * 1.15 * 1080) / 144;
+      const label = `↗ ${linkLabel(qr.href)}`;
+      const colW = Math.max(q, textWidth(label, PT.base, true) + 0.1);
+      const w = CW - colW - 5 * REM;
+      const parts: [Para[], BoxOpts, number][] = [];
+      const support: BoxOpts = { size: PT.h3, color: c.ink, line: 1.375 };
+      if (d.kicker)
+        parts.push([
+          [{ runs: [caps(d.kicker, { color: c.tealDark })] }],
+          { size: PT.sm, mono: true, color: c.tealDark, tracking: 0.06, line: 1.4 },
+          0,
+        ]);
+      parts.push([
+        d.lines.map((l) => ({ runs: lineRuns(l), balance: true })),
+        {
+          size: PT.s8,
+          mono: true,
+          bold: true,
+          color: c.ink,
+          tracking: -0.04,
+          line: LEADING.display,
+        },
+        parts.length ? 1.5 * REM : 0,
+      ]);
+      if (d.subtitle) parts.push([[{ runs: md(d.subtitle, c) }], support, 1.5 * REM]);
+      if (d.points?.length)
+        parts.push([
+          d.points.map((pt, i) => ({
+            runs: [
+              {
+                text: `${String(i + 1).padStart(2, "0")}  `,
+                options: { color: c.teal, bold: true, fontFace: MONO },
+              },
+              ...md(pt, c, { color: c.muted }),
+            ],
+            after: 1.25 * REM * 72,
+          })),
+          { size: PT.base, color: c.muted, line: 1.375 },
+          2 * REM,
+        ]);
+      if (d.closing) {
+        const quoted = d.closingStyle === "quote";
+        parts.push([
+          [{ runs: md(quoted ? `“${d.closing}”` : d.closing, c), bold: true }],
+          support,
+          1.5 * REM,
+        ]);
+      }
+      const heights = parts.map(([p, o]) => need(p, c, w, o));
+      const textH = heights.reduce((sum, h, i) => sum + h + parts[i][2], 0);
+      const labelH = need(label, c, colW, { size: PT.base, mono: true, color: c.teal });
+      const figH = q + REM + labelH;
+      const bottom = BOTTOM - footH - (d.footer ? 0.1 : 0);
+      const top = TOP + Math.max(0, (bottom - TOP - Math.max(textH, figH)) / 2);
+      let y = top;
+      parts.forEach(([p, o, gap], i) => {
+        y += gap;
+        box(s, c, p, SIDE, y, w, heights[i], o);
+        y += heights[i];
+      });
+      const x = W - SIDE - colW + (colW - q) / 2;
+      const pad = 2.5 * REM;
+      card(s, x, top, q, q, "FFFFFF", c.border, CORNER);
+      picture(s, ctx, qr.src, x + pad, top + pad, q - 2 * pad, q - 2 * pad, {
+        alt: qrAlt(qr.href, deckLang(deck)),
+        href: qr.href,
+      });
+      box(
+        s,
+        c,
+        { runs: [{ text: label, options: { hyperlink: { url: qr.href } } }] },
+        W - SIDE - colW,
+        top + q + REM,
+        colW,
+        labelH,
+        { size: PT.base, mono: true, color: c.teal, align: "center" },
+      );
+      footer(s, ctx, d.footer, footH);
+      return;
+    }
     const paras: Para[] = d.lines.map((l) => ({
       runs: lineRuns(l),
       mono: true,
@@ -3341,30 +3601,33 @@ const RENDER: {
     }
     const { c } = ctx;
     const y = header(s, ctx, d);
-    const punchH = d.punchline ? 0.55 : 0;
-    const noteH = d.footnotes?.length ? 0.3 * d.footnotes.length : 0;
-    const a = { ...BODY(y), h: BOTTOM - y - punchH - noteH };
+    const footH = comparisonFoot(undefined, c, d, 0);
+    const area = BODY(y);
     const sides = [d.left, d.right];
     const variant = d.variant ?? "vs";
     const o = { size: PT.base, color: c.ink };
+    // The sides, punchline and footnotes stand as one group where the web's slide body puts it.
+    const place = (ch: number) => area.y + Math.max(0, area.h - ch - footH) / 2.25;
     if (variant === "before-after") {
       const strike = d.strike !== false;
       const adds = !strike && d.adds;
-      const ch = Math.min(a.h, beforeAfterHeight(c, sides, strike, a.w, o, 1, adds));
-      beforeAfter(s, ctx, { ...a, h: ch }, o, sides, strike, 1, adds);
-      return comparisonFoot(s, c, d, a.y + ch, noteH);
+      const ch = Math.min(area.h - footH, beforeAfterHeight(c, sides, strike, area.w, o, 1, adds));
+      const top = place(ch);
+      beforeAfter(s, ctx, { ...area, y: top, h: ch }, o, sides, strike, 1, adds);
+      comparisonFoot(s, c, d, top + ch);
+      return;
     }
     // The print route shows both sides of a `vs` slide active, as its last reveal step does: a vs
     // side lists its plus points, then the items starting with "-" as its minus points. A `split`
-    // slide draws two plain cards of listed items, its labels read as markdown.
+    // slide draws two plain cards of listed items, its labels read as markdown. Each card as the
+    // web's: 2 rem padding, its title 1.5 rem over the items, the items 0.75 rem apart.
     const vs = variant === "vs";
-    const paras = (sd: ComparisonSide): Para[] => [
-      {
-        runs: vs ? [{ text: sd.label }] : md(sd.label, c),
-        ...TITLE,
-        rel: PT.h4 / PT.base,
-        after: 8,
-      },
+    const pad = 2 * REM;
+    const gap = 2 * REM;
+    const cw = (area.w - gap) / 2;
+    const titleO: BoxOpts = { size: PT.h4, ...TITLE, color: c.ink, line: 1.35, tracking: -0.015 };
+    const itemO: BoxOpts = { size: PT.h4, color: c.ink, line: 1.4 };
+    const items = (sd: ComparisonSide): Para[] => [
       ...(sd.highlight ? [highlightPara(sd.highlight, c.teal)] : []),
       ...(vs
         ? [
@@ -3380,26 +3643,42 @@ const RENDER: {
                 },
                 ...md(it.replace(/^[-+]\s*/, ""), c),
               ],
-              after: 6,
+              after: 0.75 * REM * 72,
             };
           })
-        : bulletParas(sd.items, c)),
+        : sd.items.map((it) => ({
+            runs: md(it, c),
+            bullet: true as const,
+            after: 0.75 * REM * 72,
+          }))),
     ];
-    const ch = Math.min(
-      a.h,
-      Math.max(...sides.map((sd) => need(paras(sd), c, a.w / 2 - 0.65, o) + (sd.logo ? 0.5 : 0))) +
-        0.55,
-    );
-    row(sides, { ...a, h: ch }, 0.3, (sd, r) => {
-      card(s, r.x, r.y, r.w, r.h, vs ? c.tealTint : c.card, vs ? c.teal : c.border);
-      let ty = r.y + 0.25;
-      if (sd.logo) {
-        picture(s, ctx, sd.logo, r.x + 0.25, ty, 1.4, 0.4, { align: "left", alt: plain(sd.label) });
-        ty += 0.5;
-      }
-      box(s, c, paras(sd), r.x + 0.25, ty, r.w - 0.5, r.y + r.h - ty - 0.2, o);
+    const label = (sd: ComparisonSide): Para => ({
+      runs: vs ? [{ text: sd.label }] : md(sd.label, c),
     });
-    comparisonFoot(s, c, d, a.y + ch, noteH);
+    const logoH = 48 / 144 + REM;
+    const parts = sides.map((sd) => {
+      const th = need(label(sd), c, cw - 2 * pad, titleO);
+      const ih = need(items(sd), c, cw - 2 * pad, itemO);
+      return { th, ih, h: 2 * pad + (sd.logo ? logoH : 0) + th + 1.5 * REM + ih };
+    });
+    const ch = Math.min(area.h - footH, Math.max(...parts.map((p) => p.h)));
+    const top = place(ch);
+    sides.forEach((sd, i) => {
+      const x = area.x + i * (cw + gap);
+      card(s, x, top, cw, ch, vs ? c.tealTint : c.card, vs ? c.teal : c.border);
+      let ty = top + pad;
+      if (sd.logo) {
+        picture(s, ctx, sd.logo, x + pad, ty, 1.4, 48 / 144, {
+          align: "left",
+          alt: plain(sd.label),
+        });
+        ty += logoH;
+      }
+      box(s, c, label(sd), x + pad, ty, cw - 2 * pad, parts[i].th, titleO);
+      ty += parts[i].th + 1.5 * REM;
+      box(s, c, items(sd), x + pad, ty, cw - 2 * pad, top + ch - pad - ty, itemO);
+    });
+    comparisonFoot(s, c, d, top + ch);
   },
 
   guidance(s, ctx, d) {
@@ -3656,17 +3935,30 @@ const RENDER: {
         w: f.w - 2 * CHART.pad,
         h: f.h - 2 * CHART.pad,
       };
+      const labelO: BoxOpts = { size: PT.sm, color: c.muted };
       const label = (
         text: string | undefined,
         x: number,
         top: number,
         w: number,
         align: BoxOpts["align"],
-      ) => text && box(s, c, text, x, top, w, CHART.line, { size: PT.sm, color: c.muted, align });
+        h = CHART.line,
+      ) => text && box(s, c, text, x, top, w, h, { ...labelO, align });
       const note = trend ? d.futureNote : undefined;
-      const head = d.yLabel || note ? CHART.line + CHART.underHead : 0;
-      label(d.yLabel, inner.x, inner.y, inner.w / 2, "left");
-      label(note, inner.x + inner.w / 2, inner.y, inner.w / 2, "right");
+      // The y label and the note in one row 2 rem apart, each shrinking by its share of the
+      // overflow and wrapping, as the web's flex row sets them.
+      const gapX = 2 * REM;
+      const basis = [d.yLabel, note].map((t) => (t ? textWidth(t, PT.sm) + 0.02 : 0));
+      const over = Math.max(0, basis[0] + basis[1] + gapX - inner.w);
+      const sum = basis[0] + basis[1] || 1;
+      const [yw, nw] = basis.map((b) => b - (over * b) / sum);
+      const lineH = (n: number) => Math.max(1, n) * CHART.line;
+      const lines = (t: string | undefined, w: number) =>
+        t ? Math.round(need(t, c, w, labelO) / ((PT.sm * LEADING.body) / 72)) : 0;
+      const headH = lineH(Math.max(lines(d.yLabel, yw), lines(note, nw)));
+      const head = d.yLabel || note ? headH + CHART.underHead : 0;
+      label(d.yLabel, inner.x, inner.y, yw, "left", headH);
+      label(note, inner.x + inner.w - nw, inner.y, nw, "right", headH);
       const foot = d.xLabel ? CHART.line + CHART.overFoot : 0;
       label(d.xLabel, inner.x, inner.y + inner.h - CHART.line, inner.w, "center");
       // The chart reaches up over the card for its legend, which PowerPoint sets at its top.
@@ -3882,25 +4174,50 @@ const RENDER: {
   },
 
   question(s, ctx, d) {
+    // As QuestionSlide in print: the headline as a display heading, under it the options as white
+    // cards in a 56 rem column, each its letter, its text and its count, centred above the footer band.
     const { c } = ctx;
-    const y = header(s, ctx, d, true);
-    const a = { x: SIDE + CW * 0.2, y: y + 0.2, w: CW * 0.6, h: BOTTOM - y - 0.2 };
-    const oh = Math.min(0.6, a.h / d.options.length - 0.15);
+    const head: BoxOpts = {
+      size: PT.s6,
+      mono: true,
+      bold: true,
+      color: c.ink,
+      tracking: -0.04,
+      line: LEADING.display,
+      align: "center",
+    };
+    const hp: Para = { ...literal(d.headline), balance: true };
+    const hh = need(hp, c, CW, head);
+    const w = Math.min(CW, 56 * REM);
+    const oh = 2.5 * REM + (PT.h4 * 1.4) / 72;
+    const total = hh + 3.5 * REM + d.options.length * (oh + REM) - REM;
+    const top = Math.max(TOP, (BOTTOM - total) / 2);
+    box(s, c, hp, SIDE, top, CW, hh, head);
+    const x = (W - w) / 2;
     d.options.forEach((op, i) => {
-      const oy = a.y + i * (oh + 0.15);
-      card(s, a.x, oy, a.w, oh, c.card, c.border, 0.08);
-      box(s, c, { runs: [{ text: op.label }] }, a.x + 0.15, oy, 0.4, oh, {
-        size: PT.label,
+      const oy = top + hh + 3.5 * REM + i * (oh + REM);
+      card(s, x, oy, w, oh, c.card, c.border);
+      const mid = { valign: "middle" } as const;
+      box(s, c, literal(op.label), x + 1.5 * REM, oy, 2 * REM, oh, {
+        size: 14,
         mono: true,
         bold: true,
         color: c.muted,
-        align: "center",
-        valign: "middle",
+        ...mid,
       });
-      box(s, c, op.text, a.x + 0.6, oy, a.w - 0.8, oh, {
-        size: PT.base,
+      box(s, c, op.text, x + 4.5 * REM, oy, w - 10 * REM, oh, {
+        size: 17.5,
         color: c.ink,
-        valign: "middle",
+        line: 1.4,
+        ...mid,
+      });
+      box(s, c, literal("0"), x + w - 5.5 * REM, oy, 4 * REM, oh, {
+        size: PT.h4,
+        mono: true,
+        bold: true,
+        color: c.teal,
+        align: "right",
+        ...mid,
       });
     });
   },
@@ -3959,129 +4276,86 @@ const RENDER: {
     if (d.variant === "discussion") {
       // A titled slide, as on the web.
       const y = header(s, ctx, { headline: d.headline ?? d.line1 ?? ctx.words.discussion });
-      const questions = (d.seedQuestions ?? []).map((q): Para => ({
-        runs: md(q, c),
-        bullet: true,
-        after: 6,
-      }));
-      if (questions.length)
-        box(s, c, questions, SIDE, y, CW, BOTTOM - y, { size: PT.lead, color: c.ink });
+      // Each seed question on its own card, as the web's: 1.25 rem over and under it, 2 rem
+      // beside, 1.5 rem between the cards, the question muted.
+      const a = BODY(y);
+      const [padY, padX, gap] = [1.25 * REM, 2 * REM, 1.5 * REM];
+      const o: BoxOpts = { size: PT.h4, color: c.muted, line: 1.35 };
+      const qs = d.seedQuestions ?? [];
+      const hs = qs.map((q) => need(literal(q), c, a.w - 2 * padX, o));
+      const total = hs.reduce((sum, h) => sum + h + 2 * padY, 0) + Math.max(0, qs.length - 1) * gap;
+      let qy = a.y + Math.max(0, a.h - total) / 2.25;
+      qs.forEach((q, i) => {
+        card(s, a.x, qy, a.w, hs[i] + 2 * padY, c.card, c.border);
+        box(s, c, literal(q), a.x + padX, qy + padY, a.w - 2 * padX, hs[i], o);
+        qy += hs[i] + 2 * padY + gap;
+      });
       return;
     }
-    const head = d.line1;
-    let y = TOP + 0.3;
-    if (head) {
-      box(s, c, literal(head), SIDE, y, CW, 1.1, {
-        size: PT.display,
-        mono: true,
-        bold: true,
-        color: c.ink,
-        align: "center",
-        valign: "middle",
-        floor: 0.5,
-      });
-      y += 1.3;
-    }
-    const speakers = d.speakers ?? [];
-    if (centredMark(d)) {
-      // The web's contact slide without portraits: the lockup in the centre column, each speaker's
-      // name and contact lines under it.
-      const lockH = 91.7 / 144;
-      const [path, ratio] = brandCut(`lockup${ctx.dark ? "-night" : ""}`);
-      const lockW = lockH * ratio;
-      // As on the web: each partner's logo at the lockup's height, a × after it.
-      const partners = d.partners ?? [];
-      const times = 0.5;
-      const gap = 0.35;
-      const partnerW = partners.map((p) => (lockH * p.width) / p.height);
-      let x = (W - lockW - partnerW.reduce((sum, w) => sum + w + 2 * gap + times, 0)) / 2;
-      partners.forEach((p, i) => {
-        picture(s, ctx, p.src, x, y, partnerW[i], lockH, { alt: p.alt ?? p.company });
-        box(s, c, "×", x + partnerW[i] + gap, y, times, lockH, {
-          size: PT.s6,
-          color: c.muted,
+    // As ContactVariant: the line, the mark row, the speakers and the closing lines 3.5 rem apart,
+    // the column centred in the slide; drawn once on DRY to measure it.
+    const gap = 3.5 * REM;
+    const column = (s: PSlide, y: number) => {
+      const head = d.line1;
+      if (head) {
+        const o: BoxOpts = {
+          size: PT.display,
+          mono: true,
+          bold: true,
+          color: c.ink,
+          tracking: -0.04,
+          line: LEADING.display,
           align: "center",
-          valign: "middle",
-        });
-        x += partnerW[i] + 2 * gap + times;
-      });
-      s.addImage({
-        path,
-        x,
-        y,
-        w: lockW,
-        h: lockH,
-        altText: "hackers&wizards",
-      });
-      y += lockH + 0.45;
-      const shown = companiesWithLogo(d);
-      for (const sp of speakers) {
-        const paras: Para[] = [
-          { runs: [{ text: sp.name }], mono: true, bold: true, rel: PT.h4 / PT.base, after: 2 },
-          ...(shown.has(sp.company.toLowerCase())
-            ? []
-            : [
-                {
-                  runs: [caps(sp.company, { color: c.muted })],
-                  rel: 0.8,
-                  after: 2,
-                },
-              ]),
-          ...(sp.contact
-            ? [
-                {
-                  runs: [
-                    {
-                      text: sp.contact,
-                      options: {
-                        color: c.teal,
-                        ...(sp.contact.includes("@")
-                          ? { hyperlink: { url: `mailto:${sp.contact}` } }
-                          : {}),
-                      },
-                    },
-                  ],
-                },
-              ]
-            : []),
-          ...(sp.linkedIn
-            ? [
-                {
-                  runs: [
-                    {
-                      text: linkLabel(sp.linkedIn),
-                      options: { color: c.teal, hyperlink: { url: sp.linkedIn } },
-                    },
-                  ],
-                },
-              ]
-            : []),
-        ];
-        const ph = need(paras, c, CW, { size: PT.base, color: c.ink });
-        box(s, c, paras, SIDE, y, CW, ph, { size: PT.base, color: c.ink, align: "center" });
-        y += ph + 0.3;
+        };
+        const hh = need(literal(head), c, CW, o);
+        box(s, c, { ...literal(head), balance: true }, SIDE, y, CW, hh, o);
+        y += hh + gap;
       }
-    } else if (speakers.length) {
-      const sw = Math.min(3.2, CW / speakers.length);
-      // The LinkedIn address under the contact, a line at 0.8 of the size.
-      const linked = speakers.some((sp) => sp.linkedIn) ? 0.3 : 0;
-      const sx = (W - sw * speakers.length) / 2;
-      speakers.forEach((sp, i) => {
-        const x = sx + i * sw;
-        const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
-        portrait(s, ctx, sp.imageSrc, sp.name, x + sw / 2 - 0.55, y, 1.1, tone);
-        box(
-          s,
-          c,
-          [
-            { runs: [{ text: sp.name }], mono: true, bold: true, after: 2 },
-            {
-              runs: [caps(sp.company, { color: tone })],
-              mono: true,
-              bold: true,
-              rel: 0.7,
-              after: 6,
-            },
+      const speakers = d.speakers ?? [];
+      if (centredMark(d)) {
+        // The web's contact slide without portraits: the lockup in the centre column, each speaker's
+        // name and contact lines under it.
+        const lockH = 91.7 / 144;
+        const [path, ratio] = brandCut(`lockup${ctx.dark ? "-night" : ""}`);
+        const lockW = lockH * ratio;
+        // As on the web: each partner's logo at the lockup's height, a × after it.
+        const partners = d.partners ?? [];
+        const times = 0.5;
+        const pad = 0.35;
+        const partnerW = partners.map((p) => (lockH * p.width) / p.height);
+        let x = (W - lockW - partnerW.reduce((sum, w) => sum + w + 2 * pad + times, 0)) / 2;
+        partners.forEach((p, i) => {
+          picture(s, ctx, p.src, x, y, partnerW[i], lockH, { alt: p.alt ?? p.company });
+          box(s, c, "×", x + partnerW[i] + pad, y, times, lockH, {
+            size: PT.s6,
+            color: c.muted,
+            align: "center",
+            valign: "middle",
+          });
+          x += partnerW[i] + 2 * pad + times;
+        });
+        s.addImage({
+          path,
+          x,
+          y,
+          w: lockW,
+          h: lockH,
+          altText: "hackers&wizards",
+        });
+        y += lockH + gap;
+        const shown = companiesWithLogo(d);
+        for (const sp of speakers) {
+          const paras: Para[] = [
+            { runs: [{ text: sp.name }], mono: true, bold: true, rel: PT.h4 / 17.5, after: 2 },
+            ...(shown.has(sp.company.toLowerCase())
+              ? []
+              : [
+                  {
+                    runs: [caps(sp.company, { color: c.muted })],
+                    rel: 0.8,
+                    after: 2,
+                  },
+                ]),
             ...(sp.contact
               ? [
                   {
@@ -4089,59 +4363,127 @@ const RENDER: {
                       {
                         text: sp.contact,
                         options: {
-                          color: tone,
+                          color: c.teal,
                           ...(sp.contact.includes("@")
                             ? { hyperlink: { url: `mailto:${sp.contact}` } }
                             : {}),
                         },
                       },
                     ],
-                    rel: 0.8,
                   },
                 ]
               : []),
-            ...(sp.linkedIn ? [{ ...profileLink(sp.linkedIn, c), rel: 0.8 }] : []),
+            ...(sp.linkedIn
+              ? [
+                  {
+                    runs: [
+                      {
+                        text: linkLabel(sp.linkedIn),
+                        options: { color: c.teal, hyperlink: { url: sp.linkedIn } },
+                      },
+                    ],
+                  },
+                ]
+              : []),
+          ];
+          const po: BoxOpts = { size: 17.5, color: c.ink, line: 1.4, align: "center" };
+          const ph = need(paras, c, CW, po);
+          box(s, c, paras, SIDE, y, CW, ph, po);
+          y += ph + 2 * REM;
+        }
+        y += gap - 2 * REM;
+      } else if (speakers.length) {
+        const sw = Math.min(3.2, CW / speakers.length);
+        // The LinkedIn address under the contact, a line at 0.8 of the size.
+        const linked = speakers.some((sp) => sp.linkedIn) ? 0.3 : 0;
+        const sx = (W - sw * speakers.length) / 2;
+        speakers.forEach((sp, i) => {
+          const x = sx + i * sw;
+          const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
+          portrait(s, ctx, sp.imageSrc, sp.name, x + sw / 2 - 0.55, y, 1.1, tone);
+          box(
+            s,
+            c,
+            [
+              { runs: [{ text: sp.name }], mono: true, bold: true, after: 2 },
+              {
+                runs: [caps(sp.company, { color: tone })],
+                mono: true,
+                bold: true,
+                rel: 0.7,
+                after: 6,
+              },
+              ...(sp.contact
+                ? [
+                    {
+                      runs: [
+                        {
+                          text: sp.contact,
+                          options: {
+                            color: tone,
+                            ...(sp.contact.includes("@")
+                              ? { hyperlink: { url: `mailto:${sp.contact}` } }
+                              : {}),
+                          },
+                        },
+                      ],
+                      rel: 0.8,
+                    },
+                  ]
+                : []),
+              ...(sp.linkedIn ? [{ ...profileLink(sp.linkedIn, c), rel: 0.8 }] : []),
+            ],
+            x,
+            y + 1.2,
+            sw,
+            1 + linked,
+            { size: PT.h4, color: c.ink, align: "center" },
+          );
+        });
+        y += 2.35 + linked + gap;
+      }
+      const tail: Para[] = [];
+      const claim = closingClaim(d, deckLang(deck));
+      if (claim) {
+        // The claim in muted ink, the word brand names for it in teal, as ClosingSlide draws it.
+        const [before, word, after] = claimParts(claim);
+        tail.push({
+          runs: [
+            { text: before, options: { color: c.muted } },
+            { text: word, options: { color: c.teal } },
+            { text: after, options: { color: c.muted } },
+          ].filter((r) => r.text),
+          mono: true,
+          bold: true,
+          after: gap * 72,
+          align: "center",
+          balance: true,
+        });
+      }
+      if (d.closingQuote) {
+        const mark = { color: mix(c.teal, c.bg, 0.7) };
+        tail.push({
+          runs: [
+            { text: "“", options: mark },
+            ...md(d.closingQuote, c, { color: c.muted }),
+            { text: "”", options: mark },
           ],
-          x,
-          y + 1.2,
-          sw,
-          1 + linked,
-          { size: PT.h4, color: c.ink, align: "center" },
-        );
-      });
-      y += 2.35 + linked;
-    }
-    const tail: Para[] = [];
-    const claim = closingClaim(d, deckLang(deck));
-    if (claim) {
-      // The claim in muted ink, the word brand names for it in teal, as ClosingSlide draws it.
-      const [before, word, after] = claimParts(claim);
-      tail.push({
-        runs: [
-          { text: before, options: { color: c.muted } },
-          { text: word, options: { color: c.teal } },
-          { text: after, options: { color: c.muted } },
-        ].filter((r) => r.text),
-        mono: true,
-        bold: true,
-        after: 10,
-        align: "center",
-      });
-    }
-    if (d.closingQuote)
-      tail.push({
-        runs: md(`“${d.closingQuote}”`, c, { color: c.teal }),
-        mono: true,
-        bold: true,
-        after: 10,
-        align: "center",
-      });
-    if (tail.length)
-      box(s, c, tail, SIDE + 1, y, CW - 2, BOTTOM - y, {
-        size: PT.lead,
-        color: c.ink,
-        align: "center",
-      });
+          mono: true,
+          bold: true,
+          align: "center",
+          balance: true,
+        });
+      }
+      if (tail.length) {
+        const o: BoxOpts = { size: PT.lead, color: c.muted, line: 1.25, tracking: -0.025 };
+        const tw = Math.min(CW, 80 * REM);
+        const th = need(tail, c, tw, o);
+        box(s, c, tail, (W - tw) / 2, y, tw, th, o);
+        return y + th;
+      }
+      return y - gap;
+    };
+    column(s, (H - column(DRY, 0)) / 2);
   },
 
   // As the web's RoadmapSlide: each column a card holding its items, or its phases as groups of
@@ -4566,112 +4908,127 @@ const RENDER: {
   },
 
   decision(s, ctx, d) {
+    // As the web's decision grid: the need, a stub arrow, the question, a fork to the yes branch
+    // above and the no branch below, both labelled in caps, a join and an arrow into the outcome;
+    // the columns `--slide-decision-columns` sets, the branches as tall as the taller, 4 px teal
+    // lines with 0.9 rem arrowheads.
     const { c } = ctx;
     const y = header(s, ctx, d);
-    const capH = d.caption ? 0.35 : 0;
-    const a = { ...BODY(y), h: BOTTOM - y - capH };
-    const cy = a.y + a.h / 2;
-    const bw = CW / 5;
-    const node = (
-      text: Para[],
-      x: number,
-      yy: number,
-      w: number,
-      h: number,
-      fill: string,
-      line: string,
-    ) => {
-      card(s, x, yy, w, h, fill, line, 0.08);
-      box(s, c, text, x + 0.12, yy + 0.08, w - 0.24, h - 0.16, {
-        size: PT.sm,
-        color: c.ink,
-        valign: "middle",
+    const a = BODY(y);
+    const fixed = [15, 4, 14, 7.5, 0, 3.5, 17].map((r) => r * REM);
+    fixed[4] = Math.max(0, a.w - fixed.reduce((sum, v) => sum + v, 0));
+    const col = (i: number) => a.x + fixed.slice(0, i).reduce((sum, v) => sum + v, 0);
+    const teamTone = (t: string) =>
+      t === "enabling" ? c.purple : t === "platform" ? c.tealDark : c.factory;
+    const teamLine = (t: string) =>
+      t === "enabling" ? c.purple : t === "platform" ? c.teal : c.factory;
+    const bold: BoxOpts = { size: PT.h4, bold: true, color: c.ink, line: 1.25 };
+    const titleO: BoxOpts = { size: PT.h4, ...TITLE, color: c.ink, line: 1.25, tracking: -0.015 };
+    const textO: BoxOpts = { size: PT.h4, color: c.ink, line: 1.375 };
+    const needIn = fixed[0] - 2 * 1.25 * REM;
+    const needH = need(d.need, c, needIn, bold) + 2 * REM;
+    const qIn = fixed[2] - 2 * 1.25 * REM;
+    const qH = need({ runs: md(d.question, c), align: "center" }, c, qIn, bold) + 2 * 1.25 * REM;
+    const oIn = fixed[6] - 2 * 1.25 * REM;
+    const oH = need(d.outcome, c, oIn, bold) + 2 * REM;
+    const bIn = fixed[4] - 2 * 1.5 * REM;
+    const branch = (br: typeof d.yes): [Para, BoxOpts, number][] => [
+      [{ runs: md(br.title, c, { color: teamTone(br.team) }) }, titleO, 0],
+      [{ runs: md(br.text, c) }, textO, 0.5 * REM],
+    ];
+    const bh = (br: typeof d.yes) =>
+      branch(br).reduce((sum, [p, o, gap]) => sum + gap + need(p, c, bIn, o), 0) + 2 * 1.25 * REM;
+    const rowH = Math.max(bh(d.yes), bh(d.no));
+    const gapY = 3.5 * REM;
+    const gridH = 2 * rowH + gapY;
+    const capO: BoxOpts = { size: PT.h4, color: c.muted, line: 1.4, align: "center" };
+    const capH = d.caption ? 1.5 * REM + need(d.caption, c, a.w, capO) : 0;
+    const top = a.y + Math.max(0, a.h - gridH - capH) / 2.25;
+    const mid = top + gridH / 2;
+    const thick = 0.25 * REM;
+    const line = { color: c.teal, width: 2 };
+    const bar = (x: number, w: number, yy: number) => rect(s, x, yy - thick / 2, w, thick, c.teal);
+    const head = (tip: number, yy: number) => {
+      const [len, half] = [0.9 * REM, 0.6 * REM];
+      s.addShape("triangle", {
+        x: tip - len / 2 - half,
+        y: yy - len / 2,
+        w: 2 * half,
+        h: len,
+        rotate: 90,
+        fill: { color: c.teal },
+        line: { type: "none" },
       });
     };
-    const nh = 1.1;
-    node([{ runs: md(d.need, c), bold: true }], SIDE, cy - nh / 2, bw * 0.9, nh, c.tint, c.border);
-    node(
-      [{ runs: md(d.question, c), bold: true, align: "center" }],
-      SIDE + bw * 1.15,
-      cy - nh / 2,
-      bw * 0.85,
-      nh,
-      c.card,
-      c.border,
+    // The need and the question, centred on the grid's middle, the arrow between them.
+    card(
+      s,
+      col(0),
+      mid - needH / 2,
+      fixed[0],
+      needH,
+      mix(c.teal, c.card, 0.07),
+      mix(c.teal, c.card, 0.4),
     );
-    arrow(s, c, SIDE + bw * 0.9, cy, SIDE + bw * 1.15, cy);
-    const bx = SIDE + bw * 2.35;
-    const bh = Math.min(1.5, a.h / 2 - 0.2);
-    const branches = [
-      [d.yes, cy - bh - 0.15],
-      [d.no, cy + 0.15],
-    ] as const;
-    const teamTone = (t: string) =>
-      t === "enabling" ? c.purple : t === "platform" ? c.teal : c.factory;
-    s.addShape("line", {
-      x: SIDE + bw * 2.15,
-      y: cy - bh / 2 - 0.15,
-      w: 0.001,
-      h: bh + 0.3,
-      line: { color: c.muted, width: 1.25 },
-    });
-    s.addShape("line", {
-      x: SIDE + bw * 2,
-      y: cy,
-      w: bw * 0.15,
-      h: 0.001,
-      line: { color: c.muted, width: 1.25 },
-    });
-    for (const [br, by] of branches) {
-      const tone = teamTone(br.team);
-      arrow(s, c, SIDE + bw * 2.15, by + bh / 2, bx, by + bh / 2);
-      box(s, c, { runs: [{ text: br.label }] }, SIDE + bw * 2.17, by + bh / 2 - 0.3, 0.6, 0.25, {
-        size: PT.label,
-        mono: true,
-        bold: true,
-        color: c.ink,
-      });
-      node(
-        [{ runs: md(br.title, c, { color: tone }), ...TITLE, after: 4 }, { runs: md(br.text, c) }],
-        bx,
-        by,
-        bw * 1.2,
-        bh,
-        mix(tone, c.bg, 0.08),
-        tone,
+    box(s, c, d.need, col(0) + 1.25 * REM, mid - needH / 2 + REM, needIn, needH - 2 * REM, bold);
+    bar(col(1), fixed[1], mid);
+    head(col(2), mid);
+    card(s, col(2), mid - qH / 2, fixed[2], qH, c.card, c.teal);
+    box(
+      s,
+      c,
+      { runs: md(d.question, c), align: "center" },
+      col(2) + 1.25 * REM,
+      mid - qH / 2 + 1.25 * REM,
+      qIn,
+      qH - 2.5 * REM,
+      { ...bold, align: "center" },
+    );
+    bar(col(3), 2 * REM, mid);
+    // The fork's vertical 2 rem into its column, the join's 2 rem before the outcome.
+    const forkX = col(3) + 2 * REM;
+    const joinX = col(6) - 2 * REM;
+    [d.yes, d.no].forEach((br, r) => {
+      const by = top + r * (rowH + gapY);
+      const cy = by + rowH / 2;
+      s.addShape("line", { x: forkX, y: Math.min(cy, mid), w: 0, h: Math.abs(mid - cy), line });
+      s.addShape("line", { x: forkX, y: cy, w: col(4) - forkX, h: 0, line });
+      head(col(4), cy);
+      const lh = (PT.h4 * 1.4) / 72;
+      box(
+        s,
+        c,
+        { runs: [caps(br.label)] },
+        forkX + 0.75 * REM,
+        r ? cy + 3 * REM - lh : cy - 3 * REM,
+        fixed[3] - 2.75 * REM,
+        lh,
+        {
+          size: PT.h4,
+          mono: true,
+          color: c.muted,
+          tracking: 0.06,
+          line: 1.4,
+        },
       );
-      s.addShape("line", {
-        x: bx + bw * 1.2,
-        y: by + bh / 2,
-        w: bw * 0.2,
-        h: 0.001,
-        line: { color: c.muted, width: 1.25 },
-      });
-    }
-    const jx = bx + bw * 1.4;
-    s.addShape("line", {
-      x: jx,
-      y: cy - bh / 2 - 0.15,
-      w: 0.001,
-      h: bh + 0.3,
-      line: { color: c.muted, width: 1.25 },
+      card(s, col(4), by, fixed[4], rowH, mix(teamLine(br.team), c.card, 0.15), teamLine(br.team));
+      const parts = branch(br);
+      const inner = parts.reduce((sum, [p, o, gap]) => sum + gap + need(p, c, bIn, o), 0);
+      let ty = cy - inner / 2;
+      for (const [p, o, gap] of parts) {
+        const ph = need(p, c, bIn, o);
+        ty += gap;
+        box(s, c, p, col(4) + 1.5 * REM, ty, bIn, ph, o);
+        ty += ph;
+      }
+      s.addShape("line", { x: col(5), y: cy, w: joinX - col(5), h: 0, line });
+      s.addShape("line", { x: joinX, y: Math.min(cy, mid), w: 0, h: Math.abs(mid - cy), line });
     });
-    arrow(s, c, jx, cy, jx + bw * 0.15, cy);
-    node(
-      [{ runs: md(d.outcome, c), bold: true }],
-      jx + bw * 0.15,
-      cy - nh / 2,
-      CW + SIDE - jx - bw * 0.15,
-      nh,
-      c.tint,
-      c.border,
-    );
-    if (d.caption)
-      box(s, c, d.caption, SIDE, BOTTOM - capH, CW, capH, {
-        size: PT.sm,
-        color: c.muted,
-        align: "center",
-      });
+    bar(joinX, col(6) - joinX, mid);
+    head(col(6), mid);
+    card(s, col(6), mid - oH / 2, fixed[6], oH, mix(c.ink, c.bg, 0.07));
+    box(s, c, d.outcome, col(6) + 1.25 * REM, mid - oH / 2 + REM, oIn, oH - 2 * REM, bold);
+    if (d.caption) box(s, c, d.caption, a.x, top + gridH + 1.5 * REM, a.w, capH - 1.5 * REM, capO);
   },
 };
 
@@ -4812,8 +5169,23 @@ export async function renderPptx(
   };
   // A deep-dive slide stands on night, as on the web (`isDeepDive`).
   const nightCtx: Ctx = { ...deckCtx, c: palette(true), dark: true };
-  const ctxOf = (slide: Slide | undefined) =>
-    dark || !slide || !isDeepDive(slide) ? deckCtx : nightCtx;
+  // A slide's ground as the web's `--slide-ground`: its hue at 7 % on the background, which every
+  // fill in the ground's colour takes too.
+  const grounded = new Map<string, Ctx>();
+  const ctxOf = (slide: Slide | undefined) => {
+    const base = dark || !slide || !isDeepDive(slide) ? deckCtx : nightCtx;
+    const ground = slide ? groundOf(slide as Grounded) : "intro";
+    if (ground === "intro") return base;
+    const key = `${base.dark}-${ground}`;
+    if (!grounded.has(key)) {
+      const c = base.c;
+      const hue = { primary: c.teal, secondary: c.purple, accent: c.amber, success: c.green }[
+        ground
+      ];
+      grounded.set(key, { ...base, c: { ...c, bg: mix(hue, c.bg, 0.07) } });
+    }
+    return grounded.get(key)!;
+  };
   deck.slides.forEach((slide, i) => {
     const s = pptx.addSlide();
     const ctx = ctxOf(slide);
@@ -4858,12 +5230,14 @@ export async function renderPptx(
           (_, v: string) =>
             `prst="round2DiagRect"><a:avLst><a:gd name="adj1" fmla="val ${v}"/><a:gd name="adj2" fmla="val ${Math.round(+v / 4)}"/>`,
         )
-        // A bullet in the brand colour at four fifths of the text, as the web's square marker;
-        // pptxgenjs writes no bullet colour.
+        // A bullet in the brand colour, as the web's square marker; pptxgenjs writes no bullet
+        // colour. The brand faces have no square, so the bullet names Arial's, which every
+        // PowerPoint has: at 130 % it is 0.29 em and stands 0.07 em above the web marker's
+        // centre, a third of the text's size centred on its first line.
         .replace(/<a:buSzPct val="100000"\/><a:buChar char="&#x(\w+);"\/>/g, (_, code: string) => {
           const hue = HUE_OF_MARKER[code];
           const marked = hue ? slideC[hue] : slideC.teal;
-          return `<a:buClr><a:srgbClr val="${marked}"/></a:buClr><a:buSzPct val="80000"/><a:buChar char="&#x${hue ? MARKER_SQUARE : code};"/>`;
+          return `<a:buClr><a:srgbClr val="${marked}"/></a:buClr><a:buSzPct val="130000"/><a:buFont typeface="Arial" pitchFamily="34" charset="0"/><a:buChar char="&#x${hue ? MARKER_SQUARE : code};"/>`;
         }),
     );
     // What a renderer would draw past a box, a card or the slide's edge.
