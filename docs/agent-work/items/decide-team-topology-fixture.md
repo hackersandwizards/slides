@@ -27,10 +27,12 @@ stream teams, two platform teams, three enabling teams and three complicated-sub
 the target team picture of one client enablement deck in talks (`data/presentations/` on
 `origin/main`), copied into this repository on 30.10.2026.
 
-What it shares with that deck, without quoting it: of 15 strings taken from the fixture, 12 stand
-verbatim in that deck file (the review of 10.11. counted 11 of its own 15). They are the platform
-and enabling team names, their descriptions, the named vendor systems and the description of the
-country interfaces. The three strings that miss are stream-team names. The fixture names no client.
+What it shares with that deck, without quoting it: of 19 strings taken from the fixture, 14 stand
+verbatim in that deck file (the review of 10.11. counted 11 of its own 15). The 14 are both
+platform team names with their descriptions and one role line, the three enabling team names, and
+the three complicated-subsystem names (two vendor products and one name for the surrounding
+systems) with their descriptions. The five that miss are the headline, the subtitle and the three
+stream-team names. The fixture names no client.
 `CLAUDE.md` rules out a customer deck and a client term in this repository, and anyone can read
 its history.
 
