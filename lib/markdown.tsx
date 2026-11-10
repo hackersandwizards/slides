@@ -6,6 +6,9 @@ import React from "react";
 export const INLINE_MARKDOWN =
   /(\[[^\]]+\]\([^)\s]+\)|\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?!\s)[^*]*[^\s*]\*|`[^`]+`)/g;
 
+/** Whether `renderMarkdown` draws anything in the text but plain runs. */
+export const hasMarkdown = (text: string) => text.split(INLINE_MARKDOWN).length > 1;
+
 // A browser breaks a line after any hyphen, so "Self-Service" in a narrow box ended one line on
 // "Self-" with "Service?" alone below. A compound up to 24 characters is an inline block: it moves
 // to the next line whole, and breaks inside itself only where it is wider than the line, so it

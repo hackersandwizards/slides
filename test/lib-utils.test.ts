@@ -7,6 +7,8 @@ import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
 import { deprecated } from "../lib/slide-components";
 import {
   arrivedBackwards,
+  bulletsAsStatement,
+  centeredAsStatement,
   closingClaim,
   deckLang,
   opensRevealed,
@@ -273,6 +275,42 @@ describe("merges of 06.11.", () => {
         headline: "H",
       }),
     ).toEqual({ type: "transition", night: true, headline: "H", preText: "Part two · Deep dive" });
+  });
+});
+
+// A statement prints its lines as typed, so markdown keeps a slide as content; a lone bracket or
+// asterisk is no markdown.
+describe("markdown in a headline", () => {
+  const centred = (headline: string): ContentSlide => ({
+    type: "content",
+    layout: "centered",
+    headline,
+    content: [{ type: "paragraph", text: "P" }],
+  });
+  const bullets = (headline: string): ContentSlide => ({
+    type: "content",
+    headline,
+    content: [{ type: "bullets", items: ["One short point"] }],
+  });
+  const split = (headline: string): ContentSlide => ({
+    type: "content",
+    headline,
+    content: [
+      {
+        type: "two-column",
+        left: { title: "L", items: ["a"] },
+        right: { title: "R", items: ["b"] },
+      },
+    ],
+  });
+
+  it.each([
+    ["centred", centred, centeredAsStatement],
+    ["bullets", bullets, bulletsAsStatement],
+    ["split", split, twoColumnAsSplit],
+  ] as const)("%s: redraws past a lone bracket, keeps a link", (_, make, redraw) => {
+    expect(redraw(make("Cost [EUR] * 2"))).toBeDefined();
+    expect(redraw(make("Read [the plan](https://example.com)"))).toBeUndefined();
   });
 });
 

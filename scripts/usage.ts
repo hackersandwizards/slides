@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 // The number of a consumer's deck slides using each catalogue entry, which the public engine cannot
 // read: `slides-usage <deck.json|-> ...` prints it as JSON for the consumer to publish. A slide drawn
-// through a replaced form counts for the entry that replaces it. Exit 1 on a slide no entry draws.
+// through a replaced form counts for the entry that replaces it. Exit 1 on a slide no entry draws,
+// named by its number from 1, as the page counter shows it.
 import { readFileSync } from "node:fs";
 import { GUIDANCE } from "../catalog/guidance";
 import {

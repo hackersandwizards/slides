@@ -5,7 +5,8 @@ import slidesCss from "../styles/slides.css?url";
 import SlideFrame from "./SlideFrame.astro";
 
 export const state = (type: Slide["type"], nth: number, component: string) => {
-  // Astrobook reads a story's args on the server only, so the client bundle leaves out the deck.
+  // Astrobook reads a story's args on the server only, so the client gets none; the deck still
+  // ships in the story bundle, since this module imports it.
   if (!import.meta.env.SSR) return {};
   const slide = slideCatalog.slides.filter((s) => s.type === type)[nth];
   if (!slide) throw new Error(`the specimen deck has no ${type} slide number ${nth + 1}`);

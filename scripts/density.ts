@@ -5,7 +5,8 @@
 // (18 pt on a 960 pt slide) at factor 1 and shrinks with it, so 0.8 keeps it at 29 px. Each listed
 // slide gets a split suggestion: its blocks laid out at full size, grouped into slides that fit.
 // A slide the printed page marks with `data-use` (a content slide of one or two short bullets, or
-// a regular slide drawn as one) fails too, naming the type that carries it.
+// a regular slide drawn as one) fails too, naming the type that carries it. A slide is named by
+// its deck page's path, `/<deck>/<index>`, counted from 0 as the URL counts.
 //
 //   slides-density [--serve "<command>"] <print-url> ...
 //
@@ -90,13 +91,13 @@ async function check(browser: Browser, url: string): Promise<string[]> {
     return (await page.$$eval(".print-slide", measure, NOTICE, [...FIT_STYLE])).map((r) => {
       if ("use" in r) {
         failed++;
-        return `FAIL ${deck}/${r.i} "${r.title}": ${STATEMENT}`;
+        return `FAIL /${deck}/${r.i} "${r.title}": ${STATEMENT}`;
       }
       if ("word" in r) {
         const fail = r.word < FAIL;
         if (fail) failed++;
         else noticed++;
-        return `${fail ? "FAIL" : "NOTICE"} ${deck}/${r.i} heading scale ${r.word.toFixed(2)} "${r.title}": ${WORD}`;
+        return `${fail ? "FAIL" : "NOTICE"} /${deck}/${r.i} heading scale ${r.word.toFixed(2)} "${r.title}": ${WORD}`;
       }
       const level = r.scale < FAIL ? "FAIL" : "NOTICE";
       if (level === "FAIL") failed++;
@@ -105,7 +106,7 @@ async function check(browser: Browser, url: string): Promise<string[]> {
         r.groups > 1
           ? `split into ${r.groups} slides by ${r.label}: ${r.split}`
           : `one ${r.label} is taller than the slide: split its text or show it as a diagram`;
-      return `${level} ${deck}/${r.i} scale ${r.scale.toFixed(2)} "${r.title}": ${hint}`;
+      return `${level} /${deck}/${r.i} scale ${r.scale.toFixed(2)} "${r.title}": ${hint}`;
     });
   } catch (e) {
     broken++;

@@ -1,6 +1,7 @@
 // Named, never the default: the whole file would bundle verbal.json's retired lines, which brand-retired fails on.
 import { claim } from "@hackersandwizards/brand/verbal.json";
 import { cornerMark, resolveSlideLogo } from "./logo";
+import { hasMarkdown } from "./markdown";
 import type {
   AgendaSlide,
   ClosingSlide,
@@ -354,7 +355,7 @@ export function twoColumnAsSplit(slide: ContentSlide): ComparisonSidesSlide | un
   if (slide.stageMarker || slide.stagePrefix) return;
   if (slide.ground || slide.background || slide.layout === "centered") return;
   // The comparison prints its headline and punchline as typed, as centeredAsStatement knows.
-  if (/[`*[]/.test(slide.headline + (slide.footer ?? ""))) return;
+  if ([slide.headline, slide.footer ?? ""].some(hasMarkdown)) return;
   const side = ({ title, items, text }: typeof block.left) =>
     title && items?.length && !text ? { label: title, items } : undefined;
   const left = side(block.left);
@@ -432,7 +433,7 @@ export function centeredAsStatement(slide: ContentSlide): StatementSlide | undef
     slide.layout !== "centered" ||
     slide.footer ||
     slide.sectionTheme === "deepdive" ||
-    /[`*[]/.test(slide.headline)
+    hasMarkdown(slide.headline)
   )
     return;
   const texts: string[] = [];
@@ -475,7 +476,7 @@ export function bulletsAsStatement(slide: ContentSlide): StatementSlide | undefi
   const { subtitle: sub, footer, badge, principle, stageMarker, sectionTheme, headline } = slide;
   if (sub || footer || badge || principle || stageMarker || sectionTheme === "deepdive") return;
   // A statement's lines print as typed, as centeredAsStatement knows.
-  if (/[`*[]/.test(headline)) return;
+  if (hasMarkdown(headline)) return;
   const items = block.items;
   if (!items.length || items.length > 2) return;
   if (!items.every((i) => typeof i === "string" && i.length <= 90)) return;

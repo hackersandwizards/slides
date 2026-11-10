@@ -8,8 +8,9 @@ import typescript from "shiki/langs/typescript.mjs";
 import yaml from "shiki/langs/yaml.mjs";
 import codeTheme from "@hackersandwizards/brand/code-theme.json";
 
-// Synchronous, with the JavaScript regex engine, so a slide renders its code in the same pass on the
-// server, in the browser and in the print route; each token takes its role's brand class
+// Synchronous, with the JavaScript regex engine, so code highlights in the pass that renders it once
+// this module is loaded: slides load it lazily (use-code-highlight.tsx) and show plain lines until
+// then, the print catalog imports it directly. Each token takes its role's brand class
 // (hw-code-<role>), never an inline colour, so the --code-* tokens a container sets colour it.
 const theme = codeTheme as ThemeRegistration;
 const highlighter = createHighlighterCoreSync({

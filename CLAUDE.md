@@ -88,8 +88,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
     state (`state.ts`), drawn by `StorySlide.tsx` as its deck shows it, strip, corner mark and
     page counter included, and entering as a slide reached from the one before; `stories/Parts/`
     one per part, drawing its sheet of variants from `parts.ts`; `stories/Deck/` one per
-    component of `components/deck/`. `test/catalog-stories.test.ts` fails on a type, specimen
-    slide, part or deck component without its story. `Home.astro` renders the shell's home with the foundations.
+    component of `components/deck/`. `test/catalog-stories.test.ts` fails on a type, part or
+    deck component without its story, and on a specimen slide of a type other than an alias without its state. `Home.astro` renders the shell's home with the foundations.
   - The print pages, `pages/catalog/print/` over `print.ts`: `index.html`, a Parts section (every
     part of `primitives.tsx` and `SlideChrome.tsx`, and the chart's `AxisTick`, in each variant, with the slide types using it),
     the Shared elements section (each brand element the slides use as a tile, each exception with
@@ -107,7 +107,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `test/`: the engine's unit tests.
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
-consumer imports, `types/slide`, the three stylesheets (`slides.css`, `sources.css`, and `tokens.css`, which a consumer's design-system page reads), `scripts/render-pdf`, the specimen deck and its
+consumer imports, `types/slide`, the three stylesheets (`slides.css`, `sources.css`, and `tokens.css`, for a consumer's design-system page, which none imports yet), `scripts/render-pdf`, the specimen deck and its
 images, the catalog's `SlideFrame.astro`, and the `slides-density`, `slides-pins`, `slides-usage` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is
 a release. Consumers import by those names, `@hackersandwizards/slides/types/slide`, and ship the source: Next lists
 the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest config in
