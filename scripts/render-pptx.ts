@@ -43,6 +43,8 @@ import {
   speakerLine,
   contentRedrawnAs,
   gridAsContent,
+  labeledGridAsCards,
+  dualPillAsRoadmap,
   regularAsContent,
   TWO_COLUMN_TONES,
   type SideTone,
@@ -124,6 +126,8 @@ function palette(dark: boolean) {
     amber: dark ? hex("--color-amber") : hex("--color-amber-dark"),
     green: dark ? hex("--color-green") : hex("--color-green-dark"),
     red: dark ? hex("--color-red-night") : hex("--color-red"),
+    // The complicated-subsystem team's colour, as DecisionSlide's branch; night lightens it.
+    factory: dark ? hex("--color-factory-light") : hex("--color-factory"),
     neutral: dark ? mix(hex("--color-ampersand"), "FFFFFF", 0.6) : hex("--color-ampersand"),
     // The brand's code palette: night (night-2 on a night deck), its text and its command green.
     code: dark ? hex("--color-night-2") : night,
@@ -1074,6 +1078,8 @@ function codeLines(code: string) {
 }
 
 function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number {
+  // Drawn as the cards block the web draws it as, columns included.
+  if (b.type === "labeled-grid") return blockHeight(labeledGridAsCards(b), c, w, k);
   const o = bodyO(c, k);
   switch (b.type) {
     case "paragraph":
@@ -1145,16 +1151,9 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
       );
     case "hooks":
       return b.items.length * ((PT.base * k * 1.9) / 72 + 0.12);
-    case "labeled-grid":
     case "cards": {
-      const items =
-        b.type === "labeled-grid"
-          ? b.items.map((i) => [i.title, i.subtitle])
-          : b.items.map((i) => [i.title ?? "", cardText(i)]);
-      const cols =
-        b.type === "labeled-grid"
-          ? (b.columns ?? Math.min(items.length, 3))
-          : (b.columns ?? (items.length === 4 ? 2 : Math.min(items.length, 3)));
+      const items = b.items.map((i) => [i.title ?? "", cardText(i)]);
+      const cols = b.columns ?? (items.length === 4 ? 2 : Math.min(items.length, 3));
       const rows = Math.ceil(items.length / cols);
       const cellW = w / cols - 0.2;
       const cell =
@@ -1269,6 +1268,7 @@ function gallery(s: PSlide, ctx: Ctx, b: Extract<ContentBlock, { type: "gallery"
 }
 
 function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, centered: boolean) {
+  if (b.type === "labeled-grid") return drawBlock(s, ctx, labeledGridAsCards(b), a, k, centered);
   const { c } = ctx;
   const o = bodyO(c, k, centered ? { align: "center" } : {});
   switch (b.type) {
@@ -1555,16 +1555,13 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       });
       return;
     }
-    case "labeled-grid":
     case "cards": {
-      const items =
-        b.type === "labeled-grid"
-          ? b.items.map((i) => ({ title: i.title, text: i.subtitle, hi: i.highlighted }))
-          : b.items.map((i, n) => ({ title: i.title, text: cardText(i), hi: b.highlight === n }));
-      const cols =
-        b.type === "labeled-grid"
-          ? (b.columns ?? Math.min(items.length, 3))
-          : (b.columns ?? (items.length === 4 ? 2 : Math.min(items.length, 3)));
+      const items = b.items.map((i, n) => ({
+        title: i.title,
+        text: cardText(i),
+        hi: b.highlight === n,
+      }));
+      const cols = b.columns ?? (items.length === 4 ? 2 : Math.min(items.length, 3));
       const rows = Math.ceil(items.length / cols);
       const cw = (a.w - (cols - 1) * 0.2) / cols;
       const rh = (a.h - (rows - 1) * 0.15) / rows;
@@ -3508,30 +3505,29 @@ const RENDER: {
       });
   },
 
-  roadmap(s, ctx, d, deck) {
-    if (d.columns.some((col) => col.phases))
-      return RENDER["dual-pill-overview"](
-        s,
-        ctx,
-        {
-          type: "dual-pill-overview",
-          preText: d.preText,
-          headline: d.headline,
-          subtitle: d.subtitle,
-          left: { ...d.columns[0], phases: d.columns[0].phases ?? [] },
-          right: { ...d.columns[1], phases: d.columns[1].phases ?? [] },
-        },
-        deck,
-      );
+  // As the web's RoadmapSlide: each column a card holding its items, or its phases as groups of
+  // rows under a caps label.
+  roadmap(s, ctx, d) {
     const { c } = ctx;
     // A row's own marker colour: `tone`, or the class its deprecated `dotColor` names.
-    const marker = (it: RoadmapItem) => {
+    const marker = (it: Pick<RoadmapItem, "tone" | "dotColor">) => {
       const t = it.tone ?? it.dotColor?.slice(3);
       return t ? (c[THEME[t as MarkerTone]] as string) : undefined;
     };
     const y = header(s, ctx, d);
     row(d.columns, BODY(y), 0.35, (col, r) => {
       const tone = col.accent === "deepdive" ? c.purple : c.teal;
+      const groups: {
+        label?: string;
+        hue: string;
+        items: (RoadmapItem & { number?: number })[];
+      }[] = col.phases
+        ? col.phases.map((p) => ({
+            label: p.label,
+            hue: c[THEME[p.theme ?? "secondary"]] as string,
+            items: p.items,
+          }))
+        : [{ hue: tone, items: col.items ?? [] }];
       card(s, r.x, r.y, r.w, r.h, mix(tone, c.bg, 0.05), c.border);
       rect(s, r.x + 0.15, r.y, r.w - 0.3, 0.05, tone);
       chip(s, c, col.label, r.x + 0.25, r.y + 0.25, PT.label * 0.85, mix(tone, c.bg, 0.15), tone);
@@ -3541,17 +3537,35 @@ const RENDER: {
         [
           { runs: md(col.title, c), mono: true, bold: true, rel: PT.h3 / PT.base, after: 4 },
           ...(col.subtitle ? [{ runs: md(col.subtitle, c, { color: c.muted }), after: 10 }] : []),
-          ...(col.items ?? []).flatMap((it) => [
-            {
-              runs: [
-                { text: "•  ", options: { color: marker(it) ?? tone } },
-                { text: it.title, options: { bold: true, fontFace: MONO } },
-              ],
-              after: 2,
-            },
-            ...(it.description
-              ? [{ runs: md(it.description, c, { color: c.muted }), after: 8 }]
+          ...groups.flatMap((g) => [
+            ...(g.label
+              ? [
+                  {
+                    runs: [{ text: g.label.toUpperCase(), options: { color: g.hue } }],
+                    mono: true,
+                    bold: true,
+                    rel: 0.8,
+                    after: 4,
+                  },
+                ]
               : []),
+            ...g.items.flatMap((it) => [
+              {
+                runs: [
+                  it.number === undefined
+                    ? { text: "•  ", options: { color: marker(it) ?? g.hue } }
+                    : {
+                        text: `${it.number}  `,
+                        options: { color: g.hue, bold: true, fontFace: MONO },
+                      },
+                  { text: it.title, options: { bold: true, fontFace: MONO } },
+                ],
+                after: 2,
+              },
+              ...(it.description
+                ? [{ runs: md(it.description, c, { color: c.muted }), after: 8 }]
+                : []),
+            ]),
           ]),
         ],
         r.x + 0.25,
@@ -3568,29 +3582,8 @@ const RENDER: {
     RENDER.transition(s, ctx, deepDiveAsTransition(d), deck);
   },
 
-  "dual-pill-overview"(s, ctx, d) {
-    const { c } = ctx;
-    const y = header(s, ctx, { preText: d.preText, headline: d.headline, subtitle: d.subtitle });
-    row([d.left, d.right], { ...BODY(y), h: Math.min(BOTTOM - y, 3) }, 0.35, (side, r) => {
-      const tone = side.accent === "deepdive" ? c.purple : c.teal;
-      card(s, r.x, r.y, r.w, r.h, mix(tone, c.bg, 0.05), c.border);
-      rect(s, r.x + 0.15, r.y, r.w - 0.3, 0.05, tone);
-      chip(s, c, side.label, r.x + 0.25, r.y + 0.25, PT.label * 0.85, mix(tone, c.bg, 0.15), tone);
-      box(
-        s,
-        c,
-        [
-          { runs: md(side.title, c, { color: tone }), ...TITLE, after: 2 },
-          ...(side.subtitle ? [{ runs: md(side.subtitle, c, { color: c.muted }), rel: 0.6 }] : []),
-        ],
-        r.x + 0.25,
-        r.y + 0.6,
-        r.w - 0.5,
-        0.6,
-        { size: PT.h3, color: c.ink },
-      );
-      pillPhases(s, ctx, side.phases, { x: r.x + 0.25, y: r.y + 1.3, w: r.w - 0.5, h: r.h - 1.4 });
-    });
+  "dual-pill-overview"(s, ctx, d, deck) {
+    RENDER.roadmap(s, ctx, dualPillAsRoadmap(d), deck);
   },
 
   gantt(s, ctx, d) {
@@ -4033,7 +4026,7 @@ const RENDER: {
       [d.no, cy + 0.15],
     ] as const;
     const teamTone = (t: string) =>
-      t === "enabling" ? c.purple : t === "platform" ? c.teal : c.red;
+      t === "enabling" ? c.purple : t === "platform" ? c.teal : c.factory;
     s.addShape("line", {
       x: SIDE + bw * 2.15,
       y: cy - bh / 2 - 0.15,

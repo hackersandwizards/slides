@@ -73,6 +73,7 @@ describe("statement slide", () => {
       attribution: "Mara",
     });
     const text = c.textContent ?? "";
+    expect(text.indexOf("Also said")).toBeGreaterThanOrEqual(0);
     expect(text.indexOf("Also said")).toBeLessThan(text.indexOf("Mara"));
     expect(text.indexOf("Mara")).toBeLessThan(text.indexOf("Our note"));
     expect(c.querySelector(".hw-quote")?.textContent).not.toContain("Our note");
@@ -80,6 +81,7 @@ describe("statement slide", () => {
 
   it("sets a plain closing after the attribution, as the slide's own words", () => {
     const text = statement({ closing: "Our point", attribution: "Mara" }).textContent ?? "";
+    expect(text.indexOf("Mara")).toBeGreaterThanOrEqual(0);
     expect(text.indexOf("Mara")).toBeLessThan(text.indexOf("Our point"));
   });
 
@@ -146,6 +148,6 @@ it.each(slideCatalog.slides.map((slide, i) => [i, slide.type, slide] as const))(
     const SlideComponent = slideComponents[type];
     const { container } = render(<SlideComponent slide={slide} />);
     const content = container.querySelector(".slide-content");
-    if (content) expect(content.parentElement?.hasAttribute("data-hw-scale")).toBe(true);
+    expect(content?.parentElement?.hasAttribute("data-hw-scale")).toBe(true);
   },
 );

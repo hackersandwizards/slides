@@ -13,6 +13,7 @@ import type { ContentSlide, Slide } from "../types/slide";
 import {
   contentRedrawnAs,
   gridAsContent,
+  labeledGridAsCards,
   overviewAsPhases,
   regularAsContent,
   twoColumnAsSplit,
@@ -583,6 +584,48 @@ describe("slides-pptx on the specimen deck", () => {
       .file("ppt/slides/slide1.xml")!
       .async("string");
   };
+
+  // The export drew three forms by rules of its own (F11).
+  it("draws a labeled grid as the cards block the web draws it as", async () => {
+    const block = {
+      type: "labeled-grid" as const,
+      items: [1, 2, 3, 4].map((n) => ({ title: `T${n}`, subtitle: `s${n}` })),
+    };
+    const content = (b: ContentSlide["content"][number]): Slide => ({
+      type: "content",
+      headline: "H",
+      content: [b],
+    });
+    expect(await onlySlide("grid.pptx", content(block))).toBe(
+      await onlySlide("cards.pptx", content(labeledGridAsCards(block))),
+    );
+  });
+
+  it("draws a roadmap's items column beside its phased one", async () => {
+    const xml = await onlySlide("roadmap.pptx", {
+      type: "roadmap",
+      headline: "H",
+      columns: [
+        {
+          label: "A",
+          title: "Phased",
+          accent: "ingredients",
+          phases: [{ label: "P", items: [{ title: "Pill" }] }],
+        },
+        { label: "B", title: "Listed", accent: "deepdive", items: [{ title: "Listed item" }] },
+      ],
+    });
+    expect(xml).toContain("Pill");
+    expect(xml).toContain("Listed item");
+  });
+
+  it("draws a complicated-subsystem branch in the team's colour", async () => {
+    const slide = slideCatalog.slides.find(
+      (x) => x.type === "decision" && x.yes.team === "complicated-subsystem",
+    )!;
+    const factory = tokens["--color-factory"].slice(1).toUpperCase();
+    expect(await onlySlide("decision.pptx", slide)).toContain(`<a:srgbClr val="${factory}"/>`);
+  });
 
   it("draws a centered content slide the statement type takes as that statement", async () => {
     const slide: ContentSlide = {

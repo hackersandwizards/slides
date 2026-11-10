@@ -473,6 +473,7 @@ const sectionText = (s: ContentSection) =>
  *  card; an untitled section is a list, a paragraph, or the closing
  *  callout where it comes last. */
 export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlide | undefined {
+  if (slide.profile) return;
   if (slide.layout === "cards")
     return {
       type: "agenda",
@@ -482,7 +483,6 @@ export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlid
         text: s.title ? (sectionText(s) ?? s.items?.join(", ")) : undefined,
       })),
     };
-  if (slide.profile) return;
   const titled = slide.sections.filter((s) => s.title);
   const grouped: ContentBlock[] =
     titled.length >= 3

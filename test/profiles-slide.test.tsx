@@ -16,7 +16,9 @@ describe("ProfilesSlide", () => {
   });
 
   it("adds nothing without one", () => {
-    const { container } = render(<ProfilesSlide slide={slide} />);
-    expect(container.querySelectorAll("p.text-center")).toHaveLength(0);
+    const footers = (s: ProfilesSlideType) =>
+      render(<ProfilesSlide slide={s} />).container.querySelectorAll("p.border-t-2").length;
+    expect(footers({ ...slide, footer: "We are six." })).toBe(1);
+    expect(footers(slide)).toBe(0);
   });
 });

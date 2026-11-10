@@ -388,8 +388,8 @@ export interface GridCard {
   value?: string;
   label?: string;
   highlight?: boolean;
-  /** The card's tone. The web drops it (merge-cards: colour comes from the role); only the
-   *  PowerPoint export still draws it. */
+  /** The card's tone, which nothing draws (merge-cards: colour comes from the role), the
+   *  PowerPoint export included; kept so a deck that sets it still type-checks. */
   tone?: GridTone;
   /** @deprecated `tone`, under its old name; read until every deck has moved. */
   accentColor?: GridTone;

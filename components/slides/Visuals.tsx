@@ -1,5 +1,5 @@
 import Image from "../ui/image";
-import type { CSSProperties, ReactNode } from "react";
+import { useContext, type CSSProperties, type ReactNode } from "react";
 import type { FlowFrame, VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { useHighlightLines } from "../../lib/use-code-highlight";
@@ -7,6 +7,7 @@ import { renderMarkdown } from "../../lib/markdown";
 import { LONG_FLOW, continuation } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { BeforeAfterSides, CodePanel, DashedFrame, NumberTile, SlideCard } from "./primitives";
+import { DeckLang } from "./SlideShell";
 
 // The diagram vocabulary of a content slide: one relationship per block, drawn so the eye reads
 // the structure before the words. Shared rules, from the deck checklist:
@@ -615,6 +616,7 @@ function Transform({ block }: { block: Of<"transform"> }) {
 }
 
 function Bars({ block }: { block: Of<"bars"> }) {
+  const lang = useContext(DeckLang);
   const anyHighlight = block.bars.some((b) => b.highlight);
   const bars =
     block.order === "given" ? block.bars : [...block.bars].sort((a, b) => b.value - a.value);
@@ -670,7 +672,8 @@ function Bars({ block }: { block: Of<"bars"> }) {
           className={`${q ? "absolute" : "inline-block"} -translate-x-1/2 ${q === 100 ? "max-md:-translate-x-full" : ""}`}
           style={q ? { left: `${q}%` } : undefined}
         >
-          {Math.round((max * q) / 100)}
+          {/* Exact, so a quarter of 10 reads 2.5 where its mark stands. */}
+          {((max * q) / 100).toLocaleString(lang, { maximumFractionDigits: 2 })}
         </span>
       ))}
     </div>

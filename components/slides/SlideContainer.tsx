@@ -142,31 +142,11 @@ export function SlideContainer({ children, logo, theme, page, mark, lang }: Prop
     </div>
   );
 
-  if (Array.isArray(logo)) {
-    return (
-      <div
-        className={viewportClassName}
-        lang={lang}
-        data-theme={theme ? "dark" : "light"}
-        data-hw-night={theme ? "" : undefined}
-      >
-        <BrandStrip />
-        <MotionConfig reducedMotion="user">{slides}</MotionConfig>
-        <div className="slide-corner-start fixed bottom-6 left-6 z-40" aria-hidden="true">
-          <Image
-            src={logo[0].src}
-            alt={logo[0].alt}
-            width={logo[0].width ?? 80}
-            height={logo[0].height ?? 65}
-            className="pointer-events-none h-9 w-auto"
-          />
-        </div>
-        {renderHW(logo[1])}
-      </div>
-    );
-  }
-
-  const displayLogo = logo ?? HW_LOGO;
+  // A list stands its last logo in the corner and the others at the bottom left; an empty list,
+  // like none, the h&w mark.
+  const logos = Array.isArray(logo) ? logo : [logo ?? HW_LOGO];
+  const corner = logos.at(-1) ?? HW_LOGO;
+  const start = logos.slice(0, -1);
 
   return (
     <div
@@ -177,7 +157,24 @@ export function SlideContainer({ children, logo, theme, page, mark, lang }: Prop
     >
       <BrandStrip />
       <MotionConfig reducedMotion="user">{slides}</MotionConfig>
-      {renderHW(displayLogo)}
+      {start.length > 0 && (
+        <div
+          className="slide-corner-start fixed bottom-6 left-6 z-40 flex items-center gap-5"
+          aria-hidden="true"
+        >
+          {start.map((l, i) => (
+            <Image
+              key={i}
+              src={l.src}
+              alt={l.alt}
+              width={l.width ?? 80}
+              height={l.height ?? 65}
+              className="pointer-events-none h-9 w-auto"
+            />
+          ))}
+        </div>
+      )}
+      {renderHW(corner)}
     </div>
   );
 }

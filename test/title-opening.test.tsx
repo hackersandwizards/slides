@@ -25,9 +25,9 @@ describe("title slide opening", () => {
       "One harness",
       "Mara Lindqvist and Jonas Okafor",
     ];
-    expect(order.map((t) => text.indexOf(t))).toEqual(
-      order.map((t) => text.indexOf(t)).sort((a, b) => a - b),
-    );
+    const at = order.map((t) => text.indexOf(t));
+    expect(at.every((i) => i >= 0)).toBe(true);
+    expect(at).toEqual([...at].sort((a, b) => a - b));
     expect(getByText("Delivery Days 2026 · Rotterdam")).toBeTruthy();
     expect(getByAltText("QR code: example.com/harness").getAttribute("src")).toContain("qr.svg");
     expect(getByText("example.com/harness").closest("a")?.getAttribute("href")).toBe(

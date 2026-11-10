@@ -10,13 +10,13 @@ import type { Slide } from "../types/slide";
 describe("chart slide", () => {
   it("renders the annotation of a cycle chart", () => {
     const SlideComponent = slideComponents.chart;
-    const slide = {
+    const slide: Slide = {
       type: "chart",
       variant: "cycle",
-      segments: [{ label: "A", percentage: "50%" }],
+      segments: [{ label: "A", percentage: 50 }],
       annotation: "The note",
     };
-    const { getByText } = render(<SlideComponent slide={slide as Slide} />);
+    const { getByText } = render(<SlideComponent slide={slide} />);
     expect(getByText("The note")).toBeTruthy();
   });
 

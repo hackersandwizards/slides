@@ -4,6 +4,7 @@ import { slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import { renderMarkdown } from "../lib/markdown";
 import type { Slide } from "../types/slide";
+import { DeckLang } from "../components/slides/SlideShell";
 
 const content = (blocks: unknown[]) =>
   render(
@@ -24,6 +25,22 @@ describe("content blocks", () => {
     const bar = figure.previousElementSibling as HTMLElement;
     expect(bar.className).toContain("min-w-1");
     expect(bar.style.width).toContain("var(--bar-room)");
+  });
+
+  // Rounded, a quarter of 10 read 3 under the mark standing at 2.5 (F09).
+  it("numbers a named scale's quarters exactly, in the deck's language", () => {
+    const bars = { type: "bars", max: 10, bars: [{ label: "a", value: 3 }] };
+    const scale = (c: HTMLElement) =>
+      [...c.querySelectorAll("[aria-hidden] > span")].map((e) => e.textContent);
+    expect(scale(content([bars]))).toEqual(["0", "2.5", "5", "7.5", "10"]);
+    const de = render(
+      <DeckLang.Provider value="de">
+        <slideComponents.content
+          slide={{ type: "content", headline: "H", content: [bars] } as Slide}
+        />
+      </DeckLang.Provider>,
+    ).container;
+    expect(scale(de)).toEqual(["0", "2,5", "5", "7,5", "10"]);
   });
 
   it("gives a full-width callout beside bars the full width", () => {
