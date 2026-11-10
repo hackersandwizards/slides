@@ -12,7 +12,7 @@ options:
     detail: The test's fixture takes invented team names and descriptions of the same shape, as the specimen's team-topology slides already use. One commit, no effect on consumers. The current strings stay readable in this public repository's history.
   - key: replace-rewrite-history
     label: Replace the fixture and rewrite the public history
-    detail: The same replacement, plus a history rewrite (git-filter-repo) and a force push to the public repository. Every commit hash from bd66c48 onward changes, so every release tag the consumers pin moves and each consumer reinstalls. The rewrite could also drop the older commits the review lists under F14, which name a client-named theme class and two of talks' deck slugs.
+    detail: The same replacement, plus a history rewrite (git-filter-repo) and a force push to the public repository. Every commit hash from bd66c48 onward changes, so every release tag the consumers pin moves and each consumer reinstalls. The rewrite could also drop the older commits the review lists under F14, which name a client-named theme class and two of talks' deck slugs. Commit 547329a records that Benedikt decided on 10.11. to leave the history for the two client project names this fixture carried until 8c99e8c; this option reopens that.
   - key: leave
     label: Leave the fixture as it is
     detail: The strings carry no client name; the fixture stays the densest real picture the test renders.
@@ -35,6 +35,10 @@ systems) with their descriptions. The five that miss are the headline, the subti
 stream-team names. The fixture names no client.
 `CLAUDE.md` rules out a customer deck and a client term in this repository, and anyone can read
 its history.
+
+The history question for this fixture's two former project names is settled: commit 547329a
+records that Benedikt decided on 10.11. to leave it. This item asks about the strings the fixture
+still holds today.
 
 The recommendation follows from the strings carrying no client name: replacing them ends the match
 at no cost to anyone, while a rewrite moves every release tag the three consumers pin. Source: the
