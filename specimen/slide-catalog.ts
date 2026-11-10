@@ -4,6 +4,7 @@ import type { Presentation, Slide } from "../types/slide";
 import agentSessionPoster from "./slide-catalog/agent-session-poster.png?url&no-inline";
 import agentSessionVideo from "./slide-catalog/agent-session.mp4?url&no-inline";
 import demoVideo from "./slide-catalog/demo.mp4?url&no-inline";
+import partnerMark from "./slide-catalog/partner-mark.png?url&no-inline";
 import portraitA from "./slide-catalog/portrait-a.png?url&no-inline";
 import portraitB from "./slide-catalog/portrait-b.png?url&no-inline";
 import qrExample from "./slide-catalog/qr-example.png?url&no-inline";
@@ -23,6 +24,7 @@ export const specimenImages = {
   "agent-session-poster.png": agentSessionPoster,
   "agent-session.mp4": agentSessionVideo,
   "demo.mp4": demoVideo,
+  "partner-mark.png": partnerMark,
   "portrait-a.png": portraitA,
   "portrait-b.png": portraitB,
   "qr-example.png": qrExample,
@@ -1834,6 +1836,26 @@ const slides: Slide[] = [
       "What would you stop doing on Monday?",
     ],
     notes: "closing: discussion with seed questions, primary background.",
+  },
+  {
+    type: "closing",
+    variant: "contact",
+    line1: "Thank you.",
+    speakers: [
+      { name: "Mara Lindqvist", contact: "mara@example.com", company: "hackers&wizards" },
+      { name: "Lena Brandt", contact: "lena@example.com", company: "Northwind" },
+    ],
+    partners: [
+      {
+        company: "Northwind",
+        src: specimenImages["partner-mark.png"],
+        width: 820,
+        height: 240,
+      },
+    ],
+    claim: false,
+    notes:
+      "closing: contact, two speakers without images, a partner's logo before the lockup, the claim turned off. Fictional people and partner.",
   },
 
   {

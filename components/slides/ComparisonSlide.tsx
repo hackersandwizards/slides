@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useContext, type ReactNode } from "react";
 import type {
   ComparisonGuidanceSlide,
   ComparisonPositionsSlide,
@@ -11,8 +11,8 @@ import { usePrintMode } from "../../lib/print-context";
 import { useCarousel } from "../../lib/use-carousel";
 import { usePhone } from "../../lib/use-progressive-reveal";
 import { BlurFade } from "../ui/blur-fade";
-import { SlideShell } from "./SlideShell";
-import { keepHyphenatedWords } from "../../lib/slide-utils";
+import { DeckLang, SlideShell } from "./SlideShell";
+import { keepHyphenatedWords, WORDS } from "../../lib/slide-utils";
 import {
   BeforeAfterSides,
   DisplayHeading,
@@ -252,6 +252,7 @@ export function Positions({
 
 function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
   const { intro, points, examples } = slide;
+  const lang = useContext(DeckLang);
   // Print and a phone show every example; a screen steps through them.
   const printMode = usePrintMode();
   const phone = usePhone();
@@ -295,7 +296,7 @@ function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
             <div className="grid grid-cols-2 gap-6">
               <SlideCard tone="error" look="soft" className="card-pad-6">
                 <p className="hw-label mb-3 [--hw-label-size:var(--text-sm)]" data-hue="red">
-                  Bad
+                  {WORDS[lang].bad}
                 </p>
                 <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
                   {example.bad}
@@ -304,7 +305,7 @@ function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
 
               <SlideCard tone="success" look="soft" className="card-pad-6">
                 <p className="hw-label mb-3 [--hw-label-size:var(--text-sm)]" data-hue="green">
-                  Good
+                  {WORDS[lang].good}
                 </p>
                 <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
                   {example.good}

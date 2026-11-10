@@ -82,8 +82,14 @@ function afterSubstitution(source: string, i: number): number {
 const specifier = (source: string, l: Literal) =>
   /(?:\bfrom|\bimport|\brequire)\s*\(?\s*$/.test(source.slice(Math.max(0, l.start - 40), l.start));
 
-/** The literals an edit may land on: every plain one but a module specifier. */
-const editable = (source: string) => literals(source).filter((l) => !specifier(source, l));
+/** Whether a literal is a discriminator (`type: "quote"`): it names what the engine draws, so a
+ *  label the engine prints that equals it is none of its text. */
+const discriminator = (source: string, l: Literal) =>
+  /\b(?:type|variant|layout)\s*:\s*$/.test(source.slice(Math.max(0, l.start - 20), l.start));
+
+/** The literals an edit may land on: every plain one but a module specifier or a discriminator. */
+const editable = (source: string) =>
+  literals(source).filter((l) => !specifier(source, l) && !discriminator(source, l));
 
 export function literals(source: string): Literal[] {
   const found: Literal[] = [];
@@ -126,16 +132,34 @@ const showsExactly = (text: string, value: string) =>
     (t) => lines(value) === t || lines(markdownless(value)) === t,
   );
 
+/** Whether a text is two or more other literals side by side, as a title and its subtitle in one
+ *  wrapper: a literal equal to the whole, such as a deck name, is none of what was clicked. */
+function composed(text: string, values: string[]): boolean {
+  const t = squash(text);
+  const parts = [...new Set(values.map((v) => squash(markdownless(v))))].filter(
+    (v) => v && v !== t,
+  );
+  // count[i]: the fewest parts that make up t's first i characters.
+  const count: number[] = [0];
+  for (let i = 1; i <= t.length; i++)
+    for (const p of parts)
+      if (i >= p.length && count[i - p.length] !== undefined && t.endsWith(p, i))
+        count[i] = Math.min(count[i] ?? Infinity, count[i - p.length] + 1);
+  return (count[t.length] ?? 0) >= 2;
+}
+
 /** The source string behind a click. `texts` runs from the clicked element out through its
  *  ancestors; the outermost one that shows a literal wins, so a click on a bold word edits the
- *  whole bullet. `index` names the text that matched. Refused when the text matches no literal,
- *  or more than one in the file. */
+ *  whole bullet, unless that text is other literals side by side. `index` names the text that
+ *  matched. Refused when the text matches no literal, or more than one in the file. */
 export function resolve(
   source: string,
   texts: string[],
 ): { value: string; index: number } | { error: string } {
   const all = editable(source);
+  const values = all.map((l) => l.value);
   for (let index = texts.length - 1; index >= 0; index--) {
+    if (index > 0 && composed(texts[index], values)) continue;
     const hits = all.filter((l) => shows(texts[index], l.value));
     const exact =
       new Set(hits.map((l) => l.value)).size > 1

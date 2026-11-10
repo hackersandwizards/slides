@@ -59,3 +59,25 @@ describe("a discussion closing", () => {
     expect(container.querySelector("canvas, [class*='gradient'], [class*='blur-']")).toBeNull();
   });
 });
+
+// The partners' logos were the engine's own list of two companies and logo paths only one
+// consumer's `public/` held (F13): now each deck names its partners.
+describe("a contact closing's partners", () => {
+  const speakers = [
+    { name: "A", company: "Partner Co" },
+    { name: "B", company: "Elsewhere" },
+  ];
+  it("draws each partner's logo before the lockup, and its speaker without a company line", () => {
+    const partners = [{ company: "partner co", src: "/p.png", width: 4, height: 1 }];
+    const { container } = render(<ClosingSlide slide={{ ...closing, speakers, partners }} />);
+    expect(container.querySelector('img[src="/p.png"]')?.getAttribute("alt")).toBe("partner co");
+    expect(container.textContent).not.toContain("Partner Co");
+    expect(container.textContent).toContain("Elsewhere");
+  });
+
+  it("draws no partner and names every company where the deck names none", () => {
+    const { container } = render(<ClosingSlide slide={{ ...closing, speakers }} />);
+    expect(container.querySelectorAll("img").length).toBe(2);
+    expect(container.textContent).toContain("Partner Co");
+  });
+});

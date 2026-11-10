@@ -258,6 +258,20 @@ describe("numbers block", () => {
       `${+(100 / (7.5 * 0.6)).toFixed(2)}cqi`,
     );
   });
+
+  // F19: lowercase was ASCII only, so "über 50" and "ca. 5" set their words at the figure's size.
+  it.each([
+    ["über 50", "über "],
+    ["ca. 5", "ca. "],
+  ])("sets the lead of %s small", (value, lead) => {
+    const items = [
+      { value, label: "a" },
+      { value: "3x", label: "b" },
+    ];
+    const c = content([{ type: "numbers", items }]);
+    const figure = c.querySelector<HTMLElement>("span[style*='--slide-figure-grid-size']")!;
+    expect(figure.querySelector("span")?.textContent).toBe(lead);
+  });
 });
 
 describe("merged card and number shapes", () => {

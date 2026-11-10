@@ -48,6 +48,7 @@ import {
   regularAsContent,
   TEAM_TYPES,
   TWO_COLUMN_TONES,
+  WORDS,
   type SideTone,
 } from "../lib/slide-utils";
 
@@ -64,8 +65,6 @@ const SIDE = 96 / 144;
 const TOP = 117 / 144;
 const BOTTOM = H - 123 / 144;
 const CW = W - 2 * SIDE;
-/** Ends the name of a marked trend's planned series, as on the web slide. */
-const PLANNED = " (planned)";
 
 /** A list marker in its own hue, written as a private character, which the post-processing turns
  *  into the brand marker in that hue: pptxgenjs writes no bullet colour. */
@@ -545,6 +544,8 @@ interface Ctx {
   warnings: string[];
   /** Per chart number, what `finishChart` sets on it. */
   charts: Map<number, ChartFix>;
+  /** The words the engine prints itself, in the deck's language. */
+  words: (typeof WORDS)["en" | "de"];
 }
 
 /** A deck file's path: a root path under the consumer's public directory, else a file path as it
@@ -2814,8 +2815,8 @@ const RENDER: {
       });
       row(
         [
-          ["BAD", ex.bad, c.red, c.redTint],
-          ["GOOD", ex.good, c.green, c.greenTint],
+          [ctx.words.bad.toUpperCase(), ex.bad, c.red, c.redTint],
+          [ctx.words.good.toUpperCase(), ex.good, c.green, c.greenTint],
         ] as const,
         { x: SIDE, y: ey + 0.35, w: CW, h: eh - 0.35 },
         0.25,
@@ -3056,7 +3057,7 @@ const RENDER: {
           ? []
           : [
               {
-                name: `${name}${PLANNED}`,
+                name: `${name} (${ctx.words.planned})`,
                 labels,
                 values: data.map((p, i) => (i >= now ? pick(p) : null)),
               },
@@ -3241,7 +3242,7 @@ const RENDER: {
             line: { color: c.bg, width: 1.5, dashType: "dash" },
           });
         }
-        const cur = i === (d.currentSegmentIndex ?? 0);
+        const cur = i === d.currentSegmentIndex;
         box(
           s,
           c,
@@ -3385,7 +3386,7 @@ const RENDER: {
     const { c } = ctx;
     if (d.variant === "discussion") {
       // A titled slide, as on the web.
-      const y = header(s, ctx, { headline: d.headline ?? d.line1 ?? "Discussion" });
+      const y = header(s, ctx, { headline: d.headline ?? d.line1 ?? ctx.words.discussion });
       const questions = (d.seedQuestions ?? []).map((q): Para => ({
         runs: md(q, c),
         bullet: true,
@@ -3416,19 +3417,36 @@ const RENDER: {
       const lockH = 91.7 / 144;
       const [path, ratio] = brandCut(`lockup${ctx.dark ? "-night" : ""}`);
       const lockW = lockH * ratio;
+      // As on the web: each partner's logo at the lockup's height, a × after it.
+      const partners = d.partners ?? [];
+      const times = 0.5;
+      const gap = 0.35;
+      const partnerW = partners.map((p) => (lockH * p.width) / p.height);
+      let x = (W - lockW - partnerW.reduce((sum, w) => sum + w + 2 * gap + times, 0)) / 2;
+      partners.forEach((p, i) => {
+        picture(s, ctx, p.src, x, y, partnerW[i], lockH, { alt: p.alt ?? p.company });
+        box(s, c, "×", x + partnerW[i] + gap, y, times, lockH, {
+          size: PT.s6,
+          color: c.muted,
+          align: "center",
+          valign: "middle",
+        });
+        x += partnerW[i] + 2 * gap + times;
+      });
       s.addImage({
         path,
-        x: (W - lockW) / 2,
+        x,
         y,
         w: lockW,
         h: lockH,
         altText: "hackers&wizards",
       });
       y += lockH + 0.45;
+      const shown = new Set(["hackers&wizards", ...partners.map((p) => p.company.toLowerCase())]);
       for (const sp of speakers) {
         const paras: Para[] = [
           { runs: [{ text: sp.name }], mono: true, bold: true, rel: PT.h4 / PT.base, after: 2 },
-          ...(sp.company.toLowerCase() === "hackers&wizards"
+          ...(shown.has(sp.company.toLowerCase())
             ? []
             : [
                 {
@@ -4309,6 +4327,7 @@ export async function renderPptx(
     dark,
     warnings: [],
     charts: new Map(),
+    words: WORDS[deckLang(deck)],
   };
   // A deep-dive slide stands on night, as on the web (`isDeepDive`).
   const nightCtx: Ctx = { ...deckCtx, c: palette(true), dark: true };

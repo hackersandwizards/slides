@@ -690,6 +690,10 @@ export interface ClosingSlide extends Grounded {
     imageSrc?: string;
     linkedIn?: string;
   }[];
+  /** Partners' logos before the lockup of a contact closing without portraits, each followed by
+   *  a ×, at the lockup's height; `width` and `height` are the file's. A speaker whose `company`
+   *  names a partner prints no company line, since the logo shows it. */
+  partners?: { company: string; src: string; alt?: string; width: number; height: number }[];
   /** A line someone said, in quote marks under the speakers. */
   closingQuote?: string;
   /** Brand's claim under the speakers of a contact closing (`verbal.json`), in the deck's language

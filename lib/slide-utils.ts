@@ -193,6 +193,28 @@ export function speakerLine(slide: TitleSlide, deckLang: "en" | "de"): string {
   );
 }
 
+/** The words the engine prints itself, in the deck's language. */
+export const WORDS = {
+  en: {
+    here: "We are here",
+    bad: "Bad",
+    good: "Good",
+    planned: "planned",
+    discussion: "Discussion",
+    printView: "Print view",
+    slides: (n: number) => (n === 1 ? "1 slide" : `${n} slides`),
+  },
+  de: {
+    here: "Wir sind hier",
+    bad: "Schlecht",
+    good: "Gut",
+    planned: "geplant",
+    discussion: "Diskussion",
+    printView: "Druckansicht",
+    slides: (n: number) => (n === 1 ? "1 Folie" : `${n} Folien`),
+  },
+} as const;
+
 /** The four team types of a team-topology slide's legend, in the deck's language: Team
  *  Topologies' own terms, which German decks keep but for the platform team. */
 export const TEAM_TYPES = {

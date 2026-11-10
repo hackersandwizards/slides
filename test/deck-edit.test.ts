@@ -38,6 +38,19 @@ describe("resolve", () => {
     expect(resolve(DECK, ["Agenda"])).toHaveProperty("error");
     expect(resolve(DECK, ["Nowhere"])).toHaveProperty("error");
   });
+
+  // F17: a wrapper of a title and its subtitle showed the deck's name, which the click then
+  // rewrote; an engine label equal to a `type` rewrote the slide's type.
+  it("passes over a wrapper of two strings and never lands on a discriminator", () => {
+    const deck = `export default { name: "Stop. Build.", slides: [{ type: "title", title: "Stop.", subtitle: "Build." }] };`;
+    expect(resolve(deck, ["Stop.", "Stop.Build."])).toEqual({ value: "Stop.", index: 0 });
+    expect(resolve(deck, ["Stop.Build."])).toEqual({ value: "Stop. Build.", index: 0 });
+    expect(resolve(`const s = { type: "quote", text: "A" }`, ["quote"])).toHaveProperty("error");
+    expect(resolve(`const s = { title: "quote" }`, ["quote"])).toEqual({
+      value: "quote",
+      index: 0,
+    });
+  });
 });
 
 describe("replace", () => {

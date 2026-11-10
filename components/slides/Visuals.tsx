@@ -756,10 +756,12 @@ function Bars({ block }: { block: Of<"bars"> }) {
 // A leading hyphen in a figure is a minus: set the typographic one, which sits on the digits' axis.
 const minus = (v: string) => v.replace(/^-(?=\d)/, "−");
 
-// A figure's leading words ("about $2M", "up to +70%"): every lowercase word before the first
-// token that is not one. They are set small, so only the figure itself carries weight; `quiet`
-// sets them in the label's face, where six figures on a slide would otherwise compete with them.
-const leadingWords = (value: string) => /^((?:[a-z]+\s+)+)(?=[^a-z\s])/.exec(value)?.[1] ?? "";
+// A figure's leading words ("about $2M", "up to +70%", "über 50", "ca. 5"): every lowercase word,
+// an abbreviation's dot included, before the first token that is not one. They are set small, so
+// only the figure itself carries weight; `quiet` sets them in the label's face, where six figures
+// on a slide would otherwise compete with them.
+const leadingWords = (value: string) =>
+  /^((?:\p{Ll}+\.?\s+)+)(?=[^\p{Ll}\s])/u.exec(value)?.[1] ?? "";
 
 // A grid of n equal columns. The count is a custom property, never an inline column template,
 // which would outrank the phone rule in slides.css that stacks every grid into one column.

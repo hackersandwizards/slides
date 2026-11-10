@@ -77,6 +77,8 @@ export function DeckEdit({ deck }: { deck: string }) {
     if (!on || !active) return;
     document.documentElement.dataset.deckEdit = "";
     let field: HTMLIFrameElement | null = null;
+    // A press outside an open field commits that field: the click it ends picks nothing.
+    let committing = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     const flash = (text: string, error = false) => {
@@ -140,22 +142,26 @@ export function DeckEdit({ deck }: { deck: string }) {
           frame.style.height = "0";
           frame.style.height = `${Math.min(Math.max(area.scrollHeight + 4, 64), innerHeight - top - 8)}px`;
         };
+        // The field stays open until the write answers, so a refused one keeps what was typed.
         const save = async () => {
           if (done) return;
           done = true;
           const to = area.value;
-          close();
-          if (to === value) return;
+          if (to === value) return close();
           // The save reloads the slide. Arriving "backwards" opens it fully revealed, so the
           // result shows; a host that refreshes in place keeps the slide, and the mark is dropped.
           writeStored("session", directionKey(), "back");
           setTimeout(() => writeStored("session", directionKey(), null), 3000);
           const answer = await ask({ deck, from: value, to });
-          if (answer.ok) flash("Saved. The slide reloads.");
-          else {
+          if (answer.ok) {
+            if (field === frame) close();
+            flash("Saved. The slide reloads.");
+          } else {
             // Nothing was saved, so a reload must open the slide as it was.
             writeStored("session", directionKey(), null);
             flash(answer.error ?? "The write failed.", true);
+            done = false;
+            area.focus();
           }
         };
         area.value = value;
@@ -186,12 +192,18 @@ export function DeckEdit({ deck }: { deck: string }) {
     const outside = (event: Event) => !badge.current?.contains(event.target as Node);
     // Propagation only: the default moves focus, which blurs an open field and so saves it.
     const swallow = (event: Event) => {
-      if (outside(event)) event.stopPropagation();
+      if (!outside(event)) return;
+      event.stopPropagation();
+      committing = !!field;
     };
     const pick = async (event: MouseEvent) => {
       if (!outside(event)) return;
       event.preventDefault();
       event.stopPropagation();
+      if (committing) {
+        committing = false;
+        return;
+      }
       const chain: Element[] = [];
       for (
         let element = event.target as Element | null;

@@ -1,14 +1,14 @@
 "use client";
 
-import { lazy, Suspense, useId, useMemo, useState, type ReactNode } from "react";
+import { lazy, Suspense, useContext, useId, useMemo, useState, type ReactNode } from "react";
 import { domAnimation, LazyMotion, m, useReducedMotion } from "motion/react";
 import { usePrintMode } from "../../lib/print-context";
 import type { ChartSlide as ChartSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
-import { SlideShell } from "./SlideShell";
+import { DeckLang, SlideShell } from "./SlideShell";
 import { SectionHeader } from "./SectionHeader";
 import { useMounted } from "../../lib/use-mounted";
-import { opensRevealed } from "../../lib/slide-utils";
+import { opensRevealed, WORDS } from "../../lib/slide-utils";
 import { ChartFrame, SlideTitle } from "./primitives";
 // recharts is most of a deck page's script and only the trend and bar charts use it, after mount:
 // it loads with the first of them.
@@ -71,8 +71,10 @@ function DrawIn({
 }
 
 function CycleVariant({ slide }: { slide: ChartSlideType }) {
+  const lang = useContext(DeckLang);
   const segments = slide.segments ?? [];
-  const currentSegmentIndex = slide.currentSegmentIndex ?? 0;
+  // No segment is marked where the slide names none.
+  const currentSegmentIndex = slide.currentSegmentIndex ?? -1;
 
   const width = 900;
   const height = 320;
@@ -179,7 +181,7 @@ function CycleVariant({ slide }: { slide: ChartSlideType }) {
                       fill="var(--color-teal)"
                       fontWeight={600}
                     >
-                      We are here
+                      {WORDS[lang].here}
                     </text>
                   </>
                 )}

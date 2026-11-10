@@ -321,13 +321,57 @@ describe("slides-pptx on the specimen deck", () => {
     expect(unescape(xml)).toContain('descr="QR-Code: example.com"');
   });
 
+  it("prints its own words in the deck's language and marks no unnamed cycle segment", async () => {
+    const out = join(dir, "deck-words.pptx");
+    const segments = [
+      { label: "A", percentage: 50 },
+      { label: "B", percentage: 50 },
+    ];
+    await renderPptx(
+      {
+        name: "D",
+        lang: "de",
+        slides: [
+          {
+            type: "comparison",
+            variant: "guidance",
+            headline: "H",
+            examples: [{ title: "T", bad: "b", good: "g" }],
+          },
+          { type: "closing", variant: "discussion" },
+          { type: "chart", variant: "cycle", headline: "C", segments },
+          { type: "chart", variant: "cycle", headline: "C", segments, currentSegmentIndex: 0 },
+        ],
+      },
+      out,
+      dir,
+    );
+    const de = await JSZip.loadAsync(readFileSync(out));
+    const text = async (n: number) =>
+      unescape(
+        (await de.file(`ppt/slides/slide${n}.xml`)!.async("string")).replace(/<[^>]+>/g, " "),
+      );
+    expect(await text(1)).toMatch(/SCHLECHT.*GUT/s);
+    expect(await text(2)).toContain("Diskussion");
+    // The shape that holds the first segment's label, teal where it is marked.
+    const label = async (n: number) => {
+      const xml = await de.file(`ppt/slides/slide${n}.xml`)!.async("string");
+      const before = xml.slice(0, xml.indexOf("<a:t>A</a:t>"));
+      return before.slice(before.lastIndexOf("<p:sp>"));
+    };
+    const teal = `val="${tokens["--color-teal"].slice(1).toUpperCase()}"`;
+    expect(await label(3)).not.toContain(teal);
+    expect(await label(4)).toContain(teal);
+  });
+
   const unmarked = (item: string) => item.replace(/^[-+]\s*/, "");
 
   it("sets every text of a slide as text on that slide", () => {
     const missing = slideCatalog.slides.flatMap((slide: Slide, i) => {
       const shown = norm(unescape(slideText[i]));
       // A stats card shows its label in place of its title, as the web card does.
-      // A closing whose mark stands centred shows the h&w lockup in place of the company's name.
+      // A closing whose mark stands centred shows the h&w lockup, and each partner's logo, in place
+      // of the company's name.
       // An overview draws as phased pills, its stage descriptions gone, as on the web.
       // A vs comparison item's leading + or - is its mark, not its text.
       const data =
@@ -338,8 +382,14 @@ describe("slides-pptx on the specimen deck", () => {
             : slide.type === "closing" && centredMark(slide)
               ? {
                   ...slide,
+                  partners: undefined,
                   speakers: slide.speakers?.map((sp) =>
-                    sp.company.toLowerCase() === "hackers&wizards" ? { ...sp, company: "" } : sp,
+                    [
+                      "hackers&wizards",
+                      ...(slide.partners ?? []).map((p) => p.company.toLowerCase()),
+                    ].includes(sp.company.toLowerCase())
+                      ? { ...sp, company: "" }
+                      : sp,
                   ),
                 }
               : slide.type === "comparison" &&

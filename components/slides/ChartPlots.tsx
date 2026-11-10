@@ -15,9 +15,10 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useContext, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { ChartDataPoint, ChartSlide } from "../../types/slide";
-import { NARROW } from "../../lib/slide-utils";
+import { NARROW, WORDS } from "../../lib/slide-utils";
+import { DeckLang } from "./SlideShell";
 
 /** `still` stops the growth animation, which a PDF would freeze mid-way. */
 interface PlotProps {
@@ -86,6 +87,7 @@ export function TrendPlot({
   seriesLabel = yLabel,
   series2Label,
 }: PlotProps & Pick<ChartSlide, "currentMarker" | "futureNote" | "seriesLabel" | "series2Label">) {
+  const lang = useContext(DeckLang);
   const two = data.some((d) => d.value2 !== undefined);
   const now = data.findIndex((d) => d.name === currentMarker);
   const rows = data.map((d, i) => ({
@@ -189,7 +191,7 @@ export function TrendPlot({
                   key={`${s.key}-plan`}
                   {...line}
                   dataKey={s.plan}
-                  name={`${s.name ?? s.key} (planned)`}
+                  name={`${s.name ?? s.key} (${WORDS[lang].planned})`}
                   stroke={s.stroke}
                   strokeDasharray="12 10"
                   fillOpacity={0}

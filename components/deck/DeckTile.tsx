@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { WORDS } from "../../lib/slide-utils";
 
 const ARROW = (
   <span className="hw-arrow" aria-hidden="true">
@@ -19,6 +20,8 @@ export interface DeckTileProps {
   family: { label: string; hue?: readonly [day: string, night: string] };
   /** A deck in use: more room and a larger title. */
   featured?: boolean;
+  /** The language of the tile's own words, the slide count and the print link: the list's. */
+  lang?: "en" | "de";
 }
 
 /** One deck on a deck list, brand's linked card: the title link stretches over the whole tile, so
@@ -32,7 +35,9 @@ export function DeckTile({
   slideCount,
   family,
   featured = false,
+  lang = "en",
 }: DeckTileProps) {
+  const words = WORDS[lang];
   const [day, night] = family.hue ?? [];
   // Settings of brand's elements rather than utilities: a hub page renders the tile without
   // slides.css, so neither its card-pad-* utility nor its muted text role reaches it there, and
@@ -51,7 +56,7 @@ export function DeckTile({
           {family.label}
         </span>
         <span className="shrink-0 text-small text-current/70 tabular-nums">
-          {slideCount} slides
+          {words.slides(slideCount)}
         </span>
       </div>
       <h3 className={`mt-2 font-heading font-bold ${featured ? "text-body" : "text-small"}`}>
@@ -63,7 +68,7 @@ export function DeckTile({
       {blurb && <p className="mt-1 text-small text-current/70">{blurb}</p>}
       {printHref && (
         <a href={printHref} className="hw-arrow-link inline-block text-small">
-          Print view
+          {words.printView}
           {ARROW}
         </a>
       )}

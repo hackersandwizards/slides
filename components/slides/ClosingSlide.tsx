@@ -14,43 +14,23 @@ import {
   SlideTitle,
   TitledContent,
 } from "./primitives";
-import { claimParts, closingClaim, personAccent, profileLabel } from "../../lib/slide-utils";
+import { claimParts, closingClaim, personAccent, profileLabel, WORDS } from "../../lib/slide-utils";
 
 interface Props {
   slide: ClosingSlideType;
 }
 
-const PARTNERS = [
-  {
-    company: "inoio gmbh",
-    src: "/inoio.png",
-    alt: "inoio gmbh",
-    width: 200,
-    height: 112,
-    className: "h-20 md:h-28",
-  },
-  {
-    company: "digitale leute school",
-    src: "/talk-factory-dls/dl-school-logo.svg",
-    alt: "Digitale Leute School",
-    width: 286,
-    height: 86,
-    className: "h-16 md:h-20",
-  },
-];
-
-/** Companies the contact layout already shows as a logo, so their name is not printed a second
- *  time under the speaker. */
-const COMPANIES_WITH_LOGO = new Set(["hackers&wizards", ...PARTNERS.map((p) => p.company)]);
-
-const partnersOf = (slide: ClosingSlideType) =>
-  PARTNERS.filter((p) => slide.speakers?.some((s) => s.company.toLowerCase() === p.company));
+/** Companies the contact layout shows as a logo, so their name is not printed a second time under
+ *  the speaker. */
+const companiesWithLogo = (slide: ClosingSlideType) =>
+  new Set(["hackers&wizards", ...(slide.partners ?? []).map((p) => p.company.toLowerCase())]);
 
 function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
+  const lang = useContext(DeckLang);
   return (
     <SlideShell ground={groundOf(slide)}>
       <TitledContent>
-        <SlideTitle>{slide.headline ?? slide.line1 ?? "Discussion"}</SlideTitle>
+        <SlideTitle>{slide.headline ?? slide.line1 ?? WORDS[lang].discussion}</SlideTitle>
         {slide.seedQuestions && slide.seedQuestions.length > 0 && (
           <div className="slide-body">
             <div className="w-full space-y-6">
@@ -161,14 +141,14 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
           <>
             <BlurFade delay={0.2} duration={0.5}>
               <div className="slide-closing-mark flex items-center justify-center gap-8 md:gap-12">
-                {partnersOf(slide).map((p) => (
+                {slide.partners?.map((p) => (
                   <span key={p.company} className="flex items-center gap-8 md:gap-12">
                     <Image
                       src={p.src}
-                      alt={p.alt}
+                      alt={p.alt ?? p.company}
                       width={p.width}
                       height={p.height}
-                      className={p.className}
+                      className="h-(--slide-closing-lockup)"
                       style={{ width: "auto" }}
                     />
                     <span className="text-4xl font-normal text-text-subtle md:text-5xl">
@@ -203,7 +183,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                       <p className="font-heading text-xl font-bold text-text md:text-2xl">
                         {speaker.name}
                       </p>
-                      {!COMPANIES_WITH_LOGO.has(speaker.company.toLowerCase()) && (
+                      {!companiesWithLogo(slide).has(speaker.company.toLowerCase()) && (
                         <p
                           className="hw-label mt-1 md:[--hw-label-size:var(--text-sm)]"
                           data-tone="muted"
