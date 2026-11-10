@@ -296,7 +296,7 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
 /** Whether a plot shows at once rather than growing: on a printed slide, on the slide a page load
  *  opens on (a recharts plot mounts after hydration, so it keeps whether its slide hydrated), and
  *  on one opening revealed, such as a catalogue tile, where the growth drew no bar for seconds, and
- *  none in a background tab, which runs no animation frame. */
+ *  none in a background tab. */
 function usePlot() {
   const mounted = useMounted();
   const [opened] = useState(() => !mounted || opensRevealed());

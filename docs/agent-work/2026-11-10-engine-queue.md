@@ -81,13 +81,15 @@ With `prefers-reduced-motion: reduce`, which stops recharts' growth, the print p
 bars at once, so the growth animation is on the path. Animation frames ran at 60 per second in the
 tile throughout. Removing every other frame of the page, starting the frame off-screen and scaling
 it changed nothing; a lone frame on an empty page grows normally. Why the growth waits on the
-print page is not yet explained. A background tab runs no animation frame, so there the tile stays
-empty.
+print page is not yet explained. In a background tab the tile's frame drew no plot at all, not
+even the bar groups; why is not measured.
 
 Fix: a plot on a slide opening revealed draws at once, as on a printed slide and on the slide a
 page load opens on (`usePlot` in `components/slides/ChartSlide.tsx`, which `DrawIn` reads too).
 Revealed is `?revealed`, which every catalogue tile and story page carries, or a slide reached
-backwards, as for every other build step. A deck stepping forward onto a chart still grows it. A chart story in the catalog
+backwards, as for every other build step. Measured on the v2.21.3 build: the bar tile in a background tab draws its bars within 1 s. In
+the deck view story the bar slide grows when reached forward, twice, and shows at once when reached
+backwards. A chart story in the catalog
 no longer shows the growth; the deck view story does. `test/pages/print-chart-cards.test.ts` failed
 before the fix on both tiles (a bar group without its bar, an area under recharts' growing clip)
 and passes after it. The stall itself stays open in
