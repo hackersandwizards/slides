@@ -17,11 +17,12 @@ function call(
   body: Readable | string,
   headers: Record<string, string> = {},
   method = "POST",
+  remoteAddress = "127.0.0.1",
 ): Promise<{ status: number; payload: Record<string, unknown> }> {
   const req = Object.assign(typeof body === "string" ? Readable.from([Buffer.from(body)]) : body, {
     method,
     headers: { host: "127.0.0.1:4324", "content-type": "application/json", ...headers },
-    socket: { localPort: 4324 },
+    socket: { localPort: 4324, remoteAddress },
   }) as unknown as IncomingMessage;
   return new Promise((done) => {
     const res = {
@@ -41,6 +42,17 @@ describe("deckEditHandler", () => {
   it("refuses a page under another name, as a DNS rebinding page arrives", async () => {
     expect((await call("{}", { host: "evil.example:4324" })).status).toBe(403);
     expect((await call("{}", { origin: "http://evil.example" })).status).toBe(403);
+  });
+
+  // Headers are the sender's to choose: a client on the network that sends a loopback Host, or
+  // comes through a local proxy, is still another machine (F04).
+  it("refuses a sender on another machine, directly or through a local proxy", async () => {
+    deck('export const deck = { title: "Agenda" };\n');
+    const edit = JSON.stringify({ deck: "/deck", texts: ["Agenda"] });
+    expect((await call(edit)).status).toBe(200);
+    expect((await call(edit, {}, "POST", "192.168.1.20")).status).toBe(403);
+    expect((await call(edit, { "x-forwarded-for": "192.168.1.20" })).status).toBe(403);
+    expect((await call(edit, {}, "POST", "::ffff:127.0.0.1")).status).toBe(200);
   });
 
   it("takes POST JSON only", async () => {

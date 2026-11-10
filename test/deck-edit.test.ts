@@ -120,6 +120,28 @@ describe("fromLocalPage", () => {
     expect(fromLocalPage("127.0.0.1:8080", null, "4324")).toBe(false);
     expect(fromLocalPage("127.0.0.1:4324", "null", "4324")).toBe(false);
     expect(fromLocalPage("localhost.evil.example:4324", null, "4324")).toBe(false);
+    expect(fromLocalPage("talks.localhost", "http://evil.localhost", "4324")).toBe(false);
+    expect(fromLocalPage("localhost:4324", "http://127.0.0.1:4324", "4324")).toBe(false);
     expect(fromLocalPage(null, null, "4324")).toBe(false);
+  });
+});
+
+// A rewritten import specifier makes the dev server import whatever it then names (F04).
+describe("module specifiers", () => {
+  const source = `import { a } from "./parts";
+import "./side-effect";
+const lazy = () => import("./lazy");
+export { b } from "./more";
+export const deck = { title: "./parts", note: "./lazy" };
+`;
+  it("are never edited, so a deck text of the same value is the one hit", () => {
+    expect(replace(source, "./side-effect", "data:x")).toEqual({
+      error: "The text is no longer in the deck file. Reload and try again.",
+    });
+    expect(replace(source, "./more", "data:x")).toHaveProperty("error");
+    const edited = replace(source, "./parts", "Parts");
+    expect("source" in edited && edited.source).toContain('import { a } from "./parts"');
+    expect("source" in edited && edited.source).toContain('title: "Parts"');
+    expect(resolve(source, ["./lazy"])).toEqual({ value: "./lazy", index: 0 });
   });
 });

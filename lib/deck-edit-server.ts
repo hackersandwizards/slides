@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { check, format, resolveConfig } from "prettier";
-import { fromLocalPage, replace, resolve } from "./deck-edit";
+import { fromLocalPage, fromThisMachine, replace, resolve } from "./deck-edit";
 
 /** The slide edit mode's write endpoint (`lib/deck-edit-mode`) as a Node request handler, which a
  *  host mounts on its dev server only, at `/api/deck-edit` (Astro: `server.middlewares.use` in
@@ -42,7 +42,11 @@ export function deckEditHandler(
       res.end(JSON.stringify(payload));
     };
     const { host, origin } = req.headers;
-    if (!fromLocalPage(host ?? null, origin ?? null, String(req.socket.localPort)))
+    const forwarded = req.headers["x-forwarded-for"];
+    if (
+      !fromThisMachine(req.socket.remoteAddress, [forwarded].flat().join(",") || undefined) ||
+      !fromLocalPage(host ?? null, origin ?? null, String(req.socket.localPort))
+    )
       return send(403, { error: "Local requests only." });
     // JSON only: a cross-site form or beacon cannot set this type without a preflight.
     if (req.method !== "POST" || !req.headers["content-type"]?.startsWith("application/json"))

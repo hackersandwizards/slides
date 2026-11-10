@@ -77,6 +77,14 @@ function afterSubstitution(source: string, i: number): number {
 /** Every plain string literal in a TypeScript source, comments skipped. A template literal holding
  *  `${}` is no plain string and is left out. Regex literals are not recognised: a deck file holds
  *  data, not regexes. */
+/** Whether a literal names a module (`import … from "x"`, `import("x")`, `export … from "x"`,
+ *  `require("x")`): never deck text, and a rewritten one runs whatever it then names. */
+const specifier = (source: string, l: Literal) =>
+  /(?:\bfrom|\bimport|\brequire)\s*\(?\s*$/.test(source.slice(Math.max(0, l.start - 40), l.start));
+
+/** The literals an edit may land on: every plain one but a module specifier. */
+const editable = (source: string) => literals(source).filter((l) => !specifier(source, l));
+
 export function literals(source: string): Literal[] {
   const found: Literal[] = [];
   let i = 0;
@@ -126,7 +134,7 @@ export function resolve(
   source: string,
   texts: string[],
 ): { value: string; index: number } | { error: string } {
-  const all = literals(source);
+  const all = editable(source);
   for (let index = texts.length - 1; index >= 0; index--) {
     const hits = all.filter((l) => shows(texts[index], l.value));
     const exact =
@@ -175,7 +183,7 @@ export function replace(
 ): { source: string } | { error: string } {
   if (!to.trim())
     return { error: "An empty text leaves a gap on the slide. Delete it in the file." };
-  const hits = literals(source).filter((l) => l.value === from);
+  const hits = editable(source).filter((l) => l.value === from);
   if (hits.length !== 1)
     return {
       error: hits.length
@@ -190,8 +198,9 @@ const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
 /** Whether a request to a dev write endpoint comes from a page this machine serves itself. A DNS
  *  rebinding page reaches the dev server under its own name, so the Host must be loopback on the
- *  dev server's `port`, and an Origin, where sent, the same. A `*.localhost` name without a port is
- *  the local Caddy proxy: browsers resolve every `.localhost` name to loopback. */
+ *  dev server's `port`, and an Origin, where sent, the same host. A `*.localhost` name without a
+ *  port is the local Caddy proxy: browsers resolve every `.localhost` name to loopback. Headers
+ *  alone prove nothing about the sender: the server also checks where the request came from. */
 export function fromLocalPage(host: string | null, origin: string | null, port: string): boolean {
   const local = (url: string) => {
     try {
@@ -202,5 +211,29 @@ export function fromLocalPage(host: string | null, origin: string | null, port: 
       return false;
     }
   };
-  return host !== null && local(`http://${host}`) && (origin === null || local(origin));
+  const sameHost = (url: string) => {
+    try {
+      return new URL(url).host === new URL(`http://${host}`).host;
+    } catch {
+      return false;
+    }
+  };
+  return (
+    host !== null &&
+    local(`http://${host}`) &&
+    (origin === null || (local(origin) && sameHost(origin)))
+  );
+}
+
+/** Whether a request reached the dev server from this machine: a loopback socket, and every
+ *  address a local proxy forwarded it for loopback too, since through the proxy every sender's
+ *  socket is loopback. */
+export function fromThisMachine(remote: string | undefined, forwardedFor: string | undefined) {
+  const loopback = (a: string) =>
+    /^(?:127\.\d+\.\d+\.\d+|::1|::ffff:127\.\d+\.\d+\.\d+)$/.test(a.trim());
+  return (
+    remote !== undefined &&
+    loopback(remote) &&
+    (forwardedFor === undefined || forwardedFor.split(",").every(loopback))
+  );
 }
