@@ -193,6 +193,23 @@ export function speakerLine(slide: TitleSlide, deckLang: "en" | "de"): string {
   );
 }
 
+/** The four team types of a team-topology slide's legend, in the deck's language: Team
+ *  Topologies' own terms, which German decks keep but for the platform team. */
+export const TEAM_TYPES = {
+  en: {
+    enabling: "Enabling team",
+    stream: "Stream-aligned team",
+    subsystem: "Complicated-subsystem team",
+    platform: "Platform team",
+  },
+  de: {
+    enabling: "Enabling Team",
+    stream: "Stream-aligned Team",
+    subsystem: "Complicated-Subsystem-Team",
+    platform: "Plattform-Team",
+  },
+} as const;
+
 /** The alt text of a slide's QR code, in the deck's language. */
 export function qrAlt(href: string, lang?: TitleSlide["lang"]): string {
   return `${lang === "de" ? "QR-Code" : "QR code"}: ${linkLabel(href)}`;

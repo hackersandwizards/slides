@@ -46,6 +46,7 @@ import {
   labeledGridAsCards,
   dualPillAsRoadmap,
   regularAsContent,
+  TEAM_TYPES,
   TWO_COLUMN_TONES,
   type SideTone,
 } from "../lib/slide-utils";
@@ -3721,16 +3722,41 @@ const RENDER: {
     footer(s, ctx, d.footer, footH);
   },
 
-  "team-topology"(s, ctx, d) {
+  "team-topology"(s, ctx, d, deck) {
     // The Team Shape Templates as on the web slide: enabling teams vertical on the left, stream
     // teams in teal, complicated subsystems as neutral octagons, the platform under a dotted line.
     const { c } = ctx;
     const y = header(s, ctx, d);
-    const capH = d.caption ? 0.35 : 0;
+    const legH = d.legend ? 0.4 : 0;
+    const capH = (d.caption ? 0.35 : 0) + legH;
     const enW = d.enabling.length ? 2.2 : 0;
     const mainX = SIDE + enW + (enW ? 0.2 : 0);
     const mainW = CW - enW - (enW ? 0.2 : 0);
     type Shape = "stream" | "subsystem" | "platform";
+    // One drawing per team type, which its boxes and its legend swatch both take.
+    const shape = (type: Shape | "enabling", x: number, y: number, w: number, h: number) => {
+      if (type === "enabling") card(s, x, y, w, h, c.purpleTint, c.purple, 0.08);
+      else if (type === "stream") card(s, x, y, w, h, mix(c.teal, c.bg, 0.08), c.teal, 0.08);
+      else if (type === "subsystem")
+        s.addShape("octagon", {
+          x,
+          y,
+          w,
+          h,
+          fill: { color: mix(c.neutral, c.bg, 0.08) },
+          line: { color: c.neutral, width: 1 },
+        });
+      else
+        s.addShape("roundRect", {
+          x,
+          y,
+          w,
+          h,
+          rectRadius: 0.08,
+          fill: { type: "none" },
+          line: { color: c.teal, width: 2, dashType: "sysDot" },
+        });
+    };
     const groups = [
       ...d.streamAligned.map((t) => ({
         name: t.name,
@@ -3760,26 +3786,7 @@ const RENDER: {
       const gy = y + (i + enRow) * (gh + 0.1);
       const x = g.shape === "platform" ? SIDE : mainX;
       const w = g.shape === "platform" ? CW : mainW;
-      if (g.shape === "stream") card(s, x, gy, w, gh, mix(c.teal, c.bg, 0.08), c.teal, 0.08);
-      else if (g.shape === "subsystem")
-        s.addShape("octagon", {
-          x,
-          y: gy,
-          w,
-          h: gh,
-          fill: { color: mix(c.neutral, c.bg, 0.08) },
-          line: { color: c.neutral, width: 1 },
-        });
-      else
-        s.addShape("roundRect", {
-          x,
-          y: gy,
-          w,
-          h: gh,
-          rectRadius: 0.08,
-          fill: { type: "none" },
-          line: { color: c.teal, width: 2, dashType: "sysDot" },
-        });
+      shape(g.shape, x, gy, w, gh);
       box(
         s,
         c,
@@ -3821,7 +3828,7 @@ const RENDER: {
         : (enRows * (gh + 0.1) - 0.1 - (d.enabling.length - 1) * 0.1) / d.enabling.length;
       const ey = enRow ? y : y + i * (eh + 0.1);
       const ex = enRow ? SIDE + i * (enW + 0.2) : SIDE;
-      card(s, ex, ey, enW, eh, c.purpleTint, c.purple, 0.08);
+      shape("enabling", ex, ey, enW, eh);
       box(
         s,
         c,
@@ -3840,8 +3847,35 @@ const RENDER: {
         { size: PT.sm, color: c.ink },
       );
     });
+    if (d.legend) {
+      // As on the web slide: each type drawn here, in the order drawn, a swatch before its name.
+      const words = TEAM_TYPES[deckLang(deck)];
+      const types = (
+        [
+          ["enabling", d.enabling],
+          ["stream", d.streamAligned],
+          ["subsystem", d.complicatedSubsystem ?? []],
+          ["platform", d.platform],
+        ] as const
+      ).filter(([, teams]) => teams.length > 0);
+      let lx = SIDE;
+      const ly = BOTTOM - capH + 0.1;
+      for (const [type] of types) {
+        shape(type, lx, ly + 0.05, 0.33, 0.2);
+        const tw = chipAdvance(words[type], false) * PT.sm + 0.1;
+        box(s, c, words[type], lx + 0.42, ly, tw, 0.3, {
+          size: PT.sm,
+          color: c.muted,
+          valign: "middle",
+        });
+        lx += 0.42 + tw + 0.25;
+      }
+    }
     if (d.caption)
-      box(s, c, d.caption, SIDE, BOTTOM - capH, CW, capH, { size: PT.sm, color: c.muted });
+      box(s, c, d.caption, SIDE, BOTTOM - capH + legH, CW, capH - legH, {
+        size: PT.sm,
+        color: c.muted,
+      });
   },
 
   agenda(s, ctx, d) {

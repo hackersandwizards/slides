@@ -16,6 +16,7 @@ import {
   labeledGridAsCards,
   overviewAsPhases,
   regularAsContent,
+  TEAM_TYPES,
   twoColumnAsSplit,
 } from "../lib/slide-utils";
 
@@ -499,6 +500,15 @@ describe("slides-pptx on the specimen deck", () => {
     expect(xml).toContain("We stopped asking for a release date.");
     const run = xml.slice(0, xml.indexOf("<a:t>Mara Lindqvist"));
     expect(run.slice(run.lastIndexOf("<a:rPr"))).toContain(`val="${muted}"`);
+  });
+
+  it("names a team picture's types under it only where the slide asks for a legend", () => {
+    const at = slideCatalog.slides.flatMap((x, i) => (x.type === "team-topology" ? [i] : []));
+    const named = at.map((i) => slideXml[i].includes(`<a:t>${TEAM_TYPES.en.enabling}</a:t>`));
+    expect(named).toEqual(
+      at.map((i) => !!(slideCatalog.slides[i] as Extract<Slide, { type: "team-topology" }>).legend),
+    );
+    expect(named).toContain(true);
   });
 
   it("fills a lone series' measured part when it holds two points or more", async () => {

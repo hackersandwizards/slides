@@ -1,15 +1,62 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useContext } from "react";
 import type { TeamTopologySlide as TeamTopologySlideType } from "../../types/slide";
 import { keepCompounds } from "../../lib/markdown";
 import { BlurFade } from "../ui/blur-fade";
-import { SlideShell } from "./SlideShell";
+import { TEAM_TYPES } from "../../lib/slide-utils";
+import { DeckLang, SlideShell } from "./SlideShell";
 import { SectionHeader } from "./SectionHeader";
 import { TitledContent, SlideTitle, SlideSubtitle } from "./primitives";
 
 interface Props {
   slide: TeamTopologySlideType;
+}
+
+type TeamType = keyof (typeof TEAM_TYPES)["en"];
+
+// One class per team type, which its boxes and its legend swatch both take. The swatch stands a
+// line tall, so it takes brand's small corner where a box takes the brand corner.
+const SHAPE: Record<TeamType, string> = {
+  enabling: "border-(length:--slide-rule-strong) border-secondary bg-secondary/7",
+  stream: "border-(length:--slide-rule-strong) border-primary bg-primary/7",
+  subsystem: "team-octagon bg-(--slide-ampersand)",
+  platform: "border-(length:--slide-rule-strong) border-dotted border-primary",
+};
+
+function Swatch({ type }: { type: TeamType }) {
+  return type === "subsystem" ? (
+    <span aria-hidden className={`${SHAPE.subsystem} block h-8 w-14 shrink-0`}>
+      <span className="team-octagon block bg-(--slide-ampersand-ground)" />
+    </span>
+  ) : (
+    <span aria-hidden className={`${SHAPE[type]} block h-8 w-14 shrink-0 rounded-brand-sm`} />
+  );
+}
+
+// Each type the slide draws, in the order drawn.
+function Legend({ slide }: Props) {
+  const words = TEAM_TYPES[useContext(DeckLang)];
+  const types = (
+    [
+      ["enabling", slide.enabling],
+      ["stream", slide.streamAligned],
+      ["subsystem", slide.complicatedSubsystem ?? []],
+      ["platform", slide.platform],
+    ] as const
+  )
+    .filter(([, teams]) => teams.length > 0)
+    .map(([type]) => type);
+  return (
+    <ul className="m-0 mt-4 flex list-none flex-wrap gap-x-10 gap-y-3 p-0 text-lg text-text-muted">
+      {types.map((type) => (
+        <li key={type} className="flex items-center gap-3">
+          <Swatch type={type} />
+          {words[type]}
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 // A team's roles as one line of text, each whole behind its own bullet, so a wrap falls between two
@@ -53,7 +100,7 @@ export function TeamTopologySlide({ slide }: Props) {
                 {slide.enabling.map((team) => (
                   <div
                     key={team.name}
-                    className="flex shrink-0 flex-col justify-center gap-1 rounded-brand border-(length:--slide-rule-strong) border-secondary bg-secondary/7 px-4 py-3 md:w-56 md:min-w-min"
+                    className={`${SHAPE.enabling} flex shrink-0 flex-col justify-center gap-1 rounded-brand px-4 py-3 md:w-56 md:min-w-min`}
                   >
                     <span className="card-title text-2xl leading-tight text-secondary">
                       {keepCompounds(team.name)}
@@ -72,7 +119,7 @@ export function TeamTopologySlide({ slide }: Props) {
                   {slide.streamAligned.map((team) => (
                     <div
                       key={team.name}
-                      className="flex flex-col items-start gap-2 rounded-brand border-(length:--slide-rule-strong) border-primary bg-primary/7 px-5 py-3"
+                      className={`${SHAPE.stream} flex flex-col items-start gap-2 rounded-brand px-5 py-3`}
                     >
                       <span className="card-title text-2xl leading-tight text-text">
                         {keepCompounds(team.name)}
@@ -84,7 +131,7 @@ export function TeamTopologySlide({ slide }: Props) {
                   {subsystems.length > 0 && (
                     <div className="flex flex-col gap-4 md:flex-row">
                       {subsystems.map((team) => (
-                        <div key={team.name} className="team-octagon flex-1 bg-(--slide-ampersand)">
+                        <div key={team.name} className={`${SHAPE.subsystem} flex-1`}>
                           <div className="team-octagon flex h-full flex-col justify-center gap-0.5 bg-(--slide-ampersand-ground) px-7 py-3">
                             <span className="card-title text-2xl leading-tight text-text">
                               {keepCompounds(team.name)}
@@ -104,7 +151,9 @@ export function TeamTopologySlide({ slide }: Props) {
             )}
 
             {slide.platform.length > 0 && (
-              <div className="flex flex-col gap-4 rounded-brand border-(length:--slide-rule-strong) border-dotted border-primary p-3 md:flex-row">
+              <div
+                className={`${SHAPE.platform} flex flex-col gap-4 rounded-brand p-3 md:flex-row`}
+              >
                 {slide.platform.map((team) => (
                   <div key={team.name} className="flex flex-1 flex-col gap-1.5 px-2 py-1">
                     <span className="card-title text-2xl leading-tight text-teal-dark">
@@ -121,6 +170,7 @@ export function TeamTopologySlide({ slide }: Props) {
               </div>
             )}
 
+            {slide.legend && <Legend slide={slide} />}
             {slide.caption && <p className="mt-2 text-xl text-text-muted">{slide.caption}</p>}
           </BlurFade>
         </div>

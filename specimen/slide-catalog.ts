@@ -1674,6 +1674,30 @@ const slides: Slide[] = [
     caption: "Fictional organisation: a target picture with every team type.",
     notes: "team-topology: a full proposal, every team type, three platforms and two subsystems.",
   },
+  {
+    type: "team-topology",
+    headline: "The teams around one stream",
+    subtitle: "One stream team, and the teams that make it faster.",
+    streamAligned: [
+      {
+        name: "Booking portal for two markets",
+        roles: ["Business lead", "Product lead", "Embedded field engineer", "Factory engineer"],
+      },
+    ],
+    platform: [
+      { name: "Environments", description: "Cloud, firewall, gateways" },
+      { name: "Storefront", description: "Catalogue, checkout, orders" },
+      { name: "Identity", description: "Login, roles, hierarchy" },
+    ],
+    enabling: [{ name: "Security", experts: ["Guardrails", "Pen-test preparation"] }],
+    complicatedSubsystem: [
+      { name: "CRM", description: "Leads, routing, activities" },
+      { name: "Legacy portal", description: "Data for the migration" },
+    ],
+    legend: true,
+    caption: "Fictional organisation.",
+    notes: "team-topology: legend, naming what each box's colour and shape stand for.",
+  },
 
   {
     type: "wheel",
