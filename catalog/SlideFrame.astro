@@ -155,15 +155,15 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
   /* System colours and the frame's own corner: a consumer's catalog need carry no brand token. */
   .story-close,
   .story-enlarge {
+    display: none;
     padding: 0.5rem 1rem;
-    border: 1px solid currentColor;
+    border: 1px solid;
     border-radius: var(--hw-card-corner);
     background: Canvas;
     color: CanvasText;
     font: inherit;
   }
   .story-close {
-    display: none;
     position: absolute;
     top: 0.5rem;
     right: 0.5rem;
@@ -175,7 +175,6 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
     writing-mode: vertical-rl;
   }
   .story-enlarge {
-    display: none;
     margin: 0.75rem auto 0;
   }
   /* Below this width the card draws a slide's text under 12 px. */

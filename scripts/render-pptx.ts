@@ -113,6 +113,13 @@ function hex(name: keyof typeof tokens): string {
   return value.slice(1).toUpperCase();
 }
 
+/** A brand percentage token as a fraction: `--tint-callout` is `10%`, 0.1. */
+function share(name: keyof typeof tokens): number {
+  const value = tokens[name];
+  if (!/^\d+(\.\d+)?%$/.test(value)) throw new Error(`brand token ${name} is not a percentage`);
+  return parseFloat(value) / 100;
+}
+
 /** `color-mix(in srgb, a p%, b)`, which the tokens use for their tints. */
 function mix(a: string, b: string, p: number): string {
   const ch = (c: string, i: number) => parseInt(c.slice(i, i + 2), 16);
@@ -157,9 +164,12 @@ function palette(dark: boolean) {
     greenTint: mix(dark ? hex("--color-green") : hex("--color-green-dark"), bg, 0.1),
     redTint: mix(dark ? hex("--color-red-night") : hex("--color-red"), bg, 0.08),
     amberTint: mix(hex("--color-amber"), bg, 0.12),
-    // brand's hw-callout, teal or data-hue="purple": the hue at 10 % on white, its night tone at
-    // 14 % on night, no line.
-    callout: (hue: string) => (dark ? mix(hue, bg, 0.14) : mix(hue, "FFFFFF", 0.1)),
+    // brand's hw-callout, teal or data-hue="purple": the hue at --tint-callout on white, its night
+    // tone at --tint-callout-night on night, no line.
+    callout: (hue: string) =>
+      dark
+        ? mix(hue, bg, share("--tint-callout-night"))
+        : mix(hue, hex("--color-white"), share("--tint-callout")),
   };
 }
 type Palette = ReturnType<typeof palette>;

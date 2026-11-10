@@ -382,6 +382,7 @@ const exceptionLinks: Record<string, string[]> = {
   "slide-table": ["block-table"],
   "chart-bars": ["chart", "block-bars"],
   "stage-status": ["frames.html"],
+  "phased-pills-slide": ["phased-pills"],
   "qr-card": ["statement-qr"],
 };
 export const exceptionSections = Object.entries(

@@ -33,7 +33,7 @@ describe("slides-pins", () => {
   it("passes the README's minimum, a later tag and a range starting there", () => {
     for (const pin of [
       tag(minimum),
-      tag("2.10.0"),
+      tag("2.100.0"),
       tag("3.0.0"),
       `^${minimum}`,
       `~${minimum}`,

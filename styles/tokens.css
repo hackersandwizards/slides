@@ -7,8 +7,8 @@
 @theme {
   --radius-brand-sm: var(--slide-radius-sm);
   /* Badge colors: opaque teal tints, for overlapping card borders */
-  --color-badge-bg: color-mix(in srgb, var(--color-teal) 15%, white);
-  --color-badge-border: color-mix(in srgb, var(--color-teal) 25%, white);
+  --color-badge-bg: color-mix(in srgb, var(--color-teal) 15%, var(--color-white));
+  --color-badge-border: color-mix(in srgb, var(--color-teal) 25%, var(--color-white));
   /* The brand-dark theme sets night-2, as the brand's code block and the PPTX export do: not
      inline, so a theme sets it again. */
   --color-code-bg: var(--code-bg);
