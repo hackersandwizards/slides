@@ -31,6 +31,9 @@ const BLOCK_ENTRY: Record<string, string> = {
   transform: "comparison-before-after",
 };
 
+/** A deck as the command reads it: `slug`, where a consumer sets one, names it in errors. */
+type Deck = Presentation & { slug?: string };
+
 const known = (id: string) => Object.hasOwn(GUIDANCE, id);
 
 /** The block a deprecated block draws as, so it counts in the shape on screen. */
@@ -98,10 +101,12 @@ if (import.meta.main) {
   // A file, or `-` for standard input, holds one deck or an array of decks, so a consumer whose
   // decks are code pipes them all in one call.
   const decks = paths.flatMap((path) => {
-    const read = JSON.parse(readFileSync(path === "-" ? 0 : path, "utf8")) as
-      Presentation | Presentation[];
-    const list = Array.isArray(read) ? read : [read];
-    return list.map((deck, i) => ({ deck, name: Array.isArray(read) ? `${path}[${i}]` : path }));
+    const read = JSON.parse(readFileSync(path === "-" ? 0 : path, "utf8")) as Deck | Deck[];
+    if (!Array.isArray(read)) return [{ deck: read, name: path }];
+    return read.map((deck, i) => {
+      const label = [deck?.slug, deck?.name].find((n) => typeof n === "string" && n);
+      return { deck, name: label ? `${label} (${path}[${i}])` : `${path}[${i}]` };
+    });
   });
   if (!decks.length) {
     console.error("slides-usage: no deck to count");

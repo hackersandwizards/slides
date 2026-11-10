@@ -61,7 +61,8 @@ The command `slides-usage <deck.json|-> ...` prints, as JSON, how many slides of
 entry of the catalogue's print page, and which entries none uses, for a consumer to publish. A slide
 drawn through a replaced form counts for the entry that replaces it. It fails on a slide no entry draws. Each
 argument, `-` for standard input, holds one deck or a JSON array of decks, so a consumer whose
-decks are code pipes them all in at once; no deck at all fails.
+decks are code pipes them all in at once; no deck at all fails. An error names a deck of an array
+by its `slug`, where the consumer sets one, else its `name`, and by its place in the array.
 
 The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]` writes a deck as a native
 PowerPoint file in the h&w design: text as text boxes, tables as tables, trend and bar charts as

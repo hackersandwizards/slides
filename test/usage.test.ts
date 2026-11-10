@@ -126,4 +126,18 @@ describe("slides-usage", () => {
     expect(empty.status).toBe(1);
     expect(empty.stderr).toContain("no deck");
   });
+
+  it("names a broken deck in an array by its slug, else its name, with its place", () => {
+    const deck = { slides: [{ type: "agenda", headline: "h", items: [] }] };
+    const broken = { slides: [{ type: "nope" }] };
+    const named = [{ ...broken, slug: "kickoff" }, { ...broken, slug: "", name: "Retro" }, broken];
+    const { code, err } = run([deck, ...named]);
+    expect(code).toBe(1);
+    expect(err).toMatch(/kickoff \(\S+\[1\]\) slide 1: type nope/);
+    expect(err).toMatch(/Retro \(\S+\[2\]\) slide 1: type nope/);
+    expect(err).toMatch(/\.json\[3\] slide 1: type nope/);
+    const noDeck = run([deck, { name: "Draft" }]);
+    expect(noDeck.code).toBe(1);
+    expect(noDeck.err).toMatch(/Draft \(\S+\[1\]\) is no deck/);
+  });
 });
