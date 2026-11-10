@@ -91,7 +91,7 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
   const printMode = usePrintMode();
   // With `revealPunchline`, step 2 keeps the right side lit and adds the punchline.
   const lastStep = slide.punchline && slide.revealPunchline ? 2 : 1;
-  const [activeIndex] = useCarousel({
+  const [activeIndex, , stepped] = useCarousel({
     count: lastStep + 1,
     initial: printMode ? -1 : 0,
     enabled: !printMode,
@@ -104,7 +104,7 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
     <>
       <div className="grid w-full grid-cols-2 gap-8">
         {sides.map((side, i) => {
-          const isActive = Math.min(activeIndex, 1) === i || printMode;
+          const isActive = !stepped || Math.min(activeIndex, 1) === i;
           const pros = side.items.filter((item) => !item.startsWith("-"));
           const cons = side.items.filter((item) => item.startsWith("-"));
 

@@ -18,6 +18,7 @@ import type {
   GuidanceSlide,
   MediaSlide,
   OverviewSlide,
+  TeamTopologySlide,
   PhasedPillsSlide,
   Presentation,
   ProcessSlide,
@@ -194,6 +195,9 @@ export function speakerLine(slide: TitleSlide, deckLang: "en" | "de"): string {
   );
 }
 
+/** A figure the engine prints from a number: exact to two decimals, ungrouped. */
+const FIGURE = { maximumFractionDigits: 2, useGrouping: false } as const;
+
 /** The words the engine prints itself, in the deck's language. */
 export const WORDS = {
   en: {
@@ -203,7 +207,16 @@ export const WORDS = {
     planned: "planned",
     discussion: "Discussion",
     printView: "Print view",
+    milestones: "Milestones",
     slides: (n: number) => (n === 1 ? "1 slide" : `${n} slides`),
+    figure: (n: number) => n.toLocaleString("en", FIGURE),
+    // Team Topologies' own terms, which German decks keep but for the platform team.
+    teams: {
+      enabling: "Enabling team",
+      stream: "Stream-aligned team",
+      subsystem: "Complicated-subsystem team",
+      platform: "Platform team",
+    },
   },
   de: {
     here: "Wir sind hier",
@@ -212,26 +225,35 @@ export const WORDS = {
     planned: "geplant",
     discussion: "Diskussion",
     printView: "Druckansicht",
+    milestones: "Meilensteine",
     slides: (n: number) => (n === 1 ? "1 Folie" : `${n} Folien`),
+    figure: (n: number) => n.toLocaleString("de", FIGURE),
+    teams: {
+      enabling: "Enabling Team",
+      stream: "Stream-aligned Team",
+      subsystem: "Complicated-Subsystem-Team",
+      platform: "Plattform-Team",
+    },
   },
 } as const;
 
-/** The four team types of a team-topology slide's legend, in the deck's language: Team
- *  Topologies' own terms, which German decks keep but for the platform team. */
-export const TEAM_TYPES = {
-  en: {
-    enabling: "Enabling team",
-    stream: "Stream-aligned team",
-    subsystem: "Complicated-subsystem team",
-    platform: "Platform team",
-  },
-  de: {
-    enabling: "Enabling Team",
-    stream: "Stream-aligned Team",
-    subsystem: "Complicated-Subsystem-Team",
-    platform: "Plattform-Team",
-  },
-} as const;
+/** The types of team a team-topology slide draws, in the order drawn: its legend's rows. */
+export const teamTypesDrawn = (slide: TeamTopologySlide) =>
+  (
+    [
+      ["enabling", slide.enabling],
+      ["stream", slide.streamAligned],
+      ["subsystem", slide.complicatedSubsystem ?? []],
+      ["platform", slide.platform],
+    ] as const
+  )
+    .filter(([, teams]) => teams.length > 0)
+    .map(([type]) => type);
+
+/** Companies a contact closing shows as a logo, so their name is not printed a second time under
+ *  the speaker. */
+export const companiesWithLogo = (slide: ClosingSlide) =>
+  new Set(["hackers&wizards", ...(slide.partners ?? []).map((p) => p.company.toLowerCase())]);
 
 /** The alt text of a slide's QR code, in the deck's language. */
 export function qrAlt(href: string, lang?: TitleSlide["lang"]): string {

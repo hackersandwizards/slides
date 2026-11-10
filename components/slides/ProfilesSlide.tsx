@@ -38,7 +38,7 @@ const ACCENT = {
 
 export function ProfilesSlide({ slide }: Props) {
   // At -1 no profile is highlighted.
-  const [highlightIndex] = useCarousel({ count: slide.profiles.length, min: -1 });
+  const [highlightIndex, , stepped] = useCarousel({ count: slide.profiles.length, min: -1 });
 
   return (
     <SlideShell>
@@ -52,7 +52,7 @@ export function ProfilesSlide({ slide }: Props) {
             className={`flex w-full flex-col justify-center gap-10 md:flex-row ${slide.profiles.length === 1 ? "max-w-5xl" : ""}`}
           >
             {slide.profiles.map((profile, index) => {
-              const isHighlighted = index === highlightIndex;
+              const isHighlighted = stepped && index === highlightIndex;
               const a = ACCENT[personAccent(index)];
 
               return (

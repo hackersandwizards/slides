@@ -29,7 +29,7 @@ describe("content blocks", () => {
 
   // Rounded, a quarter of 10 read 3 under the mark standing at 2.5 (F09).
   it("numbers a named scale's quarters exactly, in the deck's language", () => {
-    const bars = { type: "bars", max: 10, bars: [{ label: "a", value: 3 }] };
+    const bars = { type: "bars", max: 10, bars: [{ label: "a", value: 2.5 }] };
     const scale = (c: HTMLElement) =>
       [...c.querySelectorAll("[aria-hidden] > span")].map((e) => e.textContent);
     expect(scale(content([bars]))).toEqual(["0", "2.5", "5", "7.5", "10"]);
@@ -41,6 +41,8 @@ describe("content blocks", () => {
       </DeckLang.Provider>,
     ).container;
     expect(scale(de)).toEqual(["0", "2,5", "5", "7,5", "10"]);
+    // The bar's own figure takes the scale's decimal mark.
+    expect(de.textContent).toContain("a2,5");
   });
 
   it("sets a quote behind brand's rule, its source inside the rule and linked", () => {
@@ -535,18 +537,24 @@ describe("a staggered timeline", () => {
           }
         />,
       ).container.querySelectorAll<HTMLElement>(".max-md\\:hidden [aria-hidden] > div"),
-    ].map((e) => [e.dataset.dashed === "true", e.style.left, e.style.right]);
+    ].map((e) => [
+      e.dataset.dashed === "true",
+      e.style.left,
+      e.style.right,
+      e.style.getPropertyValue("--slide-timeline-rule").split(" ")[0],
+    ]);
 
   it("is solid up to now's dot and dashed after it", () => {
     // 16 tracks; the third stage's dot stands 6 tracks in.
+    // Each run takes the heavy rule every timeline line takes.
     expect(runs(2)).toEqual([
-      [false, "12.5%", "62.5%"],
-      [true, "37.5%", "12.5%"],
+      [false, "12.5%", "62.5%", "var(--slide-rule-heavy)"],
+      [true, "37.5%", "12.5%", "var(--slide-rule-heavy)"],
     ]);
   });
 
   it("is solid to the last dot where no stage is ahead", () => {
-    expect(runs()[0]).toEqual([false, "12.5%", "12.5%"]);
+    expect(runs()[0]).toEqual([false, "12.5%", "12.5%", "var(--slide-rule-heavy)"]);
   });
 });
 

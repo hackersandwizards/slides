@@ -21,14 +21,16 @@ interface UseCarouselOptions {
  * Arrow-key stepper shared by the highlight / step-through slides. ArrowRight
  * advances toward `count - 1`, ArrowLeft retreats toward `min`. Each handler
  * returns true only when the index actually moved, so at the ends the key falls
- * through to SlideNavigation and the deck advances to the adjacent slide.
+ * through to SlideNavigation and the deck advances to the adjacent slide. The third
+ * value, `stepped`, is false in print and on a phone, where every step shows and none
+ * is the one a press reached: a slide highlights nothing then.
  */
 export function useCarousel({
   count,
   min = 0,
   initial,
   enabled = true,
-}: UseCarouselOptions): [number, Dispatch<SetStateAction<number>>] {
+}: UseCarouselOptions): [number, Dispatch<SetStateAction<number>>, boolean] {
   const [index, setIndex] = useState(initial ?? min);
   const max = count - 1;
   // A slide opening revealed opens at the last step, as a reveal slide does, after
@@ -64,5 +66,5 @@ export function useCarousel({
     undoable: index > min,
   });
 
-  return [phone ? max : index, setIndex];
+  return [phone ? max : index, setIndex, keys];
 }

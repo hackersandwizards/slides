@@ -5,7 +5,7 @@ import type { Slide } from "../types/slide";
 import { wholeText } from "./fixtures/whole-text";
 import { teamTopologySlide } from "./fixtures/team-topology";
 import { DeckLang } from "../components/slides/SlideShell";
-import { TEAM_TYPES } from "../lib/slide-utils";
+import { WORDS } from "../lib/slide-utils";
 
 describe("TeamTopologySlide", () => {
   it("renders every team of all four types with its chips from the registry", () => {
@@ -62,9 +62,9 @@ describe("TeamTopologySlide legend", () => {
     );
     const items = [...legendOf(container)!.querySelectorAll("li")];
     expect(items.map((li) => li.textContent)).toEqual([
-      TEAM_TYPES.de.enabling,
-      TEAM_TYPES.de.stream,
-      TEAM_TYPES.de.platform,
+      WORDS.de.teams.enabling,
+      WORDS.de.teams.stream,
+      WORDS.de.teams.platform,
     ]);
     const box = [...container.querySelectorAll(".card-title")].find(
       (e) => e.textContent === teamTopologySlide.streamAligned[0].name,

@@ -4,7 +4,7 @@ import type { FlowFrame, VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { useHighlightLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
-import { LONG_FLOW, continuation } from "../../lib/slide-utils";
+import { LONG_FLOW, WORDS, continuation } from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { BeforeAfterSides, CodePanel, DashedFrame, NumberTile, SlideCard } from "./primitives";
 import { DeckLang } from "./SlideShell";
@@ -550,11 +550,7 @@ function Staggered({
     <div
       className="absolute top-1/2 -translate-y-1/2"
       data-dashed={dashed || undefined}
-      style={{
-        left,
-        right,
-        borderTop: `calc(var(--spacing) * 1) ${dashed ? "dashed" : "solid"} ${GREY}`,
-      }}
+      style={{ left, right, ...timelineRule(dashed), borderTop: "var(--slide-timeline-rule)" }}
     />
   );
   return (
@@ -632,7 +628,7 @@ function Transform({ block }: { block: Of<"transform"> }) {
 }
 
 function Bars({ block }: { block: Of<"bars"> }) {
-  const lang = useContext(DeckLang);
+  const number = WORDS[useContext(DeckLang)].figure;
   const anyHighlight = block.bars.some((b) => b.highlight);
   const bars =
     block.order === "given" ? block.bars : [...block.bars].sort((a, b) => b.value - a.value);
@@ -688,9 +684,8 @@ function Bars({ block }: { block: Of<"bars"> }) {
           className={`${q ? "absolute" : "inline-block"} -translate-x-1/2 ${q === 100 ? "max-md:-translate-x-full" : ""}`}
           style={q ? { left: `${q}%` } : undefined}
         >
-          {/* Exact, so a quarter of 10 reads 2.5 where its mark stands; ungrouped, as the bars'
-              own figures. */}
-          {((max * q) / 100).toLocaleString(lang, { maximumFractionDigits: 2, useGrouping: false })}
+          {/* Exact, so a quarter of 10 reads 2.5 where its mark stands. */}
+          {number((max * q) / 100)}
         </span>
       ))}
     </div>
@@ -721,7 +716,8 @@ function Bars({ block }: { block: Of<"bars"> }) {
     <span
       className={`font-heading ${inline ? "text-4xl" : "text-5xl"} whitespace-nowrap ${tone(bar, "font-bold")}`}
     >
-      {bar.display ?? (bar.from != null ? `${bar.from}–${bar.value}` : bar.value)}
+      {bar.display ??
+        (bar.from != null ? `${number(bar.from)}–${number(bar.value)}` : number(bar.value))}
     </span>
   );
   return (

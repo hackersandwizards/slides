@@ -46,7 +46,8 @@ import {
   labeledGridAsCards,
   dualPillAsRoadmap,
   regularAsContent,
-  TEAM_TYPES,
+  teamTypesDrawn,
+  companiesWithLogo,
   TWO_COLUMN_TONES,
   WORDS,
   type SideTone,
@@ -446,18 +447,11 @@ const chipAdvance = (text: string, mono: boolean) =>
 const chipWidth = (text: string, size: number, mono: boolean) =>
   chipAdvance(text, mono) * size + 0.3;
 
-/** The type size at which a row of chips `gap` apart fits `width`: `size`, or smaller where the
- *  row would run past it, down to half of it, past which it warns. */
-function rowSize(
-  ctx: Ctx,
-  texts: string[],
-  size: number,
-  mono: boolean,
-  gap: number,
-  width: number,
-) {
+/** The type size at which a row of chips in the sans face `gap` apart fits `width`: `size`, or
+ *  smaller where the row would run past it, down to half of it, past which it warns. */
+function rowSize(ctx: Ctx, texts: string[], size: number, gap: number, width: number) {
   const fixed = texts.length * 0.3 + (texts.length - 1) * gap;
-  const per = texts.reduce((sum, t) => sum + chipAdvance(t, mono), 0);
+  const per = texts.reduce((sum, t) => sum + chipAdvance(t, false), 0);
   const fit = (width - fixed) / per;
   if (fit < size / 2) ctx.warnings.push(`chips ${texts.join(", ")}: wider than the slide holds`);
   return Math.max(size / 2, Math.min(size, fit));
@@ -531,9 +525,13 @@ function brandLogo(name: string): string {
 
 /** A brand logo's path and its width over its height, read from the file, since each cut has its
  *  own (the night lockup is wider than the day one). */
+const cuts = new Map<string, [string, number]>();
 function brandCut(name: string): [string, number] {
+  const known = cuts.get(name);
+  if (known) return known;
   const path = brandLogo(name);
   const [w, h] = imageSize(readFileSync(path))!;
+  cuts.set(name, [path, w / h]);
   return [path, w / h];
 }
 
@@ -1904,7 +1902,9 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
               {
                 text:
                   bar.display ??
-                  (bar.from != null ? `${bar.from}–${bar.value}` : String(bar.value)),
+                  (bar.from != null
+                    ? `${ctx.words.figure(bar.from)}–${ctx.words.figure(bar.value)}`
+                    : ctx.words.figure(bar.value)),
               },
             ],
           },
@@ -3025,7 +3025,7 @@ const RENDER: {
         valign: "middle",
       });
       let x = SIDE + 2;
-      const size = rowSize(ctx, lane.stages, PT.sm, false, 0.3, SIDE + CW - 0.25 - x);
+      const size = rowSize(ctx, lane.stages, PT.sm, 0.3, SIDE + CW - 0.25 - x);
       lane.stages.forEach((st, j) => {
         const w = chip(s, c, st, x, ly + lh / 2 - (size * 1.9) / 144, size, c.card, c.ink, false);
         x += w;
@@ -3447,7 +3447,7 @@ const RENDER: {
         altText: "hackers&wizards",
       });
       y += lockH + 0.45;
-      const shown = new Set(["hackers&wizards", ...partners.map((p) => p.company.toLowerCase())]);
+      const shown = companiesWithLogo(d);
       for (const sp of speakers) {
         const paras: Para[] = [
           { runs: [{ text: sp.name }], mono: true, bold: true, rel: PT.h4 / PT.base, after: 2 },
@@ -3720,7 +3720,7 @@ const RENDER: {
       box(
         s,
         c,
-        { runs: [{ text: (d.milestonesLabel ?? "Milestones").toUpperCase() }] },
+        { runs: [{ text: (d.milestonesLabel ?? ctx.words.milestones).toUpperCase() }] },
         SIDE,
         my,
         lw - 0.15,
@@ -3733,19 +3733,22 @@ const RENDER: {
           align: "right",
         },
       );
-      for (const m of d.milestones) {
-        const mx = gx + (m.column - 1) * colW;
+      // Milestones of one column stack under one rule, as on the web.
+      for (const [column, ms] of Map.groupBy(d.milestones, (m) => m.column)) {
+        const mx = gx + (column - 1) * colW;
         rect(s, mx, my + 0.02, colW * 0.9, 0.025, c.purple);
-        box(s, c, m.label, mx, my + 0.08, Math.min(colW * 1.5, W - SIDE - mx), 0.25, {
-          size: PT.label,
-          color: c.purple,
-        });
+        ms.forEach((m, k) =>
+          box(s, c, m.label, mx, my + 0.08 + k * 0.25, Math.min(colW * 1.5, W - SIDE - mx), 0.25, {
+            size: PT.label,
+            color: c.purple,
+          }),
+        );
       }
     }
     footer(s, ctx, d.footer, footH);
   },
 
-  "team-topology"(s, ctx, d, deck) {
+  "team-topology"(s, ctx, d) {
     // The Team Shape Templates as on the web slide: enabling teams vertical on the left, stream
     // teams in teal, complicated subsystems as neutral octagons, the platform under a dotted line.
     const { c } = ctx;
@@ -3872,18 +3875,10 @@ const RENDER: {
     });
     if (d.legend) {
       // As on the web slide: each type drawn here, in the order drawn, a swatch before its name.
-      const words = TEAM_TYPES[deckLang(deck)];
-      const types = (
-        [
-          ["enabling", d.enabling],
-          ["stream", d.streamAligned],
-          ["subsystem", d.complicatedSubsystem ?? []],
-          ["platform", d.platform],
-        ] as const
-      ).filter(([, teams]) => teams.length > 0);
+      const words = ctx.words.teams;
       let lx = SIDE;
       const ly = BOTTOM - capH + 0.1;
-      for (const [type] of types) {
+      for (const type of teamTypesDrawn(d)) {
         shape(type, lx, ly + 0.05, 0.33, 0.2);
         const tw = chipAdvance(words[type], false) * PT.sm + 0.1;
         box(s, c, words[type], lx + 0.42, ly, tw, 0.3, {
@@ -4265,7 +4260,7 @@ function pillPhases(
     let x = a.x;
     const title = (it: (typeof p.items)[number]) =>
       it.number === undefined ? it.title : `#${it.number} ${it.title}`;
-    const size = rowSize(ctx, p.items.map(title), PT.sm * 0.9, false, 0.12, a.w);
+    const size = rowSize(ctx, p.items.map(title), PT.sm * 0.9, 0.12, a.w);
     for (const it of p.items) {
       const on = it.state === "active" || it.state === "new";
       const w = chip(

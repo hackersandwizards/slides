@@ -14,16 +14,18 @@ import {
   SlideTitle,
   TitledContent,
 } from "./primitives";
-import { claimParts, closingClaim, personAccent, profileLabel, WORDS } from "../../lib/slide-utils";
+import {
+  claimParts,
+  closingClaim,
+  companiesWithLogo,
+  personAccent,
+  profileLabel,
+  WORDS,
+} from "../../lib/slide-utils";
 
 interface Props {
   slide: ClosingSlideType;
 }
-
-/** Companies the contact layout shows as a logo, so their name is not printed a second time under
- *  the speaker. */
-const companiesWithLogo = (slide: ClosingSlideType) =>
-  new Set(["hackers&wizards", ...(slide.partners ?? []).map((p) => p.company.toLowerCase())]);
 
 function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
   const lang = useContext(DeckLang);

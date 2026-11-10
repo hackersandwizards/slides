@@ -3,6 +3,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { useCarousel } from "../lib/use-carousel";
 import { PrintProvider } from "../lib/print-context";
 import { phoneWidth } from "./phone-width";
+import { render } from "@testing-library/react";
+import { slideComponents } from "../lib/slide-components";
+import type { Slide } from "../types/slide";
 
 function pressKey(key: string): boolean {
   const event = new KeyboardEvent("keydown", { key, cancelable: true, bubbles: true });
@@ -78,6 +81,35 @@ describe("useCarousel", () => {
     expect(result.current[0]).toBe(2);
     expect(pressKey("ArrowRight")).toBe(false);
     expect(pressKey("ArrowLeft")).toBe(false);
+  });
+
+  // Showing every step is no step taken: the slides draw a phone as print draws them.
+  it("lights both sides of a vs slide and no profile on a phone", () => {
+    phoneWidth();
+    const side = (label: string) => ({ label, items: ["+ a"] });
+    const vs = render(
+      <slideComponents.comparison
+        slide={
+          {
+            type: "comparison",
+            variant: "vs",
+            headline: "H",
+            left: side("L"),
+            right: side("R"),
+          } as Slide
+        }
+      />,
+    ).container;
+    expect(vs.querySelectorAll('.hw-card[data-variant="tint"]')).toHaveLength(2);
+    const person = (name: string) => ({ name, title: "T", company: "C", bullets: ["b"] });
+    const profiles = render(
+      <slideComponents.profiles
+        slide={{ type: "profiles", headline: "H", profiles: [person("A"), person("B")] } as Slide}
+      />,
+    ).container;
+    const cards = [...profiles.querySelectorAll<HTMLElement>(".hw-card, .hw-status")];
+    expect(cards).toHaveLength(2);
+    expect(cards[1].className).toBe(cards[0].className);
   });
 
   it("takes no arrow in print", () => {

@@ -4,7 +4,7 @@ import { Fragment, useContext } from "react";
 import type { TeamTopologySlide as TeamTopologySlideType } from "../../types/slide";
 import { keepCompounds } from "../../lib/markdown";
 import { BlurFade } from "../ui/blur-fade";
-import { TEAM_TYPES } from "../../lib/slide-utils";
+import { teamTypesDrawn, WORDS } from "../../lib/slide-utils";
 import { DeckLang, SlideShell } from "./SlideShell";
 import { SectionHeader } from "./SectionHeader";
 import { TitledContent, SlideTitle, SlideSubtitle } from "./primitives";
@@ -13,7 +13,7 @@ interface Props {
   slide: TeamTopologySlideType;
 }
 
-type TeamType = keyof (typeof TEAM_TYPES)["en"];
+type TeamType = ReturnType<typeof teamTypesDrawn>[number];
 
 // One class per team type, which its boxes and its legend swatch both take. The swatch stands a
 // line tall, so it takes brand's small corner where a box takes the brand corner.
@@ -36,17 +36,8 @@ function Swatch({ type }: { type: TeamType }) {
 
 // Each type the slide draws, in the order drawn.
 function Legend({ slide }: Props) {
-  const words = TEAM_TYPES[useContext(DeckLang)];
-  const types = (
-    [
-      ["enabling", slide.enabling],
-      ["stream", slide.streamAligned],
-      ["subsystem", slide.complicatedSubsystem ?? []],
-      ["platform", slide.platform],
-    ] as const
-  )
-    .filter(([, teams]) => teams.length > 0)
-    .map(([type]) => type);
+  const words = WORDS[useContext(DeckLang)].teams;
+  const types = teamTypesDrawn(slide);
   return (
     <ul className="m-0 mt-4 flex list-none flex-wrap gap-x-10 gap-y-3 p-0 text-lg text-text-muted">
       {types.map((type) => (

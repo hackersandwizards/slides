@@ -51,6 +51,13 @@ describe("resolve", () => {
       index: 0,
     });
   });
+
+  // A bullet whose markdown splits it into elements is one literal, even where its words are
+  // other literals too.
+  it("edits a bullet with bold words as a whole, though its words are other strings", () => {
+    const deck = `const d = { chips: ["API", "first"], items: ["**API** first"] };`;
+    expect(resolve(deck, ["API", "API first"])).toEqual({ value: "**API** first", index: 1 });
+  });
 });
 
 describe("replace", () => {

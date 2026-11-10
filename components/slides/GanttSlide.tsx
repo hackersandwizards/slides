@@ -1,10 +1,11 @@
 "use client";
 
+import { useContext } from "react";
 import type { GanttSlide as GanttSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
-import { SlideShell } from "./SlideShell";
+import { DeckLang, SlideShell } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
-import { isDeepDive } from "../../lib/slide-utils";
+import { isDeepDive, WORDS } from "../../lib/slide-utils";
 import { SectionHeader } from "./SectionHeader";
 import { TitledContent, SlideTitle, SlideFooter } from "./primitives";
 
@@ -19,7 +20,8 @@ interface Props {
 const BAR = { solid: "bg-primary", soft: "bg-primary/40 border-2 border-primary/70" };
 
 export function GanttSlide({ slide }: Props) {
-  const label = slide.milestonesLabel ?? "Meilensteine";
+  const words = WORDS[useContext(DeckLang)];
+  const label = slide.milestonesLabel ?? words.milestones;
   const columnCount = slide.columns.length;
   const track = { gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` };
 

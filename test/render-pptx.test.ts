@@ -16,7 +16,8 @@ import {
   labeledGridAsCards,
   overviewAsPhases,
   regularAsContent,
-  TEAM_TYPES,
+  companiesWithLogo,
+  WORDS,
   twoColumnAsSplit,
 } from "../lib/slide-utils";
 
@@ -384,10 +385,7 @@ describe("slides-pptx on the specimen deck", () => {
                   ...slide,
                   partners: undefined,
                   speakers: slide.speakers?.map((sp) =>
-                    [
-                      "hackers&wizards",
-                      ...(slide.partners ?? []).map((p) => p.company.toLowerCase()),
-                    ].includes(sp.company.toLowerCase())
+                    companiesWithLogo(slide).has(sp.company.toLowerCase())
                       ? { ...sp, company: "" }
                       : sp,
                   ),
@@ -554,7 +552,7 @@ describe("slides-pptx on the specimen deck", () => {
 
   it("names a team picture's types under it only where the slide asks for a legend", () => {
     const at = slideCatalog.slides.flatMap((x, i) => (x.type === "team-topology" ? [i] : []));
-    const named = at.map((i) => slideXml[i].includes(`<a:t>${TEAM_TYPES.en.enabling}</a:t>`));
+    const named = at.map((i) => slideXml[i].includes(`<a:t>${WORDS.en.teams.enabling}</a:t>`));
     expect(named).toEqual(
       at.map((i) => !!(slideCatalog.slides[i] as Extract<Slide, { type: "team-topology" }>).legend),
     );
@@ -711,6 +709,51 @@ describe("slides-pptx on the specimen deck", () => {
       .file("ppt/slides/slide1.xml")!
       .async("string");
   };
+
+  it("stacks milestones that share a column, as the web does", async () => {
+    const xml = await onlySlide("milestones.pptx", {
+      type: "gantt",
+      headline: "H",
+      columns: ["Q1", "Q2"],
+      rows: [{ label: "R", bars: [{ label: "B", start: 1, span: 2 }] }],
+      milestones: [
+        { label: "Review", column: 2 },
+        { label: "Go-live", column: 2 },
+      ],
+    });
+    const top = (text: string) =>
+      xml
+        .split("<p:sp>")
+        .find((sp) => sp.includes(`>${text}<`))
+        ?.match(/<a:off x="\d+" y="(\d+)"/)?.[1];
+    expect(top("Review")).toBeDefined();
+    expect(Number(top("Go-live"))).toBeGreaterThan(Number(top("Review")));
+  });
+
+  it("prints a bar's figure with the deck's decimal mark", async () => {
+    const out = join(dir, "bars-de.pptx");
+    await renderPptx(
+      {
+        name: "T",
+        lang: "de",
+        slides: [
+          {
+            type: "content",
+            headline: "H",
+            content: [{ type: "bars", max: 10, bars: [{ label: "a", value: 2.5 }] }],
+          },
+        ],
+      },
+      out,
+      dir,
+    );
+    const xml = await (
+      await JSZip.loadAsync(readFileSync(out))
+    )
+      .file("ppt/slides/slide1.xml")!
+      .async("string");
+    expect(xml).toContain(">2,5<");
+  });
 
   it("names what a bar chart's values count", async () => {
     const xml = await onlySlide("bar-label.pptx", {

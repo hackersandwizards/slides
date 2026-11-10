@@ -74,9 +74,6 @@ function afterSubstitution(source: string, i: number): number {
   return i;
 }
 
-/** Every plain string literal in a TypeScript source, comments skipped. A template literal holding
- *  `${}` is no plain string and is left out. Regex literals are not recognised: a deck file holds
- *  data, not regexes. */
 /** Whether a literal names a module (`import … from "x"`, `import("x")`, `export … from "x"`,
  *  `require("x")`): never deck text, and a rewritten one runs whatever it then names. */
 const specifier = (source: string, l: Literal) =>
@@ -91,6 +88,9 @@ const discriminator = (source: string, l: Literal) =>
 const editable = (source: string) =>
   literals(source).filter((l) => !specifier(source, l) && !discriminator(source, l));
 
+/** Every plain string literal in a TypeScript source, comments skipped. A template literal holding
+ *  `${}` is no plain string and is left out. Regex literals are not recognised: a deck file holds
+ *  data, not regexes. */
 export function literals(source: string): Literal[] {
   const found: Literal[] = [];
   let i = 0;
@@ -133,19 +133,17 @@ const showsExactly = (text: string, value: string) =>
   );
 
 /** Whether a text is two or more other literals side by side, as a title and its subtitle in one
- *  wrapper: a literal equal to the whole, such as a deck name, is none of what was clicked. */
-function composed(text: string, values: string[]): boolean {
+ *  wrapper: a literal equal to the whole, such as a deck name, is none of what was clicked.
+ *  `parts` are the literals as shown, squashed. */
+function composed(text: string, parts: string[]): boolean {
   const t = squash(text);
-  const parts = [...new Set(values.map((v) => squash(markdownless(v))))].filter(
-    (v) => v && v !== t,
-  );
-  // count[i]: the fewest parts that make up t's first i characters.
-  const count: number[] = [0];
+  // reached[i]: t's first i characters are parts side by side, none of them t itself.
+  const reached = [true];
   for (let i = 1; i <= t.length; i++)
-    for (const p of parts)
-      if (i >= p.length && count[i - p.length] !== undefined && t.endsWith(p, i))
-        count[i] = Math.min(count[i] ?? Infinity, count[i - p.length] + 1);
-  return (count[t.length] ?? 0) >= 2;
+    reached[i] = parts.some(
+      (p) => p && p !== t && i >= p.length && reached[i - p.length] && t.endsWith(p, i),
+    );
+  return t.length > 0 && reached[t.length];
 }
 
 /** The source string behind a click. `texts` runs from the clicked element out through its
@@ -157,10 +155,12 @@ export function resolve(
   texts: string[],
 ): { value: string; index: number } | { error: string } {
   const all = editable(source);
-  const values = all.map((l) => l.value);
+  const parts = [...new Set(all.map((l) => squash(markdownless(l.value))))];
   for (let index = texts.length - 1; index >= 0; index--) {
-    if (index > 0 && composed(texts[index], values)) continue;
     const hits = all.filter((l) => shows(texts[index], l.value));
+    // A literal with markdown renders as several elements, so it is what the click meant.
+    const marked = hits.some((l) => markdownless(l.value) !== l.value);
+    if (index > 0 && hits.length && !marked && composed(texts[index], parts)) continue;
     const exact =
       new Set(hits.map((l) => l.value)).size > 1
         ? hits.filter((l) => showsExactly(texts[index], l.value))
