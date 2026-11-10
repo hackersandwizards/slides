@@ -160,6 +160,14 @@ describe("slides-pptx on the specimen deck", () => {
     }
   });
 
+  // The annotated image's band, 8 % to 52 % of the picture (F06).
+  it("crops an annotated image to its band", () => {
+    const i = slideCatalog.slides.findIndex((x) =>
+      JSON.stringify(x).includes('"crop":{"top":0.08,"bottom":0.52}'),
+    );
+    expect(slideXml[i]).toContain('<a:srcRect l="0" r="0" t="8000" b="48000"/>');
+  });
+
   it("keeps every shape on the slide, with a positive size and a crop inside the picture", () => {
     expect(slideXml.flatMap((xml, i) => misplaced(xml).map((m) => `slide ${i + 1}: ${m}`))).toEqual(
       [],
@@ -183,12 +191,16 @@ describe("slides-pptx on the specimen deck", () => {
       ],
     } as Slide;
     const lanes = at("lanes") as Extract<Slide, { type: "lanes" }>;
-    lanes.lanes[0].stages = Array.from({ length: 9 }, (_, i) => `Stage number ${i + 1}`);
+    lanes.lanes[0].stages = Array.from({ length: 6 }, (_, i) => `Stage number ${i + 1}`);
     const pills = at("phased-pills") as Extract<Slide, { type: "phased-pills" }>;
-    pills.phases[0].items = Array.from({ length: 9 }, (_, i) => ({
+    pills.phases[0].items = Array.from({ length: 6 }, (_, i) => ({
       number: i,
       title: "Long item",
     }));
+    const manyLanes = at("lanes") as Extract<Slide, { type: "lanes" }>;
+    manyLanes.lanes = Array.from({ length: 30 }, (_, i) => ({ label: `L${i}`, stages: ["a"] }));
+    const gantt = at("gantt") as Extract<Slide, { type: "gantt" }>;
+    gantt.rows = Array.from({ length: 40 }, (_, i) => ({ label: `R${i}`, bars: [] }));
     const pictured = structuredClone(
       slideCatalog.slides.find(
         (x) => x.type === "content" && x.content.some((b) => b.type === "image"),
@@ -198,11 +210,15 @@ describe("slides-pptx on the specimen deck", () => {
     const out = join(dir, "over-full.pptx");
     const root = join(import.meta.dirname, "..");
     const warnings = await renderPptx(
-      { name: "T", slides: [title, tall, lanes, pills, pictured] },
+      { name: "T", slides: [title, tall, lanes, pills, pictured, manyLanes, gantt] },
       out,
       root,
     );
-    expect(warnings).toEqual([expect.stringMatching(/^blocks table, paragraph: .* taller/)]);
+    expect(warnings).toEqual([
+      expect.stringMatching(/^blocks table, paragraph: .* taller/),
+      "lanes: 30 rows taller than the slide holds",
+      "gantt: 40 rows taller than the slide holds",
+    ]);
     const probe = await JSZip.loadAsync(readFileSync(out));
     expect(await probe.file("ppt/slides/_rels/slide1.xml.rels")!.async("string")).toContain(
       `Target="${href.replace("&", "&amp;")}"`,
@@ -212,8 +228,14 @@ describe("slides-pptx on the specimen deck", () => {
       const xml = await probe.file(part)!.async("string");
       const doc = new DOMParser().parseFromString(xml, "application/xml");
       if (doc.getElementsByTagName("parsererror").length) problems.push(`${part}: malformed`);
+      // The lanes and the gantt hold more rows than fit: they warn, and stay well-formed.
+      const warned = /slides\/slide[67]\.xml$/.test(part);
       if (/slides\/slide\d+\.xml$/.test(part))
-        problems.push(...misplaced(xml).map((m) => `${part}: ${m}`));
+        problems.push(
+          ...misplaced(xml)
+            .filter((m) => !warned || !m.startsWith("off the slide"))
+            .map((m) => `${part}: ${m}`),
+        );
       if (xml.includes(root)) problems.push(`${part}: names a local path`);
     }
     expect(problems).toEqual([]);

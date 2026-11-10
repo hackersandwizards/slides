@@ -672,8 +672,9 @@ function Bars({ block }: { block: Of<"bars"> }) {
           className={`${q ? "absolute" : "inline-block"} -translate-x-1/2 ${q === 100 ? "max-md:-translate-x-full" : ""}`}
           style={q ? { left: `${q}%` } : undefined}
         >
-          {/* Exact, so a quarter of 10 reads 2.5 where its mark stands. */}
-          {((max * q) / 100).toLocaleString(lang, { maximumFractionDigits: 2 })}
+          {/* Exact, so a quarter of 10 reads 2.5 where its mark stands; ungrouped, as the bars'
+              own figures. */}
+          {((max * q) / 100).toLocaleString(lang, { maximumFractionDigits: 2, useGrouping: false })}
         </span>
       ))}
     </div>

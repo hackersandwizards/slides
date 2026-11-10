@@ -442,11 +442,28 @@ const chipWidth = (text: string, size: number, mono: boolean) =>
   chipAdvance(text, mono) * size + 0.3;
 
 /** The type size at which a row of chips `gap` apart fits `width`: `size`, or smaller where the
- *  row would run past it. */
-function rowSize(texts: string[], size: number, mono: boolean, gap: number, width: number) {
+ *  row would run past it, down to half of it, past which it warns. */
+function rowSize(
+  ctx: Ctx,
+  texts: string[],
+  size: number,
+  mono: boolean,
+  gap: number,
+  width: number,
+) {
   const fixed = texts.length * 0.3 + (texts.length - 1) * gap;
   const per = texts.reduce((sum, t) => sum + chipAdvance(t, mono), 0);
-  return Math.min(size, (width - fixed) / per);
+  const fit = (width - fixed) / per;
+  if (fit < size / 2) ctx.warnings.push(`chips ${texts.join(", ")}: wider than the slide holds`);
+  return Math.max(size / 2, Math.min(size, fit));
+}
+
+/** Each of `n` rows' share of `room`, at most `cap`; below `floor` the rows run past the slide,
+ *  which warns. */
+function rowShare(ctx: Ctx, what: string, room: number, n: number, cap: number, floor = 0.15) {
+  const share = Math.min(cap, room / n);
+  if (share < floor) ctx.warnings.push(`${what}: ${n} rows taller than the slide holds`);
+  return Math.max(floor, share);
 }
 
 function chip(
@@ -2945,7 +2962,8 @@ const RENDER: {
       ? (d.codeSnippet.code.split("\n").length * PT.sm * 1.3) / 72 + 0.45
       : 0;
     const footH = footerHeight(ctx, d.footer);
-    const lh = Math.min(0.75, (BOTTOM - y - codeH - footH - 0.3) / d.lanes.length - 0.12);
+    const lh =
+      rowShare(ctx, "lanes", BOTTOM - y - codeH - footH - 0.3, d.lanes.length, 0.87, 0.27) - 0.12;
     let yy = y;
     if (d.codeSnippet) {
       drawBlock(
@@ -2970,7 +2988,7 @@ const RENDER: {
         valign: "middle",
       });
       let x = SIDE + 2;
-      const size = rowSize(lane.stages, PT.sm, false, 0.3, SIDE + CW - 0.25 - x);
+      const size = rowSize(ctx, lane.stages, PT.sm, false, 0.3, SIDE + CW - 0.25 - x);
       lane.stages.forEach((st, j) => {
         const w = chip(s, c, st, x, ly + lh / 2 - (size * 1.9) / 144, size, c.card, c.ink, false);
         x += w;
@@ -3604,7 +3622,7 @@ const RENDER: {
         align: "center",
       }),
     );
-    const rh = Math.min(0.75, (BOTTOM - y - 0.35 - footH - msH) / d.rows.length);
+    const rh = rowShare(ctx, "gantt", BOTTOM - y - 0.35 - footH - msH, d.rows.length, 0.75);
     d.rows.forEach((r, i) => {
       const ry = y + 0.35 + i * rh;
       box(
@@ -4148,7 +4166,7 @@ function pillPhases(
     let x = a.x;
     const title = (it: (typeof p.items)[number]) =>
       it.number === undefined ? it.title : `#${it.number} ${it.title}`;
-    const size = rowSize(p.items.map(title), PT.sm * 0.9, false, 0.12, a.w);
+    const size = rowSize(ctx, p.items.map(title), PT.sm * 0.9, false, 0.12, a.w);
     for (const it of p.items) {
       const on = it.state === "active" || it.state === "new";
       const w = chip(
