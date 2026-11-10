@@ -58,7 +58,17 @@ import {
   WORDS,
   type SideTone,
 } from "../lib/slide-utils";
-import { balance, checkSlide, family, longest, MONO, SANS, wrap, type Span } from "./pptx-text";
+import {
+  balance,
+  checkSlide,
+  family,
+  longest,
+  MONO,
+  pretty,
+  SANS,
+  wrap,
+  type Span,
+} from "./pptx-text";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
 type PSlide = ReturnType<Pptx["addSlide"]>;
@@ -330,11 +340,11 @@ function fitScale(paras: Para[], o: BoxOpts, w: number, h: number) {
   return Math.max(k, floor);
 }
 
-/** A paragraph's runs with a forced line break (`\n`) where `text-wrap: balance` breaks it, at
- *  the drawn size, so PowerPoint sets the slide's lines rather than breaking greedily. */
-function balanced(p: Para, o: BoxOpts, k: number, w: number): Run[] {
-  const lines = balance(spansOf(p, o, k), (w - marginOf(p)) * 72);
-  if (lines.length < 2) return p.runs;
+/** A paragraph's runs with a forced line break (`\n`) where the web breaks it, `text-wrap:
+ *  balance` or `pretty`, at the drawn size, so PowerPoint sets the slide's lines. */
+function broken(p: Para, o: BoxOpts, k: number, w: number, set: typeof pretty): Run[] {
+  const lines = set(spansOf(p, o, k), (w - marginOf(p)) * 72);
+  if (!lines || lines.length < 2) return p.runs;
   // Each line's end in the paragraph's text, past the spaces it broke at.
   const text = p.runs.map((r) => r.text).join("");
   const cuts: [number, number][] = [];
@@ -403,7 +413,7 @@ function box(
   paras.forEach((p, i) => {
     const last = i === paras.length - 1;
     const size = drawnSize(p, o, k);
-    breaks(o.balance || p.balance ? balanced(p, o, k, w) : p.runs).forEach((r, j, all) => {
+    breaks(broken(p, o, k, w, o.balance || p.balance ? balance : pretty)).forEach((r, j, all) => {
       runs.push({
         text: r.text,
         options: {
@@ -3306,39 +3316,48 @@ const RENDER: {
           Math.min(w, 64 * REM),
           2 * REM,
         ]);
-      const support: Para[] = [
-        ...(d.points ?? []).map((pt, i) => ({
+      // The points as one list as wide as its longest point, centred, each its number in teal
+      // mono a step larger; the closing centred under it, as the web's `w-fit` list.
+      if (d.points?.length) {
+        const pointO: BoxOpts = { size: PT.h4, color: c.muted, line: 1.375 };
+        const number = (i: number) => `${String(i + 1).padStart(2, "0")}\u00a0`;
+        const paras = d.points.map((pt, i) => ({
           runs: [
             {
-              text: `${String(i + 1).padStart(2, "0")}  `,
-              options: { color: c.teal, bold: true, fontFace: MONO },
+              text: number(i),
+              options: { color: c.teal, bold: true, fontFace: MONO, fontSize: PT.lead },
             },
             ...md(pt, c, { color: c.muted }),
           ],
           after: 1.25 * REM * 72,
-        })),
-        ...(d.closing
-          ? [
-              {
-                runs: md(
-                  d.closingStyle === "quote" ? `“${d.closing}”` : d.closing,
-                  c,
-                  d.closingStyle === "quote" ? { italic: true } : {},
-                ),
-                bold: d.closingStyle !== "quote",
-                align: "center" as const,
-                balance: true,
-              },
-            ]
-          : []),
-      ];
-      if (support.length)
+        }));
+        const longestPoint = Math.max(
+          ...paras.map((p) => (wrap(spansOf(p, pointO, 1), Infinity)[0].width / 72) * 1.01 + 0.05),
+        );
+        parts.push([paras, pointO, Math.min(w, 56 * REM, longestPoint), 3.5 * REM]);
+      }
+      if (d.closing) {
+        const quoted = d.closingStyle === "quote";
+        const mark = { color: mix(c.teal, c.bg, 0.7) };
         parts.push([
-          support,
-          { size: PT.h3, color: c.ink, line: 1.375, align: d.points?.length ? "left" : "center" },
+          [
+            {
+              runs: quoted
+                ? [
+                    { text: "“", options: mark },
+                    ...md(d.closing, c, { color: c.muted, italic: true }),
+                    { text: "”", options: mark },
+                  ]
+                : md(d.closing, c),
+              bold: true,
+              balance: true,
+            },
+          ],
+          { size: quoted ? PT.lead : PT.h3, color: c.ink, line: 1.375, align: "center" },
           Math.min(w, 56 * REM),
           2.5 * REM,
         ]);
+      }
       const heights = parts.map(([p, o, pw]) => need(p, c, pw, o));
       const total = heights.reduce((sum, h, i) => sum + h + parts[i][3], 0);
       const [top, bottom] = d.footer ? [TOP, BOTTOM - footH - 0.1] : [0, BOTTOM];

@@ -287,6 +287,23 @@ export function balance(spans: Span[], width: number): Line[] {
   return wrap(spans, hi);
 }
 
+/** The lines `text-wrap: pretty` sets, as brand's text base asks of paragraphs and list items:
+ *  where the greedy lines leave a single word on the last, the widest narrower measure that keeps
+ *  the line count and gives the last line two words; undefined where the greedy lines stand. */
+export function pretty(spans: Span[], width: number): Line[] | undefined {
+  const greedy = wrap(spans, width);
+  const lone = (lines: Line[]) => !/\S\s+\S/.test(lines[lines.length - 1].text.trim());
+  if (greedy.length < 2 || !lone(greedy)) return undefined;
+  // Never narrower than the longest word, which a renderer would break inside.
+  const floor = Math.max(width * 0.7, longest(spans));
+  for (let w = width * 0.98; w >= floor; w -= width * 0.02) {
+    const lines = wrap(spans, w);
+    if (lines.length !== greedy.length) return undefined;
+    if (!lone(lines)) return lines;
+  }
+  return undefined;
+}
+
 /** The widest piece of `spans` a line cannot break inside, in points. */
 export const longest = (spans: Span[]) =>
   Math.max(0, ...pieces(spans).map((p) => pieceWidth(p) - p.space));

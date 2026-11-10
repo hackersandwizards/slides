@@ -8,7 +8,7 @@ import verbal from "@hackersandwizards/brand/verbal.json";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { centredMark, renderPptx } from "../scripts/render-pptx";
-import { checkSlide } from "../scripts/pptx-text";
+import { checkSlide, pretty, wrap } from "../scripts/pptx-text";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import {
@@ -494,8 +494,15 @@ describe("slides-pptx on the specimen deck", () => {
     expect(chart).toContain('<c:majorUnit val="2"/>');
     expect(chart).toContain('<c:crossBetween val="midCat"/>');
     expect(chart).not.toContain("<c:title>");
-    // The y label and the note over the plot as text, the note no longer in the annotation.
-    const texts = [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((m) => m[1]);
+    // The y label and the note over the plot as text, the note no longer in the annotation; a
+    // line break the export sets reads as the space it replaces.
+    const texts = [...xml.matchAll(/<p:txBody>(.*?)<\/p:txBody>/gs)].map(([, body]) =>
+      [...body.replace(/<a:br\/>/g, "<a:t> </a:t>").matchAll(/<a:t>([^<]*)<\/a:t>/g)]
+        .map((m) => m[1])
+        .join("")
+        .replace(/\s+/g, " ")
+        .trim(),
+    );
     expect(texts).toEqual(
       expect.arrayContaining([slide.yLabel, slide.futureNote, slide.xLabel, slide.annotation]),
     );
@@ -1382,6 +1389,33 @@ describe("slides-pptx draws what the slide shows", () => {
     const bullets = slideXml.filter((x) => x.includes("<a:buChar"));
     expect(bullets.length).toBeGreaterThan(0);
     for (const x of bullets) expect(x).toMatch(/<a:buFont typeface="Arial"/);
+  });
+
+  it("never leaves one word alone on a paragraph's last line, as brand's text-wrap: pretty", () => {
+    const spans = [
+      {
+        text: "In our experience: own data, logic and UI, end to end",
+        size: 18,
+        mono: false,
+        bold: false,
+        tracking: 0,
+      },
+    ];
+    // The measure at which the greedy lines leave "end" alone on the last of three.
+    const width = [...Array(400).keys()]
+      .map((w) => 100 + w)
+      .find((w) => {
+        const lines = wrap(spans, w);
+        return lines.length === 3 && lines[2].text.trim() === "end";
+      })!;
+    expect(width).toBeDefined();
+    const lines = pretty(spans, width)!;
+    expect(lines).toHaveLength(3);
+    expect(lines[2].text.trim()).toBe("to end");
+    // A last word that can only join the line above by breaking a word stays alone.
+    const label = [{ text: "Autonomous team", size: 18, mono: false, bold: true, tracking: 0 }];
+    const w = wrap([{ ...label[0], text: "Autonomous" }], Infinity)[0].width + 2;
+    expect(pretty(label, w)).toBeUndefined();
   });
 
   it("gives a card brand's corner: the large radius at top left and bottom right, a quarter of it at the others", () => {
