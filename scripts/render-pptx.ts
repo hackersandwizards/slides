@@ -220,6 +220,8 @@ interface Para {
   indent?: number;
   after?: number;
   align?: "left" | "center" | "right";
+  /** Left tab stops, in inches from the box's edge, where a tab in the runs aligns. */
+  tabs?: number[];
 }
 
 interface BoxOpts {
@@ -351,6 +353,9 @@ function box(
           ...(o.tracking ? { charSpacing: Math.round(o.tracking * size * 10) / 10 } : {}),
           align: p.align ?? o.align ?? "left",
           paraSpaceAfter: last ? 0 : (p.after ?? 0) * k,
+          ...(p.tabs
+            ? { tabStops: p.tabs.map((at) => ({ position: at * k, alignment: "l" as const })) }
+            : {}),
           ...(p.bullet
             ? {
                 bullet:
@@ -3902,6 +3907,10 @@ const RENDER: {
     const y = header(s, ctx, d);
     const items = d.items.map((it) => (typeof it === "string" ? { title: it } : it));
     const timed = items.some((it) => it.when);
+    // A title stands after the widest time, its line under it after the tab too: the stop is the
+    // widest time's, or the widest number's where no item names a time.
+    const lead = timed ? items.map((it) => it.when ?? "") : [`${items.length}.  `];
+    const tabs = [Math.max(...lead.map((t) => chipAdvance(t, true))) * PT.h3 + (timed ? 0.3 : 0)];
     const paras: Para[] = items.flatMap((it, i) => [
       {
         runs: [
@@ -3914,9 +3923,17 @@ const RENDER: {
           ...md(it.title, c),
         ],
         after: it.text ? 2 : 10,
+        tabs,
       },
       ...(it.text
-        ? [{ runs: [{ text: "\t" }, ...md(it.text, c, { color: c.muted })], rel: 0.75, after: 10 }]
+        ? [
+            {
+              runs: [{ text: "\t" }, ...md(it.text, c, { color: c.muted })],
+              rel: 0.75,
+              after: 10,
+              tabs,
+            },
+          ]
         : []),
     ]);
     const footH = footerHeight(ctx, d.footer);

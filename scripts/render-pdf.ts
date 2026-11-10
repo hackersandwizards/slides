@@ -17,19 +17,9 @@ export async function renderPdf(url: string, out: string, title: string, slideCo
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
-    await page.goto(url, { waitUntil: "networkidle0", timeout: 300_000 });
-    // A trend or bar chart and a code block's colours draw after hydration, from a script loaded
-    // only then: network idle can come first.
-    await page.waitForFunction(
-      () =>
-        [...document.querySelectorAll("[data-chart-plot]")].every((box) =>
-          box.querySelector("svg"),
-        ) && !document.querySelector("[data-code-plain]"),
-      { timeout: 300_000 },
-    );
+    await settlePrintPage(page, url);
 
     const slides = await page.$$eval(".print-slide", (nodes) => nodes.length);
-    if (slides === 0) throw new Error("no .print-slide elements found");
     if (slides !== slideCount) {
       throw new Error(`page rendered ${slides} slides, the deck holds ${slideCount}`);
     }
@@ -54,7 +44,14 @@ export async function renderPdf(url: string, out: string, title: string, slideCo
         const ctx = canvas.getContext("2d");
         if (!ctx) continue;
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const alpha = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        // A picture from another origin taints the canvas, which then refuses to be read: it stays
+        // as it is.
+        let alpha: Uint8ClampedArray;
+        try {
+          alpha = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        } catch {
+          continue;
+        }
         let opaque = true;
         for (let i = 3; i < alpha.length; i += 4) {
           if (alpha[i] < 255) {
@@ -84,4 +81,26 @@ export async function renderPdf(url: string, out: string, title: string, slideCo
   } finally {
     await browser.close();
   }
+}
+
+/** Loads a deck's print route and waits until it stands as printed: the route answered, every
+ *  chart and code block drawn after hydration (network idle can come first), the web fonts in,
+ *  and the fit guard's refit after them landed. `slides-density` measures the page this leaves. */
+export async function settlePrintPage(page: import("puppeteer").Page, url: string) {
+  const res = await page.goto(url, { waitUntil: "networkidle0", timeout: 300_000 });
+  if (!res?.ok()) throw new Error(`HTTP ${res?.status()} from ${url}`);
+  await page.waitForFunction(
+    () =>
+      [...document.querySelectorAll("[data-chart-plot]")].every((box) =>
+        box.querySelector("svg"),
+      ) && !document.querySelector("[data-code-plain]"),
+    { timeout: 300_000 },
+  );
+  await page.evaluate(() => document.fonts.ready);
+  if (!(await page.$(".print-slide"))) throw new Error("no .print-slide elements found");
+  // The fit guard refits on its ResizeObserver: two frames and a pause let it land.
+  await page.evaluate(
+    () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+  );
+  await new Promise((r) => setTimeout(r, 500));
 }

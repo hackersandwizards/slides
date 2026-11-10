@@ -124,13 +124,16 @@ export function GanttSlide({ slide }: Props) {
                   {label}
                 </div>
                 <div className="grid flex-1 gap-1" style={track}>
-                  {slide.milestones.map((m, i) => (
+                  {/* One cell per column, its milestones stacked: two in one cell overlapped. */}
+                  {[...Map.groupBy(slide.milestones, (m) => m.column)].map(([column, ms]) => (
                     <div
-                      key={i}
+                      key={column}
                       className="row-start-1 border-t-2 border-secondary pt-1.5 text-sm leading-tight font-semibold text-secondary"
-                      style={{ gridColumn: m.column }}
+                      style={{ gridColumn: column }}
                     >
-                      {m.label}
+                      {ms.map((m, i) => (
+                        <div key={i}>{m.label}</div>
+                      ))}
                     </div>
                   ))}
                 </div>

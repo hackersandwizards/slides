@@ -549,3 +549,17 @@ describe("a staggered timeline", () => {
     expect(runs()[0]).toEqual([false, "12.5%", "12.5%"]);
   });
 });
+
+// F32: a frame's logos drew only beside its label, and `notes: []` drew a rule and an empty list.
+it("draws a frame's logos without a label, and nothing for empty notes", () => {
+  const c = content([
+    {
+      type: "flow",
+      steps: [{ title: "A" }, { title: "B" }],
+      frame: { logos: [{ src: "/l.png", alt: "L" }], notes: [] },
+    },
+  ]);
+  expect(c.querySelector('img[src="/l.png"]')).not.toBeNull();
+  expect(c.querySelector(".slide-framed-rule")).toBeNull();
+  expect(c.querySelector(".slide-framed-notes")).toBeNull();
+});

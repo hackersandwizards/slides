@@ -45,7 +45,7 @@ export function ProcessSlide({ slide }: Props) {
   // Five nodes and more overlap on a phone's circle, whose cards grow with their wrapped text: there
   // they stand as the flow block's upright list.
   const circle = loop && slide.nodes.length < LONG_FLOW;
-  const { revealedCount, footerVisible } = useProgressiveReveal({
+  const { revealedCount, footerVisible, stepped } = useProgressiveReveal({
     totalSteps: slide.nodes.length,
     startFull: !!slide.static,
     hasFooter: !!slide.footer,
@@ -172,7 +172,8 @@ export function ProcessSlide({ slide }: Props) {
                 {slide.nodes.map((node, index) => {
                   const pos = positions[index];
                   const isRevealed = index < revealedCount;
-                  const isActive = index === revealedCount - 1;
+                  // Only a step a press revealed is lit: a phone or print shows them all neutral.
+                  const isActive = stepped && index === revealedCount - 1;
                   const isHighlighted = isHighlightPhase(node.title, slide.highlightPhase);
                   const Icon =
                     (node.icon ? iconMap[node.icon] : null) ?? defaultIcons[index] ?? iconMap.bot;

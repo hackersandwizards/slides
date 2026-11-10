@@ -397,3 +397,23 @@ it("keeps trend-marked's plot tall on a phone, its note below the chart", async 
     ),
   ).toEqual([]);
 }, 60_000);
+
+// F32: the phone rule named `card-pad-8` and `card-pad-10`, so the cards block's `card-pad-8/9`
+// kept its stage padding below 48rem.
+it("pads a cards block's card as the phone rule pads every large card", async () => {
+  const page = await open("content-slide/visual-cards", 390);
+  const { pads, phone } = await page.evaluate(() => {
+    const content = document.querySelector(".slide-content")!;
+    const probe = content.appendChild(document.createElement("div"));
+    probe.style.padding = "var(--slide-phone-card-padding)";
+    return {
+      pads: [...content.querySelectorAll(".card-pad-8\\/9")].map(
+        (e) => getComputedStyle(e).paddingLeft,
+      ),
+      phone: getComputedStyle(probe).paddingLeft,
+    };
+  });
+  await page.close();
+  expect(pads.length).toBeGreaterThan(0);
+  expect(pads.every((p) => p === phone)).toBe(true);
+}, 60_000);

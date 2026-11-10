@@ -45,9 +45,11 @@ export function LaserPointer() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const laser = getComputedStyle(document.documentElement)
-      .getPropertyValue("--color-teal")
-      .trim();
+    // The teal of what the stroke starts on: night sets its own under `[data-hw-night]`, which a
+    // night deck's frame and a deep-dive slide's shell carry, never the root.
+    const tealOf = (element: Element) =>
+      getComputedStyle(element).getPropertyValue("--color-teal").trim();
+    let laser = tealOf(document.documentElement);
 
     const getCanvasPoint = (e: MouseEvent): Point => {
       const rect = canvas.getBoundingClientRect();
@@ -157,6 +159,7 @@ export function LaserPointer() {
         }
         const targetElement = document.elementFromPoint(e.clientX, e.clientY);
         if (targetElement?.closest(INTERACTIVE)) return;
+        if (targetElement) laser = tealOf(targetElement);
 
         e.preventDefault();
         window.getSelection()?.removeAllRanges();

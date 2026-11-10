@@ -1,5 +1,6 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { phoneWidth } from "./phone-width";
 import { ProcessSlide } from "../components/slides/ProcessSlide";
 import type { ProcessSlide as ProcessSlideType } from "../types/slide";
 
@@ -34,4 +35,14 @@ describe("ProcessSlide", () => {
     );
     expect(arrowSvg?.querySelectorAll("path").length).toBe(4);
   });
+});
+
+// F32: on a phone every step shows at once, which lit the last node as if a press had revealed it.
+it("lights no node on a phone, where every step shows at once", () => {
+  phoneWidth();
+  const { container } = render(<ProcessSlide slide={makeSlide(["A", "B", "C", "D"])} />);
+  const lit = container.querySelectorAll(".scale-105.border-teal");
+  expect(container.querySelectorAll(".scale-100.opacity-100").length).toBe(4);
+  expect(lit.length).toBe(0);
+  vi.restoreAllMocks();
 });

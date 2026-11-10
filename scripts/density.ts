@@ -17,6 +17,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { constants } from "node:os";
 import puppeteer, { type Browser } from "puppeteer";
 import { FIT_STYLE } from "../lib/slide-utils";
+import { settlePrintPage } from "./render-pdf";
 
 const FAIL = 0.8;
 const NOTICE = 0.9;
@@ -85,7 +86,7 @@ async function check(browser: Browser, url: string): Promise<string[]> {
   const page = await browser.newPage();
   try {
     await page.setViewport({ width: 1920, height: 1080 });
-    await settle(page, url);
+    await settlePrintPage(page, url);
     return (await page.$$eval(".print-slide", measure, NOTICE, [...FIT_STYLE])).map((r) => {
       if ("use" in r) {
         failed++;
@@ -140,24 +141,6 @@ async function start(command: string, origin: string) {
   }
   child.kill();
   throw new Error(`no server at ${origin} after 60 s`);
-}
-
-async function settle(page: import("puppeteer").Page, url: string) {
-  const res = await page.goto(url, { waitUntil: "networkidle0", timeout: 300_000 });
-  if (!res?.ok()) throw new Error(`HTTP ${res?.status()}`);
-  // A chart draws after hydration, and a web font arriving refits the slide.
-  await page.waitForFunction(
-    () =>
-      [...document.querySelectorAll("[data-chart-plot]")].every((box) => box.querySelector("svg")),
-    { timeout: 300_000 },
-  );
-  await page.evaluate(() => document.fonts.ready);
-  if (!(await page.$(".print-slide"))) throw new Error("no .print-slide elements");
-  // The fit guard refits on its ResizeObserver: two frames and a pause let it land.
-  await page.evaluate(
-    () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
-  );
-  await new Promise((r) => setTimeout(r, 500));
 }
 
 /** A slide of the wrong type, one with a heading shrunk to fit a word, or one the fit guard shrank. */

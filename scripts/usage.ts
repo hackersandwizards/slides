@@ -6,7 +6,6 @@ import { readFileSync } from "node:fs";
 import { GUIDANCE } from "../catalog/guidance";
 import {
   anchorSlug,
-  bulletsAsStatement,
   centeredAsStatement,
   fourColumnAsCards,
   gridAsContent,
@@ -35,6 +34,8 @@ const BLOCK_ENTRY: Record<string, string> = {
 type Deck = Presentation & { slug?: string };
 
 const known = (id: string) => Object.hasOwn(GUIDANCE, id);
+/** Blocks every content slide may hold, which no entry of their own counts. */
+const PLAIN = new Set(["block-paragraph", "block-bullets"]);
 
 /** The block a deprecated block draws as, so it counts in the shape on screen. */
 function drawnBlock(block: ContentBlock): ContentBlock {
@@ -73,10 +74,14 @@ export function entriesOf(slide: Slide): string[] {
     if (drawn) return entriesOf(drawn);
   }
   if (slide.type === "content") {
-    if (centeredAsStatement(slide) || bulletsAsStatement(slide)) return ["statement"];
+    // A slide of one or two short bullets still draws as bullets: the print page marks it, and
+    // it counts as what it draws.
+    if (centeredAsStatement(slide)) return ["statement"];
     if (twoColumnAsSplit(slide)) return ["comparison-split"];
-    const blocks = slide.content.map((b) => blockEntry(drawnBlock(b))).filter(known);
-    const entries = new Set(["content", ...blocks]);
+    const blocks = slide.content.map((b) => blockEntry(drawnBlock(b)));
+    const strays = blocks.filter((b) => !known(b) && !PLAIN.has(b));
+    if (strays.length) throw new Error(`no catalogue entry for ${strays.join(", ")}`);
+    const entries = new Set(["content", ...blocks.filter(known)]);
     if (blocks.filter((b) => b === "block-image").length > 1) {
       entries.delete("block-image");
       entries.add("block-two-images");

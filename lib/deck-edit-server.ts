@@ -31,7 +31,11 @@ export function deckEditHandler(
     // The gate runs `prettier --check`: a file that passed it before the edit passes it after.
     const options = { ...(await resolveConfig(file)), filepath: file };
     const formatted = await check(source, options);
-    await writeFile(file, formatted ? await format(result.source, options) : result.source);
+    const out = formatted ? await format(result.source, options) : result.source;
+    // An editor's save between the read and this write would be lost under it.
+    if ((await readFile(file, "utf8").catch(() => null)) !== source)
+      return [409, { error: "The deck file changed meanwhile. Click the text again." }];
+    await writeFile(file, out);
     return [200, { ok: true }];
   }
 

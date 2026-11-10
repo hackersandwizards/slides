@@ -399,7 +399,7 @@ html:has(.print-slide) {
   .slide-content .p-8 {
     padding: var(--slide-phone-card-padding);
   }
-  .slide-content :is(.card-pad-8, .card-pad-10) {
+  .slide-content :is(.card-pad-8, .card-pad-8\/9, .card-pad-10) {
     --hw-card-pad: var(--slide-phone-card-padding);
   }
   /* On a phone the root is 16px, so the website's roles apply at their own size. */

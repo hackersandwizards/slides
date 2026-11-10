@@ -243,12 +243,18 @@ function Flow({ block }: { block: Of<"flow"> }) {
 /** The teal dashed frame round a group of steps: its label with logos above, its notes beside
  *  the steps, its footer under a rule. A flow's `frame` and the pipeline's container draw it. */
 export function Framed({ frame, children }: { frame: FlowFrame; children: ReactNode }) {
+  // Logos draw in the label's row with or without a label; notes without one draw nothing.
+  const notes = frame.notes?.length ? frame.notes : undefined;
   return (
     <DashedFrame tone="primary" active={!!frame.label} className="w-full p-6">
-      {frame.label && (
+      {(frame.label || !!frame.logos?.length) && (
         <div className="hw-label mb-4 flex items-baseline gap-2 [--hw-label-size:var(--text-sm)]">
-          <div className="hw-marker bg-primary" />
-          <span>{frame.label}</span>
+          {frame.label && (
+            <>
+              <div className="hw-marker bg-primary" />
+              <span>{frame.label}</span>
+            </>
+          )}
           {frame.logos?.map((logo, i) => (
             <Image
               key={i}
@@ -262,15 +268,13 @@ export function Framed({ frame, children }: { frame: FlowFrame; children: ReactN
         </div>
       )}
       {/* On a phone the notes go under the steps, which take the frame's whole width (Visuals.css). */}
-      <div
-        className={`flex flex-wrap items-center justify-center ${frame.notes ? "gap-6" : "gap-4"}`}
-      >
+      <div className={`flex flex-wrap items-center justify-center ${notes ? "gap-6" : "gap-4"}`}>
         <div className="slide-framed-steps min-w-0 flex-1">{children}</div>
-        {frame.notes && (
+        {notes && (
           <>
             <div className="slide-framed-rule h-16 w-px bg-primary/25" />
             <ul className="slide-framed-notes space-y-1.5">
-              {frame.notes.map((note, i) => (
+              {notes.map((note, i) => (
                 <li key={i} className="flex items-baseline gap-2 text-base text-text-muted">
                   <span className="hw-marker slide-marker-nested bg-primary" />
                   <span>{renderMarkdown(note)}</span>

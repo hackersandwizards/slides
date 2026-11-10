@@ -1,4 +1,4 @@
-import type { StageState } from "../types/slide";
+import type { SectionTheme, StageState } from "../types/slide";
 
 export type StageCategory = "primary" | "secondary" | "accent" | "success";
 
@@ -34,35 +34,40 @@ export function getStageClasses(
   return `transition-all duration-300 ${categoryStyles[category][state]}`;
 }
 
+// Every section theme has its entry; a deck names it as a plain string.
 export const themeToCategory: Record<string, StageCategory> = {
   accent: "accent",
+  warning: "accent",
   primary: "primary",
   secondary: "secondary",
   success: "success",
   deepdive: "secondary",
-};
+} satisfies Record<SectionTheme, StageCategory>;
 
 export const themeDotColor: Record<string, string> = {
   accent: "bg-slide-accent",
+  warning: "bg-slide-accent",
   primary: "bg-primary",
   secondary: "bg-secondary",
   success: "bg-green-dark",
   deepdive: "bg-secondary",
-};
+} satisfies Record<SectionTheme, string>;
 
 export const themeLabelColor: Record<string, string> = {
   accent: "text-slide-accent",
+  warning: "text-slide-accent",
   primary: "text-primary",
   secondary: "text-secondary",
   success: "text-green-dark",
   deepdive: "text-secondary",
-};
+} satisfies Record<SectionTheme, string>;
 
 /** A theme's hue for brand's `hw-label` (its `data-hue`): none is the label's own teal. */
 export const themeHue: Record<string, "purple" | "amber" | "green" | undefined> = {
   accent: "amber",
+  warning: "amber",
   primary: undefined,
   secondary: "purple",
   success: "green",
   deepdive: "purple",
-};
+} satisfies Record<SectionTheme, "purple" | "amber" | "green" | undefined>;

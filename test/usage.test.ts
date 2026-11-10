@@ -71,7 +71,9 @@ describe("slides-usage", () => {
     const content = (blocks: object[], extra: object = {}) =>
       entriesOf({ type: "content", headline: "h", content: blocks, ...extra } as never);
     const side = { title: "t", items: ["a"] };
-    expect(content([{ type: "bullets", items: ["a"] }])).toEqual(["statement"]);
+    // Drawn as bullets, which the print page marks: counted as drawn (F32).
+    expect(content([{ type: "bullets", items: ["a"] }])).toEqual(["content"]);
+    expect(() => content([{ type: "bulets", items: ["a"] }])).toThrow(/bulets/);
     expect(content([{ type: "two-column", left: side, right: side }])).toEqual([
       "comparison-split",
     ]);

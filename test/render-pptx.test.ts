@@ -561,6 +561,18 @@ describe("slides-pptx on the specimen deck", () => {
     expect(named).toContain(true);
   });
 
+  // F32: a timed agenda aligned with tabs and set no tab stops, so each viewer's default ones did.
+  it("sets tab stops on every paragraph that aligns with a tab", () => {
+    const tabbed = slideXml.flatMap((xml, i) =>
+      [...xml.matchAll(/<a:p>.*?<\/a:p>/gs)]
+        .map(([p]) => p)
+        .filter((p) => /<a:t>[^<]*\t/.test(p) && !p.includes("<a:tabLst>"))
+        .map(() => i + 1),
+    );
+    expect(tabbed).toEqual([]);
+    expect(slideXml.some((xml) => xml.includes("<a:tabLst>"))).toBe(true);
+  });
+
   // F22: a second series that starts late was drawn at zero before its first value.
   it("leaves a gap where a point has no second value", async () => {
     const out = join(dir, "gap.pptx");
