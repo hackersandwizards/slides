@@ -16,6 +16,9 @@ export function family(stack: string): string {
 }
 export const MONO = family(tokens["--font-mono"]);
 export const SANS = family(tokens["--font-sans"]);
+/** Each brand face's PANOSE family class (sans 34, monospace 49), so a machine without it
+ *  substitutes a face of the same kind. */
+export const PITCH: Record<string, string> = { [SANS]: "34", [MONO]: "49" };
 
 /** One face's metrics in em: its line height (hhea ascender, descender and gap, which PowerPoint
  *  and LibreOffice take for single spacing) and an advance per code point. */
@@ -211,7 +214,8 @@ function pieces(spans: Span[]): Piece[] {
     cur = { parts: [], space: 0, forced: false };
   };
   for (const sp of spans) {
-    for (const tok of sp.text.split(/(\n|[^\s-]*-+|\s+)/).filter(Boolean)) {
+    // A line may break after a space, a hyphen or a slash, as Chrome and LibreOffice break.
+    for (const tok of sp.text.split(/(\n|[^\s/-]*[/-]+|[^\S\n]+)/).filter(Boolean)) {
       if (tok === "\n") {
         push(true);
         continue;
@@ -368,7 +372,6 @@ function bodyHeight(body: string, width: number) {
     if (!spans.some((sp) => sp.text.trim())) {
       return;
     }
-    const size = Math.max(...spans.map((sp) => sp.size));
     const exact = /<a:lnSpc><a:spcPts val="(\d+)"\/>/.exec(pPr);
     const pct = /<a:lnSpc><a:spcPct val="(\d+)"\/>/.exec(pPr);
     const lineH = exact
@@ -381,7 +384,6 @@ function bodyHeight(body: string, width: number) {
     line = Math.max(line, ...lines.map((l) => l.width / 72 + marL));
     if (i < paras.length - 1 && after) h += +after[1] / 100;
     widest = Math.max(widest, longest(spans) / 72 + marL);
-    void size;
   });
   return { h: h / 72, widest, line };
 }

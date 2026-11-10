@@ -6,7 +6,7 @@
 // fsType is 0, installable.
 import { readFileSync } from "node:fs";
 import type JSZip from "jszip";
-import { MONO, SANS, faceFiles, unescape } from "./pptx-text";
+import { MONO, PITCH, SANS, faceFiles, unescape } from "./pptx-text";
 
 /** Basic Latin and Latin-1, kept in every subset whatever the deck uses, so text typed into the
  *  file later still finds its letters. */
@@ -14,7 +14,6 @@ const KEPT = [
   ...Array.from({ length: 0x7f - 0x20 }, (_, i) => 0x20 + i),
   ...Array.from({ length: 0x100 - 0xa0 }, (_, i) => 0xa0 + i),
 ];
-const PITCH: Record<string, string> = { [SANS]: "34", [MONO]: "49" };
 
 /** Embeds the regular and bold of both brand faces in `zip`, each subset to the code points the
  *  slides' text uses and the Latin range. */
@@ -25,8 +24,12 @@ export async function embedFonts(zip: JSZip): Promise<void> {
   for (const name of Object.keys(zip.files).filter((f) =>
     /^ppt\/(slides|charts)\/.+\.xml$/.test(f),
   ))
-    for (const [, t] of (await zip.file(name)!.async("string")).matchAll(/<a:t>([^<]*)<\/a:t>/g))
-      for (const ch of unescape(t)) used.add(ch.codePointAt(0)!);
+    // Text runs and a chart's names and values; a caps run's capitals too.
+    for (const [, t] of (await zip.file(name)!.async("string")).matchAll(
+      /<(?:a:t|c:v)>([^<]*)<\/(?:a:t|c:v)>/g,
+    ))
+      for (const ch of unescape(t))
+        for (const cp of [ch, ch.toUpperCase()]) used.add(cp.codePointAt(0)!);
 
   // One EOT per face and weight: brand's unicode-range subsets of the weight merged, each code
   // point from the first subset holding it, as the browser picks it.

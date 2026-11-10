@@ -1418,6 +1418,34 @@ describe("slides-pptx draws what the slide shows", () => {
     expect(pretty(label, w)).toBeUndefined();
   });
 
+  it("indents a numbered list as far as the measure assumes, and steps code highlights by its lines", () => {
+    const ordered =
+      slideXml[
+        specimenAt(
+          (x) => x.type === "content" && x.content.some((b) => b.type === "bullets" && !!b.ordered),
+        )
+      ];
+    const numbered = [...ordered.matchAll(/<a:pPr([^>]*)>(?:(?!<\/a:pPr>).)*<a:buAutoNum/g)];
+    expect(numbered.length).toBeGreaterThan(0);
+    for (const [, attrs] of numbered) expect(attrs).toContain(`marL="${16 * 12700}"`);
+    // The annotated code's lines at the web's 1.3 em, the step its highlights take.
+    const code =
+      slideXml[
+        specimenAt(
+          (x) => x.type === "content" && x.content.some((b) => b.type === "annotated-code"),
+        )
+      ];
+    expect(code).toContain(`<a:spcPts val="${Math.round(16 * 1.3 * 100)}"/>`);
+  });
+
+  it("breaks a line after a space before a forced break, and after a slash", () => {
+    const span = { size: 18, mono: false, bold: false, tracking: 0 };
+    expect(wrap([{ ...span, text: "Hello \nWorld" }], Infinity)).toHaveLength(2);
+    const path = [{ ...span, text: "input/output/storage" }];
+    const lines = wrap(path, wrap([{ ...span, text: "input/output/" }], Infinity)[0].width + 1);
+    expect(lines.map((l) => l.text)).toEqual(["input/output/", "storage"]);
+  });
+
   it("gives a card brand's corner: the large radius at top left and bottom right, a quarter of it at the others", () => {
     const corners = slideXml.flatMap((x) => [
       ...x.matchAll(
@@ -1446,6 +1474,21 @@ describe("slides-pptx as a command", () => {
     expect(loose.status).toBe(0);
     expect(loose.stderr).toContain("warning: image /missing.png");
     expect(run("--strict").status).toBe(1);
+  });
+
+  it("warns once about a missing picture on a slide it measures before drawing", async () => {
+    const closing = {
+      name: "T",
+      slides: [
+        {
+          type: "closing",
+          line1: "Thanks",
+          partners: [{ company: "P", src: "/missing.png", width: 2, height: 1 }],
+        },
+      ],
+    } as unknown as Parameters<typeof renderPptx>[0];
+    const warnings = await renderPptx(closing, join(dir, "closing.pptx"), dir);
+    expect(warnings.filter((w) => w.includes("/missing.png"))).toHaveLength(1);
   });
 
   it("embeds the brand faces only under --embed-fonts: regular and bold as EOT parts PowerPoint lists", async () => {

@@ -766,13 +766,13 @@ export function formatDuration(ms: number): string {
   return h ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
 }
 
+/** A leading hyphen in a figure is a minus: the typographic one, which sits on the digits' axis. */
+export const minus = (v: string) => v.replace(/^-(?=\d)/, "−");
+
 // A figure's leading words ("about $2M", "up to +70%", "über 50", "ca. 5"): every lowercase word,
 // an abbreviation's dot included, before the first token that is not one. They are set small, so
 // only the figure itself carries weight; a quiet figure sets them in the label's face, where six
 // figures on a slide would otherwise compete with them.
-/** A leading hyphen in a figure is a minus: the typographic one, which sits on the digits' axis. */
-export const minus = (v: string) => v.replace(/^-(?=\d)/, "−");
-
 export const leadingWords = (value: string) =>
   /^((?:\p{Ll}+\.?\s+)+)(?=[^\p{Ll}\s])/u.exec(value)?.[1] ?? "";
 

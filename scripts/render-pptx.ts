@@ -64,6 +64,7 @@ import {
   family,
   longest,
   MONO,
+  PITCH,
   pretty,
   SANS,
   wrap,
@@ -435,7 +436,7 @@ function box(
             ? {
                 bullet:
                   p.bullet === "number"
-                    ? { type: "number" }
+                    ? { type: "number", indent: BULLET_INDENT }
                     : {
                         code: p.marker ? MARKER_CODES[p.marker] : MARKER_SQUARE,
                         indent: BULLET_INDENT,
@@ -1260,8 +1261,7 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
       const codeW = b.type === "annotated-code" && b.notes.length ? w * 0.62 : w;
       const lines = codeLines(b.code).map((l) => ({ runs: [{ text: l || " " }] }));
       return (
-        need(lines, c, codeW - 0.4, { size: PT.sm * k, mono: true, line: 1.08, color: c.codeInk }) *
-          1.2 +
+        need(lines, c, codeW - 0.4, { size: PT.sm * k, mono: true, line: 1.3, color: c.codeInk }) +
         0.4
       );
     }
@@ -1522,8 +1522,8 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         a.y + 0.2,
         codeW - 0.4,
         a.h - 0.3,
-        // Single spacing is about 1.2 em, so 1.08 gives the web's 1.3 em code leading.
-        { size: PT.sm * k, mono: true, color: c.codeInk, line: 1.08, floor: 0.5 },
+        // The web's 1.3 em code leading, which the highlights above step by.
+        { size: PT.sm * k, mono: true, color: c.codeInk, line: 1.3, floor: 0.5 },
       );
       notes.forEach((n, i) => {
         const y = a.y + 0.2 + (n.line - 1) * lh;
@@ -2645,8 +2645,12 @@ function flowBlock(
     bullet: true,
     after: sp(1.5) * 72,
   }));
+  // As wide as the longest note, and never more than a third of the frame, so long notes wrap.
   const notesW = notes.length
-    ? Math.max(...notes.map((t) => textWidth(t, 16 * k))) + BULLET_INDENT / 72 + 0.05
+    ? Math.min(
+        a.w / 3,
+        Math.max(...notes.map((t) => textWidth(t, 16 * k))) + BULLET_INDENT / 72 + 0.05,
+      )
     : 0;
   const stepsW = a.w - 2 * pad - (notes.length ? notesW + 2 * sp(6) : 0);
   const stepsH = flowSteps(undefined, c, b.steps, { x: 0, y: 0, w: stepsW }, opts);
@@ -4502,7 +4506,11 @@ const RENDER: {
       }
       return y - gap;
     };
-    column(s, (H - column(DRY, 0)) / 2);
+    // The measuring pass warns as the drawing pass will: its warnings are dropped.
+    const warned = ctx.warnings.length;
+    const height = column(DRY, 0);
+    ctx.warnings.length = warned;
+    column(s, (H - height) / 2);
   },
 
   // As the web's RoadmapSlide: each column a card holding its items, or its phases as groups of
@@ -5221,7 +5229,6 @@ export async function renderPptx(
   // brand fonts substitutes a sans for Inter and a monospace for JetBrains Mono instead of its
   // default face. pptxgenjs writes the typeface alone, or a sans pitch for every face in a table.
   const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
-  const fallback: Record<string, string> = { [SANS]: "34", [MONO]: "49" };
   // pptxgenjs numbers charts across every deck of the process: within one, they run in drawing order.
   const chartFiles = Object.keys(zip.files)
     .filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
@@ -5238,7 +5245,7 @@ export async function renderPptx(
         .replace(
           /typeface="([^"]+)"(?:\s+(?:pitchFamily|charset|panose)="[^"]*")*/g,
           (m, face: string) =>
-            fallback[face] ? `typeface="${face}" pitchFamily="${fallback[face]}" charset="0"` : m,
+            PITCH[face] ? `typeface="${face}" pitchFamily="${PITCH[face]}" charset="0"` : m,
         )
         // pptxgenjs marks every run en-US, so PowerPoint's spelling and hyphenation take a German
         // deck for English.
