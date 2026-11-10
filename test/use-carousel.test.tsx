@@ -1,6 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useCarousel } from "../lib/use-carousel";
+import { PrintProvider } from "../lib/print-context";
+import { phoneWidth } from "./phone-width";
 
 function pressKey(key: string): boolean {
   const event = new KeyboardEvent("keydown", { key, cancelable: true, bubbles: true });
@@ -68,4 +70,21 @@ describe("useCarousel", () => {
     history.replaceState(null, "", location.pathname);
     expect(result.current[0]).toBe(2);
   });
+
+  // A phone shows every step at once and lets Next change slides, as a reveal slide does (F31).
+  it("opens at the last step on a phone and lets the arrows through", () => {
+    phoneWidth();
+    const { result } = renderHook(() => useCarousel({ count: 3, min: -1 }));
+    expect(result.current[0]).toBe(2);
+    expect(pressKey("ArrowRight")).toBe(false);
+    expect(pressKey("ArrowLeft")).toBe(false);
+  });
+
+  it("takes no arrow in print", () => {
+    const { result } = renderHook(() => useCarousel({ count: 3 }), { wrapper: PrintProvider });
+    expect(pressKey("ArrowRight")).toBe(false);
+    expect(result.current[0]).toBe(0);
+  });
 });
+
+afterEach(() => vi.restoreAllMocks());

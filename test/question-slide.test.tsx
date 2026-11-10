@@ -80,3 +80,30 @@ describe("QuestionSlide", () => {
     expect(screen.getByRole("button", { name: /^B: there, 5 votes$/ })).toBeInTheDocument();
   });
 });
+
+// The windows of a talk replay each other's arrow presses, so a click or a focus that moves the
+// cursor goes as presses too, or the speaker window votes for another option (F15).
+describe("a cursor moved by pointer or focus", () => {
+  const three: QuestionSlideType = {
+    ...slide,
+    options: [...slide.options, { label: "C", text: "elsewhere" }],
+  };
+  it("moves as consumed arrow presses", () => {
+    render(<QuestionSlide slide={three} />);
+    const presses: string[] = [];
+    const log = (event: KeyboardEvent) =>
+      setTimeout(() => event.defaultPrevented && presses.push(event.key));
+    window.addEventListener("keydown", log, true);
+    vi.useFakeTimers();
+    act(() => screen.getByRole("button", { name: /^C:/ }).focus());
+    act(() => screen.getByRole("button", { name: /^A:/ }).click());
+    vi.runAllTimers();
+    vi.useRealTimers();
+    window.removeEventListener("keydown", log, true);
+    expect(presses).toEqual(["ArrowRight", "ArrowRight", "ArrowLeft", "ArrowLeft"]);
+    expect(screen.getByRole("button", { name: /^A: here, 1 vote/ })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+  });
+});

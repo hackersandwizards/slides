@@ -314,6 +314,22 @@ describe("createDeckSync", () => {
     expect(second.view).toEqual({ slide: 3, revealed: 0 });
   });
 
+  // The projector and a laptop tab with a speaker window open: the speaker window passes a press
+  // in one on to the other (F25).
+  it("moves a second audience window through the speaker window", async () => {
+    const channel = bus();
+    const projector = makeWindow("audience", channel, steps);
+    const laptop = makeWindow("audience", channel, steps);
+    const presenter = makeWindow("presenter", channel, steps);
+    await settle();
+    laptop.press("ArrowRight");
+    laptop.press("ArrowRight");
+    await settle();
+    expect(presenter.view).toEqual({ slide: 1, revealed: 1 });
+    expect(projector.view).toEqual({ slide: 1, revealed: 1 });
+    expect(laptop.view).toEqual({ slide: 1, revealed: 1 });
+  });
+
   it("stops following once its last slide has unmounted", async () => {
     const channel = bus();
     const audience = makeWindow("audience", channel, steps);

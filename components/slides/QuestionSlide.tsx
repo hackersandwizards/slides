@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import type { QuestionSlide as QuestionSlideType } from "../../types/slide";
 import { usePrintMode } from "../../lib/print-context";
 import { useCarousel } from "../../lib/use-carousel";
+import { usePhone } from "../../lib/use-progressive-reveal";
+import { arrowEvent } from "../../lib/presenter-sync";
 import { useSlideKeyboard } from "../../lib/use-slide-keyboard";
 import { BlurFade } from "../ui/blur-fade";
 import { NumberTicker } from "../ui/number-ticker";
@@ -65,7 +67,17 @@ function usePersistedCounts(storageKey: string, length: number, printMode: boole
 export function QuestionSlide({ slide }: Props) {
   const { headline, storageKey, options } = slide;
   const printMode = usePrintMode();
-  const [cursor, setCursor] = useCarousel({ count: options.length, enabled: !printMode });
+  // On a phone the cursor follows the tap alone, and Next changes slides.
+  const phone = usePhone();
+  const keys = !printMode && !phone;
+  const [cursor, setCursor] = useCarousel({ count: options.length, enabled: keys });
+  // The windows of a talk replay each other's arrow presses only, so the cursor moves by presses
+  // wherever the arrows step it.
+  const moveTo = (i: number) => {
+    if (!keys) return setCursor(i);
+    const key = i > cursor ? "ArrowRight" : "ArrowLeft";
+    for (let n = Math.abs(i - cursor); n > 0; n--) document.body.dispatchEvent(arrowEvent(key));
+  };
   const [counts, setCounts] = usePersistedCounts(storageKey, options.length, printMode);
 
   useSlideKeyboard({
@@ -96,7 +108,7 @@ export function QuestionSlide({ slide }: Props) {
           {options.map((option, i) => {
             const isActive = i === cursor && !printMode;
             const vote = () => {
-              setCursor(i);
+              moveTo(i);
               setCounts((prev) => prev.map((c, idx) => (idx === i ? c + 1 : c)));
             };
             return (
@@ -104,7 +116,7 @@ export function QuestionSlide({ slide }: Props) {
                 <button
                   type="button"
                   onClick={vote}
-                  onFocus={() => setCursor(i)}
+                  onFocus={() => moveTo(i)}
                   disabled={printMode}
                   aria-current={isActive ? "true" : undefined}
                   aria-label={`${option.label}: ${option.text}, ${counts[i]} votes`}

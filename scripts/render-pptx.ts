@@ -2,7 +2,7 @@
 // slides-pptx: every text is a text box, a table a PowerPoint table, a trend or bar chart a
 // PowerPoint chart, a diagram drawn shapes; only a deck's own images and the h&w logos are pictures.
 // A deck on a client's template is that consumer's own exporter.
-// Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]
+// Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict]
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { createRequire } from "node:module";
@@ -432,8 +432,18 @@ function arrow(
   });
 }
 
+const chipAdvance = (text: string, mono: boolean) =>
+  (plain(text).length * (mono ? 0.66 : 0.56)) / 72;
 const chipWidth = (text: string, size: number, mono: boolean) =>
-  (plain(text).length * size * (mono ? 0.66 : 0.56)) / 72 + 0.3;
+  chipAdvance(text, mono) * size + 0.3;
+
+/** The type size at which a row of chips `gap` apart fits `width`: `size`, or smaller where the
+ *  row would run past it. */
+function rowSize(texts: string[], size: number, mono: boolean, gap: number, width: number) {
+  const fixed = texts.length * 0.3 + (texts.length - 1) * gap;
+  const per = texts.reduce((sum, t) => sum + chipAdvance(t, mono), 0);
+  return Math.min(size, (width - fixed) / per);
+}
 
 function chip(
   s: PSlide,
@@ -491,6 +501,14 @@ function imageSize(buf: Buffer): [number, number] | undefined {
 
 function brandLogo(name: string): string {
   return createRequire(import.meta.url).resolve(`@hackersandwizards/brand/logos/${name}.png`);
+}
+
+/** A brand logo's path and its width over its height, read from the file, since each cut has its
+ *  own (the night lockup is wider than the day one). */
+function brandCut(name: string): [string, number] {
+  const path = brandLogo(name);
+  const [w, h] = imageSize(readFileSync(path))!;
+  return [path, w / h];
 }
 
 /** A trend's marked point, -1 for none, and the series its legend leaves out, or whether a bar's
@@ -567,8 +585,8 @@ function picture(
       h: ih * k,
       sizing: { type: "crop", x: (iw * k - d) / 2, y: 0, w: d, h: d },
       rounding: true,
-      altText: o.alt,
-      ...(o.href ? { hyperlink: { url: o.href } } : {}),
+      altText: altText(o.alt),
+      ...pictureLink(o.href),
     });
     return { x: px, y: py, w: d, h: d };
   }
@@ -583,11 +601,26 @@ function picture(
     y: py,
     w: pw,
     h: ph,
-    altText: o.alt,
-    ...(o.href ? { hyperlink: { url: o.href } } : {}),
+    altText: altText(o.alt),
+    ...pictureLink(o.href),
   });
   return { x: px, y: py, w: pw, h: ph };
 }
+
+/** A picture's description. pptxgenjs describes a picture without one by its file path, which
+ *  names the exporting machine's user and folders: a space describes it as nothing. */
+const altText = (alt?: string) => alt || " ";
+
+/** A picture's link. pptxgenjs escapes a text run's link, never a picture's, which it writes into
+ *  the slide's relationships as it stands: a raw `&` there leaves the part malformed. */
+const pictureLink = (href?: string) =>
+  href
+    ? {
+        hyperlink: {
+          url: href.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"),
+        },
+      }
+    : {};
 
 const THEME: Record<SectionTheme, keyof Palette> = {
   primary: "teal",
@@ -612,7 +645,16 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   // gradient fill.
   const steps = 24;
   for (let i = 0; i < steps; i++) {
-    rect(s, (W / steps) * i, 0, W / steps + 0.01, 16 / 144, mix(c.purple, c.teal, i / (steps - 1)));
+    // Each step overlaps the next by a hundredth, so no seam shows; the last ends at the edge.
+    const x = (W / steps) * i;
+    rect(
+      s,
+      x,
+      0,
+      Math.min(W / steps + 0.01, W - x),
+      16 / 144,
+      mix(c.purple, c.teal, i / (steps - 1)),
+    );
   }
   const slide = deck.slides[index];
   const mark = cornerMark(deck, index);
@@ -623,11 +665,11 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   const baseY = 1024 / 144;
   let x = right;
   if (!closingCentred) {
-    const name = `${mark}${ctx.dark ? "-night" : ""}`;
-    const [ratio, h] = mark === "lockup" ? [2416 / 447, lockupH] : [2400 / 348, markH];
+    const [path, ratio] = brandCut(`${mark}${ctx.dark ? "-night" : ""}`);
+    const h = mark === "lockup" ? lockupH : markH;
     x = right - h * ratio;
     s.addImage({
-      path: brandLogo(name),
+      path,
       x,
       y: baseY - h / 2,
       w: h * ratio,
@@ -720,6 +762,8 @@ function footer(s: PSlide, ctx: Ctx, text: string | undefined, h: number, center
 function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
   const { c } = ctx;
   let y = 58 / 144;
+  // The kicker band's second row, where the principle pill wraps as on the web.
+  let wrapped = 0;
   const kicker = h.sectionLabel ?? h.preText;
   if (kicker || h.principle) {
     let x = SIDE;
@@ -734,9 +778,15 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
       });
       x += (kicker.length * PT.base * (ADVANCE.mono + 0.06)) / 72 + 0.2;
     }
-    if (h.principle) chip(s, c, h.principle, x, y + 0.02, PT.sm, c.tint, c.ink, false);
+    if (h.principle) {
+      if (x + chipWidth(h.principle, PT.sm, false) > W - SIDE) {
+        wrapped = (45 + 20) / 144;
+        x = SIDE;
+      }
+      chip(s, c, h.principle, x, y + wrapped + 0.02, PT.sm, c.tint, c.ink, false);
+    }
   }
-  y = TOP;
+  y = TOP + wrapped;
   if (h.headline) {
     const o: BoxOpts = {
       size: PT.title,
@@ -1939,11 +1989,12 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       if (existsSync(path)) {
         s.addImage({
           path,
+          // pptxgenjs crops a picture of this whole size to the box below, as the portrait does.
           x: a.x,
           y: a.y,
-          w: pw,
-          h: ph,
-          altText: b.alt,
+          w: w0 * k2,
+          h: h0 * k2,
+          altText: altText(b.alt),
           sizing: {
             type: "crop",
             x: 0,
@@ -2009,7 +2060,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
           x: a.x + iw + 0.3,
           y,
           w: a.w - iw - 0.3,
-          h: Math.min(a.y + a.h - y, b.items.length * 1.2),
+          h: Math.max(0, Math.min(a.y + a.h - y, b.items.length * 1.2)),
         },
         k,
         false,
@@ -2031,13 +2082,17 @@ function blocks(s: PSlide, ctx: Ctx, list: ContentBlock[], a: Area, centered = f
   const grows = list.filter((b) => GROWS.has(b.type)).length;
   const room = a.h - gap * (list.length - 1) - grows * 1.5;
   while (k > 0.62 && fixed(k) > room) k -= 0.04;
+  if (fixed(k) > room)
+    ctx.warnings.push(
+      `blocks ${list.map((b) => b.type).join(", ")}: ${(fixed(k) - room).toFixed(2)} in taller than the slide holds`,
+    );
   const extra = grows ? (a.h - gap * (list.length - 1) - fixed(k)) / grows : 0;
   const total = fixed(k) + grows * extra + gap * (list.length - 1);
   let y = centered ? a.y + Math.max(0, (a.h - total) / 2) : a.y;
   for (const b of list) {
     const h = GROWS.has(b.type)
       ? Math.max(1, extra)
-      : Math.min(blockHeight(b, ctx.c, a.w, k), a.y + a.h - y);
+      : Math.max(0, Math.min(blockHeight(b, ctx.c, a.w, k), a.y + a.h - y));
     drawBlock(s, ctx, b, { x: a.x, y, w: a.w, h }, k, centered);
     y += h + gap;
   }
@@ -2675,7 +2730,7 @@ const RENDER: {
       card(s, r.x, r.y, r.w, r.h, vs ? c.tealTint : c.card, vs ? c.teal : c.border);
       let ty = r.y + 0.25;
       if (sd.logo) {
-        picture(s, ctx, sd.logo, r.x + 0.25, ty, 1.4, 0.4, { align: "left" });
+        picture(s, ctx, sd.logo, r.x + 0.25, ty, 1.4, 0.4, { align: "left", alt: plain(sd.label) });
         ty += 0.5;
       }
       box(s, c, paras(sd), r.x + 0.25, ty, r.w - 0.5, r.y + r.h - ty - 0.2, o);
@@ -2918,8 +2973,9 @@ const RENDER: {
         valign: "middle",
       });
       let x = SIDE + 2;
+      const size = rowSize(lane.stages, PT.sm, false, 0.3, SIDE + CW - 0.25 - x);
       lane.stages.forEach((st, j) => {
-        const w = chip(s, c, st, x, ly + lh / 2 - (PT.sm * 1.9) / 144, PT.sm, c.card, c.ink, false);
+        const w = chip(s, c, st, x, ly + lh / 2 - (size * 1.9) / 144, size, c.card, c.ink, false);
         x += w;
         if (j < lane.stages.length - 1) {
           arrow(s, c, x + 0.05, ly + lh / 2, x + 0.25, ly + lh / 2, c.purple);
@@ -3312,9 +3368,10 @@ const RENDER: {
       // The web's contact slide without portraits: the lockup in the centre column, each speaker's
       // name and contact lines under it.
       const lockH = 91.7 / 144;
-      const lockW = (lockH * 2416) / 447;
+      const [path, ratio] = brandCut(`lockup${ctx.dark ? "-night" : ""}`);
+      const lockW = lockH * ratio;
       s.addImage({
-        path: brandLogo(`lockup${ctx.dark ? "-night" : ""}`),
+        path,
         x: (W - lockW) / 2,
         y,
         w: lockW,
@@ -3614,7 +3671,10 @@ const RENDER: {
       for (const m of d.milestones) {
         const mx = gx + (m.column - 1) * colW;
         rect(s, mx, my + 0.02, colW * 0.9, 0.025, c.purple);
-        box(s, c, m.label, mx, my + 0.08, colW * 1.5, 0.25, { size: PT.label, color: c.purple });
+        box(s, c, m.label, mx, my + 0.08, Math.min(colW * 1.5, W - SIDE - mx), 0.25, {
+          size: PT.label,
+          color: c.purple,
+        });
       }
     }
     footer(s, ctx, d.footer, footH);
@@ -4093,15 +4153,18 @@ function pillPhases(
       color: tone,
     });
     let x = a.x;
+    const title = (it: (typeof p.items)[number]) =>
+      it.number === undefined ? it.title : `#${it.number} ${it.title}`;
+    const size = rowSize(p.items.map(title), PT.sm * 0.9, false, 0.12, a.w);
     for (const it of p.items) {
       const on = it.state === "active" || it.state === "new";
       const w = chip(
         s,
         c,
-        it.number === undefined ? it.title : `#${it.number} ${it.title}`,
+        title(it),
         x,
         py + 0.32,
-        PT.sm * 0.9,
+        size,
         on ? mix(tone, c.bg, 0.15) : c.card,
         c.ink,
         false,
@@ -4228,13 +4291,15 @@ export async function renderPptx(
 
 if (import.meta.main) {
   const args = process.argv.slice(2);
+  const strict = args.includes("--strict");
+  if (strict) args.splice(args.indexOf("--strict"), 1);
   const at = args.indexOf("--assets");
   const assets = resolve(at >= 0 ? (args.splice(at, 2)[1] ?? "") : "public");
   const [input, out] = args;
   if (!input || !out || !out.endsWith(".pptx")) {
-    console.error("Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]");
+    console.error("Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict]");
     console.error(
-      "The deck is a Presentation as JSON; --assets is the directory a slide's /image path resolves in, ./public by default; a path to an existing file is read as it stands.",
+      "The deck is a Presentation as JSON; --assets is the directory a slide's /image path resolves in, ./public by default; a path to an existing file is read as it stands. --strict exits 1 on any warning, for a gate.",
     );
     process.exit(1);
   }
@@ -4246,4 +4311,5 @@ if (import.meta.main) {
   const warnings = await renderPptx(deck, resolve(out), assets);
   for (const w of warnings) console.error(`warning: ${w}`);
   console.log(`Wrote ${out}: ${deck.slides.length} slides`);
+  if (strict && warnings.length) process.exit(1);
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useSlideKeyboard } from "./use-slide-keyboard";
 import { usePrintMode } from "./print-context";
+import { usePhone } from "./use-progressive-reveal";
 import { opensRevealed, directionKey, writeStored } from "./slide-utils";
 
 interface UseCarouselOptions {
@@ -12,7 +13,7 @@ interface UseCarouselOptions {
   min?: number;
   /** Starting index. Defaults to `min`. */
   initial?: number;
-  /** When false, arrow keys are ignored (e.g. print mode). Default true. */
+  /** When false, arrow keys are ignored. Default true; print and a phone take none either. */
   enabled?: boolean;
 }
 
@@ -34,6 +35,9 @@ export function useCarousel({
   // hydration so the server markup still matches.
   const printMode = usePrintMode();
   const [revealed] = useState(() => enabled && !printMode && opensRevealed());
+  // A phone shows the last step and lets Next change slides, as a reveal slide shows every step.
+  const phone = usePhone() && enabled && !printMode;
+  const keys = enabled && !printMode && !phone;
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount step above
     if (revealed) setIndex(max);
@@ -55,10 +59,10 @@ export function useCarousel({
       }
       return false;
     },
-    enabled,
+    enabled: keys,
     pending: index < max,
     undoable: index > min,
   });
 
-  return [index, setIndex];
+  return [phone ? max : index, setIndex];
 }

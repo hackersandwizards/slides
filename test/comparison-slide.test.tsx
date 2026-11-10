@@ -1,5 +1,6 @@
 import { act, render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { phoneWidth } from "./phone-width";
 import { slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import type { ComparisonSlide, Slide } from "../types/slide";
@@ -169,5 +170,31 @@ describe("comparison variants (merge-comparison)", () => {
     );
     expect(getByText("Stops")).toBeTruthy();
     expect(getByText("Keeps going")).toBeTruthy();
+  });
+});
+
+describe("guidance comparison on screen", () => {
+  afterEach(() => vi.restoreAllMocks());
+  const guidance = (examples: object[]) =>
+    render(
+      <slideComponents.comparison
+        slide={{ type: "comparison", variant: "guidance", headline: "H", examples } as Slide}
+      />,
+    ).container;
+  const two = [
+    { title: "One", bad: "b", good: "g" },
+    { title: "Two", bad: "b", good: "g" },
+  ];
+
+  it("draws a slide without examples, as print does", () => {
+    expect(guidance([]).textContent).toContain("H");
+  });
+
+  it("steps through the examples on a screen and shows them all on a phone", () => {
+    const titles = (c: HTMLElement) =>
+      [...c.querySelectorAll("h2:not(.slide-title)")].map((h) => h.textContent);
+    expect(titles(guidance(two))).toEqual(["One"]);
+    phoneWidth();
+    expect(titles(guidance(two))).toEqual(["One", "Two"]);
   });
 });

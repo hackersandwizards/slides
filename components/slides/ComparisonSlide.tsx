@@ -9,6 +9,7 @@ import type {
 } from "../../types/slide";
 import { usePrintMode } from "../../lib/print-context";
 import { useCarousel } from "../../lib/use-carousel";
+import { usePhone } from "../../lib/use-progressive-reveal";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { keepHyphenatedWords } from "../../lib/slide-utils";
@@ -251,10 +252,12 @@ export function Positions({
 
 function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
   const { intro, points, examples } = slide;
+  // Print and a phone show every example; a screen steps through them.
   const printMode = usePrintMode();
-  const [activeExample] = useCarousel({ count: examples.length, enabled: !printMode });
-
-  const renderExamples = printMode ? examples : [examples[activeExample]];
+  const phone = usePhone();
+  const all = printMode || phone;
+  const [activeExample] = useCarousel({ count: examples.length, enabled: !all });
+  const renderExamples = all ? examples : examples.slice(activeExample, activeExample + 1);
 
   return (
     <div className="w-full max-w-6xl self-start">
@@ -278,11 +281,11 @@ function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
       )}
 
       {renderExamples.map((example, i) => (
-        <BlurFade key={printMode ? i : activeExample} delay={0.25} duration={0.5}>
+        <BlurFade key={all ? i : activeExample} delay={0.25} duration={0.5}>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl text-text">{example.title}</h2>
-              {!printMode && examples.length > 1 && (
+              {!all && examples.length > 1 && (
                 <span className="text-base font-medium text-text-subtle">
                   {activeExample + 1} / {examples.length}
                 </span>
@@ -312,7 +315,7 @@ function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
         </BlurFade>
       ))}
 
-      {!printMode && examples.length > 1 && (
+      {!all && examples.length > 1 && (
         <div className="mt-6 flex justify-center gap-2">
           {examples.map((_, i) => (
             <div

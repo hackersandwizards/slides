@@ -64,14 +64,16 @@ argument, `-` for standard input, holds one deck or a JSON array of decks, so a 
 decks are code pipes them all in at once; no deck at all fails. An error names a deck of an array
 by its `slug`, where the consumer sets one, else its `name`, and by its place in the array.
 
-The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>]` writes a deck as a native
+The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict]` writes a deck as a native
 PowerPoint file in the h&w design: text as text boxes, tables as tables, trend and bar charts as
 charts, diagrams as shapes, and only the deck's own images and the h&w logos as pictures. A chart's
 labels and card, and the fill under a trend's measured part, are shapes beside the chart, so the
 fill does not follow data someone edits in the chart in PowerPoint. The deck
 is the `Presentation` as JSON, `-` reads it from stdin. `--assets` is the folder a deck's `/…`
 image paths resolve against, `./public` by default; a path to an existing file, as Bun gives the
-specimen's imported images, is read as it stands. It needs `pptxgenjs` and `jszip`, optional
+specimen's imported images, is read as it stands. It warns on what it cannot draw as the slide
+does, such as a missing image or blocks taller than the slide, and `--strict` makes a warning exit
+1, for a consumer's gate. It needs `pptxgenjs` and `jszip`, optional
 peer dependencies a consumer installs only to run it. In `talks`:
 
 ```sh

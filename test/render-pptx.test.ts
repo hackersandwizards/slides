@@ -1,6 +1,8 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { createRequire } from "node:module";
+import { spawnSync } from "node:child_process";
 import JSZip from "jszip";
 import verbal from "@hackersandwizards/brand/verbal.json";
 import { tokens } from "@hackersandwizards/brand/tokens";
@@ -15,6 +17,8 @@ import {
   regularAsContent,
   twoColumnAsSplit,
 } from "../lib/slide-utils";
+
+const require = createRequire(import.meta.url);
 
 const NOT_TEXT = new Set([
   "type",
@@ -77,6 +81,30 @@ const unescape = (t: string) =>
     .replace(/&apos;/g, "'")
     .replace(/&amp;/g, "&");
 
+// The slide is 13.33 by 7.5 in, in EMU.
+const [SLIDE_W, SLIDE_H] = [12192000, 6858000];
+
+/** What PowerPoint draws off the slide, at a negative size, or cropped outside the picture: each
+ *  shape's offset and extent against the slide, and each crop's edges against 0 to 100 %. */
+function misplaced(xml: string): string[] {
+  const out: string[] = [];
+  for (const [, x, y, cx, cy] of xml.matchAll(
+    /<a:off x="(-?\d+)" y="(-?\d+)"\/><a:ext cx="(-?\d+)" cy="(-?\d+)"\/>/g,
+  )) {
+    const [l, t, w, h] = [x, y, cx, cy].map(Number);
+    if (w < 0 || h < 0) out.push(`negative size ${w} x ${h}`);
+    // A rounding tenth of a millimetre past the edge is no defect.
+    if (l < -3600 || t < -3600 || l + w > SLIDE_W + 3600 || t + h > SLIDE_H + 3600)
+      out.push(
+        `off the slide at ${(l / 914400).toFixed(2)}, ${(t / 914400).toFixed(2)} in, ${(w / 914400).toFixed(2)} x ${(h / 914400).toFixed(2)} in`,
+      );
+  }
+  for (const [rect] of xml.matchAll(/<a:srcRect [^>]*\/>/g))
+    for (const [, edge, value] of rect.matchAll(/ ([lrtb])="(-?\d+)"/g))
+      if (+value < 0 || +value > 100000) out.push(`crop ${edge}=${value}`);
+  return out;
+}
+
 let dir: string;
 let zip: JSZip;
 const slideXml: string[] = [];
@@ -129,6 +157,93 @@ describe("slides-pptx on the specimen deck", () => {
       );
       expect(doc.getElementsByTagName("parsererror"), part).toHaveLength(0);
     }
+  });
+
+  it("keeps every shape on the slide, with a positive size and a crop inside the picture", () => {
+    expect(slideXml.flatMap((xml, i) => misplaced(xml).map((m) => `slide ${i + 1}: ${m}`))).toEqual(
+      [],
+    );
+  });
+
+  // Slides the specimen keeps within bounds, pushed past them: a link with `&`, a stack taller than
+  // the slide, chip rows wider than it, a picture without alt text (F02, F05, F07, F12).
+  it("keeps over-full slides on the slide and their parts well-formed", async () => {
+    const at = (type: string) => structuredClone(slideCatalog.slides.find((x) => x.type === type)!);
+    const href = "https://example.com/talk?utm_source=deck&utm_medium=qr";
+    const title = structuredClone(slideCatalog.slides.find((x) => "qr" in x && x.qr)!) as Slide;
+    (title as { qr: { href: string } }).qr.href = href;
+    const rows = Array.from({ length: 10 }, (_, i) => [`Team ${i}`, `${i} days`, `${i}%`]);
+    const tall = {
+      type: "content",
+      headline: "A table taller than the slide",
+      content: [
+        { type: "table", headers: ["Team", "Lead time", "Failure rate"], rows },
+        { type: "paragraph", text: "Under it." },
+      ],
+    } as Slide;
+    const lanes = at("lanes") as Extract<Slide, { type: "lanes" }>;
+    lanes.lanes[0].stages = Array.from({ length: 9 }, (_, i) => `Stage number ${i + 1}`);
+    const pills = at("phased-pills") as Extract<Slide, { type: "phased-pills" }>;
+    pills.phases[0].items = Array.from({ length: 9 }, (_, i) => ({
+      number: i,
+      title: "Long item",
+    }));
+    const pictured = structuredClone(
+      slideCatalog.slides.find(
+        (x) => x.type === "content" && x.content.some((b) => b.type === "image"),
+      )!,
+    ) as ContentSlide;
+    for (const b of pictured.content) if (b.type === "image") delete b.alt;
+    const out = join(dir, "over-full.pptx");
+    const root = join(import.meta.dirname, "..");
+    const warnings = await renderPptx(
+      { name: "T", slides: [title, tall, lanes, pills, pictured] },
+      out,
+      root,
+    );
+    expect(warnings).toEqual([expect.stringMatching(/^blocks table, paragraph: .* taller/)]);
+    const probe = await JSZip.loadAsync(readFileSync(out));
+    expect(await probe.file("ppt/slides/_rels/slide1.xml.rels")!.async("string")).toContain(
+      `Target="${href.replace("&", "&amp;")}"`,
+    );
+    const problems: string[] = [];
+    for (const part of Object.keys(probe.files).filter((f) => /\.(xml|rels)$/.test(f))) {
+      const xml = await probe.file(part)!.async("string");
+      const doc = new DOMParser().parseFromString(xml, "application/xml");
+      if (doc.getElementsByTagName("parsererror").length) problems.push(`${part}: malformed`);
+      if (/slides\/slide\d+\.xml$/.test(part))
+        problems.push(...misplaced(xml).map((m) => `${part}: ${m}`));
+      if (xml.includes(root)) problems.push(`${part}: names a local path`);
+    }
+    expect(problems).toEqual([]);
+  });
+
+  // Each cut of the brand marks has its own proportions; the night lockup is wider (F20).
+  it("draws each brand mark of a night deck at its own file's proportions", async () => {
+    const out = join(dir, "night.pptx");
+    const slides = slideCatalog.slides.filter((x) => x.type === "title" || x.type === "closing");
+    await renderPptx(
+      { name: "T", theme: "brand-dark", slides },
+      out,
+      join(import.meta.dirname, ".."),
+    );
+    const probe = await JSZip.loadAsync(readFileSync(out));
+    const ratio = (png: Buffer) => png.readUInt32BE(16) / png.readUInt32BE(20);
+    const cuts = await Promise.all(
+      ["lockup-night", "wordmark-night"].map((name) =>
+        ratio(readFileSync(require.resolve(`@hackersandwizards/brand/logos/${name}.png`))),
+      ),
+    );
+    const drawn: number[] = [];
+    for (let i = 1; probe.file(`ppt/slides/slide${i}.xml`); i++) {
+      const xml = await probe.file(`ppt/slides/slide${i}.xml`)!.async("string");
+      for (const [, cx, cy] of xml.matchAll(
+        /descr="hackers&amp;wizards"[\s\S]*?<a:ext cx="(\d+)" cy="(\d+)"/g,
+      ))
+        drawn.push(+cx / +cy);
+    }
+    expect(drawn.length).toBeGreaterThan(0);
+    for (const r of drawn) expect(Math.min(...cuts.map((c) => Math.abs(c - r)))).toBeLessThan(0.01);
   });
 
   it("sets brand's claim on a contact closing unless it turns the claim off", () => {
@@ -723,3 +838,23 @@ it.each([true, false])(
     expect(none).not.toBe(last);
   },
 );
+
+describe("slides-pptx as a command", () => {
+  const script = join(import.meta.dirname, "../scripts/render-pptx.ts");
+  const deck = JSON.stringify({
+    name: "T",
+    slides: [{ type: "content", headline: "H", content: [{ type: "image", src: "/missing.png" }] }],
+  });
+  const run = (...flags: string[]) =>
+    spawnSync("bun", [script, "-", join(dir, "cli.pptx"), "--assets", dir, ...flags], {
+      encoding: "utf8",
+      input: deck,
+    });
+
+  it("writes the file and reports a warning, and exits 1 on one under --strict", () => {
+    const loose = run();
+    expect(loose.status).toBe(0);
+    expect(loose.stderr).toContain("warning: image /missing.png");
+    expect(run("--strict").status).toBe(1);
+  });
+});

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { NARROW, opensRevealed, directionKey, ignoredKey, writeStored } from "./slide-utils";
 import { usePrintMode } from "./print-context";
+import { deckSync } from "./presenter-sync";
 
 // Which reveal handlers on the page still hold a step ahead, so the presenter hint can say "to
 // reveal" only while the next arrow press reveals something rather than changing slides, and which
@@ -67,12 +68,23 @@ function stepReveal(event: KeyboardEvent) {
 }
 
 const narrowQuery = () => window.matchMedia?.(NARROW);
-const isNarrow = () => !!narrowQuery()?.matches;
-const subscribeNarrow = (listener: () => void) => {
+// A window of a presented talk is no phone, whatever its width: the windows replay each other's
+// presses on their own copies of a slide, so a copy that did not step would send the others back.
+const isPhone = () =>
+  !!narrowQuery()?.matches && deckSync.role() === "audience" && !deckSync.speakerOpen();
+const subscribePhone = (listener: () => void) => {
   const query = narrowQuery();
   query?.addEventListener("change", listener);
-  return () => query?.removeEventListener("change", listener);
+  const leave = deckSync.subscribe(listener);
+  return () => {
+    query?.removeEventListener("change", listener);
+    leave();
+  };
 };
+
+/** True on a phone, where the reader scrolls a one-column slide and Next moves to the next slide:
+ *  every step shows at once and the arrows never step. */
+export const usePhone = () => useSyncExternalStore(subscribePhone, isPhone, () => false);
 
 interface UseProgressiveRevealOptions {
   totalSteps: number;
@@ -103,16 +115,15 @@ export function useProgressiveReveal({
   // slide unrevealed, and React keeps a hydrated tree's mismatched attributes as the server sent
   // them, so revealing in the first client render left a backward arrival blank.
   const [arrivedRevealed] = useState(() => !full && totalSteps > 0 && opensRevealed());
-  // On a phone the reader scrolls a one-column slide and Next moves to the next slide, so every
-  // step shows at once and the arrows never step; followed, so a rotation into it reveals too.
-  const phone = useSyncExternalStore(subscribeNarrow, isNarrow, () => false);
-  const revealed = arrivedRevealed || (!full && totalSteps > 0 && phone);
+  // Followed, so a rotation into a phone reveals too, and a speaker window opening steps again
+  // from the state the slide was in.
+  const phone = usePhone() && !full && totalSteps > 0;
   useEffect(() => {
-    if (!revealed) return;
+    if (!arrivedRevealed) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount reveal above
     setRevealedCount(totalSteps);
     setFooterVisible(hasFooter);
-  }, [revealed, totalSteps, hasFooter]);
+  }, [arrivedRevealed, totalSteps, hasFooter]);
   // Consumed after mount, once every hook on the slide has read it in render, so a reload after a
   // backward arrival opens unrevealed. Here as well as in SlideNavigation: a story renders a slide without it.
   useEffect(() => writeStored("session", directionKey(), null), []);
@@ -161,5 +172,7 @@ export function useProgressiveReveal({
     listening && (revealedCount > 0 || (hasFooter && footerVisible)),
   );
 
-  return { revealedCount, footerVisible, stepped };
+  return phone
+    ? { revealedCount: totalSteps, footerVisible: hasFooter, stepped: false }
+    : { revealedCount, footerVisible, stepped };
 }

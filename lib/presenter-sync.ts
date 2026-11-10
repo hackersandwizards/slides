@@ -11,7 +11,8 @@
  *  Only a press made in this window is broadcast, stamped with a revision that orders every state
  *  of the deck (time, then the sending window); a receiver ignores any state older than the newest
  *  it has seen, so a window still catching up never sends the others back. Where a receiver cannot
- *  go back to a state (a reveal does not un-reveal), the windows meet at the more revealed one. */
+ *  reach a state (a slide that opened fully revealed takes no step back), the windows meet at the
+ *  one it shows. */
 
 import { hasPendingReveal } from "./use-progressive-reveal";
 
@@ -158,7 +159,7 @@ export function createDeckSync(deps: Deps) {
       notify();
     }
     // Two audience windows of one deck, such as two tabs, stay apart: an audience window follows
-    // only the speaker window and is followed only by it and its frames.
+    // only the speaker window, which passes a press made in one on to the other.
     if (message.type === "bye" || (deps.role() === "audience" && message.role === "audience"))
       return;
     if (message.type === "hello") {
@@ -170,6 +171,8 @@ export function createDeckSync(deps: Deps) {
     const fresh = seen.at === 0 && local.at === 0;
     if (!newer(target, seen) && !(message.reply && fresh)) return;
     seen = { at: target.at, from: target.from };
+    if (deps.role() === "presenter" && message.role === "audience")
+      send({ type: "state", state: target, role: "presenter" });
     goal = target;
     generation++;
     void reconcile();

@@ -1,6 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useProgressiveReveal } from "../lib/use-progressive-reveal";
+import { deckSync } from "../lib/presenter-sync";
+import { phoneWidth } from "./phone-width";
 import { PrintProvider } from "../lib/print-context";
 
 function press(key: "ArrowRight" | "ArrowLeft"): boolean {
@@ -141,5 +143,34 @@ describe("useProgressiveReveal", () => {
     pressLeft();
     expect(result.current).toEqual([0, 0]);
     expect(pressLeft()).toBe(false);
+  });
+});
+
+describe("on a phone", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("shows every step at once and lets the arrows through", () => {
+    phoneWidth();
+    const { result } = renderHook(() => useProgressiveReveal({ totalSteps: 3, hasFooter: true }));
+    expect(result.current.revealedCount).toBe(3);
+    expect(result.current.footerVisible).toBe(true);
+    expect(pressRight()).toBe(false);
+  });
+
+  // The windows of a presented talk replay each other's presses on their own copies of a slide,
+  // so a narrow copy that did not step would send the others back (F01).
+  it.each([
+    ["the speaker window", () => vi.spyOn(deckSync, "role").mockReturnValue("presenter")],
+    [
+      "an audience window while a speaker window is open",
+      () => vi.spyOn(deckSync, "speakerOpen").mockReturnValue(true),
+    ],
+  ])("steps in %s", (_, present) => {
+    phoneWidth();
+    present();
+    const { result } = renderHook(() => useProgressiveReveal({ totalSteps: 3 }));
+    expect(result.current.revealedCount).toBe(0);
+    expect(pressRight()).toBe(true);
+    expect(result.current.revealedCount).toBe(1);
   });
 });
