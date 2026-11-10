@@ -166,14 +166,17 @@ export function slideFrame(deck: Presentation, index: number) {
 
 const unnamedLang = new WeakSet<Presentation>();
 
+/** The language a deck names, on itself or on the first title slide that sets one. */
+export const namedLang = (deck: Presentation) =>
+  deck.lang ??
+  deck.slides.find((slide): slide is TitleSlide => slide.type === "title" && !!slide.lang)?.lang;
+
 /** The deck's language, for the `lang` of the page and the file that show it: the deck's own
  *  `lang`, else the first title slide's that sets one, else English, with a warning once per deck
  *  outside a browser, so a German deck missing it shows in the build log rather than as English
  *  pages. */
 export function deckLang(deck: Presentation): "en" | "de" {
-  const lang =
-    deck.lang ??
-    deck.slides.find((slide): slide is TitleSlide => slide.type === "title" && !!slide.lang)?.lang;
+  const lang = namedLang(deck);
   if (lang) return lang;
   if (typeof document === "undefined" && !unnamedLang.has(deck)) {
     unnamedLang.add(deck);
@@ -334,7 +337,10 @@ export function fourColumnAsCards(block: Block<"four-column">): Block<"cards"> {
 /** A `grid` slide with pillars or stats as the content slide that replaces it: pillars as a
  *  `cards` block, numbered where no card names an icon, stats as a `numbers` block. A card's
  *  colour (`tone`) goes: colour comes from the role. Quotes keep the grid. */
-export function gridAsContent({ cards, ...slide }: GridSlide): ContentSlide {
+export function gridAsContent({
+  cards,
+  ...slide
+}: Exclude<GridSlide, { variant: "quotes" }>): ContentSlide {
   const block: ContentBlock =
     slide.variant === "stats"
       ? {

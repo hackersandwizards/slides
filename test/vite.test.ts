@@ -36,10 +36,8 @@ describe("slidesOptimizeDeps", () => {
   // An excluded package is not scanned, so a client import missing from the list is found on first
   // render and re-runs the optimizer mid-load.
   it("names every package the plainer scan finds", () => {
-    // The Next adapter's imports, JSON and `?url` assets, which Vite does not pre-bundle.
-    const browser = [...new Set(bareImports())].filter(
-      (spec) => !/^next\/|\.json$|\?url/.test(spec),
-    );
+    // JSON and `?url` assets, which Vite does not pre-bundle.
+    const browser = [...new Set(bareImports())].filter((spec) => !/\.json$|\?url/.test(spec));
     const { include } = slidesOptimizeDeps();
     expect(browser.length).toBeGreaterThan(5);
     expect(browser.filter((spec) => !include.includes(spec))).toEqual([]);

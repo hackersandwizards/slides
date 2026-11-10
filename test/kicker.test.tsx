@@ -54,6 +54,7 @@ describe("the section label on every titled slide type", () => {
     { type: "wheel", headline: "H", center: "C", segments: [{ title: "A", text: "a" }] },
     { type: "profiles", headline: "H", profiles: [] },
     { type: "chart", headline: "H", variant: "cycle", segments: [] },
+    { type: "grid", variant: "quotes", headline: "H", cards: [] },
   ];
 
   it.each(slides.map((s) => [s.type, { ...s, sectionLabel: "K" } as Slide]))(

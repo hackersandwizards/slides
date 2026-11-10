@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
-import { useSlidesAdapter } from "./adapter";
+import { useSyncExternalStore } from "react";
 import { deckSync } from "./presenter-sync";
 import { directionKey, writeStored } from "./slide-utils";
 
@@ -9,30 +8,13 @@ import { directionKey, writeStored } from "./slide-utils";
 // say; the direction written before navigating lets `opensRevealed` open a backward arrival revealed.
 const listeners = new Set<() => void>();
 
-function historyNavigate(href: string, replace: boolean): void {
-  if (replace) history.replaceState(null, "", href);
-  else history.pushState(null, "", href);
-  listeners.forEach((listener) => listener());
-}
-
-export function goToSlide(
-  href: string,
-  direction: "back" | "forward",
-  navigate: (href: string, replace: boolean) => void = historyNavigate,
-): void {
+export function goToSlide(href: string, direction: "back" | "forward"): void {
   writeStored("session", directionKey(), direction);
   // A frame inside the speaker window replaces its entry: frames share that window's history,
   // and Back there should move the deck, not a frame.
-  navigate(href, deckSync.follows());
-}
-
-/** The engine navigates through this hook, with the adapter's `navigate` where one is given. */
-export function useGoToSlide(): (href: string, direction: "back" | "forward") => void {
-  const { navigate } = useSlidesAdapter();
-  return useCallback(
-    (href: string, direction: "back" | "forward") => goToSlide(href, direction, navigate),
-    [navigate],
-  );
+  if (deckSync.follows()) history.replaceState(null, "", href);
+  else history.pushState(null, "", href);
+  listeners.forEach((listener) => listener());
 }
 
 function subscribe(listener: () => void) {

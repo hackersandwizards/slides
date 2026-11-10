@@ -32,7 +32,6 @@ itself: put it in the catalog's `css` beside `slides.css`. Both repos are public
 | `@hackersandwizards/slides/types/slide`                  | `Presentation`, `Slide` and the blocks                                                                                        |
 | `@hackersandwizards/slides/components/slides/<Name>`     | a slide component                                                                                                             |
 | `@hackersandwizards/slides/lib/<module>`                 | a module `exports` in `package.json` names                                                                                    |
-| `@hackersandwizards/slides/lib/next-adapter`             | `NextSlidesAdapter`                                                                                                           |
 | `@hackersandwizards/slides/components/slides/PrintSlide` | `PrintDeck`, a deck's print route, and `PrintSlide`, one printed page                                                         |
 | `@hackersandwizards/slides/components/deck/DeckView`     | `DeckView`, a deck page's one island: `presentation`, `index`, `basePath`, and `documentTitle` to keep the title on the slide |
 | `@hackersandwizards/slides/components/deck/DeckTile`     | `DeckTile`, one deck on a deck list, brand's linked card; React, which an Astro page renders without `client:`                |
@@ -46,20 +45,30 @@ itself: put it in the catalog's `css` beside `slides.css`. Both repos are public
 A deck page's root carries brand's `hw-focus-ring` class, as in `<html class="hw-focus-ring">`.
 It gives every control on the page the brand's focus ring.
 
+Under the dev server `DeckView` offers edit mode, which writes a text clicked on into the deck file
+through the consumer's mount of `lib/deck-edit-server`: E starts it, in a tab opened once with
+`?edit` on a deck page's address.
+
 The command `slides-pins` belongs in each consumer's gate, after scaffolding's shared steps: it
 fails when `package.json` pins no brand, which bun lets pass because the brand peer is optional, or
 a brand below the minimum above.
 That the install matches each pin, scaffolding's install and `coupling` steps check.
 
-The command `slides-density [--serve "<command>"] <print-url> ...` belongs in each consumer's gate:
+The command `slides-density [--site <dir> | --serve "<command>"] <print-url or path> ...` belongs in each consumer's gate:
 it renders each deck's print route and fails on a slide the fit guard shrinks below 0.8, and lists
 those below 0.9, a heading it shrinks so that its widest word fits included. It fails too on a content slide holding only one or two short bullets, a regular slide drawn as
-one included, which a `statement` carries (`bulletsAsStatement` in `lib/slide-utils`). `--serve` starts the consumer's
-server for the run and stops it afterwards.
+one included, which a `statement` carries (`bulletsAsStatement` in `lib/slide-utils`). `--site` serves a built
+site's folder for the run, such as `dist`; `--serve` starts the consumer's server through
+scaffolding's `serve`, which sets `HOST` and `PORT` for it, and stops it afterwards. With either, a
+path such as `/<deck>/print` is read against that server.
 
-The command `slides-usage <deck.json|-> ...` prints, as JSON, how many slides of those decks use each
-entry of the catalogue's print page, and which entries none uses, for a consumer to publish. A slide
-drawn through a replaced form counts for the entry that replaces it. It fails on a slide no entry draws. Each
+The command `slides-usage [--out <file> [--check]] <deck.json|-> ...` prints, as JSON, how many
+slides of those decks use each entry of the catalogue's print page, and which entries none uses, for
+a consumer to publish; `--out` writes it to the file instead, and `--check` fails where the file
+differs. A slide drawn through a replaced form counts for the entry that replaces it. It lints the
+decks too, failing on a slide no entry draws, on a field that changes nothing the slide draws (such
+as `numberFrom` on cards that are not numbered, a `sectionTheme` that colours no rule or pill, a
+gantt bar's `theme`), and on a deck that names its `lang` neither on itself nor on a title slide. Each
 argument, `-` for standard input, holds one deck or a JSON array of decks, so a consumer whose
 decks are code pipes them all in at once; no deck at all fails. An error names a deck of an array
 by its `slug`, where the consumer sets one, else its `name`, and by its place in the array.
@@ -104,13 +113,10 @@ deck's language; `slides-pptx` marks its text with it. The screen route passes i
 contact closing shows brand's claim in that language unless it sets `claim: false`, and a title
 slide without a `lang` of its own joins its speakers and words its QR code's alt text in it.
 
-The package ships TypeScript source. Let the build transpile it: Next
-`transpilePackages: ["@hackersandwizards/slides"]`, Astro `vite.ssr.noExternal`, vitest
+The package ships TypeScript source. Let the build transpile it: Astro `vite.ssr.noExternal`, vitest
 `test.server.deps.inline`. An Astro app sets `vite.optimizeDeps` to `slidesOptimizeDeps()` from
 `@hackersandwizards/slides/lib/vite`: the engine served unbundled, the packages its islands import
-named up front. A Next app wraps its root layout in `NextSlidesAdapter`, which puts
-`next/image` and its router behind the engine; without it the engine uses a plain `<img>` and
-`history`. Next resolves no `?url` import by itself, so such an app needs a rule for the logos.
+named up front.
 
 ## Deck structure
 

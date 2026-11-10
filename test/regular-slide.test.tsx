@@ -7,7 +7,7 @@ import type { RegularSlide, Slide } from "../types/slide";
 describe("regular slide", () => {
   it("keeps the title class when it renders as content", () => {
     const SlideComponent = slideComponents.regular;
-    const slide = { type: "regular", headline: "Headline", align: "center", sections: [] };
+    const slide = { type: "regular", headline: "Headline", sections: [] };
     const { getByText } = render(<SlideComponent slide={slide as Slide} />);
     expect(getByText("Headline").closest(".slide-title")).not.toBeNull();
   });
@@ -81,5 +81,45 @@ describe("regular slide", () => {
       regularAsContent({ ...slide, profile: { name: "Mara", title: "Partner" } }),
     ).toBeUndefined();
     expect(regularAsContent(slide)?.type).toBe("agenda");
+  });
+});
+
+// The profile slide's headline is the shared title part, so a hyphenated compound wraps whole.
+it("keeps a compound in a profile slide's headline whole", () => {
+  const slide = {
+    type: "regular",
+    headline: "Agent-first delivery",
+    profile: { name: "Mara", title: "Partner" },
+    sections: [{ title: "One", items: ["a"] }],
+  } as Slide;
+  const title = render(<slideComponents.regular slide={slide} />).container.querySelector("h1");
+  expect(title?.querySelector(".inline-block")?.textContent).toBe("Agent-first");
+});
+
+// The web decides: fields no slide draws leave the types, so a deck setting one fails its typecheck.
+describe("fields the web never drew", () => {
+  it("are rejected by the types", () => {
+    const slides: Slide[] = [
+      // @ts-expect-error a regular slide takes no `align`
+      { type: "regular", headline: "H", sections: [], align: "center" },
+      // @ts-expect-error a regular slide takes no `activeSection`
+      { type: "regular", headline: "H", sections: [], activeSection: 1 },
+      // @ts-expect-error a grid card takes no `tone`
+      { type: "grid", headline: "H", cards: [{ title: "T", tone: "primary" }] },
+      // @ts-expect-error figures take no `columns`
+      { type: "grid", variant: "stats", headline: "H", cards: [], columns: 3 },
+      // @ts-expect-error quotes are not numbered
+      { type: "grid", variant: "quotes", headline: "H", cards: [], numberFrom: 2 },
+      {
+        type: "gantt",
+        headline: "H",
+        columns: ["M1"],
+        // @ts-expect-error every bar takes the one data hue
+        rows: [{ label: "R", bars: [{ label: "B", start: 1, span: 1, theme: "accent" }] }],
+      },
+      // The control: pillars and quotes keep their columns.
+      { type: "grid", variant: "quotes", headline: "H", cards: [], columns: 3 },
+    ];
+    expect(slides).toHaveLength(7);
   });
 });

@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "2.22.0",
+  "version": "3.0.0",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -20,12 +20,8 @@
     "./components/*": "./components/*.tsx",
     "./lib/deck-edit": "./lib/deck-edit.ts",
     "./lib/deck-edit-server": "./lib/deck-edit-server.ts",
-    "./lib/deck-edit-mode": "./lib/deck-edit-mode.tsx",
     "./lib/logo": "./lib/logo.ts",
     "./lib/markdown": "./lib/markdown.tsx",
-    "./lib/navigate": "./lib/navigate.ts",
-    "./lib/next-adapter": "./lib/next-adapter.tsx",
-    "./lib/print-context": "./lib/print-context.tsx",
     "./lib/slide-components": "./lib/slide-components.ts",
     "./lib/slide-utils": "./lib/slide-utils.ts",
     "./lib/stage-utils": "./lib/stage-utils.ts",
@@ -47,6 +43,7 @@
     "styles",
     "scripts/render-pdf.ts",
     "scripts/density.ts",
+    "scripts/serve-dir.ts",
     "scripts/pins.ts",
     "scripts/usage.ts",
     "scripts/render-pptx.ts",
@@ -74,11 +71,11 @@
   },
   "peerDependencies": {
     "@hackersandwizards/brand": "*",
+    "@hackersandwizards/scaffolding": "*",
     "astro": "^7.4.4",
     "jszip": "^3.10.1",
     "lucide-react": "^1.66.0",
     "motion": "^14.9.0",
-    "next": "^16.4.3",
     "pptxgenjs": "^4.0.1",
     "prettier": "^3.9.10",
     "puppeteer": "^25.16.0",
@@ -92,10 +89,10 @@
     "@hackersandwizards/brand": {
       "optional": true
     },
-    "puppeteer": {
+    "@hackersandwizards/scaffolding": {
       "optional": true
     },
-    "next": {
+    "puppeteer": {
       "optional": true
     },
     "jszip": {
@@ -138,7 +135,6 @@
     "jszip": "3.10.2",
     "lucide-react": "1.70.0",
     "motion": "14.11.0",
-    "next": "16.4.5",
     "pptxgenjs": "4.0.1",
     "prettier": "3.9.10",
     "prettier-plugin-tailwindcss": "0.8.1",

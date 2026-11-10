@@ -10,7 +10,7 @@ import { LinkCaption, Portrait } from "./primitives";
 import { ContentSlide } from "./ContentSlide";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { usePrintMode } from "../../lib/print-context";
-import { TitledContent } from "./primitives";
+import { SlideTitle, TitledContent } from "./primitives";
 
 interface Props {
   slide: RegularSlideType;
@@ -61,9 +61,7 @@ function ProfileRegularSlide({ slide }: Props) {
   return (
     <SlideShell className="text-text">
       <TitledContent>
-        <BlurFade delay={0.1} duration={0.6}>
-          <h1 className="slide-title">{slide.headline}</h1>
-        </BlurFade>
+        <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
 
         <div className="slide-body items-center">
           <div className="flex w-full max-w-6xl flex-col items-center gap-10 md:flex-row md:gap-16">

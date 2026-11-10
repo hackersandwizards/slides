@@ -33,8 +33,8 @@ export function slidesOptimizeDeps(): { exclude: string[]; include: string[] } {
 }
 
 /** The packages a source imports at run time, static, side-effect, re-exported or dynamic. Left
- *  out: Node built-ins, `next/*` (the Next adapter), `prettier` (the edit mode's server), the engine
- *  itself, and JSON, CSS or `?url` files, which Vite cannot pre-bundle and warns about on every start. */
+ *  out: Node built-ins, `prettier` (the edit mode's server), the engine itself, and JSON, CSS or
+ *  `?url` files, which Vite cannot pre-bundle and warns about on every start. */
 export function importsOf(source: string): string[] {
   return [
     ...source
@@ -45,7 +45,6 @@ export function importsOf(source: string): string[] {
   ]
     .map(([, from, dynamic]) => from ?? dynamic)
     .filter(
-      (spec) =>
-        !/^(node:|next\/|prettier$|@hackersandwizards\/slides)|\.(json|css)$|\?url/.test(spec),
+      (spec) => !/^(node:|prettier$|@hackersandwizards\/slides)|\.(json|css)$|\?url/.test(spec),
     );
 }

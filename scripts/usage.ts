@@ -1,10 +1,13 @@
 #!/usr/bin/env bun
 // The number of a consumer's deck slides using each catalogue entry, which the public engine cannot
-// read: `slides-usage <deck.json|-> ...` prints it as JSON for the consumer to publish. A slide drawn
-// through a replaced form counts for the entry that replaces it. Exit 1 on a slide no entry draws,
-// named by its number from 1, as the page counter shows it.
-import { readFileSync } from "node:fs";
+// read: `slides-usage [--out <file> [--check]] <deck.json|-> ...` prints it as JSON for the consumer
+// to publish, or writes it to the file, or with --check fails where the file differs. A slide drawn
+// through a replaced form counts for the entry that replaces it. It lints the decks too: exit 1 on
+// a slide no entry draws, a field that changes nothing the slide draws, and a deck that names no
+// language; a slide is named by its number from 1, as the page counter shows it.
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { GUIDANCE } from "../catalog/guidance";
+import { DEFAULT_SECTION_STYLE, getSectionStyle } from "../lib/section-styles";
 import {
   anchorSlug,
   centeredAsStatement,
@@ -12,6 +15,7 @@ import {
   gridAsContent,
   labeledGridAsCards,
   mediaAsContent,
+  namedLang,
   pipelineAsFlow,
   regularAsContent,
   replacedBy,
@@ -66,14 +70,17 @@ function blockEntry(block: ContentBlock): string {
   }
 }
 
+/** The slide a slide draws as, where it draws as another: a replaced form as its heir. */
+function drawnAs(slide: Slide): Slide | undefined {
+  if (slide.type === "media") return mediaAsContent(slide);
+  if (slide.type === "grid" && slide.variant !== "quotes") return gridAsContent(slide);
+  if (slide.type === "regular") return regularAsContent(slide);
+}
+
 /** The catalogue entries a slide uses, read off what it draws: a replaced form counts as its heir. */
 export function entriesOf(slide: Slide): string[] {
-  if (slide.type === "media") return entriesOf(mediaAsContent(slide));
-  if (slide.type === "grid" && slide.variant !== "quotes") return entriesOf(gridAsContent(slide));
-  if (slide.type === "regular") {
-    const drawn = regularAsContent(slide);
-    if (drawn) return entriesOf(drawn);
-  }
+  const drawn = drawnAs(slide);
+  if (drawn) return entriesOf(drawn);
   if (slide.type === "content") {
     // A slide of one or two short bullets still draws as bullets: the print page marks it, and
     // it counts as what it draws.
@@ -99,10 +106,49 @@ export function entriesOf(slide: Slide): string[] {
   return entry ? [entry] : [];
 }
 
+/** The fields a slide sets that change nothing it draws, each with the reason: removing one leaves
+ *  the slide as it was. A field no slide draws leaves the types instead; these draw on some slides.
+ *  `sectionTheme: "deepdive"` always counts, since it sets the slide at night. */
+export function ignoredFields(slide: Slide): string[] {
+  const found: string[] = [];
+  const drawn = drawnAs(slide) ?? slide;
+  const content = drawn.type === "content" ? drawn : undefined;
+  for (const block of content?.content ?? [])
+    if (block.type === "cards" && block.numberFrom != null && !block.numbered)
+      found.push(
+        slide.type === "grid"
+          ? "numberFrom: a grid numbers its pillars only where no card names an icon"
+          : "numberFrom: the cards block is not numbered",
+      );
+  const theme = "sectionTheme" in slide ? slide.sectionTheme : undefined;
+  if (theme && theme !== "deepdive") {
+    // On a content slide the section's style draws the footer's and a centred paragraph's rule and
+    // the principle's pill, where it differs from the default, and any section keeps one neutral
+    // two-column block from becoming a comparison. A centred slide draws none of them.
+    const style = getSectionStyle(theme);
+    const plain = content?.layout !== "centered" ? content : undefined;
+    const ruled =
+      !!plain?.footer || !!plain?.content.some((b) => b.type === "paragraph" && b.centered);
+    const draws =
+      !!plain &&
+      ((ruled && style.border !== DEFAULT_SECTION_STYLE.border) ||
+        (!!plain.principle && style.pill !== DEFAULT_SECTION_STYLE.pill) ||
+        !!twoColumnAsSplit({ ...plain, sectionTheme: undefined }));
+    if (!draws) found.push(`sectionTheme: ${theme} changes no rule, pill or slide type here`);
+  }
+  return found;
+}
+
 if (import.meta.main) {
-  const paths = process.argv.slice(2);
-  if (!paths.length) {
-    console.error("usage: slides-usage <deck.json|-> ...   (each a deck or an array of decks)");
+  const args = process.argv.slice(2);
+  const at = args.indexOf("--out");
+  const out = at < 0 ? undefined : args.splice(at, 2)[1];
+  const check = args.includes("--check");
+  const paths = args.filter((arg) => arg !== "--check");
+  if (!paths.length || ((at >= 0 || check) && !out)) {
+    console.error(
+      "usage: slides-usage [--out <file> [--check]] <deck.json|-> ...   (each a deck or an array of decks)",
+    );
     process.exit(2);
   }
   // A file, or `-` for standard input, holds one deck or an array of decks, so a consumer whose
@@ -120,28 +166,39 @@ if (import.meta.main) {
     process.exit(1);
   }
   const counts = new Map<string, number>();
-  const unknown: string[] = [];
+  const findings: string[] = [];
   let slides = 0;
   for (const { deck, name } of decks) {
     if (!Array.isArray(deck?.slides)) {
       console.error(`slides-usage: ${name} is no deck: it has no slides list`);
       process.exit(1);
     }
+    if (!namedLang(deck))
+      findings.push(`${name} names no lang, on the deck or a title slide: set the deck's lang`);
     deck.slides.forEach((slide, i) => {
       slides++;
       try {
         const ids = entriesOf(slide);
-        if (!ids.length) unknown.push(`${name} slide ${i + 1}: type ${slide.type}`);
+        if (!ids.length)
+          findings.push(`no catalogue entry for ${name} slide ${i + 1}: type ${slide.type}`);
         for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
+        for (const field of ignoredFields(slide))
+          findings.push(`${name} slide ${i + 1}: draws nothing, ${field}: remove it`);
       } catch (e) {
-        unknown.push(`${name} slide ${i + 1}: malformed, ${(e as Error).message}`);
+        findings.push(
+          `no catalogue entry for ${name} slide ${i + 1}: malformed, ${(e as Error).message}`,
+        );
       }
     });
   }
   const entries = Object.fromEntries([...counts].sort(([, a], [, b]) => b - a));
   // A "-2" anchor is a second tile of one entry in the specimen deck; no slide can reach it.
   const unused = Object.keys(GUIDANCE).filter((id) => !counts.has(id) && !/-\d+$/.test(id));
-  console.log(JSON.stringify({ decks: decks.length, slides, entries, unused }, null, 2));
-  for (const line of unknown) console.error(`slides-usage: no catalogue entry for ${line}`);
-  process.exit(unknown.length ? 1 : 0);
+  const json = `${JSON.stringify({ decks: decks.length, slides, entries, unused }, null, 2)}\n`;
+  if (!out) process.stdout.write(json);
+  else if (!check) writeFileSync(out, json);
+  else if (!existsSync(out) || readFileSync(out, "utf8") !== json)
+    findings.push(`${out} is stale: run slides-usage --out ${out} without --check and commit it`);
+  for (const line of findings) console.error(`slides-usage: ${line}`);
+  process.exit(findings.length ? 1 : 0);
 }

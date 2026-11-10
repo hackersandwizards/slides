@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { SlideNavigation } from "../components/slides/SlideNavigation";
 
 const goToSlide = vi.fn();
-vi.mock("../lib/navigate", () => ({ useGoToSlide: () => goToSlide }));
+vi.mock("../lib/navigate", () => ({ goToSlide: (...args: unknown[]) => goToSlide(...args) }));
 
 const press = (key: string, init: KeyboardEventInit = {}) =>
   act(() => {

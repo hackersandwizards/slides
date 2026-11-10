@@ -14,7 +14,7 @@ import ChevronLeft from "lucide-react/icons/chevron-left";
 import ChevronRight from "lucide-react/icons/chevron-right";
 import { MotionGlobalConfig } from "motion/react";
 import { useMounted } from "../../lib/use-mounted";
-import { useGoToSlide } from "../../lib/navigate";
+import { goToSlide } from "../../lib/navigate";
 import { usePendingReveal } from "../../lib/use-progressive-reveal";
 import { arrowEvent, deckSync, ROLE_NAMES } from "../../lib/presenter-sync";
 import {
@@ -65,7 +65,8 @@ const KEYS: Array<[string[], string]> = [
   [["H"], "hints on and off"],
   [["?"], "this overlay"],
 ];
-if (process.env.NODE_ENV === "development") KEYS.push([["E"], "edit text, dev only"]);
+if (process.env.NODE_ENV === "development")
+  KEYS.push([["E"], "edit text, dev only, in a tab opened with ?edit"]);
 
 /** A stable ref, so only the dialog's mount opens it: an inline one runs on every render and
  *  would reopen it between Esc and its queued `close` event. */
@@ -79,7 +80,6 @@ function onBackdrop(event: ReactMouseEvent<HTMLDialogElement>) {
 }
 
 export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) {
-  const goToSlide = useGoToSlide();
   const [help, setHelp] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -148,7 +148,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
       clearTimeout(arrival);
       leave();
     };
-  }, [basePath, totalSlides, goToSlide, currentIndex, arrivedBackwards]);
+  }, [basePath, totalSlides, currentIndex, arrivedBackwards]);
 
   const navigate = useCallback(
     (direction: "back" | "forward") => {
@@ -160,7 +160,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
       goToSlide(`${basePath}/${targetIndex}`, direction);
       deckSync.navigated(targetIndex, direction);
     },
-    [totalSlides, basePath, goToSlide],
+    [totalSlides, basePath],
   );
 
   useEffect(() => {

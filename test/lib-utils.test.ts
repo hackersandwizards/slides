@@ -333,6 +333,6 @@ describe("deprecated", () => {
     // The values deprecated in prose: each a literal its prop takes.
     for (const prop of ["variant", "claim"] as const)
       for (const value of deprecated.values[prop])
-        expect(source).toMatch(new RegExp(`${prop}\\?: [^;]*"${value}"`));
+        expect(source).toMatch(new RegExp(`${prop}\\??: [^;]*"${value}"`));
   });
 });

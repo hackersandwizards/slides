@@ -45,12 +45,14 @@ const TONES = {
 
 /** A flow step as the process slide passes it: the block's step plus a `label` (a
  *  multiplier or stage name: in the tile while every label fits it, else above the title), a
- *  teal `subtitle`, a closing `badge` and `dim` for a stage outside the story. */
+ *  teal `subtitle`, a closing `badge`, `dim` for a stage outside the story and `numbered: false`
+ *  for a tile left out of the count. */
 export type FlowStep = Of<"flow">["steps"][number] & {
   label?: string;
   subtitle?: string;
   badge?: string;
   dim?: boolean;
+  numbered?: false;
 };
 
 // A label of up to four characters ("10x") fits the tile; one longer moves above the title, for
@@ -103,6 +105,8 @@ export function FlowSteps({
   // A label carrying a number ("Stage 1", "Monat 2 und 3") already counts: the tiles stay empty
   // rather than repeat or contradict it.
   const counted = !steps.some((step) => /\d/.test(step.label ?? ""));
+  let count = 0;
+  const numbers = steps.map((step) => (step.numbered === false ? undefined : ++count));
   const show = (on: boolean) =>
     `transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`;
   return (
@@ -186,7 +190,7 @@ export function FlowSteps({
                   ) : step.label && inTile ? (
                     step.label
                   ) : (
-                    counted && i + 1
+                    counted && numbers[i]
                   )}
                 </NumberTile>
                 {step.label && !inTile && (

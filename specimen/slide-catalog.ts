@@ -144,8 +144,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
-    sectionLabel: "Secondary theme",
-    sectionTheme: "secondary",
+    sectionLabel: "Badge",
     headline: "Numbered steps and a badge",
     badge: "New",
     content: [
@@ -155,21 +154,19 @@ const slides: Slide[] = [
         items: ["Write the plan", "Review the plan", "Let the agent build", "Review the result"],
       },
     ],
-    notes: "content: secondary theme, badge, ordered bullets.",
+    notes: "content: badge, ordered bullets.",
   },
   {
     type: "content",
-    sectionLabel: "Accent theme",
-    sectionTheme: "accent",
+    sectionLabel: "Stage strip",
     stageMarker: ["Implement", "Review"],
     headline: "Stage strip marks where in the pipeline we are",
     content: [{ type: "callout", text: "Two stages are active on this slide.", variant: "info" }],
-    notes: "content: accent theme, stage strip with two active stages, info callout.",
+    notes: "content: stage strip with two active stages, info callout.",
   },
   {
     type: "content",
-    sectionLabel: "Warning theme",
-    sectionTheme: "warning",
+    sectionLabel: "Stage prefix",
     stagePrefix: "Stage 2",
     stageMarker: ["QA"],
     headline: "Stage prefix before the strip",
@@ -182,20 +179,21 @@ const slides: Slide[] = [
         fullWidth: true,
       },
     ],
-    notes: "content: warning theme, stage prefix, warning, success and full-width callouts.",
+    notes: "content: stage prefix, warning, success and full-width callouts.",
   },
   {
     type: "content",
     sectionLabel: "Success theme",
     sectionTheme: "success",
+    principle: "Green when shipped",
     headline: "Success theme",
     content: [
       {
         type: "paragraph",
-        text: "The kicker stays teal; the success theme's green marks its pill and footer rule.",
+        text: "The kicker stays teal; the success theme's green marks the principle's pill.",
       },
     ],
-    notes: "content: success theme, sparse.",
+    notes: "content: success theme, which colours the principle's pill, sparse.",
   },
   {
     type: "content",
@@ -837,10 +835,9 @@ const slides: Slide[] = [
   },
   {
     type: "regular",
-    headline: "Regular slide, centered, no profile",
-    align: "center",
-    sections: [{ title: "One section", items: ["Centered heading", "No sidebar"] }],
-    notes: "regular: centered alignment, no profile.",
+    headline: "Regular slide, one section, no profile",
+    sections: [{ title: "One section", items: ["Drawn as a content slide", "No sidebar"] }],
+    notes: "regular: one section, no profile.",
   },
 
   {
@@ -943,7 +940,6 @@ const slides: Slide[] = [
     type: "grid",
     variant: "pillars",
     sectionLabel: "Grid",
-    sectionTheme: "primary",
     headline: "Four pillars",
     columns: 4,
     cards: [
@@ -971,7 +967,7 @@ const slides: Slide[] = [
     numberFrom: 5,
     cards: [
       { title: "Ownership", description: "One team per service.", highlight: true },
-      { title: "Cadence", description: "A weekly review.", tone: "neutral" },
+      { title: "Cadence", description: "A weekly review." },
     ],
     notes: "grid: pillars, two columns, allActive, numberFrom 5, highlight.",
   },
@@ -980,17 +976,17 @@ const slides: Slide[] = [
     variant: "stats",
     ground: "primary",
     headline: "Numbers after six months",
-    columns: 3,
     cards: [
       { title: "Lead time", value: "2d", label: "from 9d", description: "Median, all teams." },
       { title: "Rework", value: "-40%", label: "per ticket", description: "Fictional." },
       { title: "Teams", value: "38", label: "on the harness", description: "Of 40." },
     ],
-    notes: "grid: stats, three columns, primary background.",
+    notes: "grid: stats, primary background.",
   },
   {
     type: "grid",
     variant: "quotes",
+    sectionLabel: "Voices",
     headline: "What participants said",
     columns: 3,
     cards: [
@@ -998,7 +994,7 @@ const slides: Slide[] = [
       { title: "The checks caught what I missed.", author: "Team lead, fictional" },
       { title: "Monday metrics changed our backlog.", author: "Product lead, fictional" },
     ],
-    notes: "grid: quotes.",
+    notes: "grid: quotes, with a kicker.",
   },
   {
     type: "grid",
@@ -1141,7 +1137,6 @@ const slides: Slide[] = [
   {
     type: "media",
     sectionLabel: "Media",
-    sectionTheme: "accent",
     headline: "One screenshot",
     sources: [
       {
@@ -1281,6 +1276,20 @@ const slides: Slide[] = [
     })),
     notes: "process: six nodes (dense), success background.",
   },
+  {
+    type: "process",
+    headline: "A request through three teams",
+    loop: false,
+    nodes: [
+      { title: "Customer", description: "Raises the request.", numbered: false },
+      { title: "Intake", description: "Sizes and plans it." },
+      { title: "Build", description: "Ships it behind a flag." },
+      { title: "Operate", description: "Turns the flag on." },
+      { title: "Customer", description: "Uses the result.", numbered: false },
+    ],
+    notes:
+      "process, loop false: the outside party's tiles stay empty, the three teams number 1 to 3.",
+  },
 
   {
     type: "phased-pills",
@@ -1386,7 +1395,6 @@ const slides: Slide[] = [
   {
     type: "lanes",
     sectionLabel: "Lanes",
-    sectionTheme: "secondary",
     principle: "In parallel",
     headline: "Three tickets at once",
     lanes: [
@@ -1590,7 +1598,6 @@ const slides: Slide[] = [
   {
     type: "gantt",
     sectionLabel: "Plan",
-    sectionTheme: "primary",
     principle: "A month is a planning unit",
     headline: "The programme at a glance",
     columns: ["M1", "M2", "M3", "M4", "M5", "M6"],
@@ -1598,16 +1605,16 @@ const slides: Slide[] = [
       {
         label: "Assessment",
         sublabel: "Baseline",
-        bars: [{ label: "Six areas", start: 1, span: 1, theme: "primary" }],
+        bars: [{ label: "Six areas", start: 1, span: 1 }],
       },
       {
         label: "Training",
         sublabel: "Per cohort",
-        bars: [{ label: "Cohorts", start: 2, span: 2, theme: "secondary" }],
+        bars: [{ label: "Cohorts", start: 2, span: 2 }],
       },
       {
         label: "Mentoring",
-        bars: [{ label: "Weekly", start: 3, span: 4, theme: "success", continuous: true }],
+        bars: [{ label: "Weekly", start: 3, span: 4, continuous: true }],
       },
     ],
     milestones: [
@@ -1853,7 +1860,6 @@ const slides: Slide[] = [
   {
     type: "content",
     sectionLabel: "Platform engineering and developer experience",
-    sectionTheme: "primary",
     principle: "Every team ships through the same harness, every day",
     headline: "Longest kicker: label and principle",
     content: [{ type: "paragraph", text: "The kicker wraps and pushes the headline down." }],
@@ -1862,7 +1868,6 @@ const slides: Slide[] = [
   {
     type: "content",
     sectionLabel: "Platform engineering and developer experience",
-    sectionTheme: "warning",
     stagePrefix: "Stage 2",
     stageMarker: ["Implement", "Review"],
     headline: "Longest kicker: label, stage prefix and strip",
@@ -1887,7 +1892,6 @@ const slides: Slide[] = [
     type: "grid",
     variant: "pillars",
     sectionLabel: "Platform engineering and developer experience",
-    sectionTheme: "secondary",
     headline: "Grid with the longest section label",
     columns: 3,
     cards: [
@@ -1900,7 +1904,6 @@ const slides: Slide[] = [
   {
     type: "media",
     sectionLabel: "Platform engineering and developer experience",
-    sectionTheme: "accent",
     principle: "Every team ships through the same harness, every day",
     headline: "Media with the longest kicker",
     sources: [{ src: specimenImages["screen-board.png"], alt: "Fictional board" }],
@@ -1909,7 +1912,6 @@ const slides: Slide[] = [
   {
     type: "lanes",
     sectionLabel: "Platform engineering and developer experience",
-    sectionTheme: "secondary",
     principle: "Every team ships through the same harness, every day",
     headline: "Lanes with the longest kicker",
     lanes: [
@@ -1921,18 +1923,16 @@ const slides: Slide[] = [
   {
     type: "gantt",
     sectionLabel: "Platform engineering and developer experience",
-    sectionTheme: "primary",
     principle: "Every team ships through the same harness, every day",
     headline: "Gantt with the longest kicker",
     columns: ["M1", "M2", "M3", "M4"],
-    rows: [
-      { label: "Training", bars: [{ label: "Cohorts", start: 1, span: 3, theme: "secondary" }] },
-    ],
+    rows: [{ label: "Training", bars: [{ label: "Cohorts", start: 1, span: 3 }] }],
     notes: "gantt: max-length section label and principle.",
   },
 
   {
     type: "content",
+    sectionTheme: "warning",
     headline: "Why the review queue stalls",
     content: [
       {
@@ -1949,7 +1949,7 @@ const slides: Slide[] = [
       },
     ],
     footer: "Lumen Freight, internal retrospective (fictional)",
-    notes: "content: prose only, three paragraphs and a footer.",
+    notes: "content: prose only, three paragraphs and a footer on the warning theme's rule.",
   },
   {
     type: "content",
@@ -2131,6 +2131,7 @@ const slides: Slide[] = [
   },
   {
     type: "content",
+    sectionTheme: "accent",
     sectionLabel: "Connections",
     headline: "Connections grow with the square of the team",
     content: [
@@ -2146,7 +2147,8 @@ const slides: Slide[] = [
       },
     ],
     footer: "n people have n(n-1)/2 possible connections.",
-    notes: "visual blocks: bars three orders of magnitude apart, the smallest still visible.",
+    notes:
+      "visual blocks: bars three orders of magnitude apart, the smallest still visible, a footer on the accent theme's rule.",
   },
   {
     type: "content",

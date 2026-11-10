@@ -8,17 +8,17 @@
 // a regular slide drawn as one) fails too, naming the type that carries it. A slide is named by
 // its deck page's path, `/<deck>/<index>`, counted from 0 as the URL counts.
 //
-//   slides-density [--serve "<command>"] <print-url> ...
+//   slides-density [--site <dir> | --serve "<command>"] <print-url or path> ...
 //
-// `--serve` starts the consumer's server for the run, waits until the first URL's origin answers
-// and stops it at the end. Exit 1 on any slide below FAIL or marked, or any deck that does not
-// render.
+// `--site` serves a built site's folder for the run; `--serve` starts the consumer's server with
+// scaffolding's `serve`, which hands it HOST and PORT, waits until it answers and stops it at the
+// end. Either way a path (`/deck/print`) is read against that server. Exit 1 on any slide below
+// FAIL or marked, or any deck that does not render.
 
-import { spawn, type ChildProcess } from "node:child_process";
-import { constants } from "node:os";
 import puppeteer, { type Browser } from "puppeteer";
 import { FIT_STYLE } from "../lib/slide-utils";
 import { settlePrintPage } from "./render-pdf";
+import { serveDir } from "./serve-dir";
 
 const FAIL = 0.8;
 const NOTICE = 0.9;
@@ -29,22 +29,32 @@ const STATEMENT =
   "one or two short bullets leave the slide empty: make it the statement slide bulletsAsStatement in lib/slide-utils returns";
 
 const args = process.argv.slice(2);
-const at = args.indexOf("--serve");
-const serve = at < 0 ? undefined : args.splice(at, 2)[1];
-const urls = args;
-if (!urls.length) {
-  console.error('usage: slides-density [--serve "<command>"] <print-url> ...');
+const option = (name: string) => {
+  const at = args.indexOf(name);
+  return at < 0 ? undefined : args.splice(at, 2)[1];
+};
+const site = option("--site");
+const serve = option("--serve");
+// A server this run starts takes a port of its own, so an address naming another port would
+// measure whatever answers there.
+const absolute = (arg: string) => URL.canParse(arg);
+if (!args.length || (site && serve) || ((site || serve) && args.some(absolute))) {
+  console.error(
+    'usage: slides-density --site <dir> | --serve "<command>" </deck/print> ...\n       slides-density <print-url> ...',
+  );
   process.exit(2);
 }
 
-let server: ChildProcess | undefined;
-// The server runs detached, so a signal reaches only this process and would leave it running.
-for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const)
-  process.on(signal, () => {
-    server?.kill();
-    process.exit(128 + constants.signals[signal]);
-  });
-if (serve) await start(serve, new URL(urls[0]).origin);
+async function startServer() {
+  if (site) return serveDir(site);
+  if (!serve) return;
+  // Imported only here, so a consumer serving its site itself needs no scaffolding.
+  const { serve: start } = await import("@hackersandwizards/scaffolding/serve");
+  const { url, stop } = await start(["/bin/sh", "-c", serve]);
+  return { origin: url, close: stop };
+}
+const server = await startServer();
+const urls = args.map((arg) => (server ? new URL(arg, server.origin).href : arg));
 let browser: Browser | undefined;
 let failed = 0;
 let noticed = 0;
@@ -75,7 +85,7 @@ try {
   for (const line of reports.flat()) console.log(line);
 } finally {
   await browser?.close();
-  server?.kill();
+  server?.close();
 }
 console.log(
   `[slides-density] ${urls.length} decks: ${failed} findings below ${FAIL} or of the wrong type (fail), ${noticed} below ${NOTICE} (notice)${broken ? `, ${broken} decks did not render` : ""}`,
@@ -115,33 +125,6 @@ async function check(browser: Browser, url: string): Promise<string[]> {
     // A crashed page rejects close: its deck is already counted as broken.
     await page.close().catch(() => {});
   }
-}
-
-async function start(command: string, origin: string) {
-  const answers = () =>
-    fetch(origin).then(
-      () => true,
-      () => false,
-    );
-  // A server left over from an earlier run would answer for this one and be judged instead.
-  if (await answers()) throw new Error(`${origin} already answers: stop that server first`);
-  const child = (server = spawn(command, { shell: true, stdio: "ignore", detached: true }));
-  // Started detached, so the kill reaches the shell's children too.
-  const kill = child.kill.bind(child);
-  child.kill = () => {
-    try {
-      process.kill(-child.pid!, "SIGTERM");
-      return true;
-    } catch {
-      return kill();
-    }
-  };
-  for (let i = 0; i < 300; i++) {
-    if (await answers()) return;
-    await new Promise((r) => setTimeout(r, 200));
-  }
-  child.kill();
-  throw new Error(`no server at ${origin} after 60 s`);
 }
 
 /** A slide of the wrong type, one with a heading shrunk to fit a word, or one the fit guard shrank. */

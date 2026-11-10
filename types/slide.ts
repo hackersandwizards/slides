@@ -329,8 +329,6 @@ export interface RegularSlide {
   sections: ContentSection[];
   profile?: ProfileInfo;
   layout?: "default" | "cards";
-  activeSection?: number;
-  align?: "left" | "center";
 }
 
 export interface StatementSlide extends Grounded {
@@ -386,8 +384,6 @@ export interface EvolutionSlide extends Grounded {
   footer?: string;
 }
 
-export type GridTone = "neutral" | "primary" | "secondary" | "accent" | "success";
-
 export interface GridCard {
   title: string;
   description?: string;
@@ -395,30 +391,31 @@ export interface GridCard {
   value?: string;
   label?: string;
   highlight?: boolean;
-  /** The card's tone, which nothing draws (merge-cards: colour comes from the role), the
-   *  PowerPoint export included; kept so a deck that sets it still type-checks. */
-  tone?: GridTone;
-  /** @deprecated `tone`, under its old name; read until every deck has moved. */
-  accentColor?: GridTone;
   imageSrc?: string;
   author?: string;
 }
 
-export interface GridSlide extends Grounded {
+interface GridBase extends Grounded {
   type: "grid";
   sectionLabel?: string;
   sectionTheme?: SectionTheme;
   headline: string;
   cards: GridCard[];
-  /** `pillars` (the default) and `stats` are deprecated: the engine draws them as a content slide
-   *  with a `cards` or `numbers` block, through `gridAsContent` in `lib/slide-utils.ts`; `quotes`
-   *  stays. */
-  variant?: "pillars" | "stats" | "quotes";
-  columns?: 2 | 3 | 4;
   allActive?: boolean;
-  /** The first pillar's number, where one set of pillars runs across two slides. */
-  numberFrom?: number;
 }
+
+/** `pillars` (the default) and `stats` are deprecated: the engine draws them as a content slide
+ *  with a `cards` or `numbers` block, through `gridAsContent` in `lib/slide-utils.ts`; `quotes`
+ *  stays. Figures (`stats`) stand in a row of up to four and wrap, so they take no `columns`. */
+export type GridSlide =
+  | (GridBase & {
+      variant?: "pillars";
+      columns?: 2 | 3 | 4;
+      /** The first pillar's number, where one set of pillars runs across two slides. */
+      numberFrom?: number;
+    })
+  | (GridBase & { variant: "quotes"; columns?: 2 | 3 | 4 })
+  | (GridBase & { variant: "stats" });
 
 export interface ComparisonSide {
   label: string;
@@ -588,6 +585,9 @@ export interface ProcessNode {
   badge?: string;
   /** Greys the step out, for a stage left behind. */
   dimmed?: boolean;
+  /** `false` leaves the step's tile empty and out of the count, so the steps around it number on:
+   *  a party outside the process, or a slide whose steps the next slides number otherwise. */
+  numbered?: false;
 }
 
 /** Steps on one line. A cycle by default, drawn with the loop back from the last step to the
@@ -774,8 +774,6 @@ export interface GanttBar {
   // 1-indexed column the bar starts in, and how many columns it spans.
   start: number;
   span: number;
-  /** No longer colours the bar: every bar takes the one data hue. Kept so existing decks type-check. */
-  theme?: SectionTheme;
   // Continuous work (a cadence, a standing team) renders lighter than a block
   // of work that starts and finishes.
   continuous?: boolean;

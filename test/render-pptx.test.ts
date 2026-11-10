@@ -37,11 +37,9 @@ const NOT_TEXT = new Set([
   "storageKey",
   "variant",
   "layout",
-  "align",
   "theme",
   "sectionTheme",
   "accent",
-  "accentColor",
   "state",
   "tone",
   "dotColor",
@@ -505,7 +503,7 @@ describe("slides-pptx on the specimen deck", () => {
     ) as Extract<Slide, { type: "regular" }>;
     const grid = slideCatalog.slides.find(
       (x) => x.type === "grid" && (x.variant ?? "pillars") === "pillars",
-    ) as Extract<Slide, { type: "grid" }>;
+    ) as Extract<Slide, { type: "grid"; variant?: "pillars" }>;
     const out = join(dir, "redrawn.pptx");
     await renderPptx(
       {

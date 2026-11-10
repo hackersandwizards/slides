@@ -251,3 +251,17 @@ same reviewer on the same image.
 | Six stages in one phase                      | A two rows of three 6.50, B one row 7.50                                                                     | 0.00  | B, up to six pills stay on one row                                                                      |
 | One portrait of three                        | A one portrait 5.12, B none 8.50, C all three, two faces repeated 6.38                                       | 0.33  | B, and a two-quote slide with portraits                                                                 |
 | Text slides (paragraph, bullets, two-column) | A muted list text 6.88, B list and column items in ink 7.62, C B with a larger, medium-weight paragraph 8.04 | 0.31  | B: C leads B only with Claude (7.83 : 6.83); Codex 8.25 : 8.42, a tie, which goes to the smaller change |
+
+## Title and kicker from the shared parts (10.11.2026, slides v3.0.0)
+
+Blind panel, Claude (`claude-opus-5-5`, effort medium) only, as the run's brief named it; two
+personas (a CTO watching a projected deck from four metres at 1920 px, a participant in a video
+call at 1000 px), two runs each, shuffled neutral letters. Criteria: hierarchy, legibility of the
+kicker, calm, one consistent deck (1 to 10 each) and overall. Noise = |run 1 − run 2| of the same
+persona on the criteria's sum.
+
+| Slide                | Variants                                                                                                 | Noise | Shipped                                       |
+| -------------------- | -------------------------------------------------------------------------------------------------------- | ----- | --------------------------------------------- |
+| Grid of quotes       | A own kicker at the base size: legibility 6.00, sum 28.50; B `SectionHeader`: 7.75, 30.00                | 0–1   | B: legibility led in all four runs            |
+| Roadmap              | A own kicker; B `SectionHeader`, the kicker 2 px lower: overall 7.50 each, all four runs "no difference" | 0     | A: no win, no change                          |
+| Regular with profile | `SlideTitle` renders byte-identical on the specimen; it keeps a hyphenated compound whole                | n/a   | `SlideTitle`, no panel: nothing to tell apart |

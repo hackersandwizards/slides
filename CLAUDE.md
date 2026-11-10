@@ -30,11 +30,10 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `lib/`: hooks, navigation, presenter sync, the edit mode, themes and section styles.
   `lib/brand-logos.ts` is the h&w marks as `?url` imports of brand's exports, which `Image` draws
   for the root paths a deck names them by (`HW_LOGO`, `/hw-lockup.svg`).
-  `lib/adapter.tsx` is the one seam to a consumer's framework: `SlidesAdapterProvider` takes an
-  `Image` component and a `navigate(href, replace)`. Without a provider the engine renders a plain
-  `<img>` and moves with `history` inside one island, as every consumer does. `lib/next-adapter.tsx`
-  is that provider for a Next app, `next/image` and the router, wrapped round its root layout.
-  `lib/deck-edit.ts` is the edit mode's file logic, `lib/deck-edit-server.ts` its write endpoint
+  The engine draws a plain `<img>` and moves with `history` inside one island, as every consumer,
+  all on Astro, needs.
+  `lib/deck-edit-mode.tsx` is the edit mode, which a tab opened with `?edit` starts with E,
+  `lib/deck-edit.ts` its file logic, `lib/deck-edit-server.ts` its write endpoint
   as one Node request handler, which each consumer mounts on its dev server with its own map from
   deck path to file. `lib/vite.ts` is a consumer's Vite `optimizeDeps`, read from the engine's
   imports.
@@ -64,11 +63,13 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   resolves deck, URL and file name and calls it.
 - `scripts/pins.ts`: the `slides-pins` command each consumer runs in its gate after the shared steps:
   fails when `package.json` pins no brand, or a brand below the README's minimum.
-- `scripts/density.ts`: the `slides-density` command each consumer runs in its gate: fails on a
+- `scripts/density.ts`: the `slides-density` command each consumer runs in its gate, over its
+  built site (`--site`, served by `scripts/serve-dir.ts`, which the page tests use too) or its
+  server (`--serve`, through scaffolding's `serve`): fails on a
   slide the fit guard shrinks below 0.8, or whose heading it shrinks below 0.8 to fit a word, and on one `PrintSlide` marks with `data-use` (a content
   slide a statement carries, or a regular slide drawn as one), lists those below 0.9. The engine's own regression decks
   are covered where talks runs it over the specimen deck.
-- `scripts/usage.ts`: the `slides-usage` command, a deck JSON's slides counted per catalogue entry (the anchors in `catalog/guidance.ts`), which the consumer publishes: the public engine reads no client deck.
+- `scripts/usage.ts`: the `slides-usage` command, a deck JSON's slides counted per catalogue entry (the anchors in `catalog/guidance.ts`), which the consumer publishes (`--out`, `--check`): the public engine reads no client deck. It lints the decks: a slide no entry draws, a field that changes nothing drawn (`ignoredFields`, proven by `test/ignored-fields.test.tsx`), a deck naming no `lang`.
 - `scripts/render-pptx.ts`: the `slides-pptx` command, a deck JSON to a native PowerPoint file in
   the h&w design with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
   Its lengths and sizes are measured off the print route at 1920x1080.
@@ -107,15 +108,16 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `test/`: the engine's unit tests.
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
-consumer imports, `types/slide`, the three stylesheets (`slides.css`, `sources.css`, and `tokens.css`, for a consumer's design-system page, which none imports yet), `scripts/render-pdf`, the specimen deck and its
+consumer imports (`navigate`, `print-context` and `deck-edit-mode` stay internal), `types/slide`, the three stylesheets (`slides.css`, `sources.css`, and `tokens.css`, for a consumer's design-system page, which none imports yet), `scripts/render-pdf`, the specimen deck and its
 images, the catalog's `SlideFrame.astro`, and the `slides-density`, `slides-pins`, `slides-usage` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is
-a release. Consumers import by those names, `@hackersandwizards/slides/types/slide`, and ship the source: Next lists
-the package in `transpilePackages`, Astro in `vite.ssr.noExternal`, each vitest config in
+a release. Consumers import by those names, `@hackersandwizards/slides/types/slide`, and ship the source: Astro lists
+the package in `vite.ssr.noExternal`, each vitest config in
 `server.deps.inline`. React, motion, lucide-react, recharts, shiki, Tailwind and the brand package
 are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and `jszip`, which only
 `slides-pptx` imports, are optional peers like `puppeteer`: a consumer installs them to run it.
 `prettier`, which `lib/deck-edit-server` formats an edited deck with, is optional too, as is
-`astro`, which only the exported `catalog/SlideFrame.astro` needs. The brand peer is optional so
+`astro`, which only the exported `catalog/SlideFrame.astro` needs, and scaffolding, whose `serve`
+only `slides-density --serve` imports. The brand peer is optional so
 that bun never looks it up on the public npm registry; a consumer still pins it.
 
 ## Commands

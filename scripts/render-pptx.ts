@@ -2385,7 +2385,7 @@ const RENDER: {
     if (replaced?.type === "agenda") return RENDER.agenda(s, ctx, replaced, deck);
     if (replaced) return RENDER.content(s, ctx, replaced, deck);
     const { c } = ctx;
-    const y = header(s, ctx, d, d.align === "center");
+    const y = header(s, ctx, d);
     let a = BODY(y);
     if (d.profile) {
       const pw = 2.6;
@@ -2409,13 +2409,11 @@ const RENDER: {
       a = { ...a, x: a.x + pw + 0.5, w: a.w - pw - 0.5 };
     }
     const secs = d.sections;
-    const paras = (sec: (typeof secs)[number], active: boolean): Para[] => [
+    const paras = (sec: (typeof secs)[number]): Para[] => [
       ...(sec.title
         ? [
             {
-              runs: md(sec.title, c, {
-                color: active || d.activeSection === undefined ? c.teal : c.muted,
-              }),
+              runs: md(sec.title, c, { color: c.teal }),
               mono: true,
               bold: true,
               rel: PT.h4 / PT.base,
@@ -2442,16 +2440,14 @@ const RENDER: {
     box(
       s,
       c,
-      secs.flatMap((sec, i) =>
-        paras(sec, d.activeSection === i).map((p, j, arr) =>
-          j === arr.length - 1 ? { ...p, after: 14 } : p,
-        ),
+      secs.flatMap((sec) =>
+        paras(sec).map((p, j, arr) => (j === arr.length - 1 ? { ...p, after: 14 } : p)),
       ),
       a.x,
       a.y,
       a.w,
       a.h,
-      { size: PT.base, color: c.ink, align: d.align === "center" ? "center" : "left" },
+      { size: PT.base, color: c.ink },
     );
   },
 

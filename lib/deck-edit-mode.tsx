@@ -5,9 +5,10 @@ import { deckSync } from "./presenter-sync";
 import { dialogOpen, directionKey, readStored, writeStored } from "./slide-utils";
 import { useMounted } from "./use-mounted";
 
-/** Edit mode, local development only: E toggles it, a click on a text opens that text's source
- *  string in a field over it, Enter or a click elsewhere writes it into the deck file, Escape
- *  cancels. Each host mounts this behind its dev flag and serves `ENDPOINT` from its dev server
+/** Edit mode, local development only, in a tab opened once with `?edit`, so a stray E while
+ *  presenting from the dev server never starts it: E toggles it, a click on a text opens that
+ *  text's source string in a field over it, Enter or a click elsewhere writes it into the deck
+ *  file, Escape cancels. Each host mounts this behind its dev flag and serves `ENDPOINT` from its dev server
  *  only (`deck-edit.ts` holds the file logic), so neither reaches a production build.
  *
  *  The field sits in its own frame: the deck's shortcuts listen on this window, several in the
@@ -15,6 +16,9 @@ import { useMounted } from "./use-mounted";
 
 const ENDPOINT = "/api/deck-edit";
 const STORAGE_KEY = "deck-edit";
+/** Set by `?edit` for the tab's session, which survives the reload a save causes and the
+ *  navigation that drops the query. */
+const ARMED_KEY = "deck-edit-armed";
 const LEAD = "var(--color-teal)";
 
 type Answer = { value?: string; index?: number; error?: string; ok?: boolean };
@@ -55,7 +59,13 @@ export function DeckEdit({ deck }: { deck: string }) {
   const badge = useRef<HTMLDivElement>(null);
   // The audience window only: the speaker window's slide sits inert under the speaker view, which
   // edits notes itself, and its frames are previews.
-  const [active] = useState(() => deckSync.role() === "audience");
+  const [audience] = useState(() => deckSync.role() === "audience");
+  const opted = mounted && new URLSearchParams(location.search).has("edit");
+  const active = audience && mounted && (opted || readStored("session", ARMED_KEY) === "on");
+
+  useEffect(() => {
+    if (opted) writeStored("session", ARMED_KEY, "on");
+  }, [opted]);
 
   useEffect(() => {
     if (!active) return;

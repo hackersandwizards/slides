@@ -46,3 +46,17 @@ it("lights no node on a phone, where every step shows at once", () => {
   expect(lit.length).toBe(0);
   vi.restoreAllMocks();
 });
+
+it("leaves a step with `numbered: false` empty and numbers the others on", () => {
+  const slide = makeSlide(["Customer", "Intake", "Build", "Customer again"]);
+  slide.loop = false;
+  slide.nodes[0].numbered = false;
+  slide.nodes[3].numbered = false;
+  const tiles = (slide: ProcessSlideType) =>
+    [...render(<ProcessSlide slide={slide} />).container.querySelectorAll(".slide-flow-step")].map(
+      (step) => step.firstElementChild?.textContent,
+    );
+  expect(tiles(slide)).toEqual(["", "1", "2", ""]);
+  // The control: without the field every step counts.
+  expect(tiles({ ...makeSlide(["A", "B"]), loop: false })).toEqual(["1", "2"]);
+});

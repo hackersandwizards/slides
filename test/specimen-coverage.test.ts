@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import { slideCatalog, slideCatalogBrandDark, specimenImages } from "../specimen/slide-catalog";
 import { aliasTypes, slideComponents } from "../lib/slide-components";
 import { replacedBy } from "../lib/slide-utils";
+import { DEFAULT_SECTION_STYLE, getSectionStyle } from "../lib/section-styles";
+import { ignoredFields } from "../scripts/usage";
 import type {
   ChartSlide,
   ClosingSlide,
@@ -183,9 +185,13 @@ describe("slide catalogue coverage", () => {
     ).toBe(true);
   });
 
-  it("shows every section theme", () => {
+  // Each where it changes the drawing: `secondary` is the default section's style, so it shows
+  // nowhere, and slides-usage names a slide that sets it (or any colour that draws nothing there).
+  it("shows every section theme that draws, and none where it draws nothing", () => {
     const seen = slides.map((s) => ("sectionTheme" in s ? s.sectionTheme : undefined));
-    expect(missing(THEMES, seen)).toEqual([]);
+    expect(getSectionStyle("secondary")).toBe(DEFAULT_SECTION_STYLE);
+    expect(missing(THEMES, [...seen, "secondary"])).toEqual([]);
+    expect(slides.filter((s) => ignoredFields(s).length).map((s) => s.notes)).toEqual([]);
   });
 
   it("names the variant each slide shows in its notes", () => {

@@ -45,7 +45,7 @@ export const aliasTypes: Partial<Record<Slide["type"], Slide["type"]>> = {
  *  holds the alias types and the replaced block types, `variant` a grid's). For a consumer's story
  *  coverage, which shows each under the name that replaced it. */
 export const deprecated = {
-  props: ["background", "accentColor", "dotColor"],
+  props: ["background", "dotColor"],
   values: {
     type: [
       ...Object.keys(aliasTypes),

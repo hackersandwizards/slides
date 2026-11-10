@@ -80,6 +80,7 @@ export function ProcessSlide({ slide }: Props) {
                   subtitle: node.subtitle || undefined,
                   badge: node.badge,
                   dim: node.dimmed,
+                  numbered: node.numbered,
                 }))}
                 highlight={revealedCount < slide.nodes.length ? revealedCount - 1 : named}
                 loop={loop ? "" : undefined}

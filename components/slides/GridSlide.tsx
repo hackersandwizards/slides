@@ -1,10 +1,10 @@
 "use client";
 
 import type { GridSlide as GridSlideType, GridCard } from "../../types/slide";
-import { BlurFade } from "../ui/blur-fade";
 import { SlideShell, groundOf } from "./SlideShell";
 import { gridAsContent, isDeepDive } from "../../lib/slide-utils";
 import { ContentSlide } from "./ContentSlide";
+import { SectionHeader } from "./SectionHeader";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { Portrait, TitledContent, SlideTitle } from "./primitives";
 
@@ -38,12 +38,11 @@ function QuoteCard({ card, isRevealed }: { card: GridCard; isRevealed: boolean }
 /** Quotes in a grid. Pillars and stats render as a content slide with a cards or numbers block
  *  (`gridAsContent`). */
 export function GridSlide({ slide }: Props) {
-  if ((slide.variant ?? "pillars") !== "quotes")
-    return <ContentSlide slide={gridAsContent(slide)} />;
+  if (slide.variant !== "quotes") return <ContentSlide slide={gridAsContent(slide)} />;
   return <QuoteGrid slide={slide} />;
 }
 
-function QuoteGrid({ slide }: Props) {
+function QuoteGrid({ slide }: { slide: Exclude<GridSlideType, { variant: "stats" }> }) {
   const { revealedCount } = useProgressiveReveal({
     totalSteps: slide.cards.length,
     startFull: slide.allActive,
@@ -54,13 +53,7 @@ function QuoteGrid({ slide }: Props) {
   return (
     <SlideShell ground={groundOf(slide)} night={isDeepDive(slide)}>
       <TitledContent>
-        {slide.sectionLabel && (
-          <BlurFade delay={0.05} duration={0.5}>
-            <span className="slide-kicker hw-label block [--hw-label-size:var(--text-base)]">
-              {slide.sectionLabel}
-            </span>
-          </BlurFade>
-        )}
+        <SectionHeader label={slide.sectionLabel} />
         <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
 
         <div className="slide-body items-center">
