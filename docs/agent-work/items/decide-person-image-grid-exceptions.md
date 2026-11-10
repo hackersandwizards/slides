@@ -18,6 +18,8 @@ options:
 
 # Should the website's team grid and the practitioners list keep their square portraits?
 
+Veto this if the two card grids should drop their square portraits and go round like the rest.
+
 Blocks nothing. The blind review settled it; the assumption stands unless you veto it.
 
 Brand has a round person image (`hw-avatar`) since v1.49.0. A blind panel compared, on nine
