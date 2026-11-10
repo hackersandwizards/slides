@@ -61,8 +61,19 @@ export default defineConfig({
       product: "Slides",
       lead: "Every slide type of the h&w slide engine, each state a slide of the specimen deck, and the parts the types are built from, each with its variants. All content is made up.",
       // A state's page frames its slide, so only the slide's page links slides.css (SlideFrame's
-      // `css`): here the tokens and brand's elements.
-      css: ["@hackersandwizards/brand/tokens.root.css", "@hackersandwizards/brand/elements.css"],
+      // `css`), which carries the faces and the elements a slide draws: a state alone needs the
+      // tokens, the home and a state's page the faces their header and bar set, and the home the
+      // elements its rail and tiles draw.
+      css: ["@hackersandwizards/brand/tokens.root.css"],
+      homeCss: [
+        "@hackersandwizards/brand/tokens.root.css",
+        "@hackersandwizards/brand/fonts.css",
+        "@hackersandwizards/brand/elements.css",
+      ],
+      dashboardCss: [
+        "@hackersandwizards/brand/tokens.root.css",
+        "@hackersandwizards/brand/fonts.css",
+      ],
       previewSize: [1440, 810],
       groupOrder: ["Types", "Parts", "Deck"],
       head: "./Head.astro",
