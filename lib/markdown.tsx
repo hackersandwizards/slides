@@ -70,22 +70,22 @@ export function renderMarkdown(text: string): React.ReactNode {
     }
     const text = part.slice(1, -1);
     const path = /[/.]/.test(text) && !text.includes(" ");
+    const whole = keepsWhole(text);
     // In teal's text colour: base teal on the chip's tint over a striped table row falls under
-    // 4.5:1. A whole chip is as wide as its text: it moves to the next line whole, widens a table
-    // column to hold it and stands past a phone's narrow flow step, centred under it, rather than
-    // break there. Wider than a sized box such as a paragraph, it breaks inside itself. A long
-    // chip runs with the line and may break anywhere.
+    // 4.5:1. A whole chip moves to the next line whole and holds its box open to its own width,
+    // one `ch` per character of the mono face and one for the padding, up to
+    // --slide-chip-hold: a table column or a phone's flow step grows to hold it. A box narrower
+    // than that wraps it inside itself. A long chip runs with the line and may break anywhere.
     const chip = `hw-inline-code text-teal-dark ${
-      keepsWhole(text)
-        ? "inline-block w-max max-w-full whitespace-normal"
-        : path
-          ? ""
-          : "[overflow-wrap:anywhere]"
+      whole ? "inline-block max-w-full whitespace-normal" : path ? "" : "[overflow-wrap:anywhere]"
     }`;
+    const hold = whole
+      ? { minWidth: `min(${text.length + 1}ch, var(--slide-chip-hold))` }
+      : undefined;
     // A path or file name breaks only after a slash or before a dot, so a table of paths never
     // splits `my-skill` at its hyphen or `settings.json` mid-word.
     const code = path ? (
-      <code className={chip}>
+      <code className={chip} style={hold}>
         {text
           .replace(/\/|(?=\.)/g, "$&\0")
           .split("\0")
@@ -98,7 +98,9 @@ export function renderMarkdown(text: string): React.ReactNode {
           ))}
       </code>
     ) : (
-      <code className={chip}>{text}</code>
+      <code className={chip} style={hold}>
+        {text}
+      </code>
     );
     const after = trailing(i);
     return after ? (

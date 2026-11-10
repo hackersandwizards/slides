@@ -155,18 +155,20 @@ describe("content blocks", () => {
 });
 
 describe("inline code", () => {
-  const chip = (text: string) =>
-    render(<p>{renderMarkdown(`\`${text}\``)}</p>).container.querySelector("code")?.className ?? "";
+  const chip = (text: string) => {
+    const code = render(<p>{renderMarkdown(`\`${text}\``)}</p>).container.querySelector("code");
+    return `${code?.className} ${code?.style.minWidth}`;
+  };
 
   // A chip wider than a paragraph still wraps inside itself, so it is never nowrap; a long one
   // runs with the line.
   it("keeps a chip up to its length whole at every width", () => {
     for (const text of ["pr-diff-summarizer", "widths: [2, 1]", ".claude/plans/my-ticket.md"]) {
-      expect(chip(text).split(" ")).toEqual(expect.arrayContaining(["inline-block", "w-max"]));
+      expect(chip(text)).toContain(`min(${text.length + 1}ch, var(--slide-chip-hold))`);
       expect(chip(text)).not.toContain("nowrap");
     }
     for (const text of ["a-name-longer-than-24-chars", "docs/agent-work/items/a-long-file-name.md"])
-      expect(chip(text)).not.toContain("w-max");
+      expect(chip(text)).not.toContain("min(");
   });
 
   // An inline block let the line break before the comma after it.
