@@ -4,6 +4,7 @@ status: assumed
 priority: 3
 order: 1295
 owner: Benedikt
+area: brand
 evidence: "blind panel 08.11.2026: 3 personas (L&D lead, engineer attending a training, brand designer) x Claude and Codex x 2 runs, 9 surfaces, each as rendered today and with every person image round; noise 0.40 on a 10-point scale"
 recommended: keep-frame-on-grids
 assumption: "The two card grids keep the square portrait with the brand corner: the frame won on both, in both runs and with both models, by more than the noise. Every other person image goes round."

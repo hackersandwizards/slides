@@ -4,6 +4,7 @@ status: open
 priority: 2
 order: 200
 owner: Benedikt
+area: software-engineering
 evidence: "test/fixtures/team-topology.ts, in the tree and in public history since bd66c48 (30.10.2026); counted against talks' origin/main on 10.11.2026"
 recommended: replace-keep-history
 options:
@@ -12,7 +13,7 @@ options:
     detail: The test's fixture takes invented team names and descriptions of the same shape, as the specimen's team-topology slides already use. One commit, no effect on consumers. The current strings stay readable in this public repository's history.
   - key: replace-rewrite-history
     label: Replace the fixture and rewrite the public history
-    detail: The same replacement, plus a history rewrite (git-filter-repo) and a force push to the public repository. Every commit hash from bd66c48 onward changes, so every release tag the consumers pin moves and each consumer reinstalls. The rewrite could also drop the older commits the review lists under F14, which name a client-named theme class and two of talks' deck slugs. Commit 547329a records that Benedikt decided on 10.11. to leave the history for the two client project names this fixture carried until 8c99e8c; this option reopens that.
+    detail: "The same replacement, plus a history rewrite and a force push to the public repository. Every commit hash from bd66c48 on changes, so every release tag consumers pin moves and each consumer reinstalls. It reopens your decision of 10.11. to leave the history that carried two client project names."
   - key: leave
     label: Leave the fixture as it is
     detail: The strings carry no client name; the fixture stays the densest real picture the test renders.
@@ -43,3 +44,5 @@ still holds today.
 The recommendation follows from the strings carrying no client name: replacing them ends the match
 at no cost to anyone, while a rewrite moves every release tag the three consumers pin. Source: the
 whole-repository review of 10.11.2026, finding F03, with F14 for the older history entries.
+
+The rewrite in the second option could also drop the older commits the review lists under F14, which name a client-named theme class and two of talks' deck slugs. Commit 547329a records that Benedikt decided on 10.11. to leave the history for the two client project names this fixture carried until 8c99e8c.

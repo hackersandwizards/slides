@@ -4,6 +4,7 @@ status: open
 priority: 3
 order: 630
 owner: Agent (slides session)
+area: software-engineering
 evidence: "v2.21.2 build, 10.11.2026: the chart bar tile on /catalog/print/ sampled every 100 ms in Chrome for Testing 156, headless, reported in docs/agent-work/2026-11-10-engine-queue.md, section 4"
 ---
 

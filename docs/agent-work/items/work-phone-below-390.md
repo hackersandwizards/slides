@@ -4,7 +4,8 @@ status: open
 priority: 3
 order: 620
 owner: Agent (slides session)
-evidence: "sweep of every `stories/Types` page of the v2.18.0 build at 360 and 320 x 844 px on 09.11.2026, text whose box ends past the viewport, read by a script; at 390 px all of them fit (`test/pages/phone-grids.test.ts`)"
+area: software-engineering
+evidence: "sweep of every stories/Types page of the v2.18.0 build at 360 and 320 x 844 px on 09.11.2026, text whose box ends past the viewport, read by a script; at 390 px all of them fit (test/pages/phone-grids.test.ts)"
 ---
 
 # Slides whose text runs past a screen narrower than 390 px

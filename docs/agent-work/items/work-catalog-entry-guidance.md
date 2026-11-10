@@ -4,7 +4,8 @@ status: open
 priority: 2
 order: 600
 owner: Agent (slides session)
-evidence: "`slides-usage` ships in v2.18.0 (`scripts/usage.ts`, `test/usage.test.ts`), every entry reachable from a deck; blind panel 08.11.2026 on the print page with and without its when, do and don't: 8.00 to 5.38, noise 0.12, two personas, Claude and Codex, two runs; screenshots taken before seven entries' text was corrected against the real slide types"
+area: software-engineering
+evidence: "slides-usage ships in v2.18.0 (scripts/usage.ts, test/usage.test.ts), every entry reachable from a deck; blind panel 08.11.2026 on the print page with and without its when, do and don't: 8.00 to 5.38, noise 0.12, two personas, Claude and Codex, two runs; screenshots taken before seven entries' text was corrected against the real slide types"
 ---
 
 # Give every catalog entry the number of deck slides using it

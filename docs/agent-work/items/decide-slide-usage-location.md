@@ -4,12 +4,13 @@ status: open
 priority: 3
 order: 610
 owner: Benedikt
-evidence: "slides-usage since v2.18.0; `slides-usage` takes an array of decks since v2.21.0; hycle-private commits its counts at talks/slides-usage.json (00f4ba9)"
+area: software-engineering
+evidence: "slides-usage since v2.18.0; slides-usage takes an array of decks since v2.21.0; hycle-private commits its counts at talks/slides-usage.json (00f4ba9)"
 recommended: consumer-file-local-overlay
 options:
   - key: consumer-file-local-overlay
     label: Each consumer commits its counts; the engine's print page shows them only locally
-    detail: Every consumer writes `slides-usage.json` beside its decks in its own gate (talks and trainer-hub at the repository root, hycle-private at talks/slides-usage.json, where it already is). The engine's catalog reads one or more such files when started with `SLIDES_USAGE=<path>[,<path>] bun run dev` and shows the count per entry on the print page. The Pages build never reads them, so no figure derived from a client deck reaches the public site.
+    detail: "Every consumer writes slides-usage.json beside its decks in its own gate. The engine's print page shows the count per entry only when started locally with those files; the Pages build never reads them, so no figure from a client deck reaches the public site."
   - key: consumer-file-only
     label: Each consumer commits its counts; the engine shows none
     detail: The same files, read only by people opening them in the consumer. The print page stays as it is. Nothing to build in the engine.
@@ -33,3 +34,5 @@ standard input.
 The question is direction: whether figures derived from client decks may appear on the public
 Pages site. The recommended option keeps them inside the company and still shows them on the print
 page to whoever runs the catalog locally.
+
+Where the files sit under the first option: talks and trainer-hub at the repository root, hycle-private at `talks/slides-usage.json`, where it already is. The catalog reads them when started with `SLIDES_USAGE=<path>[,<path>] bun run dev`.
