@@ -488,6 +488,19 @@ describe("slides-pptx on the specimen deck", () => {
     }
   });
 
+  it("sets a content slide's quote behind a purple rule, its source in grey", () => {
+    const at = slideCatalog.slides.findIndex(
+      (x) => x.type === "content" && x.content.some((b) => b.type === "quote"),
+    );
+    const xml = slideXml[at];
+    const purple = tokens["--color-purple"].slice(1).toUpperCase();
+    const muted = tokens["--color-muted"].slice(1).toUpperCase();
+    expect(xml).toContain(`<a:srgbClr val="${purple}"`);
+    expect(xml).toContain("We stopped asking for a release date.");
+    const run = xml.slice(0, xml.indexOf("<a:t>Mara Lindqvist"));
+    expect(run.slice(run.lastIndexOf("<a:rPr"))).toContain(`val="${muted}"`);
+  });
+
   it("fills a lone series' measured part when it holds two points or more", async () => {
     const out = join(dir, "fill.pptx");
     await renderPptx(

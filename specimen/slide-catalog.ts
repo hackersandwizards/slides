@@ -2111,6 +2111,23 @@ const slides: Slide[] = [
     notes: "visual blocks: bars three orders of magnitude apart, the smallest still visible.",
   },
   {
+    type: "content",
+    sectionLabel: "Block: quote",
+    headline: "Releases stopped being events",
+    content: [
+      {
+        type: "paragraph",
+        text: "Once every change reached production on the day it was merged, nobody planned a release any more.",
+      },
+      {
+        type: "quote",
+        text: "We stopped asking for a release date. The question became which customer saw the change first.",
+        source: "Mara Lindqvist, platform lead, [field notes](https://example.com/field-notes)",
+      },
+    ],
+    notes: "content blocks: quote with its source, under a paragraph. Fictional.",
+  },
+  {
     type: "statement",
     lines: ["The build time set the pace", "of the whole company"],
     closing:

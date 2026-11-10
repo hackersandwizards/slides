@@ -443,6 +443,7 @@ const JOB_OF: Record<string, Job[]> = {
   bullets: ["explain"],
   table: ["explain", "compare"],
   callout: ["explain"],
+  quote: ["statement", "explain"],
   "two-column": ["compare"],
   hooks: ["explain", "code"],
   terminal: ["code"],

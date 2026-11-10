@@ -1094,6 +1094,17 @@ function codeLines(code: string) {
   return lines.map((l) => l.slice(Number.isFinite(cut) ? cut : 0));
 }
 
+/** The rule and its gap before a quote's words: brand's 2 px and 1.25 rem on the 1920 stage. */
+const QUOTE_INDENT = (2 + 20) / 144;
+
+/** A quote block's paragraphs, each with its type size: the words, then the source in grey. */
+function quoteParas(b: Extract<ContentBlock, { type: "quote" }>, c: Palette, k: number) {
+  const words: [Para, number] = [{ runs: md(b.text, c), after: 8 }, PT.h3 * k];
+  return b.source
+    ? [words, [{ runs: md(b.source, c, { color: c.muted }) }, PT.lead * k] as [Para, number]]
+    : [words];
+}
+
 function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number {
   // Drawn as the cards block the web draws it as, columns included.
   if (b.type === "labeled-grid") return blockHeight(labeledGridAsCards(b), c, w, k);
@@ -1103,6 +1114,11 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
       return need(b.text, c, w, o);
     case "bullets":
       return need(bulletParas(b.items, c, b.ordered), c, w, o);
+    case "quote":
+      return quoteParas(b, c, k).reduce(
+        (h, [p, size]) => h + need(p, c, w - QUOTE_INDENT, { ...o, size }) + 0.1,
+        0,
+      );
     case "callout":
       return need(b.text, c, w - 0.5, { ...o, size: PT.h4 * 1.1 * k }) + 0.3;
     case "table":
@@ -1305,6 +1321,20 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         ...o,
         align: "left",
       });
+    case "quote": {
+      // Brand's quote: a purple rule, the words in ink behind it, the source under them.
+      rect(s, a.x, a.y, 2 / 144, a.h, c.purple);
+      return box(
+        s,
+        c,
+        quoteParas(b, c, k).map(([p, size]) => ({ ...p, rel: size / (PT.base * k) })),
+        a.x + QUOTE_INDENT,
+        a.y,
+        a.w - QUOTE_INDENT,
+        a.h,
+        { ...o, align: "left" },
+      );
+    }
     case "callout": {
       if (centered) {
         const w = Math.min(a.w, 7.5);

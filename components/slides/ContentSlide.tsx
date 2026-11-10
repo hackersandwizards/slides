@@ -40,6 +40,7 @@ import {
   DisplayHeading,
   type CardTone,
   VideoPlayer,
+  Quote,
 } from "./primitives";
 
 interface Props {
@@ -527,6 +528,9 @@ function ContentBlockRenderer({
 
     case "video":
       return <VideoBlock block={block} />;
+
+    case "quote":
+      return <Quote text={block.text} source={block.source} />;
 
     case "callout":
       if (centered) {

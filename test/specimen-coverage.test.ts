@@ -29,6 +29,7 @@ const BLOCKS: Record<ContentBlock["type"], true> = {
   video: true,
   "four-column": true,
   callout: true,
+  quote: true,
   "labeled-grid": true,
   terminal: true,
   "linked-image": true,

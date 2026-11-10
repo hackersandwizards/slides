@@ -305,6 +305,11 @@ export const GUIDANCE: Record<string, Guidance> = {
     "Keep captions to a few words.",
     "Mix captioned and uncaptioned pictures.",
   ),
+  "block-quote": g(
+    "Someone else's words back a point on a content slide.",
+    "Name who said or wrote them.",
+    "Set your own claim as a quote.",
+  ),
   "block-callout": g(
     "One aside, warning or tip on a content slide.",
     "Use one per slide.",

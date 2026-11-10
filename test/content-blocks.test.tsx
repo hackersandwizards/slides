@@ -43,6 +43,19 @@ describe("content blocks", () => {
     expect(scale(de)).toEqual(["0", "2,5", "5", "7,5", "10"]);
   });
 
+  it("sets a quote behind brand's rule, its source inside the rule and linked", () => {
+    const c = content([
+      { type: "quote", text: "Words said.", source: "A person, [notes](https://example.com)" },
+      { type: "quote", text: "No source." },
+    ]);
+    const [withSource, without] = c.querySelectorAll("figure.hw-quote");
+    expect(withSource.querySelector("blockquote")?.textContent).toBe("Words said.");
+    expect(withSource.querySelector("figcaption a")?.getAttribute("href")).toBe(
+      "https://example.com",
+    );
+    expect(without.querySelector("figcaption")).toBeNull();
+  });
+
   it("gives a full-width callout beside bars the full width", () => {
     const c = content([
       { type: "bars", bars: [{ label: "a", value: 50, display: "50%" }] },

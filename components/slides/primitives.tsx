@@ -127,6 +127,21 @@ export function SlideFooter({
   );
 }
 
+/** Someone else's words on a content slide: brand's quote, its source inside the rule under the
+ *  words, as a statement slide sets its quotation. */
+export function Quote({ text, source }: { text: string; source?: string }) {
+  return (
+    <figure className="hw-quote m-0 max-w-(--slide-measure-list)">
+      <blockquote className="m-0">
+        <p className="text-4xl leading-snug text-balance">{renderMarkdown(text)}</p>
+      </blockquote>
+      {source && (
+        <figcaption className="mt-5 text-xl text-text-muted">{renderMarkdown(source)}</figcaption>
+      )}
+    </figure>
+  );
+}
+
 /** The takeaway under a slide's diagram, brand's callout, fading in when `visible`: the last step
  *  of a reveal. */
 export function SlideCaption({

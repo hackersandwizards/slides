@@ -114,6 +114,13 @@ export type ContentBlock =
       columns: { title: string; subtitle?: string; items: string[] }[];
     }
   | {
+      /** Someone else's words on a content slide, behind brand's quote rule; `source`, who said
+       *  or wrote them, in Markdown, so it may link the place. */
+      type: "quote";
+      text: string;
+      source?: string;
+    }
+  | {
       type: "callout";
       text: string;
       variant?: "info" | "warning" | "success";

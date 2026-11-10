@@ -14,6 +14,7 @@ const {
   LinkCaption,
   PictureLink,
   NumberTile,
+  Quote,
   Portrait,
   SlideCaption,
   SlideCard,
@@ -153,6 +154,19 @@ export const PARTS: Record<string, () => ReactNode> = {
   SlideSubtitle: () => h(SlideSubtitle, null, "The line under a headline, in muted ink."),
   SlideCaption: () => h(SlideCaption, null, "The caption under a diagram, its last step."),
   SlideFooter: () => h(SlideFooter, null, "The one line under a slide's body, such as its source."),
+  Quote: () =>
+    h(
+      "div",
+      { className: "space-y-12" },
+      cell(
+        "with a source",
+        h(Quote, {
+          text: "Someone else's words, behind brand's quote rule.",
+          source: "Who said or wrote them, [where](https://example.com)",
+        }),
+      ),
+      cell("without", h(Quote, { text: "Words whose source the slide names elsewhere." })),
+    ),
   CodePanel: () => codePanel(h(CodeLines, { code: CODE_SAMPLE, language: "bash" })),
   TitledContent: () =>
     label("The column of a titled slide: headline, then the body under the fit guard."),

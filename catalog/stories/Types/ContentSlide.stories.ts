@@ -53,3 +53,4 @@ export const BlockTwoImages = state("content", 45, "ContentSlide");
 export const BlockGallery = state("content", 46, "ContentSlide");
 export const BlockGallery2 = state("content", 47, "ContentSlide");
 export const VisualBarsFarApart = state("content", 48, "ContentSlide");
+export const BlockQuote = state("content", 49, "ContentSlide");
