@@ -54,8 +54,8 @@
   "scripts": {
     "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks || true",
     "check": "scaffolding check",
-    "test": "bun --bun vitest run --testTimeout=${SCAFFOLDING_TEST_TIMEOUT_MS:-5000} --exclude 'test/pages/**'",
-    "check:pages": "bun --bun vitest run --testTimeout=${SCAFFOLDING_TEST_TIMEOUT_MS:-5000} test/pages",
+    "test": "bun --bun vitest run --exclude 'test/pages/**'",
+    "check:pages": "bun --bun vitest run test/pages",
     "check:pins": "bun scripts/pins.ts",
     "check:colours": "brand-colours",
     "check:copies": "brand-copies",

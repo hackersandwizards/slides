@@ -143,8 +143,8 @@ preview`), then `check:elements`
 
 ## Releasing a change
 
-1. Change the engine here, `bun run check` green, raise `version`, commit and push `main`; once the
-   push has landed, tag `v<version>` and push the tag.
+1. Change the engine here, `bun run check` green, raise `version`, then commit, push and tag in the
+   order the README's Release section gives.
 2. Brief a session in each consumer to raise the tag in its `package.json`, `bun install` and run
    its gate. The regression
    decks are this repo's `specimen/slide-catalog.ts`, which talks shows, and
