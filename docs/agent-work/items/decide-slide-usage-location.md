@@ -20,6 +20,8 @@ options:
 
 # Where do the slide-usage counts live, and may the public print page show them?
 
+Decide where the slide-usage counts live and whether the public print page may show them.
+
 Blocks the rest of `work-catalog-entry-guidance` (the count per catalogue entry). Nothing else
 waits on it.
 

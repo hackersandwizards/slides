@@ -9,6 +9,8 @@ evidence: "`slides-usage` ships in v2.18.0 (`scripts/usage.ts`, `test/usage.test
 
 # Give every catalog entry the number of deck slides using it
 
+Brief each consumer to commit its slide counts once `decide-slide-usage-location` is decided.
+
 The print page shows each entry's when, do and don't, and `slides-usage` counts a deck's slides per
 entry. Left:
 

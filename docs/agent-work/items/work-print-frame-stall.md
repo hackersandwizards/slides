@@ -9,6 +9,8 @@ evidence: "v2.21.2 build, 10.11.2026: the chart bar tile on /catalog/print/ samp
 
 # A growing plot framed on the print page waits seconds before it draws
 
+Find the print-page stall's cause with a one-factor control and fix it where it reaches a deck.
+
 Before v2.21.3 the bar tile's plot grew in: on the print page it drew no bar for 2.4 to 6 s and
 then appeared whole in one step. The same story page grows in 0.4 s alone, framed on an empty
 page at full or quarter scale, and framed off-screen and scrolled in. Removing every other frame

@@ -9,6 +9,8 @@ evidence: "slides v2.13.0 draws the plus as the character + in Inter bold, teal,
 
 # Does PowerPoint draw the plus between an `adds` slide's two cards as a plus?
 
+Open the one-slide deck below in PowerPoint and answer "plus" or "not a plus".
+
 A before-after slide with `adds: true` shows a plus between its cards instead of an arrow: the right
 side is added to the left one, which stays. No agent may open PowerPoint, and LibreOffice drew this
 plus as a four-pointed star.

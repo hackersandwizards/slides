@@ -9,6 +9,8 @@ evidence: "sweep of every `stories/Types` page of the v2.18.0 build at 360 and 3
 
 # Slides whose text runs past a screen narrower than 390 px
 
+Make the four slides below fit at 360 and 320 px, and run the phone sweep at those widths.
+
 | Story                      | Past the edge                             |
 | -------------------------- | ----------------------------------------- |
 | `wheel-slide/specimen`     | a number, 10 px at 360, 50 px at 320      |
