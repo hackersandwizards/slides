@@ -10,6 +10,6 @@ it("keeps a hyphenated word in the headline whole", () => {
       slide={{ type: "transition", headline: "Can AI create production-ready\nsoftware?" }}
     />,
   );
-  expect(getByText("production-ready").className).toBe("inline-block");
+  expect(getByText("production-ready").className).toBe("inline-block [baseline-source:first]");
   expect(getByText(/^Can AI/).textContent).toBe("Can AI create production-ready\nsoftware?");
 });

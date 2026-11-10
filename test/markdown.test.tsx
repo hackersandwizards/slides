@@ -66,7 +66,7 @@ describe("renderMarkdown", () => {
 describe("hyphenated compounds", () => {
   const whole = (el: HTMLElement) =>
     [...el.querySelectorAll("span")]
-      .filter((s) => s.className === "inline-block")
+      .filter((s) => s.className === "inline-block [baseline-source:first]")
       .map((s) => s.textContent);
 
   it.each([

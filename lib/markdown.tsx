@@ -12,7 +12,9 @@ export const hasMarkdown = (text: string) => text.split(INLINE_MARKDOWN).length 
 // A browser breaks a line after any hyphen, so "Self-Service" in a narrow box ended one line on
 // "Self-" with "Service?" alone below. A compound up to 24 characters is an inline block: it moves
 // to the next line whole, and breaks inside itself only where it is wider than the line, so it
-// never runs out of a fixed box. Anything but a string passes through.
+// never runs out of a fixed box. Broken so, it keeps its first line on the line's baseline, where an
+// inline block would take its last, so a list marker stays beside the item's first line. Anything
+// but a string passes through.
 const COMPOUND = /([\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)+)/u;
 
 export function keepCompounds(text: React.ReactNode): React.ReactNode {
@@ -21,7 +23,7 @@ export function keepCompounds(text: React.ReactNode): React.ReactNode {
   if (pieces.length === 1) return text;
   return pieces.map((piece, i) =>
     i % 2 && piece.length <= 24 ? (
-      <span key={i} className="inline-block">
+      <span key={i} className="inline-block [baseline-source:first]">
         {piece}
       </span>
     ) : (
