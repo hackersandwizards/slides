@@ -154,7 +154,7 @@ its CSS.
 The two shifts differ. The control's shift is the one from 09.11: three blocks of the prose story
 move down for good. Brand's Roboto overrides remove it; no stripped run shows it. The stripped
 shift is new: the text after the bold run of the last paragraph drops one line and returns 15 ms
-later, 0.0382 plus 0.0512, about 470 ms after first paint. Its cause is not yet explained. With no
+later, 0.0382 plus 0.0512, about 470 ms after first paint. Its cause is in the next section. With no
 throttling and every font file held 1500 ms after navigation and released together, 10 runs per
 cell, it still appears in 2/10 without the preload and 1/10 with it, and the control shows its own
 shift in 10/10. So a face arriving after the others does not explain it alone. Nor does a bold
@@ -165,12 +165,87 @@ fallback drawn from the regular instance: with the fonts blocked the bold run dr
 The deck view story shows no subtitle shift stripped, where the 09.11 deck page shifted 30/30 at
 0.0039 to 0.0052. That this story draws the same slide as the 09.11 deck page is not checked.
 
-The preload stays: without it the prose story at 412 px reaches 0.0894, over the 0.01 bar. Its
-cost here is 276 ms (prose) and 456 ms (deck) of first paint. It can go once the stripped shift is
-explained and gone at 412 px on Roboto.
+## Cause of the Roboto shift: Inter 400 before Inter 700, under `text-wrap: pretty`, 10.11.2026
+
+Setup as in the section above, Chromium 156 in the Debian container with Android's fonts, host load
+3 to 7. Two stories at 412 px, each run a fresh context, 10 or 30 runs per cell.
+
+**The state in between.** Each font state held for good, by aborting every other font file, on
+both builds:
+
+| Fonts loaded   | Bold run "a smaller one" | Text after it | Paragraph lines |
+| -------------- | ------------------------ | ------------- | --------------- |
+| none           | one line, 177.6 px       | y 657         | 7               |
+| Inter 400 only | breaks before "one"      | y 694         | 8               |
+| Inter 700 only | one line, 175.1 px       | y 657         | 7               |
+| all            | one line, 175.1 px       | y 657         | 7               |
+
+With only Inter 400 the paragraph draws its running text in Inter and the bold run in "Inter
+Fallback Roboto" at 650 to 900, and `pretty` picks an eighth line. That is the shift's rects: the
+text drops 37 px when Inter 400 lands and returns when Inter 700 lands. In the 26 of 30 slow-4G runs
+without the preload that shift, the move down comes 5 to 18 ms after `inter-latin-400` arrives and
+the move back after `inter-latin-700` (25 runs; one reports only the move back).
+
+**One factor changed in the Inter 400 only state:**
+
+| Change                                                     | Paragraph lines | Text after it |
+| ---------------------------------------------------------- | --------------- | ------------- |
+| none                                                       | 8               | y 694         |
+| `text-wrap: wrap` on the paragraph                         | 7               | y 657         |
+| `font-synthesis-weight: none` on the bold run              | 8               | y 694         |
+| bold fallback `size-adjust` 108.75% to 107.22%, served CSS | 7               | y 657         |
+
+The `size-adjust` rewrite takes: at 150% the bold run breaks, 167 plus 67 px. The bold fallback is right
+on average, though: over 327 chunks of the print page's text, "Inter Fallback Roboto" at 700 measures
+0.9995 of Inter Bold (p10 0.9907, p90 1.0078). This run is 1.4% wide, past the p90. No metric fits
+every string, so the break `pretty` picks stays exposed to the width a mixed state brings.
+
+**Arrival order, one factor:** unthrottled, each Inter file held after navigation, 10 runs per
+cell:
+
+| Held                            | Runs with a shift, kept | Without preload | CLS    |
+| ------------------------------- | ----------------------- | --------------- | ------ |
+| Inter 400 at 600, 700 at 900 ms | 10/10                   | 10/10           | 0.0512 |
+| Inter 700 at 600, 400 at 900 ms | 0/10                    | 0/10            | 0      |
+| both at 600 ms                  | 0/10                    | 0/10            | 0      |
+
+Held together and released at 1500 ms, the setup in the section above, 2/10 without the preload
+and 1/10 with it still shifted: the two files then finish a frame or more apart.
+
+**Slow 4G, 30 runs per cell; the `wrap` row rewrites brand's rule in the served CSS:**
+
+| Build                            | Runs with a shift | CLS    | Bold run on two lines at some frame | First paint |
+| -------------------------------- | ----------------- | ------ | ----------------------------------- | ----------- |
+| preload                          | 0/30              | 0      | 30/30                               | 4924 ms     |
+| without preload                  | 26/30             | 0.0894 | 10/10, 10 runs traced               | 4644 ms     |
+| without preload, `wrap` on p, li | 0/30              | 0      | not traced                          | 4644 ms     |
+| preload with Inter 700 added     | 0/30              | 0      | 0/30                                | 5048 ms     |
+
+The preload's zero does not mean the line holds. Its set has no Inter 700, so Inter 400 lands about
+3.9 s before first paint and Inter 700 244 to 269 ms after. Every run paints the paragraph with the
+bold run broken and the text at y 688, then moves the text to y 651 when Inter 700 lands. The
+Layout Instability API reports no entry for that move. Why is not yet explained. The slide's
+entrance is ruled out: with `prefers-reduced-motion: reduce` the paragraph stands still from first
+paint, the text still moves 694 to 657, and 10/10 runs still report no entry. The move after the
+held Inter 700 at 900 ms is reported in the preload build too.
+
+Adding Inter 700 to the preload removes the move at 124 ms of first paint on slow 4G, on the prose
+story (4924 to 5048 ms) and the deck view story (2796 to 2920 ms, 10 runs). `text-wrap: wrap` on
+paragraphs and list items removes the shift at no cost in first paint. It brings back the lone last
+word `pretty` exists against (19 of 220 subtitle cases for `wrap`, measured above).
+
+**Decision.** The preload stays at four faces. Without it the prose story at 412 px reaches 0.0894,
+over the 0.01 bar, and with it the measured CLS is 0, at 276 ms (prose) and 456 ms (deck) of first
+paint in the section above. Inter 700 is not added: 124 ms on every page for a move the API does
+not count, which goes away at the source if brand changes its `pretty` rule
+(`tokens/text-base.css`), which this engine does not override. If brand keeps `pretty`, the engine
+adds Inter 700 at the measured cost: `items/work-roboto-bold-rewrap.md`.
 
 ## Open
 
-- The cause of the stripped prose story's 0.0894 shift on Roboto, above: not yet explained.
+- Why the Layout Instability API reports no entry for the preload build's text move on Roboto:
+  not yet explained, the entrance ruled out.
+- Brand's `text-wrap: pretty` on paragraphs: brand's decision, briefed with these numbers; the
+  engine's step after it in `items/work-roboto-bold-rewrap.md`.
 - Whether the dev server fetches a preloaded face twice: not checked, the catalog's dev server did
   not start within its 30 s limit at load 20.
