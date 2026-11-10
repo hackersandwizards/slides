@@ -540,6 +540,19 @@ function Staggered({
   const edge = `${(2 / tracks) * 100}%`;
   const leader = <span className="mx-auto h-full min-h-6 w-1" style={{ background: GREY }} />;
   const { into, onward } = continuation(block);
+  // Stage i's dot stands 2i + 2 tracks into the line's row.
+  const nowAt = ((2 * now + 2) / tracks) * 100;
+  const run = (left: string, right: string, dashed: boolean) => (
+    <div
+      className="absolute top-1/2 -translate-y-1/2"
+      data-dashed={dashed || undefined}
+      style={{
+        left,
+        right,
+        borderTop: `calc(var(--spacing) * 1) ${dashed ? "dashed" : "solid"} ${GREY}`,
+      }}
+    />
+  );
   return (
     <div
       className={`${block.continues ? "slide-timeline-continued" : ""} grid w-full grid-rows-[auto_auto_auto_--spacing(6)_--spacing(14)_--spacing(6)_auto_auto_auto]`}
@@ -555,11 +568,10 @@ function Staggered({
             <RowLabel text={labels.text} row={3 + at} className="mt-2" />
           </div>
         ))}
+      {/* Solid up to now's dot and dashed after it, as between two stages. */}
       <div className="relative row-start-5" style={{ gridColumn: `${1 + shift} / -1` }} aria-hidden>
-        <div
-          className="absolute top-1/2 h-1 -translate-y-1/2"
-          style={{ left: into ? BLEED : edge, right: onward ? BLEED : edge, background: GREY }}
-        />
+        {now >= 0 && run(into ? BLEED : edge, `${100 - nowAt}%`, false)}
+        {run(now >= 0 ? `${nowAt}%` : into ? BLEED : edge, onward ? BLEED : edge, true)}
       </div>
       {block.events.map((e, i) => {
         const above = i % 2 === 0;

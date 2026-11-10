@@ -24,8 +24,9 @@ describe("table", () => {
       />,
     );
     expect(container.querySelector("table")!.className).not.toContain("table-fixed");
-    expect(getByText("Self‑serve rollout")).not.toBeNull();
-    expect(getByText("Schlüssel\u2011Übergabe")).not.toBeNull();
+    // Each compound whole, as an inline block, its hyphen the one typed (F24: U+2011 rewrote it).
+    expect(getByText("Self-serve").className).toBe("inline-block");
+    expect(getByText("Schlüssel-Übergabe").className).toBe("inline-block");
   });
 });
 

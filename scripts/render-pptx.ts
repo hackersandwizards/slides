@@ -3051,7 +3051,7 @@ const RENDER: {
       // A marked trend is measured up to the point and planned from it, both holding the point,
       // as on the web slide; `finishChart` dashes the planned half once the chart is written.
       const now = trend ? data.findIndex((p) => p.name === d.currentMarker) : -1;
-      const halves = (name: string, pick: (p: (typeof data)[number]) => number) => [
+      const halves = (name: string, pick: (p: (typeof data)[number]) => number | null) => [
         { name, labels, values: data.map((p, i) => (now < 0 || i <= now ? pick(p) : null)) },
         ...(now < 0
           ? []
@@ -3066,7 +3066,8 @@ const RENDER: {
       const two = data.some((p) => p.value2 !== undefined);
       const series = [
         ...halves(d.seriesLabel ?? d.yLabel ?? "", (p) => p.value),
-        ...(two ? halves(d.series2Label ?? "", (p) => p.value2 ?? 0) : []),
+        // A point without a second value is a gap, as on the web, never a zero.
+        ...(two ? halves(d.series2Label ?? "", (p) => p.value2 ?? null) : []),
       ] as { name: string; labels: string[]; values: number[] }[];
       const hues = two ? [c.teal, c.purple] : [c.teal];
       // The card as `ChartFrame` draws it, the legend above it and the annotation below, centred

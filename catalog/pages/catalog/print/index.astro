@@ -83,7 +83,7 @@ const jobLinks = (Object.keys(JOBS) as Job[])
         font-size: 0.875rem;
         color: var(--color-muted);
       }
-      main {
+      .sheet {
         display: grid;
         grid-template-columns: repeat(auto-fill, 480px);
         gap: 2rem 1.5rem;
@@ -240,7 +240,7 @@ const jobLinks = (Object.keys(JOBS) as Job[])
         </nav>
       </div>
     </header>
-    <div class="hw-container">
+    <main class="hw-container">
       <div class="intro">
         <h1>Slide specimen</h1>
         <p>
@@ -278,9 +278,9 @@ const jobLinks = (Object.keys(JOBS) as Job[])
           <Fragment set:html={partRows} />
         </tbody>
       </table>
-      <main>
+      <div class="sheet">
         <Fragment set:html={partTiles} />
-      </main>
+      </div>
       <h2 id="elements">Shared elements</h2>
       <p class="layers">
         The elements the slides take from <code>@hackersandwizards/brand</code>, each at the stage
@@ -289,9 +289,9 @@ const jobLinks = (Object.keys(JOBS) as Job[])
         <code>brand-elements</code> measures both, last in <code>bun run check</code>, here and on{" "}
         <a href="frames.html">every specimen slide</a>.
       </p>
-      <main class="elements">
+      <div class="sheet elements">
         <Fragment set:html={usesTiles} />
-      </main>
+      </div>
       <Fragment set:html={exceptionSections} />
       <h2 id="catalog">Catalogue</h2>
       <p class="layers">
@@ -320,9 +320,9 @@ const jobLinks = (Object.keys(JOBS) as Job[])
               aria-label="Search the catalogue"
             />
           </div>
-          <main class="tiles">
+          <div class="sheet tiles">
             <Fragment set:html={entries.map((e) => e.html).join("\n")} />
-          </main>
+          </div>
           <p id="none" class="hw-empty" data-variant="plain" hidden>
             No entry matches.
           </p>
@@ -345,7 +345,7 @@ const jobLinks = (Object.keys(JOBS) as Job[])
           <Fragment set:html={replacedRows} />
         </tbody>
       </table>
-    </div>
+    </main>
     <script is:inline>
       const tiles = [...document.querySelectorAll(".tiles figure")];
       const find = document.getElementById("find");

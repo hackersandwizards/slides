@@ -248,17 +248,6 @@ export function profileLabel(href: string): string {
   return linkLabel(href.replace(/[?#].*$/, "")).replace(/^([a-z]{2,3}\.)?linkedin\.com\//, "");
 }
 
-/** Joins a hyphenated word with a non-breaking hyphen, outside code spans and link targets, so a
- *  table cell or a divider headline breaks only at a space. */
-export function keepHyphenatedWords(text: string): string {
-  return text
-    .split(/(`[^`]*`|\]\([^)]*\))/)
-    .map((part, i) =>
-      i % 2 ? part : part.replace(/([\p{L}\p{N}])-(?=[\p{L}\p{N}])/gu, "$1\u2011"),
-    )
-    .join("");
-}
-
 /** An `evolution` slide as the `process` slide with `loop: false` that replaces it. */
 export function evolutionAsProcess({ stages, ...slide }: EvolutionSlide): ProcessSlide {
   return {

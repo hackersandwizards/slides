@@ -561,6 +561,26 @@ describe("slides-pptx on the specimen deck", () => {
     expect(named).toContain(true);
   });
 
+  // F22: a second series that starts late was drawn at zero before its first value.
+  it("leaves a gap where a point has no second value", async () => {
+    const out = join(dir, "gap.pptx");
+    const data = [
+      { name: "a", value: 1 },
+      { name: "b", value: 2 },
+      { name: "c", value: 3, value2: 5 },
+    ];
+    await renderPptx(
+      { name: "G", slides: [{ type: "chart", variant: "trend", headline: "H", data }] },
+      out,
+      dir,
+    );
+    const zipped = await JSZip.loadAsync(readFileSync(out));
+    const chart = Object.keys(zipped.files).find((f) => /charts\/chart\d+\.xml$/.test(f))!;
+    const second = (await zipped.file(chart)!.async("string")).split("<c:ser>")[2];
+    const values = second.slice(second.indexOf("<c:val>"));
+    expect([...values.matchAll(/<c:v>([^<]*)<\/c:v>/g)].map((m) => m[1])).toEqual(["", "", "5"]);
+  });
+
   it("fills a lone series' measured part when it holds two points or more", async () => {
     const out = join(dir, "fill.pptx");
     await renderPptx(

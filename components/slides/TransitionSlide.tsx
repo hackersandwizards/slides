@@ -3,7 +3,7 @@
 import type { TransitionSlide as TransitionSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell, groundOf } from "./SlideShell";
-import { keepHyphenatedWords } from "../../lib/slide-utils";
+import { keepCompounds } from "../../lib/markdown";
 import { DisplayHeading, SlideCard } from "./primitives";
 
 interface Props {
@@ -27,7 +27,7 @@ export function TransitionSlide({ slide }: Props) {
         )}
 
         <BlurFade delay={0.1} duration={0.5}>
-          <DisplayHeading as="div">{keepHyphenatedWords(slide.headline)}</DisplayHeading>
+          <DisplayHeading as="div">{keepCompounds(slide.headline)}</DisplayHeading>
         </BlurFade>
 
         {slide.subtitle && (

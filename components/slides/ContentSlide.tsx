@@ -22,7 +22,6 @@ import {
   fourColumnAsCards,
   isDeepDive,
   isVideo,
-  keepHyphenatedWords,
   labeledGridAsCards,
   pipelineAsFlow,
   TWO_COLUMN_TONES,
@@ -378,7 +377,7 @@ function ContentBlockRenderer({
                       key={cellIndex}
                       className={`border-b border-border py-4 text-left text-text ${block.compact ? "px-4" : "px-6"} ${cellIndex === 0 ? "font-bold" : ""}`}
                     >
-                      {renderMarkdown(keepHyphenatedWords(cell))}
+                      {renderMarkdown(cell)}
                     </td>
                   ))}
                 </tr>

@@ -518,3 +518,34 @@ describe("statement and content merges (merge-statement, merge-content)", () => 
     expect(profile.querySelector(".text-teal")).not.toBeNull();
   });
 });
+
+// F23: six and more stages drew one solid line whatever `now` said.
+describe("a staggered timeline", () => {
+  const events = Array.from({ length: 7 }, (_, i) => ({ title: `E${i}` }));
+  const runs = (now?: number) =>
+    [
+      ...render(
+        <slideComponents.content
+          slide={
+            {
+              type: "content",
+              headline: "H",
+              content: [{ type: "timeline", events, now }],
+            } as Slide
+          }
+        />,
+      ).container.querySelectorAll<HTMLElement>(".max-md\\:hidden [aria-hidden] > div"),
+    ].map((e) => [e.dataset.dashed === "true", e.style.left, e.style.right]);
+
+  it("is solid up to now's dot and dashed after it", () => {
+    // 16 tracks; the third stage's dot stands 6 tracks in.
+    expect(runs(2)).toEqual([
+      [false, "12.5%", "62.5%"],
+      [true, "37.5%", "12.5%"],
+    ]);
+  });
+
+  it("is solid to the last dot where no stage is ahead", () => {
+    expect(runs()[0]).toEqual([false, "12.5%", "12.5%"]);
+  });
+});

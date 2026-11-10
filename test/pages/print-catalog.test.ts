@@ -85,3 +85,17 @@ it("links a stylesheet defining each brand element class the print pages draw", 
     expect(missing, page).toEqual([]);
   }
 });
+
+// F26: a part's "used by" linked `#grid`, which no tile carries; a search for "media" missed the
+// image and video blocks a media slide now draws as.
+it("links only anchors the page holds, and finds every form a media slide moved to", () => {
+  const ids = new Set([...html.matchAll(/ id="([^"]+)"/g)].map(([, id]) => id));
+  const dead = [...html.matchAll(/href="#([^"]+)"/g)]
+    .map(([, id]) => id)
+    .filter((id) => !ids.has(id));
+  expect(dead).toEqual([]);
+  expect(ids.size).toBeGreaterThan(50);
+  const media = entries.filter(([, , search]) => search.split(" ").includes("media"));
+  const named = media.map(([figure]) => /id="([^"]+)"/.exec(figure)![1]);
+  for (const id of ["block-gallery", "block-image", "block-video"]) expect(named).toContain(id);
+});

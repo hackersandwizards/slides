@@ -423,7 +423,6 @@ const JOB_OF: Record<string, Job[]> = {
   roadmap: ["orient", "schedule"],
   statement: ["statement"],
   content: ["explain"],
-  "content:centered": ["statement"],
   regular: ["people", "explain"],
   "grid:quotes": ["statement", "people"],
   "grid:quotes with portraits": ["statement", "people"],
@@ -455,7 +454,6 @@ const JOB_OF: Record<string, Job[]> = {
   annotated: ["image"],
   cards: ["explain"],
   flow: ["process"],
-  pipeline: ["process"],
   layers: ["process", "structure"],
   timeline: ["schedule", "process"],
   bars: ["data"],
@@ -471,6 +469,8 @@ const REPLACES: Record<string, string[]> = {
   roadmap: ["dual-pill-overview"],
   "phased-pills": ["overview"],
   gallery: ["media"],
+  image: ["media"],
+  video: ["media"],
   statement: ["centered"],
   agenda: ["regular"],
   content: ["regular"],
@@ -518,11 +518,15 @@ const guidanceOf = (id: string) => {
     html: `<p class="when">${attr(entry.when)}</p><dl class="dos"><dt>Do</dt><dd>${attr(entry.do)}</dd><dt>Don't</dt><dd>${attr(entry.dont)}</dd></dl>`,
   };
 };
+// Each type's first tile, which a part's "used by" links: a type whose first slide is a replaced
+// form, such as `grid`, has its first tile under a variant's name.
+const typeTile = new Map<string, string>();
 const tile = (
   { name, markup, index }: { name: string; markup: string; index: number },
   prefix = "",
 ) => {
   const id = anchor(name, prefix);
+  if (!prefix && !typeTile.has(deck[index].type)) typeTile.set(deck[index].type, id);
   const { jobs, search } = entryOf(index);
   const content = plotStory(index) ?? `srcdoc="${attr(frameDoc(markup))}"`;
   const guide = guidanceOf(id);
@@ -564,7 +568,7 @@ export const replacedRows = [
 export const partRows = partFrames
   .map(
     (p) =>
-      `<tr><td><a href="#part-${p.name.toLowerCase()}"><code>${p.name}</code></a></td><td>${attr(p.purpose)}</td><td>${p.users.map((t) => `<a href="#${t}">${t}</a>`).join(", ") || "&ndash;"}</td></tr>`,
+      `<tr><td><a href="#part-${p.name.toLowerCase()}"><code>${p.name}</code></a></td><td>${attr(p.purpose)}</td><td>${p.users.map((t) => `<a href="#${typeTile.get(t) ?? t}">${t}</a>`).join(", ") || "&ndash;"}</td></tr>`,
   )
   .join("\n");
 

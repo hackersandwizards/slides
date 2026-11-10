@@ -3,6 +3,7 @@
 import { useContext, type ReactNode } from "react";
 import type {
   ComparisonGuidanceSlide,
+  ComparisonSide,
   ComparisonPositionsSlide,
   ComparisonSidesSlide,
   ComparisonSlide as ComparisonSlideType,
@@ -11,8 +12,9 @@ import { usePrintMode } from "../../lib/print-context";
 import { useCarousel } from "../../lib/use-carousel";
 import { usePhone } from "../../lib/use-progressive-reveal";
 import { BlurFade } from "../ui/blur-fade";
+import Image from "../ui/image";
 import { DeckLang, SlideShell } from "./SlideShell";
-import { keepHyphenatedWords, WORDS } from "../../lib/slide-utils";
+import { WORDS } from "../../lib/slide-utils";
 import {
   BeforeAfterSides,
   DisplayHeading,
@@ -25,7 +27,25 @@ import { SectionHeader } from "./SectionHeader";
 
 /** Consumers import it from this path. */
 export { BeforeAfterSides } from "./primitives";
-import { renderMarkdown } from "../../lib/markdown";
+import { keepCompounds, renderMarkdown } from "../../lib/markdown";
+
+/** A side's name, under its logo where it has one, as the export draws it. */
+function SideHead({ side }: { side: ComparisonSide }) {
+  return (
+    <>
+      {side.logo && (
+        <Image
+          src={side.logo}
+          alt={side.label}
+          width={160}
+          height={48}
+          className="mb-4 h-12 w-auto"
+        />
+      )}
+      <h2 className="mb-6 card-title text-2xl text-text">{renderMarkdown(side.label)}</h2>
+    </>
+  );
+}
 
 function MarkedItem({
   mark,
@@ -94,7 +114,7 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
                 tone={isActive ? "primary" : "neutral"}
                 className="h-full transition-all duration-300 card-pad-8"
               >
-                <h2 className="mb-6 card-title text-2xl text-text">{side.label}</h2>
+                <SideHead side={side} />
 
                 <SideHighlight text={side.highlight} muted={!isActive} />
 
@@ -103,7 +123,7 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
                     <ul className="space-y-2.5">
                       {pros.map((pro, j) => (
                         <MarkedItem key={j} mark="+" tone="text-green-dark">
-                          {pro.startsWith("+") ? pro.slice(1).trim() : pro}
+                          {renderMarkdown(pro.startsWith("+") ? pro.slice(1).trim() : pro)}
                         </MarkedItem>
                       ))}
                     </ul>
@@ -117,7 +137,7 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
                     <ul className="space-y-2.5">
                       {cons.map((con, j) => (
                         <MarkedItem key={j} mark={"\u2212"} tone="text-red">
-                          {con.slice(1).trim()}
+                          {renderMarkdown(con.slice(1).trim())}
                         </MarkedItem>
                       ))}
                     </ul>
@@ -188,7 +208,7 @@ function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
         {[slide.left, slide.right].map((side, i) => (
           <BlurFade key={i} delay={0.2 + i * 0.1} duration={0.6}>
             <SlideCard className="h-full card-pad-8">
-              <h2 className="mb-6 card-title text-2xl text-text">{renderMarkdown(side.label)}</h2>
+              <SideHead side={side} />
               <SideHighlight text={side.highlight} />
               <ul className="space-y-3">
                 {side.items.map((item, j) => (
@@ -230,7 +250,7 @@ export function Positions({
               {side.name}
             </p>
             <h2 className="mb-6 card-title text-5xl leading-tight text-text">
-              {keepHyphenatedWords(side.stance)}
+              {keepCompounds(side.stance)}
             </h2>
             <p className="text-2xl leading-snug text-text-muted">{`“${side.quote}”`}</p>
           </SlideCard>

@@ -29,6 +29,20 @@ describe("ComparisonSlide", () => {
     expect(rules(slide(["Fast", "- No repository context"], ["Edits files"]))).toBe(1);
   });
 
+  // F21: the vs variant printed a side's markdown raw, and a side's logo showed only in the export.
+  it.each(["vs", "split"] as const)("renders a %s side's markdown and its logo", (variant) => {
+    const s = {
+      ...slide(["**Fast**", "- `slow` start"], ["Edits files"]),
+      variant,
+      left: { label: "**Chat**", items: ["**Fast**", "- `slow` start"], logo: "/chat.png" },
+    } as ComparisonSlide;
+    const { container } = render(<slideComponents.comparison slide={s as Slide} />);
+    expect(container.querySelector("li strong")?.textContent).toBe("Fast");
+    expect(container.querySelector("h2 strong")?.textContent).toBe("Chat");
+    expect(container.textContent).not.toContain("**");
+    expect(container.querySelector('img[src="/chat.png"]')).not.toBeNull();
+  });
+
   it("opens at the last step when the slide is entered backwards", () => {
     sessionStorage.setItem("slide-direction", "back");
     const SlideComponent = slideComponents.comparison;
