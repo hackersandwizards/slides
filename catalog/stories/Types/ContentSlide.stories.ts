@@ -5,9 +5,9 @@ import { state } from "../../state";
 export default { component: storySlide(ContentSlide) };
 
 export const PrimaryTheme = state("content", 0, "ContentSlide");
-export const SecondaryTheme = state("content", 1, "ContentSlide");
-export const AccentTheme = state("content", 2, "ContentSlide");
-export const WarningTheme = state("content", 3, "ContentSlide");
+export const Badge = state("content", 1, "ContentSlide");
+export const StageStrip = state("content", 2, "ContentSlide");
+export const StagePrefix = state("content", 3, "ContentSlide");
 export const SuccessTheme = state("content", 4, "ContentSlide");
 export const DeepDiveTheme = state("content", 5, "ContentSlide");
 export const ReplacedByStatement = state("content", 6, "ContentSlide");

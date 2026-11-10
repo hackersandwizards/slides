@@ -67,8 +67,8 @@ slides of those decks use each entry of the catalogue's print page, and which en
 a consumer to publish; `--out` writes it to the file instead, and `--check` fails where the file
 differs. A slide drawn through a replaced form counts for the entry that replaces it. It lints the
 decks too, failing on a slide no entry draws, on a field that changes nothing the slide draws (such
-as `numberFrom` on cards that are not numbered, a `sectionTheme` that colours no rule or pill, a
-gantt bar's `theme`), and on a deck that names its `lang` neither on itself nor on a title slide. Each
+as `numberFrom` on cards that are not numbered, or a `sectionTheme` that colours no rule or pill),
+and on a deck that names its `lang` neither on itself nor on a title slide. Each
 argument, `-` for standard input, holds one deck or a JSON array of decks, so a consumer whose
 decks are code pipes them all in at once; no deck at all fails. An error names a deck of an array
 by its `slug`, where the consumer sets one, else its `name`, and by its place in the array.

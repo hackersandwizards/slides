@@ -260,8 +260,8 @@ call at 1000 px), two runs each, shuffled neutral letters. Criteria: hierarchy, 
 kicker, calm, one consistent deck (1 to 10 each) and overall. Noise = |run 1 − run 2| of the same
 persona on the criteria's sum.
 
-| Slide                | Variants                                                                                                 | Noise | Shipped                                       |
-| -------------------- | -------------------------------------------------------------------------------------------------------- | ----- | --------------------------------------------- |
-| Grid of quotes       | A own kicker at the base size: legibility 6.00, sum 28.50; B `SectionHeader`: 7.75, 30.00                | 0–1   | B: legibility led in all four runs            |
-| Roadmap              | A own kicker; B `SectionHeader`, the kicker 2 px lower: overall 7.50 each, all four runs "no difference" | 0     | A: no win, no change                          |
-| Regular with profile | `SlideTitle` renders byte-identical on the specimen; it keeps a hyphenated compound whole                | n/a   | `SlideTitle`, no panel: nothing to tell apart |
+| Slide                | Variants                                                                                                      | Noise | Shipped                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------------- |
+| Grid of quotes       | A own kicker at the base size: overall 7.00, legibility 6.00, sum 28.50; B `SectionHeader`: 7.00, 7.75, 30.00 | 0–1   | B: overall a tie; legibility led in all four runs, outside the noise |
+| Roadmap              | A own kicker; B `SectionHeader`, the kicker 2 px lower: overall 7.50 each, all four runs "no difference"      | 0     | A: no win, no change                                                 |
+| Regular with profile | `SlideTitle` renders byte-identical on the specimen; it keeps a hyphenated compound whole                     | n/a   | `SlideTitle`, no panel: nothing to tell apart                        |
