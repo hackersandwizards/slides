@@ -116,7 +116,7 @@ With the metric-matched faces drawing, as on a device that has Arial:
 | prose story, 412     | 0/30                    | 0/30     | 0         | 0        | 2328 ms           | 1884 ms  |
 | prose story, 1440    | 0/30                    | 0/30     | 0         | 0        | 2328 ms           | 1876 ms  |
 
-Brand's fallback faces name `local("Arial")` and `local("Courier New")` only. On a device without
+Brand v2.2.0's fallback faces name `local("Arial")` and `local("Courier New")` only. On a device without
 them the face is skipped and the next family in the stack draws. Simulated
 on this Mac by renaming those `local()` sources in the served CSS, 412 px, 30 runs per cell (the
 generic that draws here is the Mac's system font, which another device's need not match):
@@ -131,10 +131,46 @@ Control of the same shape, the fallback faces kept but their metric overrides re
 against 0 (30 runs per cell). The zero in the Arial table is a measurement that can fail.
 
 Over the 0.01 bar stands only the story at 412 px on a device without Arial, 0.0323. The preload
-stays, at a cost of 444 to 452 ms of first paint on slow 4G. It can go once brand's fallback stack
-names metric-matched faces for the fonts such a device has.
+stays, at a cost of 444 to 452 ms of first paint on slow 4G.
+
+## Re-measured with Android's Roboto on brand v2.4.1, 10.11.2026: kept
+
+Brand v2.4.0 adds "Inter Fallback Roboto", metric-matched to Android's Roboto, and names Droid
+Sans Mono, whose advances equal Courier New's, in the mono fallback. Both builds pin brand v2.4.1. Setup: Debian sid's
+Chromium 156.0.8078.79 in a container, Android's variable `Roboto-Regular.ttf` and
+`DroidSansMono.ttf` from AOSP `main` as the only fonts, no Arial, Liberation or DejaVu. The
+catalog's server-rendered stories from one build with the preload and one without, 412 × 823 at
+1.75 without `isMobile`, slow 4G as above, 30 runs per cell in alternating blocks of 10, each a
+fresh context with the cache off, host load 6.5 to 19. CLS as above. With the font files blocked,
+`CSS.getPlatformFontsForNode` reads Roboto for the running text and Droid Sans Mono for the
+heading. The control is the build without the preload, with every metric override removed from
+its CSS.
+
+| Page, 412, slow 4G | Runs with a shift, kept | Stripped | Control | CLS, kept | Stripped | Control | First paint, kept | Stripped |
+| ------------------ | ----------------------- | -------- | ------- | --------- | -------- | ------- | ----------------- | -------- |
+| prose story        | 0/30                    | 22/30    | 30/30   | 0         | 0.0894   | 0.0327  | 4900 ms           | 4624 ms  |
+| deck view story    | 0/30                    | 0/30     | 30/30   | 0         | 0        | 0.0050  | 2792 ms           | 2336 ms  |
+
+The two shifts differ. The control's shift is the one from 09.11: three blocks of the prose story
+move down for good. Brand's Roboto overrides remove it; no stripped run shows it. The stripped
+shift is new: the text after the bold run of the last paragraph drops one line and returns 15 ms
+later, 0.0382 plus 0.0512, about 470 ms after first paint. Its cause is not yet explained. With no
+throttling and every font file held 1500 ms after navigation and released together, 10 runs per
+cell, it still appears in 2/10 without the preload and 1/10 with it, and the control shows its own
+shift in 10/10. So a face arriving after the others does not explain it alone. Nor does a bold
+fallback drawn from the regular instance: with the fonts blocked the bold run draws Roboto at 700,
+177.6 px against Inter Bold's 175.1 px, and the paragraph's sentence at 700 measures 1054.4 against
+1050.8 px.
+
+The deck view story shows no subtitle shift stripped, where the 09.11 deck page shifted 30/30 at
+0.0039 to 0.0052. That this story draws the same slide as the 09.11 deck page is not checked.
+
+The preload stays: without it the prose story at 412 px reaches 0.0894, over the 0.01 bar. Its
+cost here is 276 ms (prose) and 456 ms (deck) of first paint. It can go once the stripped shift is
+explained and gone at 412 px on Roboto.
 
 ## Open
 
+- The cause of the stripped prose story's 0.0894 shift on Roboto, above: not yet explained.
 - Whether the dev server fetches a preloaded face twice: not checked, the catalog's dev server did
   not start within its 30 s limit at load 20.
