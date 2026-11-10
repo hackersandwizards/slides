@@ -72,6 +72,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `scripts/usage.ts`: the `slides-usage` command, a deck JSON's slides counted per catalogue entry (the anchors in `catalog/guidance.ts`), which the consumer publishes (`--out`, `--check`): the public engine reads no client deck. It lints the decks: a slide no entry draws, a field that changes nothing drawn (`ignoredFields`, proven by `test/ignored-fields.test.tsx`), a deck naming no `lang`.
 - `scripts/render-pptx.ts`: the `slides-pptx` command, a deck JSON to a native PowerPoint file in
   the h&w design with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
+  `scripts/pptx-text.ts` measures its text with the brand faces' metrics and finds text past its
+  box, which `--strict` fails on; `scripts/pptx-fonts.ts` embeds the faces under `--embed-fonts`.
   Its lengths and sizes are measured off the print route at 1920x1080.
 - `specimen/`: `slide-catalog.ts`, the specimen deck, every slide type and variant with fictional
   content, and its images (`specimen/slide-catalog/`), which it imports as `?url` like brand's
@@ -114,7 +116,8 @@ a release. Consumers import by those names, `@hackersandwizards/slides/types/sli
 the package in `vite.ssr.noExternal`, each vitest config in
 `server.deps.inline`. React, motion, lucide-react, recharts, shiki, Tailwind and the brand package
 are peer dependencies, so each consumer holds one copy of each. `pptxgenjs` and `jszip`, which only
-`slides-pptx` imports, are optional peers like `puppeteer`: a consumer installs them to run it.
+`slides-pptx` imports, are optional peers like `puppeteer`: a consumer installs them to run it,
+and `fonteditor-core` too for `--embed-fonts`.
 `prettier`, which `lib/deck-edit-server` formats an edited deck with, is optional too, as is
 `astro`, which only the exported `catalog/SlideFrame.astro` needs, and scaffolding, whose `serve`
 only `slides-density --serve` imports. The brand peer is optional so

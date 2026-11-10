@@ -48,6 +48,7 @@
     "scripts/usage.ts",
     "scripts/render-pptx.ts",
     "scripts/pptx-text.ts",
+    "scripts/pptx-fonts.ts",
     "specimen",
     "catalog/SlideFrame.astro",
     "catalog/guidance.ts"
@@ -74,6 +75,7 @@
     "@hackersandwizards/brand": "*",
     "@hackersandwizards/scaffolding": "*",
     "astro": "^7.4.4",
+    "fonteditor-core": "^2.6.3",
     "jszip": "^3.10.1",
     "lucide-react": "^1.66.0",
     "motion": "^14.9.0",
@@ -107,6 +109,9 @@
     },
     "astro": {
       "optional": true
+    },
+    "fonteditor-core": {
+      "optional": true
     }
   },
   "overrides": {
@@ -132,6 +137,7 @@
     "astrobook": "0.13.3",
     "eslint": "10.14.0",
     "eslint-plugin-react-hooks": "7.1.1",
+    "fonteditor-core": "2.6.3",
     "jsdom": "31.0.0",
     "jszip": "3.10.2",
     "lucide-react": "1.70.0",

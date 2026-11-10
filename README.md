@@ -74,7 +74,7 @@ argument, `-` for standard input, holds one deck or a JSON array of decks, so a 
 decks are code pipes them all in at once; no deck at all fails. An error names a deck of an array
 by its `slug`, where the consumer sets one, else its `name`, and by its place in the array.
 
-The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict]` writes a deck as a native
+The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict] [--embed-fonts]` writes a deck as a native
 PowerPoint file in the h&w design: text as text boxes, tables as tables, trend and bar charts as
 charts, diagrams as shapes, and only the deck's own images and the h&w logos as pictures. A chart's
 labels and card, and the fill under a trend's measured part, are shapes beside the chart, so the
@@ -93,9 +93,13 @@ bun add -d pptxgenjs jszip
 bun scripts/slides-json.ts <slug> > deck.json && bun run slides-pptx deck.json <slug>.pptx
 ```
 
-The file names its fonts, Inter and JetBrains Mono, and embeds neither: the brand ships them as
-woff2, which PowerPoint cannot embed. Each carries its kind (sans, monospace), so a machine without
-them shows a font of the same kind. Install both fonts on the presenting machine for the h&w look.
+The file names its fonts, Inter and JetBrains Mono, each with its kind (sans, monospace), so a
+machine without them shows a font of the same kind. `--embed-fonts` puts both into the file as
+PowerPoint stores them, an Embedded OpenType part per face for regular and bold, built from brand's
+static woff2 subsets and cut to the deck's characters and the Latin-1 range: about 50 kB. It needs
+`fonteditor-core`, a further optional peer. PowerPoint for Windows and for Mac reads embedded
+fonts; LibreOffice 7.4 ignored them and substituted, and the parts are not yet proven in PowerPoint,
+so installing both fonts stays the sure way to the h&w look.
 It shows a client's deck in the h&w design only; a deck on a client's template needs that
 consumer's own exporter. The PowerPoint parser pulls in `image-size`, whose old version carries
 advisories, so a consumer adds `"overrides": { "image-size": "2.1.0" }` as this package does.

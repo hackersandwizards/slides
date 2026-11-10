@@ -2,7 +2,7 @@
 // slides-pptx: every text is a text box, a table a PowerPoint table, a trend or bar chart a
 // PowerPoint chart, a diagram drawn shapes; only a deck's own images and the h&w logos are pictures.
 // A deck on a client's template is that consumer's own exporter.
-// Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict]
+// Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict] [--embed-fonts]
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { createRequire } from "node:module";
@@ -5150,6 +5150,7 @@ export async function renderPptx(
   deck: Presentation,
   out: string,
   assets: string,
+  { embed = false }: { embed?: boolean } = {},
 ): Promise<string[]> {
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE";
@@ -5245,6 +5246,7 @@ export async function renderPptx(
       for (const found of checkSlide(await zip.file(name)!.async("string"), W, H))
         deckCtx.warnings.push(`slide ${n[1]}: ${found}`);
   }
+  if (embed) await (await import("./pptx-fonts")).embedFonts(zip);
   writeFileSync(out, await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
   return deckCtx.warnings;
 }
@@ -5253,13 +5255,17 @@ if (import.meta.main) {
   const args = process.argv.slice(2);
   const strict = args.includes("--strict");
   if (strict) args.splice(args.indexOf("--strict"), 1);
+  const embed = args.includes("--embed-fonts");
+  if (embed) args.splice(args.indexOf("--embed-fonts"), 1);
   const at = args.indexOf("--assets");
   const assets = resolve(at >= 0 ? (args.splice(at, 2)[1] ?? "") : "public");
   const [input, out] = args;
   if (!input || !out || !out.endsWith(".pptx")) {
-    console.error("Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict]");
     console.error(
-      "The deck is a Presentation as JSON; --assets is the directory a slide's /image path resolves in, ./public by default; a path to an existing file is read as it stands. --strict exits 1 on any warning, for a gate.",
+      "Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict] [--embed-fonts]",
+    );
+    console.error(
+      "The deck is a Presentation as JSON; --assets is the directory a slide's /image path resolves in, ./public by default; a path to an existing file is read as it stands. --strict exits 1 on any warning, text past its box included, for a gate; --embed-fonts puts the brand faces into the file, for PowerPoint on a machine without them (needs fonteditor-core).",
     );
     process.exit(1);
   }
@@ -5268,7 +5274,7 @@ if (import.meta.main) {
     console.error(`${input} is not a presentation: it needs a name and a slides array.`);
     process.exit(1);
   }
-  const warnings = await renderPptx(deck, resolve(out), assets);
+  const warnings = await renderPptx(deck, resolve(out), assets, { embed });
   for (const w of warnings) console.error(`warning: ${w}`);
   console.log(`Wrote ${out}: ${deck.slides.length} slides`);
   if (strict && warnings.length) process.exit(1);

@@ -297,7 +297,8 @@ const num = (xml: string, name: string, fallback = 0) => {
   const v = xmlAttr(xml, name);
   return v === undefined ? fallback : Number(v);
 };
-const unescape = (t: string) =>
+/** An XML text node's characters, its entities resolved. */
+export const unescape = (t: string) =>
   t
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
