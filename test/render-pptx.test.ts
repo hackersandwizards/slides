@@ -712,6 +712,17 @@ describe("slides-pptx on the specimen deck", () => {
       .async("string");
   };
 
+  it("names what a bar chart's values count", async () => {
+    const xml = await onlySlide("bar-label.pptx", {
+      type: "chart",
+      variant: "bar",
+      headline: "H",
+      data: [{ name: "Plan", value: 3 }],
+      yLabel: "Open tickets",
+    });
+    expect(xml).toContain("Open tickets");
+  });
+
   // The export drew three forms by rules of its own (F11).
   it("draws a labeled grid as the cards block the web draws it as", async () => {
     const block = {

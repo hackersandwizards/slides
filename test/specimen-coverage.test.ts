@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { slideCatalog, slideCatalogBrandDark, specimenImages } from "../specimen/slide-catalog";
 import { aliasTypes, slideComponents } from "../lib/slide-components";
+import { replacedBy } from "../lib/slide-utils";
 import type {
   ChartSlide,
   ClosingSlide,
@@ -56,6 +57,10 @@ const TWO_COLUMN: Record<
   success: true,
   neutral: true,
 };
+const CONTINUES: Record<
+  NonNullable<Extract<ContentBlock, { type: "timeline" }>["continues"]>,
+  true
+> = { in: true, out: true, both: true };
 const CALLOUT: Record<NonNullable<Extract<ContentBlock, { type: "callout" }>["variant"]>, true> = {
   info: true,
   warning: true,
@@ -145,6 +150,12 @@ describe("slide catalogue coverage", () => {
         of("gallery").map((b) => b.layout ?? "grid"),
       ),
     ).toEqual([]);
+    expect(
+      missing(
+        CONTINUES,
+        of("timeline").map((b) => b.continues),
+      ),
+    ).toEqual([]);
   });
 
   it("shows every variant of the slide types that have them", () => {
@@ -154,6 +165,22 @@ describe("slide catalogue coverage", () => {
         .map((s) => ("variant" in s ? s.variant : "layout" in s ? s.layout : undefined));
       expect(missing(wanted, seen), type).toEqual([]);
     }
+  });
+
+  // The specimen's plain centred slide draws as a statement, which leaves the layout unseen.
+  it("shows a centered content slide drawn as content", () => {
+    expect(
+      slides.some((s) => s.type === "content" && s.layout === "centered" && !replacedBy(s)),
+    ).toBe(true);
+  });
+
+  it("shows the fields a component reads beyond the variants", () => {
+    expect(slides.some((s) => s.type === "closing" && s.closingQuote)).toBe(true);
+    expect(
+      slides.some(
+        (s) => s.type === "roadmap" && s.columns.some((c) => c.items?.some((i) => i.tone)),
+      ),
+    ).toBe(true);
   });
 
   it("shows every section theme", () => {

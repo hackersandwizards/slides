@@ -32,6 +32,18 @@ describe("chart slide", () => {
     const { findByText } = render(<SlideComponent slide={slide} />);
     expect(await findByText("Q2 planned")).toBeTruthy();
   });
+
+  it("names what a bar chart's values count", async () => {
+    const SlideComponent = slideComponents.chart;
+    const slide = {
+      type: "chart",
+      variant: "bar",
+      data: [{ name: "Plan", value: 3 }],
+      yLabel: "Open tickets",
+    } as Slide;
+    const { findByText } = render(<SlideComponent slide={slide} />);
+    expect(await findByText("Open tickets")).toBeTruthy();
+  });
 });
 
 // The cycle and graph plots draw in under a clip, since recharts grows only trend and bar plots.

@@ -403,41 +403,33 @@ function BarRows({ data = [] }: Pick<PlotProps, "data">) {
   );
 }
 
-export function BarPlot({
-  data,
-  still,
-  xLabel,
-  yLabel,
-  labelled,
-}: PlotProps & {
-  /** Bars carry their value on top and drop the value axis and grid. */
-  labelled?: boolean;
-}) {
+/** Bars carry their value on top, with no value axis or grid: `yLabel` names what the values
+ *  count, above the plot. */
+export function BarPlot({ data, still, xLabel, yLabel }: PlotProps) {
   const { ref, layout } = useTickLayout(
     (data ?? []).map((d) => String(d.name)),
-    SIDE.left + (labelled ? 0 : Y_WIDTH),
+    SIDE.left,
     SIDE.right,
   );
   if (layout?.angled && layout.narrow)
     return (
-      <Axes xLabel={xLabel} yLabel={labelled ? undefined : yLabel} rows>
+      <Axes xLabel={xLabel} yLabel={yLabel} rows>
         <div ref={ref}>
           <BarRows data={data} />
         </div>
       </Axes>
     );
   const margin = {
-    top: labelled ? 40 : 12,
+    top: 40,
     right: SIDE.right,
     left: SIDE.left + (layout?.overhang ?? 0),
     bottom: 8,
   };
   return (
-    <Axes xLabel={xLabel} yLabel={labelled ? undefined : yLabel}>
+    <Axes xLabel={xLabel} yLabel={yLabel}>
       <div ref={ref} className="h-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={margin} barCategoryGap={`${BAR_GAP * 100}%`}>
-            {!labelled && <CartesianGrid stroke="var(--color-border)" vertical={false} />}
             <XAxis
               dataKey="name"
               tick={<AxisTick layout={layout} />}
@@ -447,7 +439,7 @@ export function BarPlot({
               height={Math.max(56, Math.ceil((layout?.height ?? 0) + TICK_GAP))}
               interval={0}
             />
-            <YAxis hide={labelled} tick={tick} axisLine={false} tickLine={false} width={Y_WIDTH} />
+            <YAxis hide />
             <Tooltip
               cursor={{ fill: "var(--color-teal)", fillOpacity: 0.07 }}
               {...tooltip}
@@ -459,17 +451,15 @@ export function BarPlot({
               fill="var(--color-teal)"
               radius={[4, 4, 0, 0]}
             >
-              {labelled && (
-                <LabelList
-                  dataKey="value"
-                  position="top"
-                  offset={10}
-                  fill="var(--color-text)"
-                  fontSize="var(--text-lg)"
-                  fontWeight={700}
-                  className="font-heading"
-                />
-              )}
+              <LabelList
+                dataKey="value"
+                position="top"
+                offset={10}
+                fill="var(--color-text)"
+                fontSize="var(--text-lg)"
+                fontWeight={700}
+                className="font-heading"
+              />
             </Bar>
           </BarChart>
         </ResponsiveContainer>

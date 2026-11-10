@@ -828,13 +828,12 @@ const slides: Slide[] = [
     type: "regular",
     headline: "Regular slide, cards layout",
     layout: "cards",
-    activeSection: 1,
     sections: [
       { title: "Foundations", icon: "layers", items: ["Tools and environment"] },
       { title: "Delivery", icon: "workflow", items: ["Plan, build, review"] },
       { title: "Learning", icon: "book", items: ["Conventions and metrics"] },
     ],
-    notes: "regular: cards layout, second section active.",
+    notes: "regular: cards layout.",
   },
   {
     type: "regular",
@@ -952,18 +951,16 @@ const slides: Slide[] = [
         title: "Tools",
         description: "What the agent uses.",
         icon: "wrench",
-        tone: "primary",
       },
-      { title: "Knowledge", description: "What it reads.", icon: "book", tone: "secondary" },
-      { title: "Checks", description: "What is enforced.", icon: "shield", tone: "accent" },
+      { title: "Knowledge", description: "What it reads.", icon: "book" },
+      { title: "Checks", description: "What is enforced.", icon: "shield" },
       {
         title: "Metrics",
         description: "What we learn.",
         icon: "bar-chart",
-        tone: "success",
       },
     ],
-    notes: "grid: pillars, four columns, four accents.",
+    notes: "grid: pillars, four columns.",
   },
   {
     type: "grid",
@@ -1134,7 +1131,6 @@ const slides: Slide[] = [
     examples: [
       {
         title: "Code",
-        language: "typescript",
         bad: "function f(a) { return a * 1.19 }",
         good: "const VAT = 0.19;\nexport const gross = (net: number) => net * (1 + VAT);",
       },
@@ -1237,8 +1233,6 @@ const slides: Slide[] = [
 
   {
     type: "overview",
-    foundationsActive: true,
-    pipelineActive: false,
     foundations: [
       { title: "Tools", description: "What it uses", state: "active" },
       { title: "Knowledge", description: "What it reads", state: "new" },
@@ -1249,14 +1243,10 @@ const slides: Slide[] = [
       { title: "Build", description: "From the plan" },
       { title: "Review", description: "Plan and diff" },
     ],
-    notes: "overview: three by three, foundations active, pipeline idle.",
+    notes: "overview: three by three, one stage new.",
   },
   {
     type: "overview",
-    foundationsActive: true,
-    pipelineActive: true,
-    ideateExternal: true,
-    parallelLanes: 3,
     foundations: ["Tools", "Environment", "Tracking", "Knowledge", "Automation", "Guardrails"].map(
       (title) => ({ title, description: "Foundation", state: "active" as const }),
     ),
@@ -1265,7 +1255,7 @@ const slides: Slide[] = [
       description: "Stage",
       state: "active" as const,
     })),
-    notes: "overview: six by six, external ideate, three parallel lanes.",
+    notes: "overview: six by six, every stage active.",
   },
 
   {
@@ -1337,7 +1327,7 @@ const slides: Slide[] = [
         accent: "ingredients",
         items: [
           { title: "Plans first", description: "Reviewed before code" },
-          { title: "Shared checks" },
+          { title: "Shared checks", tone: "accent" },
         ],
       },
       {
@@ -1350,7 +1340,7 @@ const slides: Slide[] = [
         ],
       },
     ],
-    notes: "roadmap: two columns, with and without descriptions.",
+    notes: "roadmap: two columns, with and without descriptions, one row marked in its own tone.",
   },
   {
     type: "roadmap",
@@ -1463,6 +1453,7 @@ const slides: Slide[] = [
     sectionLabel: "Board snapshot",
     variant: "bar",
     headline: "Build holds the most tickets",
+    yLabel: "Open tickets",
     data: [
       { name: "Plan", value: 12 },
       { name: "Build", value: 30 },
@@ -1822,8 +1813,9 @@ const slides: Slide[] = [
     line1: "Questions?",
     speakers: [{ name: "Mara Lindqvist", contact: "mara@example.com", company: "hackers&wizards" }],
     claim: false,
+    closingQuote: "Small changes, shipped every day.",
     notes:
-      "closing: contact, one speaker, no image, the lockup, the claim turned off. Fictional person.",
+      "closing: contact, one speaker, no image, the lockup, the claim turned off for a closing quote. Fictional person.",
   },
   {
     type: "closing",
@@ -2172,6 +2164,45 @@ const slides: Slide[] = [
       },
     ],
     notes: "content blocks: quote with its source, under a paragraph. Fictional.",
+  },
+  {
+    type: "content",
+    layout: "centered",
+    sectionLabel: "Live demo",
+    headline: "One ticket from plan to merge",
+    subtitle: "Run it in your own checkout as we go.",
+    content: [
+      {
+        type: "terminal",
+        commands: [
+          { prefix: "$", text: "harness plan --ticket LF-142" },
+          { prefix: "$", text: "harness run plans/LF-142.md" },
+          { prefix: ">", text: "Merged after 2 review rounds" },
+        ],
+      },
+    ],
+    notes: "content: centered layout holding a block a statement cannot carry.",
+  },
+  {
+    type: "content",
+    headline: "The middle of a longer plan",
+    content: [
+      {
+        type: "timeline",
+        continues: "both",
+        events: [
+          { title: "Pilot team", text: "One team works the new way for a month." },
+          {
+            segment: "4 weeks",
+            title: "Second team",
+            text: "Takes over the checks the first one wrote.",
+          },
+          { title: "Review", text: "Both teams compare their numbers with the old way." },
+        ],
+      },
+    ],
+    notes:
+      "visual blocks: a timeline continued from the slide before and on the next, its line running in and out.",
   },
   {
     type: "statement",

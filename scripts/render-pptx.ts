@@ -3103,12 +3103,11 @@ const RENDER: {
         top: number,
         w: number,
         align: BoxOpts["align"],
-      ) => box(s, c, text ?? "", x, top, w, CHART.line, { size: PT.sm, color: c.muted, align });
-      const head = trend && (d.yLabel || d.futureNote) ? CHART.line + CHART.underHead : 0;
-      if (trend) {
-        label(d.yLabel, inner.x, inner.y, inner.w / 2, "left");
-        label(d.futureNote, inner.x + inner.w / 2, inner.y, inner.w / 2, "right");
-      }
+      ) => text && box(s, c, text, x, top, w, CHART.line, { size: PT.sm, color: c.muted, align });
+      const note = trend ? d.futureNote : undefined;
+      const head = d.yLabel || note ? CHART.line + CHART.underHead : 0;
+      label(d.yLabel, inner.x, inner.y, inner.w / 2, "left");
+      label(note, inner.x + inner.w / 2, inner.y, inner.w / 2, "right");
       const foot = d.xLabel ? CHART.line + CHART.overFoot : 0;
       label(d.xLabel, inner.x, inner.y + inner.h - CHART.line, inner.w, "center");
       // The chart reaches up over the card for its legend, which PowerPoint sets at its top.

@@ -81,7 +81,8 @@ export function entriesOf(slide: Slide): string[] {
     const blocks = slide.content.map((b) => blockEntry(drawnBlock(b)));
     const strays = blocks.filter((b) => !known(b) && !PLAIN.has(b));
     if (strays.length) throw new Error(`no catalogue entry for ${strays.join(", ")}`);
-    const entries = new Set(["content", ...blocks.filter(known)]);
+    const form = slide.layout === "centered" ? "content-centered" : "content";
+    const entries = new Set([form, ...blocks.filter(known)]);
     if (blocks.filter((b) => b === "block-image").length > 1) {
       entries.delete("block-image");
       entries.add("block-two-images");

@@ -24,6 +24,11 @@ export const GUIDANCE: Record<string, Guidance> = {
     "Say the claim in the headline.",
     "Reach for it when a type below draws your point.",
   ),
+  "content-centered": g(
+    "A demo or an exercise the room follows on screen: the command or the figures in the middle.",
+    "Keep to one block under the headline.",
+    "Use it for a sentence alone, which is a statement.",
+  ),
   regular: g(
     "A person and what they built or stand for, beside their profile.",
     "Keep the sections to what the audience needs from them.",

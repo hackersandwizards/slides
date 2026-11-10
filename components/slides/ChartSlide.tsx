@@ -361,13 +361,7 @@ function BarVariant({ slide }: { slide: ChartSlideType }) {
         <ChartFrame>
           {mounted && (
             <Suspense fallback={null}>
-              <BarPlot
-                data={data}
-                still={still}
-                xLabel={slide.xLabel}
-                yLabel={slide.yLabel}
-                labelled
-              />
+              <BarPlot data={data} still={still} xLabel={slide.xLabel} yLabel={slide.yLabel} />
             </Suspense>
           )}
         </ChartFrame>
