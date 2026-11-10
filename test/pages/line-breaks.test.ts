@@ -114,7 +114,9 @@ it.each(
         return {
           text: chip.textContent,
           lines: tops.size,
-          inside: chip.getBoundingClientRect().right <= document.documentElement.clientWidth,
+          inside:
+            chip.getBoundingClientRect().left >= 0 &&
+            chip.getBoundingClientRect().right <= document.documentElement.clientWidth,
         };
       }),
     );

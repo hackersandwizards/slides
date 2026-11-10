@@ -27,10 +27,23 @@ export function keepCompounds(text: React.ReactNode): React.ReactNode {
   );
 }
 
+// A chip stays whole up to 24 characters, or up to 40 where a space, slash or dot leaves it a
+// break for a box narrower than the chip.
+const keepsWhole = (code: string) => code.length <= 24 || (/[ /.]/.test(code) && code.length <= 40);
+
 export function renderMarkdown(text: string): React.ReactNode {
   const parts = text.split(INLINE_MARKDOWN);
+  // The punctuation after a whole chip, which goes with it: a browser breaks a line after an
+  // inline block even before a comma.
+  const trailing = (i: number) =>
+    i % 2 === 1 && parts[i].startsWith("`") && keepsWhole(parts[i].slice(1, -1))
+      ? (/^[,.;:!?)\]]+/.exec(parts[i + 1] ?? "")?.[0] ?? "")
+      : "";
   return parts.map((part, i) => {
-    if (i % 2 === 0) return <React.Fragment key={i}>{keepCompounds(part)}</React.Fragment>;
+    if (i % 2 === 0)
+      return (
+        <React.Fragment key={i}>{keepCompounds(part.slice(trailing(i - 1).length))}</React.Fragment>
+      );
     const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);
     // Only web, mail and relative targets become links; any other scheme stays plain text.
     if (link && !/^(https?:|mailto:|[/#.]|[^:]*$)/i.test(link[2])) return link[1];
@@ -56,39 +69,45 @@ export function renderMarkdown(text: string): React.ReactNode {
       );
     }
     const text = part.slice(1, -1);
+    const path = /[/.]/.test(text) && !text.includes(" ");
     // In teal's text colour: base teal on the chip's tint over a striped table row falls under
-    // 4.5:1.
-    const chip = "hw-inline-code text-teal-dark";
-    // A chip as wide as its text: it moves to the next line whole, widens a table column to hold
-    // it and stands past a phone's narrow flow step, centred under it, rather than break there.
-    // Wider than a sized box such as a paragraph, it breaks inside itself.
-    const whole = "inline-block w-max max-w-full";
-    // Such a path or file name breaks only after a slash or before a dot, so a table of paths
-    // never splits `my-skill` at its hyphen or `settings.json` mid-word.
-    if (/[/.]/.test(text) && !text.includes(" ")) {
-      const pieces = text
-        .replace(/\/|(?=\.)/g, "$&\0")
-        .split("\0")
-        .filter(Boolean);
-      return (
-        <code key={i} className={`${chip} ${whole}`}>
-          {pieces.map((piece, j) => (
+    // 4.5:1. A whole chip is as wide as its text: it moves to the next line whole, widens a table
+    // column to hold it and stands past a phone's narrow flow step, centred under it, rather than
+    // break there. Wider than a sized box such as a paragraph, it breaks inside itself. A long
+    // chip runs with the line and may break anywhere.
+    const chip = `hw-inline-code text-teal-dark ${
+      keepsWhole(text)
+        ? "inline-block w-max max-w-full whitespace-normal"
+        : path
+          ? ""
+          : "[overflow-wrap:anywhere]"
+    }`;
+    // A path or file name breaks only after a slash or before a dot, so a table of paths never
+    // splits `my-skill` at its hyphen or `settings.json` mid-word.
+    const code = path ? (
+      <code className={chip}>
+        {text
+          .replace(/\/|(?=\.)/g, "$&\0")
+          .split("\0")
+          .filter(Boolean)
+          .map((piece, j) => (
             <React.Fragment key={j}>
               {j > 0 && <wbr />}
               <span className="inline-block max-w-full [overflow-wrap:anywhere]">{piece}</span>
             </React.Fragment>
           ))}
-        </code>
-      );
-    }
-    // A long chip runs with the line and may break inside itself.
-    return (
-      <code
-        key={i}
-        className={`${chip} ${text.length <= 24 || (text.includes(" ") && text.length <= 40) ? whole : "[overflow-wrap:anywhere]"}`}
-      >
-        {text}
       </code>
+    ) : (
+      <code className={chip}>{text}</code>
+    );
+    const after = trailing(i);
+    return after ? (
+      <span key={i} className="whitespace-nowrap">
+        {code}
+        {after}
+      </span>
+    ) : (
+      <React.Fragment key={i}>{code}</React.Fragment>
     );
   });
 }
