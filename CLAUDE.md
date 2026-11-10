@@ -82,7 +82,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   size and card and below 40rem offers the slide enlarged across the turned phone: Astrobook, `@astrojs/react`
   and scaffolding are dev dependencies, outside `files` and `exports`. Its base is
   the Pages path `/slides`, so the gate reads the build that ships. The catalog's `css` is brand's
-  tokens, `homeCss` adds its faces and elements, `dashboardCss` its faces; each state hands
+  tokens, `homeCss` adds its faces and elements, `dashboardCss` its faces and focus ring; each state hands
   `slides.css` to `SlideFrame` as a `?url`, linked on the slide's page alone. It carries two kinds of page:
   - The stories: `stories/Types/` a story file per slide type, each specimen slide of the type a
     state (`state.ts`), drawn by `StorySlide.tsx` as its deck shows it, strip, corner mark and

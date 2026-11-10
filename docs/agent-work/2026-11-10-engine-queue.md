@@ -43,7 +43,8 @@ page), so their header and story bar fell back to system faces. Each story page 
 `elements.css` (125,617 B) beside `slides.css`, which imports the elements a slide draws.
 
 Now `css` is the tokens alone, `homeCss` adds `fonts.css` and `elements.css`, and `dashboardCss`
-adds `fonts.css`. Stylesheets linked per page, chart slide's bar state:
+adds `fonts.css` and brand's focus ring (`elements/focus.css`, 1,537 B), which `Head.astro` turns
+on and `elements.css` used to bring. Stylesheets linked per page, chart slide's bar state:
 
 | Page           | Before                          | After                           |
 | -------------- | ------------------------------- | ------------------------------- |
@@ -64,7 +65,7 @@ line stays. The comment above `Cards` in `components/slides/Visuals.tsx` names t
 and `labeled-grid` blocks, which `deprecated.values.type` still lists and the engine still
 converts, so it is accurate.
 
-## 4. Bar and trend tiles on `/catalog/print/`: fixed
+## 4. Bar and trend tiles on `/catalog/print/`: drawn at once, the stall not yet explained
 
 Both tiles frame their story page. Their plots grew in, as on a slide reached in a deck. Sampled
 every 100 ms after the tile came into view:
@@ -83,9 +84,11 @@ it changed nothing; a lone frame on an empty page grows normally. Why the growth
 print page is not yet explained. A background tab runs no animation frame, so there the tile stays
 empty.
 
-Fix: a plot on a slide opened `?revealed`, which every catalogue tile and story page is, draws at
-once, as on a printed slide and on the slide a page load opens on (`usePlot` and `DrawIn` in
-`components/slides/ChartSlide.tsx`). In a deck the plots still grow. A chart story in the catalog
+Fix: a plot on a slide opening revealed draws at once, as on a printed slide and on the slide a
+page load opens on (`usePlot` in `components/slides/ChartSlide.tsx`, which `DrawIn` reads too).
+Revealed is `?revealed`, which every catalogue tile and story page carries, or a slide reached
+backwards, as for every other build step. A deck stepping forward onto a chart still grows it. A chart story in the catalog
 no longer shows the growth; the deck view story does. `test/pages/print-chart-cards.test.ts` failed
 before the fix on both tiles (a bar group without its bar, an area under recharts' growing clip)
-and passes after it.
+and passes after it. The stall itself stays open in
+`items/work-print-frame-stall.md`.

@@ -27,19 +27,22 @@ it.each([
   "draws the plot of the %s tile at once",
   async (id, drawn, growing) => {
     const page = await browser.newPage();
-    await page.setViewport({ width: 1600, height: 1000 });
-    await page.goto(`${dist.origin}/slides/catalog/print/`, { waitUntil: "load" });
-    const handle = await page.waitForSelector(`[id="${id}"] iframe`);
-    await handle!.scrollIntoView();
-    const frame = await handle!.contentFrame();
-    // A tile opens its slide revealed, the plot drawn at once: grown, its bars stayed out for
-    // seconds.
-    await frame.waitForSelector("svg :is(.recharts-bar-rectangle, .recharts-area-curve)", {
-      timeout: 20_000,
-    });
-    expect(await frame.$$eval(`svg ${drawn}`, (marks) => marks.length)).toBeGreaterThan(0);
-    expect(await frame.$$eval(`svg ${growing}`, (marks) => marks.length)).toBe(0);
-    await page.close();
+    try {
+      await page.setViewport({ width: 1600, height: 1000 });
+      await page.goto(`${dist.origin}/slides/catalog/print/`, { waitUntil: "load" });
+      const handle = await page.waitForSelector(`[id="${id}"] iframe`);
+      await handle!.scrollIntoView();
+      const frame = await handle!.contentFrame();
+      // A tile opens its slide revealed, the plot drawn at once: grown, its bars stayed out for
+      // seconds.
+      await frame.waitForSelector("svg :is(.recharts-bar-rectangle, .recharts-area-curve)", {
+        timeout: 20_000,
+      });
+      expect(await frame.$$eval(`svg ${drawn}`, (marks) => marks.length)).toBeGreaterThan(0);
+      expect(await frame.$$eval(`svg ${growing}`, (marks) => marks.length)).toBe(0);
+    } finally {
+      await page.close();
+    }
   },
   60_000,
 );

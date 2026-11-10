@@ -8,7 +8,7 @@ import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { SectionHeader } from "./SectionHeader";
 import { useMounted } from "../../lib/use-mounted";
-import { revealedUrl } from "../../lib/slide-utils";
+import { opensRevealed } from "../../lib/slide-utils";
 import { ChartFrame, SlideTitle } from "./primitives";
 // recharts is most of a deck page's script and only the trend and bar charts use it, after mount:
 // it loads with the first of them.
@@ -33,10 +33,10 @@ function Annotation({ text }: { text: string }) {
 }
 
 /** Draws its plot from left to right, as recharts grows the trend and bar plots (1.5 s, ease):
- *  a clip over the whole drawing widens from nothing. A printed slide and reduced motion show the
- *  plot at once; so do the slide a page load opens on, whose clip mounts at its full width
- *  (motion reads `initial` on mount only, as in BlurFade), and a slide opened `?revealed`. The clip reaches half the drawing's
- *  size past every edge, so a label the overflowing svg shows outside its box stays whole. */
+ *  a clip over the whole drawing widens from nothing, except where `usePlot` holds it still and
+ *  under reduced motion; motion reads `initial` on mount only, as in BlurFade. The clip reaches
+ *  half the drawing's size past every edge, so a label the overflowing svg shows outside its box
+ *  stays whole. */
 function DrawIn({
   width,
   height,
@@ -47,7 +47,7 @@ function DrawIn({
   children: ReactNode;
 }) {
   const id = useId();
-  const hydrating = !useMounted();
+  const { still } = usePlot();
   const reduced = useReducedMotion();
   const print = usePrintMode();
   if (print) return <>{children}</>;
@@ -59,7 +59,7 @@ function DrawIn({
             x={-width / 2}
             y={-height}
             height={height * 3}
-            initial={hydrating || reduced || revealedUrl() ? false : { width: width / 2 }}
+            initial={still || reduced ? false : { width: width / 2 }}
             animate={{ width: width * 2 }}
             transition={{ delay: 0.2, duration: 1.5, ease: "easeInOut" }}
           />
@@ -293,13 +293,13 @@ function GraphVariant({ slide }: { slide: ChartSlideType }) {
   );
 }
 
-/** A recharts plot mounts after hydration, so it keeps whether its slide hydrated: the slide a page
- *  load opens on shows its plot at once, as DrawIn does, and so do a printed one and one opened
- *  `?revealed`, such as a catalogue tile: there the growth drew no bar for seconds, and none at all
- *  in a hidden tab, which runs no animation frame. */
+/** Whether a plot shows at once rather than growing: on a printed slide, on the slide a page load
+ *  opens on (a recharts plot mounts after hydration, so it keeps whether its slide hydrated), and
+ *  on one opening revealed, such as a catalogue tile, where the growth drew no bar for seconds, and
+ *  none in a background tab, which runs no animation frame. */
 function usePlot() {
   const mounted = useMounted();
-  const [opened] = useState(() => !mounted || revealedUrl());
+  const [opened] = useState(() => !mounted || opensRevealed());
   return { mounted, still: usePrintMode() || opened };
 }
 
