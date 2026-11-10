@@ -10,6 +10,7 @@ const dist = join(import.meta.dirname, "..", "..", "dist");
 const FACES = [
   "inter-latin-400-normal",
   "inter-latin-500-normal",
+  "inter-latin-700-normal",
   "jetbrains-mono-latin-500-normal",
   "jetbrains-mono-latin-700-normal",
 ];

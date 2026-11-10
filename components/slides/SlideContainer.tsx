@@ -5,6 +5,7 @@ import { preload } from "react-dom";
 import { MotionConfig } from "motion/react";
 import inter400 from "@hackersandwizards/brand/fonts/inter-latin-400-normal.woff2?url&no-inline";
 import inter500 from "@hackersandwizards/brand/fonts/inter-latin-500-normal.woff2?url&no-inline";
+import inter700 from "@hackersandwizards/brand/fonts/inter-latin-700-normal.woff2?url&no-inline";
 import mono500 from "@hackersandwizards/brand/fonts/jetbrains-mono-latin-500-normal.woff2?url&no-inline";
 import mono700 from "@hackersandwizards/brand/fonts/jetbrains-mono-latin-700-normal.woff2?url&no-inline";
 import Image from "../ui/image";
@@ -106,10 +107,11 @@ export function BrandStrip() {
 }
 
 // A face arriving after a server-rendered slide's first paint can still change a line break, or
-// more where the device lacks the local font of brand's metric-matched fallback. These four of slides.css's static faces are every face of about
-// half the specimen slides, more than any other four; each further face covers fewer and goes
-// unused on most pages.
-const FACES = [inter400, inter500, mono500, mono700];
+// more where the device lacks the local font of brand's metric-matched fallback. Inter 400, 500 and
+// both mono faces are every face of about half the specimen slides; each further face covers fewer.
+// Inter 700 is here for another reason: with Inter 400 in and Inter 700 still loading, a bold run
+// drawn in the fallback beside Inter text re-breaks a `pretty` paragraph when Inter 700 lands.
+const FACES = [inter400, inter500, inter700, mono500, mono700];
 
 export function SlideContainer({ children, logo, theme, page, mark, lang }: Props) {
   for (const href of FACES) preload(href, { as: "font", type: "font/woff2", crossOrigin: "" });

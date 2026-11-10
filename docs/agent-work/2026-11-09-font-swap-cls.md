@@ -171,7 +171,8 @@ Setup as in the section above, Chromium 156 in the Debian container with Android
 3 to 7. Two stories at 412 px, each run a fresh context, 10 or 30 runs per cell.
 
 **The state in between.** Each font state held for good, by aborting every other font file, on
-both builds:
+the build without the preload. The preload build reads the same in the two states pinned there,
+Inter 400 only and all:
 
 | Fonts loaded   | Bold run "a smaller one" | Text after it | Paragraph lines |
 | -------------- | ------------------------ | ------------- | --------------- |
@@ -234,18 +235,20 @@ story (4924 to 5048 ms) and the deck view story (2796 to 2920 ms, 10 runs). `tex
 paragraphs and list items removes the shift at no cost in first paint. It brings back the lone last
 word `pretty` exists against (19 of 220 subtitle cases for `wrap`, measured above).
 
-**Decision.** The preload stays at four faces. Without it the prose story at 412 px reaches 0.0894,
-over the 0.01 bar, and with it the measured CLS is 0, at 276 ms (prose) and 456 ms (deck) of first
-paint in the section above. Inter 700 is not added: 124 ms on every page for a move the API does
-not count, which goes away at the source if brand changes its `pretty` rule
-(`tokens/text-base.css`), which this engine does not override. If brand keeps `pretty`, the engine
-adds Inter 700 at the measured cost: `items/work-roboto-bold-rewrap.md`.
+**Decision: v2.21.2 preloads Inter 700 too, five faces.** The preload stays: without it the prose
+story at 412 px reaches 0.0894, over the 0.01 bar. Four faces make the bad order certain, Inter 400
+before first paint and Inter 700 after it, and the move counted (0.0512) in the held run, where
+Inter 700 lands about 820 ms after first paint. Five faces remove the move from the prose story in
+30 of 30 runs, for 124 ms of first paint on slow 4G; the deck view story's move was not traced.
+Nothing goes to brand: its bold metric is right on average, and the 09.11 table above shows `wrap`
+changing as many breaks across faces as `pretty`, on other strings.
 
 ## Open
 
 - Why the Layout Instability API reports no entry for the preload build's text move on Roboto:
   not yet explained, the entrance ruled out.
-- Brand's `text-wrap: pretty` on paragraphs: brand's decision, briefed with these numbers; the
-  engine's step after it in `items/work-roboto-bold-rewrap.md`.
+- A face outside the five beside preloaded text, such as an Inter 600 run in an Inter 400
+  paragraph, or a bold glyph from the latin-ext subset, can make the same mixed state: not
+  measured.
 - Whether the dev server fetches a preloaded face twice: not checked, the catalog's dev server did
   not start within its 30 s limit at load 20.
