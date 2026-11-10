@@ -106,11 +106,13 @@ export function TeamTopologySlide({ slide }: Props) {
                   </div>
                 ))}
 
+                {/* A stream team's roles follow its name on one line where they fit, so a team of
+                    one role takes one line of height. */}
                 <div className="flex flex-1 flex-col gap-3">
                   {slide.streamAligned.map((team) => (
                     <div
                       key={team.name}
-                      className={`${SHAPE.stream} flex flex-col items-start gap-2 rounded-brand px-5 py-3`}
+                      className={`${SHAPE.stream} flex flex-wrap items-baseline gap-x-6 gap-y-2 rounded-brand px-5 py-3`}
                     >
                       <span className="card-title text-2xl leading-tight text-text">
                         {keepCompounds(team.name)}

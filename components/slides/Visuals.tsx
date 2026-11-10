@@ -637,11 +637,10 @@ function Bars({ block }: { block: Of<"bars"> }) {
   const bars =
     block.order === "given" ? block.bars : [...block.bars].sort((a, b) => b.value - a.value);
   const max = block.max ?? (Math.max(...bars.map((b) => b.value), 0) || 1);
-  const tall = bars.length <= 3;
-  // Five bars and more set each label left of its track, one row per bar, so six ranges and a
-  // callout fit one slide above the fit guard's 0.8.
-  const inline = bars.length > 4;
-  const height = inline ? "h-12" : tall ? "h-20" : "h-14";
+  // Four bars and more set each label left of its track, one row per bar, so six ranges and a
+  // callout, or four bars and a footer, fit one slide above the fit guard's 0.8.
+  const inline = bars.length > 3;
+  const height = inline ? "h-12" : "h-20";
   // Grey is context for a highlighted bar; with none highlighted every bar is data.
   const fill = (bar: (typeof bars)[number]) =>
     bar.highlight || !anyHighlight ? "var(--color-primary)" : CONTEXT;
@@ -726,7 +725,7 @@ function Bars({ block }: { block: Of<"bars"> }) {
   );
   return (
     <div className="w-full">
-      <div className={`flex flex-col ${inline ? "gap-5" : tall ? "gap-12" : "gap-7"}`}>
+      <div className={`flex flex-col ${inline ? "gap-5" : "gap-12"}`}>
         {bars.map((bar, i) =>
           inline ? (
             <div
