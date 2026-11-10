@@ -217,7 +217,10 @@ describe("slides-usage", () => {
     );
     const file = join(dir, "usage.json");
     const usage = (...args: string[]) =>
-      spawnSync("bun", [script, ...args, deck], { encoding: "utf8" });
+      spawnSync("bun", [script, ...args, deck], {
+        encoding: "utf8",
+        env: { ...process.env, npm_lifecycle_event: "", npm_lifecycle_script: "" },
+      });
     expect(usage("--out", file, "--check").status).toBe(1);
     expect(usage("--out", file).status).toBe(0);
     expect(JSON.parse(readFileSync(file, "utf8"))).toMatchObject({ entries: { agenda: 1 } });
@@ -225,6 +228,28 @@ describe("slides-usage", () => {
     writeFileSync(file, "{}");
     const stale = usage("--out", file, "--check");
     expect(stale.status).toBe(1);
-    expect(stale.stderr).toContain("is stale");
+    expect(stale.stderr).toContain(`is stale: run "slides-usage --out ${file} ${deck}" and commit`);
+  });
+
+  it("names the re-run of a stale file a consumer can type: its script, or the pipe's command", () => {
+    const file = join(dir, "piped.json");
+    writeFileSync(file, "{}");
+    const input = JSON.stringify({ lang: "en", slides: [] });
+    const piped = (env: Record<string, string>) =>
+      spawnSync("bun", [script, "--out", file, "-", "--check"], {
+        encoding: "utf8",
+        input,
+        env: { ...process.env, npm_lifecycle_event: "", npm_lifecycle_script: "", ...env },
+      }).stderr;
+    expect(piped({})).toContain("run the command that wrote it again, without --check, and commit");
+    // Another tool's --check in the script leaves it the one that writes.
+    const text = `bun decks.ts | slides-usage --out ${file} - && prettier --check ${file}`;
+    expect(piped({ npm_lifecycle_event: "usage", npm_lifecycle_script: text })).toContain(
+      'run "bun run usage" and commit',
+    );
+    // A script that is the check itself would only check again.
+    expect(
+      piped({ npm_lifecycle_event: "check:usage", npm_lifecycle_script: "bun run usage --check" }),
+    ).toContain("run the command that wrote it again");
   });
 });

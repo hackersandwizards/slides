@@ -139,6 +139,17 @@ export function ignoredFields(slide: Slide): string[] {
   return found;
 }
 
+/** The command that writes `out` again: the consumer's package script where its text calls
+ *  slides-usage without --check (bun appends a caller's --check to the arguments, never to the
+ *  text), else these arguments, which a pipe's decks (`-`) cannot repeat. */
+function rerun(out: string, paths: string[]) {
+  const { npm_lifecycle_event: script, npm_lifecycle_script: text } = process.env;
+  if (script && text && /slides-usage/.test(text) && !/slides-usage[^|&;]*--check/.test(text))
+    return `"bun run ${script}"`;
+  if (paths.includes("-")) return "the command that wrote it again, without --check,";
+  return `"slides-usage --out ${out} ${paths.join(" ")}"`;
+}
+
 if (import.meta.main) {
   const args = process.argv.slice(2);
   const at = args.indexOf("--out");
@@ -198,7 +209,7 @@ if (import.meta.main) {
   if (!out) process.stdout.write(json);
   else if (!check) writeFileSync(out, json);
   else if (!existsSync(out) || readFileSync(out, "utf8") !== json)
-    findings.push(`${out} is stale: run slides-usage --out ${out} without --check and commit it`);
+    findings.push(`${out} is stale: run ${rerun(out, paths)} and commit it`);
   for (const line of findings) console.error(`slides-usage: ${line}`);
   process.exit(findings.length ? 1 : 0);
 }

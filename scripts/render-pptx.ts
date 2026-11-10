@@ -139,6 +139,9 @@ function palette(dark: boolean) {
     greenTint: mix(dark ? hex("--color-green") : hex("--color-green-dark"), bg, 0.1),
     redTint: mix(dark ? hex("--color-red-night") : hex("--color-red"), bg, 0.08),
     amberTint: mix(hex("--color-amber"), bg, 0.12),
+    // brand's hw-callout, teal or data-hue="purple": the hue at 10 % on white, its night tone at
+    // 14 % on night, no line.
+    callout: (hue: string) => (dark ? mix(hue, bg, 0.14) : mix(hue, "FFFFFF", 0.1)),
   };
 }
 type Palette = ReturnType<typeof palette>;
@@ -408,6 +411,18 @@ function card(
     rectRadius: Math.min(r, w / 2, h / 2),
     fill: { color: fill },
     line: line ? { color: line, width: 1 } : { type: "none" },
+  });
+}
+
+/** A process slide's footer, `SlideCaption` on the web: brand's teal callout, centred. */
+function caption(s: PSlide, c: Palette, text: string, y: number) {
+  const fw = Math.min(CW, (text.length * PT.base * ADVANCE.sans) / 72 + 0.8);
+  card(s, (W - fw) / 2, y, fw, 0.45, c.callout(c.teal));
+  box(s, c, text, (W - fw) / 2 + 0.2, y, fw - 0.4, 0.45, {
+    size: PT.lead,
+    color: c.ink,
+    align: "center",
+    valign: "middle",
   });
 }
 
@@ -1352,16 +1367,17 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
           valign: "middle",
         });
       }
-      // The web's tints: the tone at 7 % on the ground, its border at 25 %, the text in ink, or for
-      // a warning or success the tone mixed 60 % with ink.
-      const tone = b.variant === "warning" ? c.amber : b.variant === "success" ? c.green : c.purple;
-      const ink =
-        b.variant === "warning" || b.variant === "success" ? mix(tone, c.ink, 0.6) : c.ink;
+      // The web's callouts: the info one brand's purple one, in ink; a warning or success the tone at 7 % on
+      // the ground with its border at 25 %, the text the tone mixed 60 % with ink.
+      const tone =
+        b.variant === "warning" ? c.amber : b.variant === "success" ? c.green : undefined;
+      const ink = tone ? mix(tone, c.ink, 0.6) : c.ink;
       const size = PT.h4 * 1.1 * k;
       const w = b.fullWidth
         ? a.w
         : Math.min(a.w, (plain(b.text).length * size * ADVANCE.sans) / 72 + 0.6);
-      card(s, a.x, a.y, w, a.h, mix(tone, c.bg, 0.07), mix(tone, c.bg, 0.25));
+      const fill = tone ? mix(tone, c.bg, 0.07) : c.callout(c.purple);
+      card(s, a.x, a.y, w, a.h, fill, tone && mix(tone, c.bg, 0.25));
       return box(s, c, b.text, a.x + 0.25, a.y + 0.12, w - 0.5, a.h - 0.24, {
         ...o,
         size,
@@ -2650,16 +2666,7 @@ const RENDER: {
       if (i < d.stages.length - 1)
         arrow(s, c, r.x + r.w + 0.08, r.y + r.h / 2, r.x + r.w + gap - 0.08, r.y + r.h / 2);
     });
-    if (d.footer) {
-      const fw = Math.min(CW, (d.footer.length * PT.base * ADVANCE.sans) / 72 + 0.8);
-      card(s, (W - fw) / 2, BOTTOM - 0.5, fw, 0.45, c.purpleTint, c.purple);
-      box(s, c, d.footer, (W - fw) / 2 + 0.2, BOTTOM - 0.5, fw - 0.4, 0.45, {
-        size: PT.lead,
-        color: c.purple,
-        align: "center",
-        valign: "middle",
-      });
-    }
+    if (d.footer) caption(s, c, d.footer, BOTTOM - 0.5);
   },
 
   grid(s, ctx, d, deck) {
@@ -2976,16 +2983,7 @@ const RENDER: {
       if (i < d.nodes.length - 1)
         arrow(s, c, r.x + r.w + 0.08, r.y + r.h / 2, r.x + r.w + gap - 0.08, r.y + r.h / 2, c.teal);
     });
-    if (d.footer) {
-      const fw = Math.min(CW, (d.footer.length * PT.base * ADVANCE.sans) / 72 + 0.8);
-      card(s, (W - fw) / 2, ny + ch + 0.4, fw, 0.45, c.purpleTint, c.purple);
-      box(s, c, d.footer, (W - fw) / 2 + 0.2, ny + ch + 0.4, fw - 0.4, 0.45, {
-        size: PT.lead,
-        color: c.purple,
-        align: "center",
-        valign: "middle",
-      });
-    }
+    if (d.footer) caption(s, c, d.footer, ny + ch + 0.4);
   },
 
   lanes(s, ctx, d) {

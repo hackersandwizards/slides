@@ -548,6 +548,28 @@ describe("slides-pptx on the specimen deck", () => {
     expect(run.slice(run.lastIndexOf("<a:rPr"))).toContain(`val="${muted}"`);
   });
 
+  it.each([
+    [
+      "an info callout",
+      "--color-purple",
+      (x: Slide) => JSON.stringify(x).includes("Two stages are active"),
+    ],
+    ["a process footer", "--color-teal", (x: Slide) => x.type === "process" && !!x.footer],
+  ] as const)(
+    "draws %s as brand's callout, %s at 10 percent on white with no line",
+    (_, hue, pick) => {
+      const xml = slideXml[slideCatalog.slides.findIndex(pick)];
+      const tint = [1, 3, 5]
+        .map((i) => Math.round(parseInt(tokens[hue].slice(i, i + 2), 16) * 0.1 + 255 * 0.9))
+        .map((n) => n.toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase();
+      expect(xml).toContain(`val="${tint}"`);
+      const shape = xml.slice(xml.lastIndexOf("<p:sp>", xml.indexOf(`val="${tint}"`)));
+      expect(shape.slice(0, shape.indexOf("</p:spPr>"))).toContain("<a:ln></a:ln>");
+    },
+  );
+
   it("names a team picture's types under it only where the slide asks for a legend", () => {
     const at = slideCatalog.slides.flatMap((x, i) => (x.type === "team-topology" ? [i] : []));
     const named = at.map((i) => slideXml[i].includes(`<a:t>${WORDS.en.teams.enabling}</a:t>`));

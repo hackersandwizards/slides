@@ -1,10 +1,1 @@
-{
-  "styles/tokens.css": {
-    "hex": 0,
-    "tokenHex": 0,
-    "font": 0,
-    "palette": 0,
-    "radius": 1,
-    "reason": "Radius: --slide-radius is the brand corner (--radius-brand, 20px 5px) times the slide scale, 1.875rem 0.46875rem, which --radius-brand reads on a slide."
-  }
-}
+{}

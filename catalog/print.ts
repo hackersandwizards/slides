@@ -345,6 +345,7 @@ const USES: Record<string, () => ReactNode> = {
       {
         type: "button",
         className: "hw-focus-ring rounded-brand border border-border bg-white px-6 py-5 text-lg",
+        "data-hw-focus": "",
       },
       "A vote option",
     ),

@@ -65,7 +65,8 @@ path such as `/<deck>/print` is read against that server.
 The command `slides-usage [--out <file> [--check]] <deck.json|-> ...` prints, as JSON, how many
 slides of those decks use each entry of the catalogue's print page, and which entries none uses, for
 a consumer to publish; `--out` writes it to the file instead, and `--check` fails where the file
-differs. A slide drawn through a replaced form counts for the entry that replaces it. It lints the
+differs, naming what to run instead: `bun run usage` where the check ran as `bun run usage --check`
+on a script `"usage": "… | slides-usage --out <file> -"`. A slide drawn through a replaced form counts for the entry that replaces it. It lints the
 decks too, failing on a slide no entry draws, on a field that changes nothing the slide draws (such
 as `numberFrom` on cards that are not numbered, or a `sectionTheme` that colours no rule or pill),
 and on a deck that names its `lang` neither on itself nor on a title slide. Each
