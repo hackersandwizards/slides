@@ -765,3 +765,33 @@ export function formatDuration(ms: number): string {
   const s = String(seconds % 60).padStart(2, "0");
   return h ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
 }
+
+// A figure's leading words ("about $2M", "up to +70%", "über 50", "ca. 5"): every lowercase word,
+// an abbreviation's dot included, before the first token that is not one. They are set small, so
+// only the figure itself carries weight; a quiet figure sets them in the label's face, where six
+// figures on a slide would otherwise compete with them.
+/** A leading hyphen in a figure is a minus: the typographic one, which sits on the digits' axis. */
+export const minus = (v: string) => v.replace(/^-(?=\d)/, "−");
+
+export const leadingWords = (value: string) =>
+  /^((?:\p{Ll}+\.?\s+)+)(?=[^\p{Ll}\s])/u.exec(value)?.[1] ?? "";
+
+// A figure's width in mono characters (0.6em each), leading words set at about half size counting
+// half.
+export const figureChars = (value: string) => {
+  const lead = leadingWords(value);
+  return value.length - lead.length + 0.5 * lead.trim().length;
+};
+
+/** A numbers block's grid: up to four figures stand in one row; more wrap (`wrapped`), five and six
+ *  into three columns, so a column never narrows below a quarter of the slide. One size in rem for
+ *  every figure, set by the longest, so the row shares a baseline and none wraps: a column is about
+ *  1650/cols px wide at 1920, a rem 21.333px. */
+export function numbersGrid(values: string[]) {
+  const n = values.length;
+  const cols = n <= 4 ? n : n <= 6 ? 3 : 4;
+  const wrapped = n > 4;
+  const cap = wrapped ? 5 : cols === 2 ? 9 : 7;
+  const longest = Math.max(...values.map(figureChars));
+  return { cols, wrapped, size: Math.min(cap, (1650 / cols - 60) / (longest * 0.6) / 21.333) };
+}

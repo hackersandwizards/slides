@@ -81,9 +81,11 @@ labels and card, and the fill under a trend's measured part, are shapes beside t
 fill does not follow data someone edits in the chart in PowerPoint. The deck
 is the `Presentation` as JSON, `-` reads it from stdin. `--assets` is the folder a deck's `/…`
 image paths resolve against, `./public` by default; a path to an existing file, as Bun gives the
-specimen's imported images, is read as it stands. It warns on what it cannot draw as the slide
-does, such as a missing image or blocks taller than the slide, and `--strict` makes a warning exit
-1, for a consumer's gate. It needs `pptxgenjs` and `jszip`, optional
+specimen's imported images, is read as it stands. It sets each line at the slide's own line height and breaks headings
+where the web balances them, measured with the brand fonts' metrics. It warns on what it cannot
+draw as the slide does, such as a missing image, blocks taller than the slide, or text taller or
+wider than its box, crossing the shape it stands in or off the slide, and `--strict` makes a
+warning exit 1, for a consumer's gate. It needs `pptxgenjs` and `jszip`, optional
 peer dependencies a consumer installs only to run it. In `talks`:
 
 ```sh

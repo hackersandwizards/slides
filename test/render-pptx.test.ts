@@ -8,6 +8,7 @@ import verbal from "@hackersandwizards/brand/verbal.json";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { centredMark, renderPptx } from "../scripts/render-pptx";
+import { checkSlide } from "../scripts/pptx-text";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import {
@@ -71,6 +72,7 @@ const norm = (t: string) =>
   t
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/\*\*|`|[*“”"]/g, "")
+    .replace(/−/g, "-")
     .replace(/\s+/g, "")
     .toLowerCase();
 
@@ -214,11 +216,18 @@ describe("slides-pptx on the specimen deck", () => {
       out,
       root,
     );
-    expect(warnings).toEqual([
+    // The overflow check finds text the three over-full slides cannot hold, and nothing elsewhere.
+    const [own, found] = [
+      warnings.filter((w) => !w.startsWith("slide ")),
+      warnings.filter((w) => w.startsWith("slide ")),
+    ];
+    expect(own).toEqual([
       expect.stringMatching(/^blocks table, paragraph: .* taller/),
       "lanes: 30 rows taller than the slide holds",
       "gantt: 40 rows taller than the slide holds",
     ]);
+    expect(found.filter((w) => !/^slide [267]: /.test(w))).toEqual([]);
+    expect(found.length).toBeGreaterThan(0);
     const probe = await JSZip.loadAsync(readFileSync(out));
     expect(await probe.file("ppt/slides/_rels/slide1.xml.rels")!.async("string")).toContain(
       `Target="${href.replace("&", "&amp;")}"`,
@@ -350,7 +359,10 @@ describe("slides-pptx on the specimen deck", () => {
       unescape(
         (await de.file(`ppt/slides/slide${n}.xml`)!.async("string")).replace(/<[^>]+>/g, " "),
       );
-    expect(await text(1)).toMatch(/SCHLECHT.*GUT/s);
+    // The labels keep the deck's case and are drawn in capitals, so an edit keeps them capitals.
+    expect(await de.file("ppt/slides/slide1.xml")!.async("string")).toMatch(
+      /cap="all"[^>]*>.*?<a:t>Schlecht<\/a:t>.*cap="all"[^>]*>.*?<a:t>Gut<\/a:t>/s,
+    );
     expect(await text(2)).toContain("Diskussion");
     // The shape that holds the first segment's label, teal where it is marked.
     const label = async (n: number) => {
@@ -494,7 +506,7 @@ describe("slides-pptx on the specimen deck", () => {
       `<a:srgbClr val="${tokens["--color-purple"].slice(1).toUpperCase()}"/>`,
     );
     expect(xml.includes("<a:custGeom>")).toBe(now > 0);
-    expect(xml).toContain('prst="roundRect"');
+    expect(xml).toContain('prst="round2DiagRect"');
   });
 
   it("draws a regular and a pillars grid slide as the content slides the web redraws them as", async () => {
@@ -1082,6 +1094,233 @@ it.each([true, false])(
     expect(none).not.toBe(last);
   },
 );
+
+// Each shape of a slide: its preset, frame in inches, fill, line dash and texts.
+const shapesOf = (xml: string) =>
+  [...xml.matchAll(/<p:sp>(.*?)<\/p:sp>/gs)].map(([, b]) => {
+    const [x, y, w, h] = (
+      /<a:off x="(-?\d+)" y="(-?\d+)"\/><a:ext cx="(\d+)" cy="(\d+)"/.exec(b) ?? []
+    )
+      .slice(1)
+      .map((v) => +v / 914400);
+    return {
+      prst: /prst="(\w+)"/.exec(b)?.[1],
+      x,
+      y,
+      w,
+      h,
+      fill: /<p:spPr>.*?<a:solidFill><a:srgbClr val="(\w+)"/s.exec(b)?.[1],
+      dash: /<a:prstDash val="(\w+)"/.exec(b)?.[1],
+      texts: [...b.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((m) => m[1]),
+      xml: b,
+    };
+  });
+const specimenAt = (test: (s: Slide) => boolean) => slideCatalog.slides.findIndex(test);
+const TEAL = tokens["--color-teal"].slice(1).toUpperCase();
+const REM = 21.333 / 144;
+
+describe("slides-pptx draws what the slide shows", () => {
+  it("finds no text taller or wider than its box, across its shape or off the slide, and finds each where it is", () => {
+    const found = slideXml.flatMap((x, i) =>
+      checkSlide(x, 13.333, 7.5).map((f) => `slide ${i + 1}: ${f}`),
+    );
+    expect(found).toEqual([]);
+    // Controls on a real slide: its title squeezed, a card's text pushed out of its card, the
+    // title moved off the slide.
+    const i = specimenAt((x) => x.type === "content" && x.content.some((b) => b.type === "cards"));
+    const xml = slideXml[i];
+    const title = shapesOf(xml).find(
+      (sh) => sh.texts.join("") === (slideCatalog.slides[i] as ContentSlide).headline,
+    )!;
+    const ext = /<a:ext cx="\d+" cy="\d+"\/>/.exec(title.xml)![0];
+    expect(
+      checkSlide(
+        xml.replace(title.xml, title.xml.replace(ext, ext.replace(/cy="\d+"/, 'cy="45720"'))),
+        13.333,
+        7.5,
+      ).join(),
+    ).toMatch(/tall in a box/);
+    const off = /<a:off x="(\d+)"/.exec(title.xml)!;
+    expect(
+      checkSlide(
+        xml.replace(title.xml, title.xml.replace(off[0], '<a:off x="11000000"')),
+        13.333,
+        7.5,
+      ).join(),
+    ).toMatch(/slide/);
+    const inCard = shapesOf(xml).find(
+      (sh) =>
+        sh.texts.length &&
+        shapesOf(xml).some(
+          (c) =>
+            c.prst === "round2DiagRect" &&
+            c.x! <= sh.x! &&
+            sh.x! + sh.w! <= c.x! + c.w! &&
+            c.y! <= sh.y! &&
+            sh.y! < c.y! + c.h!,
+        ),
+    )!;
+    // Raised so its top stands above the card while its centre stays inside.
+    const card = shapesOf(xml).find(
+      (c) =>
+        c.prst === "round2DiagRect" &&
+        c.x! <= inCard.x! &&
+        c.y! <= inCard.y! &&
+        inCard.y! < c.y! + c.h!,
+    )!;
+    const at = /<a:off x="(\d+)" y="(\d+)"/.exec(inCard.xml)!;
+    const raised = Math.round((card.y! - 0.4 * inCard.h!) * 914400);
+    expect(
+      checkSlide(
+        xml.replace(inCard.xml, inCard.xml.replace(at[0], `<a:off x="${at[1]}" y="${raised}"`)),
+        13.333,
+        7.5,
+      ).join(),
+    ).toMatch(/crosses the edge/);
+  });
+
+  it("sets every line at an exact height in points, as the web's line height, never a share of the font's own", () => {
+    const all = slideXml.join("");
+    expect(all).not.toMatch(/<a:lnSpc><a:spcPct/);
+    expect(all).toMatch(/<a:lnSpc><a:spcPts val="\d+"\/><\/a:lnSpc>/);
+  });
+
+  it("keeps a section label in the deck's case and sets it in capitals with cap", () => {
+    const i = specimenAt(
+      (x) =>
+        "sectionLabel" in x &&
+        !!x.sectionLabel &&
+        /[a-z]/.test(x.sectionLabel) &&
+        !/[&<>]/.test(x.sectionLabel),
+    );
+    const label = (slideCatalog.slides[i] as { sectionLabel: string }).sectionLabel;
+    const run = new RegExp(
+      `<a:rPr [^>]*cap="all"[^>]*>(?:(?!<\\/a:r>).)*<a:t>${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}<\\/a:t>`,
+      "s",
+    );
+    expect(slideXml[i]).toMatch(run);
+  });
+
+  it("breaks a headline into balanced lines, as the web's text-wrap: balance", async () => {
+    const headline = "Each team ships on its own schedule, every single week";
+    const out = join(dir, "balanced.pptx");
+    await renderPptx(
+      { name: "T", slides: [{ type: "content", headline, content: [] } as Slide] },
+      out,
+      dir,
+    );
+    const xml = await (
+      await JSZip.loadAsync(readFileSync(out))
+    )
+      .file("ppt/slides/slide1.xml")!
+      .async("string");
+    const title = shapesOf(xml).find(
+      (sh) =>
+        sh.texts.join(" ").replace(/\s+/g, " ").trim() === headline ||
+        sh.texts.join("") === headline,
+    )!;
+    expect(title.xml).toContain("<a:br/>");
+    const lines = title.xml.split("<a:br/>").map(
+      (part) =>
+        [...part.matchAll(/<a:t>([^<]*)<\/a:t>/g)]
+          .map((m) => m[1])
+          .join("")
+          .trim().length,
+    );
+    expect(lines).toHaveLength(2);
+    expect(Math.abs(lines[0] - lines[1])).toBeLessThan(12);
+  });
+
+  it("numbers a process's tiles as FlowSteps does, a numbered: false step's tile empty", () => {
+    const i = specimenAt(
+      (x) => x.type === "process" && x.headline === "A request through three teams",
+    );
+    const tiles = shapesOf(slideXml[i]).filter(
+      (sh) => sh.prst === "roundRect" && Math.abs(sh.w! - sh.h!) < 0.01,
+    );
+    expect(tiles).toHaveLength(5);
+    const numbers = shapesOf(slideXml[i]).filter((sh) => /^\d$/.test(sh.texts.join("")));
+    expect(numbers.map((sh) => sh.texts.join(""))).toEqual(["1", "2", "3"]);
+    // Each number in a tile, the first and last tiles empty.
+    for (const [n, t] of numbers.map((sh, k) => [sh, tiles[k + 1]] as const))
+      expect(Math.abs(n.x! - t.x!)).toBeLessThan(0.01);
+  });
+
+  it("marks a plain card with the web's short teal rule, never a square", () => {
+    const i = specimenAt(
+      (x) =>
+        x.type === "content" &&
+        x.content.some(
+          (b) => b.type === "cards" && !b.numbered && !b.dense && b.items.every((it) => !it.icon),
+        ),
+    );
+    const rules = shapesOf(slideXml[i]).filter(
+      (sh) => sh.fill === TEAL && Math.abs(sh.w! - 4 * REM) < 0.01,
+    );
+    expect(rules.length).toBeGreaterThan(0);
+    for (const r of rules) expect(r.h).toBeLessThan(r.w! / 4);
+  });
+
+  it("draws a numbers block's figures in teal mono over a rule, as the web's Numbers", () => {
+    const i = specimenAt(
+      (x) =>
+        x.type === "content" && x.content.some((b) => b.type === "numbers" && b.items.length > 1),
+    );
+    const block = (slideCatalog.slides[i] as ContentSlide).content.find(
+      (b) => b.type === "numbers",
+    )! as Extract<ContentSlide["content"][number], { type: "numbers" }>;
+    const shapes = shapesOf(slideXml[i]);
+    expect(shapes.filter((sh) => sh.prst === "line").length).toBeGreaterThanOrEqual(
+      block.items.length,
+    );
+    const figure = shapes.find((sh) =>
+      sh.texts.join("").endsWith(block.items[0].value.replace(/^-/, "−")),
+    )!;
+    expect(figure.xml).toContain(`<a:srgbClr val="${TEAL}"/>`);
+    expect(figure.xml).toContain('typeface="JetBrains Mono"');
+  });
+
+  it("draws a team picture's shapes as the web: octagon subsystems, a dotted platform, roles beside a stream team's name", () => {
+    const i = specimenAt(
+      (x) =>
+        x.type === "team-topology" && !!x.complicatedSubsystem?.length && x.platform.length > 0,
+    );
+    const slide = slideCatalog.slides[i] as Extract<Slide, { type: "team-topology" }>;
+    const shapes = shapesOf(slideXml[i]);
+    expect(shapes.filter((sh) => sh.prst === "octagon")).toHaveLength(
+      slide.complicatedSubsystem!.length,
+    );
+    expect(shapes.some((sh) => sh.dash === "sysDot")).toBe(true);
+    const team = slide.streamAligned[0];
+    const name = shapes.find((sh) => sh.texts.join("") === team.name)!;
+    const roles = shapes.find((sh) =>
+      sh.texts
+        .join("")
+        .replace(/\u00a0/g, " ")
+        .includes(team.roles[0]),
+    )!;
+    expect(Math.abs(name.y! + name.h! / 2 - (roles.y! + roles.h! / 2))).toBeLessThan(0.05);
+    expect(roles.x!).toBeGreaterThan(name.x! + name.w!);
+  });
+
+  it("draws a wheel's segments as arcs with a gap between them", () => {
+    const i = specimenAt((x) => x.type === "wheel");
+    const slide = slideCatalog.slides[i] as Extract<Slide, { type: "wheel" }>;
+    expect(shapesOf(slideXml[i]).filter((sh) => sh.prst === "blockArc")).toHaveLength(
+      slide.segments.length,
+    );
+  });
+
+  it("gives a card brand's corner: the large radius at top left and bottom right, a quarter of it at the others", () => {
+    const corners = slideXml.flatMap((x) => [
+      ...x.matchAll(
+        /prst="round2DiagRect"><a:avLst><a:gd name="adj1" fmla="val (\d+)"\/><a:gd name="adj2" fmla="val (\d+)"\/>/g,
+      ),
+    ]);
+    expect(corners.length).toBeGreaterThan(0);
+    for (const [, a1, a2] of corners) expect(Math.abs(+a1 / 4 - +a2)).toBeLessThanOrEqual(1);
+  });
+});
 
 describe("slides-pptx as a command", () => {
   const script = join(import.meta.dirname, "../scripts/render-pptx.ts");

@@ -47,6 +47,7 @@
     "scripts/pins.ts",
     "scripts/usage.ts",
     "scripts/render-pptx.ts",
+    "scripts/pptx-text.ts",
     "specimen",
     "catalog/SlideFrame.astro",
     "catalog/guidance.ts"

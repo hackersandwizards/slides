@@ -4,7 +4,15 @@ import type { FlowFrame, VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { useHighlightLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
-import { LONG_FLOW, WORDS, continuation } from "../../lib/slide-utils";
+import {
+  LONG_FLOW,
+  WORDS,
+  continuation,
+  figureChars,
+  leadingWords,
+  minus,
+  numbersGrid,
+} from "../../lib/slide-utils";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { BeforeAfterSides, CodePanel, DashedFrame, NumberTile, SlideCard } from "./primitives";
 import { DeckLang } from "./SlideShell";
@@ -768,26 +776,10 @@ function Bars({ block }: { block: Of<"bars"> }) {
   );
 }
 
-// A leading hyphen in a figure is a minus: set the typographic one, which sits on the digits' axis.
-const minus = (v: string) => v.replace(/^-(?=\d)/, "−");
-
-// A figure's leading words ("about $2M", "up to +70%", "über 50", "ca. 5"): every lowercase word,
-// an abbreviation's dot included, before the first token that is not one. They are set small, so
-// only the figure itself carries weight; `quiet` sets them in the label's face, where six figures
-// on a slide would otherwise compete with them.
-const leadingWords = (value: string) =>
-  /^((?:\p{Ll}+\.?\s+)+)(?=[^\p{Ll}\s])/u.exec(value)?.[1] ?? "";
-
 // A grid of n equal columns. The count is a custom property, never an inline column template,
 // which would outrank the phone rule in slides.css that stacks every grid into one column.
 const COLUMNS = "grid-cols-[repeat(var(--slide-cols),minmax(0,1fr))]";
 const columns = (n: number) => ({ "--slide-cols": n }) as CSSProperties;
-// A figure's width in mono characters (0.6em each), leading words set at about half size counting
-// half.
-const figureChars = (value: string) => {
-  const lead = leadingWords(value);
-  return value.length - lead.length + 0.5 * lead.trim().length;
-};
 // The size, in % of its column's width, at which the widest figure fits on one line, which the
 // phone rule in Visuals.css caps the figures at: one character more where leading words stand, for
 // their gap and their true size (0.55em), which a half undercounts.
@@ -839,33 +831,24 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
       </div>
     );
   }
-  // Up to four figures stand in one row; more wrap, five and six into three columns, so a column
-  // never narrows below a quarter of the slide.
-  const cols = n <= 4 ? n : n <= 6 ? 3 : 4;
-  // One size for every figure, set by the longest, so the row shares a baseline and none wraps:
-  // a column is about 1650/cols px wide at 1920, a rem 21.333px.
-  const longest = Math.max(...block.items.map((i) => figureChars(i.value)));
+  const { cols, wrapped, size } = numbersGrid(block.items.map((i) => i.value));
   // Wrapped figures read as one grid at a glance: no rule, the label bold against its line, each
   // pair close to its figure, and in three columns the rows far apart, so a note never reads as
   // the next figure's. Open space groups them better than a card or a rule per figure, which crowd
   // the slide. Four columns keep the closer rows, or two rows of notes run past the slide's foot.
-  const wrapped = n > 4;
   const look = wrapped
     ? {
-        cap: 5,
         grid: cols === 3 ? "mt-8 gap-x-16 gap-y-28" : "gap-16",
         label: "mt-4 leading-tight font-semibold",
         text: "mt-1 text-pretty",
         source: "mt-16",
       }
     : {
-        cap: cols === 2 ? 9 : 7,
         grid: "gap-x-14 gap-y-12",
         label: "mt-6 border-t-4 border-border pt-6 leading-snug",
         text: "mt-3",
         source: undefined,
       };
-  const size = Math.min(look.cap, (1650 / cols - 60) / (longest * 0.6) / 21.333);
   return (
     <div className="w-full">
       <div
