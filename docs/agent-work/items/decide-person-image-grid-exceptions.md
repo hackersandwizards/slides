@@ -20,7 +20,7 @@ options:
 
 Veto this if the two card grids should drop their square portraits and go round like the rest.
 
-Blocks nothing. The blind review settled it; the assumption stands unless you veto it.
+Blocks nothing; the blind review settled it.
 
 Brand has a round person image (`hw-avatar`) since v1.49.0. A blind panel compared, on nine
 surfaces, each surface as it is today with the same surface where every person image is round.
