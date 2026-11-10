@@ -59,15 +59,19 @@ export function renderMarkdown(text: string): React.ReactNode {
     // In teal's text colour: base teal on the chip's tint over a striped table row falls under
     // 4.5:1.
     const chip = "hw-inline-code text-teal-dark";
-    // A path or file name breaks only after a slash or before a dot, so a table of paths never
-    // splits `my-skill` at its hyphen or `settings.json` mid-word.
+    // A chip as wide as its text: it moves to the next line whole, widens a table column to hold
+    // it and stands past a phone's narrow flow step, centred under it, rather than break there.
+    // Wider than a sized box such as a paragraph, it breaks inside itself.
+    const whole = "inline-block w-max max-w-full";
+    // Such a path or file name breaks only after a slash or before a dot, so a table of paths
+    // never splits `my-skill` at its hyphen or `settings.json` mid-word.
     if (/[/.]/.test(text) && !text.includes(" ")) {
       const pieces = text
         .replace(/\/|(?=\.)/g, "$&\0")
         .split("\0")
         .filter(Boolean);
       return (
-        <code key={i} className={chip}>
+        <code key={i} className={`${chip} ${whole}`}>
           {pieces.map((piece, j) => (
             <React.Fragment key={j}>
               {j > 0 && <wbr />}
@@ -77,12 +81,11 @@ export function renderMarkdown(text: string): React.ReactNode {
         </code>
       );
     }
-    // A short chip stays on one line, so a name never splits at its hyphen; a long one may break
-    // inside itself.
+    // A long chip runs with the line and may break inside itself.
     return (
       <code
         key={i}
-        className={`${chip} ${text.length <= 24 || (text.includes(" ") && text.length <= 40) ? "md:whitespace-nowrap" : "[overflow-wrap:anywhere]"}`}
+        className={`${chip} ${text.length <= 24 || (text.includes(" ") && text.length <= 40) ? whole : "[overflow-wrap:anywhere]"}`}
       >
         {text}
       </code>

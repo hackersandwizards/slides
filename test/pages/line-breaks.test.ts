@@ -85,3 +85,42 @@ it.each([1366, 1440])(
   },
   60_000,
 );
+
+// On a phone a chip with a space broke inside itself: `widths: [2, 1]` drew "[2," and "1]" on two
+// lines, `bun run check` lost "check" to the next line, a path stacked in five pieces under its
+// flow step.
+it.each(
+  ["block-table", "primary-theme", "deep-dive-theme", "visual-flow-framed"].flatMap((story) =>
+    [360, 390, 1440].map((width) => [story, width] as const),
+  ),
+)(
+  "content-slide/%s at %i px: keeps each inline code on one line inside the page",
+  async (story, width) => {
+    const page = await browser.newPage();
+    await page.setViewport({ width, height: 844 });
+    await page.goto(`${served.origin}/slides/stories/Types/content-slide/${story}/`, {
+      waitUntil: "networkidle0",
+    });
+    await page.evaluate(() => document.fonts.ready);
+    const chips = await page.$$eval(".slide-content code.hw-inline-code", (all) =>
+      all.map((chip) => {
+        const walker = document.createTreeWalker(chip, NodeFilter.SHOW_TEXT);
+        const tops = new Set<number>();
+        while (walker.nextNode()) {
+          const range = document.createRange();
+          range.selectNodeContents(walker.currentNode);
+          for (const r of range.getClientRects()) tops.add(Math.round(r.top));
+        }
+        return {
+          text: chip.textContent,
+          lines: tops.size,
+          inside: chip.getBoundingClientRect().right <= document.documentElement.clientWidth,
+        };
+      }),
+    );
+    await page.close();
+    expect(chips.length).toBeGreaterThan(0);
+    expect(chips.filter((c) => c.lines !== 1 || !c.inside)).toEqual([]);
+  },
+  60_000,
+);

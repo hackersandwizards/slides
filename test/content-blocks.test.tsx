@@ -155,17 +155,15 @@ describe("content blocks", () => {
 });
 
 describe("inline code", () => {
-  it("keeps inline code wrappable below md", () => {
-    const { container } = render(<p>{renderMarkdown("run `a b c`")}</p>);
-    const cls = container.querySelector("code")?.className.split(" ") ?? [];
-    expect(cls).not.toContain("whitespace-nowrap");
-  });
-
   const chip = (text: string) =>
     render(<p>{renderMarkdown(`\`${text}\``)}</p>).container.querySelector("code")?.className ?? "";
 
-  it("keeps a short name on one line", () => {
-    expect(chip("pr-diff-summarizer")).toContain("md:whitespace-nowrap");
+  // A chip wider than a paragraph still wraps inside itself, so it is never nowrap.
+  it("keeps a short chip whole at every width", () => {
+    for (const text of ["pr-diff-summarizer", "widths: [2, 1]"]) {
+      expect(chip(text).split(" ")).toEqual(expect.arrayContaining(["inline-block", "w-max"]));
+      expect(chip(text)).not.toContain("nowrap");
+    }
   });
 
   // In a narrow flow step `my-skill` split at its hyphen and `settings.json` mid-word.
