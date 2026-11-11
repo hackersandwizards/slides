@@ -5,6 +5,8 @@ import { claim } from "@hackersandwizards/brand/verbal.json";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
 
+const FRAMES = join(import.meta.dirname, "..", "..", "dist", "catalog", "print", "frames.html");
+
 let browser: Browser;
 let served: Served;
 beforeAll(async () => {
@@ -55,8 +57,7 @@ const linesOf = (page: Page, scope: string, starts: string, from: string, length
 it("breaks a statement's closing where the deck types \\n", async () => {
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 1080 });
-  const file = join(import.meta.dirname, "..", "..", "dist", "catalog", "print", "frames.html");
-  await page.goto(pathToFileURL(file).href, { waitUntil: "load" });
+  await page.goto(pathToFileURL(FRAMES).href, { waitUntil: "load" });
   const closing = "The plan comes first.";
   const text = await page.evaluate(
     (c) =>
@@ -74,8 +75,7 @@ it.each(["en", "de"] as const)(
   async (lang) => {
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
-    const file = join(import.meta.dirname, "..", "..", "dist", "catalog", "print", "frames.html");
-    await page.goto(pathToFileURL(file).href, { waitUntil: "load" });
+    await page.goto(pathToFileURL(FRAMES).href, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
     const rows = await page.evaluate(
       (built, word, text) => {
@@ -159,6 +159,69 @@ it.each(
     await page.close();
     expect(chips.length).toBeGreaterThan(0);
     expect(chips.filter((c) => c.lines !== 1 || !c.inside)).toEqual([]);
+  },
+  60_000,
+);
+
+// "87,3 %" broke before its unit beside a lone figure's label: in its row the figure may shrink,
+// and a spaced unit's space was a break. A figure taller than itself held on one line wrapped; one
+// kept on its line must still leave its label inside the row.
+/** Runs in the page: each figure of a numbers block or timeline, the heights it takes as set and
+ *  held on one line, and how far it or its row's contents stand past the row's right edge. */
+function figureHeights() {
+  return [
+    ...document.querySelectorAll<HTMLElement>(
+      ".slide-figure-row > :first-child, .slide-figure-cell > :first-child, .slide-timeline-figure",
+    ),
+  ].map((f) => {
+    const set = f.getBoundingClientRect().height;
+    f.style.setProperty("white-space", "nowrap", "important");
+    const one = f.getBoundingClientRect().height;
+    f.style.removeProperty("white-space");
+    const row = f.parentElement!;
+    const right = Math.max(...[...row.children].map((c) => c.getBoundingClientRect().right));
+    // A block figure's box spans its column, so its text past the box is read off its scroll width.
+    const over = Math.max(right - row.getBoundingClientRect().right, f.scrollWidth - f.clientWidth);
+    return { text: f.textContent, set, one, over };
+  });
+}
+const wrapped = (figures: ReturnType<typeof figureHeights>) =>
+  figures.filter(({ set, one, over }) => set > one + 1 || over > 1);
+
+it("keeps every figure on one line and inside its row in print", async () => {
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1920, height: 1080 });
+  await page.emulateMediaType("print");
+  await page.goto(pathToFileURL(FRAMES).href, { waitUntil: "load" });
+  await page.evaluate(() => document.fonts.ready);
+  const figures = await page.evaluate(figureHeights);
+  await page.close();
+  expect(figures.map((f) => f.text)).toContain("87,3 %");
+  expect(wrapped(figures)).toEqual([]);
+}, 60_000);
+
+it.each(
+  [
+    "content-slide/visual-numbers",
+    "content-slide/visual-numbers-one",
+    "content-slide/visual-numbers-six",
+    "grid-slide/replaced-by-numbers",
+    "content-slide/visual-timeline-segments",
+    "content-slide/visual-timeline-staggered",
+  ].flatMap((story) => [1920, 1440, 390].map((width) => [story, width] as const)),
+)(
+  "keeps every figure of %s on one line and inside its row at %i px",
+  async (story, width) => {
+    const page = await browser.newPage();
+    await page.setViewport({ width, height: width > 800 ? (width * 9) / 16 : 844 });
+    await page.goto(`${served.origin}/slides/stories/Types/${story}/`, {
+      waitUntil: "networkidle0",
+    });
+    await page.evaluate(() => document.fonts.ready);
+    const figures = await page.evaluate(figureHeights);
+    await page.close();
+    expect(figures.length).toBeGreaterThan(0);
+    expect(wrapped(figures)).toEqual([]);
   },
   60_000,
 );

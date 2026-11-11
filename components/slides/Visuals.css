@@ -4,6 +4,15 @@
   border-top: var(--slide-timeline-rule, none);
 }
 
+/* A timeline's figure, held on one line, is capped at every width at the size that fits its
+   column (`--slide-figure-fit`, in cqi): a stage of five columns leaves one about 300 px. */
+.slide-timeline-body {
+  container-type: inline-size;
+}
+.slide-timeline-figure {
+  font-size: min(var(--slide-figure-size), var(--slide-figure-fit, var(--slide-figure-size)));
+}
+
 @media screen and (width < 48rem) {
   /* A timeline turns upright: each stage a row, its dot on a line down the left and its title and
      text beside it, a duration in the gap to the next stage. Its columns left a title 85 px at

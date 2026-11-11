@@ -1425,6 +1425,32 @@ describe("slides-pptx draws what the slide shows", () => {
     expect(figure.xml).toContain('typeface="JetBrains Mono"');
   });
 
+  // On the web a lone "87,3 %" broke before its unit. Here each figure is sized to its column, so a
+  // five-digit one with its unit holds one line in every layout. Its box is one line high, so a
+  // wrapped figure would warn as text taller than its box.
+  it("keeps a five-digit figure with its unit on one line in every numbers layout", async () => {
+    type Numbers = Extract<ContentSlide["content"][number], { type: "numbers" }>;
+    const lone = (b: ContentSlide["content"][number]): b is Numbers =>
+      b.type === "numbers" && b.items.length === 1;
+    const one = slideCatalog.slides.find(
+      (x) => x.type === "content" && x.content.some(lone),
+    ) as ContentSlide;
+    const block = one.content.find(lone)!;
+    const slides = [1, 2, 4, 6].map((n) => ({
+      ...one,
+      content: [
+        {
+          ...block,
+          items: Array(n).fill({ ...block.items[0], value: "12.345 %" }),
+        },
+      ],
+    }));
+    const out = join(dir, "long-figures.pptx");
+    expect(await renderPptx({ name: "T", slides }, out, join(import.meta.dirname, ".."))).toEqual(
+      [],
+    );
+  });
+
   it("draws a team picture as the web lays it out: enabling columns side by side, subsystem octagons in one row, the platform teams in one dotted frame, roles beside a stream team's name", () => {
     const i = specimenAt(
       (x) =>

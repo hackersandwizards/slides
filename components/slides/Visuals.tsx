@@ -405,7 +405,10 @@ function EventBody({
   balance?: boolean;
 }) {
   return (
-    <div className={className}>
+    <div
+      className={`slide-timeline-body ${className}`}
+      style={event.figure ? figureFit([event.figure]) : undefined}
+    >
       {event.text && (
         <p className={`${CAPTION} text-text ${balance ? "text-balance" : ""}`}>
           {renderMarkdown(event.text)}
@@ -413,7 +416,7 @@ function EventBody({
       )}
       {event.figure && (
         <span
-          className={`${event.text ? "mt-8" : "mt-4"} block font-heading text-(length:--slide-figure-size) leading-(--slide-figure-leading) font-bold tracking-(--slide-figure-tracking) ${tone}`}
+          className={`slide-timeline-figure ${event.text ? "mt-8" : "mt-4"} block font-heading text-(length:--slide-figure-size) leading-(--slide-figure-leading) font-bold tracking-(--slide-figure-tracking) whitespace-nowrap ${tone}`}
         >
           <Figure value={event.figure} />
         </span>
@@ -776,13 +779,23 @@ function Bars({ block }: { block: Of<"bars"> }) {
 // which would outrank the phone rule in slides.css that stacks every grid into one column.
 const COLUMNS = "grid-cols-[repeat(var(--slide-cols),minmax(0,1fr))]";
 const columns = (n: number) => ({ "--slide-cols": n }) as CSSProperties;
-// The size, in % of its column's width, at which the widest figure fits on one line, which the
-// phone rule in Visuals.css caps the figures at: one character more where leading words stand, for
+// A figure's width in characters for its cap: one character more where leading words stand, for
 // their gap and their true size (0.55em), which a half undercounts.
+const fitChars = (value: string) => figureChars(value) + (leadingWords(value) ? 1 : 0);
+// The size, in % of its column's width, at which the widest figure fits on one line, which
+// Visuals.css caps the figures at: a timeline's at every width, the others on a phone.
 const figureFit = (values: string[]) => {
-  const chars = Math.max(...values.map((v) => figureChars(v) + (leadingWords(v) ? 1 : 0)));
+  const chars = Math.max(...values.map(fitChars));
   return { "--slide-figure-fit": `${+(100 / (chars * 0.6)).toFixed(2)}cqi` } as CSSProperties;
 };
+// A figure set whole on one line, as large as its block allows.
+const FIGURE = "font-heading leading-none font-bold tracking-tight whitespace-nowrap text-primary";
+// A lone figure's size on the stage, under the hero size: at most two thirds of its row (1100 of
+// about 1650 px at 1920, a rem 21.333px), so it stays on its line and its label keeps a column.
+const loneSize = (value: string) =>
+  ({
+    "--slide-figure-lone-size": `${+(1100 / (fitChars(value) * 0.6) / 21.333).toFixed(2)}rem`,
+  }) as CSSProperties;
 
 function Figure({ value, quiet }: { value: string; quiet?: boolean }) {
   const lead = leadingWords(value);
@@ -808,13 +821,18 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
     const item = block.items[0];
     return (
       <div className="w-full">
-        <div className="slide-figure-row flex items-center gap-16" style={figureFit([item.value])}>
+        <div
+          className="slide-figure-row flex flex-wrap items-center gap-16"
+          style={{ ...figureFit([item.value]), ...loneSize(item.value) }}
+        >
           <span
-            className={`font-heading text-(length:--slide-figure-hero) leading-none font-bold tracking-tight text-primary`}
+            className={`${FIGURE} text-[length:min(var(--slide-figure-hero),var(--slide-figure-lone-size))]`}
           >
             <Figure value={item.value} />
           </span>
-          <span className="max-w-(--slide-measure-figure-label) text-5xl leading-tight font-semibold text-balance text-text">
+          {/* The label takes the room beside the figure, and stands below it where its longest
+              word finds none. */}
+          <span className="max-w-(--slide-measure-figure-label) flex-1 basis-0 text-5xl leading-tight font-semibold text-balance text-text">
             {renderMarkdown(item.label)}
             {item.text && (
               <span className={`mt-4 block font-normal ${CAPTION} text-text-muted`}>
@@ -854,7 +872,7 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
         {block.items.map((item, i) => (
           <div key={i} className="slide-figure-cell flex flex-col">
             <span
-              className="font-heading text-(length:--slide-figure-grid-size) leading-none font-bold tracking-tight whitespace-nowrap text-primary"
+              className={`${FIGURE} text-(length:--slide-figure-grid-size)`}
               style={{ "--slide-figure-grid-size": `${size}rem` } as CSSProperties}
             >
               <Figure value={item.value} quiet={wrapped} />
