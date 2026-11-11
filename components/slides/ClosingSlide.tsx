@@ -53,12 +53,15 @@ function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
 
 const HUE = { primary: undefined, secondary: "purple" } as const;
 
-/** A line under the speakers: brand's claim or a quote, one step below the lead, so the claim holds
- *  one row in either language and the German slide keeps the English one's layout. */
-function ClosingLine({ children }: { children: ReactNode }) {
+/** A line under the speakers: brand's claim or a quote. The claim stands one step below the quote's
+ *  lead, so it holds one row in either language and the German slide keeps the English one's
+ *  layout; a quote is the slide's last word and keeps the lead. */
+function ClosingLine({ children, claim }: { children: ReactNode; claim?: boolean }) {
   return (
     <BlurFade delay={0.35} duration={0.4}>
-      <p className="mx-auto max-w-7xl px-(--slide-closing-side) text-center font-heading text-2xl leading-tight font-bold tracking-tight text-balance text-text-muted">
+      <p
+        className={`mx-auto max-w-7xl px-(--slide-closing-side) text-center font-heading ${claim ? "text-2xl" : "text-3xl"} leading-tight font-bold tracking-tight text-balance text-text-muted`}
+      >
         {children}
       </p>
     </BlurFade>
@@ -218,7 +221,7 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
         )}
 
         {claim && (
-          <ClosingLine>
+          <ClosingLine claim>
             {/* The word brand names for its claim in the brand colour. */}
             {claimParts(claim).map((part, i) =>
               i === 1 ? (

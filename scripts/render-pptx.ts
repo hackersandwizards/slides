@@ -4480,9 +4480,11 @@ const RENDER: {
       const tail: Para[] = [];
       const claim = closingClaim(d, deckLang(deck));
       if (claim) {
-        // The claim in muted ink, the word brand names for it in teal, as ClosingSlide draws it.
+        // The claim in muted ink, the word brand names for it in teal, one step below a quote's
+        // lead, as ClosingSlide draws it.
         const [before, word, after] = claimParts(claim);
         tail.push({
+          rel: PT.h4 / PT.lead,
           runs: [
             { text: before, options: { color: c.muted } },
             { text: word, options: { color: c.teal } },
@@ -4510,8 +4512,9 @@ const RENDER: {
         });
       }
       if (tail.length) {
-        const o: BoxOpts = { size: PT.h4, color: c.muted, line: 1.25, tracking: -0.025 };
-        const tw = Math.min(CW, 80 * REM);
+        const o: BoxOpts = { size: PT.lead, color: c.muted, line: 1.25, tracking: -0.025 };
+        // max-w-7xl less the web line's 5vw sides (--slide-closing-side), SIDE at the 1920 stage.
+        const tw = Math.min(CW, 80 * REM) - 2 * SIDE;
         const th = need(tail, c, tw, o);
         box(s, c, tail, (W - tw) / 2, y, tw, th, o);
         return y + th;
