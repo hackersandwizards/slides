@@ -1,183 +1,79 @@
 # @hackersandwizards/slides
 
-The hackers&wizards slide engine as one package: every slide type, the deck types, the
-slide stylesheet and the PDF renderer. `talks`, `trainer-hub` and `hycle-private`, all
-three on Astro, install it and keep only their decks.
+The hackers&wizards slide engine: every slide type as a React component, the deck types, the slide
+stylesheet, and the PDF and PowerPoint export. Three Astro sites install it and keep only their
+decks: `talks`, `trainer-hub` and `hycle-private`. The colours, faces and logos it draws come from
+[`@hackersandwizards/brand`](https://github.com/hackersandwizards/brand).
 
-Maintainer: Benedikt Stemmildt. The repo is public, its history included, so nothing goes in
-that the public may not see.
+| You want                                 | Go to                                                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| to see every slide type and its variants | [the catalog](https://hackersandwizards.github.io/slides/)                                       |
+| the slide type that fits what you say    | [when, do and don't per type](https://hackersandwizards.github.io/slides/catalog/print/#catalog) |
+| to export a deck as PowerPoint           | [slides-pptx](docs/commands.md#slides-pptx)                                                      |
+| to plan a deck: agenda, chapters, slides | [Deck structure](docs/deck-structure.md)                                                         |
+| to add the engine to an Astro site       | [Install](#install) and [Use](#use)                                                              |
+| to check decks in your gate              | [Commands](#commands)                                                                            |
+| to change the engine                     | [Work on the package](#work-on-the-package)                                                      |
 
-## Use it in another repo
+## Install
 
-Add the dependency in exactly this form, pinned to the newest tag
-(`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
-`@hackersandwizards/brand` v2.15.0 or later, whose static faces (`static-fonts.css`) with their metric-matched fallback faces, shared
-elements (only those a slide draws, each from `elements/<name>.css`), text
-base (`text-base.css`), slide pointer (`cursor.svg`) and small corner the stylesheet imports, whose
-list marker takes `--hw-zoom`, which the fit guard sets beside the `zoom` it shrinks a slide with, whose dialog draws no browser focus ring, whose `verbal.json` gives the closing its claim and every h&w logo its alt text, whose `--tint-callout` tokens `slides-pptx` mixes a callout from, whose `logos.json` gives each logo's width and height, and whose logos the
-slides draw through its exports, as `?url` imports the bundler serves: a deck names a mark as
-`/hw-lockup.svg`, `/hw-wordmark.svg` or their `-night` cuts. The specimen deck imports its images
-the same way, so a consumer copies nothing into `public/` for the engine. A page that draws
-another brand element, such as a catalog shell's rail and search, imports brand's `elements.css`
-itself: put it in the catalog's `css` beside `slides.css`. Both repos are public: Bun fetches the `git+https://` form through GitHub's tarball API without any GitHub access.
+Pin the newest tag, with brand beside it:
 
 ```json
-"@hackersandwizards/slides": "git+https://github.com/hackersandwizards/slides.git#v<version>"
+"@hackersandwizards/slides": "git+https://github.com/hackersandwizards/slides.git#v<version>",
+"@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v<version>"
 ```
 
-| Import                                                   | What                                                                                                                          |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `@hackersandwizards/slides/styles/slides.css`            | the slide stylesheet, Tailwind 4                                                                                              |
-| `@hackersandwizards/slides/styles/tokens.css`            | every value a slide draws, as custom properties                                                                               |
-| `@hackersandwizards/slides/types/slide`                  | `Presentation`, `Slide` and the blocks                                                                                        |
-| `@hackersandwizards/slides/components/slides/<Name>`     | a slide component                                                                                                             |
-| `@hackersandwizards/slides/lib/<module>`                 | a module `exports` in `package.json` names                                                                                    |
-| `@hackersandwizards/slides/components/slides/PrintSlide` | `PrintDeck`, a deck's print route, and `PrintSlide`, one printed page                                                         |
-| `@hackersandwizards/slides/components/deck/DeckView`     | `DeckView`, a deck page's one island: `presentation`, `index`, `basePath`, and `documentTitle` to keep the title on the slide |
-| `@hackersandwizards/slides/components/deck/DeckTile`     | `DeckTile`, one deck on a deck list, brand's linked card; React, which an Astro page renders without `client:`                |
-| `@hackersandwizards/slides/scripts/render-pdf`           | `renderPdf` for an export script                                                                                              |
-| `@hackersandwizards/slides/specimen/slide-catalog`       | the fictional specimen deck, and `specimenImages`, its images' URLs by file name                                              |
-| `@hackersandwizards/slides/catalog/SlideFrame.astro`     | a story's frame in a catalog on scaffolding's shell: `decorators: [{ component: SlideFrame, props: { component } }]`          |
+The engine needs `@hackersandwizards/brand` v2.15.0 or later. Both repositories are public, so Bun
+fetches them without GitHub access. `git ls-remote --tags <repository URL>` lists the tags.
 
-`SlideFrame` takes `part: true` for a part, `css`, the slides' stylesheet linked on the story page
-(a URL with the site's base), and `light`, which keeps that page light.
+Requirements: Bun 1.3 or later, Astro with `@astrojs/react`, Tailwind 4 with `@tailwindcss/vite`,
+and the peers React 19 with `react-dom`, motion, lucide-react, recharts and shiki. `renderPdf` and
+`slides-density` need `puppeteer`, `slides-pptx` needs `pptxgenjs` and `jszip`.
 
-A deck page's root carries brand's `hw-focus-ring` class, as in `<html class="hw-focus-ring">`.
-It gives every control on the page the brand's focus ring.
+## Use
 
-Under the dev server `DeckView` offers edit mode, which writes a text clicked on into the deck file
-through the consumer's mount of `lib/deck-edit-server`: E starts it, in a tab opened once with
-`?edit` on a deck page's address.
+The package ships TypeScript source: an Astro site lists it in `vite.ssr.noExternal` and sets
+`vite.optimizeDeps` to `slidesOptimizeDeps()` from `lib/vite`. A deck is a `Presentation` from
+`types/slide`. A deck page imports `styles/slides.css` and renders `DeckView` from
+`components/deck/DeckView`; a print route renders `PrintDeck` from `components/slides/PrintSlide`.
+Each path is under `@hackersandwizards/slides/`. A working config, deck, deck page and print route:
+[docs/setup.md](docs/setup.md#a-first-deck), with every import.
 
-The command `slides-pins` belongs in each consumer's gate, after scaffolding's shared steps: it
-fails when `package.json` pins no brand, which bun lets pass because the brand peer is optional, or
-a brand below the minimum above.
-That the install matches each pin, scaffolding's install and `coupling` steps check.
+## Commands
 
-The command `slides-density [--site <dir> | --serve "<command>"] <print-url or path> ...` belongs in each consumer's gate:
-it renders each deck's print route and fails on a slide the fit guard shrinks below 0.8, and lists
-those below 0.9, a heading it shrinks so that its widest word fits included. It fails too on a content slide holding only one or two short bullets, a regular slide drawn as
-one included, which a `statement` carries (`bulletsAsStatement` in `lib/slide-utils`), and on a slide the fit guard
-never fitted, as on a print route that did not hydrate. `--site` serves a built
-site's folder for the run, such as `dist`; `--serve` starts the consumer's server through
-scaffolding's `serve`, which sets `HOST` and `PORT` for it, and stops it afterwards. With either, a
-path such as `/<deck>/print` is read against that server.
+- `slides-pins`: fails when `package.json` pins no brand, or one below the minimum.
+- `slides-density`: fails on a slide shrunk below 0.8 to fit, or one a statement should carry.
+- `slides-usage`: counts a deck's slides per slide type, variant and block, and lints the decks.
+- `slides-pptx`: writes a deck as a native PowerPoint file in the h&w design.
 
-The command `slides-usage [--out <file> [--check]] <deck.json|-> ...` prints, as JSON, how many
-slides of those decks use each entry of the catalogue's print page, and which entries none uses, for
-a consumer to publish; `--out` writes it to the file instead, and `--check` fails where the file
-differs, naming what to run instead: `bun run usage` where the check ran as `bun run usage --check`
-on a script `"usage": "… | slides-usage --out <file> -"`. A slide drawn through a replaced form counts for the entry that replaces it. It lints the
-decks too, failing on a slide no entry draws, on a field that changes nothing the slide draws (such
-as `numberFrom` on cards that are not numbered, or a `sectionTheme` that colours no rule or pill),
-and on a deck that names its `lang` neither on itself nor on a title slide. Each
-argument, `-` for standard input, holds one deck or a JSON array of decks, so a consumer whose
-decks are code pipes them all in at once; no deck at all fails. An error names a deck of an array
-by its `slug`, where the consumer sets one, else its `name`, and by its place in the array.
-
-The command `slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict] [--embed-fonts]` writes a deck as a native
-PowerPoint file in the h&w design: text as text boxes, tables as tables, trend and bar charts as
-charts, diagrams as shapes, and only the deck's own images and the h&w logos as pictures. A chart's
-labels and card, and the fill under a trend's measured part, are shapes beside the chart, so the
-fill does not follow data someone edits in the chart in PowerPoint. The deck
-is the `Presentation` as JSON, `-` reads it from stdin. `--assets` is the folder a deck's `/…`
-image paths resolve against, `./public` by default; a path to an existing file, as Bun gives the
-specimen's imported images, is read as it stands. It sets each line at the slide's own line height and breaks headings
-where the web balances them, measured with the brand fonts' metrics. It warns on what it cannot
-draw as the slide does, such as a missing image, blocks taller than the slide, or text taller or
-wider than its box, crossing the shape it stands in or off the slide, and `--strict` makes a
-warning exit 1, for a consumer's gate; an argument it does not know exits 1 too. It needs `pptxgenjs` and `jszip`, optional
-peer dependencies a consumer installs only to run it. In `talks`:
-
-```sh
-bun add -d pptxgenjs jszip
-bun scripts/slides-json.ts <slug> > deck.json && bun run slides-pptx deck.json <slug>.pptx
-```
-
-The file names its fonts, Inter and JetBrains Mono, each with its kind (sans, monospace), so a
-machine without them shows a font of the same kind. `--embed-fonts` puts both into the file as
-PowerPoint stores them, an Embedded OpenType part per face for regular and bold, built from brand's
-static woff2 subsets and cut to the deck's characters and the Latin-1 range: about 50 kB. It needs
-`fonteditor-core`, a further optional peer. PowerPoint for Windows and for Mac reads embedded
-fonts; LibreOffice 7.4 ignored them and substituted, and the parts are not yet proven in PowerPoint,
-so installing both fonts stays the sure way to the h&w look.
-It shows a client's deck in the h&w design only; a deck on a client's template needs that
-consumer's own exporter. The PowerPoint parser pulls in `image-size`, whose old version carries
-advisories, so a consumer adds `"overrides": { "image-size": "2.1.0" }` as this package does.
-
-A slide opens fully revealed on a URL carrying `?revealed`, such as `/<deck>/12?revealed`, as it does
-on a backward arrival: for a catalog tile, a screenshot or a check of the finished slide. It shows
-no presenter hints there. A slide whose steps replace each other, such as a guidance comparison,
-opens at its last step; only print shows them all.
-A story frame sets it on its own page, as `SlideFrame.astro` does. In a frame the plain
-`slide-direction` key no longer reaches the slide, since each frame keeps its own. The print route needs none: `PrintProvider` opens every slide full.
-
-A deck's language is its own `lang`, a deck without a title slide's one place to name it, else
-its first title slide's, else English, which the build warns about. A consumer's deck and print
-layouts set `<html lang={deckLang(presentation)}>` with `deckLang` from
-`@hackersandwizards/slides/lib/slide-utils`, so screen readers and hyphenation read the
-deck's language; `slides-pptx` marks its text with it. The screen route passes it to
-`SlideContainer` as `lang`, English when left out, which `PrintSlide` reads from the deck itself: a
-contact closing shows brand's claim in that language unless it sets `claim: false`, and a title
-slide without a `lang` of its own joins its speakers and words its QR code's alt text in it.
-
-The package ships TypeScript source. Let the build transpile it: Astro `vite.ssr.noExternal`, vitest
-`test.server.deps.inline`. An Astro app sets `vite.optimizeDeps` to `slidesOptimizeDeps()` from
-`@hackersandwizards/slides/lib/vite`: the engine served unbundled, the packages its islands import
-named up front.
+A consumer's gate runs `slides-pins` and `slides-density` after its build. The last three print
+their arguments with `--help`; what each checks: [docs/commands.md](docs/commands.md). A PDF comes
+from `renderPdf` in `scripts/render-pdf`, which a consumer's export script calls.
 
 ## Deck structure
 
-A deck that runs an hour or longer with three or more chapters shows an `agenda` slide before its
-first chapter, listing the chapters in order. Each chapter opens with a `transition` slide: its
-`headline` is the chapter's agenda item, its `preText` the chapter's position in the agenda, such
-as `"3 / 9"`. A break, lunch, a live demo or the thanks is not a chapter. A timetable is an `agenda`
-whose items carry a `when` ("09:00"), and so are a pitch's next steps (a due date as `when`, the
-owner as `text`, the decision needed as `footer`). A deck whose agenda is a map that returns before
-each part (`phased-pills`) keeps that instead.
+Agenda, chapters, statement and activity slides, retired types and sketches:
+[docs/deck-structure.md](docs/deck-structure.md).
 
-One or two short statements under a headline are a `statement` slide, never a content slide of
-bullets, which leaves the slide empty around them, and `slides-density` fails on such a slide. Three
-are one too where they lead up to one line. Three parallel points stay bullets: only the deck's
-author can tell the two apart, so the check leaves three alone. The section label is the `kicker`,
-the headline the `lines`, the statements that lead up the `subtitle` (one per line) and the one they
-lead to the `closing`.
+## Documentation
 
-An exercise, a live demo and a debrief are an `activity` slide (`kind`): the steps, watch points or
-questions, the exact instruction as `prompt`, and the timebox, mode and outcome in one card. On
-screen a countdown stands under the items, set to the first number in `duration` (else 2): a click on the
-time starts, pauses and, at zero, restarts it; minus and plus change it by a minute. The speaker
-window's frame counts along; paper and PowerPoint draw no timer.
-
-`evolution`, `dual-pill-overview`, `overview` and `media` still render, as a `process` slide with
-`loop: false`, a `roadmap` whose columns carry `phases`, a `phased-pills` slide and a `content`
-slide with an `image`, `video` or `gallery` block; new slides use those (`aliasTypes` in
-`lib/slide-components.ts`). A gallery names each picture by its `caption` and sets its `tags` only
-for what the pictures share. `deprecated` beside it lists every prop and value a deck
-should no longer write, so a consumer's story coverage can skip them.
-A chapter divider is a `transition`; `deep-dive-divider` marks a deep-dive part only. Every slide of a
-deep-dive part, the `deep-dive-divider`, a slide whose `sectionTheme` is `deepdive` and a pill map whose
-phases are, stands on night (`isDeepDive` in `lib/slide-utils`); nothing else marks the part.
-
-A concept slide whose words claim a mechanism or a relationship in up to four short cards, and
-which has no diagram of the engine, may carry a generated marker sketch beside them: the
-`image-and-grid` block takes the sketch as its image, marked `sketch: true` so it stands without a
-frame, and the cards as its items, words unchanged.
-`bun run brand-slide-sketch-prompt` prints the prompt. No other slide gets
-a sketch: on a title, agenda, transition, statement, comparison, process, data or closing slide, and
-on a concept slide of paragraphs, the slide reads better without one.
+- [Set up a consumer](docs/setup.md): a first deck, what the engine takes from brand, every import.
+- [Commands](docs/commands.md): what each command checks and writes, with its flags.
+- [Deck structure](docs/deck-structure.md): which slide carries what in a deck.
 
 ## Work on the package
 
-```sh
-bun install      # also points the git hooks at .githooks/
-bun run dev      # the catalog at http://127.0.0.1:4335/
-bun run build    # the catalog to dist/, as https://hackersandwizards.github.io/slides/ publishes it
-bun run check    # the gate: scaffolding's shared steps, then pins, colours, copies and retired lines, the print pages, brand elements, list markers
-```
+- `bun install`: also points the git hooks at `.githooks/`.
+- `bun run dev`: the catalog at `http://127.0.0.1:4335/`.
+- `bun run check`: the gate.
+- `bun run build`: the catalog to `dist/`, as GitHub Pages publishes it.
 
-A release raises `version` in `package.json`, commits and pushes `main` first
-(`git push origin main`). Only once that push has landed does it tag `v<version>` to match and push
-the tag (`git tag v<version> && git push origin v<version>`): a tag pushed with a rejected `main`
-points at a commit `main` never holds. Consumers then raise the tag in their dependency line. The
-rest: [CLAUDE.md](CLAUDE.md).
+A release raises `version`, pushes `main` and then tags `v<version>`. The rules for a change, the
+layout, the gate and the release order: [CLAUDE.md](CLAUDE.md).
+
+## Maintainer and licence
+
+Benedikt Stemmildt maintains it. The repository is public, its history included, so nothing goes
+in that the public may not see. Vulnerabilities: [SECURITY.md](SECURITY.md). Licence: PolyForm
+Strict 1.0.0 with a permission for trainers h&w commissions, [LICENSE](LICENSE).

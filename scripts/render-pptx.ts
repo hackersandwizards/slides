@@ -5310,6 +5310,14 @@ export async function renderPptx(
 
 if (import.meta.main) {
   const args = process.argv.slice(2);
+  const usage = [
+    "Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict] [--embed-fonts]",
+    "The deck is a Presentation as JSON; --assets is the directory a slide's /image path resolves in, ./public by default; a path to an existing file is read as it stands. --strict exits 1 on any warning, text past its box included, for a gate; --embed-fonts puts the brand faces into the file, for PowerPoint on a machine without them (needs fonteditor-core).",
+  ].join("\n");
+  if (args.includes("--help")) {
+    console.log(usage);
+    process.exit(0);
+  }
   const strict = args.includes("--strict");
   if (strict) args.splice(args.indexOf("--strict"), 1);
   const embed = args.includes("--embed-fonts");
@@ -5319,12 +5327,7 @@ if (import.meta.main) {
   const assets = resolve(dir ?? "");
   const [input, out, ...rest] = args;
   if (!input || !out || !out.endsWith(".pptx") || !dir || rest.length) {
-    console.error(
-      "Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict] [--embed-fonts]",
-    );
-    console.error(
-      "The deck is a Presentation as JSON; --assets is the directory a slide's /image path resolves in, ./public by default; a path to an existing file is read as it stands. --strict exits 1 on any warning, text past its box included, for a gate; --embed-fonts puts the brand faces into the file, for PowerPoint on a machine without them (needs fonteditor-core).",
-    );
+    console.error(usage);
     process.exit(1);
   }
   const deck = JSON.parse(readFileSync(input === "-" ? 0 : input, "utf8")) as Presentation;

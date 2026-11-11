@@ -152,14 +152,22 @@ function rerun(out: string, paths: string[]) {
 
 if (import.meta.main) {
   const args = process.argv.slice(2);
+  const usage = [
+    "usage: slides-usage [--out <file> [--check]] <deck.json|-> ...   (each a deck or an array of decks)",
+    "  -             read the decks from standard input",
+    "  --out <file>  write the JSON to the file instead of printing it",
+    "  --check       fail where the file differs, naming the command to run instead",
+  ].join("\n");
+  if (args.includes("--help")) {
+    console.log(usage);
+    process.exit(0);
+  }
   const at = args.indexOf("--out");
   const out = at < 0 ? undefined : args.splice(at, 2)[1];
   const check = args.includes("--check");
   const paths = args.filter((arg) => arg !== "--check");
   if (!paths.length || ((at >= 0 || check) && !out)) {
-    console.error(
-      "usage: slides-usage [--out <file> [--check]] <deck.json|-> ...   (each a deck or an array of decks)",
-    );
+    console.error(usage);
     process.exit(2);
   }
   // A file, or `-` for standard input, holds one deck or an array of decks, so a consumer whose

@@ -109,6 +109,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
     under the `/slides` base the story pages load their assets from.
   - The routes `/slides/specimen/` and `/slides/design-system/` forward old links, anchor kept, to the
     print page and the catalog.
+- `docs/`: what a consumer reads beside the README: `setup.md`, `commands.md` and
+  `deck-structure.md`; `agent-work/` holds dated reports.
 - `test/`: the engine's unit tests.
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
@@ -148,8 +150,11 @@ preview`), then `check:elements`
 
 ## Releasing a change
 
-1. Change the engine here, `bun run check` green, raise `version`, then commit, push and tag in the
-   order the README's Release section gives.
+1. Change the engine here, `bun run check` green, raise `version`, then commit, push and tag.
+   A release raises `version` in `package.json`, commits and pushes `main` first
+   (`git push origin main`). Only once that push has landed does it tag `v<version>` to match and push
+   the tag (`git tag v<version> && git push origin v<version>`): a tag pushed with a rejected `main`
+   points at a commit `main` never holds. Consumers then raise the tag in their dependency line.
 2. Brief a session in each consumer to raise the tag in its `package.json`, `bun install` and run
    its gate. The regression
    decks are this repo's `specimen/slide-catalog.ts`, which talks shows, and

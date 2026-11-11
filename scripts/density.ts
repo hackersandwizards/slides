@@ -31,7 +31,18 @@ const UNFITTED =
 const STATEMENT =
   "one or two short bullets leave the slide empty: make it the statement slide bulletsAsStatement in lib/slide-utils returns";
 
+const USAGE = [
+  'usage: slides-density --site <dir> | --serve "<command>" </deck/print> ...',
+  "       slides-density <print-url> ...",
+  "  --site <dir>         serve a built site's folder, such as dist, for the run",
+  "  --serve \"<command>\"  start the consumer's server through scaffolding's serve, which sets HOST and PORT",
+  "With either, a path such as /<deck>/print is read against that server.",
+].join("\n");
 const args = process.argv.slice(2);
+if (args.includes("--help")) {
+  console.log(USAGE);
+  process.exit(0);
+}
 const option = (name: string) => {
   const at = args.indexOf(name);
   return at < 0 ? undefined : args.splice(at, 2)[1];
@@ -42,9 +53,7 @@ const serve = option("--serve");
 // measure whatever answers there.
 const absolute = (arg: string) => URL.canParse(arg);
 if (!args.length || (site && serve) || ((site || serve) && args.some(absolute))) {
-  console.error(
-    'usage: slides-density --site <dir> | --serve "<command>" </deck/print> ...\n       slides-density <print-url> ...',
-  );
+  console.error(USAGE);
   process.exit(2);
 }
 

@@ -52,7 +52,7 @@ export function arrivedBackwards(): boolean {
   return typeof window !== "undefined" && readStored("session", directionKey()) === "back";
 }
 
-/** Whether the URL carries `?revealed`, which the README documents for catalogs and checks: the
+/** Whether the URL carries `?revealed`, which docs/setup.md documents for catalogs and checks: the
  *  slide opens full and shows no presenter hints. The deck's other windows are not told. */
 export function revealedUrl(): boolean {
   return typeof window !== "undefined" && new URLSearchParams(location.search).has("revealed");
