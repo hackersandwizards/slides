@@ -25,6 +25,15 @@
   z-index: 40;
 }
 
+/* The server's slides stand unfitted until hydration runs the fit guard, which shrinks an over-full
+   one: shown, the first slide shifted by CLS 0.097 at 1350x940. They wait hidden where the guard
+   runs; on a phone it never does, and they show at once. */
+@media screen and (width >= 48rem) {
+  [data-print-unfitted] {
+    visibility: hidden;
+  }
+}
+
 @media print {
   .print-slide {
     break-inside: avoid;

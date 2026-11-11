@@ -77,7 +77,7 @@ export function Linkedin({ className }: { className?: string }) {
   );
 }
 
-export const iconMap: Record<string, LucideIcon> = {
+export const iconMap = {
   analysis: BarChart3,
   "arrow-right-left": ArrowRightLeft,
   "bar-chart": BarChart3,
@@ -132,6 +132,9 @@ export const iconMap: Record<string, LucideIcon> = {
   workflow: Workflow,
   wrench: Wrench,
   zap: Zap,
-};
+} satisfies Record<string, LucideIcon>;
+
+/** An icon a deck may name: a name outside the map would draw nothing. */
+export type IconName = keyof typeof iconMap;
 
 export type { LucideIcon };

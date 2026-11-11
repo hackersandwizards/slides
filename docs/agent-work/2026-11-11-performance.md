@@ -46,10 +46,10 @@ the build from the load, both 9a04bab (the 09.11. build) and f32b1dc were served
 - **The frame got faster and transfers less.** It now also loads the static Inter 500 and 700 its
   slide draws in, which the 9a04bab build never fetched. Blocking every woff2 saved 150 ms on the
   frame and 300 ms on the story page.
-- **The story page is about 1.6 s slower** while it transfers less. Its LCP element is the
-  catalog shell's header logo in both builds. The cause is not yet explained: brand, scaffolding
-  and the catalog's `dashboardCss` all changed in that window. Item `work-story-page-lcp` holds
-  the control still to run.
+- **The story page read about 1.6 s slower** while it transfers less. Its LCP element is the
+  catalog shell's header logo in both builds. The control in `2026-11-11-figure-review.md` shows
+  Lighthouse's simulated LCP swinging between 1.8 and 7.5 s on both builds with the story frame,
+  and holding 1.8 to 1.9 s without it: no slower page.
 - Home transfers 496 KB against 363 KB on 09.11.: it now loads the shell's Inter Variable and the
   slide's static faces, 137 KB together, at the same score and LCP.
 

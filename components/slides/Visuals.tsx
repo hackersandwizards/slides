@@ -1,7 +1,7 @@
 import Image from "../ui/image";
 import { useContext, type CSSProperties, type ReactNode } from "react";
 import type { FlowFrame, VisualBlock } from "../../types/slide";
-import { iconMap } from "../../lib/icons";
+import { type IconName, iconMap } from "../../lib/icons";
 import { useHighlightLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
 import {
@@ -40,7 +40,7 @@ function Source({ text, gap = "mt-10" }: { text?: string; gap?: string }) {
   return <p className={`${gap} text-2xl text-text-muted`}>{renderMarkdown(text)}</p>;
 }
 
-function Icon({ name, className }: { name?: string; className?: string }) {
+function Icon({ name, className }: { name?: IconName; className?: string }) {
   const Glyph = name ? iconMap[name] : undefined;
   return Glyph ? <Glyph className={className} strokeWidth={2.75} aria-hidden /> : null;
 }

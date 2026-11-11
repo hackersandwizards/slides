@@ -1,3 +1,5 @@
+import type { IconName } from "../lib/icons";
+
 export type SectionTheme = "primary" | "secondary" | "accent" | "warning" | "success" | "deepdive";
 
 /** A slide's ground: the brand page, or the page tinted 7% towards a section's hue. */
@@ -172,7 +174,7 @@ export type VisualBlock =
       steps: {
         title: string;
         text?: string;
-        icon?: string;
+        icon?: IconName;
         /** A step whose own name is a state, such as Red or Green in TDD, takes that colour. */
         tone?: "red" | "green";
         /** A line under the step, such as "You are here". */
@@ -272,7 +274,7 @@ export type VisualBlock =
       /** Parallel points as cards, each the item's own text under an icon, or a number where the
        *  items are steps or questions. `items` on a card is a list under its text. */
       type: "cards";
-      items: { title?: string; text?: string; icon?: string; items?: string[] }[];
+      items: { title?: string; text?: string; icon?: IconName; items?: string[] }[];
       numbered?: boolean;
       highlight?: number;
       /** The first card's number, where one set of numbered cards runs across two slides. */
@@ -310,7 +312,7 @@ export interface ContentSection {
   items?: string[];
   text?: string;
   link?: { url: string; label: string };
-  icon?: string;
+  icon?: IconName;
 }
 
 export interface ProfileInfo {
@@ -387,7 +389,7 @@ export interface EvolutionSlide extends Grounded {
 export interface GridCard {
   title: string;
   description?: string;
-  icon?: string;
+  icon?: IconName;
   value?: string;
   label?: string;
   highlight?: boolean;
@@ -575,7 +577,7 @@ export interface OverviewSlide {
 export interface ProcessNode {
   title: string;
   description: string;
-  icon?: string;
+  icon?: IconName;
   /** Text in the step's tile instead of its icon or number, such as "10x"; where one label is
    *  longer than four characters, every label stands above its title. */
   label?: string;

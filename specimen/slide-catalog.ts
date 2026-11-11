@@ -2024,12 +2024,13 @@ const slides: Slide[] = [
             segment: "2 weeks",
             title: "Measured",
             text: "Against the team's metric: time per product text before and after.",
-            figure: "-90%",
+            figure: "-90 %",
           },
         ],
       },
     ],
-    notes: "visual blocks: timeline with segment labels and a figure on an event, three columns.",
+    notes:
+      "visual blocks: timeline with segment labels and a figure on an event, three columns, the figure's unit spaced.",
   },
   {
     type: "content",
@@ -2245,6 +2246,48 @@ const slides: Slide[] = [
     event: "Delivery Days 2026 · 14. Mai · Rotterdam",
     qr: { src: specimenImages["qr-example.png"], href: "https://example.com/harness" },
     notes: "title: a German talk's opening, the speakers joined in German.",
+  },
+  {
+    type: "content",
+    headline: "Seven digits and a spaced unit",
+    content: [
+      {
+        type: "numbers",
+        items: [{ value: "1.234.567 €", label: "revenue", text: "In the pilot's first year" }],
+        source: "Fictional figures",
+      },
+    ],
+    notes:
+      "visual blocks: one figure of seven digits and a spaced unit, sized to leave its label a column.",
+  },
+  {
+    type: "content",
+    headline: "One figure and one long word",
+    content: [
+      {
+        type: "numbers",
+        items: [{ value: "87,3 %", label: "Mitarbeiterzufriedenheit" }],
+        source: "Fictional figures",
+      },
+    ],
+    notes:
+      "visual blocks: one figure whose label's one word is too long to stand beside it, so the label stands below.",
+  },
+  {
+    type: "content",
+    headline: "Five digits and a unit in each column",
+    content: [
+      {
+        type: "numbers",
+        items: [
+          { value: "12.345 €", label: "saved per team" },
+          { value: "-12.345 h", label: "waiting time" },
+          { value: "up to 12.345 %", label: "more deploys" },
+        ],
+        source: "Fictional figures",
+      },
+    ],
+    notes: "visual blocks: numbers of five digits with a spaced unit, a minus and leading words.",
   },
 ];
 

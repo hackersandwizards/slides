@@ -110,20 +110,15 @@ any warning.
 
 ## Left open
 
-- The long values, the label below its figure and the spaced timeline figure were checked with
-  temporary specimen edits, and the PDF from a static scratch page without the fit guard: no gate
-  holds a specimen slide with any of them.
-- The stage size and the label below its figure had no blind review.
+Closed in v3.7.0 (`2026-11-11-figure-review.md`): the gate holds the long values, the label below
+its figure and a spaced timeline figure, and notices a timeline figure without its cap; a blind
+review kept the stage size and the label below its figure; a phone label of one long word stays
+inside its row; `slides-pptx` writes a timeline figure's minus. Still open:
+
 - `/simplify` proposes capping the lone figure in `cqi` on the stage too, as the timeline, instead of
   the rem size. It would put size containment on the numbers row at every width, which e5291b2
   kept off the stage.
-- The page test misses a timeline figure without its cap: the specimen's unspaced figures fit their
-  columns without one, as a build of v3.6.2 that lost its container class showed.
-- On a phone a label of one word wider than the screen, such as "Mitarbeiterzufriedenheit" at
-  387 px in a 350 px row, runs past it; v3.6.0 does the same.
 - The lone figure's stage size, like `numbersGrid`, writes the stage's 1650 px row and its rem of
   21.333 px as numbers rather than reading them from brand.
 - `slides-pptx` draws a lone figure as a one-column grid at 7rem with its label below, where the
   web sets it beside its label.
-- `slides-pptx` writes a timeline figure as typed, "-90%" with a hyphen, where the web draws a minus
-  sign.

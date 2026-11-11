@@ -2,6 +2,7 @@ import type { Presentation } from "../../types/slide";
 import { slideComponents } from "../../lib/slide-components";
 import { cornerMark, logoPlaces, resolveSlideLogo } from "../../lib/logo";
 import { PrintProvider } from "../../lib/print-context";
+import { useMounted } from "../../lib/use-mounted";
 import { bulletsAsStatement, deckLang, pageLabel, regularAsContent } from "../../lib/slide-utils";
 import { BrandStrip, CornerStart, DeckLogo, PageCounter } from "./SlideContainer";
 import { DeckLang, DeckNight } from "./SlideShell";
@@ -51,11 +52,15 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
  *  own root, `usePrintMode()` reads false everywhere, and the export silently loses every animated
  *  and progressively revealed element while the page count stays correct. */
 export function PrintDeck({ presentation }: { presentation: Presentation }) {
+  // Until hydration has run the fit guard, the server's slides wait hidden (PrintSlide.css).
+  const unfitted = !useMounted();
   return (
     <PrintProvider>
-      {presentation.slides.map((_, index) => (
-        <PrintSlide key={index} presentation={presentation} index={index} />
-      ))}
+      <div className="contents" data-print-unfitted={unfitted ? "" : undefined}>
+        {presentation.slides.map((_, index) => (
+          <PrintSlide key={index} presentation={presentation} index={index} />
+        ))}
+      </div>
     </PrintProvider>
   );
 }

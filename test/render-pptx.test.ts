@@ -1425,6 +1425,17 @@ describe("slides-pptx draws what the slide shows", () => {
     expect(figure.xml).toContain('typeface="JetBrains Mono"');
   });
 
+  // A timeline figure went out as typed, "-90 %" with a hyphen, where the web draws a minus.
+  it("writes a timeline figure's minus as the web's", () => {
+    const i = specimenAt(
+      (x) =>
+        x.type === "content" &&
+        x.content.some((b) => b.type === "timeline" && b.events.some((e) => e.figure === "-90 %")),
+    );
+    expect(slideXml[i]).toContain("<a:t>−90 %</a:t>");
+    expect(slideXml[i]).not.toContain("-90");
+  });
+
   // On the web a lone "87,3 %" broke before its unit. Here each figure is sized to its column, so a
   // five-digit one with its unit holds one line in every layout. Its box is one line high, so a
   // wrapped figure would warn as text taller than its box.

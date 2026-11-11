@@ -96,6 +96,7 @@
      capped at the size that fits its column on one line (`--slide-figure-fit`, in cqi). */
   .slide-figure-row {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: flex-start;
     gap: calc(var(--spacing) * 4);
   }
@@ -105,6 +106,13 @@
   }
   .slide-figure-row > :first-child {
     font-size: min(var(--slide-figure-hero), var(--slide-figure-fit, var(--slide-figure-hero)));
+  }
+  /* A label's word wider than the screen, "Mitarbeiterzufriedenheit" 387 px in a 350 px row,
+     breaks inside the row rather than running past it: one line of the column, unwrapped, is the
+     row's width, which the label stretches to. */
+  .slide-figure-row > :last-child {
+    align-self: stretch;
+    hyphens: auto;
   }
   .slide-figure-cell > :first-child {
     font-size: min(

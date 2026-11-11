@@ -56,3 +56,6 @@ export const VisualBarsFarApart = state("content", 48, "ContentSlide");
 export const BlockQuote = state("content", 49, "ContentSlide");
 export const Centered = state("content", 50, "ContentSlide");
 export const VisualTimelineMiddle = state("content", 51, "ContentSlide");
+export const NumbersLongFigure = state("content", 52, "ContentSlide");
+export const NumbersLabelBelow = state("content", 53, "ContentSlide");
+export const NumbersFiveDigits = state("content", 54, "ContentSlide");

@@ -859,7 +859,7 @@ function eventParas(
     ...(e.figure
       ? [
           {
-            runs: [{ text: e.figure, options: { color: hi ? c.teal : c.ink } }],
+            runs: [{ text: minus(e.figure), options: { color: hi ? c.teal : c.ink } }],
             mono: true,
             bold: true,
             rel: PT.s6 / PT.base,
