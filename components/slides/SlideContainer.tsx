@@ -11,7 +11,6 @@ import mono700 from "@hackersandwizards/brand/fonts/jetbrains-mono-latin-700-nor
 import Image from "../ui/image";
 import type { LogoConfig, SlideLogo } from "../../types/slide";
 import { HW_LOGO } from "../../lib/logo";
-import { logoSize } from "../../lib/brand-logos";
 import { DeckLang, DeckNight } from "./SlideShell";
 
 interface Props {
@@ -59,18 +58,8 @@ export function HwWordmark({ mark = "lockup" }: { mark?: CornerMark }) {
       "h-(--slide-corner-wordmark) w-auto shrink-0 my-[calc((var(--slide-footer-mark)-var(--slide-corner-wordmark))/2)]";
     return (
       <span className="pointer-events-none inline-flex items-center">
-        <Image
-          src="/hw-wordmark.svg"
-          alt=""
-          {...logoSize["wordmark.svg"]}
-          className={`hw-wordmark ${className}`}
-        />
-        <Image
-          src="/hw-wordmark-night.svg"
-          alt=""
-          {...logoSize["wordmark-night.svg"]}
-          className={`hw-wordmark-night ${className}`}
-        />
+        <Image src="/hw-wordmark.svg" alt="" className={`hw-wordmark ${className}`} />
+        <Image src="/hw-wordmark-night.svg" alt="" className={`hw-wordmark-night ${className}`} />
       </span>
     );
   }
@@ -79,13 +68,11 @@ export function HwWordmark({ mark = "lockup" }: { mark?: CornerMark }) {
       <Image
         src="/hw-lockup.svg"
         alt=""
-        {...logoSize["lockup.svg"]}
         className="hw-wordmark my-[calc((var(--slide-footer-mark)-var(--slide-corner-lockup))/2)] h-(--slide-corner-lockup) w-auto shrink-0 translate-y-(--logo-wizard-lift)"
       />
       <Image
         src="/hw-lockup-night.svg"
         alt=""
-        {...logoSize["lockup-night.svg"]}
         className="hw-wordmark-night my-[calc((var(--slide-footer-mark)-var(--slide-corner-lockup-night))/2)] h-(--slide-corner-lockup-night) w-auto shrink-0 translate-y-(--logo-wizard-lift)"
       />
     </span>

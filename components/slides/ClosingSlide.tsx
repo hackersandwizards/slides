@@ -2,7 +2,6 @@
 
 import { useContext, type ReactNode } from "react";
 import Image from "../ui/image";
-import { logoSize } from "../../lib/brand-logos";
 import Mail from "lucide-react/icons/mail";
 import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
@@ -166,14 +165,12 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                 <Image
                   src="/hw-lockup.svg"
                   alt="hackers&wizards"
-                  {...logoSize["lockup.svg"]}
                   className="hw-wordmark h-(--slide-closing-lockup)"
                   style={{ width: "auto" }}
                 />
                 <Image
                   src="/hw-lockup-night.svg"
                   alt="hackers&wizards"
-                  {...logoSize["lockup-night.svg"]}
                   className="hw-wordmark-night h-(--slide-closing-lockup-night)"
                   style={{ width: "auto" }}
                 />
