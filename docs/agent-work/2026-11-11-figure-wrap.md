@@ -1,8 +1,8 @@
 # A lone figure broke before its unit, 11.11.2026
 
 The catalog state "Visual numbers one" drew "87,3 %" as "87,3" with "%" alone on the line below.
-No commit or test chose that wrap. Slides v3.6.1 keeps a figure and its unit on one line, in a
-numbers block and in a timeline.
+No commit or test chose that wrap. Slides v3.6.1 and v3.6.2 keep a figure and its unit on one
+line, in a numbers block and in a timeline.
 
 ![Before: "%" on a second line](2026-11-11-figure-wrap/before-1920.jpg)
 
@@ -34,10 +34,12 @@ column on a phone and wraps. The specimen writes it unspaced, so the catalog nev
   small enough to take two thirds of its row, so a long one cannot push its label past the slide.
   "87,3 %" stays at 13rem (957 px at 1920), as before.
 - A lone figure's label takes the room left beside the figure, and stands below it where its
-  longest word finds none: "Mitarbeiterzufriedenheit" beside "87,3 %" would have pushed the row
-  past the slide's edge once the figure could no longer wrap.
+  longest word finds none. Without that, "Mitarbeiterzufriedenheit" beside "87,3 %" ran 70 px
+  past its row into the slide's margin once the figure could no longer wrap.
 - A timeline figure gets, at every width, the `cqi` cap the numbers figures have on a phone. With
-  five stages a column is 270 px at 1920: "−90 %" lands at 90 px there, 250 px of text.
+  five stages a column is 270 px at 1920: "−90 %" lands at 90 px there, 250 px of text. Only an
+  event body holding a figure is a size container (v3.6.2): on a centred slide, v3.6.1 made every
+  body one and drew a timeline's columns 8 px narrower (561 against 569 px at 1920).
 
 Where each length lands, measured on the built story, one line each:
 
@@ -46,11 +48,13 @@ Where each length lands, measured on the built story, one line each:
 | "87,3 %"             | 277 px, label 686 px           | 97.2 px |
 | "12.345 %"           | 229 px (10.7rem), label 589 px | 72.9 px |
 | "1.234.567 €"        | 167 px (7.8rem), label 589 px  | 53.0 px |
-| "up to 12.345.678 €" | 127 px, label 563 px           | 37.6 px |
-| timeline "−90 %"     | 171 px, unchanged              | 95.3 px |
+| "up to 12.345.678 €" | 118 px, label 634 px           | 37.6 px |
+| "−90 %", segments    | 171 px, unchanged              | 95.3 px |
 
 Without the stage size, "1.234.567 €" beside the label "Umsatz" ran 1754 px of figure into a
-1728 px row, past the slide's edge, where the fit guard, which shrinks only for height, never acts.
+1728 px row and pushed its label past it, where the fit guard, which shrinks only for height,
+never acts. The two thirds are a judgement, not a measurement: they keep "87,3 %" at 13rem and leave
+a label about 590 px.
 The four numbers stories and three timeline stories, shot at 1920 and some at 1440 and 390, are
 pixel-identical before and after these two sizes and the label change, apart from two shots that
 also differ between two shots of one build.
@@ -106,11 +110,19 @@ any warning.
 
 ## Left open
 
+- The long values, the label below its figure and the spaced timeline figure were checked with
+  temporary specimen edits, and the PDF from a static scratch page without the fit guard: no gate
+  holds a specimen slide with any of them.
+- The stage size and the label below its figure had no blind review.
+- `/simplify` proposes capping the lone figure in `cqi` on the stage too, as the timeline, instead of
+  the rem size. It would put size containment on the numbers row at every width, which e5291b2
+  kept off the stage.
+- The page test misses a timeline figure without its cap: the specimen's unspaced figures fit their
+  columns without one, as a build of v3.6.2 that lost its container class showed.
 - On a phone a label of one word wider than the screen, such as "Mitarbeiterzufriedenheit" at
   387 px in a 350 px row, runs past it; v3.6.0 does the same.
 - The lone figure's stage size, like `numbersGrid`, writes the stage's 1650 px row and its rem of
   21.333 px as numbers rather than reading them from brand.
-
 - `slides-pptx` draws a lone figure as a one-column grid at 7rem with its label below, where the
   web sets it beside its label.
 - `slides-pptx` writes a timeline figure as typed, "-90%" with a hyphen, where the web draws a minus

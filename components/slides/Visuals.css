@@ -5,8 +5,9 @@
 }
 
 /* A timeline's figure, held on one line, is capped at every width at the size that fits its
-   column (`--slide-figure-fit`, in cqi): a stage of five columns leaves one about 300 px. */
-.slide-timeline-body {
+   column (`--slide-figure-fit`, in cqi): five stages leave a column 270 px at 1920. Only a body
+   holding a figure is a container, which counts its text out of a centred timeline's width. */
+.slide-timeline-body:has(> .slide-timeline-figure) {
   container-type: inline-size;
 }
 .slide-timeline-figure {

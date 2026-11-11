@@ -309,7 +309,9 @@ describe("merged card and number shapes", () => {
       variant: "stats",
       cards: [{ title: "Teams", value: "12", description: "Across sites" }],
     });
-    expect(c.querySelector(".slide-figure-row > :first-child")?.textContent).toBe("12");
+    const figure = c.querySelector(".slide-figure-row > :first-child");
+    expect(figure?.textContent).toBe("12");
+    expect(figure?.className).toContain("--slide-figure-hero");
     expect(c.textContent).toContain("Across sites");
   });
 

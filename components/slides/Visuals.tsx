@@ -832,7 +832,7 @@ function Numbers({ block }: { block: Of<"numbers"> }) {
           </span>
           {/* The label takes the room beside the figure, and stands below it where its longest
               word finds none. */}
-          <span className="max-w-(--slide-measure-figure-label) flex-1 basis-0 text-5xl leading-tight font-semibold text-balance text-text">
+          <span className="max-w-(--slide-measure-figure-label) flex-1 text-5xl leading-tight font-semibold text-balance text-text">
             {renderMarkdown(item.label)}
             {item.text && (
               <span className={`mt-4 block font-normal ${CAPTION} text-text-muted`}>
