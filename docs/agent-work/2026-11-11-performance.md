@@ -30,8 +30,28 @@ Scores are performance / accessibility / best practices / SEO, of the median run
 
 The story page's and the print page's LCP gaps are noise: before and after transfer the same bytes,
 and each range overlaps the other build's median. Simulated LCP moves in steps of about 300 ms
-here, as on 09.11. Story pages and frames read 0.4 to 1.8 s slower than on 09.11. in both builds;
-this run measured under a load up to seven times the core count and did not look into it.
+here, as on 09.11.
+
+## Since 09.11.: the story page slower, the frame not
+
+The story page and frame read 3.5 to 3.8 s here, against 1.8 to 3.1 s on 09.11. To separate
+the build from the load, both 9a04bab (the 09.11. build) and f32b1dc were served uncompressed by
+`scripts/serve-dir.ts` and run three times each, interleaved, at loads of 18 to 33:
+
+| Page                          | 9a04bab LCP, KB        | f32b1dc LCP, KB       |
+| ----------------------------- | ---------------------- | --------------------- |
+| Story page, title-slide state | 4877 (4728–5929), 1219 | 6531 (6530–6680), 992 |
+| Story frame, same state       | 6456 (6455–6528), 939  | 5852 (5778–5854), 841 |
+
+- **The frame got faster and transfers less.** It now also loads the static Inter 500 and 700 its
+  slide draws in, which the 9a04bab build never fetched. Blocking every woff2 saved 150 ms on the
+  frame and 300 ms on the story page.
+- **The story page is about 1.6 s slower** while it transfers less. Its LCP element is the
+  catalog shell's header logo in both builds. The cause is not yet explained: brand, scaffolding
+  and the catalog's `dashboardCss` all changed in that window. Item `work-story-page-lcp` holds
+  the control still to run.
+- Home transfers 496 KB against 363 KB on 09.11.: it now loads the shell's Inter Variable and the
+  slide's static faces, 137 KB together, at the same score and LCP.
 
 ## `bun run preview`
 
