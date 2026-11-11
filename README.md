@@ -43,7 +43,8 @@ Each path is under `@hackersandwizards/slides/`. A working config, deck, deck pa
 ## Commands
 
 - `slides-pins`: fails when `package.json` pins no brand, or one below the minimum.
-- `slides-density`: fails on a slide shrunk below 0.8 to fit, or one a statement should carry.
+- `slides-density`: fails on a slide shrunk below 0.8 to fit, one a statement should carry, or one
+  the fit guard never fitted.
 - `slides-usage`: counts a deck's slides per slide type, variant and block, and lints the decks.
 - `slides-pptx`: writes a deck as a native PowerPoint file in the h&w design.
 
