@@ -376,6 +376,18 @@ const EXCEPTION_SHOWN: Record<string, () => ReactNode> = {
       h(DashedFrame, { tone: "primary", className: "w-64 p-6 text-lg" }, "primary"),
       h(DashedFrame, { tone: "secondary", active: true, className: "w-64 p-6 text-lg" }, "active"),
     ),
+  // PresenterView's notes textarea, its classes copied: the presenter view has no story to link.
+  "notes-field": () =>
+    onNight(
+      h("textarea", {
+        "aria-label": "Speaker notes text",
+        readOnly: true,
+        rows: 3,
+        defaultValue: "A fictional note to the speaker.",
+        className:
+          "w-full resize-none rounded-brand bg-night-2 px-5 py-4 text-lg leading-relaxed text-night-ink outline-2 outline-amber",
+      }),
+    ),
 };
 const exceptionLinks: Record<string, string[]> = {
   "callout-status": ["frames.html"],
