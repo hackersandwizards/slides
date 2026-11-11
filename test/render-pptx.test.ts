@@ -269,10 +269,10 @@ describe("slides-pptx on the specimen deck", () => {
     const drawn: number[] = [];
     for (let i = 1; probe.file(`ppt/slides/slide${i}.xml`); i++) {
       const xml = await probe.file(`ppt/slides/slide${i}.xml`)!.async("string");
-      for (const [, cx, cy] of xml.matchAll(
-        /descr="hackers&amp;wizards"[\s\S]*?<a:ext cx="(\d+)" cy="(\d+)"/g,
+      for (const [, alt, cx, cy] of xml.matchAll(
+        /descr="([^"]*)"[\s\S]*?<a:ext cx="(\d+)" cy="(\d+)"/g,
       ))
-        drawn.push(+cx / +cy);
+        if (unescape(alt) === verbal.name.company) drawn.push(+cx / +cy);
     }
     expect(drawn.length).toBeGreaterThan(0);
     for (const r of drawn) expect(Math.min(...cuts.map((c) => Math.abs(c - r)))).toBeLessThan(0.01);
@@ -345,14 +345,14 @@ describe("slides-pptx on the specimen deck", () => {
       ].map(([, alt, x, h]) => ({ alt: unescape(alt), x: +x / 914400, h: +h / 914400 }));
     const [one, two, three] = [await pics(1), await pics(2), await pics(3)];
     expect(one.find((p) => p.alt === "Partner")!.x).toBeGreaterThan(10);
-    expect(one.find((p) => p.alt === "hackers&wizards")!.x).toBeLessThan(1);
+    expect(one.find((p) => p.alt === verbal.name.company)!.x).toBeLessThan(1);
     // `h-9` at `bottom-6 left-6` on the print route, whose rem is 21.333 px.
     const other = two.find((p) => p.alt === "Other")!;
     expect(other.x).toBeCloseTo((1.5 * 21.333) / 144, 3);
     expect(other.h).toBeCloseTo((2.25 * 21.333) / 144, 3);
     expect(two.find((p) => p.alt === "Partner")!.x).toBeGreaterThan(10);
-    expect(two.some((p) => p.alt === "hackers&wizards")).toBe(false);
-    expect(three.map((p) => p.alt)).toEqual(["hackers&wizards"]);
+    expect(two.some((p) => p.alt === verbal.name.company)).toBe(false);
+    expect(three.map((p) => p.alt)).toEqual([verbal.name.company]);
   });
 
   // The centred contact closing printed the whole LinkedIn address where the web prints its path

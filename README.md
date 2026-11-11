@@ -14,7 +14,7 @@ Add the dependency in exactly this form, pinned to the newest tag
 `@hackersandwizards/brand` v2.15.0 or later, whose static faces (`static-fonts.css`) with their metric-matched fallback faces, shared
 elements (only those a slide draws, each from `elements/<name>.css`), text
 base (`text-base.css`), slide pointer (`cursor.svg`) and small corner the stylesheet imports, whose
-list marker takes `--hw-zoom`, which the fit guard sets beside the `zoom` it shrinks a slide with, whose dialog draws no browser focus ring, whose `verbal.json` gives the closing its claim, whose `--tint-callout` tokens `slides-pptx` mixes a callout from, whose `logos.json` gives each logo's width and height, and whose logos the
+list marker takes `--hw-zoom`, which the fit guard sets beside the `zoom` it shrinks a slide with, whose dialog draws no browser focus ring, whose `verbal.json` gives the closing its claim and every h&w logo its alt text, whose `--tint-callout` tokens `slides-pptx` mixes a callout from, whose `logos.json` gives each logo's width and height, and whose logos the
 slides draw through its exports, as `?url` imports the bundler serves: a deck names a mark as
 `/hw-lockup.svg`, `/hw-wordmark.svg` or their `-night` cuts. The specimen deck imports its images
 the same way, so a consumer copies nothing into `public/` for the engine. A page that draws
