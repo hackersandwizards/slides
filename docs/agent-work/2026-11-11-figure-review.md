@@ -24,10 +24,12 @@ Slides: "87,3 %" with a two-line label (short), "1.234.567 €" with the label "
 two-line label (five, a scratch slide). Each was built from the catalog and shot on its story page
 at 1920 and 1440, on day and on night (the deck's `brand-dark` theme, which no live deck uses yet).
 
-On a phone all four versions draw alike: the phone rule stacks the figure and caps it, whatever the
-stage does. Their shots match pixel for pixel, apart from 6 pixels one colour level apart, the size
-of the difference between two shots of one build. So no reviewer saw a phone. A and B draw the
-short slide alike, so it was scored A against C only.
+On a phone A, B and C draw alike: the phone rule stacks the figure and caps it, whatever the stage
+does. Their shots match pixel for pixel, apart from 6 pixels one colour level apart on one pair. Two
+shots of one build matched exactly at 390 and differed by one pixel at 1440, so that pair is near
+the shot noise but not measured against it. No reviewer saw a phone. D differs on a phone, since
+its 22rem basis acts on the label's height in the phone's column; it was not adopted. A and B draw
+the short slide alike, so it was scored A against C only.
 
 B pushes the label off the slide beside the long figure, 362 px past its row at 1920, and runs the
 long word 70 px past it. The gate fails both, so B could only serve as a reference.
@@ -232,13 +234,19 @@ Chrome for Testing 157, interleaved, at loads of 17 to 84 on 16 cores:
 | today, no `fonts.css` in `dashboardCss` | 1506 to 6236 (6 runs)                             |
 | today, story frame emptied              | 1804 to 1877 (4 runs)                             |
 
-Every build that loads the story frame swings between about 1.8 and 7.5 s. With the frame's `src`
-set to `about:blank` in that one page, today's build holds 1.8 to 1.9 s in each run. Lighthouse's
-simulation counts every request that starts before the observed LCP paint (the header logo, about
-80 ms). Whether the frame's 209 KB script, 182 KB stylesheet and faces start before or after that
-paint decides the result. Measured directly instead (puppeteer, CPU four times slower, Fast 4G),
-today's story page paints its LCP at 572 ms against 9a04bab's 648. Brand's `fonts.css` in
-`dashboardCss` is not the cause.
+Every build that loads the story frame swings between about 1.5 and 7.5 s. With the frame's `src`
+set to `about:blank` in that one page, today's build holds 1.8 to 1.9 s in each run: the controlled
+finding. Across all 31 saved runs the simulated LCP follows what the page requested before the
+observed LCP paint (the header logo, 60 to 180 ms): 116 to 173 KB gave 1.5 to 1.9 s, 904 to
+1156 KB gave 4.9 to 7.5 s. Lighthouse's simulation counts those requests toward LCP, and whether
+the frame's 209 KB script, 182 KB stylesheet and faces start before that paint decides the result.
+The runs without `fonts.css` are the exception, 463 KB at 1.6 to 2.3 s. Measured directly instead
+(puppeteer, CPU four times slower, Fast 4G), today's story page paints its LCP at 572 ms against
+9a04bab's 648. Brand's `fonts.css` in `dashboardCss` is not the cause.
+
+Not explained: 9a04bab read 2.6 to 2.7 s in six runs, then 4.9 to 7.5 s after the server restarted,
+with 904 to 1156 KB requested before the paint against 305 to 693 KB before. What moved the
+requests ahead of the paint is not measured.
 
 Lighthouse's `--blocked-url-patterns` did not block the frame: its requests answered 200.
 
