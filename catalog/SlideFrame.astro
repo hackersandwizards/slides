@@ -111,9 +111,13 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
   </div>
 )}
 
-<style>
+<style is:global>
+  /* Unscoped, as brand writes them: scoped, every selector carried the component's attribute and
+     the frame's style passed Astro's 4 KB inline limit (4108 bytes with brand v2.15.0). */
   @import "@hackersandwizards/brand/elements/card.css";
+</style>
 
+<style>
   /* A deck's page stays light behind a light slide when the catalog is dark. */
   .slide-story {
     position: fixed;

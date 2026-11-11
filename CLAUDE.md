@@ -29,7 +29,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `components/ui/`: effects and `image.tsx`, the engine's image.
 - `lib/`: hooks, navigation, presenter sync, the edit mode, themes and section styles.
   `lib/brand-logos.ts` is the h&w marks as `?url` imports of brand's exports, which `Image` draws
-  for the root paths a deck names them by (`HW_LOGO`, `/hw-lockup.svg`).
+  for the root paths a deck names them by (`HW_LOGO`, `/hw-lockup.svg`), and their sizes from brand's
+  `logos.json`.
   The engine draws a plain `<img>` and moves with `history` inside one island, as every consumer,
   all on Astro, needs.
   `lib/deck-edit-mode.tsx` is the edit mode, which a tab opened with `?edit` starts with E,
@@ -132,8 +133,8 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
   (the tests in `test/pages/` over the build: the print pages, the story pages and `bun run
 preview`), then `check:elements`
   (`brand-elements` over the print pages, `brand-elements.json`), then `check:markers` (`brand-markers` over `frames.html` and every
-  story page at 1920, the stage width, and at 1280, served from a `slides` link to `dist/` in `node_modules/.cache`,
-  since the pages load their assets from the `/slides` base). No hook runs it:
+  story page at 1920, the stage width, and at 1280, with `dist/` served at `--site-at /slides`,
+  since the pages load their assets from that base). No hook runs it:
   `.githooks/pre-commit` runs `bun run check:staged`, scaffolding's `check-staged` (`gitleaks`,
   coupling and confidential over the staged changes, `prettier --check` and `eslint` on the staged
   files, `admin-check` when an item is staged); `commit-msg` runs `check-confidential` on the message; the hooks are scaffolding's skeleton. `bun install` points `core.hooksPath` at `.githooks/`.

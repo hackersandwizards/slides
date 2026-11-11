@@ -1,6 +1,6 @@
 {
   "name": "@hackersandwizards/slides",
-  "version": "3.4.1",
+  "version": "3.5.0",
   "private": true,
   "description": "The hackers&wizards slide engine: slide components, deck types, the slide stylesheet and the PDF renderer, shared by talks, trainer-hub and hycle-private.",
   "license": "SEE LICENSE IN LICENSE",
@@ -69,7 +69,7 @@
     "catalog": "bun run dev --open /",
     "build": "check-lock astro build --root catalog",
     "preview": "ASTRO_PREVIEW_BACKGROUND=1 astro preview --root catalog",
-    "check:markers": "mkdir -p node_modules/.cache/slides-markers && ln -sfn \"$PWD/dist\" node_modules/.cache/slides-markers/slides && for w in 1920 1280; do brand-markers --width $w --site node_modules/.cache/slides-markers --catalog dist --catalog-at /slides /slides/catalog/print/frames.html || exit 1; done"
+    "check:markers": "for w in 1920 1280; do brand-markers --width $w --site dist --site-at /slides --catalog dist --catalog-at /slides /slides/catalog/print/frames.html || exit 1; done"
   },
   "peerDependencies": {
     "@hackersandwizards/brand": "*",
@@ -120,9 +120,9 @@
   },
   "devDependencies": {
     "@astrojs/react": "7.1.4",
-    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.27.0",
-    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v2.14.0",
-    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.16.0",
+    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.27.1",
+    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v2.15.0",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.17.1",
     "@tailwindcss/node": "4.3.5",
     "@tailwindcss/oxide": "4.3.5",
     "@tailwindcss/vite": "4.3.5",

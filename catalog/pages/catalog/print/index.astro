@@ -1,6 +1,7 @@
 ---
 import { brandHref } from "../../../brand-urls";
 import catalogs from "@hackersandwizards/brand/catalogs.json";
+import logos from "@hackersandwizards/brand/logos/logos.json";
 import {
   entries,
   exceptionSections,
@@ -214,15 +215,13 @@ const jobLinks = (Object.keys(JOBS) as Job[])
             class="hw-header-logo"
             src={`${brandHref}/logos/lockup-screen.svg`}
             alt=""
-            width="8042"
-            height="1489"
+            {...logos.sizes["lockup-screen.svg"]}
           />
           <img
             class="hw-header-logo-night"
             src={`${brandHref}/logos/lockup-screen-night.svg`}
             alt=""
-            width="8196"
-            height="1641"
+            {...logos.sizes["lockup-screen-night.svg"]}
           />
           <span class="hw-header-product">Slides</span>
         </a>

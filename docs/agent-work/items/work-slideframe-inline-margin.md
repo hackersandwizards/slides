@@ -5,18 +5,18 @@ priority: 3
 order: 640
 owner: Agent (slides session)
 area: software-engineering
-evidence: "brand v2.13.0's card.css took SlideFrame's built style to 4105 bytes on 11.11.2026; test/pages/catalog-pages.test.ts failed; three declarations removed in 6b6e414 bring it back under Astro's 4096-byte inline limit, by about 17 bytes, estimated from the minified declarations removed"
+evidence: "brand v2.15.0's card.css (var(--white-wash) where lightningcss wrote #ffffff12) took SlideFrame's scoped style to 4108 bytes on 11.11.2026 and test/pages/catalog-pages.test.ts failed; with card.css imported unscoped the frame's chunk measures 3610 bytes (4093 before the raise, both read off the built dashboard page's inline style)"
 ---
 
-# SlideFrame's style stays inline only by a few bytes
+# SlideFrame's style stays inline by about 480 bytes
 
 Keep the story frame's style inline on a state's page whatever brand's `card.css` grows to.
 
-`catalog/SlideFrame.astro` imports brand's `elements/card.css` into its own `<style>`. Astro inlines
-a stylesheet under 4 KB; above it every state's page waits on a stylesheet of its own before the
-header's logo, the LCP element, paints. Brand v2.13.0 added a few bytes to `card.css` and took the
-style to 4105 bytes. This repository's gate caught it (`check:pages`), but a consumer's catalog
-that renders the exported `SlideFrame` has no such test.
+`catalog/SlideFrame.astro` imports brand's `elements/card.css` unscoped (`<style is:global>`) and
+its own rules scoped. Astro inlines a stylesheet under 4 KB; above it every state's page waits on a
+stylesheet of its own before the header's logo, the LCP element, paints. The unscoped import bought
+about 480 bytes, not a guarantee. This repository's gate catches a crossing (`check:pages`), but a
+consumer's catalog that renders the exported `SlideFrame` has no such test.
 
 Options to weigh: `build.inlineStylesheets: "always"` in `catalog/astro.config.ts` and in the
 README's guidance for a consumer's catalog; moving the frame's rules into the catalog's shared
