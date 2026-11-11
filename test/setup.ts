@@ -39,8 +39,7 @@ HTMLDialogElement.prototype.showModal = function () {
 // and the chart's label measure take a null context.
 HTMLCanvasElement.prototype.getContext = (() => null) as never;
 
-// jsdom under vitest does not always expose localStorage, which the slide hints and the question
-// slide's votes keep.
+// jsdom under vitest does not always expose localStorage.
 if (!("localStorage" in window) || window.localStorage == null) {
   const store = new Map<string, string>();
   vi.stubGlobal("localStorage", {

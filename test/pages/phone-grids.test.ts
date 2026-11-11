@@ -373,7 +373,7 @@ it("wraps annotated code at most once a line on a phone", async () => {
 // and the plot keeps that height.
 it("keeps trend-marked's plot tall on a phone, its note below the chart", async () => {
   const page = await open("chart-slide/trend-marked", 390);
-  await page.waitForSelector(".recharts-surface");
+  await page.waitForSelector(".recharts-xAxis-tick-labels text");
   const { plot, note, labels, dot } = await page.evaluate(() => {
     const box = (e: Element | null | undefined) => e?.getBoundingClientRect().toJSON() as DOMRect;
     const frame = document.querySelector("[data-chart-plot]")!;
@@ -388,6 +388,7 @@ it("keeps trend-marked's plot tall on a phone, its note below the chart", async 
   });
   await page.close();
   expect(plot!.height).toBeGreaterThanOrEqual(296);
+  expect(labels.length).toBeGreaterThan(0);
   expect(note!.top).toBeGreaterThan(Math.max(...labels.map((l) => l.bottom)));
   expect(dot).toBeDefined();
   expect(

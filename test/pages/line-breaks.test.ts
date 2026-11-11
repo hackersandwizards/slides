@@ -164,8 +164,7 @@ it.each(
 );
 
 // "87,3 %" broke before its unit beside a lone figure's label: in its row the figure may shrink,
-// and a spaced unit's space was a break. A figure taller than itself held on one line wrapped; one
-// kept on its line must still leave its label inside the row.
+// and a spaced unit's space was a break.
 /** Runs in the page: each figure of a numbers block or timeline, the heights it takes as set and
  *  held on one line, and how far it or its row's contents stand past the row's right edge. */
 function figureHeights() {

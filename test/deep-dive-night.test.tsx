@@ -24,7 +24,7 @@ describe("deep-dive slides stand on night", () => {
       const Component = slideComponents[slide.type];
       const { container } = render(<Component slide={slide} />);
       const shell = container.querySelector(".slide-night");
-      // The class alone left the brand elements on day: they turn on these two (review 11.11.).
+      // The class alone left the brand elements on day: they turn on these two.
       if (shell) {
         expect(shell.getAttribute("data-theme")).toBe("dark");
         expect(shell.hasAttribute("data-hw-night")).toBe(true);

@@ -35,4 +35,4 @@ The question is direction: whether figures derived from client decks may appear 
 Pages site. The recommended option keeps them inside the company and still shows them on the print
 page to whoever runs the catalog locally.
 
-Where the files sit under the first option: talks and trainer-hub at the repository root, hycle-private at `talks/slides-usage.json`, where it already is. The catalog reads them when started with `SLIDES_USAGE=<path>[,<path>] bun run dev`.
+Where the files sit under the first option: talks and trainer-hub at the repository root, hycle-private at `talks/slides-usage.json`, where it already is. The catalog would read them when started with `SLIDES_USAGE=<path>[,<path>] bun run dev`.

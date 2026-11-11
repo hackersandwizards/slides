@@ -2,7 +2,6 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// The README lists each command in one line and leaves its arguments to `--help`.
 describe("--help", () => {
   for (const [script, flags] of [
     ["density.ts", ["--site", "--serve"]],

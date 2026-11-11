@@ -29,13 +29,18 @@ describe("slides-pins", () => {
     : minor
       ? `${major}.${minor - 1}.0`
       : `${major - 1}.0.0`;
-  // Later by number, earlier as text (2.100.0 against 2.20.0, say): a string comparison fails it.
-  const later = `${major}.1${"0".repeat(String(minor).length)}.0`;
+  // Later by number, earlier as text (2.100.0 against 2.20.0, or 10.0.0 against 3.0.0): a string
+  // comparison fails it.
+  const later = [
+    `${major}.1${"0".repeat(String(minor).length)}.0`,
+    `1${"0".repeat(String(major).length)}.0.0`,
+  ].find((v) => v < minimum);
+  it("builds a later tag that sorts before the minimum as text", () => expect(later).toBeDefined());
 
   it("passes the README's minimum, a later tag and a range starting there", () => {
     for (const pin of [
       tag(minimum),
-      tag(later),
+      tag(later!),
       tag("3.0.0"),
       `^${minimum}`,
       `~${minimum}`,

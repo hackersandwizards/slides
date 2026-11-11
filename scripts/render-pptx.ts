@@ -55,6 +55,7 @@ import {
   teamTypesDrawn,
   companiesWithLogo,
   TWO_COLUMN_TONES,
+  STAGE,
   WORDS,
   type SideTone,
 } from "../lib/slide-utils";
@@ -113,7 +114,7 @@ function hex(name: keyof typeof tokens): string {
   return value.slice(1).toUpperCase();
 }
 
-/** A brand percentage token as a fraction: `--tint-callout` is `10%`, 0.1. */
+/** A brand percentage token as a fraction, `10%` as 0.1. */
 function share(name: keyof typeof tokens): number {
   const value = tokens[name];
   if (!/^\d+(\.\d+)?%$/.test(value)) throw new Error(`brand token ${name} is not a percentage`);
@@ -164,8 +165,7 @@ function palette(dark: boolean) {
     greenTint: mix(dark ? hex("--color-green") : hex("--color-green-dark"), bg, 0.1),
     redTint: mix(dark ? hex("--color-red-night") : hex("--color-red"), bg, 0.08),
     amberTint: mix(hex("--color-amber"), bg, 0.12),
-    // brand's hw-callout, teal or data-hue="purple": the hue at --tint-callout on white, its night
-    // tone at --tint-callout-night on night, no line.
+    // brand's hw-callout, teal or data-hue="purple", without a line.
     callout: (hue: string) =>
       dark
         ? mix(hue, bg, share("--tint-callout-night"))
@@ -801,9 +801,10 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   const { corner, start } = logoPlaces(resolveSlideLogo(deck, index));
   // `h-9`, as the slide draws a deck's logos.
   const logoH = 2.25 * REM;
-  let x = right;
-  // A closing that stands the h&w lockup in its centre column leaves the corner empty.
+  // A closing that stands the h&w lockup in its centre column hides the corner, counter included,
+  // as ClosingSlide.css does.
   if (!closingCentred) {
+    let x: number;
     if (corner.src === HW_LOGO.src) {
       const [path, ratio] = brandCut(`${mark}${ctx.dark ? "-night" : ""}`);
       const h = mark === "lockup" ? lockupH : markH;
@@ -813,17 +814,17 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
       const at = { alt: corner.alt, align: "right" as const };
       x = picture(s, ctx, corner.src, right - 2.4, baseY - logoH / 2, 2.4, logoH, at).x;
     }
-  }
-  const page = pageLabel(deck.slides, index);
-  if (page) {
-    box(s, c, { runs: [{ text: page }] }, x - 1.8, baseY - 0.14, 1.6, 0.28, {
-      size: PT.label,
-      mono: true,
-      bold: true,
-      color: c.muted,
-      align: "right",
-      valign: "middle",
-    });
+    const page = pageLabel(deck.slides, index);
+    if (page) {
+      box(s, c, { runs: [{ text: page }] }, x - 1.8, baseY - 0.14, 1.6, 0.28, {
+        size: PT.label,
+        mono: true,
+        bold: true,
+        color: c.muted,
+        align: "right",
+        valign: "middle",
+      });
+    }
   }
   // `bottom-6 left-6 gap-5`, the slide's start row.
   let left = 1.5 * REM;
@@ -2074,8 +2075,8 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
   }
 }
 
-/** A rem of the print route's stage, 21.333 px at 1920, in inches. */
-const REM = 21.333 / 144;
+/** A rem of the print route's stage, in inches. */
+const REM = STAGE.rem / 144;
 
 /** The rule and its gap before a quote's words: brand's 2 px and 1.25 rem on the 1920 stage. */
 const QUOTE_INDENT = 2 / 144 + 1.25 * REM;

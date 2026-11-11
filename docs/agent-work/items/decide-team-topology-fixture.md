@@ -45,4 +45,4 @@ The recommendation follows from the strings carrying no client name: replacing t
 at no cost to anyone, while a rewrite moves every release tag the three consumers pin. Source: the
 whole-repository review of 10.11.2026, finding F03, with F14 for the older history entries.
 
-The rewrite in the second option could also drop the older commits the review lists under F14, which name a client-named theme class and two of talks' deck slugs. Commit 547329a records that Benedikt decided on 10.11. to leave the history for the two client project names this fixture carried until 8c99e8c.
+The rewrite in the second option could also drop the older commits the review lists under F14, which name a client-named theme class and two of talks' deck slugs.

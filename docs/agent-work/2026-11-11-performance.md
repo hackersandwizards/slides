@@ -1,40 +1,43 @@
 # Performance, 11.11.2026
 
-The polish run since 28beb99 changed the logo row, the fit guard's `data-fitted` mark and the
-activity timer, and none of the catalog pages got slower. Every page transfers the same bytes
-before and after. Across the whole build, the gzipped JavaScript grew by 79 bytes, from 412,189 to
-412,268 over 88 files. The catalog is a static site (GitHub Pages), so there is no endpoint to time.
+The evening polish run since c3178ed changed the start row's h&w logo size, the first-slide hints,
+the figure sizing constants and the pptx and density scripts, and none of the catalog pages got
+slower. Across the build, the gzipped JavaScript grew by 34 bytes, from 412,913 to 412,947 over 88
+files. The catalog is a static site (GitHub Pages), so there is no endpoint to time.
 
 ## Method
 
-- Lighthouse 13.6.0, mobile preset, Chrome for Testing 156, headless with a fresh profile per run.
-- Both builds served by a scratch Bun server under `/slides`, with gzip and `max-age=600`, as Pages
-  serves them. Before: a detached worktree on c5cba59, built with `astro build --root catalog`.
-  After: the build of f32b1dc that the gate made.
-- Three rounds, each running every page on both builds back to back, before and after interleaved,
-  median. Each round first waited up to five minutes for the 1-minute load to fall to the 16 cores.
-- Other sessions' test runs held the load high: 49 to 111 in round 1, 21 to 32 in round 2, 15 to
-  18 in round 3. Each before and after pair ran under the same load.
+- Before: a detached worktree on 1847348, built with `bun run build`. After: the working tree with
+  the run's fixes, built the same way.
+- Both served by `scripts/serve-dir.ts` under `/slides`, uncompressed. Chrome for Testing 157
+  through the project's puppeteer, headless, a fresh browser context per load, 1350x940.
+- LCP and FCP as the page reports them (`PerformanceObserver`), unthrottled on 127.0.0.1: these are
+  real local paints, not Lighthouse's simulated mobile LCP, which the morning run of this report
+  measured. Lighthouse is not installed on this machine, and the run installed nothing outside the
+  project.
+- Five rounds, each loading every page on both builds back to back, the order alternating per round.
+  Each round first waited up to five minutes for the 1-minute load to fall to the 16 cores. The
+  load read 9.3 to 22.4 during the series; each before and after pair ran under the same load.
+- Control: the same build served as before and after in one round read the story frame at 660 ms
+  both, and the print page at 160 and 128 ms: about 30 ms of noise.
 
-## Lighthouse, before and after
+## Before and after
 
-Scores are performance / accessibility / best practices / SEO, of the median run. LCP in ms, median
-(range); KB is the total transfer. CLS read 0.001 or less in every run.
+LCP and FCP in ms, median (range) of five loads.
 
-| Page                                        | Before         | After          | LCP before       | LCP after        | KB   |
-| ------------------------------------------- | -------------- | -------------- | ---------------- | ---------------- | ---- |
-| Home `/slides/`                             | 100/100/100/92 | 100/100/100/92 | 1202 (1202–1203) | 1203 (1202–1204) | 496  |
-| Story page `/dashboard/Types/title-slide/…` | 90/100/100/92  | 89/100/100/92  | 3606 (3460–3837) | 3756 (2657–3763) | 448  |
-| Story frame `/stories/Types/title-slide/…`  | 91/100/100/92  | 91/100/100/92  | 3457 (3455–3460) | 3461 (3343–3474) | 377  |
-| Print page `/catalog/print/`                | 97/100/100/100 | 95/100/100/100 | 2101 (2100–2701) | 2400 (1950–2401) | 1301 |
+| Page                                        | LCP before    | LCP after     | FCP before    | FCP after     |
+| ------------------------------------------- | ------------- | ------------- | ------------- | ------------- |
+| Home `/slides/`                             | 60 (52–112)   | 68 (52–96)    | 60 (52–112)   | 68 (52–96)    |
+| Story page `/dashboard/Types/title-slide/…` | 72 (52–92)    | 68 (48–80)    | 52 (48–92)    | 56 (48–64)    |
+| Story frame `/stories/Types/title-slide/…`  | 668 (652–772) | 688 (656–692) | 52 (32–76)    | 56 (36–68)    |
+| Print page `/catalog/print/`                | 132 (120–136) | 132 (120–168) | 132 (120–136) | 132 (120–168) |
 
-The story page's and the print page's LCP gaps are noise: before and after transfer the same bytes,
-and each range overlaps the other build's median. Simulated LCP moves in steps of about 300 ms
-here, as on 09.11.
+Every gap lies inside the other build's range.
 
 ## Since 09.11.: the story page slower, the frame not
 
-The story page and frame read 3.5 to 3.8 s here, against 1.8 to 3.1 s on 09.11. To separate
+In this morning's Lighthouse run of f32b1dc (simulated mobile LCP, served with gzip), the story
+page and frame read 3.5 to 3.8 s, against 1.8 to 3.1 s on 09.11. To separate
 the build from the load, both 9a04bab (the 09.11. build) and f32b1dc were served uncompressed by
 `scripts/serve-dir.ts` and run three times each, interleaved, at loads of 18 to 33:
 

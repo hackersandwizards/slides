@@ -10,6 +10,7 @@ import mono500 from "@hackersandwizards/brand/fonts/jetbrains-mono-latin-500-nor
 import mono700 from "@hackersandwizards/brand/fonts/jetbrains-mono-latin-700-normal.woff2?url&no-inline";
 import Image from "../ui/image";
 import type { LogoConfig, SlideLogo } from "../../types/slide";
+import { logoSize } from "../../lib/brand-logos";
 import { HW_LOGO, logoPlaces } from "../../lib/logo";
 import { DeckLang, DeckNight } from "./SlideShell";
 
@@ -41,14 +42,15 @@ export function DeckLogo({
   asMark?: boolean;
   mark?: CornerMark;
 }) {
+  const size = logoSize(logo.src) ?? { width: 80, height: 65 };
   return asMark && logo.src === HW_LOGO.src ? (
     <HwWordmark mark={mark} />
   ) : (
     <Image
       src={logo.src}
       alt={logo.alt}
-      width={logo.width ?? 80}
-      height={logo.height ?? 65}
+      width={logo.width ?? size.width}
+      height={logo.height ?? size.height}
       className="pointer-events-none h-9 w-auto"
     />
   );

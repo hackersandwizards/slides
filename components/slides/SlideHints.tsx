@@ -37,13 +37,8 @@ export function SlideHints({ slideIndex }: Props) {
     const deck = deckPath();
     const endsAt = introEndsAt.get(deck) ?? Date.now() + INTRO_MS;
     introEndsAt.set(deck, endsAt);
-    let live = true;
-    queueMicrotask(() => live && setIntro(endsAt > Date.now()));
     const timer = setTimeout(() => setIntro(false), endsAt - Date.now());
-    return () => {
-      live = false;
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {

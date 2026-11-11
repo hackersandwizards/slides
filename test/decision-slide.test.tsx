@@ -21,7 +21,6 @@ describe("DecisionSlide", () => {
     }
   });
 
-  // The desktop question and outcome were hand-drawn boxes beside the phone's cards (review 11.11.).
   it("draws the desktop need, question and outcome as the cards the phone draws", () => {
     const SlideComponent = slideComponents.decision;
     const { container } = render(<SlideComponent slide={decisionSlide as Slide} />);

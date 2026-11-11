@@ -14,7 +14,7 @@ const printed = (slide: ActivitySlide) =>
   );
 
 describe("ActivitySlide", () => {
-  // A timebox with a clock time before it, or a word, read the first number or none (review 11.11.).
+  // A timebox opening on a word, "ca. 15 Min.", read no number and counted the default 2.
   it("times the countdown by the duration's first number", () => {
     expect(timerMinutes("20 min")).toBe(20);
     expect(timerMinutes("ca. 15 Min.")).toBe(15);

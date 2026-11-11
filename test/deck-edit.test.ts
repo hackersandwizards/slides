@@ -26,8 +26,7 @@ describe("literals", () => {
 });
 
 describe("resolve", () => {
-  // Every * was dropped, the one a code span shows included, so such a text found no literal
-  // (review 11.11.).
+  // Every * was dropped, the one a code span shows included, so such a text found no literal.
   it("finds a text whose code span holds an asterisk", () => {
     const src =
       'const deck = { slides: [{ lines: ["Edit `*.ts` files", "**Bold** and [a link](/x)"] }] };';

@@ -49,10 +49,10 @@ where the web balances them, measured with the brand fonts' metrics. It warns on
 draw as the slide does, such as a missing image, blocks taller than the slide, or text taller or
 wider than its box, crossing the shape it stands in or off the slide, and `--strict` makes a
 warning exit 1, for a consumer's gate; an argument it does not know exits 1 too. It needs `pptxgenjs` and `jszip`, optional
-peer dependencies a consumer installs only to run it. In `talks`:
+peer dependencies a consumer installs only to run it (`bun add -d pptxgenjs jszip`). `talks` runs it
+so:
 
 ```sh
-bun add -d pptxgenjs jszip
 bun scripts/slides-json.ts <slug> > deck.json && bun run slides-pptx deck.json <slug>.pptx
 ```
 

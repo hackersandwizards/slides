@@ -94,7 +94,7 @@ slides draw through its exports, as `?url` imports the bundler serves: a deck na
 `/hw-lockup.svg`, `/hw-wordmark.svg` or their `-night` cuts. The specimen deck imports its images
 the same way, so a consumer copies nothing into `public/` for the engine. A page that draws
 another brand element, such as a catalog shell's rail and search, imports brand's `elements.css`
-itself: put it in the catalog's `css` beside `slides.css`. Both repos are public: Bun fetches the `git+https://` form through GitHub's tarball API without any GitHub access.
+itself: put it in the catalog's `css` beside `slides.css`.
 
 ## Imports
 
@@ -143,10 +143,3 @@ deck's language; `slides-pptx` marks its text with it. The screen route passes i
 `SlideContainer` as `lang`, English when left out, which `PrintSlide` reads from the deck itself: a
 contact closing shows brand's claim in that language unless it sets `claim: false`, and a title
 slide without a `lang` of its own joins its speakers and words its QR code's alt text in it.
-
-## Build settings
-
-The package ships TypeScript source. Let the build transpile it: Astro `vite.ssr.noExternal`, vitest
-`test.server.deps.inline`. An Astro app sets `vite.optimizeDeps` to `slidesOptimizeDeps()` from
-`@hackersandwizards/slides/lib/vite`: the engine served unbundled, the packages its islands import
-named up front.

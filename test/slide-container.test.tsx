@@ -1,6 +1,8 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SlideContainer } from "../components/slides/SlideContainer";
+import { logoSizes } from "../lib/brand-logos";
+import { HW_LOGO } from "../lib/logo";
 import type { LogoConfig } from "../types/slide";
 
 const logo = (name: string): LogoConfig => ({ src: `/${name}.png`, alt: name });
@@ -23,6 +25,13 @@ describe("SlideContainer with a list of logos", () => {
         ".slide-corner .hw-wordmark",
       ),
     ).not.toBeNull();
+  });
+
+  it("sizes the h&w lockup in a list by brand's logos.json, not the default box", () => {
+    const img = render(
+      <SlideContainer logo={[HW_LOGO, logo("client")]}>slide</SlideContainer>,
+    ).container.querySelector(`img[alt="${HW_LOGO.alt}"]`)!;
+    expect(img.getAttribute("width")).toBe(String(logoSizes["lockup.svg"].width));
   });
 });
 

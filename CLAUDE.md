@@ -2,8 +2,8 @@
 
 The hackers&wizards slide engine as one package, `@hackersandwizards/slides`: the slide components,
 the deck types, the slide stylesheet and the PDF renderer. Three repos run it and keep only their
-decks, all on Astro: `talks`, `trainer-hub` and `hycle-private` (its decks in `talks/`). The reasoning is in os
-`docs/agent-work/2026-10-30-repo-coupling.md`.
+decks, all on Astro: `talks`, `trainer-hub` and `hycle-private` (its decks in `talks/`). The reasoning is in os's
+history, removed there on 06.11.: `git log --all -- '*2026-10-30-repo-coupling.md'`.
 
 This repo is public on GitHub (`github.com/hackersandwizards/slides`). Consumers install it as a Git dependency pinned to a tag,
 `git+https://github.com/hackersandwizards/slides.git#v<version>`, which needs no GitHub access. `"private": true` stays:
@@ -62,18 +62,13 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   consumer's `check-coupling` lets them through.
 - `scripts/render-pdf.ts`: prints a deck's print route to a PDF; each consumer's `export-pdf.ts`
   resolves deck, URL and file name and calls it.
-- `scripts/pins.ts`: the `slides-pins` command each consumer runs in its gate after the shared steps:
-  fails when `package.json` pins no brand, or a brand below the README's minimum.
-- `scripts/density.ts`: the `slides-density` command each consumer runs in its gate, over its
-  built site (`--site`, served by `scripts/serve-dir.ts`, which the page tests use too) or its
-  server (`--serve`, through scaffolding's `serve`): fails on a
-  slide the fit guard shrinks below 0.8, or whose heading it shrinks below 0.8 to fit a word, and on one `PrintSlide` marks with `data-use` (a content
-  slide a statement carries, or a regular slide drawn as one), and on one the fit guard never
-  fitted, lists those below 0.9. The engine's own regression decks
-  are covered where talks runs it over the specimen deck.
-- `scripts/usage.ts`: the `slides-usage` command, a deck JSON's slides counted per catalogue entry (the anchors in `catalog/guidance.ts`), which the consumer publishes (`--out`, `--check`): the public engine reads no client deck. It lints the decks: a slide no entry draws, a field that changes nothing drawn (`ignoredFields`, proven by `test/ignored-fields.test.tsx`), a deck naming no `lang`.
-- `scripts/render-pptx.ts`: the `slides-pptx` command, a deck JSON to a native PowerPoint file in
-  the h&w design with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
+- `scripts/pins.ts`, `density.ts`, `usage.ts` and `render-pptx.ts`: the four commands in `bin`,
+  whose behaviour `docs/commands.md` owns. `slides-density --site` serves through
+  `scripts/serve-dir.ts`, which the page tests use too; the engine's own regression decks are
+  covered where talks runs it over the specimen deck. `slides-usage` counts per anchor of
+  `catalog/guidance.ts` and the consumer publishes it: the public engine reads no client deck; its lint of fields that change nothing drawn is
+  `ignoredFields`, proven by `test/ignored-fields.test.tsx`.
+  `slides-pptx` writes with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
   `scripts/pptx-text.ts` measures its text with the brand faces' metrics and finds text past its
   box, which `--strict` fails on; `scripts/pptx-fonts.ts` embeds the faces under `--embed-fonts`.
   Its lengths and sizes are measured off the print route at 1920x1080.
@@ -137,10 +132,8 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
 preview`), then `check:elements`
   (`brand-elements` over the print pages, `brand-elements.json`), then `check:markers` (`brand-markers` over `frames.html` and every
   story page at 1920, the stage width, and at 1280, with `dist/` served at `--site-at /slides`,
-  since the pages load their assets from that base). No hook runs it:
-  `.githooks/pre-commit` runs `bun run check:staged`, scaffolding's `check-staged` (`gitleaks`,
-  coupling and confidential over the staged changes, `prettier --check` and `eslint` on the staged
-  files, `admin-check` when an item is staged); `commit-msg` runs `check-confidential` on the message; the hooks are scaffolding's skeleton. `bun install` points `core.hooksPath` at `.githooks/`.
+  since the pages load their assets from that base). No hook runs it: the hooks are scaffolding's
+  skeleton, listed in `.githooks/README.md`.
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
 - `bun run dev` (or `bun run catalog`, which opens it): the catalog at
@@ -150,14 +143,12 @@ preview`), then `check:elements`
 
 ## Releasing a change
 
-1. Change the engine here, `bun run check` green, raise `version`, then commit, push and tag.
-   A release raises `version` in `package.json`, commits and pushes `main` first
-   (`git push origin main`). Only once that push has landed does it tag `v<version>` to match and push
-   the tag (`git tag v<version> && git push origin v<version>`): a tag pushed with a rejected `main`
-   points at a commit `main` never holds. Consumers then raise the tag in their dependency line.
-2. Brief a session in each consumer to raise the tag in its `package.json`, `bun install` and run
-   its gate. The regression
-   decks are this repo's `specimen/slide-catalog.ts`, which talks shows, and
+1. Change the engine here, `bun run check` green, raise `version` in `package.json`, then commit
+   and push `main` (`git push origin main`). Only once that push has landed, tag `v<version>` to
+   match and push the tag (`git tag v<version> && git push origin v<version>`): a tag pushed with a
+   rejected `main` points at a commit `main` never holds.
+2. Raise each consumer's pin through the `pins` mode of `dependency-updates`, which runs its gate.
+   The regression decks are this repo's `specimen/slide-catalog.ts`, which talks shows, and
    trainer-hub's `slide-master`; a new slide type or variant lands in the specimen deck first.
 
 ## Behavioral rules

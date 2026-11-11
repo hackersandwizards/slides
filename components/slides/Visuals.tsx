@@ -6,9 +6,11 @@ import { useHighlightLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";
 import {
   LONG_FLOW,
+  STAGE,
   WORDS,
   continuation,
   figureChars,
+  figureRem,
   leadingWords,
   minus,
   numbersGrid,
@@ -786,15 +788,16 @@ const fitChars = (value: string) => figureChars(value) + (leadingWords(value) ? 
 // Visuals.css caps the figures at: a timeline's at every width, the others on a phone.
 const figureFit = (values: string[]) => {
   const chars = Math.max(...values.map(fitChars));
-  return { "--slide-figure-fit": `${+(100 / (chars * 0.6)).toFixed(2)}cqi` } as CSSProperties;
+  return {
+    "--slide-figure-fit": `${+(100 / (chars * STAGE.char)).toFixed(2)}cqi`,
+  } as CSSProperties;
 };
-// A figure set whole on one line, as large as its block allows.
 const FIGURE = "font-heading leading-none font-bold tracking-tight whitespace-nowrap text-primary";
-// A lone figure's size on the stage, under the hero size: at most two thirds of its row (1100 of
-// about 1650 px at 1920, a rem 21.333px), so it stays on its line and its label keeps a column.
+// A lone figure's size on the stage, under the hero size: at most two thirds of its row, so it
+// stays on its line and its label keeps a column.
 const loneSize = (value: string) =>
   ({
-    "--slide-figure-lone-size": `${+(1100 / (fitChars(value) * 0.6) / 21.333).toFixed(2)}rem`,
+    "--slide-figure-lone-size": `${+figureRem((STAGE.row * 2) / 3, fitChars(value)).toFixed(2)}rem`,
   }) as CSSProperties;
 
 function Figure({ value, quiet }: { value: string; quiet?: boolean }) {

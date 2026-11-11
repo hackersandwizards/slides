@@ -83,9 +83,12 @@ export async function renderPdf(url: string, out: string, title: string, slideCo
   }
 }
 
+/** A slide the fit guard has not fitted, which only a page that never hydrated keeps. */
+export const UNFITTED_SLIDE = ".slide-shell > .slide-content:not([data-fitted])";
+
 /** Loads a deck's print route and waits until it stands as printed: the route answered, every
  *  chart and code block drawn after hydration (network idle can come first), the web fonts in,
- *  and the fit guard's refit after them landed. `slides-density` measures the page this leaves. */
+ *  every slide fitted, and the fit guard's refit after them landed. `slides-density` measures the page this leaves. */
 export async function settlePrintPage(page: import("puppeteer").Page, url: string) {
   const res = await page.goto(url, { waitUntil: "networkidle0", timeout: 300_000 });
   if (!res?.ok()) throw new Error(`HTTP ${res?.status()} from ${url}`);
@@ -98,6 +101,12 @@ export async function settlePrintPage(page: import("puppeteer").Page, url: strin
   );
   await page.evaluate(() => document.fonts.ready);
   if (!(await page.$(".print-slide"))) throw new Error("no .print-slide elements found");
+  // A page that never hydrates goes on after the wait, and slides-density fails its unfitted slides.
+  await page
+    .waitForFunction((sel) => !document.querySelector(sel), { timeout: 10_000 }, UNFITTED_SLIDE)
+    .catch((e: Error) => {
+      if (e.name !== "TimeoutError") throw e;
+    });
   // The fit guard refits on its ResizeObserver: two frames and a pause let it land.
   await page.evaluate(
     () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),

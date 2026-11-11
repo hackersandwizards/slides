@@ -18,7 +18,7 @@
 
 import puppeteer, { type Browser } from "puppeteer";
 import { FIT_STYLE } from "../lib/slide-utils";
-import { settlePrintPage } from "./render-pdf";
+import { UNFITTED_SLIDE, settlePrintPage } from "./render-pdf";
 import { serveDir } from "./serve-dir";
 
 const FAIL = 0.8;
@@ -100,7 +100,7 @@ try {
   server?.close();
 }
 console.log(
-  `[slides-density] ${urls.length} decks: ${failed} findings below ${FAIL} or of the wrong type (fail), ${noticed} below ${NOTICE} (notice)${broken ? `, ${broken} decks did not render` : ""}`,
+  `[slides-density] ${urls.length} decks: ${failed} findings below ${FAIL}, of the wrong type or unfitted (fail), ${noticed} below ${NOTICE} (notice)${broken ? `, ${broken} decks did not render` : ""}`,
 );
 process.exit(failed || broken ? 1 : 0);
 
@@ -110,7 +110,8 @@ async function check(browser: Browser, url: string): Promise<string[]> {
   try {
     await page.setViewport({ width: 1920, height: 1080 });
     await settlePrintPage(page, url);
-    return (await page.$$eval(".print-slide", measure, NOTICE, [...FIT_STYLE])).map((r) => {
+    const rows = await page.$$eval(".print-slide", measure, NOTICE, [...FIT_STYLE], UNFITTED_SLIDE);
+    return rows.map((r) => {
       if ("unfitted" in r) {
         failed++;
         return `FAIL /${deck}/${r.i} "${r.title}": ${UNFITTED}`;
@@ -151,12 +152,11 @@ type Row =
   | { i: number; title: string; word: number }
   | { i: number; title: string; scale: number; label: string; groups: number; split: string };
 
-function measure(nodes: Element[], notice: number, fitStyle: string[]) {
+function measure(nodes: Element[], notice: number, fitStyle: string[], unfitted: string) {
   return nodes.flatMap((slide, i): Row[] => {
     const title = slide.querySelector("h1, h2")?.textContent?.trim().slice(0, 60) ?? "";
     // The page did not hydrate, so no scale below can be read.
-    if (slide.querySelector(".slide-shell > .slide-content:not([data-fitted])"))
-      return [{ i, title, unfitted: true as const }];
+    if (slide.querySelector(unfitted)) return [{ i, title, unfitted: true as const }];
     const misused = (slide as HTMLElement).dataset.use ? [{ i, title, use: true as const }] : [];
     // A heading the fit guard shrank so that its widest word fits (SlideShell's fitWords).
     const word = Math.min(

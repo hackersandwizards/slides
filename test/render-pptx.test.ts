@@ -312,8 +312,8 @@ describe("slides-pptx on the specimen deck", () => {
     },
   );
 
-  // A list's first logo was the only one drawn, and only when it was no brand mark (code review
-  // 11.11.): the corner logo the web draws went missing.
+  // A list's first logo was the only one drawn, and only when it was no brand mark: the corner logo
+  // the web draws went missing.
   it("stands a logo list as the web does: the last in the corner, the others at the bottom left", async () => {
     const out = join(dir, "logos.pptx");
     const partner = { src: "/specimen/slide-catalog/partner-mark.png", alt: "Partner" };
@@ -355,8 +355,6 @@ describe("slides-pptx on the specimen deck", () => {
     expect(three.map((p) => p.alt)).toEqual([verbal.name.company]);
   });
 
-  // The centred contact closing printed the whole LinkedIn address where the web prints its path
-  // (code review 11.11.).
   it("labels a centred closing's LinkedIn link as the web does", async () => {
     const out = join(dir, "closing-linkedin.pptx");
     await renderPptx(
@@ -646,7 +644,7 @@ describe("slides-pptx on the specimen deck", () => {
     const run = xml.slice(0, xml.indexOf("<a:t>Mara Lindqvist"));
     expect(run.slice(run.lastIndexOf("<a:rPr"))).toContain(`val="${muted}"`);
     // The words stand brand's 2 px rule and 1.25 rem gap off the rule, at the print route's 21.333
-    // px rem; the export stood them 20 px off (review 11.11.).
+    // px rem; the export stood them 20 px off.
     const shapes = shapesOf(xml);
     const rule = shapes.find((sp) => sp.fill === purple && sp.w! < 0.02)!;
     const words = shapes.find((sp) => sp.texts.some((t) => t.includes("We stopped asking")))!;
@@ -1218,7 +1216,7 @@ it.each([true, false])(
 );
 
 // The measure reads hmtx as a plain table; a WOFF2 encoder may transform it, which drops the left
-// side bearings and would shift every advance it reads (code review 11.11.).
+// side bearings and would shift every advance it reads.
 it("refuses a face whose hmtx table is transformed, and reads one whose hmtx is plain", () => {
   const font = Buffer.from(readFileSync(faceFiles(false, false)[0]));
   expect(woff2Tables(font).get("hmtx")!.length).toBeGreaterThan(0);
@@ -1425,7 +1423,6 @@ describe("slides-pptx draws what the slide shows", () => {
     expect(figure.xml).toContain('typeface="JetBrains Mono"');
   });
 
-  // A timeline figure went out as typed, "-90 %" with a hyphen, where the web draws a minus.
   it("writes a timeline figure's minus as the web's", () => {
     const i = specimenAt(
       (x) =>
@@ -1436,9 +1433,7 @@ describe("slides-pptx draws what the slide shows", () => {
     expect(slideXml[i]).not.toContain("-90");
   });
 
-  // On the web a lone "87,3 %" broke before its unit. Here each figure is sized to its column, so a
-  // five-digit one with its unit holds one line in every layout. Its box is one line high, so a
-  // wrapped figure would warn as text taller than its box.
+  // A figure's box is one line high, so a wrapped figure warns as text taller than its box.
   it("keeps a five-digit figure with its unit on one line in every numbers layout", async () => {
     type Numbers = Extract<ContentSlide["content"][number], { type: "numbers" }>;
     const lone = (b: ContentSlide["content"][number]): b is Numbers =>
@@ -1560,6 +1555,12 @@ describe("slides-pptx draws what the slide shows", () => {
     expect(Math.abs((top + bottom) / 2 - 3.75)).toBeLessThan(0.1);
   });
 
+  it("hides the page counter on a contact closing, as the web hides its corner", () => {
+    const i = specimenAt((x) => x.type === "closing" && centredMark(x));
+    expect(unescape(slideText[i])).not.toMatch(/\d\d \/ \d\d/);
+    expect(unescape(slideText[specimenAt((x) => x.type === "content")])).toMatch(/\d\d \/ \d\d/);
+  });
+
   it("draws a bullet as the web's square marker in a face every machine has", () => {
     const bullets = slideXml.filter((x) => x.includes("<a:buChar"));
     expect(bullets.length).toBeGreaterThan(0);
@@ -1651,7 +1652,7 @@ describe("slides-pptx as a command", () => {
     expect(run("--strict").status).toBe(1);
   });
 
-  // A mistyped flag ran the export loose and exited 0 in a gate that asked for --strict (review 11.11.).
+  // A mistyped flag ran the export loose and exited 0 in a gate that asked for --strict.
   it("refuses an argument it does not know, and --assets without a directory", () => {
     expect(run("--stric").status).toBe(1);
     expect(

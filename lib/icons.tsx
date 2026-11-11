@@ -134,7 +134,7 @@ export const iconMap = {
   zap: Zap,
 } satisfies Record<string, LucideIcon>;
 
-/** An icon a deck may name: a name outside the map would draw nothing. */
+/** An icon a deck may name: a slide draws a name outside the map as no icon or its default one. */
 export type IconName = keyof typeof iconMap;
 
 export type { LucideIcon };

@@ -4,7 +4,6 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 import { TICK_GAP } from "../../components/slides/ChartPlots";
 import { type Served, serveDist } from "./serve-dist";
 
-// Served under the Pages base, since a built state page loads its stylesheets from /slides/.
 const rgb = (hex: string) =>
   `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
 const NIGHT = rgb(tokens["--color-night"]);
