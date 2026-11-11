@@ -287,22 +287,32 @@ describe("slides-pptx on the specimen deck", () => {
     expect(norm(unescape(slideText[at(false)]))).not.toContain(norm(verbal.claim.en));
   });
 
-  it("sets the claim in the deck's language", async () => {
-    const out = join(dir, "de.pptx");
-    await renderPptx(
-      {
-        name: "D",
-        slides: [
-          { type: "title", title: "T", lang: "de" },
-          { type: "closing", line1: "Danke." },
-        ],
-      },
-      out,
-      dir,
-    );
-    const de = await JSZip.loadAsync(readFileSync(out));
-    const xml = await de.file("ppt/slides/slide2.xml")!.async("string");
-    expect(norm(unescape(xml.replace(/<[^>]+>/g, "")))).toContain(norm(verbal.claim.de));
+  it("sets the claim in the deck's language, on one row in either", async () => {
+    for (const lang of ["en", "de"] as const) {
+      const out = join(dir, `claim-${lang}.pptx`);
+      await renderPptx(
+        {
+          name: "D",
+          slides: [
+            { type: "title", title: "T", lang },
+            { type: "closing", line1: "Danke." },
+          ],
+        },
+        out,
+        dir,
+      );
+      const deck = await JSZip.loadAsync(readFileSync(out));
+      const xml = await deck.file("ppt/slides/slide2.xml")!.async("string");
+      expect(norm(unescape(xml.replace(/<[^>]+>/g, "")))).toContain(norm(verbal.claim[lang]));
+      // The claim's box is one row high: its size times the line's 1.25, in EMU.
+      const box = xml
+        .split("</p:sp>")
+        .map((sp) => sp.slice(sp.lastIndexOf("<p:sp>")))
+        .find((sp) => sp.includes(`<a:t>${verbal.claim.word[lang]}</a:t>`))!;
+      const cy = +box.match(/<a:ext cx="\d+" cy="(\d+)"/)![1];
+      const size = +box.match(/sz="(\d+)"/)![1] / 100;
+      expect(cy).toBeLessThan(size * 1.25 * 12700 * 1.5);
+    }
   });
 
   it("sets a title slide's speakers and QR alt text in the deck's language", async () => {

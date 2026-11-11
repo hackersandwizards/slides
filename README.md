@@ -11,7 +11,7 @@ that the public may not see.
 
 Add the dependency in exactly this form, pinned to the newest tag
 (`git ls-remote --tags https://github.com/hackersandwizards/slides.git` lists them), next to
-`@hackersandwizards/brand` v2.13.0 or later, whose static faces (`static-fonts.css`) with their metric-matched fallback faces, shared
+`@hackersandwizards/brand` v2.14.0 or later, whose static faces (`static-fonts.css`) with their metric-matched fallback faces, shared
 elements (only those a slide draws, each from `elements/<name>.css`), text
 base (`text-base.css`), slide pointer (`cursor.svg`) and small corner the stylesheet imports, whose
 list marker takes `--hw-zoom`, which the fit guard sets beside the `zoom` it shrinks a slide with, whose dialog draws no browser focus ring, whose `verbal.json` gives the closing its claim, whose `--tint-callout` tokens `slides-pptx` mixes a callout from, and whose logos the

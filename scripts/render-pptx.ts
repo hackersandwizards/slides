@@ -4510,7 +4510,7 @@ const RENDER: {
         });
       }
       if (tail.length) {
-        const o: BoxOpts = { size: PT.lead, color: c.muted, line: 1.25, tracking: -0.025 };
+        const o: BoxOpts = { size: PT.h4, color: c.muted, line: 1.25, tracking: -0.025 };
         const tw = Math.min(CW, 80 * REM);
         const th = need(tail, c, tw, o);
         box(s, c, tail, (W - tw) / 2, y, tw, th, o);

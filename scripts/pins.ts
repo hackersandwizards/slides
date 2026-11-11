@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 
 // The README names the same version; test/pins.test.ts holds them together.
-const MINIMUM = "2.13.0";
+const MINIMUM = "2.14.0";
 const BRAND = "@hackersandwizards/brand";
 
 function fail(message: string): never {

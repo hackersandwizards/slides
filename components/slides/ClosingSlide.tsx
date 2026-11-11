@@ -53,11 +53,12 @@ function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
 
 const HUE = { primary: undefined, secondary: "purple" } as const;
 
-/** A line under the speakers: brand's claim or a quote. */
+/** A line under the speakers: brand's claim or a quote, one step below the lead, so the claim holds
+ *  one row in either language and the German slide keeps the English one's layout. */
 function ClosingLine({ children }: { children: ReactNode }) {
   return (
     <BlurFade delay={0.35} duration={0.4}>
-      <p className="mx-auto max-w-7xl px-(--slide-closing-side) text-center font-heading text-3xl leading-tight font-bold tracking-tight text-balance text-text-muted">
+      <p className="mx-auto max-w-7xl px-(--slide-closing-side) text-center font-heading text-2xl leading-tight font-bold tracking-tight text-balance text-text-muted">
         {children}
       </p>
     </BlurFade>
