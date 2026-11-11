@@ -10,8 +10,9 @@ evidence: "slides-pptx --embed-fonts (scripts/pptx-fonts.ts) writes Inter and Je
 
 # Does PowerPoint draw the brand fonts from inside the file?
 
-Open the two files below in PowerPoint on a Mac without Inter and JetBrains Mono, and answer
-"embedded fonts work", "no difference" or "repair prompt".
+Open the two specimen files in PowerPoint without the brand fonts and say what you see.
+
+Answer "embedded fonts work", "no difference" or "repair prompt".
 
 The export can now carry Inter and JetBrains Mono inside the `.pptx` (`--embed-fonts`), about
 50 kB more. Your question of 10.11. was whether that is possible or too large: size is no issue,

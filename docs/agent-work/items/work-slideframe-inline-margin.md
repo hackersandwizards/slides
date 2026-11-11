@@ -3,7 +3,7 @@ kind: work
 status: open
 priority: 3
 order: 640
-owner: Agent (slides session)
+owner: Ada
 area: software-engineering
 evidence: "brand v2.15.0's card.css (var(--white-wash) where lightningcss wrote #ffffff12) took SlideFrame's scoped style to 4108 bytes on 11.11.2026 and test/pages/catalog-pages.test.ts failed; with card.css imported unscoped the frame's chunk measures 3610 bytes (4093 before the raise, both read off the built dashboard page's inline style)"
 ---
