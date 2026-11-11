@@ -808,7 +808,7 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
       const [path, ratio] = brandCut(`${mark}${ctx.dark ? "-night" : ""}`);
       const h = mark === "lockup" ? lockupH : markH;
       x = right - h * ratio;
-      s.addImage({ path, x, y: baseY - h / 2, w: h * ratio, h, altText: "hackers&wizards" });
+      s.addImage({ path, x, y: baseY - h / 2, w: h * ratio, h, altText: HW_LOGO.alt });
     } else {
       const at = { alt: corner.alt, align: "right" as const };
       x = picture(s, ctx, corner.src, right - 2.4, baseY - logoH / 2, 2.4, logoH, at).x;
@@ -4371,7 +4371,7 @@ const RENDER: {
           y,
           w: lockW,
           h: lockH,
-          altText: "hackers&wizards",
+          altText: HW_LOGO.alt,
         });
         y += lockH + gap;
         const shown = companiesWithLogo(d);

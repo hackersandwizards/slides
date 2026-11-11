@@ -121,7 +121,7 @@
   "devDependencies": {
     "@astrojs/react": "7.1.7",
     "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.27.2",
-    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v2.15.0",
+    "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v2.18.0",
     "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.17.2",
     "@tailwindcss/node": "4.3.5",
     "@tailwindcss/oxide": "4.3.5",

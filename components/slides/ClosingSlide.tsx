@@ -6,6 +6,7 @@ import Mail from "lucide-react/icons/mail";
 import type { ClosingSlide as ClosingSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { DeckLang, SlideShell, groundOf } from "./SlideShell";
+import { HW_LOGO } from "../../lib/logo";
 import {
   DisplayHeading,
   LinkCaption,
@@ -164,13 +165,13 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
                 ))}
                 <Image
                   src="/hw-lockup.svg"
-                  alt="hackers&wizards"
+                  alt={HW_LOGO.alt}
                   className="hw-wordmark h-(--slide-closing-lockup)"
                   style={{ width: "auto" }}
                 />
                 <Image
                   src="/hw-lockup-night.svg"
-                  alt="hackers&wizards"
+                  alt={HW_LOGO.alt}
                   className="hw-wordmark-night h-(--slide-closing-lockup-night)"
                   style={{ width: "auto" }}
                 />

@@ -1,5 +1,5 @@
 // Named, never the default: the whole file would bundle verbal.json's retired lines, which brand-retired fails on.
-import { claim } from "@hackersandwizards/brand/verbal.json";
+import { claim, name } from "@hackersandwizards/brand/verbal.json";
 import { cornerMark, resolveSlideLogo } from "./logo";
 import { hasMarkdown } from "./markdown";
 import type {
@@ -256,7 +256,10 @@ export const teamTypesDrawn = (slide: TeamTopologySlide) =>
 /** Companies a contact closing shows as a logo, so their name is not printed a second time under
  *  the speaker. */
 export const companiesWithLogo = (slide: ClosingSlide) =>
-  new Set(["hackers&wizards", ...(slide.partners ?? []).map((p) => p.company.toLowerCase())]);
+  new Set([
+    name.company.toLowerCase(),
+    ...(slide.partners ?? []).map((p) => p.company.toLowerCase()),
+  ]);
 
 /** The alt text of a slide's QR code, in the deck's language. */
 export function qrAlt(href: string, lang?: TitleSlide["lang"]): string {
