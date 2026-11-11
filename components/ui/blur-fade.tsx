@@ -10,7 +10,8 @@ const MAX_DELAY = 0.3;
 const MAX_DURATION = 0.45;
 const OFFSET = 6;
 
-// No layout or drag: the fade draws with the DOM animations alone (LazyMotion below).
+// No layout or drag, which no slide uses: the fade draws with the DOM animations alone
+// (LazyMotion below).
 interface BlurFadeProps extends Omit<
   MotionProps,
   `layout${string}` | "layout" | `drag${string}` | "drag"
@@ -67,8 +68,6 @@ export function BlurFade({
   };
 
   const Motion = Tag === "li" ? m.li : m.div;
-  // m with the DOM animations alone: the full motion component carries layout and drag, which
-  // no slide uses.
   return (
     <LazyMotion features={domAnimation}>
       <Motion

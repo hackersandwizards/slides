@@ -50,8 +50,6 @@ describe("targetFor", () => {
   });
 });
 
-// A window: a deck of slides with N reveal steps each, wired to the sync the way
-// SlideNavigation wires it, over a shared in-memory channel.
 type Member = { onmessage: ((event: MessageEvent) => void) | null };
 
 // Every member of every bus, so a test's windows go silent before jsdom is torn down.
@@ -97,6 +95,7 @@ let clock = 0;
 
 let ids = 0;
 
+// A window wired to the sync the way SlideNavigation wires it.
 function makeWindow(
   role: Role,
   channel: ReturnType<typeof bus>,

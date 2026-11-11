@@ -1,11 +1,13 @@
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
-import { expect, it, vi } from "vitest";
+import { afterAll, expect, it, vi } from "vitest";
 
-const file = join(mkdtempSync(join(tmpdir(), "deck-edit-race-")), "deck.ts");
+const dir = mkdtempSync(join(tmpdir(), "deck-edit-race-"));
+afterAll(() => rmSync(dir, { recursive: true, force: true }));
+const file = join(dir, "deck.ts");
 // An editor saves the deck while the endpoint formats its edit.
 vi.mock("prettier", async (original) => {
   const prettier = await original<typeof import("prettier")>();

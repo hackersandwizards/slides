@@ -6,6 +6,15 @@ import React from "react";
 export const INLINE_MARKDOWN =
   /(\[[^\]]+\]\([^)\s]+\)|\*\*(?:[^*]|\*(?!\*))+\*\*|\*(?!\s)[^*]*[^\s*]\*|`[^`]+`)/g;
 
+/** Text as `renderMarkdown` shows it: link targets, emphasis and code markers dropped where it
+ *  reads them as markdown, so a `*` inside a code span stays. */
+export const markdownless = (text: string) =>
+  text.replace(INLINE_MARKDOWN, (part) => {
+    if (part.startsWith("[")) return part.slice(1, part.indexOf("]("));
+    const marker = part.startsWith("**") ? 2 : 1;
+    return part.slice(marker, -marker);
+  });
+
 /** Whether `renderMarkdown` draws anything in the text but plain runs. */
 export const hasMarkdown = (text: string) => text.split(INLINE_MARKDOWN).length > 1;
 
@@ -13,8 +22,7 @@ export const hasMarkdown = (text: string) => text.split(INLINE_MARKDOWN).length 
 // "Self-" with "Service?" alone below. A compound up to 24 characters is an inline block: it moves
 // to the next line whole, and breaks inside itself only where it is wider than the line, so it
 // never runs out of a fixed box. Broken so, it keeps its first line on the line's baseline, where an
-// inline block would take its last, so a list marker stays beside the item's first line. Anything
-// but a string passes through.
+// inline block would take its last, so a list marker stays beside the item's first line.
 const COMPOUND = /([\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)+)/u;
 
 export function keepCompounds(text: React.ReactNode): React.ReactNode {

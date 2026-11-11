@@ -20,4 +20,16 @@ describe("DecisionSlide", () => {
       expect(getAllByText(wholeText(text))).toHaveLength(2);
     }
   });
+
+  // The desktop question and outcome were hand-drawn boxes beside the phone's cards (review 11.11.).
+  it("draws the desktop need, question and outcome as the cards the phone draws", () => {
+    const SlideComponent = slideComponents.decision;
+    const { container } = render(<SlideComponent slide={decisionSlide as Slide} />);
+    const { need, question, outcome } = decisionSlide;
+    const grid = container.querySelector(".decision-grid")!;
+    for (const text of [need, question, outcome]) {
+      const box = [...grid.children].find((el) => el.textContent === text)!;
+      expect(box.matches('.hw-card, [data-hw-exception="card-tone"]')).toBe(true);
+    }
+  });
 });

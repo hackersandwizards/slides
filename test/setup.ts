@@ -6,8 +6,7 @@ afterEach(() => {
   cleanup();
 });
 
-// recharts' ResponsiveContainer and motion observe element size; jsdom has no
-// ResizeObserver/IntersectionObserver, so stub them out.
+// jsdom has no ResizeObserver or IntersectionObserver.
 class NoopObserver {
   observe() {}
   unobserve() {}
@@ -36,13 +35,12 @@ HTMLDialogElement.prototype.showModal = function () {
   this.setAttribute("open", "");
 };
 
-// jsdom has no canvas backend; the title-slide particle effect calls
-// getContext and already tolerates a null result. Return null quietly instead
-// of letting jsdom log a "Not implemented" warning per render.
+// jsdom has no canvas backend and logs "Not implemented" per getContext call; the laser pointer
+// and the chart's label measure take a null context.
 HTMLCanvasElement.prototype.getContext = (() => null) as never;
 
-// jsdom under vitest does not always expose localStorage; QuestionSlide reads
-// and writes it during render. Back it with an in-memory store.
+// jsdom under vitest does not always expose localStorage, which the slide hints and the question
+// slide's votes keep.
 if (!("localStorage" in window) || window.localStorage == null) {
   const store = new Map<string, string>();
   vi.stubGlobal("localStorage", {

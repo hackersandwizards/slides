@@ -42,7 +42,7 @@
     margin-top: 0;
   }
   /* Two logos share a phone's row. */
-  .slide-corner-start img {
+  .slide-viewport > .slide-corner-start img {
     height: calc(var(--slide-footer-mark) * 0.75);
   }
   /* The slide's ground fades in behind the controls, so no line of text runs under them. */

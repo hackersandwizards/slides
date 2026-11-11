@@ -131,8 +131,8 @@ export function personAccent(index: number): "primary" | "secondary" {
 
 /** A slide of a deep-dive part stands on night, the brand's ground for a whole section (os design
  *  guide), so the part reads as one from the back row, where its label alone would not mark it: the
- *  deep-dive divider, a slide whose `sectionTheme` is `deepdive` and a pill map whose phases
- *  are. */
+ *  deep-dive divider, a night transition, a slide whose `sectionTheme` is `deepdive` and a pill map
+ *  whose phases are. */
 export function isDeepDive(slide: {
   type: string;
   night?: boolean;
@@ -552,7 +552,8 @@ export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlid
               icon: s.icon,
               items: s.items,
             })),
-            // Five and six sections stand in three columns, so a column never narrows to a quarter.
+            // Five and six sections stand in three columns, so their columns never narrow to a
+            // quarter.
             columns: titled.length === 4 || titled.length > 6 ? 4 : 3,
             dense: true,
           },

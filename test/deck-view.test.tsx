@@ -10,7 +10,6 @@ const press = (key: string) =>
     window.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
   });
 
-/** Steps through the slide's reveals until the deck moves on. */
 function advance() {
   const from = location.pathname;
   for (let i = 0; i < 20 && location.pathname === from; i++) press("ArrowRight");

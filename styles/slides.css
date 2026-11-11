@@ -4,7 +4,7 @@
 @import "@hackersandwizards/brand/marker.css" layer(components);
 /* Only the elements a slide or the deck around it draws, in brand's elements.css order: the whole
    set added 76 KB of dialogs, toasts and form fields no slide shows to every slide page's
-   render-blocking stylesheet. test/brand-elements.test.ts holds the list to the classes used. */
+   render-blocking stylesheet. */
 @import "@hackersandwizards/brand/elements/scales.css" layer(components);
 @import "@hackersandwizards/brand/elements/label.css" layer(components);
 @import "@hackersandwizards/brand/elements/label-box.css" layer(components);
@@ -26,7 +26,6 @@
 @import "@hackersandwizards/brand/elements/frame.css" layer(components);
 @import "@hackersandwizards/brand/elements/dialog.css" layer(components);
 @import "@hackersandwizards/brand/elements/avatar.css" layer(components);
-/* Headings in their level's face and weight, balanced; paragraphs and list items pretty. */
 @import "@hackersandwizards/brand/text-base.css";
 /* The brand's static faces: a PDF export embeds them as TrueType, never a variable font's Type 3. */
 @import "@hackersandwizards/brand/static-fonts.css";
@@ -458,7 +457,6 @@ html:has(.print-slide) {
     background-color: var(--color-night-2) !important;
   }
 
-  /* On night, white type takes the night colour. */
   :is(.theme-brand-dark, .slide-night, :is(.slide-viewport, .print-slide):has(.slide-night))
     .text-white {
     color: var(--color-night);

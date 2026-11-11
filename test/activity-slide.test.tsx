@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { slideComponents } from "../lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import type { ActivitySlide } from "../types/slide";
+import { timerMinutes } from "../components/slides/ActivitySlide";
 
 const Activity = slideComponents.activity;
 const printed = (slide: ActivitySlide) =>
@@ -13,6 +14,15 @@ const printed = (slide: ActivitySlide) =>
   );
 
 describe("ActivitySlide", () => {
+  // A timebox with a clock time before it, or a word, read the first number or none (review 11.11.).
+  it("times the countdown by the duration's first number", () => {
+    expect(timerMinutes("20 min")).toBe(20);
+    expect(timerMinutes("ca. 15 Min.")).toBe(15);
+    expect(timerMinutes("10-15 min")).toBe(10);
+    expect(timerMinutes("5")).toBe(5);
+    expect(timerMinutes()).toBe(2);
+  });
+
   it("numbers an exercise's steps and shows its frame", () => {
     const { getByText } = printed({
       type: "activity",

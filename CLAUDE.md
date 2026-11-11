@@ -68,7 +68,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   built site (`--site`, served by `scripts/serve-dir.ts`, which the page tests use too) or its
   server (`--serve`, through scaffolding's `serve`): fails on a
   slide the fit guard shrinks below 0.8, or whose heading it shrinks below 0.8 to fit a word, and on one `PrintSlide` marks with `data-use` (a content
-  slide a statement carries, or a regular slide drawn as one), lists those below 0.9. The engine's own regression decks
+  slide a statement carries, or a regular slide drawn as one), and on one the fit guard never
+  fitted, lists those below 0.9. The engine's own regression decks
   are covered where talks runs it over the specimen deck.
 - `scripts/usage.ts`: the `slides-usage` command, a deck JSON's slides counted per catalogue entry (the anchors in `catalog/guidance.ts`), which the consumer publishes (`--out`, `--check`): the public engine reads no client deck. It lints the decks: a slide no entry draws, a field that changes nothing drawn (`ignoredFields`, proven by `test/ignored-fields.test.tsx`), a deck naming no `lang`.
 - `scripts/render-pptx.ts`: the `slides-pptx` command, a deck JSON to a native PowerPoint file in
@@ -111,7 +112,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `test/`: the engine's unit tests.
 
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
-consumer imports (`navigate`, `print-context` and `deck-edit-mode` stay internal), `types/slide`, the three stylesheets (`slides.css`, `sources.css`, and `tokens.css`, for a consumer's design-system page, which none imports yet), `scripts/render-pdf`, the specimen deck and its
+consumer imports (the other modules stay internal), `types/slide`, the three stylesheets (`slides.css`, `sources.css`, and `tokens.css`, for a consumer's design-system page, which none imports yet), `scripts/render-pdf`, the specimen deck and its
 images, the catalog's `SlideFrame.astro`, and the `slides-density`, `slides-pins`, `slides-usage` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is
 a release. Consumers import by those names, `@hackersandwizards/slides/types/slide`, and ship the source: Astro lists
 the package in `vite.ssr.noExternal`, each vitest config in

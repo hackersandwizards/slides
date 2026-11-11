@@ -1,6 +1,8 @@
 /** The dev-only edit mode's file logic, shared by every host's endpoint: find the string literal a
- *  clicked text came from, and replace exactly that literal. Pure functions, no I/O; each host's
- *  dev server reads and writes the file. Never imported by a page, so it never reaches a build. */
+ *  clicked text came from, and replace exactly that literal. Pure functions, no I/O:
+ *  `deck-edit-server.ts` reads and writes the file. Never imported by a page, so it never reaches
+ *  a build. */
+import { markdownless } from "./markdown";
 
 export interface Literal {
   start: number;
@@ -107,9 +109,6 @@ export function literals(source: string): Literal[] {
   return found;
 }
 
-/** A string as `renderMarkdown` shows it: link targets, emphasis and code markers dropped. */
-const markdownless = (s: string) =>
-  s.replace(/\[([^\]]+)\]\([^)\s]+\)/g, "$1").replace(/\*\*|\*|`/g, "");
 const squash = (s: string) => s.replace(/\s+/g, "");
 /** Typographic quote marks a component draws around a quote, outside its string. */
 const unquote = (s: string) => s.trim().replace(/^[“”„"«»]+|[“”„"«»]+$/g, "");

@@ -18,6 +18,19 @@ describe("SlideContainer with a list of logos", () => {
       "partner",
       "third",
     ]);
-    expect(() => drawn([])).not.toThrow();
+    expect(
+      render(<SlideContainer logo={[]}>slide</SlideContainer>).container.querySelector(
+        ".slide-corner .hw-wordmark",
+      ),
+    ).not.toBeNull();
+  });
+});
+
+describe("SlideContainer on a night deck", () => {
+  it("puts the night theme on the viewport, which the brand elements read", () => {
+    const viewport = render(<SlideContainer theme="brand-dark">slide</SlideContainer>).container
+      .firstElementChild!;
+    expect(viewport.getAttribute("data-theme")).toBe("dark");
+    expect(viewport.hasAttribute("data-hw-night")).toBe(true);
   });
 });

@@ -6,11 +6,7 @@ import type { TitleSlide as TitleSlideType } from "../../types/slide";
 import { isOpening, qrAlt, speakerLine } from "../../lib/slide-utils";
 import { BlurFade } from "../ui/blur-fade";
 import { DeckLang, SlideShell } from "./SlideShell";
-import { DisplayHeading, LinkCaption, PictureLink } from "./primitives";
-
-/** Inline, because the `white-space` shorthand of `whitespace-pre-line` resets the class's
- *  `text-wrap: balance`, which left a lone year on the subtitle's second line. */
-const BALANCED = { textWrap: "balance" } as const;
+import { BALANCED, DisplayHeading, LinkCaption, PictureLink } from "./primitives";
 
 interface Props {
   slide: TitleSlideType;

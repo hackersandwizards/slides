@@ -140,7 +140,6 @@ it.each([
     });
     await page.close();
     expect(stages.length).toBeGreaterThan(2);
-    // Upright: each stage starts below the one before.
     expect(stages.every((top, i) => i === 0 || top > stages[i - 1])).toBe(true);
     expect(over).toEqual([]);
   },
@@ -390,10 +389,10 @@ it("keeps trend-marked's plot tall on a phone, its note below the chart", async 
   await page.close();
   expect(plot!.height).toBeGreaterThanOrEqual(296);
   expect(note!.top).toBeGreaterThan(Math.max(...labels.map((l) => l.bottom)));
+  expect(dot).toBeDefined();
   expect(
     labels.filter(
-      (l) =>
-        dot && l.top < dot.bottom && dot.top < l.bottom && l.left < dot.right && dot.left < l.right,
+      (l) => l.top < dot.bottom && dot.top < l.bottom && l.left < dot.right && dot.left < l.right,
     ),
   ).toEqual([]);
 }, 60_000);

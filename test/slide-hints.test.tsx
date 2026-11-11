@@ -77,8 +77,8 @@ describe("SlideHints", () => {
   it("shows the first-slide hints again when the page moves on to another deck", async () => {
     vi.useFakeTimers();
     try {
-      // From the deck list to deck A, past its intro, back to the list, on to deck B. Next's router
-      // moves the URL in an insertion effect after the new page renders, as `MoveTo` does here.
+      // From the deck list to deck A, past its intro, back to the list, on to deck B. `MoveTo`
+      // moves the URL after the new page renders, as Next's router did when a consumer ran on Next.
       const first = render(
         <>
           <MoveTo path="/deck-a/0" />

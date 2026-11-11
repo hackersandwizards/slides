@@ -261,6 +261,8 @@ function useFitToSlide() {
       sizes = measure();
     };
     refit();
+    // `slides-density` reads a slide without it as one the guard never fitted.
+    content.dataset.fitted = "";
     // A web font still loading changes the text's size once it arrives.
     if (document.fonts?.status === "loading") void document.fonts.ready.then(refit);
     if (typeof ResizeObserver === "undefined") return;

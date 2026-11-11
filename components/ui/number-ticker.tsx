@@ -31,7 +31,6 @@ export function NumberTicker({ value, className, duration = 0.5 }: NumberTickerP
     });
   }, [rounded, printMode]);
 
-  // On screen it starts at the motion value's 0, which a count of 0 never moves from.
   return (
     <span ref={ref} className={className}>
       {printMode ? value : 0}

@@ -8,7 +8,7 @@ import verbal from "@hackersandwizards/brand/verbal.json";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { centredMark, renderPptx } from "../scripts/render-pptx";
-import { checkSlide, pretty, wrap } from "../scripts/pptx-text";
+import { checkSlide, faceFiles, pretty, woff2Tables, wrap } from "../scripts/pptx-text";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import {
@@ -312,6 +312,79 @@ describe("slides-pptx on the specimen deck", () => {
     },
   );
 
+  // A list's first logo was the only one drawn, and only when it was no brand mark (code review
+  // 11.11.): the corner logo the web draws went missing.
+  it("stands a logo list as the web does: the last in the corner, the others at the bottom left", async () => {
+    const out = join(dir, "logos.pptx");
+    const partner = { src: "/specimen/slide-catalog/partner-mark.png", alt: "Partner" };
+    const qr = { src: "/specimen/slide-catalog/qr-example.png", alt: "Other" };
+    await renderPptx(
+      {
+        name: "D",
+        logo: { src: "/hw-lockup.svg", alt: "hackers&wizards" },
+        slideLogos: {
+          0: [{ src: "/hw-lockup.svg", alt: "hackers&wizards" }, partner],
+          1: [qr, partner],
+          2: [],
+        },
+        slides: [
+          { type: "statement", lines: ["A"] },
+          { type: "statement", lines: ["B"] },
+          { type: "statement", lines: ["C"] },
+        ],
+      },
+      out,
+      join(import.meta.dirname, ".."),
+    );
+    const probe = await JSZip.loadAsync(readFileSync(out));
+    const pics = async (i: number) =>
+      [
+        ...(await probe.file(`ppt/slides/slide${i}.xml`)!.async("string")).matchAll(
+          /descr="([^"]*)"[\s\S]*?<a:off x="(\d+)" y="\d+"\/>\s*<a:ext cx="\d+" cy="(\d+)"/g,
+        ),
+      ].map(([, alt, x, h]) => ({ alt: unescape(alt), x: +x / 914400, h: +h / 914400 }));
+    const [one, two, three] = [await pics(1), await pics(2), await pics(3)];
+    expect(one.find((p) => p.alt === "Partner")!.x).toBeGreaterThan(10);
+    expect(one.find((p) => p.alt === "hackers&wizards")!.x).toBeLessThan(1);
+    // `h-9` at `bottom-6 left-6` on the print route, whose rem is 21.333 px.
+    const other = two.find((p) => p.alt === "Other")!;
+    expect(other.x).toBeCloseTo((1.5 * 21.333) / 144, 3);
+    expect(other.h).toBeCloseTo((2.25 * 21.333) / 144, 3);
+    expect(two.find((p) => p.alt === "Partner")!.x).toBeGreaterThan(10);
+    expect(two.some((p) => p.alt === "hackers&wizards")).toBe(false);
+    expect(three.map((p) => p.alt)).toEqual(["hackers&wizards"]);
+  });
+
+  // The centred contact closing printed the whole LinkedIn address where the web prints its path
+  // (code review 11.11.).
+  it("labels a centred closing's LinkedIn link as the web does", async () => {
+    const out = join(dir, "closing-linkedin.pptx");
+    await renderPptx(
+      {
+        name: "D",
+        slides: [
+          {
+            type: "closing",
+            line1: "Thanks.",
+            speakers: [
+              { name: "A", company: "B", linkedIn: "https://www.linkedin.com/in/example-name" },
+            ],
+          },
+        ],
+      },
+      out,
+      join(import.meta.dirname, ".."),
+    );
+    const xml = await (
+      await JSZip.loadAsync(readFileSync(out))
+    )
+      .file("ppt/slides/slide1.xml")!
+      .async("string");
+    const text = [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((m) => m[1]);
+    expect(text).toContain("in/example-name");
+    expect(text.join(" ")).not.toContain("linkedin.com");
+  });
+
   it("sets a title slide's speakers and QR alt text in the deck's language", async () => {
     const out = join(dir, "deck-lang.pptx");
     await renderPptx(
@@ -572,6 +645,12 @@ describe("slides-pptx on the specimen deck", () => {
     expect(xml).toContain("We stopped asking for a release date.");
     const run = xml.slice(0, xml.indexOf("<a:t>Mara Lindqvist"));
     expect(run.slice(run.lastIndexOf("<a:rPr"))).toContain(`val="${muted}"`);
+    // The words stand brand's 2 px rule and 1.25 rem gap off the rule, at the print route's 21.333
+    // px rem; the export stood them 20 px off (review 11.11.).
+    const shapes = shapesOf(xml);
+    const rule = shapes.find((sp) => sp.fill === purple && sp.w! < 0.02)!;
+    const words = shapes.find((sp) => sp.texts.some((t) => t.includes("We stopped asking")))!;
+    expect(words.x! - rule.x!).toBeCloseTo((2 + 1.25 * 21.333) / 144, 3);
   });
 
   it.each([
@@ -1138,6 +1217,29 @@ it.each([true, false])(
   },
 );
 
+// The measure reads hmtx as a plain table; a WOFF2 encoder may transform it, which drops the left
+// side bearings and would shift every advance it reads (code review 11.11.).
+it("refuses a face whose hmtx table is transformed, and reads one whose hmtx is plain", () => {
+  const font = Buffer.from(readFileSync(faceFiles(false, false)[0]));
+  expect(woff2Tables(font).get("hmtx")!.length).toBeGreaterThan(0);
+  let at = 48;
+  const skip = () => {
+    while (font[at++] & 0x80);
+  };
+  for (let i = 0; i < font.readUInt16BE(12); i++) {
+    const flags = font[at];
+    if ((flags & 0x3f) === 3) {
+      font[at] = flags | 0x40;
+      break;
+    }
+    at += (flags & 0x3f) === 63 ? 5 : 1;
+    skip();
+    const index = flags & 0x3f;
+    if (index === 10 || index === 11 ? flags >> 6 !== 3 : flags >> 6 !== 0) skip();
+  }
+  expect(() => woff2Tables(font)).toThrow(/hmtx/);
+});
+
 // Each shape of a slide: its preset, frame in inches, fill, line dash and texts.
 const shapesOf = (xml: string) =>
   [...xml.matchAll(/<p:sp>(.*?)<\/p:sp>/gs)].map(([, b]) => {
@@ -1510,6 +1612,14 @@ describe("slides-pptx as a command", () => {
     expect(loose.status).toBe(0);
     expect(loose.stderr).toContain("warning: image /missing.png");
     expect(run("--strict").status).toBe(1);
+  });
+
+  // A mistyped flag ran the export loose and exited 0 in a gate that asked for --strict (review 11.11.).
+  it("refuses an argument it does not know, and --assets without a directory", () => {
+    expect(run("--stric").status).toBe(1);
+    expect(
+      spawnSync("bun", [script, "-", join(dir, "cli.pptx"), "--assets"], { input: deck }).status,
+    ).toBe(1);
   });
 
   it("warns once about a missing picture on a slide it measures before drawing", async () => {

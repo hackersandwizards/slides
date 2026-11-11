@@ -22,7 +22,7 @@ import type {
 } from "../types/slide";
 import { trendTicks } from "../components/slides/ChartPlots";
 import { groundOf } from "../components/slides/SlideShell";
-import { BRAND_MARK, cornerMark, resolveSlideLogo } from "../lib/logo";
+import { BRAND_MARK, HW_LOGO, cornerMark, logoPlaces, resolveSlideLogo } from "../lib/logo";
 import { INLINE_MARKDOWN } from "../lib/markdown";
 import {
   isDeepDive,
@@ -220,7 +220,6 @@ function breaks(runs: Run[]): Run[] {
   );
 }
 
-/** Inline markdown as the engine reads it. */
 function md(text: string, c: Palette, base: TextProps = {}): Run[] {
   const parts = String(text).split(INLINE_MARKDOWN);
   return parts.flatMap((part, i): Run[] => {
@@ -687,7 +686,7 @@ function picture(
     href?: string;
     /** Cropped to a circle that it fills, as a portrait. */
     round?: boolean;
-    align?: "center" | "left";
+    align?: "center" | "left" | "right";
     /** Never drawn larger than the file at 144 px to the inch, as the slide never scales one up. */
     native?: boolean;
   } = {},
@@ -730,7 +729,7 @@ function picture(
   const k = Math.min(w / iw, h / ih, o.native ? 1 / 144 : Infinity);
   const pw = iw * k;
   const ph = ih * k;
-  const px = o.align === "left" ? x : x + (w - pw) / 2;
+  const px = o.align === "left" ? x : o.align === "right" ? x + w - pw : x + (w - pw) / 2;
   const py = y + (h - ph) / 2;
   s.addImage({
     path,
@@ -768,13 +767,12 @@ const THEME: Record<SectionTheme, keyof Palette> = {
   deepdive: "purple",
 };
 
-/** A contact closing slide without portraits carries the lockup in its centre column and none in
- *  the corner, as the web's `.slide-closing-mark` does. */
-/** Whether a closing stands the h&w mark centred in place of its speakers' companies. */
+/** Whether a closing stands the h&w lockup in its centre column and none in the corner, as the
+ *  web's `.slide-closing-mark` does on a contact closing without portraits. */
 export const centredMark = (d: Extract<Slide, { type: "closing" }>) =>
   d.variant !== "discussion" && !d.speakers?.some((sp) => sp.imageSrc);
 
-/** The brand strip, the page counter, the corner mark and a client's logo on the left. */
+/** The brand strip, the page counter and the slide's logos where the web stands them (`logoPlaces`). */
 function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   const { c } = ctx;
   s.background = { color: c.bg };
@@ -800,19 +798,21 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   const lockupH = 65 / 144;
   const right = W - 96 / 144;
   const baseY = 1024 / 144;
+  const { corner, start } = logoPlaces(resolveSlideLogo(deck, index));
+  // `h-9`, as the slide draws a deck's logos.
+  const logoH = 2.25 * REM;
   let x = right;
+  // A closing that stands the h&w lockup in its centre column leaves the corner empty.
   if (!closingCentred) {
-    const [path, ratio] = brandCut(`${mark}${ctx.dark ? "-night" : ""}`);
-    const h = mark === "lockup" ? lockupH : markH;
-    x = right - h * ratio;
-    s.addImage({
-      path,
-      x,
-      y: baseY - h / 2,
-      w: h * ratio,
-      h,
-      altText: "hackers&wizards",
-    });
+    if (corner.src === HW_LOGO.src) {
+      const [path, ratio] = brandCut(`${mark}${ctx.dark ? "-night" : ""}`);
+      const h = mark === "lockup" ? lockupH : markH;
+      x = right - h * ratio;
+      s.addImage({ path, x, y: baseY - h / 2, w: h * ratio, h, altText: "hackers&wizards" });
+    } else {
+      const at = { alt: corner.alt, align: "right" as const };
+      x = picture(s, ctx, corner.src, right - 2.4, baseY - logoH / 2, 2.4, logoH, at).x;
+    }
   }
   const page = pageLabel(deck.slides, index);
   if (page) {
@@ -825,13 +825,14 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
       valign: "middle",
     });
   }
-  const logo = resolveSlideLogo(deck, index);
-  const first = Array.isArray(logo) ? logo[0] : logo;
-  if (first && !BRAND_MARK.test(first.src)) {
-    picture(s, ctx, first.src, 24 / 144, H - 24 / 144 - 36 / 144, 1.4, 36 / 144, {
-      alt: first.alt,
+  // `bottom-6 left-6 gap-5`, the slide's start row.
+  let left = 1.5 * REM;
+  for (const l of start) {
+    const drawn = picture(s, ctx, l.src, left, H - 1.5 * REM - logoH, 2.4, logoH, {
+      alt: l.alt,
       align: "left",
     });
+    left += drawn.w + 1.25 * REM;
   }
   if (slide.notes) s.addNotes(slide.notes);
 }
@@ -1106,7 +1107,6 @@ function beforeAfterSide(
 const BA_PAD = 0.25;
 const BA_GAP = 0.7;
 
-/** The height beforeAfter needs in width w. */
 function beforeAfterHeight(
   c: Palette,
   sides: BeforeAfterSide[],
@@ -1237,9 +1237,6 @@ function codeLines(code: string) {
   return lines.map((l) => l.slice(Number.isFinite(cut) ? cut : 0));
 }
 
-/** The rule and its gap before a quote's words: brand's 2 px and 1.25 rem on the 1920 stage. */
-const QUOTE_INDENT = (2 + 20) / 144;
-
 /** A quote block's paragraphs, each with its type size: the words, then the source in grey. */
 function quoteParas(b: Extract<ContentBlock, { type: "quote" }>, c: Palette, k: number) {
   const words: [Para, number] = [{ runs: md(b.text, c), after: 8 }, PT.h3 * k];
@@ -1249,7 +1246,6 @@ function quoteParas(b: Extract<ContentBlock, { type: "quote" }>, c: Palette, k: 
 }
 
 function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number {
-  // Drawn as the cards block the web draws it as, columns included.
   if (b.type === "labeled-grid") return blockHeight(labeledGridAsCards(b), c, w, k);
   const o = bodyO(c, k);
   switch (b.type) {
@@ -1259,7 +1255,7 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
       return need(bulletParas(b.items, c, b.ordered), c, w, o);
     case "quote":
       return quoteParas(b, c, k).reduce(
-        (h, [p, size]) => h + need(p, c, w - QUOTE_INDENT, { ...o, size }) + 0.1,
+        (h, [p, size]) => h + need(p, c, w - QUOTE_INDENT * k, { ...o, size }) + 0.1,
         0,
       );
     case "callout":
@@ -1435,9 +1431,9 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         s,
         c,
         quoteParas(b, c, k).map(([p, size]) => ({ ...p, rel: size / (PT.base * k) })),
-        a.x + QUOTE_INDENT,
+        a.x + QUOTE_INDENT * k,
         a.y,
-        a.w - QUOTE_INDENT,
+        a.w - QUOTE_INDENT * k,
         a.h,
         { ...o, align: "left" },
       );
@@ -2081,6 +2077,9 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
 /** A rem of the print route's stage, 21.333 px at 1920, in inches. */
 const REM = 21.333 / 144;
 
+/** The rule and its gap before a quote's words: brand's 2 px and 1.25 rem on the 1920 stage. */
+const QUOTE_INDENT = 2 / 144 + 1.25 * REM;
+
 /** A bars block as `Bars` sets it: four bars and more one row each, the label left of its track,
  *  fewer with the label above; a highlight in teal and bold, the other bars context in grey; without
  *  a named scale each figure follows its bar's end. */
@@ -2294,7 +2293,6 @@ function topology(
   );
   const rowH = d.enabling.length || streams.length || subs.length ? Math.max(mainH, ...enH) : 0;
 
-  // The platform teams side by side in one dotted frame.
   const pw = d.platform.length
     ? (a.w - 2 * sp(3) - 2 * bd - (d.platform.length - 1) * sp(4)) / d.platform.length
     : 0;
@@ -3723,7 +3721,6 @@ const RENDER: {
       ...(d.intro ? [{ runs: md(d.intro, c), after: 6 }] : []),
       ...bulletParas(d.points ?? [], c),
     ];
-    // The intro, the points and the examples in the muted grey, as on the web.
     if (intro.length) {
       const ih = need(intro, c, CW, { size: PT.base, color: c.muted }, 1.6);
       box(s, c, intro, SIDE, y, CW, ih, { size: PT.base, color: c.muted });
@@ -4309,7 +4306,6 @@ const RENDER: {
   closing(s, ctx, d, deck) {
     const { c } = ctx;
     if (d.variant === "discussion") {
-      // A titled slide, as on the web.
       const y = header(s, ctx, { headline: d.headline ?? d.line1 ?? ctx.words.discussion });
       // Each seed question on its own card, as the web's: 1.25 rem over and under it, 2 rem
       // beside, 1.5 rem between the cards, the question muted.
@@ -4413,7 +4409,7 @@ const RENDER: {
                   {
                     runs: [
                       {
-                        text: linkLabel(sp.linkedIn),
+                        text: profileLabel(sp.linkedIn),
                         options: { color: c.teal, hyperlink: { url: sp.linkedIn } },
                       },
                     ],
@@ -4682,7 +4678,6 @@ const RENDER: {
           bar.continuous ? mix(tone, c.card, 0.7) : undefined,
           radius,
         );
-        // Each label on the line above its bar, from the bar's start.
         box(s, c, bar.label, cx(bar.start), ry, span(bar.span), lh, {
           size: PT.label,
           bold: true,
@@ -5024,7 +5019,6 @@ const RENDER: {
         line: { type: "none" },
       });
     };
-    // The need and the question, centred on the grid's middle, the arrow between them.
     card(
       s,
       col(0),
@@ -5262,9 +5256,6 @@ export async function renderPptx(
       );
     render(s, ctx, slide as never, deck);
   });
-  // Each font reference names its pitch and family class, so PowerPoint on a machine without the
-  // brand fonts substitutes a sans for Inter and a monospace for JetBrains Mono instead of its
-  // default face. pptxgenjs writes the typeface alone, or a sans pitch for every face in a table.
   const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
   // pptxgenjs numbers charts across every deck of the process: within one, they run in drawing order.
   const chartFiles = Object.keys(zip.files)
@@ -5279,6 +5270,10 @@ export async function renderPptx(
     zip.file(
       name,
       xml
+        // Each font reference names its pitch and family class, so PowerPoint on a machine without
+        // the brand fonts substitutes a sans for Inter and a monospace for JetBrains Mono instead of
+        // its default face. pptxgenjs writes the typeface alone, or a sans pitch for every face in
+        // a table.
         .replace(
           /typeface="([^"]+)"(?:\s+(?:pitchFamily|charset|panose)="[^"]*")*/g,
           (m, face: string) =>
@@ -5304,7 +5299,6 @@ export async function renderPptx(
           return `<a:buClr><a:srgbClr val="${marked}"/></a:buClr><a:buSzPct val="130000"/><a:buFont typeface="Arial" pitchFamily="34" charset="0"/><a:buChar char="&#x${hue ? MARKER_SQUARE : code};"/>`;
         }),
     );
-    // What a renderer would draw past a box, a card or the slide's edge.
     if (n)
       for (const found of checkSlide(await zip.file(name)!.async("string"), W, H))
         deckCtx.warnings.push(`slide ${n[1]}: ${found}`);
@@ -5321,9 +5315,10 @@ if (import.meta.main) {
   const embed = args.includes("--embed-fonts");
   if (embed) args.splice(args.indexOf("--embed-fonts"), 1);
   const at = args.indexOf("--assets");
-  const assets = resolve(at >= 0 ? (args.splice(at, 2)[1] ?? "") : "public");
-  const [input, out] = args;
-  if (!input || !out || !out.endsWith(".pptx")) {
+  const dir = at >= 0 ? args.splice(at, 2)[1] : "public";
+  const assets = resolve(dir ?? "");
+  const [input, out, ...rest] = args;
+  if (!input || !out || !out.endsWith(".pptx") || !dir || rest.length) {
     console.error(
       "Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict] [--embed-fonts]",
     );

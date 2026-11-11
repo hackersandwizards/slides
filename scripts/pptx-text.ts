@@ -1,6 +1,3 @@
-// The PowerPoint export's text measure: the brand faces' own advance widths and line heights, read
-// from the woff2 files brand exports, the line breaks a renderer makes with them, and the check
-// that no text box of a written slide runs past its box, the shape it stands in or the slide.
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { brotliDecompressSync } from "node:zlib";
@@ -56,6 +53,8 @@ export function woff2Tables(buf: Buffer): Map<string, Buffer> {
     const orig = base128();
     const version = flags >> 6;
     const transformed = tag === "glyf" || tag === "loca" ? version !== 3 : version !== 0;
+    // A transformed hmtx holds no left side bearings, so the advances would be read off by a field.
+    if (transformed && tag === "hmtx") throw new Error("a transformed hmtx table");
     dir.push([tag, transformed ? base128() : orig]);
   }
   const data = brotliDecompressSync(buf.subarray(at, at + buf.readUInt32BE(20)));
@@ -138,8 +137,6 @@ export function faceMetrics(files: Buffer[]): FaceMetrics {
   };
 }
 
-/** The two brand faces at the weights the export sets, regular and bold: every static WOFF2
- *  subset brand's `static-fonts.css` names for them, latin first. */
 const require = createRequire(import.meta.url);
 const staticFaces = [
   ...readFileSync(require.resolve("@hackersandwizards/brand/static-fonts.css"), "utf8").matchAll(
@@ -155,6 +152,8 @@ const staticFaces = [
     file: /url\("[^"]*\/([^"/]+\.woff2)"\)/.exec(decl.get("src") ?? "")?.[1],
   };
 });
+/** The static WOFF2 subsets brand's `static-fonts.css` names for one brand face, regular or
+ *  bold, latin first. */
 export const faceFiles = (mono: boolean, bold: boolean) => {
   const name = mono ? MONO : SANS;
   const files = staticFaces
@@ -257,7 +256,6 @@ export function wrap(spans: Span[], width: number): Line[] {
     const pw = pieceWidth(p);
     if (text && w + pw - p.space > width) end();
     if (pw - p.space > width) {
-      // Broken by character over as many lines as it takes.
       for (const [sp, t] of p.parts)
         for (const ch of t) {
           const cw = spanWidth(sp, ch);

@@ -277,7 +277,7 @@ export type VisualBlock =
       highlight?: number;
       /** The first card's number, where one set of numbered cards runs across two slides. */
       numberFrom?: number;
-      /** Columns; by default three, two for four cards. */
+      /** Columns; by default one per card up to three, two for four cards. */
       columns?: 1 | 2 | 3 | 4;
       /** Shows the cards one per arrow key instead of all on arrival. */
       reveal?: boolean;

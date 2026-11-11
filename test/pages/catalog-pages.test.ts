@@ -1,10 +1,15 @@
 import puppeteer, { type Browser, type Page } from "puppeteer";
+import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { TICK_GAP } from "../../components/slides/ChartPlots";
 import { type Served, serveDist } from "./serve-dist";
 
 // Served under the Pages base, since a built state page loads its stylesheets from /slides/.
-const NIGHT = "rgb(11, 17, 24)";
+const rgb = (hex: string) =>
+  `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
+const NIGHT = rgb(tokens["--color-night"]);
+// A story page's own ground, so a missing one (transparent) reads as no day.
+const DAY = rgb(tokens["--color-bg"]);
 let browser: Browser;
 let served: Served;
 let page: (path: string) => string;
@@ -82,7 +87,7 @@ it("keeps a day slide's story page day under the dark theme", async () => {
   const fill = await tab.evaluate(
     () => getComputedStyle(document.querySelector(".slide-story")!).backgroundColor,
   );
-  expect(fill).not.toBe(NIGHT);
+  expect(fill).toBe(DAY);
   await tab.close();
 }, 60_000);
 

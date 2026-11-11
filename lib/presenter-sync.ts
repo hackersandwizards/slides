@@ -336,7 +336,7 @@ function windowRole(): Role {
 
 let role: Role | undefined;
 
-/** The one instance per window. Module state outlives a client-side navigation in both hosts. */
+/** The one instance per window. Module state outlives a slide change, which loads no document. */
 export const deckSync = createDeckSync({
   role: () => (role ??= typeof window === "undefined" ? "audience" : windowRole()),
   channel: (name) => new BroadcastChannel(name),

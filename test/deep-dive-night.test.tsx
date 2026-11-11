@@ -23,7 +23,13 @@ describe("deep-dive slides stand on night", () => {
     const night = (slide: Slide) => {
       const Component = slideComponents[slide.type];
       const { container } = render(<Component slide={slide} />);
-      return container.querySelector(".slide-night") !== null;
+      const shell = container.querySelector(".slide-night");
+      // The class alone left the brand elements on day: they turn on these two (review 11.11.).
+      if (shell) {
+        expect(shell.getAttribute("data-theme")).toBe("dark");
+        expect(shell.hasAttribute("data-hw-night")).toBe(true);
+      }
+      return shell !== null;
     };
     expect(night({ type: "deep-dive-divider", headline: "Part two" } as Slide)).toBe(true);
     expect(night(pills("deepdive"))).toBe(true);

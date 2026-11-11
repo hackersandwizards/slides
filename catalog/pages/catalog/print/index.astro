@@ -52,7 +52,6 @@ const jobLinks = (Object.keys(JOBS) as Job[])
     <link rel="stylesheet" href={`${brandHref}/tokens.root.css`} />
     <link rel="stylesheet" href={`${brandHref}/header.css`} />
     <link rel="stylesheet" href="build/slides.css" />
-    <!-- The elements this page's own search, filter and tables draw, which no slide does. -->
     {["field", "search", "nav", "table", "empty"].map((name) => (
       <link rel="stylesheet" href={`${brandHref}/elements/${name}.css`} />
     ))}

@@ -120,9 +120,10 @@ const STALE_MS = 3 * 60 * MINUTE;
 /** The countdown's state: `endsAt` while it runs, else the time `left`; `at` is when it was saved. */
 type TimerState = { minutes: number; endsAt: number | null; left: number; at: number };
 
-/** The minutes of a timebox such as "3 min", else 2, the room's usual think time. */
-export function timerMinutes(duration?: string) {
-  const minutes = Number.parseInt(duration ?? "", 10);
+/** The minutes of a timebox such as "3 min" or "ca. 15 Min.", its first number, else 2, the room's
+ *  usual think time. */
+export function timerMinutes(duration = "") {
+  const minutes = Number(/\d+/.exec(duration)?.[0]);
   return minutes >= 1 ? Math.min(minutes, MAX_MINUTES) : 2;
 }
 

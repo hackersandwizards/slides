@@ -120,7 +120,7 @@ const frames = picks.map((index) => {
   return renderFrame(index, first ? type : `${type} · ${variantOf(deck[index])}`);
 });
 // A type whose first slide draws no list marker adds its first slide that does, since the marker
-// check (test/marker-position.test.ts) measures only this page.
+// check (test/pages/marker-position.test.ts) measures only this page.
 const marked = (index: number) => slideMarkup(index).includes("hw-marker");
 const markerFrames = [...new Set(picks.map((i) => deck[i].type))].flatMap((type) => {
   if (picks.some((i) => deck[i].type === type && marked(i))) return [];

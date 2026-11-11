@@ -34,7 +34,6 @@ function Swatch({ type }: { type: TeamType }) {
   );
 }
 
-// Each type the slide draws, in the order drawn.
 function Legend({ slide }: Props) {
   const words = WORDS[useContext(DeckLang)].teams;
   const types = teamTypesDrawn(slide);

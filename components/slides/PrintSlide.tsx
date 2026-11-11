@@ -1,10 +1,9 @@
-import type { LogoConfig, Presentation } from "../../types/slide";
+import type { Presentation } from "../../types/slide";
 import { slideComponents } from "../../lib/slide-components";
-import { HW_LOGO, cornerMark, resolveSlideLogo } from "../../lib/logo";
+import { cornerMark, logoPlaces, resolveSlideLogo } from "../../lib/logo";
 import { PrintProvider } from "../../lib/print-context";
 import { bulletsAsStatement, deckLang, pageLabel, regularAsContent } from "../../lib/slide-utils";
-import Image from "../ui/image";
-import { BrandStrip, HwWordmark, PageCounter } from "./SlideContainer";
+import { BrandStrip, CornerStart, DeckLogo, PageCounter } from "./SlideContainer";
 import { DeckLang, DeckNight } from "./SlideShell";
 
 /** One slide as a printed page: the slide, the brand strip and the corner with the page counter
@@ -14,9 +13,7 @@ import { DeckLang, DeckNight } from "./SlideShell";
 export function PrintSlide({ presentation, index }: { presentation: Presentation; index: number }) {
   const slide = presentation.slides[index];
   const SlideComponent = slideComponents[slide.type];
-  const slideLogo = resolveSlideLogo(presentation, index);
-  const logos: LogoConfig[] =
-    slideLogo == null ? [HW_LOGO] : Array.isArray(slideLogo) ? slideLogo : [slideLogo];
+  const { corner, start } = logoPlaces(resolveSlideLogo(presentation, index));
   const page = pageLabel(presentation.slides, index);
   const lang = deckLang(presentation);
   const drawn = slide.type === "regular" ? regularAsContent(slide) : slide;
@@ -35,6 +32,7 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
         </DeckLang.Provider>
       </DeckNight.Provider>
       <BrandStrip />
+      <CornerStart logos={start} position="absolute" />
       <div className="print-watermark flex items-center gap-2">
         {page && (
           <span className="mr-3">
@@ -42,20 +40,7 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
           </span>
         )}
         {/* The print root's 21.333px rem sizes the h&w mark as the screen corner at 1920x1080. */}
-        {logos.map((l, i) =>
-          l.src === HW_LOGO.src ? (
-            <HwWordmark key={i} mark={cornerMark(presentation, index)} />
-          ) : (
-            <Image
-              key={i}
-              src={l.src}
-              alt={l.alt}
-              width={l.width ?? 60}
-              height={l.height ?? 49}
-              className="pointer-events-none h-9 w-auto"
-            />
-          ),
-        )}
+        <DeckLogo logo={corner} asMark mark={cornerMark(presentation, index)} />
       </div>
     </div>
   );

@@ -4,8 +4,7 @@ import { MediaSlide } from "../components/slides/MediaSlide";
 import type { MediaSlide as MediaSlideType } from "../types/slide";
 
 describe("MediaSlide", () => {
-  // The `single` layout (the default when sources.length <= 1) used to
-  // dereference sources[0] unguarded, crashing on an empty sources array.
+  // The `single` layout read sources[0] unguarded and crashed on an empty list.
   it("renders without throwing when sources is empty", () => {
     const slide: MediaSlideType = { type: "media", headline: "Empty", sources: [] };
     expect(() => render(<MediaSlide slide={slide} />)).not.toThrow();

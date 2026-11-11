@@ -176,6 +176,8 @@ it("brand-markers fails on squares moved by half a pixel", () => {
   expect(files.length).toBeGreaterThan(10);
   const run = brandMarkers(files.slice(0, 3));
   expect(run.status).toBe(1);
+  // Exit 1 is also a page that failed to load: the run must have read the moved squares.
+  expect(`${run.stdout}${run.stderr}`).toMatch(/\b[1-9]\d* off by more than/);
 }, 300_000);
 
 it("every step number on the specimen slides sits on its line", async () => {

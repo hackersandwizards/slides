@@ -8,8 +8,8 @@ import { useMounted } from "./use-mounted";
 /** Edit mode, local development only, in a tab opened once with `?edit`, so a stray E while
  *  presenting from the dev server never starts it: E toggles it, a click on a text opens that
  *  text's source string in a field over it, Enter or a click elsewhere writes it into the deck
- *  file, Escape cancels. Each host mounts this behind its dev flag and serves `ENDPOINT` from its dev server
- *  only (`deck-edit.ts` holds the file logic), so neither reaches a production build.
+ *  file, Escape cancels. `DeckView` mounts this in dev only, and each host serves `ENDPOINT` from
+ *  its dev server only (`deck-edit-server.ts`), so neither reaches a production build.
  *
  *  The field sits in its own frame: the deck's shortcuts listen on this window, several in the
  *  capture phase, and typing H, S, F or Space there would fire them. */

@@ -546,7 +546,6 @@ describe("a staggered timeline", () => {
 
   it("is solid up to now's dot and dashed after it", () => {
     // 16 tracks; the third stage's dot stands 6 tracks in.
-    // Each run takes the heavy rule every timeline line takes.
     expect(runs(2)).toEqual([
       [false, "12.5%", "62.5%", "var(--slide-rule-heavy)"],
       [true, "37.5%", "12.5%", "var(--slide-rule-heavy)"],

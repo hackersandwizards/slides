@@ -2,10 +2,8 @@
 import brand from "@hackersandwizards/brand/tokens.json";
 import stage from "@hackersandwizards/brand/stage.css?raw";
 
-// A slide fills its window, so the dashboard frames its preview page at brand's slide page size,
-// scaled to the card: at the card's own size a phone's window was too short for the slide. The card
-// takes the largest 16:9 box that fits both the page's width and the scroll pane's height under
-// the story bar, so the whole slide shows without scrolling.
+// The preview page is framed at brand's slide page size and scaled into the card, since at the
+// card's own size a phone's window was too short for the slide.
 // `?revealed` opens a slide with every build step shown. A consumer whose catalog loads another
 // stylesheet names the slides' own in `css`, a URL with the site's base such as a `?url` import,
 // linked on the story page alone; `light` keeps that page light whatever the catalog's theme,
@@ -20,11 +18,10 @@ const { component, part, css, light } = Astro.props;
 const path = Astro.url.pathname;
 const preview = path.includes("/stories/");
 const src = path.replace("/dashboard/", "/stories/");
-// The dashboard page's own stylesheet need carry no slide token: the frame reads the page size out
-// of brand's stage and imports its card below. The card's line is the catalog's own colour, its
-// corner the site's. Two values rather than all of stage.css keep the frame's style under Astro's
-// 4 KB inline limit: above it the style becomes a render-blocking request that delays the LCP.
-// A value naming another stage token would resolve to nothing here, so only a literal passes.
+// The frame reads the page size out of brand's stage, so the dashboard's stylesheet needs no slide
+// token. Two values rather than all of stage.css keep the frame's style under Astro's 4 KB inline
+// limit, above which it becomes a render-blocking request; a value naming another stage token
+// would resolve to nothing here, so only a literal passes.
 const size = ["--slide-page-width", "--slide-page-height"]
   .map((name) => {
     const value = stage.match(new RegExp(`[{;\\s]${name}\\s*:\\s*([^;}]+)`))?.[1].trim();
@@ -75,7 +72,6 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
         const frame = stage.firstElementChild;
         const pane = embed.parentElement;
         const fit = () => {
-          // Enlarged, the slide fills the window, across a portrait phone so it is read turned.
           if (stage.showPopover && stage.matches(":popover-open")) {
             stage.style.width = "";
             const { clientWidth: w, clientHeight: h } = stage;

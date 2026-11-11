@@ -53,7 +53,7 @@ const SERVER_STATE: DeckState = { slide: -1, back: false, step: 0, at: 0, from: 
  *  window's own copy of the slide, which keeps taking the keys and the clicker, so every press
  *  here runs exactly as it would in the audience window and is mirrored there.
  *
- *  It sits outside the per-slide tree in both hosts, so its frames load once and then follow the
+ *  It sits outside the per-slide tree in DeckView, so its frames load once and then follow the
  *  deck rather than reloading on every slide. */
 export function PresenterView({ notes, basePath }: Props) {
   const mounted = useMounted();

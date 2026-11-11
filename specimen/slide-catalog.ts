@@ -2225,7 +2225,7 @@ const slides: Slide[] = [
     lines: ["Does the diagnosis hold for you?"],
     subtitle:
       "What works for you? What does not?\nWhere did you fall flat?\n\nOn to the speakers' corner,\nlater on the discussion board",
-    qr: { src: specimenImages["qr-tight.png"], href: "https://example.com/discuss" },
+    qr: { src: specimenImages["qr-tight.png"], href: "https://example.com/harness" },
     footer: "The discussion goes on in the hallway and on the board",
     notes: "statement: a QR code without a margin of its own, and a footer.",
   },

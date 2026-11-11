@@ -1,12 +1,13 @@
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import { deckEditHandler } from "../lib/deck-edit-server";
 
 const dir = mkdtempSync(join(tmpdir(), "deck-edit-server-"));
+afterAll(() => rmSync(dir, { recursive: true, force: true }));
 const files: Record<string, string> = { "/deck": "deck.ts", "/missing": "missing.ts" };
 const deckFile = (deck: unknown) =>
   typeof deck === "string" && deck in files ? join(dir, files[deck]) : null;

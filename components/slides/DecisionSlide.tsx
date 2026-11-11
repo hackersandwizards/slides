@@ -85,7 +85,8 @@ export function DecisionSlide({ slide }: Props) {
         {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
         <div className="slide-body items-center">
           <BlurFade delay={0.2} duration={0.5} className="w-full">
-            {/* Below md the 1120px canvas would overflow, so the same flow runs top to bottom. */}
+            {/* Below md the grid's columns are too narrow for their text, so the same flow runs
+                top to bottom. */}
             <div className="flex flex-col gap-3 md:hidden">
               <SlideCard
                 tone="primary"
@@ -132,19 +133,26 @@ export function DecisionSlide({ slide }: Props) {
               <div className="relative col-start-2 row-span-2 row-start-1 h-1 self-center bg-primary">
                 <Head />
               </div>
-              <div className="relative col-start-3 row-span-2 row-start-1 self-center rounded-brand border border-primary bg-white px-5 py-5 text-center text-2xl leading-tight font-bold text-text">
+              <SlideCard
+                tone="primary"
+                look="outline"
+                className="relative col-start-3 row-span-2 row-start-1 self-center text-center text-2xl leading-tight font-bold text-text card-pad-5"
+              >
                 <span className="absolute top-1/2 -right-8 h-1 w-8 -translate-y-1/2 bg-primary" />
                 {keepCompounds(slide.question)}
-              </div>
+              </SlideCard>
               <Elbow side="in" half="top" label={slide.yes.label} />
               <GridBranch branch={slide.yes} row={1} />
               <Elbow side="out" half="top" />
-              <div className="relative col-start-7 row-span-2 row-start-1 self-center rounded-brand bg-ink/7 px-5 py-4 text-2xl leading-tight font-bold text-text">
+              <SlideCard
+                tone="quiet"
+                className="relative col-start-7 row-span-2 row-start-1 self-center text-2xl leading-tight font-bold text-text card-pad-4/5"
+              >
                 <span className="absolute top-1/2 -left-8 h-1 w-8 -translate-y-1/2 bg-primary">
                   <Head />
                 </span>
                 {keepCompounds(slide.outcome)}
-              </div>
+              </SlideCard>
               <Elbow side="in" half="bottom" label={slide.no.label} />
               <GridBranch branch={slide.no} row={2} />
               <Elbow side="out" half="bottom" />

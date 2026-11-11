@@ -6,14 +6,15 @@
 // slide gets a split suggestion: its blocks laid out at full size, grouped into slides that fit.
 // A slide the printed page marks with `data-use` (a content slide of one or two short bullets, or
 // a regular slide drawn as one) fails too, naming the type that carries it. A slide is named by
-// its deck page's path, `/<deck>/<index>`, counted from 0 as the URL counts.
+// its deck page's path, `/<deck>/<index>`, counted from 0 as the URL counts. A slide the fit guard
+// never fitted, as on a print route that did not hydrate, fails, since its scale cannot be read.
 //
 //   slides-density [--site <dir> | --serve "<command>"] <print-url or path> ...
 //
 // `--site` serves a built site's folder for the run; `--serve` starts the consumer's server with
 // scaffolding's `serve`, which hands it HOST and PORT, waits until it answers and stops it at the
 // end. Either way a path (`/deck/print`) is read against that server. Exit 1 on any slide below
-// FAIL or marked, or any deck that does not render.
+// FAIL, marked or unfitted, or any deck that does not render.
 
 import puppeteer, { type Browser } from "puppeteer";
 import { FIT_STYLE } from "../lib/slide-utils";
@@ -25,6 +26,8 @@ const NOTICE = 0.9;
 const PAGES = 4;
 const WORD =
   "a heading's word is wider than its box and shrinks the heading: shorten the word or give it a wider box";
+const UNFITTED =
+  "the fit guard never ran on this slide, so its scale cannot be read: check the page's console for an error and its print route for client:load";
 const STATEMENT =
   "one or two short bullets leave the slide empty: make it the statement slide bulletsAsStatement in lib/slide-utils returns";
 
@@ -99,6 +102,10 @@ async function check(browser: Browser, url: string): Promise<string[]> {
     await page.setViewport({ width: 1920, height: 1080 });
     await settlePrintPage(page, url);
     return (await page.$$eval(".print-slide", measure, NOTICE, [...FIT_STYLE])).map((r) => {
+      if ("unfitted" in r) {
+        failed++;
+        return `FAIL /${deck}/${r.i} "${r.title}": ${UNFITTED}`;
+      }
       if ("use" in r) {
         failed++;
         return `FAIL /${deck}/${r.i} "${r.title}": ${STATEMENT}`;
@@ -127,8 +134,10 @@ async function check(browser: Browser, url: string): Promise<string[]> {
   }
 }
 
-/** A slide of the wrong type, one with a heading shrunk to fit a word, or one the fit guard shrank. */
+/** A slide the fit guard never fitted, one of the wrong type, one with a heading shrunk to fit a
+ *  word, or one the fit guard shrank. */
 type Row =
+  | { i: number; title: string; unfitted: true }
   | { i: number; title: string; use: true }
   | { i: number; title: string; word: number }
   | { i: number; title: string; scale: number; label: string; groups: number; split: string };
@@ -136,6 +145,9 @@ type Row =
 function measure(nodes: Element[], notice: number, fitStyle: string[]) {
   return nodes.flatMap((slide, i): Row[] => {
     const title = slide.querySelector("h1, h2")?.textContent?.trim().slice(0, 60) ?? "";
+    // The page did not hydrate, so no scale below can be read.
+    if (slide.querySelector(".slide-shell > .slide-content:not([data-fitted])"))
+      return [{ i, title, unfitted: true as const }];
     const misused = (slide as HTMLElement).dataset.use ? [{ i, title, use: true as const }] : [];
     // A heading the fit guard shrank so that its widest word fits (SlideShell's fitWords).
     const word = Math.min(

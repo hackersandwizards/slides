@@ -121,7 +121,6 @@ export function FlowSteps({
     <div
       className={`slide-flow relative w-full ${n >= LONG_FLOW || !fitsPhoneRow(steps) ? "slide-flow-long" : ""}`}
     >
-      {/* The loop runs above the nodes, out of the last one and down into the first. */}
       {loop !== undefined && (
         <div
           className={`slide-flow-loop relative mb-2 ${loop ? "h-24" : "h-16"} ${show(revealed >= n)}`}
@@ -352,13 +351,13 @@ function Dot({ on, future }: { on: boolean; future: boolean }) {
   );
 }
 
-// A row label: the column header of the table a timeline replaced, level with its row.
-// `className` carries the top margin of the row's own text, so the label starts level with it.
 // Row labels count only when one carries text: an empty object would open an empty column.
 function givenLabels(labels?: { when?: string; title?: string; text?: string }) {
   return labels && (labels.when || labels.title || labels.text) ? labels : undefined;
 }
 
+// A row label: the column header of the table a timeline replaced, level with its row.
+// `className` carries the top margin of the row's own text, so the label starts level with it.
 function RowLabel({
   text,
   row,
@@ -556,7 +555,6 @@ function Staggered({
   const edge = `${(2 / tracks) * 100}%`;
   const leader = <span className="mx-auto h-full min-h-6 w-1" style={{ background: GREY }} />;
   const { into, onward } = continuation(block);
-  // Stage i's dot stands 2i + 2 tracks into the line's row.
   const nowAt = ((2 * now + 2) / tracks) * 100;
   const run = (left: string, right: string, dashed: boolean) => (
     <div
@@ -684,8 +682,6 @@ function Bars({ block }: { block: Of<"bars"> }) {
     context(bar)
       ? "font-normal text-text-muted"
       : `${weight} ${bar.highlight ? "text-primary" : "text-text"}`;
-  // A named scale is numbered under the last track at its ends and quarters, in the track's
-  // column of the bars' grid.
   const scale = block.max != null && (
     <div aria-hidden className={`${CAPTION} relative mt-3 text-text-muted tabular-nums`}>
       {/* The 0 stands in the flow and gives the row its height; the others sit on their mark. */}

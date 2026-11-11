@@ -6,7 +6,7 @@
   break-after: page;
 }
 
-/* The last slide must not push a blank page after it. Next renders its scripts after the slides
+/* The last slide must not push a blank page after it. A page may render scripts after the slides
    inside <body>, so the last slide is not always `:last-child`. */
 .print-slide:not(:has(~ .print-slide)) {
   break-after: auto;

@@ -26,6 +26,18 @@ describe("literals", () => {
 });
 
 describe("resolve", () => {
+  // Every * was dropped, the one a code span shows included, so such a text found no literal
+  // (review 11.11.).
+  it("finds a text whose code span holds an asterisk", () => {
+    const src =
+      'const deck = { slides: [{ lines: ["Edit `*.ts` files", "**Bold** and [a link](/x)"] }] };';
+    expect(resolve(src, ["Edit *.ts files"])).toEqual({ value: "Edit `*.ts` files", index: 0 });
+    expect(resolve(src, ["Bold and a link"])).toEqual({
+      value: "**Bold** and [a link](/x)",
+      index: 0,
+    });
+  });
+
   it("finds a string by its rendered text, markdown markers and whitespace ignored", () => {
     expect(resolve(DECK, ["Claude", "Use Claude daily"])).toEqual({
       value: "Use **Claude** daily",

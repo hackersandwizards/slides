@@ -17,7 +17,7 @@ const HINTS_STORAGE_KEY = "slide-hints-visible";
 const INTRO_MS = 5000;
 /** When each deck's intro closes, set by its first mount: a slide change remounts the hints, and
  *  coming back to the first slide later shows no intro again. Keyed by the deck's path, the slide
- *  path without its index, since a client-side move to another deck keeps this module loaded. */
+ *  path without its index. */
 const introEndsAt = new Map<string, number>();
 
 function deckPath(): string {
@@ -33,8 +33,6 @@ export function SlideHints({ slideIndex }: Props) {
   );
   const [intro, setIntro] = useState(() => (introEndsAt.get(deckPath()) ?? Infinity) > Date.now());
 
-  // The deck is read again here: Next's router moves the URL in an insertion effect after the new
-  // page renders, so coming from the deck list the render above still saw the list's path.
   useEffect(() => {
     const deck = deckPath();
     const endsAt = introEndsAt.get(deck) ?? Date.now() + INTRO_MS;

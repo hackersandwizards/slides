@@ -7,8 +7,6 @@ export default defineConfig({
   plugins: [react()],
   test: {
     include: ["test/**/*.test.{ts,tsx}"],
-    // jsdom: the slide components render through @testing-library/react, and the canvas and
-    // observer stubs they need are jsdom's.
     environment: "jsdom",
     setupFiles: ["test/setup.ts"],
     // The gate stretches the per-test limit with the machine's load; 5 s when idle, hooks twice it.

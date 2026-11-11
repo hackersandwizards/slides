@@ -57,7 +57,8 @@ That the install matches each pin, scaffolding's install and `coupling` steps ch
 The command `slides-density [--site <dir> | --serve "<command>"] <print-url or path> ...` belongs in each consumer's gate:
 it renders each deck's print route and fails on a slide the fit guard shrinks below 0.8, and lists
 those below 0.9, a heading it shrinks so that its widest word fits included. It fails too on a content slide holding only one or two short bullets, a regular slide drawn as
-one included, which a `statement` carries (`bulletsAsStatement` in `lib/slide-utils`). `--site` serves a built
+one included, which a `statement` carries (`bulletsAsStatement` in `lib/slide-utils`), and on a slide the fit guard
+never fitted, as on a print route that did not hydrate. `--site` serves a built
 site's folder for the run, such as `dist`; `--serve` starts the consumer's server through
 scaffolding's `serve`, which sets `HOST` and `PORT` for it, and stops it afterwards. With either, a
 path such as `/<deck>/print` is read against that server.
@@ -85,7 +86,7 @@ specimen's imported images, is read as it stands. It sets each line at the slide
 where the web balances them, measured with the brand fonts' metrics. It warns on what it cannot
 draw as the slide does, such as a missing image, blocks taller than the slide, or text taller or
 wider than its box, crossing the shape it stands in or off the slide, and `--strict` makes a
-warning exit 1, for a consumer's gate. It needs `pptxgenjs` and `jszip`, optional
+warning exit 1, for a consumer's gate; an argument it does not know exits 1 too. It needs `pptxgenjs` and `jszip`, optional
 peer dependencies a consumer installs only to run it. In `talks`:
 
 ```sh
@@ -144,7 +145,7 @@ lead to the `closing`.
 
 An exercise, a live demo and a debrief are an `activity` slide (`kind`): the steps, watch points or
 questions, the exact instruction as `prompt`, and the timebox, mode and outcome in one card. On
-screen a countdown stands under the items, set to the `duration`'s minutes (else 2): a click on the
+screen a countdown stands under the items, set to the first number in `duration` (else 2): a click on the
 time starts, pauses and, at zero, restarts it; minus and plus change it by a minute. The speaker
 window's frame counts along; paper and PowerPoint draw no timer.
 

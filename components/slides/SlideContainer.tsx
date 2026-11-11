@@ -10,7 +10,7 @@ import mono500 from "@hackersandwizards/brand/fonts/jetbrains-mono-latin-500-nor
 import mono700 from "@hackersandwizards/brand/fonts/jetbrains-mono-latin-700-normal.woff2?url&no-inline";
 import Image from "../ui/image";
 import type { LogoConfig, SlideLogo } from "../../types/slide";
-import { HW_LOGO } from "../../lib/logo";
+import { HW_LOGO, logoPlaces } from "../../lib/logo";
 import { DeckLang, DeckNight } from "./SlideShell";
 
 interface Props {
@@ -28,6 +28,53 @@ interface Props {
 }
 
 export type CornerMark = "lockup" | "wordmark";
+
+/** A logo a deck names, at the corner row's height. In the corner (`asMark`), the default logo
+ *  draws as the h&w corner mark (`HwWordmark`) in the cut `mark`; elsewhere every logo is its
+ *  picture. */
+export function DeckLogo({
+  logo,
+  asMark,
+  mark,
+}: {
+  logo: LogoConfig;
+  asMark?: boolean;
+  mark?: CornerMark;
+}) {
+  return asMark && logo.src === HW_LOGO.src ? (
+    <HwWordmark mark={mark} />
+  ) : (
+    <Image
+      src={logo.src}
+      alt={logo.alt}
+      width={logo.width ?? 80}
+      height={logo.height ?? 65}
+      className="pointer-events-none h-9 w-auto"
+    />
+  );
+}
+
+/** A deck's logos before its last, at the slide's bottom left: `fixed` on the screen's viewport,
+ *  `absolute` on a printed page. */
+export function CornerStart({
+  logos,
+  position,
+}: {
+  logos: LogoConfig[];
+  position: "fixed" | "absolute";
+}) {
+  if (logos.length === 0) return null;
+  return (
+    <div
+      className={`slide-corner-start ${position} bottom-6 left-6 z-40 flex items-center gap-5`}
+      aria-hidden="true"
+    >
+      {logos.map((l, i) => (
+        <DeckLogo key={i} logo={l} />
+      ))}
+    </div>
+  );
+}
 
 /** The page counter beside the corner logo, legible in a half-size video call and a step below the
  *  company name, on its centre line: at 1.625rem it would outrank the name and be read before the
@@ -106,31 +153,7 @@ export function SlideContainer({ children, logo, theme, page, mark, lang }: Prop
   );
   const viewportClassName = `slide-viewport fixed inset-0 overflow-hidden${theme ? ` theme-${theme}` : ""}`;
 
-  const renderHW = (l: LogoConfig) => (
-    <div
-      className="slide-corner fixed right-(--slide-footer-side) bottom-(--slide-footer-inset) z-40 flex items-center gap-5"
-      aria-hidden="true"
-    >
-      {page && <PageCounter label={page} />}
-      {l.src === HW_LOGO.src ? (
-        <HwWordmark mark={mark} />
-      ) : (
-        <Image
-          src={l.src}
-          alt={l.alt}
-          width={l.width ?? 80}
-          height={l.height ?? 65}
-          className="pointer-events-none h-9 w-auto"
-        />
-      )}
-    </div>
-  );
-
-  // A list stands its last logo in the corner and the others at the bottom left; an empty list,
-  // like none, the h&w mark.
-  const logos = Array.isArray(logo) ? logo : [logo ?? HW_LOGO];
-  const corner = logos.at(-1) ?? HW_LOGO;
-  const start = logos.slice(0, -1);
+  const { corner, start } = logoPlaces(logo);
 
   return (
     <div
@@ -141,24 +164,14 @@ export function SlideContainer({ children, logo, theme, page, mark, lang }: Prop
     >
       <BrandStrip />
       <MotionConfig reducedMotion="user">{slides}</MotionConfig>
-      {start.length > 0 && (
-        <div
-          className="slide-corner-start fixed bottom-6 left-6 z-40 flex items-center gap-5"
-          aria-hidden="true"
-        >
-          {start.map((l, i) => (
-            <Image
-              key={i}
-              src={l.src}
-              alt={l.alt}
-              width={l.width ?? 80}
-              height={l.height ?? 65}
-              className="pointer-events-none h-9 w-auto"
-            />
-          ))}
-        </div>
-      )}
-      {renderHW(corner)}
+      <CornerStart logos={start} position="fixed" />
+      <div
+        className="slide-corner fixed right-(--slide-footer-side) bottom-(--slide-footer-inset) z-40 flex items-center gap-5"
+        aria-hidden="true"
+      >
+        {page && <PageCounter label={page} />}
+        <DeckLogo logo={corner} asMark mark={mark} />
+      </div>
     </div>
   );
 }

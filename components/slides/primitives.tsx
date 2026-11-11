@@ -170,7 +170,6 @@ type CardLook = "tint" | "soft" | "outline" | "line";
  *  brand-elements.json). Tailwind sees each class whole: one line per tone and look. */
 const CARD_TONES: Record<Exclude<CardTone, "neutral">, Partial<Record<CardLook, string>>> = {
   primary: {
-    soft: "border border-primary/25 bg-primary/7",
     outline: "border border-primary bg-white",
     line: "border border-primary/25 bg-white",
   },
@@ -182,19 +181,16 @@ const CARD_TONES: Record<Exclude<CardTone, "neutral">, Partial<Record<CardLook, 
   },
   accent: {
     tint: "border border-slide-accent bg-slide-accent/7",
-    soft: "border border-slide-accent/25 bg-slide-accent/7",
     outline: "border border-slide-accent bg-white",
     line: "border border-slide-accent/25 bg-white",
   },
   success: {
     tint: "border border-green-dark bg-green-dark/7",
-    soft: "border border-green-dark/25 bg-green-dark/7",
     outline: "border border-green-dark bg-white",
     line: "border border-green-dark/25 bg-white",
   },
   error: {
     tint: "border border-red bg-red/7",
-    soft: "border border-red/25 bg-red/7",
     outline: "border border-red bg-white",
     line: "border border-red/25 bg-white",
   },
@@ -255,7 +251,7 @@ const DISPLAY_SIZES = {
 
 /** Inline, because the `white-space` shorthand of `whitespace-pre-line` resets the class's
  *  `text-wrap: balance`, which left a lone year on a subtitle's second line. */
-const BALANCED: CSSProperties = { textWrap: "balance" };
+export const BALANCED: CSSProperties = { textWrap: "balance" };
 
 /** The display heading of a slide that stands on one statement: the title, a divider, a
  *  statement, a question, the closing line, a roadmap column's name. The heading family in ink at

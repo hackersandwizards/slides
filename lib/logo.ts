@@ -19,6 +19,16 @@ export function resolveSlideLogo(
   return presentation.logo;
 }
 
+/** Where a slide's logos stand, on screen, in print and in `slides-pptx`: a list's last logo in the
+ *  corner and the others at the bottom left; none, `null` or an empty list, the h&w mark. */
+export function logoPlaces(logo: SlideLogo | undefined): {
+  corner: LogoConfig;
+  start: LogoConfig[];
+} {
+  const logos = Array.isArray(logo) ? logo : [logo ?? HW_LOGO];
+  return { corner: logos.at(-1) ?? HW_LOGO, start: logos.slice(0, -1) };
+}
+
 /** The h&w corner mark: the lockup, wizard and wordmark, on a title and a closing slide, the
  *  wordmark alone on every other slide. */
 export function cornerMark(
