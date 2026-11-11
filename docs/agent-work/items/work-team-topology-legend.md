@@ -2,7 +2,7 @@
 kind: work
 status: open
 priority: 3
-order: 635
+order: 1964
 owner: Ada
 area: software-engineering
 evidence: "the orchestrator's brief of 10.11.2026 (pin wave 2): every reviewer of that day's deck asked for a legend of the team-topology slide's box colours; types/slide.ts and TeamTopologySlide.tsx on v3.2.1"

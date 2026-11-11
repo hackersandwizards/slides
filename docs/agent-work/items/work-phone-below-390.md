@@ -2,15 +2,15 @@
 kind: work
 status: open
 priority: 3
-order: 620
-owner: Agent (slides session)
+order: 1962
+owner: Ada
 area: software-engineering
 evidence: "sweep of every stories/Types page of the v2.18.0 build at 360 and 320 x 844 px on 09.11.2026, text whose box ends past the viewport, read by a script; at 390 px all of them fit (test/pages/phone-grids.test.ts)"
 ---
 
 # Slides whose text runs past a screen narrower than 390 px
 
-Make the four slides below fit at 360 and 320 px, and run the phone sweep at those widths.
+Ada briefs a slides session to make the four slides below fit at 360 and 320 px and sweep at those widths.
 
 | Story                      | Past the edge                             |
 | -------------------------- | ----------------------------------------- |

@@ -3,14 +3,14 @@ kind: work
 status: open
 priority: 3
 order: 1400
-owner: Agent (slides session)
+owner: Ada
 area: software-engineering
 evidence: "talks build of 10.11.2026 12:12, specimen deck slide-catalog (126 slides), page /slide-catalog/5/: 111,263 B of HTML, 20,961 B gzipped, 90% of it island props; the deck's folder 14 MB; one cold load at 390x844, 150 ms latency, 9 Mbit/s, CPU 4x slower, three runs: 277,563 B gzipped over 13 resources, DOMContentLoaded 565 to 574 ms, every island hydrated 1,146 to 1,185 ms"
 ---
 
 # Every slide page embeds its whole deck
 
-Serve each deck once as a shared asset and pass the island its URL, if the build size is worth a day or two.
+Ada briefs a slides session to serve each deck once as a shared asset, if the build size is worth a day or two.
 
 Every slide page of a deck carries the deck as the `DeckView` island's props, so a 126-slide deck
 writes 126 copies: 14 MB in talks' build. For the audience the cost is smaller: the props are

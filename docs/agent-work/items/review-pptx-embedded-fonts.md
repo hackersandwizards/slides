@@ -2,7 +2,7 @@
 kind: review
 status: open
 priority: 2
-order: 1310
+order: 625
 owner: Benedikt
 area: software-engineering
 evidence: "slides-pptx --embed-fonts (scripts/pptx-fonts.ts) writes Inter and JetBrains Mono, regular and bold, as uncompressed Embedded OpenType parts (ppt/fonts/*.fntdata, application/x-fontdata, p:embeddedFontLst), as MS-OI29500 §15.2.13 says PowerPoint stores them; fontTools reads each wrapped font, but LibreOffice 7.4, the only renderer an agent has, ignores embedded fonts, so whether PowerPoint takes these parts is not established"

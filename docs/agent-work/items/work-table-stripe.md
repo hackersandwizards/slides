@@ -2,15 +2,15 @@
 kind: work
 status: open
 priority: 3
-order: 645
-owner: Agent (slides session)
+order: 1967
+owner: Ada
 area: brand
 evidence: "brand v2.15.0 elements/table.css: hairlines under every row, no fill, no frame; components/slides/ContentSlide.tsx tints every second body row and the head row bg-primary/7, inside a framed white box; the stripe came over unchanged with the engine in bd66c48 (30.10.2026), and no panel of 01.11. or 06.11. chose it"
 ---
 
 # The slide table stripes alternate rows where brand's table does not
 
-Run a blind panel on a table slide with and without the stripes, then ship the winner in a release.
+Ada briefs a slides session to score a table slide with and without stripes blind, then ship the winner.
 
 Brand's table (`hw-table`) draws hairlines under each row, no fill and no frame. The slide table
 is an exception in `brand-elements.json` (`slide-table`: projected rows at stage size with the

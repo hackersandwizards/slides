@@ -2,7 +2,7 @@
 kind: decision
 status: open
 priority: 3
-order: 610
+order: 1065
 owner: Benedikt
 area: software-engineering
 evidence: "slides-usage since v2.18.0; slides-usage takes an array of decks since v2.21.0; hycle-private commits its counts at talks/slides-usage.json (00f4ba9)"
