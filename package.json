@@ -119,8 +119,8 @@
     "image-size": "2.1.0"
   },
   "devDependencies": {
-    "@astrojs/react": "7.1.7",
-    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.31.1",
+    "@astrojs/react": "7.1.8",
+    "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.31.2",
     "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v2.21.0",
     "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.19.1",
     "@tailwindcss/node": "4.3.5",
@@ -133,7 +133,7 @@
     "@types/react-dom": "19.3.0",
     "@typescript/native": "npm:typescript@7.0.2",
     "@vitejs/plugin-react": "6.3.0",
-    "astro": "7.4.10",
+    "astro": "7.4.11",
     "astrobook": "0.13.3",
     "eslint": "10.14.0",
     "eslint-plugin-react-hooks": "7.1.1",
@@ -143,7 +143,7 @@
     "lucide-react": "1.72.0",
     "motion": "14.12.0",
     "pptxgenjs": "4.0.1",
-    "prettier": "3.9.10",
+    "prettier": "3.10.0",
     "prettier-plugin-tailwindcss": "0.8.1",
     "puppeteer": "25.17.0",
     "react": "19.3.1",
