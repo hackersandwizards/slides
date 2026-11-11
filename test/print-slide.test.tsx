@@ -1,4 +1,5 @@
 import { render } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { PrintDeck } from "../components/slides/PrintSlide";
 import type { Presentation } from "../types/slide";
@@ -17,6 +18,15 @@ const deck: Presentation = {
 // The chrome talks, trainer-hub and hycle-private each copied: one page per slide, the deck's
 // logo in the corner, the h&w mark where a slide overrides it with null.
 describe("PrintDeck", () => {
+  // The server's slides waited unfitted and shifted once the fit guard shrank them (CLS 0.097):
+  // they come hidden and show once hydration has fitted them.
+  it("marks the server's slides unfitted and clears the mark once rendered", () => {
+    expect(renderToString(<PrintDeck presentation={deck} />)).toContain("data-print-unfitted");
+    const { container } = render(<PrintDeck presentation={deck} />);
+    expect(container.querySelectorAll(".print-slide")).toHaveLength(2);
+    expect(container.querySelector("[data-print-unfitted]")).toBeNull();
+  });
+
   it("prints every slide with the strip, the theme and its corner logos", () => {
     const { container } = render(<PrintDeck presentation={deck} />);
     const pages = container.querySelectorAll(".print-slide.theme-brand-dark");

@@ -205,14 +205,17 @@ it holds after load already in its markup, read CLS 0 in 3 of 3. The only style 
 the first slide is the fit guard's shrink of an over-full slide (`zoom: 0.852`, its width, height
 and top padding). The server renders the slides unfitted, and the guard fits them after hydration.
 
-`PrintDeck` now keeps its slides hidden until hydration has fitted them, on screens of 48rem and
-wider, where the guard runs. A phone never fits, and its slides show at once. Patched into v3.5.0
-alone, at loads of 23 to 32, three interleaved runs, median:
+`PrintDeck` now keeps its slides hidden until hydration has fitted them: on screens of 48rem and
+wider, where the guard shrinks slides, and only inside an Astro island, which hydrates. A deck
+rendered without a client directive shows at once, as before. Three interleaved runs, median, at
+loads of 23 to 32:
 
-| Print page    | CLS    | FCP    | Mobile FCP |
-| ------------- | ------ | ------ | ---------- |
-| v3.5.0        | 0.0974 | 116 ms | 784 ms     |
-| v3.5.0, fixed | 0      | 176 ms | 792 ms     |
+| Print page                  | CLS    | FCP    | Mobile FCP |
+| --------------------------- | ------ | ------ | ---------- |
+| v3.5.0                      | 0.0974 | 116 ms | 784 ms     |
+| v3.5.0, the fix alone       | 0      | 176 ms | 792 ms     |
+| v3.5.0, again               | 0.0974 | 60 ms  | 796 ms     |
+| this release, the same deck | 0      | 120 ms | 808 ms     |
 
 Rendering the slides only after hydration also reached CLS 0, but cost 690 ms of mobile FCP (828
 against 1516 ms), where nothing shifts.
@@ -241,3 +244,14 @@ Lighthouse's `--blocked-url-patterns` did not block the frame: its requests answ
 
 No defect in the engine: the item is closed. A shell that wants a steady Lighthouse LCP on its story
 pages could start the frame after the page's first paint. That would be scaffolding's call.
+
+## Left open
+
+- A timeline figure with leading words ("up to −90 %") draws them small on the web; `slides-pptx`
+  writes them whole at the figure's size. No deck has one: the one timeline figure in a consumer is
+  "-90%".
+- A JSON deck naming an icon outside the map still draws nothing on the web, with no warning, and
+  an empty tile in PowerPoint. The type catches it only in a TypeScript deck; `slides-usage` could
+  lint it.
+- A refit after the slides show, when a face or a chart arrives late, could still shift a print
+  page. hycle's measured none.

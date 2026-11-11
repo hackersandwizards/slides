@@ -26,10 +26,11 @@
 }
 
 /* The server's slides stand unfitted until hydration runs the fit guard, which shrinks an over-full
-   one: shown, the first slide shifted by CLS 0.097 at 1350x940. They wait hidden where the guard
-   runs; on a phone it never does, and they show at once. */
+   one: shown, the first slide shifted by CLS 0.097 at 1350x940. In an Astro island, which
+   hydrates, they wait hidden where the guard shrinks slides. A phone shrinks none, and a deck
+   rendered without a client directive never hydrates: both show at once. */
 @media screen and (width >= 48rem) {
-  [data-print-unfitted] {
+  astro-island [data-print-unfitted] {
     visibility: hidden;
   }
 }

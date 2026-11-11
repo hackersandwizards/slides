@@ -185,6 +185,11 @@ function figureHeights() {
     return { text: f.textContent, set, one, over };
   });
 }
+const PLACE: Record<string, string> = {
+  "visual-numbers-one": "beside",
+  "numbers-long-figure": "beside",
+  "numbers-label-below": "below",
+};
 const wrapped = (figures: ReturnType<typeof figureHeights>) =>
   figures.filter(({ set, one, over }) => set > one + 1 || over > 1);
 
@@ -223,35 +228,18 @@ it.each(
     });
     await page.evaluate(() => document.fonts.ready);
     const figures = await page.evaluate(figureHeights);
+    // A lone figure's label stands beside it on the stage while its longest word finds room there.
+    const place = width > 800 && PLACE[story.split("/")[1]];
+    const below =
+      place &&
+      (await page.$eval(".slide-figure-row", (row) => {
+        const [figure, label] = [...row.children].map((c) => c.getBoundingClientRect());
+        return label.top >= figure.bottom;
+      }));
     await page.close();
     expect(figures.length).toBeGreaterThan(0);
     expect(wrapped(figures)).toEqual([]);
-  },
-  60_000,
-);
-
-// A lone figure's label stands beside it while its longest word finds room there, else below it.
-it.each(
-  [
-    ["visual-numbers-one", "beside"],
-    ["numbers-long-figure", "beside"],
-    ["numbers-label-below", "below"],
-  ].flatMap(([story, place]) => [1920, 1440].map((width) => [story, place, width] as const)),
-)(
-  "sets the label of content-slide/%s %s its figure at %i px",
-  async (story, place, width) => {
-    const page = await browser.newPage();
-    await page.setViewport({ width, height: (width * 9) / 16 });
-    await page.goto(`${served.origin}/slides/stories/Types/content-slide/${story}/`, {
-      waitUntil: "networkidle0",
-    });
-    await page.evaluate(() => document.fonts.ready);
-    const below = await page.$eval(".slide-figure-row", (row) => {
-      const [figure, label] = [...row.children].map((c) => c.getBoundingClientRect());
-      return label.top >= figure.bottom;
-    });
-    await page.close();
-    expect(below ? "below" : "beside").toBe(place);
+    if (place) expect(below ? "below" : "beside").toBe(place);
   },
   60_000,
 );
