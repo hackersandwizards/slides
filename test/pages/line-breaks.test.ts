@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import puppeteer, { type Browser, type Page } from "puppeteer";
+import { claim } from "@hackersandwizards/brand/verbal.json";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
 
@@ -65,6 +66,41 @@ it("breaks a statement's closing where the deck types \\n", async () => {
   expect(await linesOf(page, "body", closing, closing, (text ?? "").length)).toBe(2);
   await page.close();
 }, 60_000);
+
+// The specimen closing set in each language's claim: at the lead step the German claim took two
+// rows and the fit guard shrank the closing with speaker photos further.
+it.each(["en", "de"] as const)(
+  "sets brand's %s claim on one row of a contact closing",
+  async (lang) => {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
+    const file = join(import.meta.dirname, "..", "..", "dist", "catalog", "print", "frames.html");
+    await page.goto(pathToFileURL(file).href, { waitUntil: "load" });
+    await page.evaluate(() => document.fonts.ready);
+    const rows = await page.evaluate(
+      (built, word, text) => {
+        // The specimen deck is English, so the built page accents the English word.
+        const accent = [...document.querySelectorAll("p > span.text-primary")].find(
+          (s) => s.textContent === built,
+        );
+        const line = accent?.parentElement;
+        if (!line) return 0;
+        const at = text.indexOf(word);
+        accent.textContent = word;
+        line.replaceChildren(text.slice(0, at), accent, text.slice(at + word.length));
+        const range = document.createRange();
+        range.selectNodeContents(line);
+        return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+      },
+      claim.word.en,
+      claim.word[lang],
+      claim[lang],
+    );
+    await page.close();
+    expect(rows).toBe(1);
+  },
+  60_000,
+);
 
 // A narrow box broke "self-service?" after its hyphen, leaving "service?" alone on the next line.
 it.each([1366, 1440])(
