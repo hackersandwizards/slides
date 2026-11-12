@@ -1474,9 +1474,10 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const colW = Array.from({ length: cols }, (_, i) =>
         b.widths && total ? (b.widths[i] / total) * a.w : a.w / cols,
       );
-      // The web's table: body and headers at the small step, headers as mono capitals.
+      // The web's table: body and headers at the small step, headers as mono capitals, the head
+      // and every second body row tinted alike.
       const size = Math.max(7, Math.round(PT.base * 0.875 * k * 2) / 2);
-      const cell = (t: string, head: boolean): PptxGenJS.TableCell => ({
+      const cell = (t: string, head: boolean, tinted = head): PptxGenJS.TableCell => ({
         text: breaks(
           md(
             t,
@@ -1484,14 +1485,14 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
             head ? { bold: true, fontFace: MONO, color: c.ink, fontSize: size, lang: CAPS } : {},
           ),
         ) as PptxGenJS.TableCell[],
-        options: { fill: { color: head ? c.tint : c.card } },
+        options: { fill: { color: tinted ? c.tint : c.card } },
       });
       const rows = [
         ...(b.headers ? [b.headers.map((t) => cell(t, true))] : []),
         // The web sets a table's first column in bold, as the row's name.
-        ...b.rows.map((r) =>
+        ...b.rows.map((r, i) =>
           r.map((t, j) => {
-            const td = cell(t, false);
+            const td = cell(t, false, i % 2 === 1);
             return j === 0 ? { ...td, options: { ...td.options, bold: true } } : td;
           }),
         ),

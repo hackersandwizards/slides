@@ -525,6 +525,21 @@ describe("slides-pptx on the specimen deck", () => {
     });
   });
 
+  it("tints a table's head and every second body row, as the web's table", () => {
+    const at = slideCatalog.slides.findIndex(
+      (slide: Slide) =>
+        slide.type === "content" && slide.content.some((b) => b.type === "table" && b.headers),
+    );
+    const table = slideXml[at].match(/<a:tbl>.*?<\/a:tbl>/s)![0];
+    // Each row's first cell fill, after its borders: the head, then the three body rows.
+    const fills = [
+      ...table.matchAll(/<a:tr\b.*?<\/a:lnB><a:solidFill><a:srgbClr val="(\w+)"/gs),
+    ].map((m) => m[1]);
+    expect(fills).toHaveLength(4);
+    expect(fills[0]).not.toBe(fills[1]);
+    expect(fills).toEqual([fills[0], fills[1], fills[0], fills[1]]);
+  });
+
   it("dashes a marked trend's planned half and dots the marked point", () => {
     const charts = allCharts();
     const [marked] = slideCharts[markedAt];

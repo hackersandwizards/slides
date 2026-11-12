@@ -156,8 +156,8 @@ reaches 4.85:1 on a white row and 4.42:1 on a tinted one, and teal-dark reaches 
 - In all eight runs the reviewers marked the column heads down for legibility: small, letterspaced
   mono capitals that wrap onto two lines and wash out in the projected view. That is outside this
   review and was not changed.
-- The PowerPoint export (`scripts/render-pptx.ts`) draws its tables with a tinted head and untinted
-  body rows, though its comment calls them the web's table. Work item `work-pptx-table-stripe`
-  carries it.
+- The PowerPoint export (`scripts/render-pptx.ts`) now tints every second body row in its head's
+  fill too, as the web does, and `test/render-pptx.test.ts` holds it. No agent had a renderer for
+  the exported file, so the stripes are checked in its XML only.
 
 Review: medium, because the change would reach every table slide in three consumers.
