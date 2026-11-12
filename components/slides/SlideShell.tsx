@@ -239,7 +239,12 @@ function useFitToSlide() {
       }
       box.style.width = width;
       box.style.zoom = String(scale);
-      box.style.setProperty("--hw-zoom", String(scale * outer));
+      // The zoom Chrome applies, both zooms' product as a 32-bit float: the double above it, by a
+      // rounding error, put a label's marker 1 px low at 0.9683333.
+      box.style.setProperty(
+        "--hw-zoom",
+        String((box as { currentCSSZoom?: number }).currentCSSZoom ?? scale * outer),
+      );
     };
     // The sizes the last fit left, so an observer report of those same sizes, such as the one every
     // observation starts with, lays nothing out again: the children's and the parent's, since the

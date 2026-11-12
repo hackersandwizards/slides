@@ -230,7 +230,9 @@ it.each(["bar", "bar-long-names", "trend", "trend-marked"])(
 // The fit guard shrinks with zoom, which draws a px width zoomed but a percentage at full size: a
 // shrunk titled body still spans the slide's width, and an untitled one fills its height, centred,
 // also once its slide narrows without the text changing size, as a deck window wider than 16:9 does
-// (the stage follows the height alone).
+// (the stage follows the height alone). Its --hw-zoom is the zoom Chrome applies, a 32-bit float:
+// written as the double the guard computed, it stood above that at 0.9683333, and the frame's
+// label marker on talks' print page sat 1 px low.
 it("draws a shrunk slide at the slide's full width or height", async () => {
   const tab = await newTab();
   await tab.setViewport({ width: 1920, height: 1080 });
@@ -257,6 +259,8 @@ it("draws a shrunk slide at the slide's full width or height", async () => {
         const o = outer.getBoundingClientRect();
         return {
           zoom: Number(box.style.zoom),
+          hwZoom: Number(box.style.getPropertyValue("--hw-zoom")),
+          applied: box.currentCSSZoom,
           width: box.style.width,
           drawn: {
             left: r.left - o.left,
@@ -275,6 +279,7 @@ it("draws a shrunk slide at the slide's full width or height", async () => {
   const body = await read("content-slide/density", ".slide-body");
   expect(body.zoom).toBeGreaterThan(0.5);
   expect(body.zoom).toBeLessThan(1);
+  expect(body.hwZoom).toBe(body.applied);
   expect(body.width).toMatch(/px$/);
   expect(body.outer.width - body.drawn.left - body.drawn.right).toBeCloseTo(body.inner, 0);
   const resized = await read("content-slide/density", ".slide-body", true);
@@ -285,6 +290,7 @@ it("draws a shrunk slide at the slide's full width or height", async () => {
   const content = await read("closing-slide/contact", ".slide-content");
   expect(content.zoom).toBeGreaterThan(0.5);
   expect(content.zoom).toBeLessThan(1);
+  expect(content.hwZoom).toBe(content.applied);
   expect(content.drawn.top).toBeCloseTo(0, 0);
   expect(content.drawn.height).toBeCloseTo(content.outer.height, 0);
   expect(content.drawn.left).toBeCloseTo(content.drawn.right, 0);
