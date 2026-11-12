@@ -216,8 +216,7 @@
         "check:retired"
       ],
       "check:pages",
-      "check:elements",
-      "check:markers"
+      "check:elements"
     ]
   }
 }

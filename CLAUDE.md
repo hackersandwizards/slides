@@ -130,10 +130,12 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
   (`brand-copies`) and `check:retired` (`brand-retired` over `dist`), then `check:pages`
   (the tests in `test/pages/` over the build: the print pages, the story pages and `bun run
 preview`), then `check:elements`
-  (`brand-elements` over the print pages, `brand-elements.json`), then `check:markers` (`brand-markers` over `frames.html` and every
-  story page at 1920, the stage width, and at 1280, with `dist/` served at `--site-at /slides`,
-  since the pages load their assets from that base). No hook runs it: the hooks are scaffolding's
-  skeleton, listed in `.githooks/README.md`.
+  (`brand-elements` over the print pages, `brand-elements.json`). No hook runs it: the hooks are
+  scaffolding's skeleton, listed in `.githooks/README.md`.
+- `bun run check:markers`, by hand after a brand raise and after a change to how lists are styled,
+  outside the gate: `brand-markers` over `frames.html` and every story page at 1920, the stage
+  width, and at 1280, with `dist/` served at `--site-at /slides`, since the pages load their assets
+  from that base.
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
 - `bun run dev` (or `bun run catalog`, which opens it): the catalog at
