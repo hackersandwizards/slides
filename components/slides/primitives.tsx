@@ -83,7 +83,7 @@ export function LinkCaption({ href, variant }: { href: string; variant?: "linked
       rel="noopener noreferrer"
       className={
         variant
-          ? "inline-flex items-center gap-2 text-lg whitespace-nowrap text-text-muted"
+          ? "inline-flex items-center gap-2 text-lg text-text-muted md:whitespace-nowrap"
           : "slide-media-caption slide-media-link"
       }
     >

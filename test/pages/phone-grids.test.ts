@@ -235,6 +235,8 @@ const PROCESS = ALL.filter((story) => story.startsWith("process-slide/"));
 
 // Side-by-side layouts kept their columns on a phone: a quotation's portrait left its words one
 // letter a line, a QR card and an annotated picture pushed their text 100 to 700 px off the screen.
+// Down to 320 px, the narrowest phone: there a profile's address and its one-word company ran 5 to
+// 21 px past the screen, and a framed flow's badge stood one word a line.
 /** Runs in the page: the visible text past the screen's edge or squeezed into a sliver of a column. */
 function runaways() {
   const width = document.documentElement.clientWidth;
@@ -259,12 +261,35 @@ function runaways() {
   return found;
 }
 
-it(
-  "keeps all text of every story on a phone's screen, in columns wide enough to read",
-  async () => {
-    expect(await sweep(390, (page) => page.evaluate(runaways))).toEqual([]);
+it.each([390, 360, 320])(
+  "keeps all text of every story on a %i px phone's screen, in columns wide enough to read",
+  async (width) => {
+    expect(await sweep(width, (page) => page.evaluate(runaways))).toEqual([]);
   },
   limit(600_000),
+);
+
+// A wheel's ring kept its stage width of 24rem on a phone, 384 px against a 350 px row at 390, so
+// the ring ran past the screen there and a numeral with it at 360 and 320. The text sweep skips svg.
+it.each(
+  ["wheel-slide/specimen", "wheel-slide/specimen2"].flatMap((s) =>
+    [390, 360, 320].map((w) => [s, w] as const),
+  ),
+)(
+  "keeps %s's ring and numerals on a %i px phone's screen",
+  async (story, width) => {
+    const page = await open(story, width);
+    const over = await page.evaluate(() => {
+      const screen = document.documentElement.clientWidth;
+      return [...document.querySelectorAll(".slide-content svg:has(path), .slide-content svg text")]
+        .map((e) => e.getBoundingClientRect())
+        .map((r) => Math.round(Math.max(r.right - screen, -r.left)))
+        .filter((o) => o > 1);
+    });
+    await page.close();
+    expect(over).toEqual([]);
+  },
+  limit(60_000),
 );
 
 // A repeated time leaves its cell empty: on the stage the empty cell keeps the column, so every

@@ -65,7 +65,8 @@ export function WheelSlide({ slide }: Props) {
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-8">
               {/* Both columns sit against the ring, so the left one keeps the right one's gap. */}
               <div className="flex flex-col gap-7 justify-self-end">{left.map(label)}</div>
-              <div className="relative h-96 w-96">
+              {/* As wide as its column allows, so a phone's narrower row keeps the ring on the screen. */}
+              <div className="relative aspect-square w-96 max-w-full">
                 <svg viewBox="0 0 200 200" className="h-full w-full" aria-hidden>
                   {slide.segments.map((segment, k) => {
                     const from = -90 + (360 * k) / n + GAP;

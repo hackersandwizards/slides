@@ -70,11 +70,12 @@ export type FlowStep = Of<"flow">["steps"][number] & {
 const TILE_LABEL = 4;
 
 // On a phone a row of steps holds a title's longest word only where it fits a column: a mono
-// glyph is 0.6em of the title's `--type-body-size` (1rem there, Visuals.css), the narrowest phone
-// leaves the row 20rem inside `--slide-phone-padding`, and a column pads 0.5rem (`--spacing` each
-// side). A word wider than its column, which the hyphenator cannot always split ("Autocomplete"),
-// stands the steps one under another instead, as five and more do (Visuals.css).
-function fitsPhoneRow(steps: FlowStep[]) {
+// glyph is 0.6em of the title's `--type-body-size` (1rem there, Visuals.css), the narrowest phone,
+// 320 px, leaves the row 17.5rem inside `--slide-phone-padding` and a frame's padding 14rem, and a
+// column pads 0.5rem (`--spacing` each side). A word wider than its column, which the hyphenator
+// cannot always split ("Autocomplete"), stands the steps one under another instead, as five and
+// more do (Visuals.css). In a frame at 17.5rem a badge broke one word a line.
+function fitsPhoneRow(steps: FlowStep[], framed: boolean) {
   const word = Math.max(
     ...steps.flatMap((step) =>
       step.title
@@ -83,25 +84,28 @@ function fitsPhoneRow(steps: FlowStep[]) {
         .map((w) => w.length),
     ),
   );
-  return steps.length * (word * 0.6 + 0.5) <= 20;
+  return steps.length * (word * 0.6 + 0.5) <= (framed ? 14 : 17.5);
 }
 
 /** Steps on one line with a tile each, as the flow block draws them; the process
  *  slides draw theirs with it too. `loop` draws the arrow from the last step back to the first,
  *  labelled when non-empty. `revealed` shows the first n steps, the line to each and the loop
- *  once all show. `dense` draws the small tiles and titles of the pipeline it replaces. */
+ *  once all show. `dense` draws the small tiles and titles of the pipeline it replaces. `framed`: the
+ *  steps stand in a frame, whose padding narrows a phone's row. */
 export function FlowSteps({
   steps,
   highlight,
   loop,
   revealed = steps.length,
   dense = false,
+  framed = false,
 }: {
   steps: FlowStep[];
   highlight?: number;
   loop?: string;
   revealed?: number;
   dense?: boolean;
+  framed?: boolean;
 }) {
   const n = steps.length;
   // Six and more steps leave a column about a sixth of the slide: a size down keeps the labels
@@ -121,7 +125,7 @@ export function FlowSteps({
     `transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`;
   return (
     <div
-      className={`slide-flow relative w-full ${n >= LONG_FLOW || !fitsPhoneRow(steps) ? "slide-flow-long" : ""}`}
+      className={`slide-flow relative w-full ${n >= LONG_FLOW || !fitsPhoneRow(steps, framed) ? "slide-flow-long" : ""}`}
     >
       {loop !== undefined && (
         <div
@@ -248,6 +252,7 @@ function Flow({ block }: { block: Of<"flow"> }) {
       highlight={block.highlight}
       loop={block.loop}
       dense={block.dense}
+      framed={!!block.frame}
     />
   );
   return block.frame ? <Framed frame={block.frame}>{steps}</Framed> : steps;

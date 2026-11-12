@@ -66,7 +66,8 @@ function ProfileRegularSlide({ slide }: Props) {
         <div className="slide-body items-center">
           <div className="flex w-full max-w-6xl flex-col items-center gap-10 md:flex-row md:gap-16">
             {slide.profile && (
-              <div className="w-56 flex-shrink-0 md:w-80">
+              <div className="w-full flex-shrink-0 md:w-80">
+                {/* A phone gives the profile the row's width, so its role and address keep their lines. */}
                 <ProfileCard profile={slide.profile} />
               </div>
             )}
