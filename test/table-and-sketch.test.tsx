@@ -28,6 +28,18 @@ describe("table", () => {
     expect(getByText("Self-serve").className).toBe("inline-block [baseline-source:first]");
     expect(getByText("Schlüssel-Übergabe").className).toBe("inline-block [baseline-source:first]");
   });
+
+  // The stripes are exception `slide-table` in brand-elements.json.
+  it("tints every second body row", () => {
+    const SlideComponent = slideComponents.content;
+    const { container } = render(
+      <SlideComponent slide={content({ type: "table", rows: [["a"], ["b"], ["c"]] })} />,
+    );
+    const tinted = [...container.querySelectorAll("tbody tr")].map((tr) =>
+      tr.classList.contains("bg-primary/7"),
+    );
+    expect(tinted).toEqual([false, true, false]);
+  });
 });
 
 describe("image beside a grid", () => {
