@@ -3,7 +3,7 @@ import { join } from "node:path";
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 // On a phone (390 px) every numbers and cards grid stacks into one column and every figure fits its
 // column on one line. An inline column template once outranked the phone rule, so a two-figure row
@@ -55,7 +55,7 @@ function measure() {
 it.each(STORIES)(
   "stacks %s into one column with every figure inside it",
   async (story) => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     await page.setViewport({ width: 390, height: 844 });
     await page.goto(`${dist.origin}/slides/stories/Types/${story}/`, { waitUntil: "networkidle0" });
     const { columns, figures } = await page.evaluate(measure);
@@ -66,7 +66,7 @@ it.each(STORIES)(
     if (story.includes("numbers")) expect(figures.length).toBeGreaterThan(0);
     expect(columns.filter((n) => n !== 1)).toEqual([]);
   },
-  60_000,
+  limit(60_000),
 );
 
 // A profile's company ran past its card beside the portrait on a phone (209 px of text in 148 px):
@@ -74,7 +74,7 @@ it.each(STORIES)(
 it.each(["profiles-slide/specimen", "profiles-slide/specimen2"])(
   "keeps every line of %s inside its card on a phone",
   async (story) => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     await page.setViewport({ width: 390, height: 844 });
     await page.goto(`${dist.origin}/slides/stories/Types/${story}/`, { waitUntil: "networkidle0" });
     const lines = await page.$$eval(".slide-content :is(h2, p)", (all) =>
@@ -84,7 +84,7 @@ it.each(["profiles-slide/specimen", "profiles-slide/specimen2"])(
     expect(lines.length).toBeGreaterThan(2);
     expect(lines.filter(({ over }) => over > 1)).toEqual([]);
   },
-  60_000,
+  limit(60_000),
 );
 
 // Three defects consumers found: a card title of one long word ran 100 px out
@@ -92,7 +92,7 @@ it.each(["profiles-slide/specimen", "profiles-slide/specimen2"])(
 // first point set the point's name on the value axis while its last category lost a digit.
 
 async function open(story: string, width: number): Promise<Page> {
-  const page = await browser.newPage();
+  const page = await newPage(browser);
   await page.setViewport({ width, height: width > 800 ? 810 : 844 });
   await page.goto(`${dist.origin}/slides/stories/Types/${story}/`, { waitUntil: "networkidle0" });
   return page;
@@ -109,7 +109,7 @@ it.each([1440, 390])(
     expect(titles.map((t) => t.text)).toContain("Internationalization");
     expect(titles.filter(({ over }) => over > 1)).toEqual([]);
   },
-  60_000,
+  limit(60_000),
 );
 
 it.each([
@@ -144,7 +144,7 @@ it.each([
     expect(stages.every((top, i) => i === 0 || top > stages[i - 1])).toBe(true);
     expect(over).toEqual([]);
   },
-  60_000,
+  limit(60_000),
 );
 
 it.each([1440, 390])(
@@ -185,7 +185,7 @@ it.each([1440, 390])(
     ]);
     expect(labels.filter((l) => /^Month ?12$/.test(l.text ?? ""))).toHaveLength(1);
   },
-  60_000,
+  limit(60_000),
 );
 
 // "Architecture" broke as "Architectur / e" in a team card (trainer-hub): Chrome
@@ -228,7 +228,7 @@ it.each([1440, 390])(
     );
     expect(broken).toEqual([]);
   },
-  600_000,
+  limit(600_000),
 );
 
 const PROCESS = ALL.filter((story) => story.startsWith("process-slide/"));
@@ -352,7 +352,7 @@ it.each(PROCESS)(
     expect(cards.length + steps).toBeGreaterThan(2);
     expect(overlapping(cards)).toEqual([]);
   },
-  60_000,
+  limit(60_000),
 );
 
 it(

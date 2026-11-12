@@ -3,7 +3,7 @@ import { join } from "node:path";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 // Every numbered badge on the specimen slides, its numeral's ink centred in the badge, and a code
 // line's badge on its line, which it hung below with the row aligned to its top. A tile
@@ -96,7 +96,7 @@ type Reading = { label: string; offset: number };
 
 /** Each badge's offset on every print frame and code story, as drawn and under the control. */
 async function offsets() {
-  const page = await browser.newPage();
+  const page = await newPage(browser);
   const found: Reading[] = [];
   const control: Reading[] = [];
   const read = async (where: string) => {

@@ -2,7 +2,7 @@ import puppeteer, { type Browser, type Page } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { slideCatalog } from "../../specimen/slide-catalog";
 import { type Served, serveDist } from "./serve-dist";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 // Between 40rem and 48rem no control and no counter showed: the bar ended at `sm` and the counter
 // started at `md`.
@@ -23,7 +23,7 @@ afterAll(async () => {
 });
 
 async function deck(width: number, touch = false, height = 900) {
-  const page = await browser.newPage();
+  const page = await newPage(browser);
   await page.setViewport({ width, height, hasTouch: touch, isMobile: touch });
   await page.goto(`${served.origin}${DECK}`, { waitUntil: "load" });
   await page.waitForSelector(NEXT);
@@ -91,7 +91,7 @@ it.each(WIDTHS)(
     await reached(page, 3);
     await page.close();
   },
-  30_000,
+  limit(30_000),
 );
 
 it.each([820, 1024])(
@@ -102,7 +102,7 @@ it.each([820, 1024])(
     expect(await bar(page)).toMatchObject({ opacity: 1, hit: true, inside: true });
     await page.close();
   },
-  30_000,
+  limit(30_000),
 );
 
 it(
@@ -230,7 +230,7 @@ it.each([
     });
     await page.close();
   },
-  30_000,
+  limit(30_000),
 );
 
 // A closing slide's lockup hides the whole corner, its counter included, so the bar keeps the count.

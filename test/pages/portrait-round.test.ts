@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 // Every portrait on the print page's slides, read off its box: a picture fills brand's round
 // hw-avatar, a circle, with no mat or ring round it. A mat drawn round a picture with the brand
@@ -49,7 +49,7 @@ afterAll(() => browser?.close());
 it(
   "draws every portrait as a picture filling a round avatar",
   async () => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     await page.setViewport({ width: 1920, height: 1080 });
     await page.goto(FRAMES, { waitUntil: "load" });
     const fits = await page.evaluate(measure);

@@ -34,7 +34,10 @@ it(
     const running = () => server.exitCode === null && server.signalCode === null;
     try {
       let status: number | undefined;
-      for (const deadline = Date.now() + 20_000; !status && running() && Date.now() < deadline;)
+      for (
+        const deadline = Date.now() + limit(20_000);
+        !status && running() && Date.now() < deadline;
+      )
         status = await fetch(`http://127.0.0.1:${port}/slides/catalog/print/`, {
           signal: AbortSignal.timeout(limit(2_000)),
         }).then(

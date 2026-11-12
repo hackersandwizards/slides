@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 // talks and trainer-hub set a dark theme on <html>. The brand's night rule reaches down to the
 // nearest light theme, so every day slide carries data-theme="light" (SlideShell, SlideContainer,
@@ -27,7 +27,7 @@ it(
   async () => {
     const cards: { night: boolean; fill: string }[] = [];
     for (const name of ["frames.html", "index.html"]) {
-      const tab = await browser.newPage();
+      const tab = await newPage(browser);
       await tab.goto(page(name), { waitUntil: "load" });
       cards.push(
         ...(await tab.evaluate(() => {

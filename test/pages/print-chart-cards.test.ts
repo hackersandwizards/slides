@@ -1,7 +1,7 @@
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 // Recharts draws in the browser only, so these two tiles frame a story page, which needs the
 // `/slides` base a file:// read does not give.
@@ -27,7 +27,7 @@ it.each([
 ])(
   "draws the plot of the %s tile at once",
   async (id, drawn, growing) => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     try {
       await page.setViewport({ width: 1600, height: 1000 });
       await page.goto(`${dist.origin}/slides/catalog/print/`, { waitUntil: "load" });
@@ -45,5 +45,5 @@ it.each([
       await page.close();
     }
   },
-  60_000,
+  limit(60_000),
 );

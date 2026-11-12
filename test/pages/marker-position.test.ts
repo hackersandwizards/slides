@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 // Every step number on the print page's slides, measured on the pixels Chrome paints at
 // 1920x1080. Markers drifted 1.2 to 3.4 px off for months while every check passed, since only a
@@ -121,7 +121,7 @@ beforeAll(async () => {
     headless: true,
     args: ["--use-mock-keychain", "--password-store=basic"],
   });
-  const page = await browser.newPage();
+  const page = await newPage(browser);
   await page.goto(`file://${join(PRINT, "index.html")}`);
   frames = await page.$$eval("iframe", (all) =>
     all.map((f) => ({ title: f.title, doc: f.srcdoc })),
@@ -188,7 +188,7 @@ it(
 it(
   "every step number on the specimen slides sits on its line",
   async () => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     const off: string[] = [];
     let found = 0;
     try {

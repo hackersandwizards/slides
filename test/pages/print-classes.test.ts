@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { classesIn, compileSlides, unescapeHtml } from "../../catalog/print-css";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 // The print stylesheet is compiled from the markup print.ts hands it, not from a scan of the pages,
 // so a class the built pages write can miss its rule; a class name alone in the CSS proves nothing.
@@ -55,7 +55,7 @@ it("reads a class whose markup is escaped, as a frame writes it", () => {
 it(
   "draws each night tile on the night ground",
   async () => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     await page.goto(pathToFileURL(join(print, "index.html")).href, { waitUntil: "load" });
     const tiles = await page.$$eval("[data-hw-tile] > .slide-night", (grounds) =>
       grounds.map((ground) => getComputedStyle(ground).backgroundColor),

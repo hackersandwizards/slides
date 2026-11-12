@@ -3,7 +3,7 @@ import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { TICK_GAP } from "../../components/slides/ChartPlots";
 import { type Served, serveDist } from "./serve-dist";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 const rgb = (hex: string) =>
   `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
@@ -29,7 +29,7 @@ afterAll(async () => {
 // A tab holds focus as the one in front does, as brand-elements emulates it: a background tab never
 // paints, and the catalog's frames load only after the first paint.
 const newTab = async () => {
-  const tab = await browser.newPage();
+  const tab = await newPage(browser);
   await (
     await tab.createCDPSession()
   ).send("Emulation.setFocusEmulationEnabled", { enabled: true });
@@ -119,7 +119,7 @@ it.each([
     expect(missing).toEqual([]);
     await tab.close();
   },
-  60_000,
+  limit(60_000),
 );
 
 const stylesheets = async (url: string) => {
@@ -252,7 +252,7 @@ it.each(["bar", "bar-long-names", "trend", "trend-marked"])(
     }
     await tab.close();
   },
-  60_000,
+  limit(60_000),
 );
 
 // The fit guard shrinks with zoom, which draws a px width zoomed but a percentage at full size: a

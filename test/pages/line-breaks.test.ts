@@ -4,7 +4,7 @@ import puppeteer, { type Browser, type Page } from "puppeteer";
 import { claim } from "@hackersandwizards/brand/verbal.json";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 const FRAMES = join(import.meta.dirname, "..", "..", "dist", "catalog", "print", "frames.html");
 
@@ -58,7 +58,7 @@ const linesOf = (page: Page, scope: string, starts: string, from: string, length
 it(
   "breaks a statement's closing where the deck types \\n",
   async () => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     await page.setViewport({ width: 1920, height: 1080 });
     await page.goto(pathToFileURL(FRAMES).href, { waitUntil: "load" });
     const closing = "The plan comes first.";
@@ -78,7 +78,7 @@ it(
 it.each(["en", "de"] as const)(
   "sets brand's %s claim on one row of a contact closing",
   async (lang) => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     await page.setViewport({ width: 1920, height: 1080 });
     await page.goto(pathToFileURL(FRAMES).href, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
@@ -104,14 +104,14 @@ it.each(["en", "de"] as const)(
     await page.close();
     expect(rows).toBe(1);
   },
-  60_000,
+  limit(60_000),
 );
 
 // A narrow box broke "self-service?" after its hyphen, leaving "service?" alone on the next line.
 it.each([1366, 1440])(
   "%i px: keeps a hyphenated compound on one line",
   async (width) => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     await page.setViewport({ width, height: 900 });
     await page.goto(`${served.origin}/slides/stories/Types/decision-slide/specimen3/`, {
       waitUntil: "load",
@@ -124,7 +124,7 @@ it.each([1366, 1440])(
     ).toBe(1);
     await page.close();
   },
-  60_000,
+  limit(60_000),
 );
 
 // On a phone a chip with a space broke inside itself: `widths: [2, 1]` drew "[2," and "1]" on two
@@ -137,7 +137,7 @@ it.each(
 )(
   "content-slide/%s at %i px: keeps each inline code on one line inside the page",
   async (story, width) => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     await page.setViewport({ width, height: 844 });
     await page.goto(`${served.origin}/slides/stories/Types/content-slide/${story}/`, {
       waitUntil: "networkidle0",
@@ -165,19 +165,17 @@ it.each(
     expect(chips.length).toBeGreaterThan(0);
     expect(chips.filter((c) => c.lines !== 1 || !c.inside)).toEqual([]);
   },
-  60_000,
+  limit(60_000),
 );
 
 // "87,3 %" broke before its unit beside a lone figure's label: in its row the figure may shrink,
 // and a spaced unit's space was a break.
+const FIGURES =
+  ".slide-figure-row > :first-child, .slide-figure-cell > :first-child, .slide-timeline-figure";
 /** Runs in the page: each figure of a numbers block or timeline, the heights it takes as set and
  *  held on one line, and how far it or its row's contents stand past the row's right edge. */
-function figureHeights() {
-  return [
-    ...document.querySelectorAll<HTMLElement>(
-      ".slide-figure-row > :first-child, .slide-figure-cell > :first-child, .slide-timeline-figure",
-    ),
-  ].map((f) => {
+function figureHeights(selector: string) {
+  return [...document.querySelectorAll<HTMLElement>(selector)].map((f) => {
     const set = f.getBoundingClientRect().height;
     f.style.setProperty("white-space", "nowrap", "important");
     const one = f.getBoundingClientRect().height;
@@ -200,12 +198,12 @@ const wrapped = (figures: ReturnType<typeof figureHeights>) =>
 it(
   "keeps every figure on one line and inside its row in print",
   async () => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     await page.setViewport({ width: 1920, height: 1080 });
     await page.emulateMediaType("print");
     await page.goto(pathToFileURL(FRAMES).href, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
-    const figures = await page.evaluate(figureHeights);
+    const figures = await page.evaluate(figureHeights, FIGURES);
     await page.close();
     expect(figures.map((f) => f.text)).toContain("87,3 %");
     expect(wrapped(figures)).toEqual([]);
@@ -229,13 +227,14 @@ it.each(
 )(
   "keeps every figure of %s on one line and inside its row at %i px",
   async (story, width) => {
-    const page = await browser.newPage();
+    const page = await newPage(browser);
     await page.setViewport({ width, height: width > 800 ? (width * 9) / 16 : 844 });
     await page.goto(`${served.origin}/slides/stories/Types/${story}/`, {
       waitUntil: "networkidle0",
     });
+    await page.waitForSelector(FIGURES);
     await page.evaluate(() => document.fonts.ready);
-    const figures = await page.evaluate(figureHeights);
+    const figures = await page.evaluate(figureHeights, FIGURES);
     // A lone figure's label stands beside it on the stage while its longest word finds room there.
     const place = width > 800 && PLACE[story.split("/")[1]];
     const below =
@@ -249,5 +248,5 @@ it.each(
     expect(wrapped(figures)).toEqual([]);
     if (place) expect(below ? "below" : "beside").toBe(place);
   },
-  60_000,
+  limit(60_000),
 );

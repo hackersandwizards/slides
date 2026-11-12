@@ -1,7 +1,7 @@
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 // The dashboard's card on a phone draws a slide's text unreadably small: below 40rem it offers an
 // enlarged view across the turned phone.
@@ -21,7 +21,7 @@ afterAll(async () => {
 });
 
 const open = async (width: number, height: number) => {
-  const page = await browser.newPage();
+  const page = await newPage(browser);
   await page.setViewport({ width, height });
   await page.goto(`${dist.origin}${STORY}`, { waitUntil: "networkidle0" });
   return page;

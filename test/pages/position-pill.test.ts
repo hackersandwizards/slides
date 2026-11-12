@@ -1,7 +1,7 @@
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
-import { limit } from "./limit";
+import { limit, newPage } from "./limit";
 
 // The phone's position pill set its width by its glyphs, so the swap to the web face moved the
 // next-slide button: 3.5 px with a metric-matched fallback, and Chrome counted it as a layout shift.
@@ -21,7 +21,7 @@ afterAll(async () => {
 
 /** The pill on a phone, drawn in the web faces or with every font request refused. */
 async function pill(fonts: boolean) {
-  const page = await browser.newPage();
+  const page = await newPage(browser);
   await page.setViewport({ width: 412, height: 823, isMobile: true, hasTouch: true });
   if (!fonts) {
     await page.setRequestInterception(true);
