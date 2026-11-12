@@ -57,8 +57,8 @@ painted out of all four, since it gave the slide's place in the specimen deck.
 - **Criteria**, of 10 each, fixed before any score: understanding, legibility, visual calm, ours and
   overall. Before scoring, each reviewer named the type of three teams on the _stream_ slide from the
   slide alone.
-- **Decision rule**, written before any output was read: the default changes only where the legend
-  leads outside the noise for every reviewer.
+- **Decision rule**: the stripe review's, a lead outside the noise for every reviewer. It was not
+  written down for this panel before its outputs were read.
 
 The prompt of the room persona's second Claude run, verbatim (the image paths name the scratch
 folder):

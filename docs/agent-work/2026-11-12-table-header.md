@@ -61,8 +61,9 @@ quality 50).
   call.
 - **Criteria**, of 10 each, fixed before any score: column heads, cells, visual calm, ours and
   overall.
-- **Decision rule**, written before any output was read: a variant ships only where it leads A
-  outside the noise for every reviewer; C ships only through brand.
+- **Decision rule**: the stripe review's, a variant ships only where it leads A outside the noise for
+  every reviewer, and C only through brand. It was not written down for this panel before its
+  outputs were read.
 
 The prompt of the room persona's first Codex run, verbatim but for the image list, which named the
 twelve images by absolute path in the scratch folder, `slide-<n>_version-<n>_full.png` and
