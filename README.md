@@ -52,11 +52,6 @@ A consumer's gate runs `slides-pins` and `slides-density` after its build. The l
 their arguments with `--help`; what each checks: [docs/commands.md](docs/commands.md). A PDF comes
 from `renderPdf` in `scripts/render-pdf`, which a consumer's export script calls.
 
-## Deck structure
-
-Agenda, chapters, statement and activity slides, retired types and sketches:
-[docs/deck-structure.md](docs/deck-structure.md).
-
 ## Documentation
 
 - [Set up a consumer](docs/setup.md): a first deck, what the engine takes from brand, every import.
