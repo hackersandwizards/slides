@@ -5,7 +5,7 @@ priority: 3
 order: 1966
 owner: Ada
 area: software-engineering
-evidence: "brand v2.15.0's card.css (var(--white-wash) where lightningcss wrote #ffffff12) took SlideFrame's scoped style to 4108 bytes on 11.11.2026 and test/pages/catalog-pages.test.ts failed; with card.css imported unscoped the frame's chunk measures 3610 bytes (4093 before the raise, both read off the built dashboard page's inline style)"
+evidence: "Checked 12.11.: SlideFrame.astro:110-113 still imports card.css is:global and catalog/astro.config.ts sets no inlineStylesheets; the byte margin not re-measured. Internal."
 ---
 
 # SlideFrame's style stays inline by about 480 bytes

@@ -4,7 +4,7 @@ status: open
 priority: 3
 owner: Ada
 area: brand
-evidence: "scripts/render-pptx.ts fills every body cell c.card and only the head c.tint, under a comment calling it the web's table; the web table keeps its stripes after the blind review in docs/agent-work/2026-11-12-table-stripe.md"
+evidence: "Checked 12.11.: scripts/render-pptx.ts:1487 still fills every body cell c.card and only the head c.tint. Visible in an exported deck."
 ---
 
 # The PowerPoint export draws the slide table without its stripes

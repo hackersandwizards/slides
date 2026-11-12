@@ -5,7 +5,7 @@ priority: 3
 order: 1963
 owner: Ada
 area: software-engineering
-evidence: "v2.21.2 build, 10.11.2026: the chart bar tile on /catalog/print/ sampled every 100 ms in Chrome for Testing 156, headless, reported in docs/agent-work/2026-11-10-engine-queue.md, section 4"
+evidence: "Checked 12.11.: SlideFrame.astro:51 still opens each tile ?revealed, so the print page shows no stall; the cause under a growing plot is not explained. Internal."
 ---
 
 # A growing plot framed on the print page waits seconds before it draws

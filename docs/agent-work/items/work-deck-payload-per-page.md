@@ -5,7 +5,7 @@ priority: 3
 order: 1400
 owner: Ada
 area: software-engineering
-evidence: "talks build of 10.11.2026 12:12, specimen deck slide-catalog (126 slides), page /slide-catalog/5/: 111,263 B of HTML, 20,961 B gzipped, 90% of it island props; the deck's folder 14 MB; one cold load at 390x844, 150 ms latency, 9 Mbit/s, CPU 4x slower, three runs: 277,563 B gzipped over 13 resources, DOMContentLoaded 565 to 574 ms, every island hydrated 1,146 to 1,185 ms"
+evidence: "Checked 12.11.: DeckView still takes the whole presentation as props (components/deck/DeckView.tsx:18, 34). Internal: build size, about 7 % of a first load."
 ---
 
 # Every slide page embeds its whole deck

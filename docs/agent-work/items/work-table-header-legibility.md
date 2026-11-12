@@ -5,7 +5,7 @@ priority: 3
 order: 1967
 owner: Ada
 area: brand
-evidence: "Run table-stripe, 12.11.: in all eight blind runs (two personas, Claude and Codex, two runs each) the reviewers marked the slide table's column headers down on legibility: small, letter-spaced, wrapping onto two lines. Report docs/agent-work/2026-11-12-table-stripe.md (d681c4a); the raw reviews were deleted with the run's scratch."
+evidence: "Checked 12.11.: logged today from the table-stripe review (d681c4a), no change to the header row since. Visible on every slide table."
 ---
 
 # Slide table column headers read small and wrap
