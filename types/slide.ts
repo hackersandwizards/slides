@@ -817,7 +817,8 @@ export interface TeamTopologySlide {
   // one enabling team per topic
   enabling: { name: string; experts: string[] }[];
   complicatedSubsystem?: { name: string; description?: string }[];
-  /** Names what each box's colour and shape stand for, in the deck's language: off by default. */
+  /** Names what each box's colour and shape stand for, in the deck's language, unless `false`:
+   *  readers new to Team Topologies could not tell the types apart by colour alone. */
   legend?: boolean;
   caption?: string;
 }

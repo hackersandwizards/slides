@@ -2322,7 +2322,7 @@ function topology(
     row: number;
     tw: number;
   }[] = [];
-  if (d.legend)
+  if (d.legend !== false)
     for (const type of teamTypesDrawn(d)) {
       const tw = textWidth(words[type], legO.size) + 0.02;
       const last = legend.at(-1);

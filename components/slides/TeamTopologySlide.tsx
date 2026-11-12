@@ -162,7 +162,7 @@ export function TeamTopologySlide({ slide }: Props) {
               </div>
             )}
 
-            {slide.legend && <Legend slide={slide} />}
+            {slide.legend !== false && <Legend slide={slide} />}
             {slide.caption && <p className="mt-2 text-xl text-text-muted">{slide.caption}</p>}
           </BlurFade>
         </div>

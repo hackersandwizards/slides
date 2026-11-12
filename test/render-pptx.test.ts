@@ -688,13 +688,17 @@ describe("slides-pptx on the specimen deck", () => {
     },
   );
 
-  it("names a team picture's types under it only where the slide asks for a legend", () => {
+  it("names a team picture's types under it unless the slide turns its legend off", () => {
     const at = slideCatalog.slides.flatMap((x, i) => (x.type === "team-topology" ? [i] : []));
     const named = at.map((i) => slideXml[i].includes(`<a:t>${WORDS.en.teams.enabling}</a:t>`));
     expect(named).toEqual(
-      at.map((i) => !!(slideCatalog.slides[i] as Extract<Slide, { type: "team-topology" }>).legend),
+      at.map(
+        (i) =>
+          (slideCatalog.slides[i] as Extract<Slide, { type: "team-topology" }>).legend !== false,
+      ),
     );
     expect(named).toContain(true);
+    expect(named).toContain(false);
   });
 
   // F32: a timed agenda aligned with tabs and set no tab stops, so each viewer's default ones did.
@@ -1483,11 +1487,12 @@ describe("slides-pptx draws what the slide shows", () => {
     const slide = slideCatalog.slides[i] as Extract<Slide, { type: "team-topology" }>;
     const shapes = shapesOf(slideXml[i]);
     const top = (sh: { y?: number }) => +sh.y!.toFixed(2);
-    const octagons = shapes.filter((sh) => sh.prst === "octagon");
-    expect(octagons).toHaveLength(slide.complicatedSubsystem!.length);
-    expect(new Set(octagons.map(top)).size).toBe(1);
     const frames = shapes.filter((sh) => sh.dash === "sysDot" && sh.w! > 2);
     expect(frames).toHaveLength(1);
+    // The legend's swatch, under the platform frame, is an octagon too.
+    const octagons = shapes.filter((sh) => sh.prst === "octagon" && sh.y! < frames[0].y!);
+    expect(octagons).toHaveLength(slide.complicatedSubsystem!.length);
+    expect(new Set(octagons.map(top)).size).toBe(1);
     for (const t of slide.platform) {
       const name = shapes.find((sh) => sh.texts.join("") === t.name)!;
       expect(name.x!).toBeGreaterThanOrEqual(frames[0].x!);

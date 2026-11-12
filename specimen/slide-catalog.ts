@@ -1649,7 +1649,8 @@ const slides: Slide[] = [
     streamAligned: [{ name: "Stream team: Payments", roles: ["Engineers"] }],
     platform: [{ name: "Platform team" }],
     enabling: [{ name: "Enabling: Data", experts: ["Analytics"] }],
-    notes: "team-topology: minimal.",
+    legend: false,
+    notes: "team-topology: minimal, without a legend.",
   },
   {
     type: "team-topology",
@@ -1694,7 +1695,6 @@ const slides: Slide[] = [
       { name: "CRM", description: "Leads, routing, activities" },
       { name: "Legacy portal", description: "Data for the migration" },
     ],
-    legend: true,
     caption: "Fictional organisation.",
     notes: "team-topology: legend, naming what each box's colour and shape stand for.",
   },

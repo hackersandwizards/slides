@@ -42,19 +42,21 @@ it("sets a team's roles as one balanced line, each role whole", () => {
   expect(roles).toEqual(teamTopologySlide.streamAligned[0].roles.map((r) => `•${NBSP}${r}`));
 });
 
-// Every blind reviewer of a client deck's team picture asked what the box colours meant: an
-// optional legend names each type drawn, in the order drawn, with a swatch drawn like its boxes.
+// Every blind reviewer of a client deck's team picture asked what the box colours meant, and readers
+// new to Team Topologies named no type without one: a legend names each type drawn, in the order
+// drawn, with a swatch drawn like its boxes, unless the slide turns it off.
 describe("TeamTopologySlide legend", () => {
   const SlideComponent = slideComponents["team-topology"];
   const legendOf = (container: HTMLElement) => container.querySelector("ul");
 
-  it("draws none unless the slide asks for it", () => {
-    const { container } = render(<SlideComponent slide={teamTopologySlide as Slide} />);
+  it("draws none where the slide turns it off", () => {
+    const off = { ...teamTopologySlide, legend: false };
+    const { container } = render(<SlideComponent slide={off as Slide} />);
     expect(legendOf(container)).toBeNull();
   });
 
   it("names each type drawn, in the deck's language, its swatch shaped like its boxes", () => {
-    const slide = { ...teamTopologySlide, complicatedSubsystem: [], legend: true };
+    const slide = { ...teamTopologySlide, complicatedSubsystem: [] };
     const { container } = render(
       <DeckLang.Provider value="de">
         <SlideComponent slide={slide as Slide} />
