@@ -2,6 +2,7 @@
 kind: work
 status: open
 priority: 3
+order: 1965
 owner: Ada
 area: brand
 evidence: "Checked 12.11.: scripts/render-pptx.ts:1487 still fills every body cell c.card and only the head c.tint. Visible in an exported deck."
