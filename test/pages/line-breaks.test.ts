@@ -4,6 +4,7 @@ import puppeteer, { type Browser, type Page } from "puppeteer";
 import { claim } from "@hackersandwizards/brand/verbal.json";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
+import { limit } from "./limit";
 
 const FRAMES = join(import.meta.dirname, "..", "..", "dist", "catalog", "print", "frames.html");
 
@@ -54,19 +55,23 @@ const linesOf = (page: Page, scope: string, starts: string, from: string, length
   );
 
 // The built frames page keeps the specimen's `\n` as text, so only the stylesheet can break it.
-it("breaks a statement's closing where the deck types \\n", async () => {
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1920, height: 1080 });
-  await page.goto(pathToFileURL(FRAMES).href, { waitUntil: "load" });
-  const closing = "The plan comes first.";
-  const text = await page.evaluate(
-    (c) =>
-      [...document.querySelectorAll("p")].find((e) => e.textContent?.startsWith(c))?.textContent,
-    closing,
-  );
-  expect(await linesOf(page, "body", closing, closing, (text ?? "").length)).toBe(2);
-  await page.close();
-}, 60_000);
+it(
+  "breaks a statement's closing where the deck types \\n",
+  async () => {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
+    await page.goto(pathToFileURL(FRAMES).href, { waitUntil: "load" });
+    const closing = "The plan comes first.";
+    const text = await page.evaluate(
+      (c) =>
+        [...document.querySelectorAll("p")].find((e) => e.textContent?.startsWith(c))?.textContent,
+      closing,
+    );
+    expect(await linesOf(page, "body", closing, closing, (text ?? "").length)).toBe(2);
+    await page.close();
+  },
+  limit(60_000),
+);
 
 // The specimen closing set in each language's claim: at the lead step the German claim took two
 // rows and the fit guard shrank the closing with speaker photos further.
@@ -192,17 +197,21 @@ const PLACE: Record<string, string> = {
 const wrapped = (figures: ReturnType<typeof figureHeights>) =>
   figures.filter(({ set, one, over }) => set > one + 1 || over > 1);
 
-it("keeps every figure on one line and inside its row in print", async () => {
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1920, height: 1080 });
-  await page.emulateMediaType("print");
-  await page.goto(pathToFileURL(FRAMES).href, { waitUntil: "load" });
-  await page.evaluate(() => document.fonts.ready);
-  const figures = await page.evaluate(figureHeights);
-  await page.close();
-  expect(figures.map((f) => f.text)).toContain("87,3 %");
-  expect(wrapped(figures)).toEqual([]);
-}, 60_000);
+it(
+  "keeps every figure on one line and inside its row in print",
+  async () => {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
+    await page.emulateMediaType("print");
+    await page.goto(pathToFileURL(FRAMES).href, { waitUntil: "load" });
+    await page.evaluate(() => document.fonts.ready);
+    const figures = await page.evaluate(figureHeights);
+    await page.close();
+    expect(figures.map((f) => f.text)).toContain("87,3 %");
+    expect(wrapped(figures)).toEqual([]);
+  },
+  limit(60_000),
+);
 
 it.each(
   [

@@ -3,6 +3,7 @@ import { join } from "node:path";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
+import { limit } from "./limit";
 
 // Every numbered badge on the specimen slides, its numeral's ink centred in the badge, and a code
 // line's badge on its line, which it hung below with the row aligned to its top. A tile
@@ -129,11 +130,17 @@ const outside = (readings: Reading[]) =>
     .filter(({ offset }) => Math.abs(offset) > TOLERANCE)
     .map(({ label, offset }) => `${label}: ${offset.toFixed(2)} px`);
 
-it("every numbered badge on the specimen slides centres its numeral", async () => {
-  const { found, control } = await offsets();
-  expect(found.filter(({ label }) => label.startsWith(served.origin)).length).toBeGreaterThan(0);
-  expect(found.length).toBeGreaterThan(20);
-  expect(outside(found)).toEqual([]);
-  expect(outside(control).length).toBeGreaterThan(10);
-  expect(outside(control).filter((line) => line.includes("on its line")).length).toBeGreaterThan(0);
-}, 300_000);
+it(
+  "every numbered badge on the specimen slides centres its numeral",
+  async () => {
+    const { found, control } = await offsets();
+    expect(found.filter(({ label }) => label.startsWith(served.origin)).length).toBeGreaterThan(0);
+    expect(found.length).toBeGreaterThan(20);
+    expect(outside(found)).toEqual([]);
+    expect(outside(control).length).toBeGreaterThan(10);
+    expect(outside(control).filter((line) => line.includes("on its line")).length).toBeGreaterThan(
+      0,
+    );
+  },
+  limit(300_000),
+);

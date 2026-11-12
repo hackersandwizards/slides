@@ -1,6 +1,7 @@
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
+import { limit } from "./limit";
 
 // The phone's position pill set its width by its glyphs, so the swap to the web face moved the
 // next-slide button: 3.5 px with a metric-matched fallback, and Chrome counted it as a layout shift.
@@ -46,9 +47,13 @@ async function pill(fonts: boolean) {
   return reading;
 }
 
-it("keeps the next-slide button still when the web face swaps in, the longest count fitting", async () => {
-  const [web, fallback] = [await pill(true), await pill(false)];
-  expect(Math.abs(web.next - fallback.next)).toBeLessThan(0.5);
-  expect(web.overflow).toBeLessThanOrEqual(0);
-  expect(fallback.overflow).toBeLessThanOrEqual(0);
-}, 60_000);
+it(
+  "keeps the next-slide button still when the web face swaps in, the longest count fitting",
+  async () => {
+    const [web, fallback] = [await pill(true), await pill(false)];
+    expect(Math.abs(web.next - fallback.next)).toBeLessThan(0.5);
+    expect(web.overflow).toBeLessThanOrEqual(0);
+    expect(fallback.overflow).toBeLessThanOrEqual(0);
+  },
+  limit(60_000),
+);

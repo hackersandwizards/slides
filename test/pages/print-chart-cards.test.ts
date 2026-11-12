@@ -1,6 +1,7 @@
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
+import { limit } from "./limit";
 
 // Recharts draws in the browser only, so these two tiles frame a story page, which needs the
 // `/slides` base a file:// read does not give.
@@ -36,7 +37,7 @@ it.each([
       // A tile opens its slide revealed, the plot drawn at once: grown, its bars stayed out for
       // seconds.
       await frame.waitForSelector("svg :is(.recharts-bar-rectangle, .recharts-area-curve)", {
-        timeout: 20_000,
+        timeout: limit(20_000),
       });
       expect(await frame.$$eval(`svg ${drawn}`, (marks) => marks.length)).toBeGreaterThan(0);
       expect(await frame.$$eval(`svg ${growing}`, (marks) => marks.length)).toBe(0);

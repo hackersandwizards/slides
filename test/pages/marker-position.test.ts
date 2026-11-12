@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
+import { limit } from "./limit";
 
 // Every step number on the print page's slides, measured on the pixels Chrome paints at
 // 1920x1080. Markers drifted 1.2 to 3.4 px off for months while every check passed, since only a
@@ -171,43 +172,52 @@ it("every marker class in the components is defined", () => {
 });
 
 // The control for check:markers: brand-markers over the squares moved half a pixel down must fail.
-it("brand-markers fails on squares moved by half a pixel", () => {
-  const files = frameFiles(".hw-marker { translate: 0 0.5px }");
-  expect(files.length).toBeGreaterThan(10);
-  const run = brandMarkers(files.slice(0, 3));
-  expect(run.status).toBe(1);
-  // Exit 1 is also a page that failed to load: the run must have read the moved squares.
-  expect(`${run.stdout}${run.stderr}`).toMatch(/\b[1-9]\d* off by more than/);
-}, 300_000);
+it(
+  "brand-markers fails on squares moved by half a pixel",
+  () => {
+    const files = frameFiles(".hw-marker { translate: 0 0.5px }");
+    expect(files.length).toBeGreaterThan(10);
+    const run = brandMarkers(files.slice(0, 3));
+    expect(run.status).toBe(1);
+    // Exit 1 is also a page that failed to load: the run must have read the moved squares.
+    expect(`${run.stdout}${run.stderr}`).toMatch(/\b[1-9]\d* off by more than/);
+  },
+  limit(300_000),
+);
 
-it("every step number on the specimen slides sits on its line", async () => {
-  const page = await browser.newPage();
-  const off: string[] = [];
-  let found = 0;
-  try {
-    await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: SCALE });
-    // One navigation sets the base every frame's relative links resolve against: setContent keeps
-    // the URL, and reloading the page per frame outgrew the timeout once it showed every variant.
-    await page.goto(`file://${join(PRINT, "index.html")}`);
-    for (const { title, doc } of frames) {
-      await page.setContent(doc, { waitUntil: "load" });
-      await page.evaluate(() => document.fonts.ready.then(() => undefined));
-      const read = async (clip: Box) =>
-        clip.y +
-        (await page.evaluate(
-          inkBottom,
-          await page.screenshot({ clip, encoding: "base64", captureBeyondViewport: true }),
-          SCALE,
-        ));
-      for (const p of await page.evaluate(collect)) {
-        found++;
-        const offset = (await read(p.number)) - (await read(p.text));
-        if (Math.abs(offset) > TOLERANCE) off.push(`${title}: ${p.label}: ${offset.toFixed(2)} px`);
+it(
+  "every step number on the specimen slides sits on its line",
+  async () => {
+    const page = await browser.newPage();
+    const off: string[] = [];
+    let found = 0;
+    try {
+      await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: SCALE });
+      // One navigation sets the base every frame's relative links resolve against: setContent keeps
+      // the URL, and reloading the page per frame outgrew the timeout once it showed every variant.
+      await page.goto(`file://${join(PRINT, "index.html")}`);
+      for (const { title, doc } of frames) {
+        await page.setContent(doc, { waitUntil: "load" });
+        await page.evaluate(() => document.fonts.ready.then(() => undefined));
+        const read = async (clip: Box) =>
+          clip.y +
+          (await page.evaluate(
+            inkBottom,
+            await page.screenshot({ clip, encoding: "base64", captureBeyondViewport: true }),
+            SCALE,
+          ));
+        for (const p of await page.evaluate(collect)) {
+          found++;
+          const offset = (await read(p.number)) - (await read(p.text));
+          if (Math.abs(offset) > TOLERANCE)
+            off.push(`${title}: ${p.label}: ${offset.toFixed(2)} px`);
+        }
       }
+    } finally {
+      await page.close();
     }
-  } finally {
-    await page.close();
-  }
-  expect(found).toBeGreaterThan(5);
-  expect(off).toEqual([]);
-}, 120_000);
+    expect(found).toBeGreaterThan(5);
+    expect(off).toEqual([]);
+  },
+  limit(120_000),
+);

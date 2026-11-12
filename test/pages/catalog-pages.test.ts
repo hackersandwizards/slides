@@ -3,6 +3,7 @@ import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { TICK_GAP } from "../../components/slides/ChartPlots";
 import { type Served, serveDist } from "./serve-dist";
+import { limit } from "./limit";
 
 const rgb = (hex: string) =>
   `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
@@ -37,58 +38,70 @@ const newTab = async () => {
 
 // A tile's frame loads once the home has painted and the tile is within
 // 200 px of the view, so a check reading the tiles without scrolling them in sees none.
-it("loads every tile on the catalog home, with no failed request", async () => {
-  const tab = await newTab();
-  await tab.setViewport({ width: 1440, height: 900 });
-  const failed: string[] = [];
-  tab.on("requestfailed", (request) => failed.push(request.url()));
-  tab.on("response", (response) => {
-    if (response.status() >= 400) failed.push(`${response.status()} ${response.url()}`);
-  });
-  await tab.goto(page("").slice(0, -1), { waitUntil: "load" });
-  const tiles = ".hw-catalog-preview iframe";
-  const count = await tab.$$eval(tiles, (all) => all.length);
-  await tab.$$eval(tiles, async (all) => {
-    for (const frame of all) {
-      frame.scrollIntoView();
-      await new Promise((done) => setTimeout(done, 50));
-    }
-  });
-  const allDrawn = (selector: string) =>
-    [...document.querySelectorAll<HTMLIFrameElement>(selector)].every((frame) =>
-      frame.contentDocument?.querySelector("[data-hw-scale]"),
+it(
+  "loads every tile on the catalog home, with no failed request",
+  async () => {
+    const tab = await newTab();
+    await tab.setViewport({ width: 1440, height: 900 });
+    const failed: string[] = [];
+    tab.on("requestfailed", (request) => failed.push(request.url()));
+    tab.on("response", (response) => {
+      if (response.status() >= 400) failed.push(`${response.status()} ${response.url()}`);
+    });
+    await tab.goto(page("").slice(0, -1), { waitUntil: "load" });
+    const tiles = ".hw-catalog-preview iframe";
+    const count = await tab.$$eval(tiles, (all) => all.length);
+    await tab.$$eval(tiles, async (all) => {
+      for (const frame of all) {
+        frame.scrollIntoView();
+        await new Promise((done) => setTimeout(done, 50));
+      }
+    });
+    const allDrawn = (selector: string) =>
+      [...document.querySelectorAll<HTMLIFrameElement>(selector)].every((frame) =>
+        frame.contentDocument?.querySelector("[data-hw-scale]"),
+      );
+    await tab.waitForFunction(allDrawn, { timeout: limit(60_000) }, tiles).catch(() => undefined);
+    expect(count).toBeGreaterThan(20);
+    expect(await tab.evaluate(allDrawn, tiles)).toBe(true);
+    expect(failed).toEqual([]);
+    await tab.close();
+  },
+  limit(120_000),
+);
+
+it(
+  "turns the catalog page night with its dark theme button, and back",
+  async () => {
+    const tab = await newTab();
+    await tab.goto(page("dashboard/Types/closing-slide/contact"), { waitUntil: "load" });
+    // The shell paints the ground on <html>; the body is transparent over it.
+    const ground = () =>
+      tab.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
+    const day = await ground();
+    await tab.click("button[data-hw-theme]");
+    expect(await ground()).toBe(NIGHT);
+    await tab.click("button[data-hw-theme]");
+    expect(await ground()).toBe(day);
+    await tab.close();
+  },
+  limit(60_000),
+);
+
+it(
+  "keeps a day slide's story page day under the dark theme",
+  async () => {
+    const tab = await newTab();
+    await tab.evaluateOnNewDocument(() => localStorage.setItem("theme-toggle", "dark"));
+    await tab.goto(page("stories/Types/closing-slide/contact"), { waitUntil: "load" });
+    const fill = await tab.evaluate(
+      () => getComputedStyle(document.querySelector(".slide-story")!).backgroundColor,
     );
-  await tab.waitForFunction(allDrawn, { timeout: 60_000 }, tiles).catch(() => undefined);
-  expect(count).toBeGreaterThan(20);
-  expect(await tab.evaluate(allDrawn, tiles)).toBe(true);
-  expect(failed).toEqual([]);
-  await tab.close();
-}, 120_000);
-
-it("turns the catalog page night with its dark theme button, and back", async () => {
-  const tab = await newTab();
-  await tab.goto(page("dashboard/Types/closing-slide/contact"), { waitUntil: "load" });
-  // The shell paints the ground on <html>; the body is transparent over it.
-  const ground = () =>
-    tab.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
-  const day = await ground();
-  await tab.click("button[data-hw-theme]");
-  expect(await ground()).toBe(NIGHT);
-  await tab.click("button[data-hw-theme]");
-  expect(await ground()).toBe(day);
-  await tab.close();
-}, 60_000);
-
-it("keeps a day slide's story page day under the dark theme", async () => {
-  const tab = await newTab();
-  await tab.evaluateOnNewDocument(() => localStorage.setItem("theme-toggle", "dark"));
-  await tab.goto(page("stories/Types/closing-slide/contact"), { waitUntil: "load" });
-  const fill = await tab.evaluate(
-    () => getComputedStyle(document.querySelector(".slide-story")!).backgroundColor,
-  );
-  expect(fill).toBe(DAY);
-  await tab.close();
-}, 60_000);
+    expect(fill).toBe(DAY);
+    await tab.close();
+  },
+  limit(60_000),
+);
 
 it.each([
   "stories/Types/closing-slide/contact",
@@ -119,24 +132,35 @@ const stylesheets = async (url: string) => {
   return links;
 };
 
-it("links slides.css on a slide's page alone, never on the state's page framing it", async () => {
-  const isSlidesCss = (href: string) => /\/slides\.[^/]+\.css$/.test(href);
-  expect((await stylesheets(page("dashboard/Types/title-slide/specimen"))).some(isSlidesCss)).toBe(
-    false,
-  );
-  expect((await stylesheets(page("stories/Types/title-slide/specimen"))).some(isSlidesCss)).toBe(
-    true,
-  );
-}, 60_000);
+it(
+  "links slides.css on a slide's page alone, never on the state's page framing it",
+  async () => {
+    const isSlidesCss = (href: string) => /\/slides\.[^/]+\.css$/.test(href);
+    expect(
+      (await stylesheets(page("dashboard/Types/title-slide/specimen"))).some(isSlidesCss),
+    ).toBe(false);
+    expect((await stylesheets(page("stories/Types/title-slide/specimen"))).some(isSlidesCss)).toBe(
+      true,
+    );
+  },
+  limit(60_000),
+);
 
 // SlideFrame's style inlines only under Astro's 4 KB limit: above it every state's page waits on a
 // stylesheet of its own before the header's logo paints, the LCP element.
-it("links no stylesheet on a state's page beyond the shell's on the home", async () => {
-  const home = await stylesheets(`${served.origin}/slides/`);
-  expect(home.length).toBeGreaterThan(0);
-  for (const path of ["dashboard/Types/title-slide/specimen", "dashboard/Parts/axis-tick/variants"])
-    expect(home).toEqual(expect.arrayContaining(await stylesheets(page(path))));
-}, 60_000);
+it(
+  "links no stylesheet on a state's page beyond the shell's on the home",
+  async () => {
+    const home = await stylesheets(`${served.origin}/slides/`);
+    expect(home.length).toBeGreaterThan(0);
+    for (const path of [
+      "dashboard/Types/title-slide/specimen",
+      "dashboard/Parts/axis-tick/variants",
+    ])
+      expect(home).toEqual(expect.arrayContaining(await stylesheets(page(path))));
+  },
+  limit(60_000),
+);
 
 // A wide window scaled the slide to the page's width alone, so its bottom ran below the window
 // (ActivitySlide at about 1900x1200).
@@ -168,32 +192,36 @@ const fits = (tab: Page) =>
     };
   });
 
-it("shows a story's whole slide, centred, and fits it again as the window changes", async () => {
-  const tab = await newTab();
-  await tab.setViewport({ width: 1920, height: 1080 });
-  await tab.goto(page("dashboard/Types/activity-slide/specimen3"), { waitUntil: "networkidle0" });
-  expect(
-    await tab.$eval(".story-stage iframe", (frame) =>
-      Boolean(frame.contentDocument?.querySelector(".slide-story")),
-    ),
-  ).toBe(true);
-  for (const [width, height] of [
-    [1920, 1080],
-    [1440, 900],
-    [1280, 720],
-    [390, 844],
-    [1440, 600],
-  ]) {
-    await tab.setViewport({ width, height });
-    expect(await fits(tab), `${width}x${height}`).toEqual({
-      inside: true,
-      centred: true,
-      filled: true,
-      framed: true,
-    });
-  }
-  await tab.close();
-}, 60_000);
+it(
+  "shows a story's whole slide, centred, and fits it again as the window changes",
+  async () => {
+    const tab = await newTab();
+    await tab.setViewport({ width: 1920, height: 1080 });
+    await tab.goto(page("dashboard/Types/activity-slide/specimen3"), { waitUntil: "networkidle0" });
+    expect(
+      await tab.$eval(".story-stage iframe", (frame) =>
+        Boolean(frame.contentDocument?.querySelector(".slide-story")),
+      ),
+    ).toBe(true);
+    for (const [width, height] of [
+      [1920, 1080],
+      [1440, 900],
+      [1280, 720],
+      [390, 844],
+      [1440, 600],
+    ]) {
+      await tab.setViewport({ width, height });
+      expect(await fits(tab), `${width}x${height}`).toEqual({
+        inside: true,
+        centred: true,
+        filled: true,
+        framed: true,
+      });
+    }
+    await tab.close();
+  },
+  limit(60_000),
+);
 
 // Every category label of a chart story stands below the axis line by the tick gap and whole
 // inside its plot, at stage size.
@@ -233,77 +261,85 @@ it.each(["bar", "bar-long-names", "trend", "trend-marked"])(
 // (the stage follows the height alone). Its --hw-zoom is the zoom Chrome applies, a 32-bit float:
 // written as the double the guard computed, it stood above that at 0.9683333, and the frame's
 // label marker on talks' print page sat 1 px low.
-it("draws a shrunk slide at the slide's full width or height", async () => {
-  const tab = await newTab();
-  await tab.setViewport({ width: 1920, height: 1080 });
-  const read = async (story: string, selector: string, narrow = false) => {
-    await tab.goto(page(`stories/Types/${story}`), { waitUntil: "load" });
-    await tab.waitForSelector(`${selector}[style*="zoom"]`);
-    return tab.evaluate(
-      async (selector, narrow) => {
-        const settle = async () => {
-          for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
-        };
-        await document.fonts.ready;
-        await settle();
-        const box = document.querySelector<HTMLElement>(selector)!;
-        // Narrowed once the fit the font's arrival sets off has run.
-        if (narrow) {
-          await new Promise((r) => setTimeout(r, 300));
-          box.parentElement!.style.maxWidth = "1600px";
+it(
+  "draws a shrunk slide at the slide's full width or height",
+  async () => {
+    const tab = await newTab();
+    await tab.setViewport({ width: 1920, height: 1080 });
+    const read = async (story: string, selector: string, narrow = false) => {
+      await tab.goto(page(`stories/Types/${story}`), { waitUntil: "load" });
+      await tab.waitForSelector(`${selector}[style*="zoom"]`);
+      return tab.evaluate(
+        async (selector, narrow) => {
+          const settle = async () => {
+            for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
+          };
+          await document.fonts.ready;
           await settle();
-        }
-        const outer = box.parentElement!;
-        const cs = getComputedStyle(outer);
-        const r = box.getBoundingClientRect();
-        const o = outer.getBoundingClientRect();
-        return {
-          zoom: Number(box.style.zoom),
-          hwZoom: Number(box.style.getPropertyValue("--hw-zoom")),
-          applied: box.currentCSSZoom,
-          width: box.style.width,
-          drawn: {
-            left: r.left - o.left,
-            right: o.right - r.right,
-            top: r.top - o.top,
-            height: r.height,
-          },
-          inner: o.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
-          outer: { width: o.width, height: o.height },
-        };
-      },
-      selector,
-      narrow,
+          const box = document.querySelector<HTMLElement>(selector)!;
+          // Narrowed once the fit the font's arrival sets off has run.
+          if (narrow) {
+            await new Promise((r) => setTimeout(r, 300));
+            box.parentElement!.style.maxWidth = "1600px";
+            await settle();
+          }
+          const outer = box.parentElement!;
+          const cs = getComputedStyle(outer);
+          const r = box.getBoundingClientRect();
+          const o = outer.getBoundingClientRect();
+          return {
+            zoom: Number(box.style.zoom),
+            hwZoom: Number(box.style.getPropertyValue("--hw-zoom")),
+            applied: box.currentCSSZoom,
+            width: box.style.width,
+            drawn: {
+              left: r.left - o.left,
+              right: o.right - r.right,
+              top: r.top - o.top,
+              height: r.height,
+            },
+            inner: o.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+            outer: { width: o.width, height: o.height },
+          };
+        },
+        selector,
+        narrow,
+      );
+    };
+    const body = await read("content-slide/density", ".slide-body");
+    expect(body.zoom).toBeGreaterThan(0.5);
+    expect(body.zoom).toBeLessThan(1);
+    expect(body.hwZoom).toBe(body.applied);
+    expect(body.width).toMatch(/px$/);
+    expect(body.outer.width - body.drawn.left - body.drawn.right).toBeCloseTo(body.inner, 0);
+    const resized = await read("content-slide/density", ".slide-body", true);
+    expect(resized.outer.width - resized.drawn.left - resized.drawn.right).toBeCloseTo(
+      resized.inner,
+      0,
     );
-  };
-  const body = await read("content-slide/density", ".slide-body");
-  expect(body.zoom).toBeGreaterThan(0.5);
-  expect(body.zoom).toBeLessThan(1);
-  expect(body.hwZoom).toBe(body.applied);
-  expect(body.width).toMatch(/px$/);
-  expect(body.outer.width - body.drawn.left - body.drawn.right).toBeCloseTo(body.inner, 0);
-  const resized = await read("content-slide/density", ".slide-body", true);
-  expect(resized.outer.width - resized.drawn.left - resized.drawn.right).toBeCloseTo(
-    resized.inner,
-    0,
-  );
-  const content = await read("closing-slide/contact", ".slide-content");
-  expect(content.zoom).toBeGreaterThan(0.5);
-  expect(content.zoom).toBeLessThan(1);
-  expect(content.hwZoom).toBe(content.applied);
-  expect(content.drawn.top).toBeCloseTo(0, 0);
-  expect(content.drawn.height).toBeCloseTo(content.outer.height, 0);
-  expect(content.drawn.left).toBeCloseTo(content.drawn.right, 0);
-  await tab.close();
-}, 60_000);
+    const content = await read("closing-slide/contact", ".slide-content");
+    expect(content.zoom).toBeGreaterThan(0.5);
+    expect(content.zoom).toBeLessThan(1);
+    expect(content.hwZoom).toBe(content.applied);
+    expect(content.drawn.top).toBeCloseTo(0, 0);
+    expect(content.drawn.height).toBeCloseTo(content.outer.height, 0);
+    expect(content.drawn.left).toBeCloseTo(content.drawn.right, 0);
+    await tab.close();
+  },
+  limit(60_000),
+);
 
-it("keeps the deck's shortcut dialog inside a phone's width", async () => {
-  const tab = await newTab();
-  await tab.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
-  await tab.goto(page("stories/Deck/deck-view/specimen-deck"), { waitUntil: "networkidle0" });
-  await tab.keyboard.type("?");
-  await tab.waitForSelector("dialog[open]");
-  const [scroll, client] = await tab.$eval("dialog[open]", (d) => [d.scrollWidth, d.clientWidth]);
-  expect(scroll).toBeLessThanOrEqual(client);
-  await tab.close();
-}, 60_000);
+it(
+  "keeps the deck's shortcut dialog inside a phone's width",
+  async () => {
+    const tab = await newTab();
+    await tab.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+    await tab.goto(page("stories/Deck/deck-view/specimen-deck"), { waitUntil: "networkidle0" });
+    await tab.keyboard.type("?");
+    await tab.waitForSelector("dialog[open]");
+    const [scroll, client] = await tab.$eval("dialog[open]", (d) => [d.scrollWidth, d.clientWidth]);
+    expect(scroll).toBeLessThanOrEqual(client);
+    await tab.close();
+  },
+  limit(60_000),
+);

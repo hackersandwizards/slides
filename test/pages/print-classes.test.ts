@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { classesIn, compileSlides, unescapeHtml } from "../../catalog/print-css";
+import { limit } from "./limit";
 
 // The print stylesheet is compiled from the markup print.ts hands it, not from a scan of the pages,
 // so a class the built pages write can miss its rule; a class name alone in the CSS proves nothing.
@@ -51,13 +52,17 @@ it("reads a class whose markup is escaped, as a frame writes it", () => {
   ]);
 });
 
-it("draws each night tile on the night ground", async () => {
-  const page = await browser.newPage();
-  await page.goto(pathToFileURL(join(print, "index.html")).href, { waitUntil: "load" });
-  const tiles = await page.$$eval("[data-hw-tile] > .slide-night", (grounds) =>
-    grounds.map((ground) => getComputedStyle(ground).backgroundColor),
-  );
-  await page.close();
-  expect(tiles.length).toBeGreaterThan(0);
-  expect(tiles.filter((ground) => ground !== NIGHT)).toEqual([]);
-}, 60_000);
+it(
+  "draws each night tile on the night ground",
+  async () => {
+    const page = await browser.newPage();
+    await page.goto(pathToFileURL(join(print, "index.html")).href, { waitUntil: "load" });
+    const tiles = await page.$$eval("[data-hw-tile] > .slide-night", (grounds) =>
+      grounds.map((ground) => getComputedStyle(ground).backgroundColor),
+    );
+    await page.close();
+    expect(tiles.length).toBeGreaterThan(0);
+    expect(tiles.filter((ground) => ground !== NIGHT)).toEqual([]);
+  },
+  limit(60_000),
+);

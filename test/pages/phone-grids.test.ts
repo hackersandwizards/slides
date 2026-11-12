@@ -3,6 +3,7 @@ import { join } from "node:path";
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
+import { limit } from "./limit";
 
 // On a phone (390 px) every numbers and cards grid stacks into one column and every figure fits its
 // column on one line. An inline column template once outranked the phone rule, so a two-figure row
@@ -258,47 +259,59 @@ function runaways() {
   return found;
 }
 
-it("keeps all text of every story on a phone's screen, in columns wide enough to read", async () => {
-  expect(await sweep(390, (page) => page.evaluate(runaways))).toEqual([]);
-}, 600_000);
+it(
+  "keeps all text of every story on a phone's screen, in columns wide enough to read",
+  async () => {
+    expect(await sweep(390, (page) => page.evaluate(runaways))).toEqual([]);
+  },
+  limit(600_000),
+);
 
 // A repeated time leaves its cell empty: on the stage the empty cell keeps the column, so every
 // title starts level; on a phone, where the time stands above its title, it takes no line.
-it("keeps an agenda's titles level on the stage under a repeated time", async () => {
-  const page = await open("agenda-slide/specimen4", 1440);
-  const lefts = await page.$$eval(".slide-content ol > li > span:last-child", (all) =>
-    all.map((t) => Math.round(t.getBoundingClientRect().left)),
-  );
-  await page.close();
-  expect(lefts.length).toBeGreaterThan(2);
-  expect(new Set(lefts).size).toBe(1);
-}, 60_000);
+it(
+  "keeps an agenda's titles level on the stage under a repeated time",
+  async () => {
+    const page = await open("agenda-slide/specimen4", 1440);
+    const lefts = await page.$$eval(".slide-content ol > li > span:last-child", (all) =>
+      all.map((t) => Math.round(t.getBoundingClientRect().left)),
+    );
+    await page.close();
+    expect(lefts.length).toBeGreaterThan(2);
+    expect(new Set(lefts).size).toBe(1);
+  },
+  limit(60_000),
+);
 
 // Eight long names leave 30 px a band on a phone: angled, they crossed each other and took the
 // plot's whole height. There each bar stands as a row under its whole name; short names keep the plot.
-it("draws a bar chart of long names as rows on a phone, as a plot on the stage", async () => {
-  const page = await open("chart-slide/bar-long-names", 390);
-  await page.waitForSelector("[data-chart-plot] li");
-  const rows = await page.$$eval("[data-chart-plot] li", (all) =>
-    all.map((li) => ({
-      name: li.querySelector("span")!.textContent,
-      bar: li.lastElementChild!.getBoundingClientRect().width,
-    })),
-  );
-  const axis = await page.$(".recharts-xAxis");
-  await page.close();
-  expect(axis).toBeNull();
-  expect(rows).toHaveLength(8);
-  expect(rows[0]).toMatchObject({ name: "Waiting for a reviewer" });
-  // The 31 is the longest and the 6 about a fifth of it.
-  expect(rows[0].bar).toBeGreaterThan(rows[3].bar * 4.5);
-  expect(rows[0].bar).toBeLessThan(rows[3].bar * 5.8);
+it(
+  "draws a bar chart of long names as rows on a phone, as a plot on the stage",
+  async () => {
+    const page = await open("chart-slide/bar-long-names", 390);
+    await page.waitForSelector("[data-chart-plot] li");
+    const rows = await page.$$eval("[data-chart-plot] li", (all) =>
+      all.map((li) => ({
+        name: li.querySelector("span")!.textContent,
+        bar: li.lastElementChild!.getBoundingClientRect().width,
+      })),
+    );
+    const axis = await page.$(".recharts-xAxis");
+    await page.close();
+    expect(axis).toBeNull();
+    expect(rows).toHaveLength(8);
+    expect(rows[0]).toMatchObject({ name: "Waiting for a reviewer" });
+    // The 31 is the longest and the 6 about a fifth of it.
+    expect(rows[0].bar).toBeGreaterThan(rows[3].bar * 4.5);
+    expect(rows[0].bar).toBeLessThan(rows[3].bar * 5.8);
 
-  const stage = await open("chart-slide/bar-long-names", 1440);
-  await stage.waitForSelector(".recharts-xAxis");
-  expect(await stage.$("[data-chart-plot] li")).toBeNull();
-  await stage.close();
-}, 60_000);
+    const stage = await open("chart-slide/bar-long-names", 1440);
+    await stage.waitForSelector(".recharts-xAxis");
+    expect(await stage.$("[data-chart-plot] li")).toBeNull();
+    await stage.close();
+  },
+  limit(60_000),
+);
 
 // Boxes the text sweep cannot see: an annotated picture's number tiles stood on each other in the
 // picture's short gutter, and the six cards of a loop's circle covered one another's text.
@@ -309,15 +322,19 @@ const overlapping = (boxes: DOMRect[]) =>
       .filter((b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom),
   );
 
-it("keeps an annotated picture's number tiles apart on a phone", async () => {
-  const page = await open("content-slide/visual-annotated-image", 390);
-  const tiles = await page.$$eval(".slide-content .absolute.left-0 > span", (all) =>
-    all.map((t) => t.getBoundingClientRect().toJSON() as DOMRect),
-  );
-  await page.close();
-  expect(tiles).toHaveLength(2);
-  expect(overlapping(tiles)).toEqual([]);
-}, 60_000);
+it(
+  "keeps an annotated picture's number tiles apart on a phone",
+  async () => {
+    const page = await open("content-slide/visual-annotated-image", 390);
+    const tiles = await page.$$eval(".slide-content .absolute.left-0 > span", (all) =>
+      all.map((t) => t.getBoundingClientRect().toJSON() as DOMRect),
+    );
+    await page.close();
+    expect(tiles).toHaveLength(2);
+    expect(overlapping(tiles)).toEqual([]);
+  },
+  limit(60_000),
+);
 
 it.each(PROCESS)(
   "keeps the cards of %s apart on a phone",
@@ -338,82 +355,105 @@ it.each(PROCESS)(
   60_000,
 );
 
-it("shows where a phone's upright loop returns to", async () => {
-  const page = await open("process-slide/specimen5", 390);
-  const back = await page.$eval(".slide-flow-loop", (l) => getComputedStyle(l, "::before").content);
-  await page.close();
-  expect(back).toContain("Ideate");
-}, 60_000);
+it(
+  "shows where a phone's upright loop returns to",
+  async () => {
+    const page = await open("process-slide/specimen5", 390);
+    const back = await page.$eval(
+      ".slide-flow-loop",
+      (l) => getComputedStyle(l, "::before").content,
+    );
+    await page.close();
+    expect(back).toContain("Ideate");
+  },
+  limit(60_000),
+);
 
 // A QR card filled the phone that would have to scan it, and code at the stage's size broke
 // identifiers every dozen letters; both read better at a phone's own size.
-it("keeps the QR card small on a phone, its link in reach", async () => {
-  const page = await open("statement-slide/qr-code", 390);
-  const card = await page.$eval(".slide-qr .hw-card", (c) => c.getBoundingClientRect().width);
-  const link = await page.$(".slide-qr a[href]");
-  await page.close();
-  expect(card).toBeLessThanOrEqual(200);
-  expect(link).not.toBeNull();
-}, 60_000);
+it(
+  "keeps the QR card small on a phone, its link in reach",
+  async () => {
+    const page = await open("statement-slide/qr-code", 390);
+    const card = await page.$eval(".slide-qr .hw-card", (c) => c.getBoundingClientRect().width);
+    const link = await page.$(".slide-qr a[href]");
+    await page.close();
+    expect(card).toBeLessThanOrEqual(200);
+    expect(link).not.toBeNull();
+  },
+  limit(60_000),
+);
 
-it("wraps annotated code at most once a line on a phone", async () => {
-  const page = await open("content-slide/block-annotated-code", 390);
-  const lines = await page.$$eval(".slide-content code span.min-w-0", (all) =>
-    all.map((s) =>
-      Math.round(s.getBoundingClientRect().height / parseFloat(getComputedStyle(s).lineHeight)),
-    ),
-  );
-  await page.close();
-  expect(lines.length).toBeGreaterThan(2);
-  expect(Math.max(...lines)).toBeLessThanOrEqual(2);
-}, 60_000);
+it(
+  "wraps annotated code at most once a line on a phone",
+  async () => {
+    const page = await open("content-slide/block-annotated-code", 390);
+    const lines = await page.$$eval(".slide-content code span.min-w-0", (all) =>
+      all.map((s) =>
+        Math.round(s.getBoundingClientRect().height / parseFloat(getComputedStyle(s).lineHeight)),
+      ),
+    );
+    await page.close();
+    expect(lines.length).toBeGreaterThan(2);
+    expect(Math.max(...lines)).toBeLessThanOrEqual(2);
+  },
+  limit(60_000),
+);
 
 // A seven-line note beside the value axis left the trend 88 px of plot on a phone (talks),
 // where the plot drew 296 px without the note: there the note stands below the chart
 // and the plot keeps that height.
-it("keeps trend-marked's plot tall on a phone, its note below the chart", async () => {
-  const page = await open("chart-slide/trend-marked", 390);
-  await page.waitForSelector(".recharts-xAxis-tick-labels text");
-  const { plot, note, labels, dot } = await page.evaluate(() => {
-    const box = (e: Element | null | undefined) => e?.getBoundingClientRect().toJSON() as DOMRect;
-    const frame = document.querySelector("[data-chart-plot]")!;
-    return {
-      plot: box(frame.querySelector("svg.recharts-surface")),
-      note: box(
-        [...frame.querySelectorAll("p")].find((p) => p.textContent?.startsWith("Baseline")),
+it(
+  "keeps trend-marked's plot tall on a phone, its note below the chart",
+  async () => {
+    const page = await open("chart-slide/trend-marked", 390);
+    await page.waitForSelector(".recharts-xAxis-tick-labels text");
+    const { plot, note, labels, dot } = await page.evaluate(() => {
+      const box = (e: Element | null | undefined) => e?.getBoundingClientRect().toJSON() as DOMRect;
+      const frame = document.querySelector("[data-chart-plot]")!;
+      return {
+        plot: box(frame.querySelector("svg.recharts-surface")),
+        note: box(
+          [...frame.querySelectorAll("p")].find((p) => p.textContent?.startsWith("Baseline")),
+        ),
+        labels: [...frame.querySelectorAll(".recharts-xAxis-tick-labels text")].map((t) => box(t)!),
+        dot: box(frame.querySelector(".recharts-reference-dot circle")),
+      };
+    });
+    await page.close();
+    expect(plot!.height).toBeGreaterThanOrEqual(296);
+    expect(labels.length).toBeGreaterThan(0);
+    expect(note!.top).toBeGreaterThan(Math.max(...labels.map((l) => l.bottom)));
+    expect(dot).toBeDefined();
+    expect(
+      labels.filter(
+        (l) => l.top < dot.bottom && dot.top < l.bottom && l.left < dot.right && dot.left < l.right,
       ),
-      labels: [...frame.querySelectorAll(".recharts-xAxis-tick-labels text")].map((t) => box(t)!),
-      dot: box(frame.querySelector(".recharts-reference-dot circle")),
-    };
-  });
-  await page.close();
-  expect(plot!.height).toBeGreaterThanOrEqual(296);
-  expect(labels.length).toBeGreaterThan(0);
-  expect(note!.top).toBeGreaterThan(Math.max(...labels.map((l) => l.bottom)));
-  expect(dot).toBeDefined();
-  expect(
-    labels.filter(
-      (l) => l.top < dot.bottom && dot.top < l.bottom && l.left < dot.right && dot.left < l.right,
-    ),
-  ).toEqual([]);
-}, 60_000);
+    ).toEqual([]);
+  },
+  limit(60_000),
+);
 
 // F32: the phone rule named `card-pad-8` and `card-pad-10`, so the cards block's `card-pad-8/9`
 // kept its stage padding below 48rem.
-it("pads a cards block's card as the phone rule pads every large card", async () => {
-  const page = await open("content-slide/visual-cards", 390);
-  const { pads, phone } = await page.evaluate(() => {
-    const content = document.querySelector(".slide-content")!;
-    const probe = content.appendChild(document.createElement("div"));
-    probe.style.padding = "var(--slide-phone-card-padding)";
-    return {
-      pads: [...content.querySelectorAll(".card-pad-8\\/9")].map(
-        (e) => getComputedStyle(e).paddingLeft,
-      ),
-      phone: getComputedStyle(probe).paddingLeft,
-    };
-  });
-  await page.close();
-  expect(pads.length).toBeGreaterThan(0);
-  expect(pads.every((p) => p === phone)).toBe(true);
-}, 60_000);
+it(
+  "pads a cards block's card as the phone rule pads every large card",
+  async () => {
+    const page = await open("content-slide/visual-cards", 390);
+    const { pads, phone } = await page.evaluate(() => {
+      const content = document.querySelector(".slide-content")!;
+      const probe = content.appendChild(document.createElement("div"));
+      probe.style.padding = "var(--slide-phone-card-padding)";
+      return {
+        pads: [...content.querySelectorAll(".card-pad-8\\/9")].map(
+          (e) => getComputedStyle(e).paddingLeft,
+        ),
+        phone: getComputedStyle(probe).paddingLeft,
+      };
+    });
+    await page.close();
+    expect(pads.length).toBeGreaterThan(0);
+    expect(pads.every((p) => p === phone)).toBe(true);
+  },
+  limit(60_000),
+);
