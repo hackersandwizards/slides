@@ -163,7 +163,8 @@
         "label": "Slide types",
         "href": "https://hackersandwizards.github.io/slides/catalog/"
       }
-    ]
+    ],
+    "label": "Slide engine"
   },
   "scaffolding": {
     "styles": [
