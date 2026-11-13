@@ -36,3 +36,9 @@ the font parts: answer "repair prompt". Both files the same, with stand-ins, mea
 ignored them: answer "no difference".
 
 Then reactivate both fonts in Font Book and answer on the admin page.
+
+Both files sit in an ignored cache folder, written 10.11. at 23:50 and present on 14.11. An install
+that clears `node_modules` removes them; `slides-pptx --embed-fonts` writes them again. An agent
+can open them in PowerPoint through AppleScript once you agree that it may open your PowerPoint and
+deactivate the two fonts in Font Book. No LibreOffice is installed on this Mac on 14.11., so where
+the LibreOffice 7.4 reading ran is not established.

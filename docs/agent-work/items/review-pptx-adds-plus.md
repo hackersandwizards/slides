@@ -32,3 +32,8 @@ arms, a box, or no sign.
 
 Answer on the admin page with "plus" or "not a plus", and for "not a plus" what you see. Then
 delete `/tmp/adds.pptx`.
+
+An agent can open the deck in PowerPoint through AppleScript and export it as a PDF, from a file
+in `~/Downloads`, once you agree that it may open your PowerPoint; that yes alone settles this
+review. No LibreOffice is installed on this Mac on 14.11., so where the star render ran is not
+established.
