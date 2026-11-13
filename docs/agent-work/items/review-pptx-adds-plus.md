@@ -2,7 +2,7 @@
 kind: review
 status: open
 priority: 3
-order: 1300
+order: 1290
 owner: Benedikt
 area: software-engineering
 evidence: "slides v2.13.0 draws the plus as the character + in Inter bold, teal, between the two cards (scripts/render-pptx.ts, beforeAfter); LibreOffice, the only renderer an agent had, drew it as a four-pointed star, so how PowerPoint draws it is not established"

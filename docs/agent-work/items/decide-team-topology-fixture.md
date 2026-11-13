@@ -5,7 +5,7 @@ priority: 2
 order: 200
 owner: Benedikt
 area: software-engineering
-evidence: "test/fixtures/team-topology.ts, in the tree and in public history since bd66c48 (30.10.2026); counted against talks' origin/main on 10.11.2026"
+evidence: "test/fixtures/team-topology.ts, in the tree and in public history since bd66c48 (30.10.2026); counted against talks' origin/main on 10.11.2026 and again on 13.11.2026"
 recommended: replace-keep-history
 options:
   - key: replace-keep-history
@@ -33,7 +33,9 @@ verbatim in that deck file (the review of 10.11. counted 11 of its own 15). The 
 platform team names with their descriptions and one role line, the three enabling team names, and
 the three complicated-subsystem names (two vendor products and one name for the surrounding
 systems) with their descriptions. The five that miss are the headline, the subtitle and the three
-stream-team names. The fixture names no client.
+stream-team names. Recounted by field on 13.11. against talks' `origin/main`: one deck holds 13
+of the fixture's 19 headline, subtitle, caption, name and description strings and 17 of its 22
+role and expert strings. The fixture names no client.
 `CLAUDE.md` rules out a customer deck and a client term in this repository, and anyone can read
 its history.
 
