@@ -75,8 +75,9 @@ describe("ProcessSlide, loop false", () => {
   });
 });
 
-// On a phone a row of three holds an eight-glyph word per column at most; a longer one, which the
-// hyphenator may not split, stacks the steps rather than cutting it ("Autocomplet / e").
+// On a phone an unframed row of three holds an eight-glyph word per column at most; a longer
+// one, which the hyphenator may not split, stacks the steps rather than cutting it
+// ("Autocomplet / e").
 describe("FlowSteps on a phone", () => {
   it("stacks the steps where a title's word is wider than its column", () => {
     const row = (titles: string[]) =>

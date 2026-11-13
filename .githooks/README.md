@@ -15,4 +15,9 @@ installs. `session-start`, the SessionStart hook in `.claude/settings.json`, fet
 within 20 s, says how far it is ahead, and runs `install`; the chrome-devtools server in `.mcp.json`
 runs `install` before it starts.
 
+`pre-push` runs `bun run check --changed` over the ranges of the pushed branches, a deleted one
+excepted: `package.json` names no `scaffolding.changed`, so the whole gate runs unless every path
+is in scaffolding's quick list (`.claude/rules/**`, a skill's `.md`, `.yaml` and `.yml`), which
+runs the quick shared steps only. A push of tags alone runs no gate.
+
 A missing `bun`, `gitleaks`, `prettier` or `eslint` fails the commit closed: `brew install gitleaks`, `bun install`.
