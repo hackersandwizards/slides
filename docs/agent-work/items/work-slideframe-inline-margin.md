@@ -3,12 +3,12 @@ kind: work
 status: open
 priority: 3
 order: 1966
-owner: Ada
+owner: Poppy
 area: software-engineering
-evidence: "Checked 12.11.: SlideFrame.astro:110-113 still imports card.css is:global and catalog/astro.config.ts sets no inlineStylesheets; the byte margin not re-measured. Internal."
+evidence: "Checked 13.11.: SlideFrame.astro:110-113 still imports card.css is:global and catalog/astro.config.ts sets no inlineStylesheets; the byte margin not re-measured. Measurements: docs/agent-work/2026-11-11-performance.md. Internal."
 ---
 
-# SlideFrame's style stays inline by about 480 bytes
+# Keep SlideFrame's style inline whatever brand's card.css grows to
 
 Keep the story frame's style inline on a state's page whatever brand's `card.css` grows to.
 

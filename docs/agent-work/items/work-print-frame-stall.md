@@ -3,14 +3,14 @@ kind: work
 status: open
 priority: 3
 order: 1963
-owner: Ada
+owner: Poppy
 area: software-engineering
-evidence: "Checked 12.11.: SlideFrame.astro:51 still opens each tile ?revealed, so the print page shows no stall; the cause under a growing plot is not explained. Internal."
+evidence: "Checked 13.11.: SlideFrame.astro:51 still opens each tile ?revealed, so the print page shows no stall; the cause under a growing plot is not explained. Measurements: docs/agent-work/2026-11-10-engine-queue.md, section 4. Internal."
 ---
 
-# A growing plot framed on the print page waits seconds before it draws
+# Find why a growing plot framed on the print page waits seconds before it draws
 
-Ada briefs a slides session to find the print-page stall's cause with a one-factor control and fix it.
+Find the print-page stall's cause with a one-factor control and fix it where it can reach a deck.
 
 Before v2.21.3 the bar tile's plot grew in: on the print page it drew no bar for 2.4 to 6 s and
 then appeared whole in one step. The same story page grows in 0.4 s alone, framed on an empty
