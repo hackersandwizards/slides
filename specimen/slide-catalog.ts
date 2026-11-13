@@ -1696,7 +1696,7 @@ const slides: Slide[] = [
       { name: "Legacy portal", description: "Data for the migration" },
     ],
     caption: "Fictional organisation.",
-    notes: "team-topology: legend, naming what each box's colour and shape stand for.",
+    notes: "team-topology: names without their type, which the legend names.",
   },
 
   {

@@ -130,7 +130,9 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
   (`brand-copies`) and `check:retired` (`brand-retired` over `dist`), then `check:pages`
   (the tests in `test/pages/` over the build: the print pages, the story pages and `bun run
 preview`), then `check:elements`
-  (`brand-elements` over the print pages, `brand-elements.json`). No hook runs it: the hooks are
+  (`brand-elements` over the print pages, `brand-elements.json`). The pre-push
+  hook runs it over the pushed commits (`--changed`), whole but for a push of the hub's rules and
+  skill prose alone, since `package.json` names no `scaffolding.changed`; the hooks are
   scaffolding's skeleton, listed in `.githooks/README.md`.
 - `bun run check:markers`, by hand after a brand raise and after a change to how lists are styled,
   outside the gate: `brand-markers` over `frames.html` and every story page at 1920, the stage
