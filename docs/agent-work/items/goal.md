@@ -1,13 +1,12 @@
 ---
 kind: goal
 status: open
+area: software-engineering
 ---
 
 # Goal
 
 Open work on the engine's slide catalog: the `work-*` and `decide-*` items beside this file.
-
-## Goal
 
 Benedikt am 01.11.2026: «das gefällt mir gut. es fehlt noch eine variante mit gemaltem bild oder?
 wir haben machnmal slides mit gemaltem bild. aber decision und gantt sehen stark aus teamtopology
@@ -27,9 +26,7 @@ Benedikt am 01.11.2026 (von Ada weitergegeben): «Wir scheinen da auch bei den F
 viele Duplikate zu haben, also einfach Folientypen, die super ähnlich zueinander sind. Dafür
 scheinen andere Folientypen vollständig zu fehlen.»
 
-## Done means
-
-Assumption (agent, 01.11.2026, not Benedikt's words):
+Done means, an assumption (agent, 01.11.2026, not Benedikt's words):
 
 - Every communication job a deck needs today has a catalogue entry (full-bleed and data charts only
   when needed), duplicates are merged (the merge groups shipped in v0.27.0), every entry sits on its
@@ -38,8 +35,6 @@ Assumption (agent, 01.11.2026, not Benedikt's words):
   v0.27.0), with search.
 - Every slide in talks, trainer-hub and hycle uses a catalogue entry with no adjustment beside it,
   and `slides-density` is green in all three gates.
-
-## Open work
 
 Analysis and the results of phases 2 and 2b:
 [docs/agent-work/2026-11-01-catalog-program.md](../2026-11-01-catalog-program.md); the later panel
