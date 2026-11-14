@@ -71,7 +71,7 @@ it(
 );
 
 it(
-  "turns the catalog page night with its dark theme button, and back",
+  "turns the catalog page night with the header's theme switch, and back",
   async () => {
     const tab = await newTab();
     await tab.goto(page("dashboard/Types/closing-slide/contact"), { waitUntil: "load" });
@@ -79,9 +79,9 @@ it(
     const ground = () =>
       tab.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
     const day = await ground();
-    await tab.click("button[data-hw-theme]");
+    await tab.click("#theme-toggle");
     expect(await ground()).toBe(NIGHT);
-    await tab.click("button[data-hw-theme]");
+    await tab.click("#theme-toggle");
     expect(await ground()).toBe(day);
     await tab.close();
   },

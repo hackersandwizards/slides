@@ -40,7 +40,7 @@ const jobLinks = (Object.keys(JOBS) as Job[])
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class="hw-focus-ring">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -70,7 +70,7 @@ const jobLinks = (Object.keys(JOBS) as Job[])
     <link rel="stylesheet" href={`${brandHref}/tokens.root.css`} />
     <link rel="stylesheet" href={`${brandHref}/header.css`} />
     <link rel="stylesheet" href="build/slides.css" />
-    {["field", "search", "nav", "table", "empty"].map((name) => (
+    {["focus", "field", "search", "nav", "table", "empty"].map((name) => (
       <link rel="stylesheet" href={`${brandHref}/elements/${name}.css`} />
     ))}
     <style is:inline>
