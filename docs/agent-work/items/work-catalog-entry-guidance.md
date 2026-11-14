@@ -6,6 +6,9 @@ order: 1066
 owner: Poppy
 area: software-engineering
 evidence: "slides-usage ships in v2.18.0 (scripts/usage.ts, test/usage.test.ts), every entry reachable from a deck; blind panel 08.11.2026 on the print page with and without its when, do and don't: 8.00 to 5.38, noise 0.12, two personas, Claude and Codex, two runs; screenshots taken before seven entries' text was corrected against the real slide types; checked 13.11. on each consumer's origin/main: hycle-private writes talks/slides-usage.json in its usage script (2b5f018), talks and trainer-hub run slides-usage nowhere; v3.10.0 shows the counts on the dev server only, its build test red when a build reads the files"
+images:
+  - src: print-page-with-counts.jpg
+    caption: "The print page started with two invented count files: a count per entry, 0 in outline, and a warning for a name no entry matches."
 ---
 
 # Give every catalog entry the number of deck slides using it
