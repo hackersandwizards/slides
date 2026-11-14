@@ -66,7 +66,7 @@ LCP simulated, in ms, median (range); KB the total transfer. CLS read 0.001 or l
 
 It failed from the repo root under Bun with `ENOENT … catalog/astrobook/pages/app.astro`, and
 served from `catalog/` or under Node. The `preview` script runs Astro under Node, and
-`test/pages/preview.test.ts` fails when `bun run preview` stops serving the build. The cause inside
+`test/pages/astro.test.ts` fails when `bun run preview` stops serving the build. The cause inside
 Astro's preview under Bun is not yet explained. Scaffolding's documented script keeps `bun --bun`.
 
 ## Still true from 08.11., not measured again
@@ -110,7 +110,7 @@ the build from the load, both 9a04bab (the 09.11. build) and f32b1dc were served
 
 It failed from the repo root under Bun with `ENOENT … catalog/astrobook/pages/app.astro`, and
 served from `catalog/` or under Node. The `preview` script runs Astro under Node, and
-`test/pages/preview.test.ts` fails when `bun run preview` stops serving the build. The cause inside
+`test/pages/astro.test.ts` fails when `bun run preview` stops serving the build. The cause inside
 Astro's preview under Bun is not yet explained. Scaffolding's documented script keeps `bun --bun`.
 
 ## Still true from 08.11., not measured again

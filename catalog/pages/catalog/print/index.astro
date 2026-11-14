@@ -14,6 +14,23 @@ import {
   type Job,
 } from "../../../print";
 
+// Each entry's slide count, where the dev server was started with SLIDES_USAGE (catalog/usage.ts);
+// a "-2" anchor is a second tile of one entry, which slides-usage never counts.
+const usage = __SLIDES_USAGE__;
+const slideCount = (n: number) => `${n} ${n === 1 ? "slide" : "slides"}`;
+const hasCount = (id: string) => !!usage && !/-\d+$/.test(id);
+const tiles = entries.map(({ id, html }) =>
+  hasCount(id)
+    ? html.replace(
+        "</figcaption>",
+        ` <span class="hw-pill" ${usage!.entries[id] ? 'data-tone="neutral"' : 'data-variant="outline"'} data-usage>${slideCount(usage!.entries[id] ?? 0)}</span></figcaption>`,
+      )
+    : html,
+);
+const strays = Object.entries(usage?.entries ?? {}).filter(
+  ([id]) => !entries.some((e) => e.id === id),
+);
+
 const jobLinks = (Object.keys(JOBS) as Job[])
   .map(
     (j) =>
@@ -198,6 +215,15 @@ const jobLinks = (Object.keys(JOBS) as Job[])
       .dos dd {
         margin: 0;
       }
+      .usage {
+        max-width: 60rem;
+        margin: 0 0 1.5rem;
+        --hw-card-pad: 0.75rem 1rem;
+      }
+      /* A count's pill is 27 px high: a caption without one, a "-2" tile's, keeps the frames in line. */
+      .counted figcaption {
+        min-height: 1.6875rem;
+      }
       .note {
         max-width: 480px;
         font-size: 0.875rem;
@@ -298,6 +324,32 @@ const jobLinks = (Object.keys(JOBS) as Job[])
         two jobs. The search finds every type, block and variant name, and the old names of types
         that now draw through another. Click a name to see its slide at 1440 px with its jobs.
       </p>
+      {usage && (
+        <p class="layers" data-usage>
+          Each entry counts the slides using it in {usage.decks}{" "}
+          {usage.decks === 1 ? "deck" : "decks"} of {slideCount(usage.slides)}, from{" "}
+          {usage.files.map((file, i) => (
+            <>
+              {i > 0 && ", "}
+              <code>{file}</code>
+            </>
+          ))}
+          . A slide using two entries counts for both.
+        </p>
+      )}
+      {strays.length > 0 && (
+        <p class="usage hw-status" data-tone="warning" data-usage-stray>
+          No entry here has these names from the counts:{" "}
+          {strays.map(([id, n], i) => (
+            <>
+              {i > 0 && ", "}
+              <code>{id}</code> ({slideCount(n)})
+            </>
+          ))}
+          . These slides count for no entry above: run <code>slides-usage</code> again with this
+          version of the engine.
+        </p>
+      )}
       <div class="catalog">
         <nav class="jobs hw-nav" aria-label="Communication jobs">
           <ul>
@@ -319,8 +371,8 @@ const jobLinks = (Object.keys(JOBS) as Job[])
               aria-label="Search the catalogue"
             />
           </div>
-          <div class="sheet tiles">
-            <Fragment set:html={entries.map((e) => e.html).join("\n")} />
+          <div class:list={["sheet tiles", { counted: usage }]}>
+            <Fragment set:html={tiles.join("\n")} />
           </div>
           <p id="none" class="hw-empty" data-variant="plain" hidden>
             No entry matches.

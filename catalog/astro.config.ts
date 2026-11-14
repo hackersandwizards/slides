@@ -7,6 +7,7 @@ import { catalog } from "@hackersandwizards/scaffolding/catalog";
 import type { AstroIntegration } from "astro";
 import { defineConfig } from "astro/config";
 import { brandFile, brandNames, selfContained } from "./brand-urls";
+import { readUsage } from "./usage";
 
 const BASE = "/slides";
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -50,6 +51,19 @@ const files: AstroIntegration = {
   },
 };
 
+// The consumers' slide counts, which name client decks: only `astro dev` reads them, so no build,
+// the public Pages build included, holds a count (test/pages/astro.test.ts).
+const usage: AstroIntegration = {
+  name: "slide-usage",
+  hooks: {
+    "astro:config:setup": ({ command, updateConfig }) => {
+      const list = command === "dev" ? process.env.SLIDES_USAGE : undefined;
+      const read = list ? readUsage(list) : null;
+      updateConfig({ vite: { define: { __SLIDES_USAGE__: JSON.stringify(read) } } });
+    },
+  },
+};
+
 export default defineConfig({
   base: BASE,
   srcDir: ".",
@@ -78,6 +92,7 @@ export default defineConfig({
       admin: true,
     }),
     files,
+    usage,
   ],
   vite: {
     define: { __SLIDES_ROOT__: JSON.stringify(root) },

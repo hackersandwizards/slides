@@ -1,0 +1,11 @@
+{
+  "decks": 2,
+  "slides": 30,
+  "entries": {
+    "content": 12,
+    "statement": 5,
+    "block-cards": 4,
+    "title": 2
+  },
+  "unused": ["wheel"]
+}

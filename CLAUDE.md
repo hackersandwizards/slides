@@ -141,6 +141,10 @@ preview`), then `check:elements`
 - One test file: `bun run test <file>`.
 - `bun run dev` (or `bun run catalog`, which opens it): the catalog at
   `http://127.0.0.1:4335/`, the print page at `/catalog/print/`: dev serves without the `/slides` base.
+  `SLIDES_USAGE=<path>[,<path>] bun run dev`, each path a `slides-usage` output read from this
+  checkout, puts on every print page entry how many slides of those files use it, summed
+  (`catalog/usage.ts`); only `astro dev` reads it, so no build holds a count
+  (`test/pages/astro.test.ts`).
 - `bun run build`: the catalog to `dist/`, which the Pages workflow (scaffolding's reusable one)
   publishes at `https://hackersandwizards.github.io/slides/`. `bun run preview` serves that build.
 

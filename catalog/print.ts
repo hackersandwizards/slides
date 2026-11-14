@@ -544,7 +544,8 @@ const tile = (
   const { jobs, search } = entryOf(index);
   const content = plotStory(index) ?? `srcdoc="${attr(frameDoc(markup))}"`;
   const guide = guidanceOf(id);
-  return `<figure id="${id}" data-jobs="${jobs.join(" ")}" data-search="${attr(`${name.toLowerCase()} ${search} ${guide.search}`)}"><figcaption><a href="#${id}">${name}</a></figcaption><div class="frame"><iframe loading="lazy" title="${attr(name)}" ${content}></iframe></div><p class="meta">${jobs.map((j) => JOBS[j]).join(" · ")}</p>${guide.html}</figure>`;
+  const html = `<figure id="${id}" data-jobs="${jobs.join(" ")}" data-search="${attr(`${name.toLowerCase()} ${search} ${guide.search}`)}"><figcaption><a href="#${id}">${name}</a></figcaption><div class="frame"><iframe loading="lazy" title="${attr(name)}" ${content}></iframe></div><p class="meta">${jobs.map((j) => JOBS[j]).join(" · ")}</p>${guide.html}</figure>`;
+  return { id, jobs, html };
 };
 const partTile = ({ name, markup }: { name: string; markup: string }) => {
   const id = anchor(name, "part-");
@@ -555,12 +556,13 @@ const frameDoc = (markup: string) =>
 
 const codeGuide = guidanceOf("block-code");
 const codeEntry = {
+  id: "block-code",
   jobs: ["code"] as Job[],
   html: `<figure id="block-code" data-jobs="code" data-search="${[...codeBlocks].join(" ")} code and demo ${codeGuide.search}"><figcaption><a href="#block-code">${[...codeBlocks].join(", ")}</a></figcaption><p class="note">No tile: Shiki sets a code block's colours inline, which the brand colour scan allows only in <code>styles/slides.css</code>.</p>${codeGuide.html}</figure>`,
 };
 export const entries = [
-  ...[...frames, ...markerFrames].map((f) => ({ jobs: entryOf(f.index).jobs, html: tile(f) })),
-  ...blockFrames.map((f) => ({ jobs: entryOf(f.index).jobs, html: tile(f, "block-") })),
+  ...[...frames, ...markerFrames].map((f) => tile(f)),
+  ...blockFrames.map((f) => tile(f, "block-")),
   codeEntry,
 ];
 export const partTiles = partFrames.map(partTile).join("\n");
