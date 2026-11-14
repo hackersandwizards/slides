@@ -62,6 +62,8 @@ from `renderPdf` in `scripts/render-pdf`, which a consumer's export script calls
 
 - `bun install`: also points the git hooks at `.githooks/`.
 - `bun run dev`: the catalog at `http://127.0.0.1:4335/`.
+- `SLIDES_USAGE=<path>[,<path>] bun run dev`: the same, with the print page at `/catalog/print/`
+  showing per entry how many slides use it. Each path is a file `slides-usage --out` wrote.
 - `bun run check`: the gate.
 - `bun run build`: the catalog to `dist/`, as GitHub Pages publishes it.
 
