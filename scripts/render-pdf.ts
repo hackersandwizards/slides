@@ -17,7 +17,7 @@ export async function renderPdf(url: string, out: string, title: string, slideCo
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
-    await settlePrintPage(page, url);
+    await settlePrintPage(page, url, { fitted: true });
 
     const slides = await page.$$eval(".print-slide", (nodes) => nodes.length);
     if (slides !== slideCount) {
@@ -88,8 +88,13 @@ export const UNFITTED_SLIDE = ".slide-shell > .slide-content:not([data-fitted])"
 
 /** Loads a deck's print route and waits until it stands as printed: the route answered, every
  *  chart and code block drawn after hydration (network idle can come first), the web fonts in,
- *  every slide fitted, and the fit guard's refit after them landed. `slides-density` measures the page this leaves. */
-export async function settlePrintPage(page: import("puppeteer").Page, url: string) {
+ *  every slide fitted, and the fit guard's refit after them landed. `slides-density` measures the page this leaves.
+ *  With `fitted`, a slide still unfitted after 300 s throws rather than going on, as `renderPdf` needs. */
+export async function settlePrintPage(
+  page: import("puppeteer").Page,
+  url: string,
+  { fitted = false }: { fitted?: boolean } = {},
+) {
   const res = await page.goto(url, { waitUntil: "networkidle0", timeout: 300_000 });
   if (!res?.ok()) throw new Error(`HTTP ${res?.status()} from ${url}`);
   await page.waitForFunction(
@@ -102,10 +107,19 @@ export async function settlePrintPage(page: import("puppeteer").Page, url: strin
   await page.evaluate(() => document.fonts.ready);
   if (!(await page.$(".print-slide"))) throw new Error("no .print-slide elements found");
   // A page that never hydrates goes on after the wait, and slides-density fails its unfitted slides.
+  // An export never goes on: a late hydration printed its slides unfitted.
   await page
-    .waitForFunction((sel) => !document.querySelector(sel), { timeout: 10_000 }, UNFITTED_SLIDE)
+    .waitForFunction(
+      (sel) => !document.querySelector(sel),
+      { timeout: fitted ? 300_000 : 10_000 },
+      UNFITTED_SLIDE,
+    )
     .catch((e: Error) => {
       if (e.name !== "TimeoutError") throw e;
+      if (fitted)
+        throw new Error(
+          `slides still unfitted after 300 s, the print route did not hydrate: ${url}`,
+        );
     });
   // The fit guard refits on its ResizeObserver: two frames and a pause let it land.
   await page.evaluate(
