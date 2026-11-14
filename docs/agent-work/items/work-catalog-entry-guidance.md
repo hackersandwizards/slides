@@ -10,15 +10,18 @@ evidence: "slides-usage ships in v2.18.0 (scripts/usage.ts, test/usage.test.ts),
 
 # Give every catalog entry the number of deck slides using it
 
-Brief each consumer to commit its slide counts once `decide-slide-usage-location` is decided.
+Build the print page's local count overlay and brief talks and trainer-hub to commit their slide counts.
 
 The print page shows each entry's when, do and don't, and `slides-usage` counts a deck's slides per
 entry. Left:
 
-1. `talks` and `trainer-hub` run `slides-usage` over their decks in their own gates and commit the
-   JSON, as `hycle-private` already does at `talks/slides-usage.json`; where it lives and whether
-   the print page shows it waits on `decide-slide-usage-location`. Since v2.21.0 `slides-usage`
-   takes an array of decks.
-2. The time to the right entry, measured with people on real search tasks. The panel gave the nine
+1. Decided on 14.11.: each consumer commits its counts, and the print page shows them only when
+   started locally. `talks` and `trainer-hub` run `slides-usage` over their decks in their own
+   gates and commit `slides-usage.json` at the repository root, as `hycle-private` already does at
+   `talks/slides-usage.json`. Since v2.21.0 `slides-usage` takes an array of decks.
+2. The print page shows the count per entry when the catalog is started with
+   `SLIDES_USAGE=<path>[,<path>] bun run dev`. The Pages build never reads those files, so no
+   figure from a client deck reaches the public site.
+3. The time to the right entry, measured with people on real search tasks. The panel gave the nine
    search words as hit counts; it measured no time. No agent can run this: it is Benedikt's to
    arrange.
