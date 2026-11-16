@@ -28,6 +28,7 @@ const BLOCKS: Record<ContentBlock["type"], true> = {
   hooks: true,
   pipeline: true,
   image: true,
+  "image-steps": true,
   gallery: true,
   video: true,
   "four-column": true,

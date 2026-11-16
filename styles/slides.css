@@ -217,6 +217,15 @@ html:has(.print-slide) {
   max-height: 100cqh;
   min-width: var(--media-fill, 0);
 }
+/* Image steps share one cell: the frame keeps the size of the largest picture, so nothing moves
+   between steps. */
+.slide-media-box.slide-media-steps {
+  display: grid;
+  place-items: center;
+}
+.slide-media-steps .slide-media-item {
+  grid-area: 1 / 1;
+}
 .slide-titled .slide-media-link {
   align-self: center;
 }

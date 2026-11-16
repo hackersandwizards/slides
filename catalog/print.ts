@@ -461,6 +461,7 @@ const JOB_OF: Record<string, Job[]> = {
   hooks: ["explain", "code"],
   terminal: ["code"],
   image: ["image"],
+  "image-steps": ["image", "explain"],
   gallery: ["image"],
   video: ["image", "code"],
   "linked-image": ["image"],

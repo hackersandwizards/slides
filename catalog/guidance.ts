@@ -190,6 +190,11 @@ export const GUIDANCE: Record<string, Guidance> = {
     "Keep cells to a few words.",
     "Use a table for what a sentence says.",
   ),
+  "block-table-2": g(
+    "A comparison the room should take in row by row, one row per arrow press.",
+    "Talk through each row before the next one appears.",
+    "Reveal a table the room needs whole to compare.",
+  ),
   "block-two-column": g(
     "Two lists on a content slide, with a judgement: what works against what fails.",
     "Keep both columns the same length.",
@@ -209,6 +214,11 @@ export const GUIDANCE: Record<string, Guidance> = {
     "One picture carries the point.",
     "Say in the headline what to see in it.",
     "Use a picture as decoration.",
+  ),
+  "block-image-steps": g(
+    "A diagram the room should follow as it grows, one step per arrow press.",
+    "Keep every step the same size and say in each caption what is new.",
+    "Use it for pictures that do not build on each other.",
   ),
   "block-video": g(
     "A short recording shows what a picture cannot.",

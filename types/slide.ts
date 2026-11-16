@@ -58,6 +58,8 @@ export type ContentBlock =
       headers?: string[];
       rows: string[][];
       compact?: boolean;
+      /** Per ArrowRight: the first column, then one row's remaining cells at a time. */
+      reveal?: boolean;
       /** Relative column widths. A table split across two slides sets the same on both halves,
        *  so its columns start at the same place on each. */
       widths?: number[];
@@ -91,6 +93,9 @@ export type ContentBlock =
       containerSideNotes?: string[];
     }
   | { type: "image"; src: string; alt?: string }
+  /** One picture per ArrowRight, each replacing the last in place: a diagram built up step by
+   *  step on one slide. The caption under it names the step on screen; print shows the last. */
+  | { type: "image-steps"; alt: string; steps: { src: string; caption?: string }[] }
   | {
       /** The image block's gallery form: pictures and videos side by side, a `row` at each
        *  picture's own `height` (a 300 px default on the 1920 stage) or a `grid` of equal cells,
