@@ -17,8 +17,10 @@ beforeEach(() => {
   vi.spyOn(Date, "now").mockImplementation(() => now);
 });
 
-const goToSlide = vi.fn();
-vi.mock("../lib/navigate", () => ({ goToSlide: (...args: unknown[]) => goToSlide(...args) }));
+const goToSlide = vi.fn<typeof import("../lib/navigate").goToSlide>();
+vi.mock("../lib/navigate", () => ({
+  goToSlide: (...args: Parameters<typeof goToSlide>) => goToSlide(...args),
+}));
 
 const press = (key: string) =>
   act(() => {

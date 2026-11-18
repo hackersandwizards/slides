@@ -33,7 +33,7 @@ function parseCounts(raw: string | null, length: number): number[] | null {
  *  first client render that read them kept the server's "0 votes" labels. Nothing is written
  *  before they have loaded, so the zeros of the first render never overwrite them. */
 function usePersistedCounts(storageKey: string, length: number, printMode: boolean) {
-  const [counts, setCounts] = useState<number[]>(() => Array(length).fill(0));
+  const [counts, setCounts] = useState<number[]>(() => Array<number>(length).fill(0));
   // The key whose saved votes have loaded, so a new key never receives the previous one's votes.
   const [loaded, setLoaded] = useState<string | null>(null);
 

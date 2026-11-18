@@ -736,7 +736,24 @@ export function replacedBy(slide: Slide): { to: string; form?: string } | undefi
         ? { to: "flow", form: "pipeline" }
         : undefined;
     }
-    default:
+    case "activity":
+    case "agenda":
+    case "chart":
+    case "closing":
+    case "comparison":
+    case "decision":
+    case "gantt":
+    case "lanes":
+    case "phased-pills":
+    case "process":
+    case "profiles":
+    case "question":
+    case "roadmap":
+    case "statement":
+    case "team-topology":
+    case "title":
+    case "transition":
+    case "wheel":
       return undefined;
   }
 }

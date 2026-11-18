@@ -206,7 +206,7 @@ export function DeckEdit({ deck }: { deck: string }) {
       event.stopPropagation();
       committing = !!field;
     };
-    const pick = async (event: MouseEvent) => {
+    const pick = (event: MouseEvent) => {
       if (!outside(event)) return;
       event.preventDefault();
       event.stopPropagation();
@@ -224,10 +224,13 @@ export function DeckEdit({ deck }: { deck: string }) {
       // A click on the page itself, outside every element, has no text to edit.
       if (!chain.length) return;
       const texts = chain.map((element) => (element.textContent ?? "").slice(0, 4000));
-      const answer = await ask({ deck, texts });
-      if (answer.value !== undefined && answer.index !== undefined)
-        open(chain[answer.index], answer.value);
-      else refuse(chain[0], answer.error ?? "This text cannot be edited here.");
+      ask({ deck, texts })
+        .then((answer) => {
+          if (answer.value !== undefined && answer.index !== undefined)
+            open(chain[answer.index], answer.value);
+          else refuse(chain[0], answer.error ?? "This text cannot be edited here.");
+        })
+        .catch(() => flash("This text cannot be edited here.", true));
     };
 
     // Capture on the window runs before the slide's own pointer handlers, the laser among them.

@@ -296,7 +296,10 @@ describe("merged card and number shapes", () => {
   });
 
   it("drops the rule and quiets a leading word once figures wrap", () => {
-    const items = [{ value: "up to 7", label: "a" }, ...Array(4).fill({ value: "1", label: "b" })];
+    const items = [
+      { value: "up to 7", label: "a" },
+      ...Array.from({ length: 4 }, () => ({ value: "1", label: "b" })),
+    ];
     const c = content([{ type: "numbers", items }]);
     expect(c.querySelector(".border-t-4")).toBeNull();
     expect(c.querySelector("span.font-sans")?.textContent).toBe("up to ");

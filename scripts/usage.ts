@@ -65,9 +65,33 @@ function blockEntry(block: ContentBlock): string {
       return block.frame ? "block-flow-framed" : "block-flow";
     case "image-and-grid":
       return block.image.sketch ? "block-image-and-grid-sketch" : "block-image-and-grid";
-    default:
-      return BLOCK_ENTRY[block.type] ?? `block-${block.type}`;
+    case "annotated-code":
+    case "annotated":
+    case "bullets":
+    case "callout":
+    case "code-and-text":
+    case "code":
+    case "four-column":
+    case "gallery":
+    case "hooks":
+    case "image-steps":
+    case "image":
+    case "labeled-grid":
+    case "layers":
+    case "linked-image":
+    case "paragraph":
+    case "pipeline":
+    case "positions":
+    case "quote":
+    case "table":
+    case "terminal":
+    case "timeline":
+    case "transform":
+    case "two-column":
+    case "video":
+      break;
   }
+  return BLOCK_ENTRY[block.type] ?? `block-${block.type}`;
 }
 
 /** The slide a slide draws as, where it draws as another: a replaced form as its heir. */

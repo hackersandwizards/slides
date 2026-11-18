@@ -56,7 +56,9 @@ describe("SlideHints", () => {
     try {
       const first = render(<SlideHints slideIndex={0} />);
       expect(first.queryByText("to go to next slide")).not.toBeNull();
-      act(() => vi.advanceTimersByTime(5000));
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
       // The title slide in front of the audience carries no key hints.
       expect(first.queryByText("to go to next slide")).toBeNull();
       first.unmount();
@@ -73,7 +75,9 @@ describe("SlideHints", () => {
     try {
       history.pushState(null, "", "/deck-a/0");
       const first = render(<SlideHints slideIndex={0} />);
-      act(() => vi.advanceTimersByTime(5000));
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
       first.unmount();
       history.pushState(null, "", "/deck-b/0");
       const second = render(<SlideHints slideIndex={0} />);

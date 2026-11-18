@@ -92,13 +92,19 @@ describe("the activity timer", () => {
     fireEvent.click(getByLabelText("One minute less"));
     expect(time(container)).toBe("4:00");
     fireEvent.click(getByLabelText(/^Start timer/));
-    act(() => vi.advanceTimersByTime(61_000));
+    act(() => {
+      vi.advanceTimersByTime(61_000);
+    });
     expect(time(container)).toBe("2:59");
     fireEvent.click(getByLabelText(/^Pause timer/));
-    act(() => vi.advanceTimersByTime(10_000));
+    act(() => {
+      vi.advanceTimersByTime(10_000);
+    });
     expect(time(container)).toBe("2:59");
     fireEvent.click(getByLabelText(/^Start timer/));
-    act(() => vi.advanceTimersByTime(180_000));
+    act(() => {
+      vi.advanceTimersByTime(180_000);
+    });
     expect(time(container)).toBe("0:00");
     expect(getByLabelText(/^Restart timer/).dataset.variant).toBeUndefined();
     fireEvent.click(getByLabelText(/^Restart timer/));

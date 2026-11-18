@@ -261,10 +261,8 @@ describe("slides-pptx on the specimen deck", () => {
     );
     const probe = await JSZip.loadAsync(readFileSync(out));
     const ratio = (png: Buffer) => png.readUInt32BE(16) / png.readUInt32BE(20);
-    const cuts = await Promise.all(
-      ["lockup-night", "wordmark-night"].map((name) =>
-        ratio(readFileSync(require.resolve(`@hackersandwizards/brand/logos/${name}.png`))),
-      ),
+    const cuts = ["lockup-night", "wordmark-night"].map((name) =>
+      ratio(readFileSync(require.resolve(`@hackersandwizards/brand/logos/${name}.png`))),
     );
     const drawn: number[] = [];
     for (let i = 1; probe.file(`ppt/slides/slide${i}.xml`); i++) {

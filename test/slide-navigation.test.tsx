@@ -2,8 +2,10 @@ import { act, render, screen, fireEvent } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SlideNavigation } from "../components/slides/SlideNavigation";
 
-const goToSlide = vi.fn();
-vi.mock("../lib/navigate", () => ({ goToSlide: (...args: unknown[]) => goToSlide(...args) }));
+const goToSlide = vi.fn<typeof import("../lib/navigate").goToSlide>();
+vi.mock("../lib/navigate", () => ({
+  goToSlide: (...args: Parameters<typeof goToSlide>) => goToSlide(...args),
+}));
 
 const press = (key: string, init: KeyboardEventInit = {}) =>
   act(() => {

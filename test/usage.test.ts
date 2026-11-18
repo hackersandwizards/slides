@@ -20,7 +20,8 @@ const run = (...decks: unknown[]) => {
     return path;
   });
   const out = spawnSync("bun", [script, ...paths], { encoding: "utf8" });
-  return { code: out.status, err: out.stderr, json: out.stdout && JSON.parse(out.stdout) };
+  const json: unknown = out.stdout && JSON.parse(out.stdout);
+  return { code: out.status, err: out.stderr, json };
 };
 
 describe("slides-usage", () => {
@@ -97,9 +98,11 @@ describe("slides-usage", () => {
     const { code, json } = run(deck, deck);
     expect(code).toBe(0);
     expect(json).toMatchObject({ decks: 2, slides: 2, entries: { agenda: 2 } });
+    if (!json || typeof json !== "object" || !("unused" in json) || !Array.isArray(json.unused))
+      throw new Error("Expected slides-usage output with an unused list");
     expect(json.unused).toContain("wheel");
     expect(json.unused).not.toContain("agenda");
-    expect(json.unused.filter((id: string) => /-\d+$/.test(id))).toEqual([]);
+    expect(json.unused.filter((id: unknown) => /-\d+$/.test(String(id)))).toEqual([]);
   });
 
   it("fails on a slide no entry draws, naming it, and on a file that is no deck", () => {

@@ -14,7 +14,7 @@
  *  reach a state (a slide that opened fully revealed takes no step back), the windows meet at the
  *  one it shows. */
 
-import { hasPendingReveal } from "./use-progressive-reveal";
+import { hasPendingReveal } from "./reveal-state";
 
 export type Direction = "back" | "forward";
 export type ArrowKey = "ArrowRight" | "ArrowLeft";

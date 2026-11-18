@@ -189,7 +189,7 @@ describe("tokens", () => {
 // staggered timeline, a Gantt's months and the phased pills' rows.
 it("keeps inline column templates to the grids that keep their columns on a phone", () => {
   const counts = Object.fromEntries(
-    SOURCES.map((f) => [
+    SOURCES.map((f): [string, number] => [
       f,
       readFileSync(join(ROOT, f), "utf8").split("gridTemplateColumns").length - 1,
     ]).filter(([, n]) => n),

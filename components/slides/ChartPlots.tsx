@@ -283,6 +283,8 @@ function useTickLayout(labels: string[], left: number, right: number, points = f
     if (!el || typeof ResizeObserver === "undefined") return;
     const ctx = document.createElement("canvas").getContext("2d");
     if (!ctx) return;
+    const names: unknown = JSON.parse(key);
+    if (!Array.isArray(names) || !names.every((name: unknown) => typeof name === "string")) return;
     const update = () => {
       const { fontFamily, fontWeight } = getComputedStyle(el);
       // The steps scale with the stage, so they are read again on every resize, in one pass.
@@ -293,7 +295,6 @@ function useTickLayout(labels: string[], left: number, right: number, points = f
       });
       const px = probes.map((probe) => parseFloat(getComputedStyle(probe).fontSize));
       for (const probe of probes) probe.remove();
-      const names: string[] = JSON.parse(key);
       const category =
         (el.clientWidth - left - right) / Math.max(1, names.length - (points ? 1 : 0));
       // Points have no bar between their labels: a gap's share on either side keeps them apart.

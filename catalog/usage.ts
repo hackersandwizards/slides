@@ -18,20 +18,29 @@ export function readUsage(list: string): Usage {
     .filter(Boolean);
   const usage: Usage = { files, decks: 0, slides: 0, entries: {} };
   for (const file of files) {
-    const read = JSON.parse(readFileSync(resolve(file), "utf8"));
-    const { decks, slides, entries } = read ?? {};
+    const read: unknown = JSON.parse(readFileSync(resolve(file), "utf8"));
+    const invalid = () => new Error(`SLIDES_USAGE: ${file} holds no slides-usage output`);
+    if (
+      typeof read !== "object" ||
+      !read ||
+      !("decks" in read && "slides" in read && "entries" in read)
+    )
+      throw invalid();
+    const { decks, slides, entries } = read;
     if (
       typeof decks !== "number" ||
       typeof slides !== "number" ||
       typeof entries !== "object" ||
-      !entries ||
-      !Object.values(entries).every((n) => typeof n === "number")
+      !entries
     )
-      throw new Error(`SLIDES_USAGE: ${file} holds no slides-usage output`);
+      throw invalid();
     usage.decks += decks;
     usage.slides += slides;
-    for (const [id, n] of Object.entries(entries as Record<string, number>))
+    const counts: [string, unknown][] = Object.entries(entries);
+    for (const [id, n] of counts) {
+      if (typeof n !== "number") throw invalid();
       usage.entries[id] = (usage.entries[id] ?? 0) + n;
+    }
   }
   return usage;
 }

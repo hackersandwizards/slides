@@ -22,10 +22,15 @@ afterAll(async () => {
 /** The pill on a phone, drawn in the web faces or with every font request refused. */
 async function pill(fonts: boolean) {
   const page = await newPage(browser);
+  const interceptionErrors: unknown[] = [];
   await page.setViewport({ width: 412, height: 823, isMobile: true, hasTouch: true });
   if (!fonts) {
     await page.setRequestInterception(true);
-    page.on("request", (r) => (r.resourceType() === "font" ? r.abort() : r.continue()));
+    page.on("request", (r) => {
+      (r.resourceType() === "font" ? r.abort() : r.continue()).catch((error: unknown) => {
+        interceptionErrors.push(error);
+      });
+    });
   }
   await page.goto(`${served.origin}${DECK}`, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready);
@@ -44,6 +49,7 @@ async function pill(fonts: boolean) {
     return { next: x, overflow };
   });
   await page.close();
+  if (interceptionErrors.length) throw new AggregateError(interceptionErrors);
   return reading;
 }
 
