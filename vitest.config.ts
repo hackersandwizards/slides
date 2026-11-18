@@ -5,6 +5,8 @@ const timeout = Number(process.env.SCAFFOLDING_TEST_TIMEOUT_MS) || 5000;
 
 export default defineConfig({
   plugins: [react()],
+  // Keep dependency asset URLs under Stryker's sandbox root through its node_modules symlink.
+  resolve: { preserveSymlinks: Boolean(process.env.STRYKER_MUTATOR_WORKER) },
   test: {
     include: ["test/**/*.test.{ts,tsx}"],
     environment: "jsdom",

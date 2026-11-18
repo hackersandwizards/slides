@@ -1,5 +1,7 @@
 node_modules/
 coverage/
+/.stryker-tmp/
+/.stryker-reports/
 .eslintcache
 .DS_Store
 .env

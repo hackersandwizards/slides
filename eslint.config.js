@@ -2,6 +2,7 @@ import shared from "@hackersandwizards/scaffolding/eslint";
 import reactHooks from "eslint-plugin-react-hooks";
 
 export default [
+  { ignores: [".stryker-tmp/**"] },
   ...shared,
   {
     // The engine's hooks carry a keyboard-consumption protocol; a stale closure there shows up as
