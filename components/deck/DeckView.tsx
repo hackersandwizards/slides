@@ -8,6 +8,7 @@ import { SlideNavigation } from "../slides/SlideNavigation";
 import { SlideHints } from "../slides/SlideHints";
 import { LaserPointer } from "../slides/LaserPointer";
 import { PresenterView } from "../slides/PresenterView";
+import { DeckOverview } from "../slides/DeckOverview";
 
 // Edit mode, dev only: the condition folds to null in a build, which drops the import with it.
 const DeckEdit = import.meta.env.DEV
@@ -56,6 +57,7 @@ export function DeckView({ presentation, index: initial, basePath, documentTitle
         <LaserPointer />
       </SlideContainer>
       <PresenterView notes={presentation.slides.map((s) => s.notes)} basePath={basePath} />
+      <DeckOverview presentation={presentation} index={index} basePath={basePath} />
       {DeckEdit && (
         <Suspense fallback={null}>
           <DeckEdit deck={basePath} />

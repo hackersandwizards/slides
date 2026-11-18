@@ -463,6 +463,7 @@ describe("slides-pptx on the specimen deck", () => {
       // of the company's name.
       // An overview draws as phased pills, its stage descriptions gone, as on the web.
       // A vs comparison item's leading + or - is its mark, not its text.
+      // Image steps show their last step, as print does: a file has no arrow steps.
       const data =
         slide.type === "grid" && slide.variant === "stats"
           ? { ...slide, cards: slide.cards.map((cd) => (cd.label ? { ...cd, title: "" } : cd)) }
@@ -485,7 +486,14 @@ describe("slides-pptx on the specimen deck", () => {
                     left: { ...slide.left, items: slide.left.items.map(unmarked) },
                     right: { ...slide.right, items: slide.right.items.map(unmarked) },
                   }
-                : slide;
+                : slide.type === "content"
+                  ? {
+                      ...slide,
+                      content: slide.content.map((b) =>
+                        b.type === "image-steps" ? { ...b, steps: b.steps.slice(-1) } : b,
+                      ),
+                    }
+                  : slide;
       return texts(data)
         .filter((t) => !shown.includes(norm(t)))
         .map((t) => `slide ${i + 1} (${slide.type}): ${t}`);

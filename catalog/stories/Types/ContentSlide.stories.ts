@@ -59,3 +59,5 @@ export const VisualTimelineMiddle = state("content", 51, "ContentSlide");
 export const NumbersLongFigure = state("content", 52, "ContentSlide");
 export const NumbersLabelBelow = state("content", 53, "ContentSlide");
 export const NumbersFiveDigits = state("content", 54, "ContentSlide");
+export const TableReveal = state("content", 55, "ContentSlide");
+export const BlockImageSteps = state("content", 56, "ContentSlide");

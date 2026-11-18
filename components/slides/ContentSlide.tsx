@@ -15,6 +15,7 @@ import { ComparisonSlide, Positions } from "./ComparisonSlide";
 import { StatementSlide } from "./StatementSlide";
 import { SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
+import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { CodeLines } from "../../lib/use-code-highlight";
 import { getSectionStyle } from "../../lib/section-styles";
 import {
@@ -46,7 +47,7 @@ interface Props {
   slide: ContentSlideType;
 }
 
-const MEDIA_BLOCKS = new Set(["image", "video", "linked-image"]);
+const MEDIA_BLOCKS = new Set(["image", "image-steps", "video", "linked-image"]);
 
 /** An image, video or linked image: centred, and on a titled slide as large as the body's free
  *  height allows, never larger than its own file. */
@@ -92,6 +93,102 @@ function MediaPicture({ src, alt, className }: { src: string; alt?: string; clas
     >
       <Image src={src} alt={alt || ""} width={1920} height={1080} className={className} />
     </span>
+  );
+}
+
+/** A table; with `reveal`, the first column comes on the first ArrowRight, then each row's
+ *  remaining cells on the next, so the room reads the row the speaker talks about. */
+function TableBlock({ block }: { block: Extract<ContentBlock, { type: "table" }> }) {
+  const { revealedCount } = useProgressiveReveal({
+    totalSteps: block.rows.length + 1,
+    startFull: !block.reveal,
+  });
+  return (
+    <div
+      className="overflow-x-auto rounded-brand border-2 border-border bg-white"
+      data-hw-exception="slide-table"
+    >
+      {/* Automatic layout: `widths` are the columns' preferred shares, and no column ever gets
+          narrower than its longest word. A fixed layout let a word run into the next cell. */}
+      {/* The cells take the ink and the heads the step under the cells', set tight: in a lit
+          hall and a 720p stream the label step and the muted grey wash out first, and the
+          cells' own step for the heads widened a two-column table until its slide fell to
+          0.79; the step under it holds 0.80. */}
+      <table className={`w-full border-collapse ${block.compact ? "text-lg" : "text-xl"}`}>
+        {block.widths && (
+          <colgroup>
+            {block.widths.map((w, i) => (
+              <col
+                key={i}
+                style={{ width: `${(w / block.widths!.reduce((a, b) => a + b, 0)) * 100}%` }}
+              />
+            ))}
+          </colgroup>
+        )}
+        {block.headers && (
+          <thead>
+            <tr className="bg-primary/7">
+              {block.headers.map((header, i) => (
+                <th
+                  key={i}
+                  className={`hw-label border-b-2 border-border py-3 text-left leading-tight ${block.compact ? "px-4 [--hw-label-size:var(--text-base)]" : "px-6 [--hw-label-size:var(--text-lg)]"}`}
+                  data-tone="ink"
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+        )}
+        <tbody>
+          {block.rows.map((row, rowIndex) => (
+            <tr
+              key={rowIndex}
+              className={`transition-colors hover:bg-primary/7 ${rowIndex % 2 === 1 ? "bg-primary/7" : ""}`}
+            >
+              {row.map((cell, cellIndex) => {
+                const shown = cellIndex === 0 ? revealedCount > 0 : rowIndex < revealedCount - 1;
+                return (
+                  <td
+                    key={cellIndex}
+                    className={`border-b border-border py-4 text-left text-text transition-opacity duration-300 ${block.compact ? "px-4" : "px-6"} ${cellIndex === 0 ? "font-bold" : ""} ${shown ? "opacity-100" : "opacity-0"}`}
+                  >
+                    {renderMarkdown(cell)}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** Pictures that replace each other in place, one per ArrowRight: a diagram built up step by step
+ *  without a slide change. They share one cell, so the frame keeps the size of the largest and
+ *  nothing moves between steps; no border, since a diagram's own ground is its edge. */
+function ImageStepsBlock({ block }: { block: Extract<ContentBlock, { type: "image-steps" }> }) {
+  const { revealedCount } = useProgressiveReveal({ totalSteps: block.steps.length - 1 });
+  const caption = block.steps[revealedCount]?.caption;
+  return (
+    <MediaFrame
+      boxClassName="slide-media-steps"
+      below={
+        caption && (
+          <figcaption className="slide-media-caption">{renderMarkdown(caption)}</figcaption>
+        )
+      }
+    >
+      {block.steps.map((step, i) => (
+        <MediaPicture
+          key={step.src}
+          src={step.src}
+          alt={i === revealedCount ? `${block.alt}, ${i + 1}/${block.steps.length}` : ""}
+          className={`slide-media-item ${i === revealedCount ? "visible" : "invisible"}`}
+        />
+      ))}
+    </MediaFrame>
   );
 }
 
@@ -329,63 +426,10 @@ function ContentBlockRenderer({
     }
 
     case "table":
-      return (
-        <div
-          className="overflow-x-auto rounded-brand border-2 border-border bg-white"
-          data-hw-exception="slide-table"
-        >
-          {/* Automatic layout: `widths` are the columns' preferred shares, and no column ever gets
-              narrower than its longest word. A fixed layout let a word run into the next cell. */}
-          {/* The cells take the ink and the heads the step under the cells', set tight: in a lit
-              hall and a 720p stream the label step and the muted grey wash out first, and the
-              cells' own step for the heads widened a two-column table until its slide fell to
-              0.79; the step under it holds 0.80. */}
-          <table className={`w-full border-collapse ${block.compact ? "text-lg" : "text-xl"}`}>
-            {block.widths && (
-              <colgroup>
-                {block.widths.map((w, i) => (
-                  <col
-                    key={i}
-                    style={{ width: `${(w / block.widths!.reduce((a, b) => a + b, 0)) * 100}%` }}
-                  />
-                ))}
-              </colgroup>
-            )}
-            {block.headers && (
-              <thead>
-                <tr className="bg-primary/7">
-                  {block.headers.map((header, i) => (
-                    <th
-                      key={i}
-                      className={`hw-label border-b-2 border-border py-3 text-left leading-tight ${block.compact ? "px-4 [--hw-label-size:var(--text-base)]" : "px-6 [--hw-label-size:var(--text-lg)]"}`}
-                      data-tone="ink"
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-            )}
-            <tbody>
-              {block.rows.map((row, rowIndex) => (
-                <tr
-                  key={rowIndex}
-                  className={`transition-colors hover:bg-primary/7 ${rowIndex % 2 === 1 ? "bg-primary/7" : ""}`}
-                >
-                  {row.map((cell, cellIndex) => (
-                    <td
-                      key={cellIndex}
-                      className={`border-b border-border py-4 text-left text-text ${block.compact ? "px-4" : "px-6"} ${cellIndex === 0 ? "font-bold" : ""}`}
-                    >
-                      {renderMarkdown(cell)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
+      return <TableBlock block={block} />;
+
+    case "image-steps":
+      return <ImageStepsBlock block={block} />;
 
     case "two-column": {
       const [left, right] =

@@ -62,6 +62,7 @@ const KEYS: Array<[string[], string]> = [
   [["←", "PageUp", "Shift+Space"], "previous step or slide"],
   [["F"], "fullscreen on and off"],
   [["S"], "speaker view in a second window"],
+  [["O"], "overview of every slide"],
   [["H"], "hints on and off"],
   [["?"], "this overlay"],
 ];

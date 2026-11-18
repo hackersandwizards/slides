@@ -2289,6 +2289,41 @@ const slides: Slide[] = [
     ],
     notes: "visual blocks: numbers of five digits with a spaced unit, a minus and leading words.",
   },
+  {
+    type: "content",
+    sectionLabel: "Block: table",
+    headline: "Table, revealed row by row",
+    content: [
+      {
+        type: "table",
+        reveal: true,
+        headers: ["Team", "Lead time", "Change failure rate"],
+        rows: [
+          ["Checkout", "2 days", "4%"],
+          ["Search", "5 days", "9%"],
+          ["Billing", "11 days", "15%"],
+        ],
+      },
+    ],
+    notes: "content blocks: table with reveal, first the first column, then one row at a time.",
+  },
+  {
+    type: "content",
+    sectionLabel: "Block: image steps",
+    headline: "One board, built up step by step",
+    content: [
+      {
+        type: "image-steps",
+        alt: "Fictional board",
+        steps: [
+          { src: specimenImages["screen-board.png"], caption: "The board as the sprint starts" },
+          { src: specimenImages["screen-chart.png"], caption: "The chart it feeds" },
+          { src: specimenImages["screen-code.png"], caption: "The code behind one card" },
+        ],
+      },
+    ],
+    notes: "content blocks: image-steps, three pictures replacing each other in place.",
+  },
 ];
 
 export const slideCatalog: Presentation = {

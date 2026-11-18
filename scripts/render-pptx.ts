@@ -1339,6 +1339,7 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
     case "numbers":
       return numbersLayout(b, c, w, k).h;
     case "image":
+    case "image-steps":
     case "gallery":
     case "linked-image":
     case "video":
@@ -1361,7 +1362,15 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
   }
 }
 
-const GROWS = new Set(["image", "gallery", "linked-image", "video", "annotated", "image-and-grid"]);
+const GROWS = new Set([
+  "image",
+  "image-steps",
+  "gallery",
+  "linked-image",
+  "video",
+  "annotated",
+  "image-and-grid",
+]);
 
 /** A gallery: its pictures and videos in a row or grid of equal cells, each over its caption, and
  *  its tags as chips under them. */
@@ -1918,6 +1927,20 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
     case "image":
       picture(s, ctx, b.src, a.x, a.y, a.w, a.h, { alt: b.alt, native: true });
       return;
+    case "image-steps": {
+      // A file has no arrow steps: the last picture, the one the slide ends on, as print shows it.
+      const last = b.steps[b.steps.length - 1];
+      const h = a.h - (last.caption ? 0.35 : 0);
+      picture(s, ctx, last.src, a.x, a.y, a.w, h, { alt: b.alt, native: true });
+      if (last.caption)
+        box(s, c, last.caption, a.x, a.y + h + 0.08, a.w, 0.27, {
+          ...o,
+          size: PT.sm,
+          color: c.muted,
+          align: "center",
+        });
+      return;
+    }
     case "gallery":
       return gallery(s, ctx, b, a);
     case "linked-image": {
