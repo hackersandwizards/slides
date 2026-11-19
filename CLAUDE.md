@@ -140,7 +140,8 @@ preview`), then `check:elements`
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
 - `bun run mutation` uses Stryker to check whether the Vitest unit suite catches changes to the
-  engine. It runs outside the gate and writes `.stryker-reports/mutation.json`.
+  engine, excluding static-only mutants and the PDF and PPTX rendering tests and scripts.
+  It runs outside the gate and writes `.stryker-reports/mutation.json`.
 - `bun run dev` (or `bun run catalog`, which opens it): the catalog at
   `http://127.0.0.1:4335/`, the print page at `/catalog/print/`: dev serves without the `/slides` base.
   `SLIDES_USAGE=<path>[,<path>] bun run dev`, each path a `slides-usage` output read from this

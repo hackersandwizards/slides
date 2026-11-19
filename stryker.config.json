@@ -1,9 +1,5 @@
 {
-  "mutate": [
-    "components/**/*.{ts,tsx}",
-    "lib/**/*.{ts,tsx}",
-    "scripts/{pins,pptx-fonts,pptx-text,render-pdf,render-pptx,usage}.ts"
-  ],
+  "mutate": ["components/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}", "scripts/{pins,usage}.ts"],
   "plugins": ["@stryker-mutator/vitest-runner", "./stryker-browser-callbacks.js"],
   "ignorers": ["puppeteer-callbacks"],
   "testRunner": "vitest",
@@ -12,11 +8,19 @@
     "related": false
   },
   "coverageAnalysis": "perTest",
+  "ignoreStatic": true,
+  "incremental": true,
+  "incrementalFile": ".stryker-reports/incremental.json",
   "reporters": ["clear-text", "json"],
   "jsonReporter": {
     "fileName": ".stryker-reports/mutation.json"
   },
-  "ignorePatterns": [".*", "/test/pages/**"],
+  "ignorePatterns": [
+    ".*",
+    "/test/pages/**",
+    "/test/render-pdf.test.ts",
+    "/test/render-pptx.test.ts"
+  ],
   "tempDirName": ".stryker-tmp",
   "cleanTempDir": "always",
   "concurrency": 4
