@@ -139,8 +139,11 @@ preview`), then `check:elements`
   from that base.
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
-- `bun run mutation` uses Stryker to check whether the Vitest unit suite catches changes to the
-  engine, excluding static-only mutants and the PDF and PPTX rendering tests and scripts.
+- `bun run mutation` uses Stryker to check reveal state, print context and the carousel,
+  progressive-reveal and keyboard hooks with the three suites in `vitest.mutation.config.ts`.
+  The timed run leaves the component and CLI suites out of scope and skips presenter sync
+  (`test/presenter-sync.test.ts`, 8.97 s of timer-driven tests), `test/pages/` (up to 138 s per
+  file), `test/render-pdf.test.ts` (14.68 s) and `test/render-pptx.test.ts` (1.65 s).
   It runs outside the gate and writes `.stryker-reports/mutation.json`.
 - `bun run dev` (or `bun run catalog`, which opens it): the catalog at
   `http://127.0.0.1:4335/`, the print page at `/catalog/print/`: dev serves without the `/slides` base.

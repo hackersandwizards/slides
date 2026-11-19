@@ -1,10 +1,13 @@
 {
-  "mutate": ["components/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}", "scripts/{pins,usage}.ts"],
-  "plugins": ["@stryker-mutator/vitest-runner", "./stryker-browser-callbacks.js"],
-  "ignorers": ["puppeteer-callbacks"],
+  "mutate": [
+    "lib/{reveal-state,use-carousel,use-progressive-reveal,use-slide-keyboard}.ts",
+    "lib/print-context.tsx"
+  ],
+  "plugins": ["@stryker-mutator/vitest-runner"],
   "testRunner": "vitest",
   "vitest": {
-    "configFile": "vitest.config.ts",
+    "configFile": "vitest.mutation.config.ts",
+    "pool": "threads",
     "related": false
   },
   "coverageAnalysis": "perTest",
@@ -15,13 +18,8 @@
   "jsonReporter": {
     "fileName": ".stryker-reports/mutation.json"
   },
-  "ignorePatterns": [
-    ".*",
-    "/test/pages/**",
-    "/test/render-pdf.test.ts",
-    "/test/render-pptx.test.ts"
-  ],
+  "ignorePatterns": [".*"],
   "tempDirName": ".stryker-tmp",
   "cleanTempDir": "always",
-  "concurrency": 4
+  "concurrency": 2
 }
