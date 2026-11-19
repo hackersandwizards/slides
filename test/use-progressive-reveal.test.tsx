@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { useProgressiveReveal } from "../lib/use-progressive-reveal";
+import { usePendingReveal, useProgressiveReveal } from "../lib/use-progressive-reveal";
 import { deckSync } from "../lib/presenter-sync";
 import { phoneWidth } from "./phone-width";
 import { PrintProvider } from "../lib/print-context";
@@ -144,6 +144,79 @@ describe("useProgressiveReveal", () => {
     expect(result.current).toEqual([0, 0]);
     expect(pressLeft()).toBe(false);
   });
+
+  it("reports whether the next and previous arrows have a step or a footer to change", () => {
+    const hints = renderHook(() => [usePendingReveal(), usePendingReveal("behind")]);
+    const slide = renderHook(() => useProgressiveReveal({ totalSteps: 1, hasFooter: true }));
+
+    expect(hints.result.current).toEqual([true, false]);
+    expect(slide.result.current.stepped).toBe(false);
+    pressRight();
+    expect(hints.result.current).toEqual([true, true]);
+    expect(slide.result.current.stepped).toBe(true);
+    pressRight();
+    expect(hints.result.current).toEqual([false, true]);
+    pressLeft();
+    expect(hints.result.current).toEqual([true, true]);
+    pressLeft();
+    expect(hints.result.current).toEqual([true, false]);
+    slide.unmount();
+    expect(hints.result.current).toEqual([false, false]);
+  });
+
+  it("reports no more right-arrow steps on a finished slide without a footer", () => {
+    const { result } = renderHook(() => {
+      useProgressiveReveal({ totalSteps: 1 });
+      return usePendingReveal();
+    });
+
+    expect(result.current).toBe(true);
+    pressRight();
+    expect(result.current).toBe(false);
+  });
+
+  it("passes browser shortcuts through and keeps a reveal press away from deck navigation", () => {
+    const { result, unmount } = renderHook(() => useProgressiveReveal({ totalSteps: 1 }));
+    const navigationKeys: string[] = [];
+    const controller = new AbortController();
+    document.addEventListener("keydown", (event) => navigationKeys.push(event.key), {
+      signal: controller.signal,
+    });
+    const arrow = (options: KeyboardEventInit = {}) =>
+      new KeyboardEvent("keydown", {
+        key: "ArrowRight",
+        bubbles: true,
+        cancelable: true,
+        ...options,
+      });
+    const browserShortcut = arrow({ metaKey: true });
+    const reveal = arrow();
+    const nextSlide = arrow();
+    const dispatch = (event: KeyboardEvent) => {
+      act(() => {
+        document.body.dispatchEvent(event);
+      });
+    };
+
+    try {
+      dispatch(browserShortcut);
+      expect(browserShortcut.defaultPrevented).toBe(false);
+      expect(result.current.revealedCount).toBe(0);
+      expect(navigationKeys).toEqual(["ArrowRight"]);
+
+      dispatch(reveal);
+      expect(reveal.defaultPrevented).toBe(true);
+      expect(result.current.revealedCount).toBe(1);
+      expect(navigationKeys).toEqual(["ArrowRight"]);
+
+      unmount();
+      dispatch(nextSlide);
+      expect(nextSlide.defaultPrevented).toBe(false);
+      expect(navigationKeys).toEqual(["ArrowRight", "ArrowRight"]);
+    } finally {
+      controller.abort();
+    }
+  });
 });
 
 describe("on a phone", () => {
@@ -155,6 +228,45 @@ describe("on a phone", () => {
     expect(result.current.revealedCount).toBe(3);
     expect(result.current.footerVisible).toBe(true);
     expect(pressRight()).toBe(false);
+  });
+
+  it("shows the whole slide on a narrow viewport and resumes stepping when it widens", () => {
+    const media = new EventTarget();
+    const query = {
+      ...window.matchMedia("(max-width: 48rem)"),
+      matches: false,
+      addEventListener: media.addEventListener.bind(media),
+      removeEventListener: media.removeEventListener.bind(media),
+      dispatchEvent: media.dispatchEvent.bind(media),
+    };
+    vi.spyOn(window, "matchMedia").mockReturnValue(query);
+    const { result } = renderHook(() => {
+      const slide = useProgressiveReveal({ totalSteps: 3 });
+      return { ...slide, pending: usePendingReveal(), undoable: usePendingReveal("behind") };
+    });
+    const resize = (matches: boolean) => {
+      query.matches = matches;
+      act(() => {
+        query.dispatchEvent(new Event("change"));
+      });
+    };
+
+    pressRight();
+    expect(result.current).toMatchObject({ revealedCount: 1, stepped: true, pending: true });
+    resize(true);
+    expect(result.current).toEqual({
+      revealedCount: 3,
+      footerVisible: false,
+      stepped: false,
+      pending: false,
+      undoable: false,
+    });
+    expect(pressLeft()).toBe(false);
+
+    resize(false);
+    expect(result.current.revealedCount).toBe(1);
+    expect(pressRight()).toBe(true);
+    expect(result.current.revealedCount).toBe(2);
   });
 
   // The windows of a presented talk replay each other's presses on their own copies of a slide,
