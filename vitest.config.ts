@@ -1,18 +1,13 @@
+import base from "@hackersandwizards/scaffolding/vitest";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
+import { mergeConfig, type ViteUserConfig } from "vitest/config";
 
-const timeout = Number(process.env.SCAFFOLDING_TEST_TIMEOUT_MS) || 5000;
-
-export default defineConfig({
+export default mergeConfig(base, {
   plugins: [react()],
-  // Keep dependency asset URLs under Stryker's sandbox root through its node_modules symlink.
-  resolve: { preserveSymlinks: Boolean(process.env.STRYKER_MUTATOR_WORKER) },
   test: {
     include: ["test/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     setupFiles: ["test/setup.ts"],
-    // The gate stretches the per-test limit with the machine's load; 5 s when idle, hooks twice it.
-    testTimeout: timeout,
-    hookTimeout: 2 * timeout,
+    hookTimeout: 2 * base.test.hookTimeout,
   },
-});
+} satisfies ViteUserConfig) as ViteUserConfig;
