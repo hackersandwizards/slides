@@ -5,7 +5,6 @@ import { NARROW, opensRevealed, directionKey, ignoredKey, writeStored } from "./
 import { usePrintMode } from "./print-context";
 import { useMounted } from "./use-mounted";
 import { deckSync } from "./presenter-sync";
-
 import { useReportPendingReveal } from "./reveal-state";
 
 export { hasPendingReveal, usePendingReveal, useReportPendingReveal } from "./reveal-state";

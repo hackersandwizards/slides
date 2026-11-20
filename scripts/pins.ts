@@ -23,9 +23,9 @@ const devDeps =
   pkg && typeof pkg === "object" && "devDependencies" in pkg ? pkg.devDependencies : undefined;
 const pin = hasBrandPin(devDeps) ? devDeps[BRAND] : hasBrandPin(deps) ? deps[BRAND] : undefined;
 if (!pin) fail("package.json pins no version; pin it as the slides README shows");
+if (typeof pin !== "string") fail("package.json brand pin must be a string");
 
-const version =
-  typeof pin === "string" ? /(?:#v?|^(?:[\^~]|>=)?)(\d+\.\d+\.\d+)$/.exec(pin)?.[1] : undefined;
+const version = /(?:#v?|^(?:[\^~]|>=)?)(\d+\.\d+\.\d+)$/.exec(pin)?.[1];
 if (!version) fail(`${pin} names no version; pin a tag as the slides README shows`);
 if (version.localeCompare(MINIMUM, "en", { numeric: true }) < 0)
   fail(`${pin} is below the minimum this engine needs, v${MINIMUM}: raise the pin`);

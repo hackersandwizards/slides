@@ -195,7 +195,6 @@ function ActivityTimer({ headline, duration }: { headline: string; duration?: st
   const [timer, setTimer] = useState(() => fresh(timerMinutes(duration)));
   const [now, setNow] = useState(clock);
 
-  // The saved timer loads after hydration, as the server has no localStorage.
   const storageKey = useMounted() && !printMode ? key : null;
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   if (storageKey !== loadedKey) {

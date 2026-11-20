@@ -8,7 +8,7 @@ const script = join(__dirname, "../scripts/pins.ts");
 const root = mkdtempSync(join(tmpdir(), "slides-pins-"));
 afterAll(() => rmSync(root, { recursive: true }));
 
-function consumer(pin?: string) {
+function consumer(pin?: unknown) {
   writeFileSync(
     join(root, "package.json"),
     JSON.stringify({ dependencies: { "@hackersandwizards/brand": pin, react: "19.0.0" } }),
@@ -70,5 +70,11 @@ describe("slides-pins", () => {
     const { code, err } = consumer();
     expect(code).toBe(1);
     expect(err).toContain("@hackersandwizards/brand: package.json pins no version");
+  });
+
+  it("reports a malformed brand pin without coercing it to a string", () => {
+    const { code, err } = consumer({ toString: null });
+    expect(code).toBe(1);
+    expect(err).toContain("@hackersandwizards/brand: package.json brand pin must be a string");
   });
 });

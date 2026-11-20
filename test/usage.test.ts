@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { GUIDANCE } from "../catalog/guidance";
+import { readUsage } from "../catalog/usage";
 import { entriesOf, ignoredFields } from "../scripts/usage";
 import { twoColumnAsSplit } from "../lib/slide-utils";
 import { slideCatalog } from "../specimen/slide-catalog";
@@ -23,6 +24,27 @@ const run = (...decks: unknown[]) => {
   const json: unknown = out.stdout && JSON.parse(out.stdout);
   return { code: out.status, err: out.stderr, json };
 };
+
+describe("catalog usage counts", () => {
+  it("sums entry IDs that match inherited object properties", () => {
+    const first = join(dir, "usage-first.json");
+    const second = join(dir, "usage-second.json");
+    writeFileSync(first, '{"decks":1,"slides":3,"entries":{"constructor":1,"__proto__":2}}');
+    writeFileSync(second, '{"decks":1,"slides":2,"entries":{"constructor":2,"__proto__":1}}');
+
+    expect(Object.entries(readUsage([first, second].join(",")).entries)).toEqual([
+      ["constructor", 3],
+      ["__proto__", 3],
+    ]);
+  });
+
+  it("rejects an array in place of the entry count object", () => {
+    const file = join(dir, "usage-array.json");
+    writeFileSync(file, '{"decks":1,"slides":3,"entries":[3]}');
+
+    expect(() => readUsage(file)).toThrow(/usage-array\.json holds no slides-usage output/);
+  });
+});
 
 describe("slides-usage", () => {
   it("finds a catalogue entry for every slide of the specimen deck", () => {

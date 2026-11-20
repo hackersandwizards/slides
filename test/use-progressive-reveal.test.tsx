@@ -1,6 +1,12 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, render, renderHook } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { usePendingReveal, useProgressiveReveal } from "../lib/use-progressive-reveal";
+import {
+  hasPendingReveal,
+  usePendingReveal,
+  useProgressiveReveal,
+  useReportPendingReveal,
+} from "../lib/use-progressive-reveal";
 import { deckSync } from "../lib/presenter-sync";
 import { phoneWidth } from "./phone-width";
 import { PrintProvider } from "../lib/print-context";
@@ -112,6 +118,28 @@ describe("useProgressiveReveal", () => {
     expect(sessionStorage.getItem("slide-direction")).toBeNull();
   });
 
+  it("hydrates a backward arrival and updates the steps and footer independently", () => {
+    function Reveal({ steps, footer }: { steps: number; footer: boolean }) {
+      const { revealedCount, footerVisible } = useProgressiveReveal({
+        totalSteps: steps,
+        hasFooter: footer,
+      });
+      return <output>{`${revealedCount}/${String(footerVisible)}`}</output>;
+    }
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    container.innerHTML = renderToString(<Reveal steps={2} footer />);
+    expect(container.textContent).toBe("0/false");
+
+    sessionStorage.setItem("slide-direction", "back");
+    const { rerender } = render(<Reveal steps={2} footer />, { container, hydrate: true });
+    expect(container.textContent).toBe("2/true");
+    rerender(<Reveal steps={3} footer />);
+    expect(container.textContent).toBe("3/true");
+    rerender(<Reveal steps={3} footer={false} />);
+    expect(container.textContent).toBe("3/false");
+  });
+
   it("ignores ArrowRight when there are no steps", () => {
     const { result } = renderHook(() => useProgressiveReveal({ totalSteps: 0 }));
     expect(pressRight()).toBe(false);
@@ -150,17 +178,42 @@ describe("useProgressiveReveal", () => {
     const slide = renderHook(() => useProgressiveReveal({ totalSteps: 1, hasFooter: true }));
 
     expect(hints.result.current).toEqual([true, false]);
+    expect(hasPendingReveal()).toBe(true);
     expect(slide.result.current.stepped).toBe(false);
     pressRight();
     expect(hints.result.current).toEqual([true, true]);
     expect(slide.result.current.stepped).toBe(true);
     pressRight();
     expect(hints.result.current).toEqual([false, true]);
+    expect(hasPendingReveal()).toBe(false);
     pressLeft();
     expect(hints.result.current).toEqual([true, true]);
     pressLeft();
     expect(hints.result.current).toEqual([true, false]);
     slide.unmount();
+    expect(hints.result.current).toEqual([false, false]);
+  });
+
+  it("takes the pending hint from the current slide only after hydration", () => {
+    function Hint() {
+      return <output>{String(usePendingReveal())}</output>;
+    }
+    renderHook(() => useProgressiveReveal({ totalSteps: 1 }));
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    container.innerHTML = renderToString(<Hint />);
+    expect(container.textContent).toBe("false");
+    render(<Hint />, { container, hydrate: true });
+    expect(container.textContent).toBe("true");
+  });
+
+  it("keeps the hint while another reporter still has a step ahead", () => {
+    const hints = renderHook(() => [usePendingReveal(), usePendingReveal("behind")]);
+    const first = renderHook(() => useReportPendingReveal(true));
+    const second = renderHook(() => useReportPendingReveal(true));
+    first.unmount();
+    expect(hints.result.current).toEqual([true, false]);
+    second.unmount();
     expect(hints.result.current).toEqual([false, false]);
   });
 

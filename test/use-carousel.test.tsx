@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useCarousel } from "../lib/use-carousel";
+import { usePendingReveal } from "../lib/use-progressive-reveal";
 import { PrintProvider } from "../lib/print-context";
 import { phoneWidth } from "./phone-width";
 import { render } from "@testing-library/react";
@@ -116,6 +117,43 @@ describe("useCarousel", () => {
     const { result } = renderHook(() => useCarousel({ count: 3 }), { wrapper: PrintProvider });
     expect(pressKey("ArrowRight")).toBe(false);
     expect(result.current[0]).toBe(0);
+  });
+
+  it("ignores a backward arrival when disabled or in print", () => {
+    sessionStorage.setItem("slide-direction", "back");
+    const disabled = renderHook(() => useCarousel({ count: 3, enabled: false }));
+    expect(disabled.result.current[0]).toBe(0);
+    disabled.unmount();
+
+    sessionStorage.setItem("slide-direction", "back");
+    const printed = renderHook(() => useCarousel({ count: 3 }), { wrapper: PrintProvider });
+    expect(printed.result.current[0]).toBe(0);
+  });
+
+  it("updates both navigation hints as the carousel moves between its bounds", () => {
+    renderHook(() => useCarousel({ count: 3, min: -1 }));
+    const hints = renderHook(() => [usePendingReveal(), usePendingReveal("behind")]);
+
+    expect(hints.result.current).toEqual([true, false]);
+    pressKey("ArrowRight");
+    expect(hints.result.current).toEqual([true, true]);
+    pressKey("ArrowRight");
+    pressKey("ArrowRight");
+    expect(hints.result.current).toEqual([false, true]);
+  });
+
+  it("updates the last step when a backward arrival changes size", () => {
+    sessionStorage.setItem("slide-direction", "back");
+    const { result, rerender } = renderHook(({ count }) => useCarousel({ count }), {
+      initialProps: { count: 3 },
+    });
+    expect(result.current[0]).toBe(2);
+    sessionStorage.setItem("slide-direction", "back");
+    rerender({ count: 4 });
+    expect(result.current[0]).toBe(3);
+    expect(sessionStorage.getItem("slide-direction")).toBeNull();
+    rerender({ count: 2 });
+    expect(result.current[0]).toBe(1);
   });
 });
 

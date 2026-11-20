@@ -16,7 +16,9 @@ export function readUsage(list: string): Usage {
     .split(",")
     .map((path) => path.trim())
     .filter(Boolean);
-  const usage: Usage = { files, decks: 0, slides: 0, entries: {} };
+  let totalDecks = 0;
+  let totalSlides = 0;
+  const totals = new Map<string, number>();
   for (const file of files) {
     const read: unknown = JSON.parse(readFileSync(resolve(file), "utf8"));
     const invalid = () => new Error(`SLIDES_USAGE: ${file} holds no slides-usage output`);
@@ -31,16 +33,22 @@ export function readUsage(list: string): Usage {
       typeof decks !== "number" ||
       typeof slides !== "number" ||
       typeof entries !== "object" ||
-      !entries
+      !entries ||
+      Array.isArray(entries)
     )
       throw invalid();
-    usage.decks += decks;
-    usage.slides += slides;
+    totalDecks += decks;
+    totalSlides += slides;
     const counts: [string, unknown][] = Object.entries(entries);
     for (const [id, n] of counts) {
       if (typeof n !== "number") throw invalid();
-      usage.entries[id] = (usage.entries[id] ?? 0) + n;
+      totals.set(id, (totals.get(id) ?? 0) + n);
     }
   }
-  return usage;
+  return {
+    files,
+    decks: totalDecks,
+    slides: totalSlides,
+    entries: Object.fromEntries(totals),
+  };
 }

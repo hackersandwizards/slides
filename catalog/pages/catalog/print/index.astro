@@ -15,11 +15,10 @@ import {
   type Job,
 } from "../../../print";
 
-// Each entry's slide count, where the dev server was started with SLIDES_USAGE (catalog/usage.ts);
-// a "-2" anchor is a second tile of one entry, which slides-usage never counts.
 declare const __SLIDES_USAGE__: Usage | null;
 const usage = __SLIDES_USAGE__;
 const slideCount = (n: number) => `${n} ${n === 1 ? "slide" : "slides"}`;
+// Numbered anchors are extra tiles for the same entry, so slides-usage omits them.
 const hasCount = (id: string) => !!usage && !/-\d+$/.test(id);
 const tiles = entries.map(({ id, html }) =>
   hasCount(id)
