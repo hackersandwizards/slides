@@ -1,14 +1,16 @@
-import shared from "@hackersandwizards/scaffolding/eslint";
+import shared from "@hackersandwizards/scaffolding/eslint/astro";
 import reactHooks from "eslint-plugin-react-hooks";
 
 export default [
   { ignores: [".stryker-tmp/**"] },
   ...shared,
   {
-    // The engine's hooks carry a keyboard-consumption protocol; a stale closure there shows up as
-    // a deck that stops advancing mid-talk, so the full recommended set stays on.
+    // The native React plugin has no equivalents for the compiler config and gating rules.
     files: ["components/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
     plugins: { "react-hooks": reactHooks },
-    rules: reactHooks.configs.flat.recommended.rules,
+    rules: {
+      "react-hooks/config": "error",
+      "react-hooks/gating": "error",
+    },
   },
 ];

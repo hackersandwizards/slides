@@ -1,0 +1,38 @@
+{
+  "extends": ["./node_modules/@hackersandwizards/scaffolding/config/oxlint.json"],
+  "plugins": ["typescript"],
+  "env": { "browser": true, "node": true, "bun": true },
+  "options": { "typeAware": true },
+  "ignorePatterns": [
+    "node_modules/**",
+    "coverage/**",
+    "**/dist/**",
+    "**/.astro/**",
+    "/.claude/**",
+    "/.agents/**",
+    "/.githooks/**",
+    ".stryker-tmp/**"
+  ],
+  "overrides": [
+    {
+      "files": ["components/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
+      "plugins": ["typescript", "react"],
+      "rules": {
+        "react/rules-of-hooks": "error",
+        "react/exhaustive-deps": "warn",
+        "react/static-components": "error",
+        "react/use-memo": "error",
+        "react/preserve-manual-memoization": "error",
+        "react/incompatible-library": "warn",
+        "react/immutability": "error",
+        "react/globals": "error",
+        "react/refs": "error",
+        "react/set-state-in-effect": "error",
+        "react/error-boundaries": "error",
+        "react/purity": "error",
+        "react/set-state-in-render": "error",
+        "react/unsupported-syntax": "warn"
+      }
+    }
+  ]
+}
