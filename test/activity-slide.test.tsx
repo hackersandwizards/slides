@@ -84,6 +84,14 @@ describe("the activity timer", () => {
     expect(time(bare.container)).toBe("2:00");
   });
 
+  it("uses the slide's duration when a saved timer has an invalid remaining time", () => {
+    localStorage.setItem(
+      "hw-activity-timer:Think first",
+      JSON.stringify({ minutes: 1, endsAt: null, left: null, at: Date.now() }),
+    );
+    expect(time(render(<Activity slide={slide} />).container)).toBe("3:00");
+  });
+
   it("counts down on a click, pauses on the next, and changes by a minute either way", () => {
     vi.useFakeTimers();
     const { container, getByLabelText } = render(<Activity slide={slide} />);

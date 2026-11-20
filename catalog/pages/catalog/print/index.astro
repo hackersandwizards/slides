@@ -3,6 +3,7 @@ import { brandHref } from "../../../brand-urls";
 import catalogs from "@hackersandwizards/brand/catalogs.json";
 import { name } from "@hackersandwizards/brand/verbal.json";
 import { logoSizes } from "../../../../lib/brand-logos";
+import type { Usage } from "../../../usage";
 import {
   entries,
   exceptionSections,
@@ -16,6 +17,7 @@ import {
 
 // Each entry's slide count, where the dev server was started with SLIDES_USAGE (catalog/usage.ts);
 // a "-2" anchor is a second tile of one entry, which slides-usage never counts.
+declare const __SLIDES_USAGE__: Usage | null;
 const usage = __SLIDES_USAGE__;
 const slideCount = (n: number) => `${n} ${n === 1 ? "slide" : "slides"}`;
 const hasCount = (id: string) => !!usage && !/-\d+$/.test(id);
@@ -398,31 +400,39 @@ const jobLinks = (Object.keys(JOBS) as Job[])
       </table>
     </main>
     <script is:inline>
-      const tiles = [...document.querySelectorAll(".tiles figure")];
-      const find = document.getElementById("find");
-      let job = "";
-      const apply = () => {
-        const q = find.value.trim().toLowerCase();
-        let shown = 0;
-        for (const t of tiles) {
-          const on =
-            (!job || t.dataset.jobs.split(" ").includes(job)) &&
-            (!q || t.dataset.search.includes(q));
-          t.hidden = !on;
-          shown += on;
+      {
+        const find = document.getElementById("find");
+        const none = document.getElementById("none");
+        if (find instanceof HTMLInputElement && none instanceof HTMLElement) {
+          const tiles = [...document.querySelectorAll(".tiles figure")];
+          let job = "";
+          const apply = () => {
+            const q = find.value.trim().toLowerCase();
+            let hasMatch = false;
+            for (const tile of tiles) {
+              if (!(tile instanceof HTMLElement)) continue;
+              const on =
+                (!job || (tile.dataset.jobs ?? "").split(" ").includes(job)) &&
+                (!q || (tile.dataset.search ?? "").includes(q));
+              tile.hidden = !on;
+              hasMatch ||= on;
+            }
+            none.hidden = hasMatch;
+          };
+          const jobs = [...document.querySelectorAll(".jobs a")];
+          for (const link of jobs) {
+            if (!(link instanceof HTMLAnchorElement) || link.dataset.job === undefined) continue;
+            link.addEventListener("click", (event) => {
+              event.preventDefault();
+              job = link.dataset.job ?? "";
+              for (const other of jobs) other.removeAttribute("aria-current");
+              link.setAttribute("aria-current", "true");
+              apply();
+            });
+          }
+          find.addEventListener("input", apply);
         }
-        document.getElementById("none").hidden = shown > 0;
-      };
-      const jobs = [...document.querySelectorAll(".jobs a")];
-      for (const a of jobs)
-        a.addEventListener("click", (event) => {
-          event.preventDefault();
-          job = a.dataset.job;
-          for (const o of jobs) o.removeAttribute("aria-current");
-          a.setAttribute("aria-current", "true");
-          apply();
-        });
-      find.addEventListener("input", apply);
+      }
     </script>
   </body>
 </html>

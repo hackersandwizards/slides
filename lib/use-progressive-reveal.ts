@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { NARROW, opensRevealed, directionKey, ignoredKey, writeStored } from "./slide-utils";
 import { usePrintMode } from "./print-context";
+import { useMounted } from "./use-mounted";
 import { deckSync } from "./presenter-sync";
 
 import { useReportPendingReveal } from "./reveal-state";
@@ -73,22 +74,30 @@ export function useProgressiveReveal({
 }: UseProgressiveRevealOptions): UseProgressiveRevealResult {
   const printMode = usePrintMode();
   const full = printMode || startFull;
-  const [revealedCount, setRevealedCount] = useState(full ? totalSteps : 0);
-  const [footerVisible, setFooterVisible] = useState(full);
-  const [stepped, setStepped] = useState(false);
   // Read during render, applied after mount: the server cannot see sessionStorage and renders the
   // slide unrevealed, and React keeps a hydrated tree's mismatched attributes as the server sent
   // them, so revealing in the first client render left a backward arrival blank.
   const [arrivedRevealed] = useState(() => !full && totalSteps > 0 && opensRevealed());
+  const showArrival = useMounted() && arrivedRevealed;
+  const arrivalCount = showArrival ? totalSteps : null;
+  const arrivalFooter = showArrival && hasFooter;
+  const [previousArrival, setPreviousArrival] = useState({ arrivalCount, arrivalFooter });
+  const [revealedCount, setRevealedCount] = useState(full || showArrival ? totalSteps : 0);
+  const [footerVisible, setFooterVisible] = useState(full || arrivalFooter);
+  const [stepped, setStepped] = useState(false);
+  if (
+    arrivalCount !== previousArrival.arrivalCount ||
+    arrivalFooter !== previousArrival.arrivalFooter
+  ) {
+    setPreviousArrival({ arrivalCount, arrivalFooter });
+    if (arrivalCount !== null) {
+      setRevealedCount(arrivalCount);
+      setFooterVisible(arrivalFooter);
+    }
+  }
   // Followed, so a rotation into a phone reveals too, and a speaker window opening steps again
   // from the state the slide was in.
   const phone = usePhone() && !full && totalSteps > 0;
-  useEffect(() => {
-    if (!arrivedRevealed) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount reveal above
-    setRevealedCount(totalSteps);
-    setFooterVisible(hasFooter);
-  }, [arrivedRevealed, totalSteps, hasFooter]);
   // Consumed after mount, once every hook on the slide has read it in render, so a reload after a
   // backward arrival opens unrevealed. Here as well as in SlideNavigation: a story renders a slide without it.
   useEffect(() => writeStored("session", directionKey(), null), []);

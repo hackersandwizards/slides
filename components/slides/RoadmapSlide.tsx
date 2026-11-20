@@ -55,7 +55,6 @@ function PartCard({
   delay: number;
 }) {
   const hue = COLUMN_HUE[accent];
-  let row = 0;
 
   return (
     <BlurFade delay={delay} duration={0.5}>
@@ -80,6 +79,9 @@ function PartCard({
 
           <div className="mt-6 space-y-6">
             {groups.map((group, g) => {
+              const firstRow = groups
+                .slice(0, g)
+                .reduce((rows, prior) => rows + prior.items.length, 0);
               const theme =
                 group.theme && Object.hasOwn(themeDotColor, group.theme)
                   ? group.theme
@@ -101,7 +103,7 @@ function PartCard({
                     {group.items.map((item, i) => (
                       <BlurFade
                         key={i}
-                        delay={delay + 0.05 + row++ * 0.04}
+                        delay={delay + 0.05 + (firstRow + i) * 0.04}
                         duration={0.35}
                         as="li"
                         className="flex items-baseline gap-4 text-xl leading-snug"

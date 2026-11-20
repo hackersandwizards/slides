@@ -120,7 +120,8 @@ export function FlowSteps({
   // rather than repeat or contradict it.
   const counted = !steps.some((step) => /\d/.test(step.label ?? ""));
   let count = 0;
-  const numbers = steps.map((step) => (step.numbered === false ? undefined : ++count));
+  const numbers: (number | undefined)[] = [];
+  for (const step of steps) numbers.push(step.numbered === false ? undefined : ++count);
   const show = (on: boolean) =>
     `transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`;
   return (

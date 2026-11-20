@@ -3,6 +3,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useSlideKeyboard } from "./use-slide-keyboard";
 import { usePrintMode } from "./print-context";
+import { useMounted } from "./use-mounted";
 import { usePhone } from "./use-progressive-reveal";
 import { opensRevealed, directionKey, writeStored } from "./slide-utils";
 
@@ -31,20 +32,22 @@ export function useCarousel({
   initial,
   enabled = true,
 }: UseCarouselOptions): [number, Dispatch<SetStateAction<number>>, boolean] {
-  const [index, setIndex] = useState(initial ?? min);
   const max = count - 1;
   // A slide opening revealed opens at the last step, as a reveal slide does, after
   // hydration so the server markup still matches.
   const printMode = usePrintMode();
   const [revealed] = useState(() => enabled && !printMode && opensRevealed());
+  const revealedIndex = useMounted() && revealed ? max : null;
+  const [previousRevealedIndex, setPreviousRevealedIndex] = useState(revealedIndex);
+  const [index, setIndex] = useState(revealedIndex ?? initial ?? min);
+  if (revealedIndex !== previousRevealedIndex) {
+    setPreviousRevealedIndex(revealedIndex);
+    if (revealedIndex !== null) setIndex(revealedIndex);
+  }
   // A phone shows the last step and lets Next change slides, as a reveal slide shows every step.
   const phone = usePhone() && enabled && !printMode;
   const keys = enabled && !printMode && !phone;
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount step above
-    if (revealed) setIndex(max);
-    writeStored("session", directionKey(), null);
-  }, [revealed, max]);
+  useEffect(() => writeStored("session", directionKey(), null), [revealed, max]);
 
   useSlideKeyboard({
     onRight: () => {

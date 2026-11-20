@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import type { QuestionSlide as QuestionSlideType } from "../../types/slide";
 import { usePrintMode } from "../../lib/print-context";
+import { useMounted } from "../../lib/use-mounted";
 import { useCarousel } from "../../lib/use-carousel";
 import { usePhone } from "../../lib/use-progressive-reveal";
 import { arrowEvent } from "../../lib/presenter-sync";
@@ -21,8 +22,12 @@ interface Props {
 function parseCounts(raw: string | null, length: number): number[] | null {
   try {
     const saved: unknown = JSON.parse(raw ?? "null");
-    return Array.isArray(saved) && saved.length === length && saved.every(Number.isFinite)
-      ? saved
+    if (!Array.isArray(saved) || saved.length !== length) return null;
+    const counts: unknown[] = saved;
+    return counts.every(
+      (count): count is number => typeof count === "number" && Number.isFinite(count),
+    )
+      ? counts
       : null;
   } catch {
     return null;
@@ -35,18 +40,20 @@ function parseCounts(raw: string | null, length: number): number[] | null {
 function usePersistedCounts(storageKey: string, length: number, printMode: boolean) {
   const [counts, setCounts] = useState<number[]>(() => Array<number>(length).fill(0));
   // The key whose saved votes have loaded, so a new key never receives the previous one's votes.
-  const [loaded, setLoaded] = useState<string | null>(null);
+  const key = useMounted() && !printMode ? storageKey : null;
+  const [loaded, setLoaded] = useState<{ key: string | null; length: number }>({
+    key: null,
+    length,
+  });
+  if (key !== loaded.key || length !== loaded.length) {
+    setLoaded({ key, length });
+    if (key !== null)
+      setCounts(parseCounts(readStored("local", key), length) ?? Array<number>(length).fill(0));
+  }
 
   useEffect(() => {
-    if (printMode) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount load above
-    setCounts(parseCounts(readStored("local", storageKey), length) ?? Array(length).fill(0));
-    setLoaded(storageKey);
-  }, [storageKey, length, printMode]);
-
-  useEffect(() => {
-    if (loaded === storageKey) writeStored("local", storageKey, JSON.stringify(counts));
-  }, [counts, storageKey, loaded]);
+    if (loaded.key === storageKey) writeStored("local", storageKey, JSON.stringify(counts));
+  }, [counts, storageKey, loaded.key]);
 
   // A vote in another window of the deck, such as the speaker window, reaches this one through
   // the storage it wrote, so both show the same votes and neither overwrites the other's.

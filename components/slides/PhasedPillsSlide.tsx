@@ -49,8 +49,6 @@ export function PhasedPillsSlide({ slide }: Props) {
   // then wraps its pills in rows of their own width.
   const wrap = columns > 3;
 
-  let itemIndex = 0;
-
   return (
     <SlideShell night={isDeepDive(slide)}>
       <div className="slide-content relative z-10 flex flex-col items-center justify-center px-6">
@@ -82,6 +80,9 @@ export function PhasedPillsSlide({ slide }: Props) {
             }
           >
             {phases.map((phase, phaseIndex) => {
+              const firstItem = phases
+                .slice(0, phaseIndex)
+                .reduce((items, prior) => items + prior.items.length, 0);
               const theme = phase.theme ?? "secondary";
               const category = themeToCategory[theme] ?? "secondary";
               const phaseDelay = 0.1 + phaseIndex * 0.12;
@@ -114,8 +115,7 @@ export function PhasedPillsSlide({ slide }: Props) {
                   </BlurFade>
 
                   {phase.items.map((item, i) => {
-                    const delay = 0.15 + itemIndex * 0.04;
-                    itemIndex++;
+                    const delay = 0.15 + (firstItem + i) * 0.04;
                     return (
                       <BlurFade key={i} delay={delay} duration={0.3}>
                         <PillBox

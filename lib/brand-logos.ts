@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference -- an ambient wildcard module has no import form, and a consumer's typecheck reaches it only from here
-/// <reference path="../types/url-imports.d.ts" />
+import "../types/url-imports.d.ts";
 import { BRAND_MARK } from "./logo";
 import lockupNight from "@hackersandwizards/brand/logos/lockup-night.svg?url&no-inline";
 import lockup from "@hackersandwizards/brand/logos/lockup.svg?url&no-inline";

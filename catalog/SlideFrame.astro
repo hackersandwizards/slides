@@ -66,13 +66,17 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
       Enlarge slide
     </button>
     <script is:inline>
-      {
-        const embed = document.currentScript.parentElement;
+      (() => {
+        const embed = document.currentScript?.parentElement;
+        if (!embed) return;
         const stage = embed.querySelector(".story-stage");
-        const frame = stage.firstElementChild;
+        const frame = stage?.firstElementChild;
         const pane = embed.parentElement;
+        if (!(stage instanceof HTMLElement) || !(frame instanceof HTMLIFrameElement) || !pane)
+          return;
+        const popover = typeof stage.showPopover === "function";
         const fit = () => {
-          if (stage.showPopover && stage.matches(":popover-open")) {
+          if (popover && stage.matches(":popover-open")) {
             stage.style.width = "";
             const { clientWidth: w, clientHeight: h } = stage;
             const [slideW, slideH] = [frame.offsetWidth, frame.offsetHeight];
@@ -97,12 +101,16 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
         new ResizeObserver(fit).observe(pane);
         stage.addEventListener("toggle", fit);
         const enlarge = embed.querySelector(".story-enlarge");
-        if (stage.showPopover) enlarge.onclick = () => stage.showPopover();
-        else enlarge.remove();
-        embed.querySelector(".story-close").onclick = () => stage.hidePopover();
+        const close = embed.querySelector(".story-close");
+        if (enlarge instanceof HTMLButtonElement) {
+          if (popover) enlarge.onclick = () => stage.showPopover();
+          else enlarge.remove();
+        }
+        if (popover && close instanceof HTMLButtonElement)
+          close.onclick = () => stage.hidePopover();
         // A face that loads late changes the story bar's height but not the pane's.
-        document.fonts.ready.then(fit);
-      }
+        void document.fonts.ready.then(fit);
+      })();
     </script>
   </div>
 )}

@@ -112,7 +112,12 @@ function SpeakerWindow({ notes, basePath }: Props) {
             <h2 className="text-sm font-bold tracking-wide text-night-muted">Now</h2>
             <div className="[container-type:size] min-h-0 flex-1">
               {frames && (
-                <Frame name={ROLE_NAMES.follow} src={frames.follow} title="Current slide" />
+                <Frame
+                  name={ROLE_NAMES.follow}
+                  src={frames.follow}
+                  back={frames.back}
+                  title="Current slide"
+                />
               )}
             </div>
           </section>
@@ -122,7 +127,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
             <div className="[container-type:size] min-h-0 flex-1">
               <div className={last ? "hidden" : "contents"}>
                 {frames && (
-                  <Frame name={ROLE_NAMES.preview} src={frames.preview} title="Next slide" />
+                  <Frame name={ROLE_NAMES.preview} src={frames.preview} back title="Next slide" />
                 )}
               </div>
               {last && (
@@ -259,27 +264,42 @@ function useInertSlide() {
  *  role's key, written here before it loads: the live frame opens as revealed as this window, the
  *  preview fully revealed. */
 function useFrameSources(state: DeckState, basePath: string, total: number) {
-  const [frames, setFrames] = useState<{ follow: string; preview: string } | null>(null);
-  const known = state.slide >= 0;
-  useEffect(() => {
-    if (!known || frames) return;
-    const { slide, back } = deckSync.getState();
-    writeStored("session", directionKey(ROLE_NAMES.follow), back ? "back" : "forward");
-    writeStored("session", directionKey(ROLE_NAMES.preview), "back");
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- set once, after the keys above
+  const [frames, setFrames] = useState<{ follow: string; preview: string; back: boolean } | null>(
+    null,
+  );
+  const { slide, back } = state;
+  if (frames === null && slide >= 0) {
     setFrames({
       follow: `${basePath}/${slide}`,
       preview: `${basePath}/${Math.min(slide + 1, total - 1)}`,
+      back,
     });
-  }, [known, frames, basePath, total]);
+  }
   return frames;
 }
 
 /** A slide at the 1920x1080 the audience window is laid out for, scaled into its box. It takes no
  *  focus and no pointer, so every key stays with this window. */
-function Frame({ name, src, title }: { name: string; src: string; title: string }) {
+function Frame({
+  name,
+  src,
+  back,
+  title,
+}: {
+  name: string;
+  src: string;
+  back: boolean;
+  title: string;
+}) {
   const box = useRef<HTMLDivElement>(null);
+  const frame = useRef<HTMLIFrameElement>(null);
   const [scale, setScale] = useState(0);
+  useEffect(() => {
+    const element = frame.current;
+    if (!element || element.getAttribute("src") === src) return;
+    writeStored("session", directionKey(name), back ? "back" : "forward");
+    element.src = src;
+  }, [name, src, back]);
   useEffect(() => {
     const element = box.current;
     if (!element) return;
@@ -292,8 +312,8 @@ function Frame({ name, src, title }: { name: string; src: string; title: string 
   return (
     <div ref={box} className={`${FRAME_SIZE} relative overflow-hidden rounded-brand bg-black`}>
       <iframe
+        ref={frame}
         name={name}
-        src={src}
         title={title}
         tabIndex={-1}
         className="pointer-events-none absolute top-0 left-0 origin-top-left border-0"

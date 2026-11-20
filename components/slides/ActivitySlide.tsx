@@ -9,6 +9,7 @@ import RotateCcw from "lucide-react/icons/rotate-ccw";
 import type { ActivitySlide as ActivitySlideType } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { usePrintMode } from "../../lib/print-context";
+import { useMounted } from "../../lib/use-mounted";
 import { formatDuration, readStored, writeStored } from "../../lib/slide-utils";
 import { renderMarkdown } from "../../lib/markdown";
 import { BlurFade } from "../ui/blur-fade";
@@ -134,16 +135,34 @@ const fresh = (minutes: number): TimerState => ({
   at: 0,
 });
 
-function parseTimer(value: string | null): TimerState | null {
+function parseTimer(value: string | null, now: number): TimerState | null {
   try {
-    const state = JSON.parse(value ?? "null") as TimerState | null;
-    if (state && typeof state.minutes === "number" && Date.now() - state.at < STALE_MS)
-      return state;
+    const state: unknown = JSON.parse(value ?? "null");
+    if (
+      typeof state === "object" &&
+      state !== null &&
+      "minutes" in state &&
+      "endsAt" in state &&
+      "left" in state &&
+      "at" in state
+    ) {
+      const { minutes, endsAt, left, at } = state;
+      if (
+        typeof minutes === "number" &&
+        Number.isFinite(minutes) &&
+        (endsAt === null || (typeof endsAt === "number" && Number.isFinite(endsAt))) &&
+        typeof left === "number" &&
+        Number.isFinite(left) &&
+        typeof at === "number" &&
+        Number.isFinite(at) &&
+        now - at < STALE_MS
+      )
+        return { minutes, endsAt, left, at };
+    }
   } catch {}
   return null;
 }
 
-// Read only in event handlers and effects, never while rendering.
 const clock = () => Date.now();
 
 /** A running timer whose end has passed is one stopped at zero. */
@@ -176,15 +195,22 @@ function ActivityTimer({ headline, duration }: { headline: string; duration?: st
   const [timer, setTimer] = useState(() => fresh(timerMinutes(duration)));
   const [now, setNow] = useState(clock);
 
-  // The saved timer loads after mount, as the server renders none.
+  // The saved timer loads after hydration, as the server has no localStorage.
+  const storageKey = useMounted() && !printMode ? key : null;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  if (storageKey !== loadedKey) {
+    setLoadedKey(storageKey);
+    if (storageKey !== null) {
+      const saved = parseTimer(readStored("local", storageKey), clock());
+      if (saved) setTimer(saved);
+    }
+  }
+
   useEffect(() => {
     if (printMode) return;
-    const saved = parseTimer(readStored("local", key));
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- the post-mount load above
-    if (saved) setTimer(saved);
     const adopt = (event: StorageEvent) => {
       if (event.key !== key) return;
-      const next = parseTimer(event.newValue);
+      const next = parseTimer(event.newValue, clock());
       if (next) setTimer(next);
     };
     window.addEventListener("storage", adopt);
