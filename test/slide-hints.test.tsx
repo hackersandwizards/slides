@@ -1,7 +1,7 @@
 import { act, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SlideHints } from "../components/slides/SlideHints";
-import { slideComponents } from "../lib/slide-components";
+import { slideComponents } from "../components/slide-components";
 import type { GridSlide, Slide } from "../types/slide";
 
 function pressRight() {

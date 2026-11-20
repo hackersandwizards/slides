@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { isDeepDive } from "../lib/slide-utils";
-import { slideComponents } from "../lib/slide-components";
+import { slideComponents } from "../components/slide-components";
 import type { Slide } from "../types/slide";
 
 const pills = (theme: "deepdive" | "secondary") =>

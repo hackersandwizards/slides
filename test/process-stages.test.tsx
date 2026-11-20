@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ProcessSlide } from "../components/slides/ProcessSlide";
-import { slideComponents } from "../lib/slide-components";
+import { slideComponents } from "../components/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import type { EvolutionSlide as EvolutionSlideType } from "../types/slide";
 

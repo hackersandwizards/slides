@@ -3,7 +3,7 @@ import { hasReducedMotionListener, prefersReducedMotion } from "motion/react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { expect, it } from "vitest";
-import { slideComponents } from "../lib/slide-components";
+import { slideComponents } from "../components/slide-components";
 import type { Slide } from "../types/slide";
 
 it("hydrates a chart under reduced motion without a mismatch, its plot whole", async () => {

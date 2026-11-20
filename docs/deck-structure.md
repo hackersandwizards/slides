@@ -27,7 +27,7 @@ window's frame counts along; paper and PowerPoint draw no timer.
 render, as a `process` slide with `loop: false`, a `roadmap` whose columns carry `phases`, a
 `comparison` with `variant: "guidance"`, a `transition` with `night: true`, a `phased-pills` slide
 and a `content` slide with an `image`, `video` or `gallery` block; new slides use those
-(`aliasTypes` in `lib/slide-components.ts`). A gallery names each picture by its `caption` and sets its `tags` only
+(`aliasTypes` in `components/slide-components.ts`). A gallery names each picture by its `caption` and sets its `tags` only
 for what the pictures share. `deprecated` beside it lists every prop and value a deck
 should no longer write, so a consumer's story coverage can skip them.
 A chapter divider is a `transition`; one with `night: true` opens a deep-dive part only. Every slide

@@ -22,7 +22,7 @@
     "./lib/deck-edit-server": "./lib/deck-edit-server.ts",
     "./lib/logo": "./lib/logo.ts",
     "./lib/markdown": "./lib/markdown.tsx",
-    "./lib/slide-components": "./lib/slide-components.ts",
+    "./lib/slide-components": "./components/slide-components.ts",
     "./lib/slide-utils": "./lib/slide-utils.ts",
     "./lib/stage-utils": "./lib/stage-utils.ts",
     "./lib/use-progressive-reveal": "./lib/use-progressive-reveal.ts",

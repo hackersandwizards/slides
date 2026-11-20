@@ -4,7 +4,7 @@ import { useCarousel } from "../lib/use-carousel";
 import { PrintProvider } from "../lib/print-context";
 import { phoneWidth } from "./phone-width";
 import { render } from "@testing-library/react";
-import { slideComponents } from "../lib/slide-components";
+import { slideComponents } from "../components/slide-components";
 import type { Slide } from "../types/slide";
 
 function pressKey(key: string): boolean {

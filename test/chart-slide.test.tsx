@@ -3,7 +3,7 @@ import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { AxisTick, tickLayout, trendTicks } from "../components/slides/ChartPlots";
-import { slideComponents } from "../lib/slide-components";
+import { slideComponents } from "../components/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import type { Slide } from "../types/slide";
 

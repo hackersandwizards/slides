@@ -33,6 +33,96 @@
         "react/set-state-in-render": "error",
         "react/unsupported-syntax": "warn"
       }
+    },
+    {
+      "files": ["components/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^(?:(?:\\.\\./)+|@hackersandwizards/slides/)(scripts|catalog|specimen|test)(/|$)",
+                "message": "Components cannot depend on scripts, the catalog, specimen decks or tests."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["lib/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^(?:(?:\\.\\./)+components(/|$)|@hackersandwizards/slides/(components(/|$)|lib/slide-components$))",
+                "message": "Library code cannot depend on components."
+              },
+              {
+                "regex": "^(?:(?:\\.\\./)+|@hackersandwizards/slides/)(scripts|catalog|specimen|test)(/|$)",
+                "message": "Library code cannot depend on scripts, the catalog, specimen decks or tests."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["types/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^(?:(?:\\.\\./)+|@hackersandwizards/slides/)(lib|components)(/|$)",
+                "allowTypeImports": true,
+                "message": "Slide types cannot depend on library or component values."
+              },
+              {
+                "regex": "^(?:(?:\\.\\./)+|@hackersandwizards/slides/)(scripts|catalog|specimen|test)(/|$)",
+                "message": "Slide types cannot depend on scripts, the catalog, specimen decks or tests."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["scripts/**"],
+      "excludeFiles": ["scripts/usage.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^(?:(?:\\.\\./)+|@hackersandwizards/slides/)catalog(/|$)",
+                "message": "Scripts cannot depend on the catalog."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["scripts/usage.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^(?:(?:\\.\\./){2,}|@hackersandwizards/slides/)catalog(/|$)|^\\.\\./catalog($|/(.{0,7}|.{9,}|[^g].{7}|.[^u].{6}|..[^i].{5}|...[^d].{4}|....[^a]...|.....[^n]..|......[^c].|.......[^e])$)",
+                "message": "The usage command may only import the catalog guidance."
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

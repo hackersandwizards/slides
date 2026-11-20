@@ -1,7 +1,7 @@
 import { act, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { phoneWidth } from "./phone-width";
-import { slideComponents } from "../lib/slide-components";
+import { slideComponents } from "../components/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import type { ComparisonSlide, Slide } from "../types/slide";
 

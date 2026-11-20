@@ -108,6 +108,18 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `deck-structure.md`; `agent-work/` holds dated reports.
 - `test/`: the engine's unit tests.
 
+`components/slide-components.ts` maps slide types to components. Consumers import it through
+`@hackersandwizards/slides/lib/slide-components`.
+
+### Import layers
+
+Dependencies point from `catalog` to `scripts` to `components` to `lib` to `types`.
+`components`, `lib` and `types` cannot import from `scripts`, `catalog`, `specimen` or `test`.
+`lib` cannot import components. `types` may import types from `lib` and `components`.
+Scripts cannot import from the catalog. The one exception is `scripts/usage.ts`, which imports
+`../catalog/guidance` for `slides-usage`. The scoped regex in `.oxlintrc.json` matches every other
+catalog specifier in that file by checking the suffix length and characters.
+
 `exports` in `package.json` is the whole public surface: every component, the `lib/` modules a
 consumer imports (the other modules stay internal), `types/slide`, the three stylesheets (`slides.css`, `sources.css`, and `tokens.css`, for a consumer's design-system page, which none imports yet), `scripts/render-pdf`, the specimen deck and its
 images, the catalog's `SlideFrame.astro`, and the `slides-density`, `slides-pins`, `slides-usage` and `slides-pptx` commands in `bin`. Moving or renaming one of them, or adding one, is

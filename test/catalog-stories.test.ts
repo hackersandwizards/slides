@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { aliasTypes } from "../lib/slide-components";
+import { aliasTypes } from "../components/slide-components";
 import { slideCatalog } from "../specimen/slide-catalog";
 import { PARTS } from "../catalog/parts";
 
@@ -9,7 +9,7 @@ const STORIES = join(import.meta.dirname, "..", "catalog", "stories");
 const files = (group: string) =>
   readdirSync(join(STORIES, group)).map((f) => f.replace(/\.stories\.ts$/, ""));
 const registry = readFileSync(
-  join(import.meta.dirname, "..", "lib", "slide-components.ts"),
+  join(import.meta.dirname, "..", "components", "slide-components.ts"),
   "utf8",
 );
 const types = [...registry.matchAll(/^\s*"?([\w-]+)"?: (\w+) as SlideComponent/gm)]

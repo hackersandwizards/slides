@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import type { Presentation } from "../../types/slide";
-import { slideComponents } from "../../lib/slide-components";
+import { slideComponents } from "../slide-components";
 import { slideFrame, slideTitle } from "../../lib/slide-utils";
 import { usePathname } from "../../lib/navigate";
 import { SlideContainer } from "../slides/SlideContainer";
