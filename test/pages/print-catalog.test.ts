@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { expect, it } from "vitest";
-import { slideComponents } from "../../components/slide-components";
+import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { slideCatalog } from "../../specimen/slide-catalog";
 
 // Reads the print page `bun run build` writes into dist/ before `check:pages` runs.

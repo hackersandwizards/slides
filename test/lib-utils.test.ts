@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ContentSlide, Presentation } from "../types/slide";
 import { cornerMark, resolveSlideLogo } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
-import { deprecated } from "../components/slide-components";
+import { deprecated } from "@hackersandwizards/slides/lib/slide-components";
 import {
   arrivedBackwards,
   bulletsAsStatement,

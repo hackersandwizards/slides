@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { slideComponents } from "../components/slide-components";
+import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { ignoredFields } from "../scripts/usage";
 import { slideCatalog } from "../specimen/slide-catalog";
 import { SECTION_STYLES } from "../lib/section-styles";

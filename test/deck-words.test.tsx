@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { DeckTile } from "../components/deck/DeckTile";
 import { DeckLang } from "../components/slides/SlideShell";
 import { PrintProvider } from "../lib/print-context";
-import { slideComponents } from "../components/slide-components";
+import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import type { Slide } from "../types/slide";
 
 // The words the engine prints itself were English on German decks (F16).

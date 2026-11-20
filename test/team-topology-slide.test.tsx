@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { slideComponents } from "../components/slide-components";
+import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import type { Slide } from "../types/slide";
 import { wholeText } from "./fixtures/whole-text";
 import { teamTopologySlide } from "./fixtures/team-topology";

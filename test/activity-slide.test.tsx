@@ -1,6 +1,6 @@
 import { act, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { slideComponents } from "../components/slide-components";
+import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import type { ActivitySlide } from "../types/slide";
 import { timerMinutes } from "../components/slides/ActivitySlide";

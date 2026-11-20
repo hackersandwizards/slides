@@ -2,7 +2,7 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { slideCatalog, slideCatalogBrandDark, specimenImages } from "../specimen/slide-catalog";
-import { aliasTypes, slideComponents } from "../components/slide-components";
+import { aliasTypes, slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { replacedBy } from "../lib/slide-utils";
 import { DEFAULT_SECTION_STYLE, getSectionStyle } from "../lib/section-styles";
 import { ignoredFields } from "../scripts/usage";

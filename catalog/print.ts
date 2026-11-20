@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Scanner } from "@tailwindcss/oxide";
-import { aliasTypes, slideComponents } from "../components/slide-components";
+import { aliasTypes, slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { brandLogos } from "../lib/brand-logos";
 import { PrintProvider } from "../lib/print-context";
 import { PrintSlide } from "../components/slides/PrintSlide";
@@ -19,7 +19,7 @@ import { CODE_SAMPLE, PARTS, codePanel, inRow } from "./parts";
 import { GUIDANCE } from "./guidance";
 import exceptions from "../brand-elements.json";
 import { version as brandVersion } from "@hackersandwizards/brand/package.json";
-import registry from "../components/slide-components.ts?raw";
+import registry from "@hackersandwizards/slides/lib/slide-components?raw";
 
 // The checkout, which the config hands over: under Astro's bundle import.meta points into dist/.
 const root = __SLIDES_ROOT__;

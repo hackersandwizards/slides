@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 import type { Presentation } from "../../types/slide";
-import { slideComponents } from "../slide-components";
+import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { cornerMark, logoPlaces, resolveSlideLogo } from "../../lib/logo";
 import { PrintProvider } from "../../lib/print-context";
 import { bulletsAsStatement, deckLang, pageLabel, regularAsContent } from "../../lib/slide-utils";

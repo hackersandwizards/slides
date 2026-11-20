@@ -1,6 +1,6 @@
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { slideComponents } from "../components/slide-components";
+import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import { renderMarkdown } from "../lib/markdown";
 import type { Slide } from "../types/slide";
