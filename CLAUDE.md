@@ -151,12 +151,10 @@ preview`), then `check:elements`
   from that base.
 - `bun run fix`: `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
-- `bun run mutation` runs Stryker with a 15-minute cap to check reveal state, print context and the carousel,
-  progressive-reveal and keyboard hooks with the three suites in `vitest.mutation.config.ts`.
-  The timed run leaves the component and CLI suites out of scope and skips presenter sync
-  (`test/presenter-sync.test.ts`, 8.97 s of timer-driven tests), `test/pages/` (up to 138 s per
-  file, including browser-based PDF tests) and `test/render-pptx.test.ts` (1.65 s).
-  It runs outside the gate and writes `.stryker-reports/mutation.json`.
+- `bun run mutation` runs Stryker with a 15-minute cap. `stryker.config.mjs` selects the code,
+  including the pure functions tested by the property suite. `vitest.mutation.config.ts` selects
+  the tests, leaving out the timer-driven sync scenarios, the browser suite and the PPTX integration
+  suite. Mutation runs outside the gate and writes `.stryker-reports/mutation.json`.
 - `bun run dev` (or `bun run catalog`, which opens it): the catalog at
   `http://127.0.0.1:4335/`, the print page at `/catalog/print/`: dev serves without the `/slides` base.
   `SLIDES_USAGE=<path>[,<path>] bun run dev`, each path a `slides-usage` output read from this

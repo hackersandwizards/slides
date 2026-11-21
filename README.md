@@ -65,6 +65,7 @@ from `renderPdf` in `scripts/render-pdf`, which a consumer's export script calls
 - `SLIDES_USAGE=<path>[,<path>] bun run dev`: the same, with the print page at `/catalog/print/`
   showing per entry how many slides use it. Each path is a file `slides-usage --out` wrote.
 - `bun run check`: the full gate, including the catalog build and browser suite.
+- `bun run explore`: run 512 cases per property with a fresh seed. Pass `--seed <seed>` to replay.
 - `bun run mutation`: the Stryker suite with a 15-minute cap.
 - `bun run build`: the catalog to `dist/`, as GitHub Pages publishes it.
 

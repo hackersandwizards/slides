@@ -117,10 +117,19 @@ describe("useSlideKeyboard", () => {
   it("keeps handled keys away from the deck while leaving a browser shortcut and other keys alone", () => {
     const stepped: string[] = [];
     const navigationKeys: string[] = [];
+    const errors: string[] = [];
     const controller = new AbortController();
     document.addEventListener("keydown", (event) => navigationKeys.push(event.key), {
       signal: controller.signal,
     });
+    window.addEventListener(
+      "error",
+      (event) => {
+        errors.push(event.message);
+        event.preventDefault();
+      },
+      { signal: controller.signal },
+    );
     renderHook(() =>
       useSlideKeyboard({
         onRight: () => void stepped.push("right"),
@@ -140,6 +149,7 @@ describe("useSlideKeyboard", () => {
     try {
       expect(fromSlide("ArrowRight", true)).toBe(false);
       expect(fromSlide("Escape")).toBe(false);
+      expect(errors).toEqual([]);
       expect(fromSlide("ArrowRight")).toBe(true);
       expect(fromSlide("ArrowLeft")).toBe(true);
       expect(fromSlide(" ")).toBe(true);

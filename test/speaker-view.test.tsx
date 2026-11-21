@@ -270,10 +270,7 @@ describe("directionKey", () => {
 });
 
 describe("formatDuration", () => {
-  it("reads as minutes and seconds, with hours once there are any", () => {
-    expect(formatDuration(7_000)).toBe("0:07");
-    expect(formatDuration(754_000)).toBe("12:34");
+  it("spells one hour, two minutes and three seconds as 1:02:03", () => {
     expect(formatDuration(3_723_000)).toBe("1:02:03");
-    expect(formatDuration(-5)).toBe("0:00");
   });
 });

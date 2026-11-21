@@ -39,7 +39,7 @@ function readLiteral(source: string, start: number) {
     if (source[i] === "\\") {
       const next = source[i + 1];
       const unicode = /^u\{([0-9a-fA-F]+)\}|^u([0-9a-fA-F]{4})|^x([0-9a-fA-F]{2})/.exec(
-        source.slice(i + 1, i + 12),
+        source.slice(i + 1),
       );
       if (unicode) {
         value += String.fromCodePoint(parseInt(unicode[1] ?? unicode[2] ?? unicode[3], 16));

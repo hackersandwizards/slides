@@ -32,9 +32,9 @@ export const SECTION_STYLES: Record<SectionTheme, SectionStyle> = {
   },
 };
 
-export function getSectionStyle(theme?: SectionTheme): SectionStyle {
-  if (!theme || !(theme in SECTION_STYLES)) return DEFAULT_SECTION_STYLE;
-  return SECTION_STYLES[theme];
+export function getSectionStyle(theme?: string): SectionStyle {
+  if (!theme || !Object.hasOwn(SECTION_STYLES, theme)) return DEFAULT_SECTION_STYLE;
+  return SECTION_STYLES[theme as SectionTheme];
 }
 
 export type ColumnAccent = "ingredients" | "deepdive";

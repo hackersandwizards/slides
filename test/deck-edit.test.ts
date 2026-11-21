@@ -45,11 +45,6 @@ describe("resolve", () => {
     expect(resolve(DECK, ["Line oneLine two"])).toEqual({ value: "Line one\nLine two", index: 0 });
   });
 
-  it("refuses a text that is in the file twice or not at all", () => {
-    expect(resolve(DECK, ["Agenda"])).toHaveProperty("error");
-    expect(resolve(DECK, ["Nowhere"])).toHaveProperty("error");
-  });
-
   // F17: a wrapper of a title and its subtitle showed the deck's name, which the click then
   // rewrote; an engine label equal to a `type` rewrote the slide's type.
   it("passes over a wrapper of two strings and never lands on a discriminator", () => {
@@ -85,17 +80,6 @@ describe("replace", () => {
     const template = replace(DECK, "Grüße", "a `b` ${c}");
     expect(template).toEqual({ source: DECK.replace("`Grüße`", "`a \\`b\\` \\${c}`") });
   });
-
-  it("round-trips: the written literal decodes to the new value", () => {
-    const to = `It's "Grüße" \\ done\nnext`;
-    const written = replace(DECK, 'Say "yes"', to);
-    expect("source" in written && literals(written.source).map((l) => l.value)).toContain(to);
-  });
-
-  it("refuses a duplicate or missing original", () => {
-    expect(replace(DECK, "Agenda", "x")).toHaveProperty("error");
-    expect(replace(DECK, "Nowhere", "x")).toHaveProperty("error");
-  });
 });
 
 describe("review findings", () => {
@@ -121,6 +105,10 @@ describe("review findings", () => {
 });
 
 describe("substitutions and escapes", () => {
+  it("reads the NUL escape with eight leading zeros that exceeded the parser's lookahead", () => {
+    expect(literals('"\\u{000000000}"').map(({ value }) => value)).toEqual(["\0"]);
+  });
+
   it("skips a substitution whose quoted strings hold an unmatched brace", () => {
     const source = 'const a = `${x ? "{" : ""} items`;\nconst b = "after";';
     expect(literals(source).map((l) => l.value)).toEqual(["after"]);

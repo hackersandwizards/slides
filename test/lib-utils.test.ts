@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ContentSlide, Presentation } from "../types/slide";
-import { cornerMark, resolveSlideLogo } from "../lib/logo";
+import { cornerMark } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
 import { deprecated } from "@hackersandwizards/slides/lib/slide-components";
 import {
@@ -20,35 +20,9 @@ import {
   twoColumnAsSplit,
 } from "../lib/slide-utils";
 
-const LOGO = { src: "/a.svg", alt: "A" };
-
-describe("resolveSlideLogo", () => {
-  it("returns the deck logo when there is no per-slide override", () => {
-    expect(resolveSlideLogo({ logo: LOGO }, 0)).toBe(LOGO);
-  });
-
-  it("returns the per-slide override when present", () => {
-    const override = { src: "/b.svg", alt: "B" };
-    expect(resolveSlideLogo({ logo: LOGO, slideLogos: { 2: override } }, 2)).toBe(override);
-  });
-
-  // An explicit null shows the default h&w logo, where an absent index takes the deck's.
-  it("returns null for an explicit null entry", () => {
-    expect(resolveSlideLogo({ logo: LOGO, slideLogos: { 3: null } }, 3)).toBeNull();
-  });
-
-  it("falls back to the deck logo for an index not in slideLogos", () => {
-    expect(resolveSlideLogo({ logo: LOGO, slideLogos: { 3: null } }, 5)).toBe(LOGO);
-  });
-
-  it("returns undefined when neither logo nor override is set", () => {
-    expect(resolveSlideLogo({}, 0)).toBeUndefined();
-  });
-});
-
 describe("getSectionStyle", () => {
-  it("returns the default style for an undefined theme", () => {
-    expect(getSectionStyle(undefined)).toBe(DEFAULT_SECTION_STYLE);
+  it("uses the default style when a deck read from JSON names constructor", () => {
+    expect(getSectionStyle("constructor")).toBe(DEFAULT_SECTION_STYLE);
   });
 
   it("maps a known theme to its own style", () => {

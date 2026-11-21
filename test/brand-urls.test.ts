@@ -56,10 +56,6 @@ describe("placeBrandUrls", () => {
 });
 
 describe("selfContained", () => {
-  it("takes a stylesheet whose only URLs are inline", () => {
-    expect(selfContained(`a{b:url("data:image/svg+xml,%3Csvg/%3E")}`)).toBe(true);
-  });
-
   it.each([
     '@import "./select.css";',
     '@IMPORT url("a.css");',
@@ -74,9 +70,5 @@ describe("brandNames", () => {
   it("reads each export name a page links, whatever quotes it", () => {
     const page = `<link href="../../brand/header.css"><iframe srcdoc="&lt;img src=&quot;../../brand/logos/a.svg&quot;&gt;"></iframe><style>a{b:url('../../../brand/fonts/c.woff2')}</style>`;
     expect(brandNames(page)).toEqual(["header.css", "logos/a.svg", "fonts/c.woff2"]);
-  });
-
-  it("skips the path the page's prose names", () => {
-    expect(brandNames("<code>dist/brand/</code>")).toEqual([]);
   });
 });

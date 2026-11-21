@@ -57,17 +57,7 @@ describe("slides-usage", () => {
     expect(Object.keys(GUIDANCE).filter((id) => !reached.has(id) && !/-\d+$/.test(id))).toEqual([]);
   });
 
-  it("counts a type, a variant and each kind of block once per slide", () => {
-    const content = {
-      type: "content",
-      headline: "h",
-      content: [
-        { type: "cards", items: [] },
-        { type: "cards", items: [] },
-        { type: "bars", bars: [] },
-      ],
-    } as unknown as Slide;
-    expect(entriesOf(content)).toEqual(["content", "block-cards", "block-bars"]);
+  it("counts the quotation and trend variants under their own entry names", () => {
     expect(
       entriesOf({ type: "statement", lines: ["a"], attribution: "b" } as unknown as Slide),
     ).toEqual(["statement-quotation"]);

@@ -1,54 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  createDeckSync,
-  planSync,
-  roleOf,
-  ROLE_NAMES,
-  targetFor,
-  type DeckState,
-  type Role,
-} from "../lib/presenter-sync";
-
-const at = (slide: number, step = 0, back = false, time = 1): DeckState => ({
-  slide,
-  back,
-  step,
-  at: time,
-  from: "",
-});
-
-describe("roleOf", () => {
-  it("reads the role off the window name, anything else is the audience", () => {
-    expect(roleOf(ROLE_NAMES.presenter)).toBe("presenter");
-    expect(roleOf(ROLE_NAMES.follow)).toBe("follow");
-    expect(roleOf(ROLE_NAMES.preview)).toBe("preview");
-    expect(roleOf("")).toBe("audience");
-    expect(roleOf("some-other-tab")).toBe("audience");
-  });
-});
-
-describe("planSync", () => {
-  it("navigates to another slide in the direction the target arrived", () => {
-    expect(planSync(at(2), at(5))).toEqual({ navigate: 5, direction: "forward" });
-    expect(planSync(at(5), at(4, 0, true))).toEqual({ navigate: 4, direction: "back" });
-  });
-  it("presses one arrow at a time on the same slide", () => {
-    expect(planSync(at(3, 1), at(3, 3))).toEqual({ key: "ArrowRight" });
-    expect(planSync(at(3, 2), at(3, 1))).toEqual({ key: "ArrowLeft" });
-    expect(planSync(at(3, 2), at(3, 2))).toBeNull();
-  });
-});
-
-describe("targetFor", () => {
-  it("leaves the state alone for every role but the preview", () => {
-    for (const role of ["audience", "presenter", "follow"] as Role[])
-      expect(targetFor(role, at(3, 2), 10)).toEqual(at(3, 2));
-  });
-  it("points the preview at the next slide, fully revealed, and nowhere past the end", () => {
-    expect(targetFor("preview", at(3, 2), 10)).toEqual(at(4, 0, true));
-    expect(targetFor("preview", at(9, 0), 10)).toBeNull();
-  });
-});
+import { createDeckSync, type Role } from "../lib/presenter-sync";
 
 type Member = { onmessage: ((event: MessageEvent) => void) | null };
 

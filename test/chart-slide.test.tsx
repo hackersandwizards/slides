@@ -106,18 +106,6 @@ describe("bar tick layout", () => {
       angled: false,
     });
   });
-
-  it("steps down when a word does not fit the first step", () => {
-    expect(tickLayout(["Onboarding"], 90, widthAt).step).toBe(1);
-  });
-
-  it("angles every label when a word fits no step", () => {
-    expect(tickLayout(["Onboarding", "QA"], 60, widthAt)).toEqual({
-      step: 2,
-      lines: [["Onboarding"], ["QA"]],
-      angled: true,
-    });
-  });
 });
 
 // WebKit drops a text's dominant-baseline on the tspans inside it: the labels sat on the axis line
@@ -144,7 +132,7 @@ describe("axis tick", () => {
 
 // The marked point's guide runs down to the first tick, the axis floor.
 describe("trendTicks", () => {
-  it("spans both series and zero", () => {
+  it("keeps the concrete axis intervals used in the web and PowerPoint plots", () => {
     expect(
       trendTicks([
         { name: "a", value: 2 },

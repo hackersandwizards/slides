@@ -20,25 +20,17 @@ describe("bulletsAsStatement", () => {
       subtitle: "Time, no brief.",
       closing: "That became our lead.",
     });
-    expect(bulletsAsStatement(few(["Time, no brief."]))?.closing).toBeUndefined();
     expect(replacedBy(few(["One.", "Two."]))?.to).toBe("statement");
   });
 
-  it("leaves a slide with three bullets, a long bullet, nested items or another block", () => {
-    expect(bulletsAsStatement(few(["One.", "Two.", "Three."]))).toBeUndefined();
-    expect(bulletsAsStatement(few(["One.", "x".repeat(91)]))).toBeUndefined();
-    expect(bulletsAsStatement(few(["One.", { text: "Two.", children: ["a"] }]))).toBeUndefined();
+  it("keeps the content slide when it carries other content or styling", () => {
     const more = few(["One.", "Two."]);
     more.content.push({ type: "paragraph", text: "More." });
     expect(bulletsAsStatement(more)).toBeUndefined();
     expect(bulletsAsStatement({ ...few(["One.", "Two."]), subtitle: "Sub" })).toBeUndefined();
-    expect(bulletsAsStatement(few([]))).toBeUndefined();
     expect(bulletsAsStatement({ ...few(["One."]), headline: "Ship **daily**" })).toBeUndefined();
     expect(bulletsAsStatement({ ...few(["One."]), sectionTheme: "deepdive" })).toBeUndefined();
     expect(bulletsAsStatement({ ...few(["One."]), badge: "New" })).toBeUndefined();
-    const ordered = few(["One.", "Two."]);
-    ordered.content = [{ type: "bullets", ordered: true, items: ["One.", "Two."] }];
-    expect(bulletsAsStatement(ordered)).toBeUndefined();
   });
 });
 
