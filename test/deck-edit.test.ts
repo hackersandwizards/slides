@@ -109,6 +109,20 @@ describe("substitutions and escapes", () => {
     expect(literals('"\\u{000000000}"').map(({ value }) => value)).toEqual(["\0"]);
   });
 
+  it("decodes a two-digit hex escape and leaves escape-like text after a newline escape alone", () => {
+    const source = '["\\nu{41}", "\\nx41", "\\x41"]';
+    expect(literals(source).map(({ value }) => value)).toEqual(["\nu{41}", "\nx41", "A"]);
+  });
+
+  it("can edit text after a tagged template with an out-of-range Unicode escape", () => {
+    const source = 'const raw = String.raw`\\u{000000110000}`; const title = "Before";';
+
+    expect(literals(source).map(({ value }) => value)).toEqual(["Before"]);
+    expect(replace(source, "Before", "After")).toEqual({
+      source: source.replace('"Before"', '"After"'),
+    });
+  });
+
   it("skips a substitution whose quoted strings hold an unmatched brace", () => {
     const source = 'const a = `${x ? "{" : ""} items`;\nconst b = "after";';
     expect(literals(source).map((l) => l.value)).toEqual(["after"]);

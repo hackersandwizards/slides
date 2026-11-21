@@ -28,8 +28,7 @@ function afterComment(source: string, i: number): number {
   return i;
 }
 
-/** The string or template literal whose quote is at `start`: where it ends, its value, and whether
- *  it is plain, which a template holding `${}` is not. */
+/** The span and cooked value of the literal at `start`, when a cooked value is available. */
 function readLiteral(source: string, start: number) {
   const quote = source[start] as Literal["quote"];
   let i = start + 1;
@@ -42,7 +41,10 @@ function readLiteral(source: string, start: number) {
         source.slice(i + 1),
       );
       if (unicode) {
-        value += String.fromCodePoint(parseInt(unicode[1] ?? unicode[2] ?? unicode[3], 16));
+        const code = parseInt(unicode[1] ?? unicode[2] ?? unicode[3], 16);
+        // A tagged template may contain an out-of-range escape without a cooked value.
+        if (code > 0x10ffff) plain = false;
+        else value += String.fromCodePoint(code);
         i += 1 + unicode[0].length;
       } else if (next === "\r" || next === "\n") {
         i += source.startsWith("\r\n", i + 1) ? 3 : 2;
@@ -90,9 +92,8 @@ const discriminator = (source: string, l: Literal) =>
 const editable = (source: string) =>
   literals(source).filter((l) => !specifier(source, l) && !discriminator(source, l));
 
-/** Every plain string literal in a TypeScript source, comments skipped. A template literal holding
- *  `${}` is no plain string and is left out. Regex literals are not recognised: a deck file holds
- *  data, not regexes. */
+/** Every plain string literal in a TypeScript source, comments skipped. Templates with substitutions
+ *  or out-of-range Unicode escapes are left out. Regex literals are not recognised. */
 export function literals(source: string): Literal[] {
   const found: Literal[] = [];
   let i = 0;
