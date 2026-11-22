@@ -4,7 +4,7 @@ import { slideComponents } from "@hackersandwizards/slides/lib/slide-components"
 import { cornerMark, logoPlaces, resolveSlideLogo } from "../../lib/logo";
 import { PrintProvider } from "../../lib/print-context";
 import { bulletsAsStatement, deckLang, pageLabel, regularAsContent } from "../../lib/slide-utils";
-import { BrandStrip, DeckLogo, PageCounter, SlideFooter } from "./SlideContainer";
+import { BrandStrip, CornerStart, DeckLogo, PageCounter } from "./SlideContainer";
 import { DeckLang, DeckNight } from "./SlideShell";
 
 /** One slide as a printed page: the slide, the brand strip and the corner with the page counter
@@ -33,7 +33,7 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
         </DeckLang.Provider>
       </DeckNight.Provider>
       <BrandStrip />
-      <SlideFooter logos={start} position="absolute" confidential={presentation.confidential}>
+      <CornerStart logos={start} position="absolute" confidential={presentation.confidential}>
         <div className="print-watermark flex items-center gap-2">
           {page && (
             <span className="mr-3">
@@ -43,7 +43,7 @@ export function PrintSlide({ presentation, index }: { presentation: Presentation
           {/* The print root's 21.333px rem sizes the h&w mark as the screen corner at 1920x1080. */}
           <DeckLogo logo={corner} asMark mark={cornerMark(presentation, index)} />
         </div>
-      </SlideFooter>
+      </CornerStart>
     </div>
   );
 }

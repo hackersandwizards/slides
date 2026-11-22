@@ -57,15 +57,7 @@ export function DeckLogo({
   );
 }
 
-/** A deck's logos before its last, at the slide's bottom left: `fixed` on the screen's viewport,
- *  `absolute` on a printed page. */
-export function CornerStart({
-  logos,
-  position,
-}: {
-  logos: LogoConfig[];
-  position: "fixed" | "absolute";
-}) {
+function StartLogos({ logos, position }: { logos: LogoConfig[]; position: "fixed" | "absolute" }) {
   if (logos.length === 0) return null;
   return (
     <div
@@ -79,13 +71,21 @@ export function CornerStart({
   );
 }
 
-export function SlideFooter({
+/** What stands at the slide's bottom left: a deck's logos before its last, and after them the
+ *  deck's `confidential` line. `fixed` on the screen's viewport, `absolute` on a printed page.
+ *  With the line set, it is the footer row and holds the corner, its `children`, at its end. */
+export function CornerStart({
   logos,
   position,
   confidential,
   children,
-}: Parameters<typeof CornerStart>[0] & { confidential?: string; children: ReactNode }) {
-  const start = <CornerStart logos={logos} position={position} />;
+}: {
+  logos: LogoConfig[];
+  position: "fixed" | "absolute";
+  confidential?: string;
+  children?: ReactNode;
+}) {
+  const start = <StartLogos logos={logos} position={position} />;
   if (!confidential?.trim())
     return (
       <>
@@ -194,7 +194,7 @@ export function SlideContainer({ children, logo, theme, page, mark, lang, confid
     >
       <BrandStrip />
       <MotionConfig reducedMotion="user">{slides}</MotionConfig>
-      <SlideFooter logos={start} position="fixed" confidential={confidential}>
+      <CornerStart logos={start} position="fixed" confidential={confidential}>
         <div
           className="slide-corner fixed right-(--slide-footer-side) bottom-(--slide-footer-inset) z-40 flex items-center gap-5"
           aria-hidden="true"
@@ -202,7 +202,7 @@ export function SlideContainer({ children, logo, theme, page, mark, lang, confid
           {page && <PageCounter label={page} />}
           <DeckLogo logo={corner} asMark mark={mark} />
         </div>
-      </SlideFooter>
+      </CornerStart>
     </div>
   );
 }
