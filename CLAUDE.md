@@ -20,7 +20,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `primitives.tsx` and `SlideChrome.tsx` (`SlideCard`, `DisplayHeading`, `NumberTile`,
   `DashedFrame`, `VideoPlayer` and the rest). A part used by a second slide type moves there; a real
   difference is a variant of the part, never a class string of the type's own. `PrintSlide.tsx` is
-  the printed page, strip and corner included, and `PrintDeck` the whole deck a consumer's print
+  the printed page, strip, corner and optional confidentiality line included, and `PrintDeck` the whole deck a consumer's print
   route renders, which the print page renders too. A CSS rule one component owns lives in a `.css`
   beside it, which `slides.css` imports where the rule stands in the cascade, never the component
   itself: trainer-hub's hub pages render components without `slides.css`.
@@ -85,8 +85,8 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   tokens, `homeCss` adds its faces and elements, `dashboardCss` its faces and focus ring; each state hands
   `slides.css` to `SlideFrame` as a `?url`, linked on the slide's page alone. It carries two kinds of page:
   - The stories: `stories/Types/` a story file per slide type, each specimen slide of the type a
-    state (`state.ts`), drawn by `StorySlide.tsx` as its deck shows it, strip, corner mark and
-    page counter included, and entering as a slide reached from the one before; `stories/Parts/`
+    state (`state.ts`), drawn by `StorySlide.tsx` as its deck shows it, strip, corner mark,
+    page counter and optional confidentiality line included, and entering as a slide reached from the one before; `stories/Parts/`
     one per part, drawing its sheet of variants from `parts.ts`; `stories/Deck/` one per
     component of `components/deck/`. `test/catalog-stories.test.ts` fails on a type, part or
     deck component without its story, and on a specimen slide of a type other than an alias without its state. `Home.astro` renders the shell's home with the foundations.

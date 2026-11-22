@@ -946,6 +946,7 @@ export interface Presentation {
   date?: string;
   speakers?: string[];
   theme?: "brand-dark";
+  confidential?: string;
   logo?: LogoConfig;
   // Per-slide logo override. An explicit `null` forces the default h&w logo on
   // that slide (overriding `logo`); an absent index falls back to `logo`.

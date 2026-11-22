@@ -18,6 +18,7 @@ interface Props {
   children: ReactNode;
   logo?: SlideLogo;
   theme?: "brand-dark";
+  confidential?: string;
   /** The page counter, "05 / 24"; none on a title slide. */
   page?: string;
   /** The h&w corner mark, `cornerMark()`: the lockup by default. */
@@ -74,6 +75,33 @@ export function CornerStart({
       {logos.map((l, i) => (
         <DeckLogo key={i} logo={l} />
       ))}
+    </div>
+  );
+}
+
+export function SlideFooter({
+  logos,
+  position,
+  confidential,
+  children,
+}: Parameters<typeof CornerStart>[0] & { confidential?: string; children: ReactNode }) {
+  const start = <CornerStart logos={logos} position={position} />;
+  if (!confidential?.trim())
+    return (
+      <>
+        {start}
+        {children}
+      </>
+    );
+  return (
+    <div
+      className={`slide-footer ${position} pointer-events-none inset-x-(--slide-footer-side) bottom-(--slide-footer-inset) z-40 flex h-(--slide-footer-mark) items-center gap-5`}
+    >
+      {start}
+      <span className="slide-confidential min-w-0 flex-1 truncate text-sm leading-none text-text-subtle">
+        {confidential}
+      </span>
+      {children}
     </div>
   );
 }
@@ -146,7 +174,7 @@ export function BrandStrip() {
 // drawn in the fallback beside Inter text re-breaks a `pretty` paragraph when Inter 700 lands.
 const FACES = [inter400, inter500, inter700, mono500, mono700];
 
-export function SlideContainer({ children, logo, theme, page, mark, lang }: Props) {
+export function SlideContainer({ children, logo, theme, page, mark, lang, confidential }: Props) {
   for (const href of FACES) preload(href, { as: "font", type: "font/woff2", crossOrigin: "" });
   const slides = (
     <DeckNight.Provider value={!!theme}>
@@ -166,14 +194,15 @@ export function SlideContainer({ children, logo, theme, page, mark, lang }: Prop
     >
       <BrandStrip />
       <MotionConfig reducedMotion="user">{slides}</MotionConfig>
-      <CornerStart logos={start} position="fixed" />
-      <div
-        className="slide-corner fixed right-(--slide-footer-side) bottom-(--slide-footer-inset) z-40 flex items-center gap-5"
-        aria-hidden="true"
-      >
-        {page && <PageCounter label={page} />}
-        <DeckLogo logo={corner} asMark mark={mark} />
-      </div>
+      <SlideFooter logos={start} position="fixed" confidential={confidential}>
+        <div
+          className="slide-corner fixed right-(--slide-footer-side) bottom-(--slide-footer-inset) z-40 flex items-center gap-5"
+          aria-hidden="true"
+        >
+          {page && <PageCounter label={page} />}
+          <DeckLogo logo={corner} asMark mark={mark} />
+        </div>
+      </SlideFooter>
     </div>
   );
 }

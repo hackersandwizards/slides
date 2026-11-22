@@ -13,11 +13,16 @@
   }
 }
 
+.slide-footer > :is(.slide-corner-start, .slide-corner, .print-watermark) {
+  position: static;
+  flex-shrink: 0;
+}
+
 @media screen and (width < 48rem) {
   /* The corner row follows the slide's content instead of standing over it while it scrolls: it
      takes the foot of the content's bottom padding, so it adds no height, and stands above the
      player's control bar in the bottom band. */
-  .slide-viewport > :is(.slide-corner, .slide-corner-start) {
+  .slide-viewport > :is(.slide-corner, .slide-corner-start, .slide-footer) {
     position: relative;
     inset: auto;
     z-index: 20;
@@ -25,10 +30,32 @@
     padding-block: 0;
     pointer-events: none;
   }
-  .slide-viewport > .slide-corner {
+  .slide-viewport > :is(.slide-corner, .slide-footer) {
     justify-content: flex-end;
     margin: calc(-1 * (var(--slide-footer-mark) + var(--slide-phone-nav-band))) 0
       var(--slide-phone-nav-band);
+  }
+  .slide-viewport > .slide-footer {
+    --slide-phone-footer-gap: calc(var(--spacing) * 4);
+    --slide-phone-footer-height: calc(
+      var(--slide-footer-mark) + 2 * var(--text-sm) + var(--slide-phone-footer-gap)
+    );
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: calc(2 * var(--text-sm)) var(--slide-footer-mark);
+    row-gap: var(--slide-phone-footer-gap);
+    height: var(--slide-phone-footer-height);
+    margin-top: calc(-1 * (var(--slide-phone-footer-height) + var(--slide-phone-nav-band)));
+  }
+  .slide-viewport .slide-confidential {
+    @apply line-clamp-2 wrap-anywhere whitespace-normal;
+  }
+  .slide-viewport .slide-confidential:first-child,
+  .slide-viewport > .slide-footer > .slide-corner {
+    grid-column: 1 / -1;
+  }
+  .slide-viewport > .slide-footer > .slide-corner {
+    justify-self: end;
   }
   .slide-viewport > .slide-corner-start {
     display: flex;
@@ -42,7 +69,7 @@
     margin-top: 0;
   }
   /* Two logos share a phone's row. */
-  .slide-viewport > .slide-corner-start img {
+  .slide-viewport .slide-corner-start img {
     height: calc(var(--slide-footer-mark) * 0.75);
   }
   /* The slide's ground fades in behind the controls, so no line of text runs under them. */

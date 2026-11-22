@@ -772,7 +772,7 @@ const THEME: Record<SectionTheme, keyof Palette> = {
 export const centredMark = (d: Extract<Slide, { type: "closing" }>) =>
   d.variant !== "discussion" && !d.speakers?.some((sp) => sp.imageSrc);
 
-/** The brand strip, the page counter and the slide's logos where the web stands them (`logoPlaces`). */
+/** The brand strip and footer, where the web stands them. */
 function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   const { c } = ctx;
   s.background = { color: c.bg };
@@ -798,6 +798,8 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   const lockupH = 65 / 144;
   const right = W - 96 / 144;
   const baseY = 1024 / 144;
+  const confidential = deck.confidential?.trim();
+  let end = right;
   const { corner, start } = logoPlaces(resolveSlideLogo(deck, index));
   // `h-9`, as the slide draws a deck's logos.
   const logoH = 2.25 * REM;
@@ -815,7 +817,9 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
       x = picture(s, ctx, corner.src, right - 2.4, baseY - logoH / 2, 2.4, logoH, at).x;
     }
     const page = pageLabel(deck.slides, index);
+    end = x;
     if (page) {
+      end -= 1.8;
       box(s, c, { runs: [{ text: page }] }, x - 1.8, baseY - 0.14, 1.6, 0.28, {
         size: PT.label,
         mono: true,
@@ -826,14 +830,31 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
       });
     }
   }
-  // `bottom-6 left-6 gap-5`, the slide's start row.
-  let left = 1.5 * REM;
+  // A deck with a footer line moves the start logos onto the corner's centre line.
+  let left = confidential ? W - right : 1.5 * REM;
+  const y = confidential ? baseY - logoH / 2 : H - 1.5 * REM - logoH;
   for (const l of start) {
-    const drawn = picture(s, ctx, l.src, left, H - 1.5 * REM - logoH, 2.4, logoH, {
+    const drawn = picture(s, ctx, l.src, left, y, 2.4, logoH, {
       alt: l.alt,
       align: "left",
     });
     left += drawn.w + 1.25 * REM;
+  }
+  if (confidential && end > left + 1.25 * REM) {
+    box(
+      s,
+      c,
+      { runs: [{ text: confidential }] },
+      left,
+      baseY - 0.14,
+      end - left - 1.25 * REM,
+      0.28,
+      {
+        size: PT.label,
+        color: c.muted,
+        valign: "middle",
+      },
+    );
   }
   if (slide.notes) s.addNotes(slide.notes);
 }

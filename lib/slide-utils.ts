@@ -152,12 +152,12 @@ export function isOpening(slide: TitleSlide): boolean {
   return !!(slide.kicker || slide.name || slide.speakers?.length || slide.event || slide.qr);
 }
 
-/** What a deck's slide `index` hands its SlideContainer: the logos, the deck's theme, the page
- *  counter, the corner mark and the language. A deck page and a catalog story frame a slide alike. */
+/** A deck page and a catalog story frame a slide alike. */
 export function slideFrame(deck: Presentation, index: number) {
   return {
     logo: resolveSlideLogo(deck, index),
     theme: deck.theme,
+    confidential: deck.confidential,
     page: pageLabel(deck.slides, index),
     mark: cornerMark(deck, index),
     lang: deckLang(deck),

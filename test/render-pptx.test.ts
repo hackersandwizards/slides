@@ -146,6 +146,44 @@ beforeAll(async () => {
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("slides-pptx on the specimen deck", () => {
+  it("writes the confidentiality line on every slide at the footer centre line", () => {
+    for (const xml of slideXml) {
+      const note = shapesOf(xml).find(
+        (shape) => shape.texts.join("") === slideCatalog.confidential,
+      );
+      expect(note).toBeDefined();
+      expect(note!.x).toBeCloseTo(96 / 144);
+      expect(note!.y! + note!.h! / 2).toBeCloseTo(1024 / 144);
+    }
+  });
+
+  it("places the confidentiality line after the start logo in a logo list", async () => {
+    const out = join(dir, "confidential.pptx");
+    const confidential = "Specimen deck, fictional content";
+    const warnings = await renderPptx(
+      {
+        name: "Deck",
+        confidential,
+        slideLogos: {
+          0: [
+            { src: "/hw-lockup.svg", alt: "Start" },
+            { src: "/hw-lockup.svg", alt: "End" },
+          ],
+        },
+        slides: [{ type: "statement", lines: ["Hello"] }],
+      },
+      out,
+      dir,
+    );
+    expect(warnings).toEqual([]);
+    const deck = await JSZip.loadAsync(readFileSync(out));
+    const xml = await deck.file("ppt/slides/slide1.xml")!.async("string");
+    const [, x, width] =
+      /descr="Start"[^>]*>[\s\S]*?<a:off x="(\d+)" y="\d+"\/>\s*<a:ext cx="(\d+)"/.exec(xml)!;
+    const note = shapesOf(xml).find((shape) => shape.texts.join("") === confidential)!;
+    expect(note.x).toBeGreaterThan((+x + +width) / 914400);
+  });
+
   it("writes one slide per deck slide", () => {
     expect(slideXml).toHaveLength(slideCatalog.slides.length);
   });

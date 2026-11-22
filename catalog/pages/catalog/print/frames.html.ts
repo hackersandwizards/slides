@@ -1,6 +1,6 @@
 // An endpoint, since only an endpoint keeps a route ending in .html as its file name.
 import { brandHref } from "../../../brand-urls";
-import { inlineFrames } from "../../../print";
+import { fitPrint, inlineFrames } from "../../../print";
 
 const html = `<!doctype html>
 <html lang="en">
@@ -11,6 +11,7 @@ const html = `<!doctype html>
 <link rel="icon" href="${brandHref}/logos/favicon.ico" sizes="32x32">
 <link rel="icon" href="${brandHref}/logos/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="build/slides.css">
+${fitPrint}
 <style>body{margin:0}</style>
 </head>
 <body>

@@ -20,6 +20,7 @@ import { GUIDANCE } from "./guidance";
 import exceptions from "../brand-elements.json";
 import { version as brandVersion } from "@hackersandwizards/brand/package.json";
 import registry from "@hackersandwizards/slides/lib/slide-components?raw";
+import fitPrintUrl from "./fit-print?worker&url";
 
 // The checkout, which the config hands over: under Astro's bundle import.meta points into dist/.
 const root = __SLIDES_ROOT__;
@@ -84,6 +85,7 @@ const slideMarkup = (index: number) =>
     h(PrintProvider, null, h(PrintSlide, { presentation: slideCatalog, index })),
   );
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+export const fitPrint = `<script ${import.meta.env.DEV ? 'type="module"' : "defer"} src="${fitPrintUrl.replace(`${base}/_astro/`, "../../_astro/")}"></script>`;
 const bundled = `"${base}/_astro/`;
 const besidePage = (markup: string) => {
   for (const [file, url] of Object.entries(brandLogos))
@@ -553,7 +555,7 @@ const partTile = ({ name, markup }: { name: string; markup: string }) => {
   return `<figure id="${id}"><figcaption><a href="#${id}">${name}</a></figcaption><div class="frame"><iframe loading="lazy" title="${attr(name)}" srcdoc="${attr(frameDoc(markup))}"></iframe></div></figure>`;
 };
 const frameDoc = (markup: string) =>
-  `<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="build/slides.css"><style>body{margin:0}</style></head><body>${markup}</body></html>`;
+  `<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="build/slides.css">${fitPrint}<style>body{margin:0}</style></head><body>${markup}</body></html>`;
 
 const codeGuide = guidanceOf("block-code");
 const codeEntry = {

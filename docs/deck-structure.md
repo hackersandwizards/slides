@@ -2,6 +2,10 @@
 
 How to build a deck from the slide types: which slide carries what. The catalog's print page gives each type's when, do and don't.
 
+Set `Presentation.confidential` to a short line to show it at the bottom left of every slide on
+screen, in print and PDF, and in PowerPoint. When the slide has logos at the left, the line follows
+them. Keep it short enough to fit beside the logos and page counter.
+
 A deck that runs an hour or longer with three or more chapters shows an `agenda` slide before its
 first chapter, listing the chapters in order. Each chapter opens with a `transition` slide: its
 `headline` is the chapter's agenda item, its `preText` the chapter's position in the agenda, such

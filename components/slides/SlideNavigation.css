@@ -18,6 +18,9 @@
     translate: -50%;
     z-index: 60;
   }
+  .slide-viewport:has(> .slide-footer) .slide-controls {
+    bottom: calc(var(--slide-footer-inset) + var(--slide-footer-mark));
+  }
   /* The slide's corner already counts the slides: the bar keeps its buttons, and the count stays
      for a screen reader, which the corner's is hidden from. A title slide has no counter, and a
      closing slide's lockup hides the corner. */

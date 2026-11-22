@@ -72,6 +72,28 @@ const reached = (page: Page, position: number) =>
     position,
   );
 
+it("fits the confidentiality line above the lockup and controls at 320 px", async () => {
+  const page = await deck(320, true, 720);
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  const footer = await page.$eval(".slide-footer", (row) => {
+    const note = row.querySelector(".slide-confidential")!;
+    const mark = row.querySelector<HTMLImageElement>(".slide-corner img.hw-wordmark")!;
+    const controls = document.querySelector(".slide-controls")!;
+    const range = document.createRange();
+    range.selectNodeContents(note);
+    const text = range.getBoundingClientRect();
+    const logo = mark.getBoundingClientRect();
+    return (
+      text.width > 0 &&
+      text.right <= innerWidth &&
+      text.bottom <= logo.top &&
+      logo.bottom <= controls.getBoundingClientRect().top
+    );
+  });
+  await page.close();
+  expect(footer).toBe(true);
+});
+
 it.each(WIDTHS)(
   "%i px: a position and working buttons",
   async (width) => {

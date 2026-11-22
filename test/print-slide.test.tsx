@@ -18,6 +18,30 @@ const deck: Presentation = {
 // The chrome talks, trainer-hub and hycle-private each copied: one page per slide, the deck's
 // logo in the corner, the h&w mark where a slide overrides it with null.
 describe("PrintDeck", () => {
+  it("prints the confidentiality line on each page, including the title and contact closing", () => {
+    const confidential = "Specimen deck, fictional content";
+    const { container } = render(
+      <PrintDeck
+        presentation={{
+          ...deck,
+          confidential,
+          slides: [...deck.slides, { type: "closing", variant: "contact", line1: "Thanks" }],
+        }}
+      />,
+    );
+    const pages = container.querySelectorAll(".print-slide");
+    expect(pages).toHaveLength(3);
+    for (const page of pages) {
+      expect(page.querySelector(".slide-confidential")?.textContent).toBe(confidential);
+    }
+    expect(pages[2].querySelector(".slide-closing-mark")).not.toBeNull();
+  });
+
+  it("adds no footer row or text when the field is unset", () => {
+    const { container } = render(<PrintDeck presentation={deck} />);
+    expect(container.querySelector(".slide-footer, .slide-confidential")).toBeNull();
+    expect(container.querySelectorAll(".print-slide > .print-watermark")).toHaveLength(2);
+  });
   // The server's slides waited unfitted and shifted once the fit guard shrank them (CLS 0.097):
   // they come hidden and show once hydration has fitted them.
   it("marks the server's slides unfitted and clears the mark once rendered", () => {

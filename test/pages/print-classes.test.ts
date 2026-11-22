@@ -52,6 +52,23 @@ it("reads a class whose markup is escaped, as a frame writes it", () => {
   ]);
 });
 
+it("fits the static specimen slides above their confidentiality line", async () => {
+  const page = await newPage(browser);
+  await page.setViewport({ width: 1920, height: 1080 });
+  await page.goto(pathToFileURL(join(print, "frames.html")).href, { waitUntil: "load" });
+  const slides = await page.$$eval(".print-slide:has(.slide-shell)", (frames) =>
+    frames.map((frame) => ({
+      note: frame.querySelector(".slide-confidential")?.textContent,
+      fitted: Boolean(frame.querySelector("[data-fitted]")),
+    })),
+  );
+  await page.close();
+  expect(slides.length).toBeGreaterThan(0);
+  expect(
+    slides.filter(({ note, fitted }) => note !== "Specimen deck, fictional content" || !fitted),
+  ).toEqual([]);
+});
+
 it(
   "draws each night tile on the night ground",
   async () => {

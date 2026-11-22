@@ -2327,6 +2327,7 @@ const slides: Slide[] = [
 
 export const slideCatalog: Presentation = {
   name: "Slide Catalog",
+  confidential: "Specimen deck, fictional content",
   subtitle: "Every slide type and its variants",
   speakers: ["hackers&wizards"],
   slides,
