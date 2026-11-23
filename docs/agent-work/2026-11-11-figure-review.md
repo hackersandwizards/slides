@@ -82,8 +82,8 @@ One prompt, verbatim (the paths shortened to their file names):
 > name anything that keeps a criterion below 10.
 >
 > End your answer with one line of JSON and nothing after it, in this form: {"scores": {"V": [c1,
-> c2, c3, c4, c5, c6], ...one entry per image...}, "prefer": {"slide 1": "<image>", "slide 2":
-> "<image>", "slide 3": "<image>"}}
+> c2, c3, c4, c5, c6], ...one entry per image...}, "prefer": {"slide 1": "`<image>`", "slide 2":
+> "`<image>`", "slide 3": "`<image>`"}}
 
 ### Round 1: A, B and C
 

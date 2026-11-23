@@ -52,7 +52,7 @@ row on a phone): E2 won with all three reviewers, 8 : 7, 7 : 6 and 8.3 : 7.3.
 > workshop.
 >
 > Read every image file in /tmp/claude-sdf/review/claude-leader (PNG). File names are
-> <set>-<version>-<width>.png. Each set shows several renderings of the same content; versions are
+> `<set>-<version>-<width>.png`. Each set shows several renderings of the same content; versions are
 > letters. […] Score every version of every set on each criterion from 1 (poor) to 10
 > (excellent): 1. Legibility at the real display size. 2. Understood within five seconds. 3. Breathing room and visual calm, not cramped. 4. s2 only: proportions stay honest and every
 > value can be read and matched to its bar. 5. s4 only: the reader can tell where in the deck they

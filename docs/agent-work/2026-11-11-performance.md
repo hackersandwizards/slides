@@ -41,16 +41,17 @@ both builds served with gzip and `max-age=600` as Pages serves them, three inter
 loads of 15 to 111. Scores are performance / accessibility / best practices / SEO of the median run,
 LCP simulated, in ms, median (range); KB the total transfer. CLS read 0.001 or less in every run.
 
-| Page                                        | Before                 | After                 | LCP before       | LCP after        | KB   |
-| ------------------------------------------- | ---------------------- | --------------------- | ---------------- | ---------------- | ---- |
-| Home `/slides/`                             | 100/100/100/92         | 100/100/100/92        | 1202 (1202–1203) | 1203 (1202–1204) | 496  |
-| Story page `/dashboard/Types/title-slide/…` | 90/100/100/92          | 89/100/100/92         | 3606 (3460–3837) | 3756 (2657–3763) | 448  |
-| Story frame `/stories/Types/title-slide/…`  | 91/100/100/92          | 91/100/100/92         | 3457 (3455–3460) | 3461 (3343–3474) | 377  |
-| Print page `/catalog/print/`                | 97/100/100/100         | 95/100/100/100        | 2101 (2100–2701) | 2400 (1950–2401) | 1301 |
-| Page                                        | 9a04bab LCP, KB        | f32b1dc LCP, KB       |
-| -----------------------------               | ---------------------- | --------------------- |
-| Story page, title-slide state               | 4877 (4728–5929), 1219 | 6531 (6530–6680), 992 |
-| Story frame, same state                     | 6456 (6455–6528), 939  | 5852 (5778–5854), 841 |
+| Page                                        | Before         | After          | LCP before       | LCP after        | KB   |
+| ------------------------------------------- | -------------- | -------------- | ---------------- | ---------------- | ---- |
+| Home `/slides/`                             | 100/100/100/92 | 100/100/100/92 | 1202 (1202–1203) | 1203 (1202–1204) | 496  |
+| Story page `/dashboard/Types/title-slide/…` | 90/100/100/92  | 89/100/100/92  | 3606 (3460–3837) | 3756 (2657–3763) | 448  |
+| Story frame `/stories/Types/title-slide/…`  | 91/100/100/92  | 91/100/100/92  | 3457 (3455–3460) | 3461 (3343–3474) | 377  |
+| Print page `/catalog/print/`                | 97/100/100/100 | 95/100/100/100 | 2101 (2100–2701) | 2400 (1950–2401) | 1301 |
+
+| Page                          | 9a04bab LCP, KB        | f32b1dc LCP, KB       |
+| ----------------------------- | ---------------------- | --------------------- |
+| Story page, title-slide state | 4877 (4728–5929), 1219 | 6531 (6530–6680), 992 |
+| Story frame, same state       | 6456 (6455–6528), 939  | 5852 (5778–5854), 841 |
 
 - **The frame got faster and transfers less.** It now also loads the static Inter 500 and 700 its
   slide draws in, which the 9a04bab build never fetched. Blocking every woff2 saved 150 ms on the
@@ -62,14 +63,14 @@ LCP simulated, in ms, median (range); KB the total transfer. CLS read 0.001 or l
 - Home transfers 496 KB against 363 KB on 09.11.: it now loads the shell's Inter Variable and the
   slide's static faces, 137 KB together, at the same score and LCP.
 
-## `bun run preview`
+### `bun run preview`
 
 It failed from the repo root under Bun with `ENOENT … catalog/astrobook/pages/app.astro`, and
 served from `catalog/` or under Node. The `preview` script runs Astro under Node, and
 `test/pages/astro.test.ts` fails when `bun run preview` stops serving the build. The cause inside
 Astro's preview under Bun is not yet explained. Scaffolding's documented script keeps `bun --bun`.
 
-## Still true from 08.11., not measured again
+### Still true from 08.11., not measured again
 
 - Measure with gzip. Served uncompressed, a state page read 5.5 s of simulated LCP against 1.9 s
   with gzip, the same build (120eec5). Pages and `astro preview` both send gzip.
@@ -106,14 +107,14 @@ the build from the load, both 9a04bab (the 09.11. build) and f32b1dc were served
 - Home transfers 496 KB against 363 KB on 09.11.: it now loads the shell's Inter Variable and the
   slide's static faces, 137 KB together, at the same score and LCP.
 
-## `bun run preview`
+### `bun run preview`
 
 It failed from the repo root under Bun with `ENOENT … catalog/astrobook/pages/app.astro`, and
 served from `catalog/` or under Node. The `preview` script runs Astro under Node, and
 `test/pages/astro.test.ts` fails when `bun run preview` stops serving the build. The cause inside
 Astro's preview under Bun is not yet explained. Scaffolding's documented script keeps `bun --bun`.
 
-## Still true from 08.11., not measured again
+### Still true from 08.11., not measured again
 
 - Measure with gzip. Served uncompressed, a state page read 5.5 s of simulated LCP against 1.9 s
   with gzip, the same build (120eec5). Pages and `astro preview` both send gzip.
