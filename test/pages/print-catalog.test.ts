@@ -4,7 +4,7 @@ import { expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { slideCatalog } from "../../specimen/slide-catalog";
 
-// Reads the print page `bun run build` writes into dist/ before `check:pages` runs.
+// Reads the print page `bun run build` writes into dist/ before `browser-test` runs.
 const dist = join(import.meta.dirname, "..", "..", "dist");
 const print = join(dist, "catalog/print");
 const html = readFileSync(join(print, "index.html"), "utf8");

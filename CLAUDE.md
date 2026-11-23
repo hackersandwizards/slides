@@ -139,9 +139,9 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
 - `bun run check`: `scaffolding check`, the shared steps side by side (it prints each; stylelint
   reads `stylelint.config.js`), then the `scaffolding.check` steps in
   `package.json`: `check:pins`, `check:colours` (`brand-colours.json` holds the exceptions), `check:copies`
-  (`brand-copies`) and `check:retired` (`brand-retired` over `dist`), then `check:pages`
+  (`brand-copies`) and `retired` (`brand-retired` over `dist`), then `browser-test`
   (the tests in `test/pages/` over the build: the print pages, the story pages and `bun run
-preview`), then `check:elements`
+preview`), then `elements`
   (`brand-elements` over the print pages, `brand-elements.json`). The pre-push
   hook runs it with `--changed`; the hooks are scaffolding's skeleton, listed in
   `.githooks/README.md`.
@@ -149,7 +149,7 @@ preview`), then `check:elements`
   outside the gate: `brand-markers` over `frames.html` and every story page at 1920, the stage
   width, and at 1280, with `dist/` served at `--site-at /slides`, since the pages load their assets
   from that base.
-- `bun run fix`: `eslint --fix`, then `prettier --write`.
+- `bun run scaffolding fix` runs `eslint --fix`, then `prettier --write`.
 - One test file: `bun run test <file>`.
 - `bun run mutation` runs Stryker with a 15-minute cap. `stryker.config.mjs` selects the code,
   including the pure functions tested by the property suite. `vitest.mutation.config.ts` selects

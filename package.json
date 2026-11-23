@@ -56,16 +56,11 @@
   "scripts": {
     "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks || true",
     "check": "scaffolding check",
-    "test": "bun --bun vitest run --exclude 'test/pages/**'",
-    "explore": "scaffolding-explore",
+    "test": "scaffolding test",
     "mutation": "scaffolding-mutation",
-    "check:pages": "bun --bun vitest run test/pages",
     "check:pins": "bun scripts/pins.ts",
     "check:colours": "brand-colours",
     "check:copies": "brand-copies",
-    "check:retired": "brand-retired dist",
-    "check:elements": "brand-elements",
-    "fix": "bun --bun eslint --cache --concurrency=auto . --fix && bun --bun prettier --write .",
     "check:staged": "check-staged",
     "dev": "ASTRO_DEV_BACKGROUND=1 bun --bun astro dev --root catalog",
     "catalog": "bun run dev --open /",
@@ -210,21 +205,21 @@
         "reason": "the specimen's video, a teal block on a light ground with no text: 4 s, no audio, read at four frames a second of its 96"
       }
     ],
-    "test": "test",
-    "fullOnly": {
-      "check:pages": "runs the browser suite for rendered pages",
-      "check:elements": "renders and checks elements",
-      "check:retired": "scans generated output"
+    "browserTest": "test/pages",
+    "brand": {
+      "retired": [
+        "dist"
+      ]
     },
     "check": [
       [
         "check:pins",
         "check:colours",
         "check:copies",
-        "check:retired"
+        "retired"
       ],
-      "check:pages",
-      "check:elements"
+      "browser-test",
+      "elements"
     ]
   }
 }

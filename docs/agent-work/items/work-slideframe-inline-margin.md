@@ -15,7 +15,7 @@ Keep the story frame's style inline on a state's page whatever brand's `card.css
 `catalog/SlideFrame.astro` imports brand's `elements/card.css` unscoped (`<style is:global>`) and
 its own rules scoped. Astro inlines a stylesheet under 4 KB; above it every state's page waits on a
 stylesheet of its own before the header's logo, the LCP element, paints. The unscoped import bought
-about 480 bytes, not a guarantee. This repository's gate catches a crossing (`check:pages`), but a
+about 480 bytes, not a guarantee. This repository's gate catches a crossing (`browser-test`), but a
 consumer's catalog that renders the exported `SlideFrame` has no such test.
 
 Options to weigh: `build.inlineStylesheets: "always"` in `catalog/astro.config.ts` and in
