@@ -4,7 +4,7 @@
 
 | Hook            | Trigger                                                     | Runs                                                                                                                                            |
 | --------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pre-commit`    | every commit                                                | `bun run check:staged`: scaffolding's `check-staged` (gitleaks, coupling, confidential, prettier, eslint; `admin-check` when an item is staged) |
+| `pre-commit`    | every commit                                                | `bun run check:staged`: scaffolding's `check-staged` (gitleaks, coupling, confidential, prettier, eslint, ShellCheck, markdownlint; `admin-check` when an item is staged) |
 | `commit-msg`    | every commit                                                | `check-confidential` on the message                                                                                                             |
 | `pre-push`      | every push                                                  | `check-confidential prepush`: refuses commits a `.confidential-purged.json` lists (none here), then `bun run check --changed` per pushed branch |
 | `post-merge`    | a merge that changed `bun.lock` or `package.json`           | `install`; a skip or failure is named on stderr                                                                                                 |
