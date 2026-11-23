@@ -125,7 +125,7 @@
     "@astrojs/react": "7.1.9",
     "@hackersandwizards/admin": "git+https://github.com/hackersandwizards/admin.git#v1.40.2",
     "@hackersandwizards/brand": "git+https://github.com/hackersandwizards/brand.git#v2.29.3",
-    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.38.0",
+    "@hackersandwizards/scaffolding": "git+https://github.com/hackersandwizards/scaffolding.git#v5.39.0",
     "@tailwindcss/node": "4.3.5",
     "@tailwindcss/oxide": "4.3.5",
     "@tailwindcss/vite": "4.3.5",
