@@ -136,13 +136,12 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
 
 ## Commands
 
-- `bun run check`: `scaffolding check`, the shared steps side by side (it prints each; stylelint
-  reads `stylelint.config.js`), then the `scaffolding.check` steps in
-  `package.json`: `check:pins`, `check:colours` (`brand-colours.json` holds the exceptions), `check:copies`
-  (`brand-copies`) and `retired` (`brand-retired` over `dist`), then `browser-test`
-  (the tests in `test/pages/` over the build: the print pages, the story pages and `bun run
-preview`), then `elements`
-  (`brand-elements` over the print pages, `brand-elements.json`). The pre-push
+- `bun run check` runs `scaffolding check` and prints each step. The shared static checks include
+  `colours` (exceptions in `brand-colours.json`) and `copies`. Both run on every `--changed` check.
+  Stylelint reads `stylelint.config.js`. The `scaffolding.check` sequence in `package.json` runs
+  `check:pins` and `retired` (`brand-retired` over `dist`) together, then `browser-test` (the tests
+  in `test/pages/` over the print pages, story pages and `bun run preview`), then `elements`
+  (`brand-elements` over the print pages, with `brand-elements.json`). The pre-push
   hook runs it with `--changed`; the hooks are scaffolding's skeleton, listed in
   `.githooks/README.md`.
 - `bun run check:markers`, by hand after a brand raise and after a change to how lists are styled,

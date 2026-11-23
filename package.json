@@ -59,8 +59,6 @@
     "test": "scaffolding test",
     "mutation": "scaffolding-mutation",
     "check:pins": "bun scripts/pins.ts",
-    "check:colours": "brand-colours",
-    "check:copies": "brand-copies",
     "check:staged": "check-staged",
     "dev": "ASTRO_DEV_BACKGROUND=1 bun --bun astro dev --root catalog",
     "catalog": "bun run dev --open /",
@@ -214,8 +212,6 @@
     "check": [
       [
         "check:pins",
-        "check:colours",
-        "check:copies",
         "retired"
       ],
       "browser-test",
