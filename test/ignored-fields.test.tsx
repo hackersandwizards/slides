@@ -35,22 +35,22 @@ describe("a section colour slides-usage names as drawing nothing", () => {
   const bases = [...slideCatalog.slides, centred]
     .filter((s) => ["content", "grid", "media", "lanes", "gantt"].includes(s.type))
     .map(without);
+  const themedSlides = (base: Slide) =>
+    themes.map((sectionTheme) => ({ ...base, sectionTheme }) as Slide);
   const named = (s: Slide) => ignoredFields(s).some((f) => f.startsWith("sectionTheme"));
 
-  it("changes nothing where it is named, and the drawing everywhere else", () => {
-    let dead = 0;
-    let live = 0;
-    for (const base of bases) {
-      const plain = markup(base);
-      for (const sectionTheme of themes) {
-        const slide = { ...base, sectionTheme } as Slide;
-        if (named(slide)) dead++;
-        else live++;
-        if (named(slide)) expect(markup(slide), slide.type).toBe(plain);
-        else expect(markup(slide), slide.type).not.toBe(plain);
-      }
+  it.each(bases)("$type [%#] changes the drawing only where the colour is live", (base) => {
+    const plain = markup(base);
+    for (const slide of themedSlides(base)) {
+      if (named(slide)) expect(markup(slide), slide.type).toBe(plain);
+      else expect(markup(slide), slide.type).not.toBe(plain);
     }
-    // Controls: both sides hold cases.
+  });
+
+  it("names some section colours as dead and leaves others live", () => {
+    const slides = bases.flatMap(themedSlides);
+    const dead = slides.filter(named).length;
+    const live = slides.length - dead;
     expect(dead).toBeGreaterThan(20);
     expect(live).toBeGreaterThan(5);
   });
