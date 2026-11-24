@@ -178,5 +178,5 @@ that bun never looks it up on the public npm registry; a consumer still pins it.
 Project rules live in `.claude/rules/*.md` (relative to this file). Files with no YAML frontmatter
 are always-on: read and apply them this session. Files with a `paths:` frontmatter list apply only
 when editing files matching those globs. Claude loads these natively and excludes the global
-`~/.claude/rules` here via `claudeMdExcludes`. Codex and pi must read `.claude/rules/` themselves
+`~/.claude/rules` here via `claudeMdExcludes`. Codex must read `.claude/rules/` itself
 and ignore the global set. These project rules supersede it.
