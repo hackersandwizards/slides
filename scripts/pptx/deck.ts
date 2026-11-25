@@ -3,7 +3,6 @@ import { join } from "node:path";
 import { createRequire } from "node:module";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
-import { tokens } from "@hackersandwizards/brand/tokens";
 import type {
   ComparisonSide,
   ContentBlock,
@@ -18,347 +17,71 @@ import type {
 import { trendTicks } from "../../components/slides/ChartPlots";
 import { groundOf } from "../../components/slides/SlideShell";
 import { BRAND_MARK, HW_LOGO, cornerMark, logoPlaces, resolveSlideLogo } from "../../lib/logo";
-import { INLINE_MARKDOWN } from "../../lib/markdown";
 import { isDeepDive, pageLabel } from "../../lib/slide-framing";
-import { isHighlightPhase, continuation } from "../../lib/process-layout";
+import { continuation, isHighlightPhase } from "../../lib/process-layout";
 import { isOpening, speakerLine } from "../../lib/title-slide";
 import { isVideo } from "../../lib/gallery-media";
 import { linkLabel, profileLabel, qrAlt } from "../../lib/link-labels";
 import { claimParts, companiesWithLogo } from "../../lib/closing-copy";
 import { closingClaim, deckLang } from "../../lib/slide-utils";
 import { personAccent, teamTypesDrawn } from "../../lib/people-slides";
-import { pipelineAsFlow, labeledGridAsCards } from "../../lib/content-block-aliases";
-import { leadingWords, minus, numbersGrid, STAGE } from "../../lib/figure-layout";
+import { labeledGridAsCards, pipelineAsFlow } from "../../lib/content-block-aliases";
+import { leadingWords, minus, numbersGrid } from "../../lib/figure-layout";
 import { TWO_COLUMN_TONES, type SideTone } from "../../lib/two-column-tones";
-import { WORDS } from "../../lib/slide-words";
 import { centredMark } from "./chrome";
-import { family, MONO, PITCH, SANS } from "./faces";
-import { balance, longest, pretty, wrap, type Span } from "./lines";
+import { MONO, PITCH, SANS } from "./faces";
+import {
+  breakAt,
+  BULLET_INDENT,
+  fitScale,
+  lineOf,
+  marginOf,
+  paraType,
+  spansOf,
+  textWidth,
+} from "./fit";
+import { balance, longest, pretty, wrap } from "./lines";
+import { Look } from "./look";
 import { checkSlide } from "./overflow";
+import { hex, mixColor, palette, THEME, type Palette } from "./palette";
 import { slideDrawn } from "./slides";
+import {
+  W,
+  H,
+  EDGE,
+  TOP,
+  BOTTOM,
+  CW,
+  PT,
+  LEADING,
+  TITLE,
+  CORNER,
+  REM,
+  BODY,
+  spacing,
+  type Area,
+  type Measure,
+} from "./stage";
+import {
+  MARKER_CODES,
+  HUE_OF_MARKER,
+  MARKER_SQUARE,
+  CAPS,
+  caps,
+  md,
+  plain,
+  literal,
+  breaks,
+  asParas,
+  bulletParas,
+  type MarkerHue,
+  type Para,
+  type BoxOpts,
+  type Run,
+} from "./text";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
 type PSlide = ReturnType<Pptx["addSlide"]>;
-type TextProps = PptxGenJS.TextPropsOptions;
-type Run = { text: string; options?: TextProps };
-
-// The print route's 1920 px stage on a 13.333 in slide: 144 px to the inch, so a CSS px is half a
-// point; the route's root font size is 21.333 px.
-const W = 13.333;
-const H = 7.5;
-const SIDE = 96 / 144;
-const TOP = 117 / 144;
-const BOTTOM = H - 123 / 144;
-const CW = W - 2 * SIDE;
-
-/** A list marker in its own hue, written as a private character, which the post-processing turns
- *  into the brand marker in that hue: pptxgenjs writes no bullet colour. */
-const MARKER_CODES = { green: "E001", red: "E002" } as const;
-type MarkerHue = keyof typeof MARKER_CODES;
-const HUE_OF_MARKER = Object.fromEntries(
-  Object.entries(MARKER_CODES).map(([hue, code]) => [code, hue as MarkerHue]),
-);
-const MARKER_SQUARE = "25AA";
-
-const PT = {
-  label: 13.5,
-  sm: 16,
-  base: 18,
-  h4: 18,
-  lead: 20,
-  h3: 24,
-  title: 36,
-  s6: 40,
-  s8: 48,
-  display: 64,
-};
-
-function hex(name: keyof typeof tokens): string {
-  const value = tokens[name];
-  if (!/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`brand token ${name} is not a hex colour`);
-  return value.slice(1).toUpperCase();
-}
-
-/** A brand percentage token as a fraction, `10%` as 0.1. */
-function share(name: keyof typeof tokens): number {
-  const value = tokens[name];
-  if (!/^\d+(\.\d+)?%$/.test(value)) throw new Error(`brand token ${name} is not a percentage`);
-  return parseFloat(value) / 100;
-}
-
-/** `color-mix(in srgb, a p%, b)`, which the tokens use for their tints. */
-function mix(a: string, b: string, p: number): string {
-  const ch = (c: string, i: number) => parseInt(c.slice(i, i + 2), 16);
-  return [0, 2, 4]
-    .map((i) =>
-      Math.round(ch(a, i) * p + ch(b, i) * (1 - p))
-        .toString(16)
-        .padStart(2, "0"),
-    )
-    .join("")
-    .toUpperCase();
-}
-
-function palette(dark: boolean) {
-  const night = hex("--color-night");
-  const bg = dark ? night : hex("--color-bg");
-  const teal = dark ? hex("--color-teal-night") : hex("--color-teal");
-  const purple = dark ? hex("--color-purple-night") : hex("--color-purple");
-  return {
-    bg,
-    card: dark ? hex("--color-night-2") : hex("--color-white"),
-    ink: dark ? mix("FFFFFF", night, 0.92) : hex("--color-ink"),
-    muted: dark ? mix("FFFFFF", night, 0.8) : hex("--color-muted"),
-    border: dark ? mix("FFFFFF", night, 0.15) : hex("--color-border"),
-    tint: dark ? mix("FFFFFF", night, 0.06) : hex("--color-tint"),
-    teal,
-    purple,
-    amber: dark ? hex("--color-amber") : hex("--color-amber-dark"),
-    green: dark ? hex("--color-green") : hex("--color-green-dark"),
-    red: dark ? hex("--color-red-night") : hex("--color-red"),
-    // The complicated-subsystem team's colour, as DecisionSlide's branch; night lightens it.
-    factory: dark ? hex("--color-factory-light") : hex("--color-factory"),
-    neutral: dark ? mix(hex("--color-ampersand"), "FFFFFF", 0.6) : hex("--color-ampersand"),
-    // The brand's code palette: night (night-2 on a night deck), its text and its command green.
-    code: dark ? hex("--color-night-2") : night,
-    codeInk: mix("FFFFFF", night, 0.92),
-    codeGreen: hex("--color-green"),
-    chip: mix(dark ? mix("FFFFFF", night, 0.92) : hex("--color-ink"), bg, dark ? 0.08 : 0.07),
-    tealDark: dark ? mix(hex("--color-teal-night"), "FFFFFF", 0.7) : hex("--color-teal-dark"),
-    tealTint: mix(teal, bg, 0.12),
-    purpleTint: mix(purple, bg, 0.12),
-    greenTint: mix(dark ? hex("--color-green") : hex("--color-green-dark"), bg, 0.1),
-    redTint: mix(dark ? hex("--color-red-night") : hex("--color-red"), bg, 0.08),
-    amberTint: mix(hex("--color-amber"), bg, 0.12),
-    // brand's hw-callout, teal or data-hue="purple", without a line.
-    callout: (hue: string) =>
-      dark
-        ? mix(hue, bg, share("--tint-callout-night"))
-        : mix(hue, hex("--color-white"), share("--tint-callout")),
-  };
-}
-type Palette = ReturnType<typeof palette>;
-
-/** brand's stage scale, the slide's type table: a value it sets, as a number. */
-const stageCss = readFileSync(
-  createRequire(import.meta.url).resolve("@hackersandwizards/brand/stage.css"),
-  "utf8",
-);
-function stage(name: string): number {
-  const m = new RegExp(`${name}:\\s*([\\d.]+);`).exec(stageCss);
-  if (!m) throw new Error(`brand's stage.css sets no ${name}`);
-  return Number(m[1]);
-}
-/** The web's line heights: body text, a slide title, a display heading. */
-const LEADING = {
-  body: stage("--text-base--line-height"),
-  title: stage("--slide-title-leading"),
-  display: stage("--slide-display-leading"),
-};
-
-/** A card's title and a diagram's label in the brand's h3 face, as the web's card-title utility. */
-const TITLE = (() => {
-  const face = family(
-    tokens["--type-h3-family"].replace(
-      /^var\((--[\w-]+)\)$/,
-      (_, v: string) => (tokens as Record<string, string>)[v],
-    ),
-  );
-  const weight = Number(tokens["--type-h3-weight"]);
-  if (![MONO, SANS].includes(face) || !weight)
-    throw new Error(
-      `brand h3 ${face} ${tokens["--type-h3-weight"]}: neither the mono nor the sans`,
-    );
-  return { mono: face === MONO, bold: weight >= 600 };
-})();
-
-/** Runs with each `\n` as a line break inside the paragraph (`<a:br/>`). pptxgenjs, given the
- *  `\n`, splits the run into paragraphs that all end a line, so a run after it, such as a bold word,
- *  started a paragraph of its own. */
-function breaks(runs: Run[]): Run[] {
-  return runs.flatMap((r) =>
-    r.text
-      .split(/\r?\n/)
-      .map((text, i) =>
-        i ? { text, options: { ...r.options, softBreakBefore: true } } : { ...r, text },
-      ),
-  );
-}
-
-function md(text: string, c: Palette, base: TextProps = {}): Run[] {
-  const parts = String(text).split(INLINE_MARKDOWN);
-  return parts.flatMap((part, i): Run[] => {
-    if (!part) return [];
-    if (i % 2 === 0) return [{ text: part, options: { ...base } }];
-    const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);
-    if (link) {
-      const url = /^(https?:|mailto:)/i.test(link[2]) ? link[2] : undefined;
-      return [
-        {
-          text: link[1],
-          options: { ...base, color: c.teal, ...(url ? { hyperlink: { url } } : {}) },
-        },
-      ];
-    }
-    if (part.startsWith("**"))
-      return [{ text: part.slice(2, -2), options: { ...base, bold: true } }];
-    if (part.startsWith("*")) {
-      return [{ text: part.slice(1, -1), options: { ...base, bold: true, color: c.amber } }];
-    }
-    // brand's inline code: teal's text colour, regular, on the ink's tint.
-    return [
-      {
-        text: part.slice(1, -1),
-        options: { ...base, fontFace: MONO, color: c.tealDark, bold: false, highlight: c.chip },
-      },
-    ];
-  });
-}
-
-const plain = (t: string) => String(t).replace(/\*\*|`|\[([^\]]+)\]\([^)]*\)/g, "$1");
-
-/** One paragraph of a text box: its runs and what sets it apart from the box's defaults. */
-interface Para {
-  runs: Run[];
-  /** Size relative to the box's size. */
-  rel?: number;
-  mono?: boolean;
-  bold?: boolean;
-  bullet?: boolean | "number";
-  marker?: MarkerHue;
-  indent?: number;
-  after?: number;
-  align?: "left" | "center" | "right";
-  /** Left tab stops, in inches from the box's edge, where a tab in the runs aligns. */
-  tabs?: number[];
-  /** Line height as a share of the size, where it differs from the box's. */
-  line?: number;
-  /** Lines broken as `text-wrap: balance` breaks them. */
-  balance?: boolean;
-}
-
-interface BoxOpts {
-  size: number;
-  mono?: boolean;
-  bold?: boolean;
-  italic?: boolean;
-  color: string;
-  align?: "left" | "center" | "right";
-  valign?: "top" | "middle" | "bottom";
-  line?: number;
-  /** The smallest share of `size` the fit may shrink to. */
-  floor?: number;
-  fill?: string;
-  /** Letter spacing in em, as the web's headline tracking. */
-  tracking?: number;
-  /** Lines broken as `text-wrap: balance` breaks them, as the web's headings. */
-  balance?: boolean;
-  /** A share of every line height, which the fit sets. */
-  lineScale?: number;
-}
-
-/** A run drawn in capitals whatever its case, as the web's caps labels: pptxgenjs writes no `cap`,
- *  so the run carries this language, which the post-processing turns into the deck's own and
- *  `cap="all"`. The text keeps the deck's case, which an edit in PowerPoint keeps too. */
-const CAPS = "x-caps";
-const caps = (text: string, options: TextProps = {}): Run => ({
-  text,
-  options: { ...options, lang: CAPS },
-});
-
-/** Width in inches of `text` set in one face, with 1 % to spare: LibreOffice sets a line up to
- *  0.7 % wider than the faces' advances add up to, so a box sized to its text keeps it on a line. */
-const textWidth = (text: string, size: number, mono = false, bold = false, tracking = 0) =>
-  (wrap([{ text: plain(text), size, mono, bold, tracking: tracking * size }], Infinity)[0].width /
-    72) *
-  1.01;
-
-/** The size a paragraph is drawn at, at scale k: pptxgenjs writes half points. */
-const drawnSize = (p: Para, o: BoxOpts, k: number) => Math.round(o.size * (p.rel ?? 1) * k * 2) / 2;
-
-/** A paragraph as the measure reads it: each run in the face and weight it is drawn in. */
-function spansOf(p: Para, o: BoxOpts, k: number): Span[] {
-  const size = drawnSize(p, o, k);
-  return p.runs.map((r) => ({
-    text: r.text,
-    size: r.options?.fontSize ?? size,
-    mono: (r.options?.fontFace ?? ((p.mono ?? o.mono) ? MONO : SANS)) === MONO,
-    bold: !!(r.options?.bold ?? p.bold ?? o.bold),
-    tracking: (o.tracking ?? 0) * size,
-    caps: r.options?.lang === CAPS,
-  }));
-}
-
-/** A paragraph's left margin in inches: a bullet's, as `box` writes it. */
-const marginOf = (p: Para) => (p.bullet ? (BULLET_INDENT * (1 + (p.indent ?? 0))) / 72 : 0);
-const BULLET_INDENT = 16;
-
-/** A paragraph's line height in points at scale k: the web's leading for its size, exact. */
-const lineOf = (p: Para, o: BoxOpts, k: number) =>
-  drawnSize(p, o, k) * (p.line ?? o.line ?? LEADING.body) * (o.lineScale ?? 1);
-
-function parasHeight(paras: Para[], o: BoxOpts, w: number, k: number) {
-  return paras.reduce((sum, p, i) => {
-    const n = wrap(spansOf(p, o, k), (w - marginOf(p)) * 72).length;
-    const after = i < paras.length - 1 ? (p.after ?? 0) * k : 0;
-    return sum + (n * lineOf(p, o, k) + after) / 72;
-  }, 0);
-}
-
-/** The scale in [floor, 1] at which `paras` fit `h` inches and their longest word `w`. */
-function fitScale(paras: Para[], o: BoxOpts, w: number, h: number) {
-  let k = 1;
-  const floor = o.floor ?? 0.6;
-  const widest = (kk: number) =>
-    Math.max(...paras.map((p) => longest(spansOf(p, o, kk)) / 72 + marginOf(p)));
-  while (k > floor && (parasHeight(paras, o, w, k) > h + 0.005 || widest(k) > w)) k -= 0.02;
-  return Math.max(k, floor);
-}
-
-/** A paragraph's runs with a forced line break (`\n`) where the web breaks it, `text-wrap:
- *  balance` or `pretty`, at the drawn size, so PowerPoint sets the slide's lines. */
-function broken(p: Para, o: BoxOpts, k: number, w: number, set: typeof pretty): Run[] {
-  const lines = set(spansOf(p, o, k), (w - marginOf(p)) * 72);
-  if (!lines || lines.length < 2) return p.runs;
-  // Each line's end in the paragraph's text, past the spaces it broke at.
-  const text = p.runs.map((r) => r.text).join("");
-  const cuts: [number, number][] = [];
-  let at = 0;
-  for (const line of lines.slice(0, -1)) {
-    at = text.indexOf(line.text, at) + line.text.length;
-    // A line the text breaks itself keeps its own break.
-    if (text[at] === "\n") {
-      at++;
-      continue;
-    }
-    const gap = /^[ \t]*/.exec(text.slice(at))![0].length;
-    cuts.push([at, at + gap]);
-    at += gap;
-  }
-  const out: Run[] = [];
-  let pos = 0;
-  for (const r of p.runs) {
-    let t = "";
-    for (let i = 0; i < r.text.length; i++, pos++) {
-      const cut = cuts.find(([from, to]) => pos >= from && pos < to);
-      if (cut) {
-        if (pos === cut[0]) t += "\n";
-      } else {
-        if (cuts.some(([from, to]) => from === to && pos === from)) t += "\n";
-        t += r.text[i];
-      }
-    }
-    out.push({ ...r, text: t });
-  }
-  return out;
-}
-
-/** Text the web slide prints as typed, so a `*` or a backtick in it stays a character. */
-const literal = (text: string): Para => ({ runs: [{ text }] });
-
-const asParas = (p: Para[] | Para | string, c: Palette): Para[] =>
-  typeof p === "string" ? [{ runs: md(p, c) }] : Array.isArray(p) ? p : [p];
-
 /** A text box at x, y, w, h whose paragraphs shrink together until their measure fits. */
 function box(
   s: PSlide,
@@ -374,11 +97,12 @@ function box(
   if (!paras.length) return;
   // A box too short for its lines keeps their size and closes their leading first, down to the
   // size itself: a box cut to a label's height on the web holds the label at its size.
-  let k = fitScale(paras, o, w, h);
+  const area = { w, h };
+  let k = fitScale(paras, o, area);
   if (k < 1) {
     const base = Math.min(...paras.map((p) => p.line ?? o.line ?? LEADING.body));
     for (let sc = 0.98; sc * base >= 1; sc -= 0.02)
-      if (fitScale(paras, { ...o, lineScale: sc }, w, h) === 1) {
+      if (fitScale(paras, { ...o, lineScale: sc }, area) === 1) {
         o = { ...o, lineScale: sc };
         k = 1;
         break;
@@ -387,15 +111,19 @@ function box(
   const runs: Run[] = [];
   paras.forEach((p, i) => {
     const last = i === paras.length - 1;
-    const size = drawnSize(p, o, k);
-    breaks(broken(p, o, k, w, o.balance || p.balance ? balance : pretty)).forEach((r, j, all) => {
+    const { size, face: fontFace, bold } = paraType(p, o, k);
+    const lines = (o.balance || p.balance ? balance : pretty)(
+      spansOf(p, o, k),
+      (w - marginOf(p)) * 72,
+    );
+    breaks(breakAt(p.runs, lines)).forEach((r, j, all) => {
       runs.push({
         text: r.text,
         options: {
-          fontFace: (p.mono ?? o.mono) ? MONO : SANS,
+          fontFace,
           fontSize: size,
           color: o.color,
-          bold: p.bold ?? o.bold,
+          bold,
           italic: o.italic,
           ...(o.tracking ? { charSpacing: Math.round(o.tracking * size * 10) / 10 } : {}),
           align: p.align ?? o.align ?? "left",
@@ -442,15 +170,6 @@ function box(
   });
 }
 
-/** The height a box of `content` needs at full size, capped at `max`. */
-function need(content: Para[] | Para | string, c: Palette, w: number, o: BoxOpts, max = H) {
-  return Math.min(max, parasHeight(asParas(content, c), o, w, 1));
-}
-
-/** The brand card's corner, `--slide-radius` at 1920: 40 px at the top left and bottom right, a
- *  quarter of it at the other two, which the post-processing sets. */
-const CORNER = 40 / 144;
-
 /** A card: the brand's corners, or every corner `r` round where given, as a pill or a label box. */
 function card(
   s: PSlide,
@@ -475,10 +194,11 @@ function card(
 
 /** A process slide's footer, `SlideCaption` on the web: brand's teal callout as wide as its
  *  text, centred, at `y`; returns its height. */
-function caption(s: PSlide | undefined, c: Palette, text: string, y: number) {
+function caption(s: PSlide | undefined, look: Look, text: string, y: number) {
+  const { c } = look;
   const o: BoxOpts = { size: PT.base, color: c.ink, align: "center", valign: "middle" };
-  const fw = Math.min(CW, 1365 / 144, textWidth(text, PT.base) + 2 * CALLOUT_PAD + 0.02);
-  const th = need(text, c, fw - 2 * CALLOUT_PAD, o);
+  const fw = Math.min(CW, 1365 / 144, textWidth(text, o) + 2 * CALLOUT_PAD + 0.02);
+  const th = look.need(text, fw - 2 * CALLOUT_PAD, o);
   const h = th + 2 * CALLOUT_PAD;
   if (!s) return h;
   card(s, (W - fw) / 2, y, fw, h, c.callout(c.teal));
@@ -518,7 +238,7 @@ function arrow(
 }
 
 /** A chip's text width in inches per point of size, in the face a chip sets it in. */
-const chipAdvance = (text: string, mono: boolean) => textWidth(text, 1, mono, mono);
+const chipAdvance = (text: string, mono: boolean) => textWidth(text, { size: 1, mono, bold: mono });
 const chipWidth = (text: string, size: number, mono: boolean) =>
   chipAdvance(text, mono) * size + 0.3;
 
@@ -616,15 +336,11 @@ type ChartFix = { now: number; unnamed: number[] } | { level: boolean };
 
 interface Ctx {
   pptx: Pptx;
-  c: Palette;
+  look: Look;
   assets: string;
-  dark: boolean;
   warnings: string[];
   /** Per chart number, what `finishChart` sets on it. */
   charts: Map<number, ChartFix>;
-  /** The words the engine prints itself, in the deck's language. */
-  words: (typeof WORDS)["en" | "de"];
-  lang: ReturnType<typeof deckLang>;
 }
 
 /** A deck file's path: a root path under the consumer's public directory, else a file path as it
@@ -664,10 +380,10 @@ function picture(
     ctx.warnings.push(
       `image ${src}: ${existsSync(path) ? "unreadable format" : `not found under ${ctx.assets}`}`,
     );
-    card(s, x, y, w, h, ctx.c.tint, ctx.c.border);
-    box(s, ctx.c, o.alt || src, x + 0.1, y + 0.1, w - 0.2, h - 0.2, {
+    card(s, x, y, w, h, ctx.look.c.tint, ctx.look.c.border);
+    box(s, ctx.look.c, o.alt || src, x + 0.1, y + 0.1, w - 0.2, h - 0.2, {
       size: PT.sm,
-      color: ctx.c.muted,
+      color: ctx.look.c.muted,
       align: "center",
       valign: "middle",
     });
@@ -724,18 +440,9 @@ const pictureLink = (href?: string) =>
       }
     : {};
 
-const THEME: Record<SectionTheme, keyof Palette> = {
-  primary: "teal",
-  secondary: "purple",
-  accent: "amber",
-  warning: "amber",
-  success: "green",
-  deepdive: "purple",
-};
-
 /** The brand strip and footer, where the web stands them. */
 function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
-  const { c } = ctx;
+  const { c } = ctx.look;
   s.background = { color: c.bg };
   // The strip's teal-to-purple gradient as twenty-four steps, since a pptxgenjs shape takes no
   // gradient fill.
@@ -749,7 +456,7 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
       0,
       Math.min(W / steps + 0.01, W - x),
       16 / 144,
-      mix(c.purple, c.teal, i / (steps - 1)),
+      mixColor(c.purple, c.teal, i / (steps - 1)),
     );
   }
   const slide = deck.slides[index];
@@ -769,7 +476,7 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   if (!closingCentred) {
     let x: number;
     if (corner.src === HW_LOGO.src) {
-      const [path, ratio] = brandCut(`${mark}${ctx.dark ? "-night" : ""}`);
+      const [path, ratio] = brandCut(`${mark}${ctx.look.dark ? "-night" : ""}`);
       const h = mark === "lockup" ? lockupH : markH;
       x = right - h * ratio;
       s.addImage({ path, x, y: baseY - h / 2, w: h * ratio, h, altText: HW_LOGO.alt });
@@ -858,8 +565,8 @@ const profileLink = (url: string, c: Palette): Para => ({
 });
 
 /** The height a slide's footer takes above the bottom edge: its line under a rule. */
-function footerHeight(ctx: Ctx, text?: string): number {
-  return text ? need(text, ctx.c, CW, { size: PT.base, color: ctx.c.ink }, 0.6) + 0.25 : 0;
+function footerHeight(look: Look, text?: string): number {
+  return text ? Math.min(0.6, look.need(text, CW, { size: PT.base, color: look.c.ink })) + 0.25 : 0;
 }
 
 /** The slide's footer (`SlideFooter` on the web): one line under a rule, at the bottom or at
@@ -874,32 +581,33 @@ function footer(
 ) {
   if (!text) return;
   s.addShape("line", {
-    x: SIDE,
+    x: EDGE,
     y: top + 0.05,
     w: CW,
     h: 0.001,
-    line: { color: ctx.c.border, width: 0.75 },
+    line: { color: ctx.look.c.border, width: 0.75 },
   });
-  box(s, ctx.c, text, SIDE, top + 0.15, CW, h - 0.15, {
+  box(s, ctx.look.c, text, EDGE, top + 0.15, CW, h - 0.15, {
     size: PT.base,
-    color: ctx.c.ink,
+    color: ctx.look.c.ink,
     align: centered ? "center" : "left",
   });
 }
 
 /** Kicker, principle pill, title and subtitle; returns where the body starts. */
 function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
-  const { c } = ctx;
+  const { c } = ctx.look;
   let y = 58 / 144;
   // The kicker band's second row, where the principle pill wraps as on the web.
   let wrapped = 0;
   const kicker = h.sectionLabel ?? h.preText;
   if (kicker || h.principle) {
-    let x = SIDE;
+    let x = EDGE;
     // Teal in every section, the website's mono caps.
     if (kicker) {
       // The web's label line, 1.4 of its size, as wide as its capitals.
-      const kw = textWidth(kicker.toUpperCase(), PT.base, true, false, 0.06) + 0.02;
+      const kw =
+        textWidth(kicker.toUpperCase(), { size: PT.base, mono: true, tracking: 0.06 }) + 0.02;
       box(s, c, { runs: [caps(kicker)] }, x, 0.38, Math.min(kw, CW), 0.35, {
         size: PT.base,
         mono: true,
@@ -912,10 +620,10 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
     }
     if (h.principle) {
       // On the print route a wrapped pill stands 65 px below the label's row, the title 76 px.
-      const row = x + chipWidth(h.principle, PT.sm, false) > W - SIDE ? 65 / 144 : 0;
+      const row = x + chipWidth(h.principle, PT.sm, false) > W - EDGE ? 65 / 144 : 0;
       if (row) {
         wrapped = 76 / 144;
-        x = SIDE;
+        x = EDGE;
       }
       chip(s, c, h.principle, x, y + row + 0.02, PT.sm, c.tint, c.ink, false);
     }
@@ -933,24 +641,17 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
       balance: true,
       align: centered ? "center" : "left",
     };
-    const hh = need(h.headline, c, CW, o, 1.1);
-    box(s, c, h.headline, SIDE, y, CW, Math.max(hh, 0.45), o);
+    const hh = Math.min(1.1, ctx.look.need(h.headline, CW, o));
+    box(s, c, h.headline, EDGE, y, CW, Math.max(hh, 0.45), o);
     y += Math.max(hh, 0.45) + 0.08;
   }
   if (h.subtitle) {
     const o: BoxOpts = { size: PT.base, color: c.muted, align: centered ? "center" : "left" };
-    const sh = need(h.subtitle, c, CW, o, 0.7);
-    box(s, c, h.subtitle, SIDE, y, CW, sh, o);
+    const sh = Math.min(0.7, ctx.look.need(h.subtitle, CW, o));
+    box(s, c, h.subtitle, EDGE, y, CW, sh, o);
     y += sh;
   }
   return y + 0.3;
-}
-
-interface Area {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
 }
 
 const bodyO = (c: Palette, k: number, extra: Partial<BoxOpts> = {}): BoxOpts => ({
@@ -958,26 +659,6 @@ const bodyO = (c: Palette, k: number, extra: Partial<BoxOpts> = {}): BoxOpts => 
   color: c.ink,
   ...extra,
 });
-
-function bulletParas(
-  items: (string | { text: string; children: string[] })[],
-  c: Palette,
-  ordered?: boolean,
-): Para[] {
-  return items.flatMap((item) =>
-    typeof item === "string"
-      ? [{ runs: md(item, c), bullet: ordered ? ("number" as const) : true, after: 6 }]
-      : [
-          { runs: md(item.text, c), bullet: ordered ? ("number" as const) : true, after: 4 },
-          ...item.children.map((ch) => ({
-            runs: md(ch, c),
-            bullet: true as const,
-            indent: 1,
-            after: 4,
-          })),
-        ],
-  );
-}
 
 /** A card with a title and items or text, as two-column, four-column and comparison sides draw. */
 function itemCard(
@@ -994,7 +675,7 @@ function itemCard(
     marker?: MarkerHue;
   },
 ) {
-  const { c } = ctx;
+  const { c } = ctx.look;
   card(s, a.x, a.y, a.w, a.h, c.card, o.tone ?? c.border);
   const pad = 0.2;
   const paras: Para[] = [];
@@ -1052,7 +733,7 @@ const highlightPara = (text: string, color: string): Para => ({
  *  side that does not add and on a struck before side, and its highlight and plain items under it, struck through
  *  on a struck before side, with the heights both need. */
 function beforeAfterSide(
-  c: Palette,
+  look: Look,
   sd: BeforeAfterSide,
   i: number,
   strike: boolean,
@@ -1061,6 +742,7 @@ function beforeAfterSide(
   k: number,
   adds: boolean,
 ) {
+  const { c } = look;
   const tone = i ? c.teal : c.muted;
   const icon = (i && !adds) || (!i && strike) ? (o.size * 1.3) / 72 : 0;
   const indent = icon && icon + 0.12;
@@ -1082,8 +764,8 @@ function beforeAfterSide(
     indent,
     label,
     rest,
-    labelH: Math.max(icon, need(label, c, inner - indent, o)),
-    restH: need(rest, c, inner, o),
+    labelH: Math.max(icon, look.need(label, inner - indent, o)),
+    restH: look.need(rest, inner, o),
   };
 }
 
@@ -1091,7 +773,7 @@ const BA_PAD = 0.25;
 const BA_GAP = 0.7;
 
 function beforeAfterHeight(
-  c: Palette,
+  look: Look,
   sides: BeforeAfterSide[],
   strike: boolean,
   w: number,
@@ -1101,7 +783,7 @@ function beforeAfterHeight(
 ) {
   return Math.max(
     ...sides.map((sd, i) => {
-      const l = beforeAfterSide(c, sd, i, strike, (w - BA_GAP * k) / 2, o, k, adds);
+      const l = beforeAfterSide(look, sd, i, strike, (w - BA_GAP * k) / 2, o, k, adds);
       return (2 * BA_PAD + 0.15 + 0.1) * k + l.labelH + l.restH;
     }),
   );
@@ -1120,16 +802,16 @@ function beforeAfter(
   k = 1,
   adds = false,
 ) {
-  const { c } = ctx;
+  const { c } = ctx.look;
   // The web shrinks a block whole: its paddings and gap with its text.
   const pad = BA_PAD * k;
   const gap = BA_GAP * k;
   const half = (a.w - gap) / 2;
   sides.forEach((sd, i) => {
     const x = a.x + i * (half + gap);
-    const l = beforeAfterSide(c, sd, i, strike, half, o, k, adds);
+    const l = beforeAfterSide(ctx.look, sd, i, strike, half, o, k, adds);
     if (i) card(s, x, a.y, half, a.h, c.tealTint, c.teal);
-    else card(s, x, a.y, half, a.h, strike ? mix(c.muted, c.bg, 0.07) : c.card, c.border);
+    else card(s, x, a.y, half, a.h, strike ? mixColor(c.muted, c.bg, 0.07) : c.card, c.border);
     const top = a.y + pad;
     if (l.icon) circleMark(s, x + pad, top + (l.labelH - l.icon) / 2, l.icon, l.tone, i === 1);
     box(s, c, l.label, x + pad + l.indent, top, half - 2 * pad - l.indent, l.labelH, {
@@ -1156,10 +838,11 @@ function beforeAfter(
  *  56 rem column. Draws where `s` is given; returns the height. */
 function comparisonFoot(
   s: PSlide | undefined,
-  c: Palette,
+  look: Look,
   d: { punchline?: string; footnotes?: string[] },
   y: number,
 ) {
+  const { c } = look;
   const punchO: BoxOpts = {
     size: PT.h4,
     mono: true,
@@ -1174,12 +857,12 @@ function comparisonFoot(
   const nw = Math.min(
     CW,
     56 * REM,
-    Math.max(0, ...(d.footnotes ?? []).map((f) => textWidth(f, 13.33) + 0.02)),
+    Math.max(0, ...(d.footnotes ?? []).map((f) => textWidth(f, { size: 13.33 }) + 0.02)),
   );
   const punch: Para = { runs: md(d.punchline ?? "", c), balance: true };
   const notes = (d.footnotes ?? []).map((f) => ({ runs: md(f, c) }));
-  const ph = d.punchline ? need(punch, c, pw, punchO) : 0;
-  const nh = notes.length ? need(notes, c, nw, noteO) : 0;
+  const ph = d.punchline ? look.need(punch, pw, punchO) : 0;
+  const nh = notes.length ? look.need(notes, nw, noteO) : 0;
   let h = 0;
   if (ph) {
     h += 2.5 * REM;
@@ -1202,11 +885,12 @@ const SIDE_HUES: Record<SideTone, MarkerHue | "muted"> = {
 };
 
 /** The height of each row of a table at scale k in width w, its header first. */
-function tableRows(b: Extract<ContentBlock, { type: "table" }>, c: Palette, w: number, k: number) {
+function tableRows(look: Look, b: Extract<ContentBlock, { type: "table" }>, { w, k }: Measure) {
+  const { c } = look;
   const cols = Math.max(b.headers?.length ?? 0, ...b.rows.map((r) => r.length));
   const o = bodyO(c, k);
   const row = (r: string[]) =>
-    Math.max(...r.map((t) => need(t, c, w / cols - 0.2, { ...o, size: PT.base * 0.875 * k }))) +
+    Math.max(...r.map((t) => look.need(t, w / cols - 0.2, { ...o, size: PT.base * 0.875 * k }))) +
     0.3;
   return [...(b.headers ? [row(b.headers)] : []), ...b.rows.map(row)];
 }
@@ -1228,23 +912,25 @@ function quoteParas(b: Extract<ContentBlock, { type: "quote" }>, c: Palette, k: 
     : [words];
 }
 
-function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number {
-  if (b.type === "labeled-grid") return blockHeight(labeledGridAsCards(b), c, w, k);
+function blockHeight(look: Look, b: ContentBlock, m: Measure): number {
+  const { w, k } = m;
+  const { c } = look;
+  if (b.type === "labeled-grid") return blockHeight(look, labeledGridAsCards(b), m);
   const o = bodyO(c, k);
   switch (b.type) {
     case "paragraph":
-      return need(b.text, c, w, o);
+      return look.need(b.text, w, o);
     case "bullets":
-      return need(bulletParas(b.items, c, b.ordered), c, w, o);
+      return look.need(bulletParas(b.items, c, b.ordered), w, o);
     case "quote":
       return quoteParas(b, c, k).reduce(
-        (h, [p, size]) => h + need(p, c, w - QUOTE_INDENT * k, { ...o, size }) + 0.1,
+        (h, [p, size]) => h + look.need(p, w - QUOTE_INDENT * k, { ...o, size }) + 0.1,
         0,
       );
     case "callout":
-      return need(b.text, c, w - 2 * CALLOUT_PAD * k, o) + 2 * CALLOUT_PAD * k;
+      return look.need(b.text, w - 2 * CALLOUT_PAD * k, o) + 2 * CALLOUT_PAD * k;
     case "table":
-      return tableRows(b, c, w, k).reduce((x, y) => x + y, 0);
+      return tableRows(look, b, m).reduce((x, y) => x + y, 0);
     case "terminal":
       return (b.commands.length * PT.sm * k * 1.5) / 72 + 0.45;
     case "code":
@@ -1252,20 +938,24 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
       const codeW = b.type === "annotated-code" && b.notes.length ? w * 0.62 : w;
       const lines = codeLines(b.code).map((l) => ({ runs: [{ text: l || " " }] }));
       return (
-        need(lines, c, codeW - 0.4, { size: PT.sm * k, mono: true, line: 1.3, color: c.codeInk }) +
-        0.4
+        look.need(lines, codeW - 0.4, {
+          size: PT.sm * k,
+          mono: true,
+          line: 1.3,
+          color: c.codeInk,
+        }) + 0.4
       );
     }
     case "transform":
-      return beforeAfterHeight(c, [b.before, b.after], false, w, o, k);
+      return beforeAfterHeight(look, [b.before, b.after], false, w, o, k);
     case "positions":
-      return positions(undefined, c, b, { x: 0, y: 0, w }, k);
+      return positions(undefined, look, b, { x: 0, y: 0, w }, k);
     case "two-column": {
       const sides = [b.left, b.right];
       return (
         Math.max(
           ...sides.map((sd) =>
-            need(
+            look.need(
               [
                 { runs: [{ text: "x" }], rel: 1.2, after: 6 },
                 ...(sd.items ?? []).map((i) => ({
@@ -1275,7 +965,6 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
                 })),
                 ...(sd.text ? [{ runs: md(sd.text, c) }] : []),
               ],
-              c,
               w / 2 - 0.6,
               o,
             ),
@@ -1287,12 +976,11 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
       return (
         Math.max(
           ...b.columns.map((col) =>
-            need(
+            look.need(
               [
                 { runs: [{ text: col.title }], rel: 1.2, after: 6 },
                 ...col.items.map((i) => ({ runs: md(i, c), bullet: true as const, after: 5 })),
               ],
-              c,
               w / b.columns.length - 0.5,
               o,
             ),
@@ -1302,24 +990,24 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
     case "hooks":
       return b.items.length * ((PT.base * k * 1.9) / 72 + 0.12);
     case "cards":
-      return cardsLayout(b, c, w, k).h;
+      return cardsLayout(look, b, m).h;
     case "pipeline":
-      return blockHeight(pipelineAsFlow(b), c, w, k);
+      return blockHeight(look, pipelineAsFlow(b), m);
     case "flow":
-      return flowBlock(undefined, c, b, { x: 0, y: 0, w }, k);
+      return flowBlock(undefined, look, b, { x: 0, y: 0, w }, k);
     case "layers":
       return b.layers.length * (0.5 * k + 0.1);
     case "timeline":
       return (
         0.6 +
         Math.max(
-          ...b.events.map((e) => need(eventParas(e, c, false), c, w / b.events.length - 0.15, o)),
+          ...b.events.map((e) => look.need(eventParas(e, c, false), w / b.events.length - 0.15, o)),
         )
       );
     case "bars":
-      return barsLayout(b, { c, words: WORDS.en } as Ctx, w, k).h;
+      return barsLayout(look, b, m).h;
     case "numbers":
-      return numbersLayout(b, c, w, k).h;
+      return numbersLayout(look, b, m).h;
     case "image":
     case "image-steps":
     case "gallery":
@@ -1331,12 +1019,11 @@ function blockHeight(b: ContentBlock, c: Palette, w: number, k: number): number 
     case "code-and-text":
       return Math.max(
         (b.code.split("\n").length * PT.sm * k * 1.3) / 72 + 0.4,
-        need(
+        look.need(
           b.sections.flatMap((sc) => [
             { runs: [{ text: sc.title }], after: 4 },
             { runs: md(sc.text, c), after: 8 },
           ]),
-          c,
           w / 2 - 0.2,
           o,
         ),
@@ -1357,7 +1044,7 @@ const GROWS = new Set([
 /** A gallery: its pictures and videos in a row or grid of equal cells, each over its caption, and
  *  its tags as chips under them. */
 function gallery(s: PSlide, ctx: Ctx, b: Extract<ContentBlock, { type: "gallery" }>, area: Area) {
-  const { c } = ctx;
+  const { c } = ctx.look;
   const tagH = b.tags?.length ? 0.4 : 0;
   const a = { ...area, h: area.h - tagH };
   const n = b.items.length;
@@ -1397,7 +1084,7 @@ function gallery(s: PSlide, ctx: Ctx, b: Extract<ContentBlock, { type: "gallery"
 
 function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, centered: boolean) {
   if (b.type === "labeled-grid") return drawBlock(s, ctx, labeledGridAsCards(b), a, k, centered);
-  const { c } = ctx;
+  const { c } = ctx.look;
   const o = bodyO(c, k, centered ? { align: "center" } : {});
   switch (b.type) {
     case "paragraph":
@@ -1446,12 +1133,12 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       // the ground with its border at 25 %, the text the tone mixed 60 % with ink.
       const tone =
         b.variant === "warning" ? c.amber : b.variant === "success" ? c.green : undefined;
-      const ink = tone ? mix(tone, c.ink, 0.6) : c.ink;
+      const ink = tone ? mixColor(tone, c.ink, 0.6) : c.ink;
       // As wide as its text, at the body size, brand's callout padding round it.
       const pad = CALLOUT_PAD * k;
-      const w = b.fullWidth ? a.w : Math.min(a.w, textWidth(b.text, o.size) + 2 * pad + 0.02);
-      const fill = tone ? mix(tone, c.bg, 0.07) : c.callout(c.purple);
-      card(s, a.x, a.y, w, a.h, fill, tone && mix(tone, c.bg, 0.25));
+      const w = b.fullWidth ? a.w : Math.min(a.w, textWidth(b.text, o) + 2 * pad + 0.02);
+      const fill = tone ? mixColor(tone, c.bg, 0.07) : c.callout(c.purple);
+      card(s, a.x, a.y, w, a.h, fill, tone && mixColor(tone, c.bg, 0.25));
       return box(s, c, b.text, a.x + pad, a.y + pad, w - 2 * pad, a.h - 2 * pad, {
         ...o,
         color: ink,
@@ -1494,7 +1181,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         w: a.w,
         colW,
         // The planned row heights, so the table fills the area the layout gave it.
-        rowH: tableRows(b, c, a.w, k),
+        rowH: tableRows(ctx.look, b, { w: a.w, k }),
         fontFace: SANS,
         fontSize: size,
         color: c.ink,
@@ -1514,7 +1201,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const codeW = notes.length ? a.w * 0.62 : a.w;
       const lh = (PT.sm * k * 1.3) / 72;
       for (const n of notes)
-        rect(s, a.x, a.y + 0.2 + (n.line - 1) * lh, codeW, lh, mix(c.teal, c.code, 0.35));
+        rect(s, a.x, a.y + 0.2 + (n.line - 1) * lh, codeW, lh, mixColor(c.teal, c.code, 0.35));
       box(
         s,
         c,
@@ -1617,7 +1304,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
     case "transform":
       return beforeAfter(s, ctx, a, bodyO(c, k), [b.before, b.after], false, k);
     case "positions":
-      positions(s, c, b, a, k);
+      positions(s, ctx.look, b, a, k);
       return;
     case "hooks": {
       // The web's hook list: one row per event, its name as a mono chip before the description.
@@ -1648,7 +1335,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "cards": {
-      const L = cardsLayout(b, c, a.w, k);
+      const L = cardsLayout(ctx.look, b, { w: a.w, k });
       let rowY = a.y;
       L.cells.forEach((cell, i) => {
         const [r, col] = [Math.floor(i / L.cols), i % L.cols];
@@ -1674,7 +1361,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
             y,
             cell.mark,
             cell.mark,
-            solid ? c.teal : mix(c.teal, c.card, 0.07),
+            solid ? c.teal : mixColor(c.teal, c.card, 0.07),
             undefined,
             10 / 144,
           );
@@ -1710,7 +1397,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
     case "pipeline":
       return drawBlock(s, ctx, pipelineAsFlow(b), a, k, centered);
     case "flow":
-      flowBlock(s, c, b, a, k);
+      flowBlock(s, ctx.look, b, a, k);
       return;
     case "layers": {
       const n = b.layers.length;
@@ -1808,7 +1495,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         });
         // A segment's label breaks the middle of the line that leads to its event, as on the web.
         if (e.segment && i > 0) {
-          const tw = textWidth(e.segment, PT.label * k, true) + 0.16;
+          const tw = textWidth(e.segment, { size: PT.label * k, mono: true }) + 0.16;
           box(s, c, { runs: [{ text: e.segment }] }, cx - ew / 2 - tw / 2, ly - 0.11, tw, 0.22, {
             size: PT.label * k,
             mono: true,
@@ -1835,15 +1522,22 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "bars": {
-      const L = barsLayout(b, ctx, a.w, k);
+      const L = barsLayout(ctx.look, b, { w: a.w, k });
       for (const r of L.rows) {
         const y = a.y + r.y;
         box(s, c, r.label, a.x, y + r.labelY, L.labelW, r.labelH, L.labelO);
         const ty = y + r.barY;
         if (b.max != null) {
           // The track ends on a rule and marks its quarters in the ground, under the bar.
-          rect(s, a.x + L.trackX, ty, L.trackW, L.barH, mix(c.ink, c.bg, 0.07));
-          rect(s, a.x + L.trackX + L.trackW - 4 / 144, ty, 4 / 144, L.barH, mix(c.ink, c.bg, 0.25));
+          rect(s, a.x + L.trackX, ty, L.trackW, L.barH, mixColor(c.ink, c.bg, 0.07));
+          rect(
+            s,
+            a.x + L.trackX + L.trackW - 4 / 144,
+            ty,
+            4 / 144,
+            L.barH,
+            mixColor(c.ink, c.bg, 0.25),
+          );
           for (const q of [0.25, 0.5, 0.75])
             rect(s, a.x + L.trackX + q * L.trackW - 1 / 144, ty, 2 / 144, L.barH, c.bg);
         }
@@ -1875,7 +1569,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "numbers": {
-      const L = numbersLayout(b, c, a.w, k);
+      const L = numbersLayout(ctx.look, b, { w: a.w, k });
       L.cells.forEach((cell) => {
         const [x, y] = [a.x + cell.x, a.y + cell.y];
         box(s, c, cell.figure, x, y, L.cw, L.fig, L.figO);
@@ -2081,17 +1775,14 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
   }
 }
 
-/** A rem of the print route's stage, in inches. */
-const REM = STAGE.rem / 144;
-
 /** The rule and its gap before a quote's words: brand's 2 px and 1.25 rem on the 1920 stage. */
 const QUOTE_INDENT = 2 / 144 + 1.25 * REM;
 
 /** A bars block as `Bars` sets it: four bars and more one row each, the label left of its track,
  *  fewer with the label above; a highlight in teal and bold, the other bars context in grey; without
  *  a named scale each figure follows its bar's end. */
-function barsLayout(b: Extract<ContentBlock, { type: "bars" }>, ctx: Ctx, w: number, k: number) {
-  const { c } = ctx;
+function barsLayout(look: Look, b: Extract<ContentBlock, { type: "bars" }>, { w, k }: Measure) {
+  const { c } = look;
   const bars = b.order === "given" ? b.bars : [...b.bars].sort((p, q) => q.value - p.value);
   const max = b.max ?? (Math.max(...bars.map((x) => x.value), 0) || 1);
   const inline = bars.length > 3;
@@ -2116,15 +1807,15 @@ function barsLayout(b: Extract<ContentBlock, { type: "bars" }>, ctx: Ctx, w: num
     const context = anyHighlight && !bar.highlight;
     const tone = context ? c.muted : bar.highlight ? c.teal : c.ink;
     const label: Para = { runs: md(bar.label, c, { color: tone }), bold: !context, balance: true };
-    const lh = need(label, c, labelW, labelO);
+    const lh = look.need(label, labelW, labelO);
     const rowH = inline ? Math.max(lh, barH) : lh + 0.75 * REM * k + barH;
     const from = ((bar.from ?? 0) / max) * trackW;
     const barW = Math.max(4 / 144, ((bar.value - (bar.from ?? 0)) / max) * trackW);
     const text =
       bar.display ??
       (bar.from != null
-        ? `${ctx.words.figure(bar.from)}–${ctx.words.figure(bar.value)}`
-        : ctx.words.figure(bar.value));
+        ? `${look.words.figure(bar.from)}–${look.words.figure(bar.value)}`
+        : look.words.figure(bar.value));
     const row = {
       y,
       label,
@@ -2133,7 +1824,7 @@ function barsLayout(b: Extract<ContentBlock, { type: "bars" }>, ctx: Ctx, w: num
       barY: inline ? (rowH - barH) / 2 : lh + 0.75 * REM * k,
       from,
       barW,
-      fill: bar.highlight || !anyHighlight ? c.teal : mix(c.ink, c.bg, 0.4),
+      fill: bar.highlight || !anyHighlight ? c.teal : mixColor(c.ink, c.bg, 0.4),
       value: { runs: [{ text }], bold: !context } as Para,
       valueO: {
         size: (inline ? PT.h3 : PT.title) * k,
@@ -2148,16 +1839,16 @@ function barsLayout(b: Extract<ContentBlock, { type: "bars" }>, ctx: Ctx, w: num
     return row;
   });
   const sourceH = b.source
-    ? 2.5 * REM * k + need(b.source, c, w, { size: PT.sm * k, color: c.muted })
+    ? 2.5 * REM * k + look.need(b.source, w, { size: PT.sm * k, color: c.muted })
     : 0;
   // A named scale is numbered under the last track at its ends and quarters.
   const scaleO: BoxOpts = { size: PT.h4 * k, color: c.muted, line: 1.375, align: "center" };
   const scaleY = y - (inline ? 1.25 : 3) * REM * k + 0.75 * REM * k;
-  const scaleH = b.max == null ? 0 : 0.75 * REM * k + need("0", c, w, scaleO);
+  const scaleH = b.max == null ? 0 : 0.75 * REM * k + look.need("0", w, scaleO);
   const h = y - (inline ? 1.25 : 3) * REM * k + scaleH + sourceH;
   const ticks = [0, 25, 50, 75, 100].map((q) => ({
     q,
-    text: ctx.words.figure((max * q) / 100),
+    text: look.words.figure((max * q) / 100),
   }));
   return { rows, barH, labelW, labelO, trackX, trackW, valueW, sourceH, h, scaleO, scaleY, ticks };
 }
@@ -2186,8 +1877,8 @@ function topology(
   a: Area,
   k: number,
 ): number {
-  const { c } = ctx;
-  const sp = (v: number) => v * 0.25 * REM * k;
+  const { c } = ctx.look;
+  const sp = (v: number) => spacing(v, k);
   const bd = (3 / 144) * k;
   // Sizes as drawn, in the half points pptxgenjs writes, so a box sized to its text holds it.
   const pt = (v: number) => Math.round(v * k * 2) / 2;
@@ -2211,7 +1902,7 @@ function topology(
         h,
         rectRadius:
           type === "subsystem" ? Math.min(0.9 * REM * k, h / 2) : Math.min(r, w / 2, h / 2),
-        fill: type === "platform" ? { type: "none" } : { color: mix(hue[type], c.bg, 0.07) },
+        fill: type === "platform" ? { type: "none" } : { color: mixColor(hue[type], c.bg, 0.07) },
         line: {
           color: hue[type],
           width: 1.5 * k,
@@ -2223,7 +1914,7 @@ function topology(
   const column = (parts: [Para, BoxOpts, number][], w: number, x?: number, y = 0) => {
     let h = 0;
     for (const [p, o, gap] of parts) {
-      const ph = need(p, c, w, o);
+      const ph = ctx.look.need(p, w, o);
       h += gap;
       if (s && x !== undefined) box(s, c, p, x, y + h, w, ph, o);
       h += ph;
@@ -2243,8 +1934,8 @@ function topology(
   // The enabling columns: 14 rem wide, wider where a word needs it, as `md:w-56 md:min-w-min`.
   const enW = d.enabling.map((t) => {
     const words = [
-      ...t.name.split(/\s+/).map((w) => textWidth(w, titleO.size, TITLE.mono, TITLE.bold, -0.015)),
-      ...t.experts.flatMap((e) => e.split(/\s+/).map((w) => textWidth(w, textO.size))),
+      ...t.name.split(/\s+/).map((w) => textWidth(w, titleO)),
+      ...t.experts.flatMap((e) => e.split(/\s+/).map((w) => textWidth(w, textO))),
     ];
     return Math.max(sp(56), Math.max(...words) + 0.02 + 2 * sp(4) + 2 * bd);
   });
@@ -2265,12 +1956,12 @@ function topology(
   // The stream teams, a row each: the roles after the name where both fit one line.
   const sIn = mw - 2 * sp(5) - 2 * bd;
   const streams = d.streamAligned.map((t) => {
-    const nw = textWidth(t.name, titleO.size, TITLE.mono, TITLE.bold, -0.015) + 0.02;
+    const nw = textWidth(t.name, titleO) + 0.02;
     const r = roles(t.roles);
-    const rw = textWidth(r.runs.map((x) => x.text).join(""), textO.size, false, true);
+    const rw = textWidth(r.runs.map((x) => x.text).join(""), { size: textO.size, bold: true });
     const beside = t.roles.length > 0 && nw + sp(6) + rw <= sIn;
-    const nh = need(name(t.name, c.ink), c, sIn, titleO);
-    const rh = t.roles.length ? need(r, c, beside ? rw + 0.02 : sIn, textO) : 0;
+    const nh = ctx.look.need(name(t.name, c.ink), sIn, titleO);
+    const rh = t.roles.length ? ctx.look.need(r, beside ? rw + 0.02 : sIn, textO) : 0;
     return {
       t,
       r,
@@ -2317,7 +2008,7 @@ function topology(
       2 * bd
     : 0;
 
-  const words = ctx.words.teams;
+  const words = ctx.look.words.teams;
   const legO: BoxOpts = { size: pt(17.33), color: c.muted, line: 1.4, valign: "middle" };
   // The legend's items in rows as `flex-wrap` sets them: x and row of each.
   const legRow = Math.max(sp(8), (legO.size * 1.4) / 72);
@@ -2329,7 +2020,7 @@ function topology(
   }[] = [];
   if (d.legend !== false)
     for (const type of teamTypesDrawn(d)) {
-      const tw = textWidth(words[type], legO.size) + 0.02;
+      const tw = textWidth(words[type], legO) + 0.02;
       const last = legend.at(-1);
       let lx = last ? last.x + sp(17) + last.tw + sp(10) : 0;
       let row = last?.row ?? 0;
@@ -2339,7 +2030,7 @@ function topology(
   const legRows = legend.length ? legend.at(-1)!.row + 1 : 0;
   const legH = legRows && sp(4) + legRows * legRow + (legRows - 1) * sp(3);
   const capO: BoxOpts = { size: pt(PT.h4), color: c.muted, line: 1.4 };
-  const capH = d.caption ? sp(2) + need(d.caption, c, a.w, capO) : 0;
+  const capH = d.caption ? sp(2) + ctx.look.need(d.caption, a.w, capO) : 0;
   const rows = [rowH, platH, legH, capH].filter(Boolean);
   const total = rows.reduce((sum, h) => sum + h, 0) + (rows.length - 1) * sp(4);
   if (!s) return total;
@@ -2417,11 +2108,12 @@ function topology(
  *  a display line, centred. Draws where `s` is given; returns the height at scale k. */
 function positions(
   s: PSlide | undefined,
-  c: Palette,
+  look: Look,
   b: Extract<ContentBlock, { type: "positions" }>,
   a: { x: number; y: number; w: number },
   k: number,
 ): number {
+  const { c } = look;
   const rem = REM * k;
   const w = Math.min(a.w, 72 * rem);
   const x0 = a.x + (a.w - w) / 2;
@@ -2439,7 +2131,7 @@ function positions(
   // A column of paragraphs in width pw, drawn at x, y where both are given; returns its height.
   const stack = (list: [Para, BoxOpts, number][], pw: number, x?: number, y = 0) =>
     list.reduce((h, [p, o, g]) => {
-      const ph = need(p, c, pw, o);
+      const ph = look.need(p, pw, o);
       if (s && x !== undefined) box(s, c, p, x, y + h + g, pw, ph, o);
       return h + g + ph;
     }, 0);
@@ -2483,14 +2175,15 @@ function positions(
  *  is given; returns the height either way. */
 function flowSteps(
   s: PSlide | undefined,
-  c: Palette,
+  look: Look,
   steps: FlowStep[],
   a: { x: number; y: number; w: number },
   o: { highlight?: number; loop?: string; dense?: boolean; k: number },
 ): number {
+  const { c } = look;
   const { k } = o;
   const n = steps.length;
-  const sp = (v: number) => v * 0.25 * REM * k;
+  const sp = (v: number) => spacing(v, k);
   const narrow = n >= 6;
   const colW = a.w / n;
   const inner = colW - 2 * sp(narrow ? 2 : 5);
@@ -2544,7 +2237,7 @@ function flowSteps(
       // A word wider than the text column, such as a path in a chip, stands past it into the
       // step's padding, as the web's chip does.
       const pw = Math.min(colW, Math.max(inner, longest(spansOf(p, po, 1)) / 72 + 0.02));
-      const ph = need(p, c, pw, po);
+      const ph = look.need(p, pw, po);
       y += gap;
       if (s) box(s, c, p, centre(i) - pw / 2, y, pw, ph, po);
       y += ph;
@@ -2615,7 +2308,7 @@ function flowSteps(
       line: { type: "none" },
     });
     if (o.loop) {
-      const lw = textWidth(o.loop, PT.h4 * k, false, true) + sp(12);
+      const lw = textWidth(o.loop, { size: PT.h4 * k, bold: true }) + sp(12);
       // At least a line high, so the fit keeps the label at its size.
       const lh = Math.max(sp(7), (PT.h4 * k * 1.4) / 72);
       box(
@@ -2645,14 +2338,15 @@ function flowSteps(
  *  footer under a line. Draws where `s` is given; returns the height. */
 function flowBlock(
   s: PSlide | undefined,
-  c: Palette,
+  look: Look,
   b: Extract<ContentBlock, { type: "flow" }>,
   a: { x: number; y: number; w: number },
   k: number,
 ): number {
+  const { c } = look;
   const opts = { highlight: b.highlight, loop: b.loop, dense: b.dense, k };
-  if (!b.frame) return flowSteps(s, c, b.steps, a, opts);
-  const sp = (v: number) => v * 0.25 * REM * k;
+  if (!b.frame) return flowSteps(s, look, b.steps, a, opts);
+  const sp = (v: number) => spacing(v, k);
   const { label, notes = [], footer } = b.frame;
   const pad = sp(6);
   const labelH = label ? (13.33 * 1.4 * k) / 72 : 0;
@@ -2666,25 +2360,25 @@ function flowBlock(
   const notesW = notes.length
     ? Math.min(
         a.w / 3,
-        Math.max(...notes.map((t) => textWidth(t, 16 * k))) + BULLET_INDENT / 72 + 0.05,
+        Math.max(...notes.map((t) => textWidth(t, noteO))) + BULLET_INDENT / 72 + 0.05,
       )
     : 0;
   const stepsW = a.w - 2 * pad - (notes.length ? notesW + 2 * sp(6) : 0);
-  const stepsH = flowSteps(undefined, c, b.steps, { x: 0, y: 0, w: stepsW }, opts);
-  const notesH = notes.length ? need(noteParas, c, notesW, noteO) : 0;
+  const stepsH = flowSteps(undefined, look, b.steps, { x: 0, y: 0, w: stepsW }, opts);
+  const notesH = notes.length ? look.need(noteParas, notesW, noteO) : 0;
   const rowH = Math.max(stepsH, notesH, notes.length ? sp(16) : 0);
   const footO: BoxOpts = { size: 16 * k, color: c.muted, line: 1.45 };
-  const footH = footer ? need(footer, c, a.w - 2 * pad, footO) : 0;
+  const footH = footer ? look.need(footer, a.w - 2 * pad, footO) : 0;
   const h = pad + (label ? labelH + sp(4) : 0) + rowH + (footer ? sp(4) + sp(3) + footH : 0) + pad;
   if (!s) return h;
-  const tint = mix(c.teal, c.bg, 0.25);
+  const tint = mixColor(c.teal, c.bg, 0.25);
   s.addShape("round2DiagRect", {
     x: a.x,
     y: a.y,
     w: a.w,
     h,
     rectRadius: Math.min(CORNER, h / 2),
-    fill: { color: label ? mix(c.teal, c.bg, 0.07) : c.card },
+    fill: { color: label ? mixColor(c.teal, c.bg, 0.07) : c.card },
     line: { color: label ? c.teal : tint, width: 1, dashType: "dash" },
   });
   let y = a.y + pad;
@@ -2701,7 +2395,7 @@ function flowBlock(
     });
     y += labelH + sp(4);
   }
-  flowSteps(s, c, b.steps, { x: a.x + pad, y: y + (rowH - stepsH) / 2, w: stepsW }, opts);
+  flowSteps(s, look, b.steps, { x: a.x + pad, y: y + (rowH - stepsH) / 2, w: stepsW }, opts);
   if (notes.length) {
     const rx = a.x + pad + stepsW + sp(6);
     s.addShape("line", {
@@ -2734,17 +2428,13 @@ const CALLOUT_PAD = 1.75 * REM;
 
 /** A cards block as `Cards` sets it: the grid, the padding and gaps of each size, a short teal
  *  rule over the title or a number tile, every card in a row as tall as the tallest. */
-function cardsLayout(
-  b: Extract<ContentBlock, { type: "cards" }>,
-  c: Palette,
-  w: number,
-  k: number,
-) {
+function cardsLayout(look: Look, b: Extract<ContentBlock, { type: "cards" }>, { w, k }: Measure) {
+  const { c } = look;
   const n = b.items.length;
   const cols = b.columns ?? (n === 4 ? 2 : Math.min(n, 3));
   const wide = cols >= 4;
   const dense = !!b.dense;
-  const sp = (v: number) => v * 0.25 * REM * k;
+  const sp = (v: number) => spacing(v, k);
   const gap = sp(dense ? 5 : 6);
   const [padY, padX] = dense ? (wide ? [5, 5] : [6, 6]) : wide ? [6, 6] : [8, 9];
   const cw = (w - gap * (cols - 1)) / cols;
@@ -2779,8 +2469,8 @@ function cardsLayout(
         after: sp(dense ? 2 : 3) * 72,
       })),
     ];
-    const th = title ? need(title, c, inner, titleO) : 0;
-    const bh = body.length ? need(body, c, inner, textO) : 0;
+    const th = title ? look.need(title, inner, titleO) : 0;
+    const bh = body.length ? look.need(body, inner, textO) : 0;
     const parts = [mark, th, bh].filter(Boolean);
     return {
       it,
@@ -2817,11 +2507,11 @@ function cardsLayout(
 /** A numbers block as `Numbers` sets it: the grid `numbersGrid` picks, each figure at its one size
  *  with any leading words small, a rule over the label in one row, the label, its note. */
 function numbersLayout(
+  look: Look,
   b: Extract<ContentBlock, { type: "numbers" }>,
-  c: Palette,
-  w: number,
-  k: number,
+  { w, k }: Measure,
 ) {
+  const { c } = look;
   const { cols, wrapped, size } = numbersGrid(b.items.map((i) => i.value));
   const gapX = (wrapped ? 4 : 3.5) * REM * k;
   const gapY = (wrapped ? (cols === 3 ? 7 : 4) : 3) * REM * k;
@@ -2872,7 +2562,7 @@ function numbersLayout(
       },
       ...(it.text ? [{ runs: md(it.text, c, { color: c.muted }), line: 1.375 }] : []),
     ];
-    return { figure, paras, h: need(paras, c, cw, o) };
+    return { figure, paras, h: look.need(paras, cw, o) };
   });
   const rows = Math.ceil(cells.length / cols);
   const rowH = Array.from(
@@ -2881,7 +2571,7 @@ function numbersLayout(
       fig + over + Math.max(...cells.slice(r * cols, r * cols + cols).map((cell) => cell.h)),
   );
   const sourceGap = (wrapped ? 4 : 2.5) * REM * k;
-  const sourceH = b.source ? sourceGap + need(b.source, c, w, { ...o, size: PT.sm * k }) : 0;
+  const sourceH = b.source ? sourceGap + look.need(b.source, w, { ...o, size: PT.sm * k }) : 0;
   let y = 0;
   const placed = cells.map((cell, i) => {
     const [r, col] = [Math.floor(i / cols), i % cols];
@@ -2909,7 +2599,7 @@ function blocks(
   const fixed = (kk: number) =>
     list
       .filter((b) => !GROWS.has(b.type))
-      .reduce((sum, b) => sum + blockHeight(b, ctx.c, a.w, kk), 0);
+      .reduce((sum, b) => sum + blockHeight(ctx.look, b, { w: a.w, k: kk }), 0);
   const grows = list.filter((b) => GROWS.has(b.type)).length;
   const room = a.h - tail - gap * (list.length - 1) - grows * 1.5;
   while (k > 0.62 && fixed(k) > room) k -= 0.04;
@@ -2924,14 +2614,13 @@ function blocks(
   for (const b of list) {
     const h = GROWS.has(b.type)
       ? Math.max(1, extra)
-      : Math.max(0, Math.min(blockHeight(b, ctx.c, a.w, k), a.y + a.h - tail - y));
+      : Math.max(0, Math.min(blockHeight(ctx.look, b, { w: a.w, k }), a.y + a.h - tail - y));
     drawBlock(s, ctx, b, { x: a.x, y, w: a.w, h }, k, centered);
     y += h + gap;
   }
   return y - gap;
 }
 
-const BODY = (y: number): Area => ({ x: SIDE, y, w: CW, h: BOTTOM - y });
 /** A trend or bar chart as the print route draws it (`ChartFrame`, `Axes` and recharts' margins in
  *  `ChartPlots`): the card, its padding, a 16 pt label's line and the gaps round it, the legend's
  *  row over the card, the annotation under it, and the plot's edges inside its container. */
@@ -2976,7 +2665,7 @@ function portrait(
     s.addShape("ellipse", { x, y, w: d, h: d, fill: { color: tone }, line: { type: "none" } });
     box(
       s,
-      ctx.c,
+      ctx.look.c,
       {
         runs: [
           {
@@ -3010,8 +2699,8 @@ type Render = (s: PSlide, ctx: Ctx, slide: never) => void;
  *  the left, centred above the bottom row and kept 2rem clear of it, where speakers and event stand
  *  beside the QR code and its link. */
 function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
-  const lang = d.lang ?? ctx.lang;
-  const { c } = ctx;
+  const lang = d.lang ?? ctx.look.lang;
+  const { c } = ctx.look;
   const qr = 256 / 144;
   const rowH = d.qr ? 324 / 144 : 119 / 144;
   const rowY = BOTTOM - rowH;
@@ -3053,25 +2742,25 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
     ...(d.subtitle ? [[literal(d.subtitle), { size: PT.lead, color: c.muted }, 43 / 144]] : []),
   ] as [Para, BoxOpts, number][];
   // A heading taller than the space above the bottom row shrinks to fit it, as the fit guard does.
-  const full = lines.map(([text, o]) => need(text, c, CW, o, 3));
+  const full = lines.map(([text, o]) => Math.min(3, ctx.look.need(text, CW, o)));
   const total = lines.reduce((sum, [, , gap], i) => sum + gap + full[i], 0) - lines[0][2];
   const k = Math.min(1, (headEnd - TOP) / total);
   const heights = full.map((h) => h * k);
   let y = TOP + (headEnd - TOP - total * k) / 2;
   lines.forEach(([text, o, gap], i) => {
     if (i) y += gap * k;
-    box(s, c, text, SIDE, y, CW, heights[i], o);
+    box(s, c, text, EDGE, y, CW, heights[i], o);
     y += heights[i];
   });
   const mid = rowY + rowH / 2;
   const label = d.qr && `↗ ${linkLabel(d.qr.href)}`;
-  const colW = label ? Math.max(qr, textWidth(label, PT.base, true) + 0.1) : 0;
+  const colW = label ? Math.max(qr, textWidth(label, { size: PT.base, mono: true }) + 0.1) : 0;
   const textW = CW - (colW && colW + 0.5);
   const speakers = d.speakers?.length ? literal(speakerLine(d, lang)) : undefined;
   const left = (speakers ? 53 / 144 : 0) + (d.event ? (speakers ? 17 / 144 : 0) + 49 / 144 : 0);
   let ly = mid - left / 2;
   if (speakers) {
-    box(s, c, speakers, SIDE, ly, textW, 53 / 144, {
+    box(s, c, speakers, EDGE, ly, textW, 53 / 144, {
       size: PT.h3,
       mono: true,
       bold: true,
@@ -3080,9 +2769,9 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
     ly += 70 / 144;
   }
   if (d.event)
-    box(s, c, literal(d.event), SIDE, ly, textW, 49 / 144, { size: PT.base, color: c.muted });
+    box(s, c, literal(d.event), EDGE, ly, textW, 49 / 144, { size: PT.base, color: c.muted });
   if (d.qr && label) {
-    const colX = W - SIDE - colW;
+    const colX = W - EDGE - colW;
     picture(s, ctx, d.qr.src, colX + (colW - qr) / 2, rowY, qr, qr, {
       alt: qrAlt(d.qr.href, lang),
       href: d.qr.href,
@@ -3119,7 +2808,7 @@ const RENDER: {
 } = {
   title(s, ctx, d) {
     if (isOpening(d)) return opening(s, ctx, d);
-    const { c } = ctx;
+    const { c } = ctx.look;
     const o: BoxOpts = {
       size: PT.display,
       mono: true,
@@ -3133,12 +2822,14 @@ const RENDER: {
     };
     const title = literal(d.title);
     const subtitle = d.subtitle ? literal(d.subtitle) : undefined;
-    const th = need(title, c, CW - 1, o, 3);
-    const sh = subtitle ? need(subtitle, c, CW - 2, { size: PT.lead, color: c.ink }, 1.2) : 0;
+    const th = Math.min(3, ctx.look.need(title, CW - 1, o));
+    const sh = subtitle
+      ? Math.min(1.2, ctx.look.need(subtitle, CW - 2, { size: PT.lead, color: c.ink }))
+      : 0;
     const y = (H - th - sh - 0.5) / 2;
-    box(s, c, title, SIDE + 0.5, y, CW - 1, th, o);
+    box(s, c, title, EDGE + 0.5, y, CW - 1, th, o);
     if (subtitle)
-      box(s, c, subtitle, SIDE + 1, y + th + 0.5, CW - 2, sh, {
+      box(s, c, subtitle, EDGE + 1, y + th + 0.5, CW - 2, sh, {
         size: PT.lead,
         color: c.ink,
         align: "center",
@@ -3151,37 +2842,38 @@ const RENDER: {
     if (d.badge)
       chip(
         s,
-        ctx.c,
+        ctx.look.c,
         d.badge,
-        W - SIDE - (d.badge.length * PT.label * 0.62) / 72 - 0.24,
+        W - EDGE - (d.badge.length * PT.label * 0.62) / 72 - 0.24,
         TOP - 0.32,
         PT.label,
-        ctx.c.tealTint,
-        ctx.c.teal,
+        ctx.look.c.tealTint,
+        ctx.look.c.teal,
       );
     if (d.stageMarker?.length) {
-      let x = SIDE;
+      let x = EDGE;
       if (d.stagePrefix) {
-        box(s, ctx.c, d.stagePrefix, x, y - 0.15, 1.5, 0.25, {
+        box(s, ctx.look.c, d.stagePrefix, x, y - 0.15, 1.5, 0.25, {
           size: PT.label,
           mono: true,
           bold: true,
-          color: ctx.c.muted,
+          color: ctx.look.c.muted,
           valign: "middle",
         });
         x += (d.stagePrefix.length * PT.label * 0.62) / 72 + 0.15;
       }
       for (const m of d.stageMarker)
-        x += chip(s, ctx.c, m, x, y - 0.15, PT.label, ctx.c.tealTint, ctx.c.teal) + 0.1;
+        x +=
+          chip(s, ctx.look.c, m, x, y - 0.15, PT.label, ctx.look.c.tealTint, ctx.look.c.teal) + 0.1;
       y += 0.25;
     }
-    const footH = footerHeight(ctx, d.footer);
+    const footH = footerHeight(ctx.look, d.footer);
     const end = blocks(s, ctx, d.content, BODY(y), centered, footH && footH + 0.1);
     footer(s, ctx, d.footer, footH, centered, end + 0.1);
   },
 
   regular(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     const y = header(s, ctx, d);
     let a = BODY(y);
     if (d.profile) {
@@ -3202,7 +2894,7 @@ const RENDER: {
         ...(d.profile.linkedIn ? [{ ...profileLink(d.profile.linkedIn, c), rel: 0.9 }] : []),
       ];
       const o: BoxOpts = { size: PT.base, color: c.ink, align: "center" };
-      box(s, c, who, a.x, a.y + 1.75, pw, Math.max(0.9, need(who, c, pw, o)), o);
+      box(s, c, who, a.x, a.y + 1.75, pw, Math.max(0.9, ctx.look.need(who, pw, o)), o);
       a = { ...a, x: a.x + pw + 0.5, w: a.w - pw - 0.5 };
     }
     const secs = d.sections;
@@ -3249,12 +2941,12 @@ const RENDER: {
   },
 
   statement(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     // The picture beside the statement, as the slide picks it: a quotation keeps its portrait and
     // drops a QR code, and a screenshot's or QR code's link is on the picture.
     const qr = !d.attribution && d.qr;
     const side = qr
-      ? { src: qr.src, alt: qrAlt(qr.href, ctx.lang), href: qr.href }
+      ? { src: qr.src, alt: qrAlt(qr.href, ctx.look.lang), href: qr.href }
       : d.imageSrc
         ? { src: d.imageSrc, alt: d.imageAlt, href: undefined, round: !!d.attribution }
         : d.linkedImage;
@@ -3288,7 +2980,7 @@ const RENDER: {
       // As the web's centred statement: the kicker, each line a display heading balanced on its
       // own, 64 pt where nothing else stands, 48 pt otherwise, the subtitle in its narrower column,
       // the points and closing under it, all centred in the slide or above its footer.
-      const footH = footerHeight(ctx, d.footer);
+      const footH = footerHeight(ctx.look, d.footer);
       const simple =
         !d.points?.length && !d.closing && !d.subtitle && !d.highlighted && !d.crossedOut;
       const w = d.footer ? CW : W - 2 * 4 * REM;
@@ -3357,7 +3049,7 @@ const RENDER: {
       }
       if (d.closing) {
         const quoted = d.closingStyle === "quote";
-        const mark = { color: mix(c.teal, c.bg, 0.7) };
+        const mark = { color: mixColor(c.teal, c.bg, 0.7) };
         parts.push([
           [
             {
@@ -3377,7 +3069,7 @@ const RENDER: {
           2.5 * REM,
         ]);
       }
-      const heights = parts.map(([p, o, pw]) => need(p, c, pw, o));
+      const heights = parts.map(([p, o, pw]) => ctx.look.need(p, pw, o));
       const total = heights.reduce((sum, h, i) => sum + h + parts[i][3], 0);
       const [top, bottom] = d.footer ? [TOP, BOTTOM - footH - 0.1] : [0, BOTTOM];
       let y = top + Math.max(0, (bottom - top - total) / 2);
@@ -3392,10 +3084,10 @@ const RENDER: {
     if (qr) {
       // As QrStatement: the words at the left, the code on the right in a white card whose padding
       // is its quiet zone, its address under it, the row top-aligned and centred above the footer.
-      const footH = footerHeight(ctx, d.footer);
+      const footH = footerHeight(ctx.look, d.footer);
       const q = (0.45 * 1.15 * 1080) / 144;
       const label = `↗ ${linkLabel(qr.href)}`;
-      const colW = Math.max(q, textWidth(label, PT.base, true) + 0.1);
+      const colW = Math.max(q, textWidth(label, { size: PT.base, mono: true }) + 0.1);
       const w = CW - colW - 5 * REM;
       const parts: [Para[], BoxOpts, number][] = [];
       const support: BoxOpts = { size: PT.h3, color: c.ink, line: 1.375 };
@@ -3441,30 +3133,30 @@ const RENDER: {
           1.5 * REM,
         ]);
       }
-      const heights = parts.map(([p, o]) => need(p, c, w, o));
+      const heights = parts.map(([p, o]) => ctx.look.need(p, w, o));
       const textH = heights.reduce((sum, h, i) => sum + h + parts[i][2], 0);
-      const labelH = need(label, c, colW, { size: PT.base, mono: true, color: c.teal });
+      const labelH = ctx.look.need(label, colW, { size: PT.base, mono: true, color: c.teal });
       const figH = q + REM + labelH;
       const bottom = BOTTOM - footH - (d.footer ? 0.1 : 0);
       const top = TOP + Math.max(0, (bottom - TOP - Math.max(textH, figH)) / 2);
       let y = top;
       parts.forEach(([p, o, gap], i) => {
         y += gap;
-        box(s, c, p, SIDE, y, w, heights[i], o);
+        box(s, c, p, EDGE, y, w, heights[i], o);
         y += heights[i];
       });
-      const x = W - SIDE - colW + (colW - q) / 2;
+      const x = W - EDGE - colW + (colW - q) / 2;
       const pad = 2.5 * REM;
       card(s, x, top, q, q, "FFFFFF", c.border, CORNER);
       picture(s, ctx, qr.src, x + pad, top + pad, q - 2 * pad, q - 2 * pad, {
-        alt: qrAlt(qr.href, ctx.lang),
+        alt: qrAlt(qr.href, ctx.look.lang),
         href: qr.href,
       });
       box(
         s,
         c,
         { runs: [{ text: label, options: { hyperlink: { url: qr.href } } }] },
-        W - SIDE - colW,
+        W - EDGE - colW,
         top + q + REM,
         colW,
         labelH,
@@ -3553,12 +3245,12 @@ const RENDER: {
       line: 1.2,
       floor: 0.5,
     };
-    const footH = footerHeight(ctx, d.footer);
-    box(s, c, paras, SIDE, TOP, w, BOTTOM - TOP - footH, o);
+    const footH = footerHeight(ctx.look, d.footer);
+    box(s, c, paras, EDGE, TOP, w, BOTTOM - TOP - footH, o);
     footer(s, ctx, d.footer, footH);
     if (side) {
       // A quotation's portrait is round at the web's size, 384 px at 1920, centred in the side.
-      const [x, h] = [SIDE + w + 0.4, BOTTOM - TOP - footH];
+      const [x, h] = [EDGE + w + 0.4, BOTTOM - TOP - footH];
       const r = "round" in side && side.round ? 384 / 144 : 0;
       picture(
         s,
@@ -3576,7 +3268,7 @@ const RENDER: {
   grid(s, ctx, d) {
     // Quotes as the web's QuoteCard: the brand quote, upright ink behind a purple rule with no
     // card, and under it the author in teal, a round portrait beside, in the web's columns.
-    const { c } = ctx;
+    const { c } = ctx.look;
     const y = header(s, ctx, d);
     const cols = d.columns === 2 ? 2 : d.columns === 4 ? 4 : 3;
     const rows = Math.ceil(d.cards.length / cols);
@@ -3589,7 +3281,7 @@ const RENDER: {
     const who = 74.67 / 144;
     const o: BoxOpts = { size: PT.lead, color: c.ink };
     const quote = (cd: (typeof d.cards)[number]) => ({ runs: md(cd.description ?? cd.title, c) });
-    const qh = Math.max(...d.cards.map((cd) => need(quote(cd), c, cw - indent, o)));
+    const qh = Math.max(...d.cards.map((cd) => ctx.look.need(quote(cd), cw - indent, o)));
     const ch = Math.min((a.h - (rows - 1) * gap) / rows, qh + 0.25 + who);
     const left = a.x + (a.w - w) / 2;
     const top = a.y + Math.max(0, (a.h - rows * ch - (rows - 1) * gap) / 2);
@@ -3615,9 +3307,9 @@ const RENDER: {
   },
 
   comparison(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     const y = header(s, ctx, d);
-    const footH = comparisonFoot(undefined, c, d, 0);
+    const footH = comparisonFoot(undefined, ctx.look, d, 0);
     const area = BODY(y);
     const sides = [d.left, d.right];
     const variant = d.variant ?? "vs";
@@ -3627,10 +3319,13 @@ const RENDER: {
     if (variant === "before-after") {
       const strike = d.strike !== false;
       const adds = !strike && d.adds;
-      const ch = Math.min(area.h - footH, beforeAfterHeight(c, sides, strike, area.w, o, 1, adds));
+      const ch = Math.min(
+        area.h - footH,
+        beforeAfterHeight(ctx.look, sides, strike, area.w, o, 1, adds),
+      );
       const top = place(ch);
       beforeAfter(s, ctx, { ...area, y: top, h: ch }, o, sides, strike, 1, adds);
-      comparisonFoot(s, c, d, top + ch);
+      comparisonFoot(s, ctx.look, d, top + ch);
       return;
     }
     // The print route shows both sides of a `vs` slide active, as its last reveal step does: a vs
@@ -3673,8 +3368,8 @@ const RENDER: {
     });
     const logoH = 48 / 144 + REM;
     const parts = sides.map((sd) => {
-      const th = need(label(sd), c, cw - 2 * pad, titleO);
-      const ih = need(items(sd), c, cw - 2 * pad, itemO);
+      const th = ctx.look.need(label(sd), cw - 2 * pad, titleO);
+      const ih = ctx.look.need(items(sd), cw - 2 * pad, itemO);
       return { th, ih, h: 2 * pad + (sd.logo ? logoH : 0) + th + 1.5 * REM + ih };
     });
     const ch = Math.min(area.h - footH, Math.max(...parts.map((p) => p.h)));
@@ -3694,19 +3389,19 @@ const RENDER: {
       ty += parts[i].th + 1.5 * REM;
       box(s, c, items(sd), x + pad, ty, cw - 2 * pad, top + ch - pad - ty, itemO);
     });
-    comparisonFoot(s, c, d, top + ch);
+    comparisonFoot(s, ctx.look, d, top + ch);
   },
 
   guidance(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     let y = header(s, ctx, d);
     const intro: Para[] = [
       ...(d.intro ? [{ runs: md(d.intro, c), after: 6 }] : []),
       ...bulletParas(d.points ?? [], c),
     ];
     if (intro.length) {
-      const ih = need(intro, c, CW, { size: PT.base, color: c.muted }, 1.6);
-      box(s, c, intro, SIDE, y, CW, ih, { size: PT.base, color: c.muted });
+      const ih = Math.min(1.6, ctx.look.need(intro, CW, { size: PT.base, color: c.muted }));
+      box(s, c, intro, EDGE, y, CW, ih, { size: PT.base, color: c.muted });
       y += ih + 0.2;
     }
     const a = BODY(y);
@@ -3719,7 +3414,7 @@ const RENDER: {
     );
     d.examples.forEach((ex, i) => {
       const ey = a.y + i * (eh + 0.2);
-      box(s, c, { runs: md(ex.title, c) }, SIDE, ey, CW, 0.3, {
+      box(s, c, { runs: md(ex.title, c) }, EDGE, ey, CW, 0.3, {
         size: PT.base,
         mono: true,
         bold: true,
@@ -3727,10 +3422,10 @@ const RENDER: {
       });
       row(
         [
-          [ctx.words.bad, ex.bad, c.red, c.redTint],
-          [ctx.words.good, ex.good, c.green, c.greenTint],
+          [ctx.look.words.bad, ex.bad, c.red, c.redTint],
+          [ctx.look.words.good, ex.good, c.green, c.greenTint],
         ] as const,
-        { x: SIDE, y: ey + 0.35, w: CW, h: eh - 0.35 },
+        { x: EDGE, y: ey + 0.35, w: CW, h: eh - 0.35 },
         0.25,
         ([label, text, tone, tint], r) => {
           card(s, r.x, r.y, r.w, r.h, tint, tone);
@@ -3758,9 +3453,9 @@ const RENDER: {
   },
 
   profiles(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     const y = header(s, ctx, d);
-    const footH = footerHeight(ctx, d.footer);
+    const footH = footerHeight(ctx.look, d.footer);
     const a = { ...BODY(y), h: BOTTOM - y - footH };
     const body = (p: (typeof d.profiles)[number]): Para[] => [
       ...bulletParas(p.bullets ?? [], c),
@@ -3771,7 +3466,7 @@ const RENDER: {
       1.6 +
         Math.max(
           ...d.profiles.map((p) =>
-            need(body(p), c, a.w / d.profiles.length - 0.6, {
+            ctx.look.need(body(p), a.w / d.profiles.length - 0.6, {
               size: PT.base,
               color: c.ink,
             }),
@@ -3806,13 +3501,12 @@ const RENDER: {
 
   "phased-pills"(s, ctx, d) {
     const y = d.title ? header(s, ctx, { headline: d.title }) : TOP;
-    pillPhases(s, ctx, d.phases, { x: SIDE + CW * 0.2, y, w: CW * 0.6, h: BOTTOM - y });
+    pillPhases(s, ctx, d.phases, { x: EDGE + CW * 0.2, y, w: CW * 0.6, h: BOTTOM - y });
   },
 
   process(s, ctx, d) {
     // `ProcessSlide` on a desktop and in print: the nodes as the flow block's steps, the loop back
     // above unless `loop: false`, the named phase lit, the footer as the caption under them.
-    const { c } = ctx;
     const y = header(s, ctx, d);
     const steps: FlowStep[] = d.nodes.map((n) => ({
       title: n.title,
@@ -3830,20 +3524,20 @@ const RENDER: {
       k: 1,
     };
     const a = BODY(y);
-    const sh = flowSteps(undefined, c, steps, a, o);
-    const capH = d.footer ? caption(undefined, c, d.footer, 0) + 0.37 : 0;
+    const sh = flowSteps(undefined, ctx.look, steps, a, o);
+    const capH = d.footer ? caption(undefined, ctx.look, d.footer, 0) + 0.37 : 0;
     const top = a.y + Math.max(0, a.h - sh - capH) / 2.25;
-    flowSteps(s, c, steps, { ...a, y: top }, o);
-    if (d.footer) caption(s, c, d.footer, top + sh + 0.37);
+    flowSteps(s, ctx.look, steps, { ...a, y: top }, o);
+    if (d.footer) caption(s, ctx.look, d.footer, top + sh + 0.37);
   },
 
   lanes(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     const y = header(s, ctx, d);
     const codeH = d.codeSnippet
       ? (d.codeSnippet.code.split("\n").length * PT.sm * 1.3) / 72 + 0.45
       : 0;
-    const footH = footerHeight(ctx, d.footer);
+    const footH = footerHeight(ctx.look, d.footer);
     const lh =
       rowShare(ctx, "lanes", BOTTOM - y - codeH - footH - 0.3, d.lanes.length, 0.87, 0.27) - 0.12;
     let yy = y;
@@ -3852,7 +3546,7 @@ const RENDER: {
         s,
         ctx,
         { type: "code", ...d.codeSnippet },
-        { x: SIDE, y: yy, w: CW, h: codeH - 0.1 },
+        { x: EDGE, y: yy, w: CW, h: codeH - 0.1 },
         1,
         false,
       );
@@ -3861,16 +3555,16 @@ const RENDER: {
     d.lanes.forEach((lane, i) => {
       const ly = yy + i * (lh + 0.12);
       const first = i === 0;
-      card(s, SIDE, ly, CW, lh, first ? c.purpleTint : c.card, first ? c.purple : c.border, 0.08);
-      box(s, c, { runs: [{ text: lane.label }] }, SIDE + 0.25, ly, 1.6, lh, {
+      card(s, EDGE, ly, CW, lh, first ? c.purpleTint : c.card, first ? c.purple : c.border, 0.08);
+      box(s, c, { runs: [{ text: lane.label }] }, EDGE + 0.25, ly, 1.6, lh, {
         size: PT.sm,
         mono: true,
         bold: true,
         color: first ? c.purple : c.muted,
         valign: "middle",
       });
-      let x = SIDE + 2;
-      const size = rowSize(ctx, lane.stages, PT.sm, 0.3, SIDE + CW - 0.25 - x);
+      let x = EDGE + 2;
+      const size = rowSize(ctx, lane.stages, PT.sm, 0.3, EDGE + CW - 0.25 - x);
       lane.stages.forEach((st, j) => {
         const w = chip(s, c, st, x, ly + lh / 2 - (size * 1.9) / 144, size, c.card, c.ink, false);
         x += w;
@@ -3884,7 +3578,8 @@ const RENDER: {
   },
 
   chart(s, ctx, d) {
-    const { c, pptx } = ctx;
+    const { pptx, look } = ctx;
+    const { c } = look;
     const y = header(s, ctx, d);
     // The web's `Annotation`, under the card or the drawing.
     const annotate = (x: number, top: number, w: number, h: number) =>
@@ -3907,7 +3602,7 @@ const RENDER: {
           ? []
           : [
               {
-                name: `${name} (${ctx.words.planned})`,
+                name: `${name} (${look.words.planned})`,
                 labels,
                 values: data.map((p, i) => (i >= now ? pick(p) : null)),
               },
@@ -3955,13 +3650,13 @@ const RENDER: {
       // The y label and the note in one row 2 rem apart, each shrinking by its share of the
       // overflow and wrapping, as the web's flex row sets them.
       const gapX = 2 * REM;
-      const basis = [d.yLabel, note].map((t) => (t ? textWidth(t, PT.sm) + 0.02 : 0));
+      const basis = [d.yLabel, note].map((t) => (t ? textWidth(t, labelO) + 0.02 : 0));
       const over = Math.max(0, basis[0] + basis[1] + gapX - inner.w);
       const sum = basis[0] + basis[1] || 1;
       const [yw, nw] = basis.map((b) => b - (over * b) / sum);
       const lineH = (n: number) => Math.max(1, n) * CHART.line;
       const lines = (t: string | undefined, w: number) =>
-        t ? Math.round(need(t, c, w, labelO) / ((PT.sm * LEADING.body) / 72)) : 0;
+        t ? Math.round(look.need(t, w, labelO) / ((PT.sm * LEADING.body) / 72)) : 0;
       const headH = lineH(Math.max(lines(d.yLabel, yw), lines(note, nw)));
       const head = d.yLabel || note ? headH + CHART.underHead : 0;
       label(d.yLabel, inner.x, inner.y, yw, "left", headH);
@@ -3983,7 +3678,7 @@ const RENDER: {
         const hi = ticks[ticks.length - 1];
         // A point's name centres on it, so the axis pads each end by what the first and last
         // names overhang the margin beside them, as `TrendPlot` does.
-        const edge = (i: number) => textWidth(labels[i], PT.sm, false, i === now) / 2;
+        const edge = (i: number) => textWidth(labels[i], { size: PT.sm, bold: i === now }) / 2;
         const padL = Math.max(24 / 144, edge(0) - CHART.left);
         const padR = Math.max(8 / 144, edge(labels.length - 1) - CHART.right);
         const g = {
@@ -4031,7 +3726,7 @@ const RENDER: {
         if (!two && filled > 1) {
           s.addShape("custGeom" as PptxGenJS.SHAPE_NAME, {
             ...g,
-            fill: { color: mix(c.teal, c.card, 0.07) },
+            fill: { color: mixColor(c.teal, c.card, 0.07) },
             line: { type: "none" },
             points: [
               { x: 0, y: yAt(0), moveTo: true },
@@ -4047,7 +3742,8 @@ const RENDER: {
       const band = (plot.w / data.length) * 0.9;
       const step = TICK_STEPS.find(
         (pt) =>
-          Math.max(...labels.flatMap((l) => l.split(" ").map((w) => textWidth(w, pt)))) <= band,
+          Math.max(...labels.flatMap((l) => l.split(" ").map((w) => textWidth(w, { size: pt })))) <=
+          band,
       );
       // The web's legend has an entry for a named series only.
       const perSeries = now < 0 ? 1 : 2;
@@ -4177,13 +3873,13 @@ const RENDER: {
         });
       }
     }
-    annotate(SIDE, BOTTOM - 0.35, CW, 0.35);
+    annotate(EDGE, BOTTOM - 0.35, CW, 0.35);
   },
 
   question(s, ctx, d) {
     // As QuestionSlide in print: the headline as a display heading, under it the options as white
     // cards in a 56 rem column, each its letter, its text and its count, centred above the footer band.
-    const { c } = ctx;
+    const { c } = ctx.look;
     const head: BoxOpts = {
       size: PT.s6,
       mono: true,
@@ -4194,12 +3890,12 @@ const RENDER: {
       align: "center",
     };
     const hp: Para = { ...literal(d.headline), balance: true };
-    const hh = need(hp, c, CW, head);
+    const hh = ctx.look.need(hp, CW, head);
     const w = Math.min(CW, 56 * REM);
     const oh = 2.5 * REM + (PT.h4 * 1.4) / 72;
     const total = hh + 3.5 * REM + d.options.length * (oh + REM) - REM;
     const top = Math.max(TOP, (BOTTOM - total) / 2);
-    box(s, c, hp, SIDE, top, CW, hh, head);
+    box(s, c, hp, EDGE, top, CW, hh, head);
     const x = (W - w) / 2;
     d.options.forEach((op, i) => {
       const oy = top + hh + 3.5 * REM + i * (oh + REM);
@@ -4230,7 +3926,7 @@ const RENDER: {
   },
 
   transition(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     const paras: Para[] = [];
     if (d.preText)
       paras.push({
@@ -4251,9 +3947,9 @@ const RENDER: {
       line: 1.1,
       floor: 0.5,
     };
-    const th = Math.min(BOTTOM - TOP - speakerH, need(paras, c, CW - 1, o) + 0.2);
+    const th = Math.min(BOTTOM - TOP - speakerH, ctx.look.need(paras, CW - 1, o) + 0.2);
     const ty = TOP + (BOTTOM - TOP - th - speakerH) / 2;
-    box(s, c, paras, SIDE + 0.5, ty, CW - 1, th, o);
+    box(s, c, paras, EDGE + 0.5, ty, CW - 1, th, o);
     if (d.speakerName) {
       const sw = Math.max(2.6, (d.speakerName.length * PT.h3 * 0.62) / 72 + 0.8);
       card(s, (W - sw) / 2, ty + th + 0.2, sw, 0.85, c.card, c.border);
@@ -4279,16 +3975,16 @@ const RENDER: {
   },
 
   closing(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     if (d.variant === "discussion") {
-      const y = header(s, ctx, { headline: d.headline ?? d.line1 ?? ctx.words.discussion });
+      const y = header(s, ctx, { headline: d.headline ?? d.line1 ?? ctx.look.words.discussion });
       // Each seed question on its own card, as the web's: 1.25 rem over and under it, 2 rem
       // beside, 1.5 rem between the cards, the question muted.
       const a = BODY(y);
       const [padY, padX, gap] = [1.25 * REM, 2 * REM, 1.5 * REM];
       const o: BoxOpts = { size: PT.h4, color: c.muted, line: 1.35 };
       const qs = d.seedQuestions ?? [];
-      const hs = qs.map((q) => need(literal(q), c, a.w - 2 * padX, o));
+      const hs = qs.map((q) => ctx.look.need(literal(q), a.w - 2 * padX, o));
       const total = hs.reduce((sum, h) => sum + h + 2 * padY, 0) + Math.max(0, qs.length - 1) * gap;
       let qy = a.y + Math.max(0, a.h - total) / 2.25;
       qs.forEach((q, i) => {
@@ -4313,8 +4009,8 @@ const RENDER: {
           line: LEADING.display,
           align: "center",
         };
-        const hh = need(literal(head), c, CW, o);
-        box(s, c, { ...literal(head), balance: true }, SIDE, y, CW, hh, o);
+        const hh = ctx.look.need(literal(head), CW, o);
+        box(s, c, { ...literal(head), balance: true }, EDGE, y, CW, hh, o);
         y += hh + gap;
       }
       const speakers = d.speakers ?? [];
@@ -4322,7 +4018,7 @@ const RENDER: {
         // The web's contact slide without portraits: the lockup in the centre column, each speaker's
         // name and contact lines under it.
         const lockH = 91.7 / 144;
-        const [path, ratio] = brandCut(`lockup${ctx.dark ? "-night" : ""}`);
+        const [path, ratio] = brandCut(`lockup${ctx.look.dark ? "-night" : ""}`);
         const lockW = lockH * ratio;
         // As on the web: each partner's logo at the lockup's height, a × after it.
         const partners = d.partners ?? [];
@@ -4393,8 +4089,8 @@ const RENDER: {
               : []),
           ];
           const po: BoxOpts = { size: 17.5, color: c.ink, line: 1.4, align: "center" };
-          const ph = need(paras, c, CW, po);
-          box(s, c, paras, SIDE, y, CW, ph, po);
+          const ph = ctx.look.need(paras, CW, po);
+          box(s, c, paras, EDGE, y, CW, ph, po);
           y += ph + 2 * REM;
         }
         y += gap - 2 * REM;
@@ -4449,7 +4145,7 @@ const RENDER: {
         y += 2.35 + linked + gap;
       }
       const tail: Para[] = [];
-      const claim = closingClaim(d, ctx.lang);
+      const claim = closingClaim(d, ctx.look.lang);
       if (claim) {
         // The claim in muted ink, the word brand names for it in teal, one step below a quote's
         // lead, as ClosingSlide draws it.
@@ -4469,7 +4165,7 @@ const RENDER: {
         });
       }
       if (d.closingQuote) {
-        const mark = { color: mix(c.teal, c.bg, 0.7) };
+        const mark = { color: mixColor(c.teal, c.bg, 0.7) };
         tail.push({
           runs: [
             { text: "“", options: mark },
@@ -4484,9 +4180,9 @@ const RENDER: {
       }
       if (tail.length) {
         const o: BoxOpts = { size: PT.lead, color: c.muted, line: 1.25, tracking: -0.025 };
-        // max-w-7xl less the web line's 5vw sides (--slide-closing-side), SIDE at the 1920 stage.
-        const tw = Math.min(CW, 80 * REM) - 2 * SIDE;
-        const th = need(tail, c, tw, o);
+        // max-w-7xl less the web line's 5vw sides (--slide-closing-side), EDGE at the 1920 stage.
+        const tw = Math.min(CW, 80 * REM) - 2 * EDGE;
+        const th = ctx.look.need(tail, tw, o);
         box(s, c, tail, (W - tw) / 2, y, tw, th, o);
         return y + th;
       }
@@ -4502,7 +4198,7 @@ const RENDER: {
   // As the web's RoadmapSlide: each column a card holding its items, or its phases as groups of
   // rows under a caps label.
   roadmap(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     // A row's own marker colour: `tone`, or the class its deprecated `dotColor` names.
     const marker = (it: Pick<RoadmapItem, "tone" | "dotColor">) => {
       const t = it.tone ?? it.dotColor?.slice(3);
@@ -4522,9 +4218,18 @@ const RENDER: {
             items: p.items,
           }))
         : [{ hue: tone, items: col.items ?? [] }];
-      card(s, r.x, r.y, r.w, r.h, mix(tone, c.bg, 0.05), c.border);
+      card(s, r.x, r.y, r.w, r.h, mixColor(tone, c.bg, 0.05), c.border);
       rect(s, r.x + 0.15, r.y, r.w - 0.3, 0.05, tone);
-      chip(s, c, col.label, r.x + 0.25, r.y + 0.25, PT.label * 0.85, mix(tone, c.bg, 0.15), tone);
+      chip(
+        s,
+        c,
+        col.label,
+        r.x + 0.25,
+        r.y + 0.25,
+        PT.label * 0.85,
+        mixColor(tone, c.bg, 0.15),
+        tone,
+      );
       box(
         s,
         c,
@@ -4572,15 +4277,15 @@ const RENDER: {
   },
 
   gantt(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     const y = header(s, ctx, d);
-    const footH = footerHeight(ctx, d.footer);
+    const footH = footerHeight(ctx.look, d.footer);
     // GanttSlide's grid, in the spacing scale: a 20 rem label column, 0.25 rem between columns, and
     // per row a label line over a bar that fills the row, the row at most 7 rem tall.
     const sp = (v: number) => v * 0.25 * REM;
-    const gx = SIDE + sp(84);
+    const gx = EDGE + sp(84);
     const gap = sp(1);
-    const colW = (W - SIDE - gx - gap * (d.columns.length - 1)) / d.columns.length;
+    const colW = (W - EDGE - gx - gap * (d.columns.length - 1)) / d.columns.length;
     const cx = (col: number) => gx + (col - 1) * (colW + gap);
     const span = (n: number) => n * colW + (n - 1) * gap;
     const radius = (0.46875 * W) / 90;
@@ -4621,7 +4326,7 @@ const RENDER: {
               ]
             : []),
         ],
-        SIDE,
+        EDGE,
         ry,
         sp(80),
         rh,
@@ -4640,8 +4345,8 @@ const RENDER: {
           by,
           span(bar.span),
           ry + rh - by,
-          bar.continuous ? mix(tone, c.card, 0.4) : tone,
-          bar.continuous ? mix(tone, c.card, 0.7) : undefined,
+          bar.continuous ? mixColor(tone, c.card, 0.4) : tone,
+          bar.continuous ? mixColor(tone, c.card, 0.7) : undefined,
           radius,
         );
         box(s, c, bar.label, cx(bar.start), ry, span(bar.span), lh, {
@@ -4655,13 +4360,22 @@ const RENDER: {
     });
     if (stack) {
       const my = top + d.rows.length * pitch - (pitch - rh) + sp(3);
-      box(s, c, { runs: [caps(d.milestonesLabel ?? ctx.words.milestones)] }, SIDE, my, sp(80), lh, {
-        size: PT.label,
-        mono: true,
-        color: c.muted,
-        tracking: 0.06,
-        align: "right",
-      });
+      box(
+        s,
+        c,
+        { runs: [caps(d.milestonesLabel ?? ctx.look.words.milestones)] },
+        EDGE,
+        my,
+        sp(80),
+        lh,
+        {
+          size: PT.label,
+          mono: true,
+          color: c.muted,
+          tracking: 0.06,
+          align: "right",
+        },
+      );
       // Milestones of one column stack under one rule, as on the web.
       for (const [column, ms] of Map.groupBy(d.milestones!, (m) => m.column)) {
         rect(s, cx(column), my, colW, 2 / 144, c.purple);
@@ -4672,7 +4386,7 @@ const RENDER: {
             m.label,
             cx(column),
             my + 2 / 144 + sp(1.5) + k * lh,
-            Math.min(colW * 1.5, W - SIDE - cx(column)),
+            Math.min(colW * 1.5, W - EDGE - cx(column)),
             lh,
             { size: PT.label, bold: true, color: c.purple, line: 1.25 },
           ),
@@ -4693,7 +4407,7 @@ const RENDER: {
   },
 
   agenda(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     const y = header(s, ctx, d);
     const items = d.items.map((it) => (typeof it === "string" ? { title: it } : it));
     const timed = items.some((it) => it.when);
@@ -4726,8 +4440,8 @@ const RENDER: {
           ]
         : []),
     ]);
-    const footH = footerHeight(ctx, d.footer);
-    box(s, c, paras, SIDE, y + 0.2, CW * 0.8, BOTTOM - y - 0.2 - footH, {
+    const footH = footerHeight(ctx.look, d.footer);
+    box(s, c, paras, EDGE, y + 0.2, CW * 0.8, BOTTOM - y - 0.2 - footH, {
       size: PT.h3,
       color: c.ink,
     });
@@ -4735,7 +4449,7 @@ const RENDER: {
   },
 
   activity(s, ctx, d) {
-    const { c } = ctx;
+    const { c } = ctx.look;
     const label =
       d.label ?? { exercise: "Hands-on", demo: "Live demo", debrief: "Debrief" }[d.kind];
     const y = header(s, ctx, { sectionLabel: label, headline: d.headline, subtitle: d.task });
@@ -4743,9 +4457,9 @@ const RENDER: {
     const fw = frame.length ? CW * 0.34 : 0;
     let top = y + 0.3;
     if (d.prompt) {
-      const ph = need(d.prompt, c, CW - 0.6, { size: PT.lead, color: c.ink }) + 0.3;
-      card(s, SIDE, top, CW, ph, c.tealTint, c.teal);
-      box(s, c, d.prompt, SIDE + 0.3, top + 0.15, CW - 0.6, ph - 0.3, {
+      const ph = ctx.look.need(d.prompt, CW - 0.6, { size: PT.lead, color: c.ink }) + 0.3;
+      card(s, EDGE, top, CW, ph, c.tealTint, c.teal);
+      box(s, c, d.prompt, EDGE + 0.3, top + 0.15, CW - 0.6, ph - 0.3, {
         size: PT.lead,
         color: c.ink,
       });
@@ -4761,12 +4475,12 @@ const RENDER: {
       bullet: d.kind === "demo",
       after: 10,
     }));
-    box(s, c, paras, SIDE, top, CW - fw - (fw ? 0.5 : 0), BOTTOM - top, {
+    box(s, c, paras, EDGE, top, CW - fw - (fw ? 0.5 : 0), BOTTOM - top, {
       size: PT.lead,
       color: c.ink,
     });
     if (!frame.length) return;
-    const fx = SIDE + CW - fw;
+    const fx = EDGE + CW - fw;
     const fh = 0.5 + frame.length * 0.55;
     card(s, fx, top, fw, fh, c.card, c.border);
     box(
@@ -4791,7 +4505,7 @@ const RENDER: {
     // As `WheelSlide`: a ring of segments at 40 % teal, a 1.5 degree gap each side, numbered from
     // the top clockwise, the centre on a soft disc; each segment's tile, title and text on the side
     // its centre lies on, both columns against the ring.
-    const { c } = ctx;
+    const { c } = ctx.look;
     const y = header(s, ctx, d);
     const a = BODY(y);
     const n = d.segments.length;
@@ -4814,14 +4528,14 @@ const RENDER: {
     const itemH = (k: number) =>
       Math.max(
         tile,
-        need(d.segments[k].title, c, textW, titleO) +
+        ctx.look.need(d.segments[k].title, textW, titleO) +
           0.25 * REM +
-          need(d.segments[k].text, c, textW, textO),
+          ctx.look.need(d.segments[k].text, textW, textO),
       );
     const colH = (list: number[]) =>
       list.reduce((sum, k, i) => sum + itemH(k) + (i ? 1.75 * REM : 0), 0);
     const capO: BoxOpts = { size: PT.sm, color: c.muted, line: 1.45 };
-    const capH = d.caption ? REM + need(d.caption, c, a.w, capO) : 0;
+    const capH = d.caption ? REM + ctx.look.need(d.caption, a.w, capO) : 0;
     const h = Math.max(dia, colH(left), colH(right));
     const top = a.y + Math.max(0, a.h - h - capH) / 2.25;
     const cx = a.x + colW + 2 * REM + dia / 2;
@@ -4836,7 +4550,7 @@ const RENDER: {
         h: dia,
         angleRange: [(from + 360) % 360, (to + 360) % 360],
         arcThicknessRatio: 36 / 96,
-        fill: { color: mix(c.teal, c.bg, 0.4) },
+        fill: { color: mixColor(c.teal, c.bg, 0.4) },
         line: { type: "none" },
       });
       const r = 78 * unit;
@@ -4865,7 +4579,7 @@ const RENDER: {
       y: cy - hub / 2,
       w: hub,
       h: hub,
-      fill: { color: mix(c.ink, c.bg, 0.07) },
+      fill: { color: mixColor(c.ink, c.bg, 0.07) },
       line: { type: "none" },
     });
     box(
@@ -4898,7 +4612,7 @@ const RENDER: {
           valign: "middle",
           line: 1,
         });
-        const th = need(sg.title, c, w, titleO);
+        const th = ctx.look.need(sg.title, w, titleO);
         box(s, c, sg.title, x + tile + 0.75 * REM, ly, w, th, titleO);
         box(
           s,
@@ -4907,7 +4621,7 @@ const RENDER: {
           x + tile + 0.75 * REM,
           ly + th + 0.25 * REM,
           w,
-          need(sg.text, c, w, textO),
+          ctx.look.need(sg.text, w, textO),
           textO,
         );
         ly += itemH(k) + 1.75 * REM;
@@ -4921,8 +4635,8 @@ const RENDER: {
           tile +
           0.75 * REM +
           Math.max(
-            textWidth(d.segments[k].title, PT.h4, TITLE.mono, TITLE.bold),
-            textWidth(d.segments[k].text, PT.sm),
+            textWidth(d.segments[k].title, { size: PT.h4, ...TITLE }),
+            textWidth(d.segments[k].text, textO),
           ) +
           0.02,
       ),
@@ -4937,7 +4651,7 @@ const RENDER: {
     // above and the no branch below, both labelled in caps, a join and an arrow into the outcome;
     // the columns `--slide-decision-columns` sets, the branches as tall as the taller, 4 px teal
     // lines with 0.9 rem arrowheads.
-    const { c } = ctx;
+    const { c } = ctx.look;
     const y = header(s, ctx, d);
     const a = BODY(y);
     const fixed = [15, 4, 14, 7.5, 0, 3.5, 17].map((r) => r * REM);
@@ -4951,23 +4665,25 @@ const RENDER: {
     const titleO: BoxOpts = { size: PT.h4, ...TITLE, color: c.ink, line: 1.25, tracking: -0.015 };
     const textO: BoxOpts = { size: PT.h4, color: c.ink, line: 1.375 };
     const needIn = fixed[0] - 2 * 1.25 * REM;
-    const needH = need(d.need, c, needIn, bold) + 2 * REM;
+    const needH = ctx.look.need(d.need, needIn, bold) + 2 * REM;
     const qIn = fixed[2] - 2 * 1.25 * REM;
-    const qH = need({ runs: md(d.question, c), align: "center" }, c, qIn, bold) + 2 * 1.25 * REM;
+    const qH =
+      ctx.look.need({ runs: md(d.question, c), align: "center" }, qIn, bold) + 2 * 1.25 * REM;
     const oIn = fixed[6] - 2 * 1.25 * REM;
-    const oH = need(d.outcome, c, oIn, bold) + 2 * REM;
+    const oH = ctx.look.need(d.outcome, oIn, bold) + 2 * REM;
     const bIn = fixed[4] - 2 * 1.5 * REM;
     const branch = (br: typeof d.yes): [Para, BoxOpts, number][] => [
       [{ runs: md(br.title, c, { color: teamTone(br.team) }) }, titleO, 0],
       [{ runs: md(br.text, c) }, textO, 0.5 * REM],
     ];
     const bh = (br: typeof d.yes) =>
-      branch(br).reduce((sum, [p, o, gap]) => sum + gap + need(p, c, bIn, o), 0) + 2 * 1.25 * REM;
+      branch(br).reduce((sum, [p, o, gap]) => sum + gap + ctx.look.need(p, bIn, o), 0) +
+      2 * 1.25 * REM;
     const rowH = Math.max(bh(d.yes), bh(d.no));
     const gapY = 3.5 * REM;
     const gridH = 2 * rowH + gapY;
     const capO: BoxOpts = { size: PT.h4, color: c.muted, line: 1.4, align: "center" };
-    const capH = d.caption ? 1.5 * REM + need(d.caption, c, a.w, capO) : 0;
+    const capH = d.caption ? 1.5 * REM + ctx.look.need(d.caption, a.w, capO) : 0;
     const top = a.y + Math.max(0, a.h - gridH - capH) / 2.25;
     const mid = top + gridH / 2;
     const thick = 0.25 * REM;
@@ -4991,8 +4707,8 @@ const RENDER: {
       mid - needH / 2,
       fixed[0],
       needH,
-      mix(c.teal, c.card, 0.07),
-      mix(c.teal, c.card, 0.4),
+      mixColor(c.teal, c.card, 0.07),
+      mixColor(c.teal, c.card, 0.4),
     );
     box(s, c, d.need, col(0) + 1.25 * REM, mid - needH / 2 + REM, needIn, needH - 2 * REM, bold);
     bar(col(1), fixed[1], mid);
@@ -5035,12 +4751,20 @@ const RENDER: {
           line: 1.4,
         },
       );
-      card(s, col(4), by, fixed[4], rowH, mix(teamLine(br.team), c.card, 0.15), teamLine(br.team));
+      card(
+        s,
+        col(4),
+        by,
+        fixed[4],
+        rowH,
+        mixColor(teamLine(br.team), c.card, 0.15),
+        teamLine(br.team),
+      );
       const parts = branch(br);
-      const inner = parts.reduce((sum, [p, o, gap]) => sum + gap + need(p, c, bIn, o), 0);
+      const inner = parts.reduce((sum, [p, o, gap]) => sum + gap + ctx.look.need(p, bIn, o), 0);
       let ty = cy - inner / 2;
       for (const [p, o, gap] of parts) {
-        const ph = need(p, c, bIn, o);
+        const ph = ctx.look.need(p, bIn, o);
         ty += gap;
         box(s, c, p, col(4) + 1.5 * REM, ty, bIn, ph, o);
         ty += ph;
@@ -5050,7 +4774,7 @@ const RENDER: {
     });
     bar(joinX, col(6) - joinX, mid);
     head(col(6), mid);
-    card(s, col(6), mid - oH / 2, fixed[6], oH, mix(c.ink, c.bg, 0.07));
+    card(s, col(6), mid - oH / 2, fixed[6], oH, mixColor(c.ink, c.bg, 0.07));
     box(s, c, d.outcome, col(6) + 1.25 * REM, mid - oH / 2 + REM, oIn, oH - 2 * REM, bold);
     if (d.caption) box(s, c, d.caption, a.x, top + gridH + 1.5 * REM, a.w, capH - 1.5 * REM, capO);
   },
@@ -5070,7 +4794,7 @@ function curve(s: PSlide, ctx: Ctx, g: Area, f: (t: number) => number, fill: boo
       y: g.y,
       w: g.w,
       h: g.h,
-      fill: { color: mix(ctx.c.teal, ctx.c.bg, 0.18) },
+      fill: { color: mixColor(ctx.look.c.teal, ctx.look.c.bg, 0.18) },
       line: { type: "none" },
       points: [{ x: 0, y: g.h, moveTo: true }, ...pts, { x: g.w, y: g.h }, { close: true }],
     });
@@ -5080,7 +4804,7 @@ function curve(s: PSlide, ctx: Ctx, g: Area, f: (t: number) => number, fill: boo
     y: g.y,
     w: g.w,
     h: g.h,
-    line: { color: ctx.c.teal, width: 2.25 },
+    line: { color: ctx.look.c.teal, width: 2.25 },
     points: [{ ...pts[0], moveTo: true }, ...pts.slice(1)],
   });
 }
@@ -5096,7 +4820,7 @@ function pillPhases(
   }[],
   a: Area,
 ) {
-  const { c } = ctx;
+  const { c } = ctx.look;
   const ph = Math.min(1, a.h / phases.length);
   phases.forEach((p, i) => {
     const py = a.y + i * ph;
@@ -5120,7 +4844,7 @@ function pillPhases(
         x,
         py + 0.32,
         size,
-        on ? mix(tone, c.bg, 0.15) : c.card,
+        on ? mixColor(tone, c.bg, 0.15) : c.card,
         c.ink,
         false,
       );
@@ -5169,7 +4893,8 @@ function finishChart(xml: string, fix: ChartFix) {
     );
 }
 
-/** Builds the deck and checks the finished slides for overflow. */
+/** Builds the deck and checks the finished slides for overflow. Returns warnings for images or
+ *  videos it could not place. */
 export async function renderPptx(
   deck: Presentation,
   assets: string,
@@ -5184,16 +4909,13 @@ export async function renderPptx(
   const dark = deck.theme === "brand-dark";
   const deckCtx: Ctx = {
     pptx,
-    c: palette(dark),
+    look: new Look(palette(dark), deckLanguage, dark),
     assets,
-    dark,
     warnings: [],
     charts: new Map(),
-    words: WORDS[deckLanguage],
-    lang: deckLanguage,
   };
   // A deep-dive slide stands on night, as on the web (`isDeepDive`).
-  const nightCtx: Ctx = { ...deckCtx, c: palette(true), dark: true };
+  const nightCtx: Ctx = { ...deckCtx, look: new Look(palette(true), deckLanguage, true) };
   // A slide's ground as the web's `--slide-ground`: its hue at 7 % on the background, which every
   // fill in the ground's colour takes too.
   const grounded = new Map<string, Ctx>();
@@ -5201,13 +4923,13 @@ export async function renderPptx(
     const base = dark || !slide || !isDeepDive(slide) ? deckCtx : nightCtx;
     const ground = slide ? groundOf(slide as Grounded) : "intro";
     if (ground === "intro") return base;
-    const key = `${base.dark}-${ground}`;
+    const key = `${base.look.dark}-${ground}`;
     if (!grounded.has(key)) {
-      const c = base.c;
+      const { c } = base.look;
       const hue = { primary: c.teal, secondary: c.purple, accent: c.amber, success: c.green }[
         ground
       ];
-      grounded.set(key, { ...base, c: { ...c, bg: mix(hue, c.bg, 0.07) } });
+      grounded.set(key, { ...base, look: base.look.grounded(hue) });
     }
     return grounded.get(key)!;
   };
@@ -5233,7 +4955,7 @@ export async function renderPptx(
     const fix = deckCtx.charts.get(chartFiles.indexOf(name) + 1);
     const xml = fix ? finishChart(raw, fix) : raw;
     const n = /^ppt\/slides\/slide(\d+)\.xml$/.exec(name);
-    const slideC = ctxOf(n ? deck.slides[Number(n[1]) - 1] : undefined).c;
+    const slideC = ctxOf(n ? deck.slides[Number(n[1]) - 1] : undefined).look.c;
     zip.file(
       name,
       xml
