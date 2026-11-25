@@ -70,8 +70,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `ignoredFields`, proven by `test/ignored-fields.test.tsx`.
   `slides-pptx` writes with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
   `scripts/render-pptx.ts` runs the command, and `scripts/pptx/` holds the exporter modules.
-  `scripts/pptx-text.ts` measures its text with the brand faces' metrics and finds text past its
-  box, which `--strict` fails on; `scripts/pptx-fonts.ts` embeds the faces under `--embed-fonts`.
+  `scripts/pptx/lines.ts` measures text with the metrics in `scripts/pptx/faces.ts`.
+  `scripts/pptx/overflow.ts` finds text past its box, which `--strict` fails on.
+  `scripts/pptx/embed-fonts.ts` embeds the faces under `--embed-fonts`.
   Its lengths and sizes are measured off the print route at 1920x1080.
 - `specimen/`: `slide-catalog.ts`, the specimen deck, every slide type and variant with fictional
   content, and its images (`specimen/slide-catalog/`), which it imports as `?url` like brand's

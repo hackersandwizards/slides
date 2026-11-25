@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pretty, wrap } from "../scripts/pptx-text";
+import { pretty, wrap } from "../scripts/pptx/lines";
 
 describe("slides-pptx draws what the slide shows", () => {
   it("never leaves one word alone on a paragraph's last line, as brand's text-wrap: pretty", () => {

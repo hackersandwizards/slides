@@ -54,19 +54,10 @@ import {
   WORDS,
   type SideTone,
 } from "../../lib/slide-utils";
-import {
-  balance,
-  checkSlide,
-  family,
-  longest,
-  MONO,
-  PITCH,
-  pretty,
-  SANS,
-  wrap,
-  type Span,
-} from "../pptx-text";
 import { centredMark } from "./chrome";
+import { family, MONO, PITCH, SANS } from "./faces";
+import { balance, longest, pretty, wrap, type Span } from "./lines";
+import { checkSlide } from "./overflow";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
 type PSlide = ReturnType<Pptx["addSlide"]>;

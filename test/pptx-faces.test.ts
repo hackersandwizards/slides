@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { brotliCompressSync } from "node:zlib";
 import { expect, it } from "vitest";
-import { faceFiles, faceMetrics, woff2Tables } from "../scripts/pptx-text";
+import { faceFiles, faceMetrics, woff2Tables } from "../scripts/pptx/faces";
 
 // The measure reads hmtx as a plain table; a WOFF2 encoder may transform it, which drops the left
 // side bearings and would shift every advance it reads.

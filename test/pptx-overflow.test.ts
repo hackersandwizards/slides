@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { checkSlide } from "../scripts/pptx-text";
+import { checkSlide } from "../scripts/pptx/overflow";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide } from "../types/slide";
 import { shapesOf, specimen, specimenAt } from "./fixtures/rendered-deck";

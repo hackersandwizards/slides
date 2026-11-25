@@ -5,7 +5,7 @@ import { centredMark } from "../scripts/pptx/chrome";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import { overviewAsPhases, companiesWithLogo } from "../lib/slide-utils";
-import { norm, rendered, specimen, texts, unescape } from "./fixtures/rendered-deck";
+import { norm, rendered, specimen, texts, unescapeNamedEntities } from "./fixtures/rendered-deck";
 
 // The slide is 13.33 by 7.5 in, in EMU.
 const [SLIDE_W, SLIDE_H] = [12192000, 6858000];
@@ -141,7 +141,7 @@ describe("slides-pptx on the specimen deck", () => {
 
   it("sets every text of a slide as text on that slide", () => {
     const missing = slideCatalog.slides.flatMap((slide: Slide, i) => {
-      const shown = norm(unescape(slideText[i]));
+      const shown = norm(unescapeNamedEntities(slideText[i]));
       // A stats card shows its label in place of its title, as the web card does.
       // A closing whose mark stands centred shows the h&w lockup, and each partner's logo, in place
       // of the company's name.

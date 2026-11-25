@@ -48,8 +48,6 @@
     "scripts/usage.ts",
     "scripts/render-pptx.ts",
     "scripts/pptx",
-    "scripts/pptx-text.ts",
-    "scripts/pptx-fonts.ts",
     "specimen",
     "catalog/SlideFrame.astro",
     "catalog/guidance.ts"

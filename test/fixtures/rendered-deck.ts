@@ -137,7 +137,7 @@ export const REM = 21.333 / 144;
 
 export const specimenAt = (test: (s: Slide) => boolean) => slideCatalog.slides.findIndex(test);
 
-export const unescape = (t: string) =>
+export const unescapeNamedEntities = (t: string) =>
   t
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")

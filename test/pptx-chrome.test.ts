@@ -6,7 +6,13 @@ import { assert, beforeAll, describe, expect, it } from "vitest";
 import { centredMark } from "../scripts/pptx/chrome";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
-import { rendered, shapesOf, specimen, specimenAt, unescape } from "./fixtures/rendered-deck";
+import {
+  rendered,
+  shapesOf,
+  specimen,
+  specimenAt,
+  unescapeNamedEntities,
+} from "./fixtures/rendered-deck";
 
 import { pptxSlideVariants } from "./fixtures/pptx-slide-variants";
 
@@ -69,7 +75,7 @@ describe("slides-pptx on the specimen deck", () => {
       for (const [, alt, cx, cy] of xml.matchAll(
         /descr="([^"]*)"[\s\S]*?<a:ext cx="(\d+)" cy="(\d+)"/g,
       ))
-        if (unescape(alt) === verbal.name.company) drawn.push(+cx / +cy);
+        if (unescapeNamedEntities(alt) === verbal.name.company) drawn.push(+cx / +cy);
     }
     expect(drawn.length).toBeGreaterThan(0);
     for (const r of drawn) expect(Math.min(...cuts.map((c) => Math.abs(c - r)))).toBeLessThan(0.01);
@@ -102,7 +108,11 @@ describe("slides-pptx on the specimen deck", () => {
         ...(await probe.file(`ppt/slides/slide${i}.xml`)!.async("string")).matchAll(
           /descr="([^"]*)"[\s\S]*?<a:off x="(\d+)" y="\d+"\/>\s*<a:ext cx="\d+" cy="(\d+)"/g,
         ),
-      ].map(([, alt, x, h]) => ({ alt: unescape(alt), x: +x / 914400, h: +h / 914400 }));
+      ].map(([, alt, x, h]) => ({
+        alt: unescapeNamedEntities(alt),
+        x: +x / 914400,
+        h: +h / 914400,
+      }));
     const [one, two, three] = [await pics(1), await pics(2), await pics(3)];
     expect(one.find((p) => p.alt === "Partner")!.x).toBeGreaterThan(10);
     expect(one.find((p) => p.alt === verbal.name.company)!.x).toBeLessThan(1);
@@ -171,8 +181,10 @@ describe("slides-pptx draws what the slide shows", () => {
 
   it("hides the page counter on a contact closing, as the web hides its corner", () => {
     const i = specimenAt((x) => x.type === "closing" && centredMark(x));
-    expect(unescape(slideText[i])).not.toMatch(/\d\d \/ \d\d/);
-    expect(unescape(slideText[specimenAt((x) => x.type === "content")])).toMatch(/\d\d \/ \d\d/);
+    expect(unescapeNamedEntities(slideText[i])).not.toMatch(/\d\d \/ \d\d/);
+    expect(unescapeNamedEntities(slideText[specimenAt((x) => x.type === "content")])).toMatch(
+      /\d\d \/ \d\d/,
+    );
   });
 });
 

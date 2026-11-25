@@ -36,7 +36,7 @@ if (import.meta.main) {
     process.exit(1);
   }
   const { zip, warnings } = await renderPptx(deck, assets);
-  if (embed) await (await import("./pptx-fonts")).embedFonts(zip);
+  if (embed) await (await import("./pptx/embed-fonts")).embedFonts(zip);
   writeFileSync(
     resolve(out),
     await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }),
