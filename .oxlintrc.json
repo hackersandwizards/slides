@@ -43,7 +43,7 @@
             "patterns": [
               {
                 "regex": "^(?:(?:\\.\\./)+|@hackersandwizards/slides/)(scripts|catalog|specimen|test)(/|$)",
-                "message": "Components cannot depend on scripts, the catalog, specimen decks or tests."
+                "message": "components/** cannot import from scripts/, catalog/, specimen/, or test/. Move shared logic or types into lib/ or types/, or pass deck and fixture data into the component via props. Do not silence with oxlint-disable."
               }
             ]
           }
@@ -59,11 +59,11 @@
             "patterns": [
               {
                 "regex": "^(?:(?:\\.\\./)+components(/|$)|@hackersandwizards/slides/(components(/|$)|lib/slide-components$))",
-                "message": "Library code cannot depend on components."
+                "message": "lib/** cannot import from components/ or @hackersandwizards/slides/lib/slide-components. Keep UI-independent logic in lib/, move component rendering or mapping into components/ (such as components/slide-components.ts), or accept a component/callback parameter. Do not silence with oxlint-disable."
               },
               {
                 "regex": "^(?:(?:\\.\\./)+|@hackersandwizards/slides/)(scripts|catalog|specimen|test)(/|$)",
-                "message": "Library code cannot depend on scripts, the catalog, specimen decks or tests."
+                "message": "lib/** cannot import from scripts/, catalog/, specimen/, or test/. Move shared pure logic, constants, or types into lib/ or types/ so scripts/, catalog/, specimen/, and test/ import from lib/. Do not silence with oxlint-disable."
               }
             ]
           }
@@ -80,11 +80,11 @@
               {
                 "regex": "^(?:(?:\\.\\./)+|@hackersandwizards/slides/)(lib|components)(/|$)",
                 "allowTypeImports": true,
-                "message": "Slide types cannot depend on library or component values."
+                "message": "types/** cannot import runtime values from lib/ or components/. Switch to a type-only import (`import type { ... }`), or move runtime helpers and constants into lib/ or components/. Do not silence with oxlint-disable."
               },
               {
                 "regex": "^(?:(?:\\.\\./)+|@hackersandwizards/slides/)(scripts|catalog|specimen|test)(/|$)",
-                "message": "Slide types cannot depend on scripts, the catalog, specimen decks or tests."
+                "message": "types/** cannot import from scripts/, catalog/, specimen/, or test/. Declare shared type definitions in types/ (such as types/slide.ts) and import them from scripts/, catalog/, specimen/, or test/. Do not silence with oxlint-disable."
               }
             ]
           }
@@ -101,7 +101,7 @@
             "patterns": [
               {
                 "regex": "^(?:(?:\\.\\./)+|@hackersandwizards/slides/)catalog(/|$)",
-                "message": "Scripts cannot depend on the catalog."
+                "message": "scripts/** cannot import from catalog/ (only scripts/usage.ts may import catalog/guidance). Move shared data or helpers out of catalog/ into lib/ or scripts/ so both scripts/ and catalog/ import them there. Do not silence with oxlint-disable."
               }
             ]
           }
@@ -117,7 +117,7 @@
             "patterns": [
               {
                 "regex": "^(?:(?:\\.\\./){2,}|@hackersandwizards/slides/)catalog(/|$)|^\\.\\./catalog($|/(.{0,7}|.{9,}|[^g].{7}|.[^u].{6}|..[^i].{5}|...[^d].{4}|....[^a]...|.....[^n]..|......[^c].|.......[^e])$)",
-                "message": "The usage command may only import the catalog guidance."
+                "message": "scripts/usage.ts may only import catalog/guidance from catalog/. Change the import to catalog/guidance, or move any other shared code out of catalog/ into lib/ or scripts/. Do not silence with oxlint-disable."
               }
             ]
           }
