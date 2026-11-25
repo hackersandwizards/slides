@@ -71,49 +71,76 @@ describe("positionsLayout", () => {
   it.each<{
     label: string;
     block: typeof baseBlock & { middle?: string };
-    resCount: number;
-    resGaps: number[];
-    h: number;
+    areaW: number;
+    expected: {
+      w: number;
+      xOffset: number;
+      cw: number;
+      cardH: number;
+      resGap: number;
+      resCount: number;
+      resGaps: number[];
+      h: number;
+    };
   }>([
     {
-      label: "without a middle label",
+      label: "clamped without a middle label",
       block: baseBlock,
-      resCount: 1,
-      resGaps: [0],
-      h: 2.3133515625,
-    },
-    {
-      label: "with a middle label",
-      block: { ...baseBlock, middle: "Both hold" },
-      resCount: 2,
-      resGaps: [0, 0.11110937499999998],
-      h: 2.657794270833333,
-    },
-  ])(
-    "clamps to 72 rem and measures the resolution stack $label",
-    ({ block, resCount, resGaps, h }) => {
-      const layout = positionsLayout(look, block, { w: 12, k: 0.75 });
-      expect({
-        w: layout.w,
-        xOffset: layout.xOffset,
-        cw: layout.cw,
-        cardH: layout.cardH,
-        resGap: layout.resGap,
-        resCount: layout.resolution.length,
-        resGaps: layout.resolution.map((item) => item.gap),
-        h: layout.h,
-      }).toEqual({
+      areaW: 12,
+      expected: {
         w: 7.9998749999999985,
         xOffset: 2.0000625000000007,
         cw: 3.8888281249999994,
         cardH: 1.6300234374999998,
         resGap: 0.333328125,
-        resCount,
-        resGaps,
-        h,
-      });
+        resCount: 1,
+        resGaps: [0],
+        h: 2.3133515625,
+      },
     },
-  );
+    {
+      label: "clamped with a middle label",
+      block: { ...baseBlock, middle: "Both hold" },
+      areaW: 12,
+      expected: {
+        w: 7.9998749999999985,
+        xOffset: 2.0000625000000007,
+        cw: 3.8888281249999994,
+        cardH: 1.6300234374999998,
+        resGap: 0.333328125,
+        resCount: 2,
+        resGaps: [0, 0.11110937499999998],
+        h: 2.657794270833333,
+      },
+    },
+    {
+      label: "unclamped when area is narrower than 72 rem",
+      block: baseBlock,
+      areaW: 6,
+      expected: {
+        w: 6,
+        xOffset: 0,
+        cw: 2.888890625,
+        cardH: 1.6300234374999998,
+        resGap: 0.333328125,
+        resCount: 1,
+        resGaps: [0],
+        h: 2.3133515625,
+      },
+    },
+  ])("measures the positions layout $label", ({ block, areaW, expected }) => {
+    const layout = positionsLayout(look, block, { w: areaW, k: 0.75 });
+    expect({
+      w: layout.w,
+      xOffset: layout.xOffset,
+      cw: layout.cw,
+      cardH: layout.cardH,
+      resGap: layout.resGap,
+      resCount: layout.resolution.length,
+      resGaps: layout.resolution.map((item) => item.gap),
+      h: layout.h,
+    }).toEqual(expected);
+  });
 });
 
 describe("drawPositions", () => {

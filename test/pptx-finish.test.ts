@@ -80,6 +80,14 @@ it("sorts hidden legend entries in ascending index order on an unmarked trend", 
   );
 });
 
+it("adds the 11pt marked circle with the first series fill, 19050 white ring and bubble3D off", () => {
+  const xml =
+    '<c:ser><c:spPr><a:ln><a:solidFill><a:srgbClr val="1A7285"/></a:solidFill></a:ln></c:spPr><c:dLbls><c:showVal val="0"/></c:dLbls><c:marker><c:symbol val="none"/></c:marker></c:ser>';
+  expect(finishChart(xml, { now: 2, unnamed: [] })).toEqual(
+    '<c:ser><c:spPr><a:ln><a:solidFill><a:srgbClr val="1A7285"/></a:solidFill></a:ln></c:spPr><c:marker><c:symbol val="none"/></c:marker><c:dPt><c:idx val="2"/><c:marker><c:symbol val="circle"/><c:size val="11"/><c:spPr><a:solidFill><a:srgbClr val="1A7285"/></a:solidFill><a:ln w="19050"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></a:ln></c:spPr></c:marker><c:bubble3D val="0"/></c:dPt><c:dLbls><c:showVal val="0"/></c:dLbls></c:ser>',
+  );
+});
+
 it("applies part fixes in numeric chart order across ppt XML parts and skips root parts", async () => {
   const zip = new JSZip();
   zip.file("ppt/charts/chart10.xml", '<c:legendPos val="t"/>');
@@ -136,34 +144,45 @@ const deepAccentSlide: Slide = {
 };
 
 it.each([
-  { name: "day base", deck: lightDeck, slide: undefined, expected: { dark: false, bg: "F7F9FA" } },
+  {
+    name: "day base",
+    deck: lightDeck,
+    slide: undefined,
+    expected: { dark: false, bg: "F7F9FA", lang: "de" },
+  },
+  {
+    name: "dark deck base",
+    deck: darkDeck,
+    slide: undefined,
+    expected: { dark: true, bg: "0B1118", lang: "en" },
+  },
   {
     name: "deep-dive on day deck",
     deck: lightDeck,
     slide: deepSlide,
-    expected: { dark: true, bg: "0B1118" },
+    expected: { dark: true, bg: "0B1118", lang: "de" },
   },
   {
     name: "deep-dive on dark deck",
     deck: darkDeck,
     slide: deepSlide,
-    expected: { dark: true, bg: "0B1118" },
+    expected: { dark: true, bg: "0B1118", lang: "en" },
   },
   {
     name: "accent ground on day deck",
     deck: lightDeck,
     slide: accentSlide,
-    expected: { dark: false, bg: "F2EDE9" },
+    expected: { dark: false, bg: "F2EDE9", lang: "de" },
   },
   {
     name: "accent ground on deep-dive slide",
     deck: lightDeck,
     slide: deepAccentSlide,
-    expected: { dark: true, bg: "1B1B17" },
+    expected: { dark: true, bg: "1B1B17", lang: "de" },
   },
-])("resolves theme and ground background for $name", ({ deck, slide, expected }) => {
+])("resolves theme, ground and language for $name", ({ deck, slide, expected }) => {
   const look = deckGrounds(deck)(slide);
-  expect({ dark: look.dark, bg: look.c.bg }).toEqual(expected);
+  expect({ dark: look.dark, bg: look.c.bg, lang: look.lang }).toEqual(expected);
 });
 
 it("caches grounded looks per base and ground", () => {

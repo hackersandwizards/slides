@@ -181,8 +181,9 @@ export function beforeAfterLayout(
   return { k, pad, gap, half, o, connector: spec.connector, sides, h };
 }
 
-/** Draws a measured before-after pair into `area`: the before and after cards side by side, their
- *  circle icons, labels and items, and the arrow or plus connector between them. */
+/** The before and the after side by side with an arrow between, as the web's BeforeAfterSides
+ *  draws a comparison's `before-after` and the transform block: plain items, the before side
+ *  muted on white and, with `strike`, crossed out, struck through and greyed. */
 export function drawBeforeAfter(sheet: Sheet, layout: BeforeAfterLayout, area: Area): void {
   const { c } = sheet;
   const { k, pad, gap, half, o, connector, sides } = layout;
