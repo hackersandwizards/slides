@@ -195,7 +195,9 @@ it("keeps inline column templates to the grids that keep their columns on a phon
     ]).filter(([, n]) => n),
   );
   expect(counts).toEqual({
-    "components/slides/Visuals.tsx": 3,
+    "components/slides/Visuals.tsx": 1,
+    "components/slides/TimelineVisual.tsx": 1,
+    "components/slides/StaggeredTimeline.tsx": 1,
     "components/slides/GanttSlide.tsx": 1,
     "components/slides/PhasedPillsSlide.tsx": 2,
   });

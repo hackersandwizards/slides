@@ -417,6 +417,8 @@ html:has(.print-slide) {
   }
 }
 
+@import "../components/slides/TimelineVisual.css";
+@import "../components/slides/NumbersVisual.css";
 @import "../components/slides/Visuals.css";
 @import "../components/slides/SlideContainer.css";
 
