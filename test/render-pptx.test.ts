@@ -7,10 +7,10 @@ import JSZip from "jszip";
 import verbal from "@hackersandwizards/brand/verbal.json";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { centredMark, renderPptx } from "../scripts/render-pptx";
+import { centredMark } from "../scripts/render-pptx";
 import { checkSlide, faceFiles, pretty, woff2Tables, wrap } from "../scripts/pptx-text";
 import { slideCatalog } from "../specimen/slide-catalog";
-import type { ContentSlide, Slide } from "../types/slide";
+import type { ContentSlide, Presentation, Slide } from "../types/slide";
 import {
   contentRedrawnAs,
   gridAsContent,
@@ -22,67 +22,20 @@ import {
   twoColumnAsSplit,
 } from "../lib/slide-utils";
 
+import {
+  norm,
+  onlySlide,
+  rendered,
+  REM,
+  shapesOf,
+  specimen,
+  specimenAt,
+  TEAL,
+  texts,
+  unescape,
+} from "./fixtures/rendered-deck";
+
 const require = createRequire(import.meta.url);
-
-const NOT_TEXT = new Set([
-  "type",
-  "src",
-  "poster",
-  "imageSrc",
-  "logo",
-  "href",
-  "linkedIn",
-  "url",
-  "icon",
-  "notes",
-  "storageKey",
-  "variant",
-  "layout",
-  "theme",
-  "sectionTheme",
-  "accent",
-  "state",
-  "tone",
-  "dotColor",
-  "team",
-  "kind",
-  "language",
-  "closingStyle",
-  "background",
-  "ground",
-  "alt",
-  "imageAlt",
-  "highlight",
-  "highlightPhase",
-  "contact",
-  "continues",
-  "order",
-]);
-
-function texts(value: unknown, key = ""): string[] {
-  if (NOT_TEXT.has(key)) return [];
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) return value.flatMap((v) => texts(v));
-  if (value && typeof value === "object")
-    return Object.entries(value).flatMap(([k, v]) => texts(v, k));
-  return [];
-}
-
-const norm = (t: string) =>
-  t
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-    .replace(/\*\*|`|[*“”"]/g, "")
-    .replace(/−/g, "-")
-    .replace(/\s+/g, "")
-    .toLowerCase();
-
-const unescape = (t: string) =>
-  t
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, "&");
 
 // The slide is 13.33 by 7.5 in, in EMU.
 const [SLIDE_W, SLIDE_H] = [12192000, 6858000];
@@ -110,9 +63,9 @@ function misplaced(xml: string): string[] {
 
 let dir: string;
 let zip: JSZip;
-const slideXml: string[] = [];
-const slideText: string[] = [];
-const slideCharts: string[][] = [];
+let slideXml: string[];
+let slideText: string[];
+let slideCharts: string[][];
 const allCharts = () => slideCharts.flat();
 const markedAt = slideCatalog.slides.findIndex(
   (s) => s.type === "chart" && s.variant === "trend" && s.currentMarker,
@@ -120,32 +73,16 @@ const markedAt = slideCatalog.slides.findIndex(
 
 beforeAll(async () => {
   dir = mkdtempSync(join(tmpdir(), "slides-pptx-"));
-  const out = join(dir, "specimen.pptx");
-  // Vite names the specimen's images from the repository root.
-  const warnings = await renderPptx(slideCatalog, out, join(import.meta.dirname, ".."));
-  expect(warnings).toEqual([]);
-  zip = await JSZip.loadAsync(readFileSync(out));
-  for (let i = 1; zip.file(`ppt/slides/slide${i}.xml`); i++) {
-    const xml = await zip.file(`ppt/slides/slide${i}.xml`)!.async("string");
-    const rels = (await zip.file(`ppt/slides/_rels/slide${i}.xml.rels`)?.async("string")) ?? "";
-    const charts = await Promise.all(
-      [...rels.matchAll(/Target="[^"]*\/charts\/(chart\d+\.xml)"/g)].map((m) =>
-        zip.file(`ppt/charts/${m[1]}`)!.async("string"),
-      ),
-    );
-    slideXml.push(xml);
-    slideCharts.push(charts);
-    slideText.push(
-      [xml, ...charts]
-        .flatMap((x) => [...x.matchAll(/<(?:a:t|c:v)>([^<]*)<\/(?:a:t|c:v)>/g)].map((m) => m[1]))
-        .join(""),
-    );
-  }
+  ({ zip, slideXml, slideText, slideCharts } = await specimen());
 }, 60_000);
 
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("slides-pptx on the specimen deck", () => {
+  it("renders the specimen without a warning", async () => {
+    expect((await specimen()).warnings).toEqual([]);
+  });
+
   it("writes the confidentiality line on every slide at the footer centre line", () => {
     for (const xml of slideXml) {
       const note = shapesOf(xml).find(
@@ -158,25 +95,19 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("places the confidentiality line after the start logo in a logo list", async () => {
-    const out = join(dir, "confidential.pptx");
     const confidential = "Specimen deck, fictional content";
-    const warnings = await renderPptx(
-      {
-        name: "Deck",
-        confidential,
-        slideLogos: {
-          0: [
-            { src: "/hw-lockup.svg", alt: "Start" },
-            { src: "/hw-lockup.svg", alt: "End" },
-          ],
-        },
-        slides: [{ type: "statement", lines: ["Hello"] }],
+    const { warnings, zip: deck } = await rendered({
+      name: "Deck",
+      confidential,
+      slideLogos: {
+        0: [
+          { src: "/hw-lockup.svg", alt: "Start" },
+          { src: "/hw-lockup.svg", alt: "End" },
+        ],
       },
-      out,
-      dir,
-    );
+      slides: [{ type: "statement", lines: ["Hello"] }],
+    });
     expect(warnings).toEqual([]);
-    const deck = await JSZip.loadAsync(readFileSync(out));
     const xml = await deck.file("ppt/slides/slide1.xml")!.async("string");
     const [, x, width] =
       /descr="Start"[^>]*>[\s\S]*?<a:off x="(\d+)" y="\d+"\/>\s*<a:ext cx="(\d+)"/.exec(xml)!;
@@ -247,11 +178,9 @@ describe("slides-pptx on the specimen deck", () => {
       )!,
     ) as ContentSlide;
     for (const b of pictured.content) if (b.type === "image") delete b.alt;
-    const out = join(dir, "over-full.pptx");
     const root = join(import.meta.dirname, "..");
-    const warnings = await renderPptx(
+    const { warnings, zip: probe } = await rendered(
       { name: "T", slides: [title, tall, lanes, pills, pictured, manyLanes, gantt] },
-      out,
       root,
     );
     // The overflow check finds text the three over-full slides cannot hold, and nothing elsewhere.
@@ -266,7 +195,6 @@ describe("slides-pptx on the specimen deck", () => {
     ]);
     expect(found.filter((w) => !/^slide [267]: /.test(w))).toEqual([]);
     expect(found.length).toBeGreaterThan(0);
-    const probe = await JSZip.loadAsync(readFileSync(out));
     expect(await probe.file("ppt/slides/_rels/slide1.xml.rels")!.async("string")).toContain(
       `Target="${href.replace("&", "&amp;")}"`,
     );
@@ -290,14 +218,11 @@ describe("slides-pptx on the specimen deck", () => {
 
   // Each cut of the brand marks has its own proportions; the night lockup is wider (F20).
   it("draws each brand mark of a night deck at its own file's proportions", async () => {
-    const out = join(dir, "night.pptx");
     const slides = slideCatalog.slides.filter((x) => x.type === "title" || x.type === "closing");
-    await renderPptx(
+    const { zip: probe } = await rendered(
       { name: "T", theme: "brand-dark", slides },
-      out,
       join(import.meta.dirname, ".."),
     );
-    const probe = await JSZip.loadAsync(readFileSync(out));
     const ratio = (png: Buffer) => png.readUInt32BE(16) / png.readUInt32BE(20);
     const cuts = ["lockup-night", "wordmark-night"].map((name) =>
       ratio(readFileSync(require.resolve(`@hackersandwizards/brand/logos/${name}.png`))),
@@ -326,19 +251,13 @@ describe("slides-pptx on the specimen deck", () => {
   it.each(["en", "de"] as const)(
     "sets the %s claim in the deck's language, on one row",
     async (lang) => {
-      const out = join(dir, `claim-${lang}.pptx`);
-      await renderPptx(
-        {
-          name: "D",
-          slides: [
-            { type: "title", title: "T", lang },
-            { type: "closing", line1: "Danke." },
-          ],
-        },
-        out,
-        dir,
-      );
-      const deck = await JSZip.loadAsync(readFileSync(out));
+      const { zip: deck } = await rendered({
+        name: "D",
+        slides: [
+          { type: "title", title: "T", lang },
+          { type: "closing", line1: "Danke." },
+        ],
+      });
       const xml = await deck.file("ppt/slides/slide2.xml")!.async("string");
       expect(norm(unescape(xml.replace(/<[^>]+>/g, "")))).toContain(norm(verbal.claim[lang]));
       // One row: the claim's box no higher than its size times the line's 1.25, with some slack.
@@ -351,10 +270,9 @@ describe("slides-pptx on the specimen deck", () => {
   // A list's first logo was the only one drawn, and only when it was no brand mark: the corner logo
   // the web draws went missing.
   it("stands a logo list as the web does: the last in the corner, the others at the bottom left", async () => {
-    const out = join(dir, "logos.pptx");
     const partner = { src: "/specimen/slide-catalog/partner-mark.png", alt: "Partner" };
     const qr = { src: "/specimen/slide-catalog/qr-example.png", alt: "Other" };
-    await renderPptx(
+    const { zip: probe } = await rendered(
       {
         name: "D",
         logo: { src: "/hw-lockup.svg", alt: "hackers&wizards" },
@@ -369,10 +287,8 @@ describe("slides-pptx on the specimen deck", () => {
           { type: "statement", lines: ["C"] },
         ],
       },
-      out,
       join(import.meta.dirname, ".."),
     );
-    const probe = await JSZip.loadAsync(readFileSync(out));
     const pics = async (i: number) =>
       [
         ...(await probe.file(`ppt/slides/slide${i}.xml`)!.async("string")).matchAll(
@@ -392,8 +308,7 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("labels a centred closing's LinkedIn link as the web does", async () => {
-    const out = join(dir, "closing-linkedin.pptx");
-    await renderPptx(
+    const { zip } = await rendered(
       {
         name: "D",
         slides: [
@@ -406,22 +321,16 @@ describe("slides-pptx on the specimen deck", () => {
           },
         ],
       },
-      out,
       join(import.meta.dirname, ".."),
     );
-    const xml = await (
-      await JSZip.loadAsync(readFileSync(out))
-    )
-      .file("ppt/slides/slide1.xml")!
-      .async("string");
+    const xml = await zip.file("ppt/slides/slide1.xml")!.async("string");
     const text = [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((m) => m[1]);
     expect(text).toContain("in/example-name");
     expect(text.join(" ")).not.toContain("linkedin.com");
   });
 
   it("sets a title slide's speakers and QR alt text in the deck's language", async () => {
-    const out = join(dir, "deck-lang.pptx");
-    await renderPptx(
+    const { zip: de } = await rendered(
       {
         name: "D",
         lang: "de",
@@ -434,41 +343,33 @@ describe("slides-pptx on the specimen deck", () => {
           },
         ],
       },
-      out,
       join(import.meta.dirname, ".."),
     );
-    const de = await JSZip.loadAsync(readFileSync(out));
     const xml = await de.file("ppt/slides/slide1.xml")!.async("string");
     expect(norm(unescape(xml.replace(/<[^>]+>/g, "")))).toContain(norm("A und B"));
     expect(unescape(xml)).toContain('descr="QR-Code: example.com"');
   });
 
   it("prints its own words in the deck's language and marks no unnamed cycle segment", async () => {
-    const out = join(dir, "deck-words.pptx");
     const segments = [
       { label: "A", percentage: 50 },
       { label: "B", percentage: 50 },
     ];
-    await renderPptx(
-      {
-        name: "D",
-        lang: "de",
-        slides: [
-          {
-            type: "comparison",
-            variant: "guidance",
-            headline: "H",
-            examples: [{ title: "T", bad: "b", good: "g" }],
-          },
-          { type: "closing", variant: "discussion" },
-          { type: "chart", variant: "cycle", headline: "C", segments },
-          { type: "chart", variant: "cycle", headline: "C", segments, currentSegmentIndex: 0 },
-        ],
-      },
-      out,
-      dir,
-    );
-    const de = await JSZip.loadAsync(readFileSync(out));
+    const { zip: de } = await rendered({
+      name: "D",
+      lang: "de",
+      slides: [
+        {
+          type: "comparison",
+          variant: "guidance",
+          headline: "H",
+          examples: [{ title: "T", bad: "b", good: "g" }],
+        },
+        { type: "closing", variant: "discussion" },
+        { type: "chart", variant: "cycle", headline: "C", segments },
+        { type: "chart", variant: "cycle", headline: "C", segments, currentSegmentIndex: 0 },
+      ],
+    });
     const text = async (n: number) =>
       unescape(
         (await de.file(`ppt/slides/slide${n}.xml`)!.async("string")).replace(/<[^>]+>/g, " "),
@@ -667,16 +568,10 @@ describe("slides-pptx on the specimen deck", () => {
     const grid = slideCatalog.slides.find(
       (x) => x.type === "grid" && (x.variant ?? "pillars") === "pillars",
     ) as Extract<Slide, { type: "grid"; variant?: "pillars" }>;
-    const out = join(dir, "redrawn.pptx");
-    await renderPptx(
-      {
-        name: "R",
-        slides: [regular, regularAsContent(regular)!, grid, gridAsContent(grid)] as Slide[],
-      },
-      out,
-      dir,
-    );
-    const zipped = await JSZip.loadAsync(readFileSync(out));
+    const { zip: zipped } = await rendered({
+      name: "R",
+      slides: [regular, regularAsContent(regular)!, grid, gridAsContent(grid)] as Slide[],
+    });
     const xmlOf = (n: number) => zipped.file(`ppt/slides/slide${n}.xml`)!.async("string");
     // Each pair is one drawing, but for the shapes' ids and names and the page counter.
     const shapes = (xml: string) =>
@@ -766,18 +661,15 @@ describe("slides-pptx on the specimen deck", () => {
 
   // F22: a second series that starts late was drawn at zero before its first value.
   it("leaves a gap where a point has no second value", async () => {
-    const out = join(dir, "gap.pptx");
     const data = [
       { name: "a", value: 1 },
       { name: "b", value: 2 },
       { name: "c", value: 3, value2: 5 },
     ];
-    await renderPptx(
-      { name: "G", slides: [{ type: "chart", variant: "trend", headline: "H", data }] },
-      out,
-      dir,
-    );
-    const zipped = await JSZip.loadAsync(readFileSync(out));
+    const { zip: zipped } = await rendered({
+      name: "G",
+      slides: [{ type: "chart", variant: "trend", headline: "H", data }],
+    });
     const chart = Object.keys(zipped.files).find((f) => /charts\/chart\d+\.xml$/.test(f))!;
     const second = (await zipped.file(chart)!.async("string")).split("<c:ser>")[2];
     const values = second.slice(second.indexOf("<c:val>"));
@@ -785,24 +677,18 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("fills a lone series' measured part when it holds two points or more", async () => {
-    const out = join(dir, "fill.pptx");
-    await renderPptx(
-      {
-        name: "F",
-        slides: [
-          {
-            type: "chart",
-            variant: "trend",
-            headline: "H",
-            data: [1, 2, 4, 5].map((value, i) => ({ name: `M${i}`, value })),
-            currentMarker: "M2",
-          },
-        ],
-      },
-      out,
-      dir,
-    );
-    const zipped = await JSZip.loadAsync(readFileSync(out));
+    const { zip: zipped } = await rendered({
+      name: "F",
+      slides: [
+        {
+          type: "chart",
+          variant: "trend",
+          headline: "H",
+          data: [1, 2, 4, 5].map((value, i) => ({ name: `M${i}`, value })),
+          currentMarker: "M2",
+        },
+      ],
+    });
     expect(await zipped.file("ppt/slides/slide1.xml")!.async("string")).toContain("<a:custGeom>");
   });
 
@@ -810,98 +696,72 @@ describe("slides-pptx on the specimen deck", () => {
     const bars = allCharts().filter((xml) => xml.includes("<c:barChart>"));
     expect(bars.length).toBeGreaterThan(0);
     for (const xml of bars) expect(xml).toMatch(/<c:catAx>.*?<a:bodyPr rot="0" vert="horz"\/>/s);
-    const out = join(dir, "long.pptx");
     const name = "Implementierungsphasenabschlussbericht";
-    await renderPptx(
-      {
-        name: "B",
-        slides: [
-          {
-            type: "chart",
-            variant: "bar",
-            headline: "H",
-            data: Array.from({ length: 8 }, (_, i) => ({ name: `${name} ${i}`, value: i + 1 })),
-          },
-        ],
-      },
-      out,
-      dir,
-    );
-    const zipped = await JSZip.loadAsync(readFileSync(out));
+    const { zip: zipped } = await rendered({
+      name: "B",
+      slides: [
+        {
+          type: "chart",
+          variant: "bar",
+          headline: "H",
+          data: Array.from({ length: 8 }, (_, i) => ({ name: `${name} ${i}`, value: i + 1 })),
+        },
+      ],
+    });
     const chart = Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))!;
     expect(await zipped.file(chart)!.async("string")).not.toContain('rot="0"');
   });
 
   it("keeps a marked two-series trend's planned halves out of the legend", async () => {
-    const out = join(dir, "two.pptx");
-    await renderPptx(
-      {
-        name: "T",
-        slides: [
-          {
-            type: "chart",
-            variant: "trend",
-            headline: "H",
-            currentMarker: "b",
-            seriesLabel: "A",
-            series2Label: "B",
-            data: [
-              { name: "a", value: 1, value2: 2 },
-              { name: "b", value: 2, value2: 3 },
-              { name: "c", value: 3, value2: 4 },
-            ],
-          },
-        ],
-      },
-      out,
-      dir,
-    );
-    const zipped = await JSZip.loadAsync(readFileSync(out));
+    const { zip: zipped } = await rendered({
+      name: "T",
+      slides: [
+        {
+          type: "chart",
+          variant: "trend",
+          headline: "H",
+          currentMarker: "b",
+          seriesLabel: "A",
+          series2Label: "B",
+          data: [
+            { name: "a", value: 1, value2: 2 },
+            { name: "b", value: 2, value2: 3 },
+            { name: "c", value: 3, value2: 4 },
+          ],
+        },
+      ],
+    });
     const chart = Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))!;
     const xml = await zipped.file(chart)!.async("string");
     expect(xml.match(/<c:legendEntry>/g)).toHaveLength(2);
     expect(xml.match(/<a:prstDash val="dash"\/>/g)).toHaveLength(2);
   });
 
-  const chartXml = async (out: string) => {
-    const zipped = await JSZip.loadAsync(readFileSync(out));
+  const chartXml = (zipped: JSZip) => {
     const chart = Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))!;
     return zipped.file(chart)!.async("string");
   };
 
   it("leaves an unnamed series out of the legend, as the web does", async () => {
-    const out = join(dir, "unnamed.pptx");
-    await renderPptx(
-      {
-        name: "T",
-        slides: [
-          {
-            type: "chart",
-            variant: "trend",
-            headline: "H",
-            series2Label: "B",
-            data: [
-              { name: "a", value: 1, value2: 2 },
-              { name: "b", value: 2, value2: 3 },
-            ],
-          },
-        ],
-      },
-      out,
-      dir,
-    );
-    const xml = await chartXml(out);
+    const { zip } = await rendered({
+      name: "T",
+      slides: [
+        {
+          type: "chart",
+          variant: "trend",
+          headline: "H",
+          series2Label: "B",
+          data: [
+            { name: "a", value: 1, value2: 2 },
+            { name: "b", value: 2, value2: 3 },
+          ],
+        },
+      ],
+    });
+    const xml = await chartXml(zip);
     expect(xml).toContain('<c:legendEntry><c:idx val="0"/><c:delete val="1"/></c:legendEntry>');
     expect(xml.match(/<c:legendEntry>/g)).toHaveLength(1);
   });
-
-  const onlySlide = async (name: string, slide: Slide) => {
-    const out = join(dir, name);
-    await renderPptx({ name: "T", slides: [slide] }, out, dir);
-    return (await JSZip.loadAsync(readFileSync(out)))
-      .file("ppt/slides/slide1.xml")!
-      .async("string");
-  };
 
   it("sets the headline a row below a principle that wraps to the kicker's second row", () => {
     const at = slideCatalog.slides.findLastIndex((s) => s.type === "gantt" && s.principle);
@@ -939,7 +799,7 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("stacks milestones that share a column, as the web does", async () => {
-    const xml = await onlySlide("milestones.pptx", {
+    const xml = await onlySlide({
       type: "gantt",
       headline: "H",
       columns: ["Q1", "Q2"],
@@ -959,32 +819,23 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("prints a bar's figure with the deck's decimal mark", async () => {
-    const out = join(dir, "bars-de.pptx");
-    await renderPptx(
-      {
-        name: "T",
-        lang: "de",
-        slides: [
-          {
-            type: "content",
-            headline: "H",
-            content: [{ type: "bars", max: 10, bars: [{ label: "a", value: 2.5 }] }],
-          },
-        ],
-      },
-      out,
-      dir,
-    );
-    const xml = await (
-      await JSZip.loadAsync(readFileSync(out))
-    )
-      .file("ppt/slides/slide1.xml")!
-      .async("string");
+    const { zip } = await rendered({
+      name: "T",
+      lang: "de",
+      slides: [
+        {
+          type: "content",
+          headline: "H",
+          content: [{ type: "bars", max: 10, bars: [{ label: "a", value: 2.5 }] }],
+        },
+      ],
+    });
+    const xml = await zip.file("ppt/slides/slide1.xml")!.async("string");
     expect(xml).toContain(">2,5<");
   });
 
   it("names what a bar chart's values count", async () => {
-    const xml = await onlySlide("bar-label.pptx", {
+    const xml = await onlySlide({
       type: "chart",
       variant: "bar",
       headline: "H",
@@ -1005,13 +856,13 @@ describe("slides-pptx on the specimen deck", () => {
       headline: "H",
       content: [b],
     });
-    expect(await onlySlide("grid.pptx", content(block))).toBe(
-      await onlySlide("cards.pptx", content(labeledGridAsCards(block))),
+    expect(await onlySlide(content(block))).toBe(
+      await onlySlide(content(labeledGridAsCards(block))),
     );
   });
 
   it("draws a roadmap's items column beside its phased one", async () => {
-    const xml = await onlySlide("roadmap.pptx", {
+    const xml = await onlySlide({
       type: "roadmap",
       headline: "H",
       columns: [
@@ -1033,7 +884,7 @@ describe("slides-pptx on the specimen deck", () => {
       (x) => x.type === "decision" && x.yes.team === "complicated-subsystem",
     )!;
     const factory = tokens["--color-factory"].slice(1).toUpperCase();
-    expect(await onlySlide("decision.pptx", slide)).toContain(`<a:srgbClr val="${factory}"/>`);
+    expect(await onlySlide(slide)).toContain(`<a:srgbClr val="${factory}"/>`);
   });
 
   it("draws a centered content slide the statement type takes as that statement", async () => {
@@ -1043,14 +894,12 @@ describe("slides-pptx on the specimen deck", () => {
       headline: "One claim",
       content: [{ type: "paragraph", text: "Under it." }],
     };
-    expect(await onlySlide("centered.pptx", slide)).toBe(
-      await onlySlide("statement.pptx", contentRedrawnAs(slide)!),
-    );
+    expect(await onlySlide(slide)).toBe(await onlySlide(contentRedrawnAs(slide)!));
   });
 
   it("draws a toned two-column's markers in its hues and a neutral one's in teal", async () => {
     const column = { title: "T", items: ["one"] };
-    const xml = await onlySlide("toned.pptx", {
+    const xml = await onlySlide({
       type: "content",
       headline: "H",
       content: [
@@ -1073,15 +922,15 @@ describe("slides-pptx on the specimen deck", () => {
   it("shrinks a transform's gap with its text", async () => {
     const items = Array.from({ length: 12 }, () => "A line of a long list, written out in full");
     const side = (label: string, list: string[]) => ({ label, items: list });
-    const gap = async (name: string, list: string[]) => {
-      const xml = await onlySlide(name, {
+    const gap = async (list: string[]) => {
+      const xml = await onlySlide({
         type: "content",
         headline: "H",
         content: [{ type: "transform", before: side("B", list), after: side("A", list) }],
       });
       return Number(/<a:ext cx="(\d+)" cy="914"\/>/.exec(xml)?.[1]);
     };
-    expect(await gap("dense.pptx", items)).toBeLessThan(await gap("sparse.pptx", ["One"]));
+    expect(await gap(items)).toBeLessThan(await gap(["One"]));
   });
 
   it("puts a plus between the sides of a before-after that adds", async () => {
@@ -1151,13 +1000,10 @@ it("colours a deep-dive slide's bullets in the night teal, every other slide's i
     headline: "H",
     content: [{ type: "bullets", items: ["a", "b"] }],
   };
-  const out = join(dir, "bullets.pptx");
-  await renderPptx(
+  const { zip: pptx } = await rendered(
     { ...slideCatalog, slides: [slide, { ...slide, sectionTheme: "deepdive" }] as Slide[] },
-    out,
     join(import.meta.dirname, "..", "specimen"),
   );
-  const pptx = await JSZip.loadAsync(readFileSync(out));
   const colour = async (n: number) =>
     [
       ...(await pptx.file(`ppt/slides/slide${n}.xml`)!.async("string")).matchAll(
@@ -1172,8 +1018,7 @@ it("colours a deep-dive slide's bullets in the night teal, every other slide's i
 });
 
 it("marks the text of a German deck German, its notes included", async () => {
-  const out = join(dir, "lang.pptx");
-  await renderPptx(
+  const { zip: pptx } = await rendered(
     {
       ...slideCatalog,
       slides: [
@@ -1186,10 +1031,8 @@ it("marks the text of a German deck German, its notes included", async () => {
         },
       ] as Slide[],
     },
-    out,
     join(import.meta.dirname, "..", "specimen"),
   );
-  const pptx = await JSZip.loadAsync(readFileSync(out));
   for (const part of ["ppt/slides/slide2.xml", "ppt/notesSlides/notesSlide2.xml"])
     expect(await pptx.file(part)!.async("string")).toContain('lang="de-DE"');
   for (const part of Object.keys(pptx.files).filter((f) => f.endsWith(".xml")))
@@ -1212,17 +1055,11 @@ it.each([
     },
   ],
 ])("sets a \\n in %s as a line break inside its paragraph", async (_, slide) => {
-  const out = join(dir, "breaks.pptx");
-  await renderPptx(
+  const { zip } = await rendered(
     { ...slideCatalog, slides: [slide as Slide] },
-    out,
     join(import.meta.dirname, "..", "specimen"),
   );
-  const xml = await (
-    await JSZip.loadAsync(readFileSync(out))
-  )
-    .file("ppt/slides/slide1.xml")!
-    .async("string");
+  const xml = await zip.file("ppt/slides/slide1.xml")!.async("string");
   const para = [...xml.matchAll(/<a:p>(.*?)<\/a:p>/g)].find((m) => m[1].includes(">one<"))!;
   expect(para[1].match(/<a:br\/>/g)).toHaveLength(1);
   expect(para[1]).toMatch(/>two .*three.* four<\/a:t>/);
@@ -1230,8 +1067,7 @@ it.each([
 
 // pptxgenjs stores every video cover as a PNG part: another format would sit there mislabelled.
 it("warns on a video poster that is no PNG and sets no cover", async () => {
-  const out = join(dir, "poster.pptx");
-  const warnings = await renderPptx(
+  const { warnings } = await rendered(
     {
       ...slideCatalog,
       slides: [
@@ -1248,7 +1084,6 @@ it("warns on a video poster that is no PNG and sets no cover", async () => {
         },
       ],
     },
-    out,
     join(import.meta.dirname, "..", "specimen"),
   );
   expect(warnings).toEqual([expect.stringContaining("poster")]);
@@ -1266,13 +1101,10 @@ it.each([true, false])(
       ...(highlightPhase === undefined ? {} : { highlightPhase }),
     });
     const phases = ["Two", "two", undefined, "Nope", "Three"];
-    const out = join(dir, "process.pptx");
-    await renderPptx(
+    const { zip: pptx } = await rendered(
       { ...slideCatalog, slides: phases.map(slide) as Slide[] },
-      out,
       join(import.meta.dirname, "..", "specimen"),
     );
-    const pptx = await JSZip.loadAsync(readFileSync(out));
     // Each slide's colours in drawing order: the slides differ in nothing else but name and page.
     const [exact, lower, none, unknown, last] = await Promise.all(
       phases.map(async (_, i) =>
@@ -1313,30 +1145,6 @@ it("refuses a face whose hmtx table is transformed, and reads one whose hmtx is 
   }
   expect(() => woff2Tables(font)).toThrow(/hmtx/);
 });
-
-// Each shape of a slide: its preset, frame in inches, fill, line dash and texts.
-const shapesOf = (xml: string) =>
-  [...xml.matchAll(/<p:sp>(.*?)<\/p:sp>/gs)].map(([, b]) => {
-    const [x, y, w, h] = (
-      /<a:off x="(-?\d+)" y="(-?\d+)"\/><a:ext cx="(\d+)" cy="(\d+)"/.exec(b) ?? []
-    )
-      .slice(1)
-      .map((v) => +v / 914400);
-    return {
-      prst: /prst="(\w+)"/.exec(b)?.[1],
-      x,
-      y,
-      w,
-      h,
-      fill: /<p:spPr>.*?<a:solidFill><a:srgbClr val="(\w+)"/s.exec(b)?.[1],
-      dash: /<a:prstDash val="(\w+)"/.exec(b)?.[1],
-      texts: [...b.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((m) => m[1]),
-      xml: b,
-    };
-  });
-const specimenAt = (test: (s: Slide) => boolean) => slideCatalog.slides.findIndex(test);
-const TEAL = tokens["--color-teal"].slice(1).toUpperCase();
-const REM = 21.333 / 144;
 
 describe("slides-pptx draws what the slide shows", () => {
   it("finds no text taller or wider than its box, across its shape or off the slide, and finds each where it is", () => {
@@ -1422,17 +1230,11 @@ describe("slides-pptx draws what the slide shows", () => {
 
   it("breaks a headline into balanced lines, as the web's text-wrap: balance", async () => {
     const headline = "Each team ships on its own schedule, every single week";
-    const out = join(dir, "balanced.pptx");
-    await renderPptx(
-      { name: "T", slides: [{ type: "content", headline, content: [] } as Slide] },
-      out,
-      dir,
-    );
-    const xml = await (
-      await JSZip.loadAsync(readFileSync(out))
-    )
-      .file("ppt/slides/slide1.xml")!
-      .async("string");
+    const { zip } = await rendered({
+      name: "T",
+      slides: [{ type: "content", headline, content: [] } as Slide],
+    });
+    const xml = await zip.file("ppt/slides/slide1.xml")!.async("string");
     const title = shapesOf(xml).find(
       (sh) =>
         sh.texts.join(" ").replace(/\s+/g, " ").trim() === headline ||
@@ -1527,10 +1329,9 @@ describe("slides-pptx draws what the slide shows", () => {
         },
       ],
     }));
-    const out = join(dir, "long-figures.pptx");
-    expect(await renderPptx({ name: "T", slides }, out, join(import.meta.dirname, ".."))).toEqual(
-      [],
-    );
+    expect(
+      (await rendered({ name: "T", slides }, join(import.meta.dirname, ".."))).warnings,
+    ).toEqual([]);
   });
 
   it("draws a team picture as the web lays it out: enabling columns side by side, subsystem octagons in one row, the platform teams in one dotted frame, roles beside a stream team's name", () => {
@@ -1747,8 +1548,8 @@ describe("slides-pptx as a command", () => {
           partners: [{ company: "P", src: "/missing.png", width: 2, height: 1 }],
         },
       ],
-    } as unknown as Parameters<typeof renderPptx>[0];
-    const warnings = await renderPptx(closing, join(dir, "closing.pptx"), dir);
+    } as unknown as Presentation;
+    const { warnings } = await rendered(closing, dir);
     expect(warnings.filter((w) => w.includes("/missing.png"))).toHaveLength(1);
   });
 
