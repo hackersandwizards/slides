@@ -1,8 +1,9 @@
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type JSZip from "jszip";
 import { tokens } from "@hackersandwizards/brand/tokens";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import { labeledGridAsCards } from "../lib/slide-utils";
@@ -15,6 +16,7 @@ import {
   specimenAt,
   TEAL,
 } from "./fixtures/rendered-deck";
+import { pptxBlockVariants } from "./fixtures/pptx-block-variants";
 
 let zip: JSZip;
 let slideXml: string[];
@@ -336,5 +338,202 @@ describe("slides-pptx draws what the slide shows", () => {
         )
       ];
     expect(code).toContain(`<a:spcPts val="${Math.round(16 * 1.3 * 100)}"/>`);
+  });
+});
+
+describe("slides-pptx block variants", () => {
+  it("sets single-asterisk emphasis in bold amber", async () => {
+    const xml = await onlySlide(pptxBlockVariants.emphasis);
+    const run = [...xml.matchAll(/<a:r>.*?<\/a:r>/gs)].find(([part]) =>
+      part.includes("<a:t>small steps</a:t>"),
+    );
+    assert(run, "emphasis run");
+    expect(run[0]).toContain('b="1"');
+    const amber = tokens["--color-amber-dark"].slice(1).toUpperCase();
+    expect(run[0]).toContain(`<a:srgbClr val="${amber}"/>`);
+  });
+
+  it("draws a source-free quote as one paragraph", async () => {
+    const xml = await onlySlide(pptxBlockVariants.quote);
+    const quote = shapesOf(xml).find((shape) => shape.texts.includes("Start where you are."));
+    assert(quote, "quote text");
+    expect([...quote.xml.matchAll(/<a:p>/g)]).toHaveLength(1);
+    expect(quote.texts).toEqual(["Start where you are."]);
+  });
+
+  it("centres a callout in its 7.5-inch card", async () => {
+    const xml = await onlySlide(pptxBlockVariants.callout);
+    const shapes = shapesOf(xml);
+    const card = shapes.find((shape) => shape.prst === "round2DiagRect");
+    const callout = shapes.find((shape) => shape.texts.includes("Bring a sample."));
+    assert(card, "callout card");
+    assert(callout, "callout text");
+    expect(card.w).toBe(7.5);
+    expect(callout.x + callout.w / 2).toBeCloseTo(card.x + card.w / 2, 5);
+    expect(callout.xml).toContain('algn="ctr"');
+  });
+
+  it("prefixes ordered layers with their numbers", async () => {
+    const xml = await onlySlide(pptxBlockVariants.layers);
+    const layers = shapesOf(xml).filter((shape) =>
+      shape.texts.some((text) => ["Queue", "Work"].includes(text)),
+    );
+    expect(layers.map((shape) => shape.texts.map((text) => text.trim()))).toEqual([
+      ["1", "Queue"],
+      ["2", "Work"],
+    ]);
+  });
+
+  it("draws a placeholder and warns when a video is missing", async () => {
+    const assets = join(import.meta.dirname, "fixtures");
+    const {
+      warnings,
+      slideXml: [xml],
+    } = await rendered({ name: "Video", slides: [pptxBlockVariants.missingVideo] }, assets);
+    const shapes = shapesOf(xml);
+    expect(warnings).toEqual([`video /r2s-missing.mp4: not found under ${assets}`]);
+    expect(shapes.filter((shape) => shape.prst === "round2DiagRect")).toHaveLength(1);
+    expect(shapes.flatMap((shape) => shape.texts)).toContain("Video unavailable");
+  });
+
+  it("warns when an annotated image is missing", async () => {
+    const assets = join(import.meta.dirname, "fixtures");
+    const { warnings } = await rendered(
+      { name: "Annotations", slides: [pptxBlockVariants.missingAnnotated] },
+      assets,
+    );
+    expect(warnings).toEqual([`image /r2s-missing-annotated.png: not found under ${assets}`]);
+  });
+
+  it("prints both ends of a bar range without a display override", async () => {
+    const xml = await onlySlide(pptxBlockVariants.barRange);
+    expect(shapesOf(xml).flatMap((shape) => shape.texts)).toContain("3–7");
+  });
+
+  it("draws two position cards when the middle label is absent", async () => {
+    const xml = await onlySlide(pptxBlockVariants.positions);
+    const shapes = shapesOf(xml);
+    expect(shapes.filter((shape) => shape.prst === "round2DiagRect")).toHaveLength(2);
+    const headings = shapes.filter((shape) =>
+      shape.texts.some((text) => ["Ari", "Bea"].includes(text)),
+    );
+    expect(headings.map((shape) => shape.texts.join(""))).toEqual(["Ari", "Bea"]);
+  });
+
+  it("shares the full inner frame between flow steps when notes are absent", async () => {
+    const xml = await onlySlide(pptxBlockVariants.framedFlow);
+    const shapes = shapesOf(xml);
+    const frame = shapes.find((shape) => shape.dash === "dash");
+    assert(frame, "dashed flow frame");
+    const centers = shapes
+      .filter((shape) => shape.prst === "roundRect")
+      .map((shape) => shape.x + shape.w / 2);
+    const pad = 1.5 * REM;
+    expect(centers).toEqual([
+      expect.closeTo(frame.x + pad + (frame.w - 2 * pad) / 4, 5),
+      expect.closeTo(frame.x + pad + (3 * (frame.w - 2 * pad)) / 4, 5),
+    ]);
+  });
+
+  it("sets the height of a dense card with a title and no body", async () => {
+    const xml = await onlySlide(pptxBlockVariants.cardWithoutText);
+    const shapes = shapesOf(xml);
+    const card = shapes.find((shape) => shape.prst === "round2DiagRect");
+    const title = shapes.find((shape) => shape.texts.includes("Plan"));
+    assert(card, "dense card");
+    assert(title, "card title");
+    expect(card.h).toBeCloseTo(title.h + 3 * REM, 5);
+  });
+
+  it("exports a slide with an unknown block without warnings", async () => {
+    const { warnings, slideXml: slides } = await rendered({
+      name: "Unknown",
+      slides: [pptxBlockVariants.unknown],
+    });
+    expect(warnings).toEqual([]);
+    expect(slides).toHaveLength(1);
+  });
+});
+
+describe("slides-pptx picture headers", () => {
+  let assets: string;
+
+  beforeAll(() => {
+    assets = mkdtempSync(join(tmpdir(), "slides-pptx-headers-"));
+  });
+
+  afterAll(() => rmSync(assets, { recursive: true, force: true }));
+
+  it.each([
+    { format: "GIF", file: "picture.gif", header: "47494638396128001400", ratio: 2 },
+    {
+      format: "VP8X",
+      file: "x.webp",
+      header: "5249464600000000574542505650385800000000000000005900001d0000",
+      ratio: 3,
+    },
+    {
+      format: "VP8L",
+      file: "l.webp",
+      header: "5249464600000000574542505650384c000000002f63000600",
+      ratio: 4,
+    },
+    {
+      format: "VP8",
+      file: "picture.webp",
+      header: "524946460000000057454250565038200000000000000000000096001e00",
+      ratio: 5,
+    },
+    { format: "JPEG", file: "picture.jpg", header: "ffd8ffc0000708001e00b4", ratio: 6 },
+  ])("uses the $format header's picture proportions", async ({ file, header, ratio }) => {
+    writeFileSync(join(assets, file), Buffer.from(header, "hex"));
+    const {
+      warnings,
+      slideXml: [xml],
+    } = await rendered(
+      {
+        name: "Picture",
+        slides: [
+          {
+            type: "content",
+            headline: "Picture proportions",
+            content: [{ type: "image", src: file, alt: "Header picture" }],
+          },
+        ],
+      },
+      assets,
+    );
+    const picture = [...xml.matchAll(/<p:pic>.*?<\/p:pic>/gs)].find(([part]) =>
+      part.includes('descr="Header picture"'),
+    );
+    assert(picture, "embedded picture");
+    const size = /<a:ext cx="(\d+)" cy="(\d+)"\/>/.exec(picture[0]);
+    assert(size, "picture dimensions");
+    expect(Number(size[1]) / Number(size[2])).toBeCloseTo(ratio, 3);
+    expect(warnings).toEqual([]);
+  });
+
+  it("draws a placeholder and warns for an unreadable image format", async () => {
+    writeFileSync(join(assets, "unreadable.bin"), Buffer.from("not an image"));
+    const {
+      warnings,
+      slideXml: [xml],
+    } = await rendered(
+      {
+        name: "Unreadable picture",
+        slides: [
+          {
+            type: "content",
+            headline: "Unreadable picture",
+            content: [{ type: "image", src: "unreadable.bin", alt: "Picture unavailable" }],
+          },
+        ],
+      },
+      assets,
+    );
+    const shapes = shapesOf(xml);
+    expect(warnings).toEqual(["image unreadable.bin: unreadable format"]);
+    expect(shapes.filter((shape) => shape.prst === "round2DiagRect")).toHaveLength(1);
+    expect(shapes.flatMap((shape) => shape.texts)).toContain("Picture unavailable");
   });
 });
