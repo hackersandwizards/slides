@@ -1,12 +1,18 @@
 import { join } from "node:path";
 import type JSZip from "jszip";
-import { beforeAll, describe, expect, it } from "vitest";
-import { centredMark } from "../scripts/pptx/chrome";
+import { assert, beforeAll, describe, expect, it } from "vitest";
+import { HW_LOGO } from "../lib/logo";
+import { slideDrawn } from "../scripts/pptx/slides";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
-import { overviewAsPhases } from "../lib/slide-aliases";
-import { companiesWithLogo } from "../lib/closing-copy";
-import { norm, rendered, specimen, texts, unescapeNamedEntities } from "./fixtures/rendered-deck";
+import {
+  norm,
+  rendered,
+  specimen,
+  specimenSlide,
+  texts,
+  unescapeNamedEntities,
+} from "./fixtures/rendered-deck";
 
 // The slide is 13.33 by 7.5 in, in EMU.
 const [SLIDE_W, SLIDE_H] = [12192000, 6858000];
@@ -138,52 +144,109 @@ describe("slides-pptx on the specimen deck", () => {
     expect(problems).toEqual([]);
   });
 
-  const unmarked = (item: string) => item.replace(/^[-+]\s*/, "");
+  const stats = specimenSlide("Numbers after six months", "grid");
+  const versus = specimenSlide("Prompting against a harness", "comparison");
+  const imageSteps = specimenSlide("One board, built up step by step", "content");
+  const questions = slideCatalog.slides.find(
+    (slide) => slide.type === "closing" && slide.line1 === "Questions?",
+  );
+  const partnerClosing = slideCatalog.slides.find(
+    (slide) => slide.type === "closing" && slide.partners?.length === 1,
+  );
+  assert(questions, "Specimen contact closing without portraits");
+  assert(partnerClosing, "Specimen contact closing with the partner logo");
 
+  // A stats card shows its label in place of its title, as the web card does.
+  // A closing whose mark stands centred shows the h&w lockup, and each partner's logo, in place
+  // of the company's name.
+  // A vs comparison item's leading + or - is its mark, not its text.
+  // Image steps show their last step, as print does: a file has no arrow steps.
+  const specialTextSlides = new Set([stats, versus, imageSteps, questions, partnerClosing]);
+
+  // An overview draws as phased pills, its stage descriptions gone, as on the web.
   it("sets every text of a slide as text on that slide", () => {
-    const missing = slideCatalog.slides.flatMap((slide: Slide, i) => {
+    const slides = [...slideCatalog.slides.entries()].filter(
+      ([, slide]) => !specialTextSlides.has(slide),
+    );
+    expect(slides).toHaveLength(134);
+    const missing = slides.flatMap(([i, slide]) => {
       const shown = norm(unescapeNamedEntities(slideText[i]));
-      // A stats card shows its label in place of its title, as the web card does.
-      // A closing whose mark stands centred shows the h&w lockup, and each partner's logo, in place
-      // of the company's name.
-      // An overview draws as phased pills, its stage descriptions gone, as on the web.
-      // A vs comparison item's leading + or - is its mark, not its text.
-      // Image steps show their last step, as print does: a file has no arrow steps.
-      const data =
-        slide.type === "grid" && slide.variant === "stats"
-          ? { ...slide, cards: slide.cards.map((cd) => (cd.label ? { ...cd, title: "" } : cd)) }
-          : slide.type === "overview"
-            ? overviewAsPhases(slide)
-            : slide.type === "closing" && centredMark(slide)
-              ? {
-                  ...slide,
-                  partners: undefined,
-                  speakers: slide.speakers?.map((sp) =>
-                    companiesWithLogo(slide).has(sp.company.toLowerCase())
-                      ? { ...sp, company: "" }
-                      : sp,
-                  ),
-                }
-              : slide.type === "comparison" &&
-                  (slide.variant === undefined || slide.variant === "vs")
-                ? {
-                    ...slide,
-                    left: { ...slide.left, items: slide.left.items.map(unmarked) },
-                    right: { ...slide.right, items: slide.right.items.map(unmarked) },
-                  }
-                : slide.type === "content"
-                  ? {
-                      ...slide,
-                      content: slide.content.map((b) =>
-                        b.type === "image-steps" ? { ...b, steps: b.steps.slice(-1) } : b,
-                      ),
-                    }
-                  : slide;
-      return texts(data)
+      return texts(slideDrawn(slide))
         .filter((t) => !shown.includes(norm(t)))
         .map((t) => `slide ${i + 1} (${slide.type}): ${t}`);
     });
     expect(missing).toEqual([]);
+  });
+
+  it("uses a stats card's label in place of its title", () => {
+    const shown = norm(unescapeNamedEntities(slideText[slideCatalog.slides.indexOf(stats)]));
+    const xml = slideXml[slideCatalog.slides.indexOf(stats)];
+    const runs = [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map(([, text]) => norm(text));
+    const titles = ["Lead time", "Rework", "Teams"];
+    const visible = [
+      stats.headline,
+      "2d",
+      "from 9d",
+      "Median, all teams.",
+      "-40%",
+      "per ticket",
+      "Fictional.",
+      "38",
+      "on the harness",
+      "Of 40.",
+    ];
+    expect({
+      missing: visible.filter((text) => !shown.includes(norm(text))),
+      printedTitles: titles.filter((text) => runs.includes(norm(text))),
+    }).toEqual({ missing: [], printedTitles: [] });
+  });
+
+  it.each([
+    { name: "lockup", slide: questions, companies: [HW_LOGO.alt], labels: [HW_LOGO.alt] },
+    {
+      name: "partner logo and lockup",
+      slide: partnerClosing,
+      companies: [HW_LOGO.alt, "Northwind"],
+      labels: ["Northwind", HW_LOGO.alt],
+    },
+  ])(
+    "shows the $name in place of the centred closing's company text",
+    ({ slide, companies, labels }) => {
+      const i = slideCatalog.slides.indexOf(slide);
+      const shown = norm(unescapeNamedEntities(slideText[i]));
+      const copy = texts(slide).filter((text) => !companies.includes(text));
+      const logos = [...slideXml[i].matchAll(/<p:pic>.*?<p:cNvPr [^>]*descr="([^"]*)"/gs)].map(
+        ([, alt]) => unescapeNamedEntities(alt),
+      );
+      expect({
+        missing: copy.filter((text) => !shown.includes(norm(text))),
+        printedCompanies: companies.filter((company) => shown.includes(norm(company))),
+        logos,
+      }).toEqual({ missing: [], printedCompanies: [], logos: labels });
+    },
+  );
+
+  it("sets a vs comparison's minus as a separate mark before the item text", () => {
+    const i = slideCatalog.slides.indexOf(versus);
+    const shown = norm(unescapeNamedEntities(slideText[i]));
+    const items = [...slideXml[i].matchAll(/<a:t>− {2}<\/a:t>.*?<a:t>([^<]*)<\/a:t>/g)].map(
+      ([, text]) => text,
+    );
+    expect({
+      missing: texts(versus).filter((text) => !shown.includes(norm(text))),
+      minusItems: items,
+    }).toEqual({ missing: [], minusItems: ["Ad hoc", "Hard to review", "Knowledge in heads"] });
+  });
+
+  it("prints only the final image step's caption", () => {
+    const shown = norm(unescapeNamedEntities(slideText[slideCatalog.slides.indexOf(imageSteps)]));
+    const earlier = ["The board as the sprint starts", "The chart it feeds"];
+    expect({
+      missing: texts(imageSteps)
+        .filter((text) => !earlier.includes(text))
+        .filter((text) => !shown.includes(norm(text))),
+      earlierCaptions: earlier.filter((text) => shown.includes(norm(text))),
+    }).toEqual({ missing: [], earlierCaptions: [] });
   });
 
   it("places pictures only for a deck's images and the h&w mark", () => {
