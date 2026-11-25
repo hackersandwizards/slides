@@ -3,7 +3,7 @@
 import type { LanesSlide as LanesSlideType, PipelineLane } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { isDeepDive } from "../../lib/slide-utils";
+import { isDeepDive } from "../../lib/slide-framing";
 import { SectionHeader } from "./SectionHeader";
 import { CodeLines } from "../../lib/use-code-highlight";
 import { renderMarkdown } from "../../lib/markdown";

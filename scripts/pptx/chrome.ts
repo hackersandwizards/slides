@@ -1,6 +1,6 @@
 import type { Presentation, SectionTheme, Slide } from "../../types/slide";
 import { HW_LOGO, cornerMark, logoPlaces, resolveSlideLogo } from "../../lib/logo";
-import { pageLabel } from "../../lib/slide-utils";
+import { pageLabel } from "../../lib/slide-framing";
 import { chip, chipWidth } from "./chips";
 import { textWidth } from "./fit";
 import { brandCut } from "./images";

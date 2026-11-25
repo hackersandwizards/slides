@@ -1,4 +1,4 @@
-import { profileLabel } from "../../lib/slide-utils";
+import { profileLabel } from "../../lib/link-labels";
 import { hex, type Palette } from "./palette";
 import type { Sheet } from "./sheet";
 import type { Disc } from "./stage";

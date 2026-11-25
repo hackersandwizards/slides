@@ -1,4 +1,4 @@
-import { FIT_STYLE, NARROW } from "../../lib/slide-utils";
+import { FIT_STYLE, NARROW } from "../../lib/stage-fit";
 
 /** A heading's word wider than its box broke without a hyphen ("Architectur / e"): Chrome
  *  hyphenates no capitalised English word and Safari none under the limit `slides.css` sets. Such a

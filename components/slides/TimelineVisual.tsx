@@ -1,5 +1,5 @@
 import { renderMarkdown } from "../../lib/markdown";
-import { continuation } from "../../lib/slide-utils";
+import { continuation } from "../../lib/process-layout";
 import { VISUAL_LABEL } from "./DiagramVocabulary";
 import { Staggered } from "./StaggeredTimeline";
 import {

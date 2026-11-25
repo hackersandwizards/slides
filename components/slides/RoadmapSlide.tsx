@@ -1,6 +1,10 @@
 "use client";
 
-import type { MarkerTone, RoadmapSlide as RoadmapSlideType } from "../../types/slide";
+import type {
+  MarkerTone,
+  RoadmapColumn,
+  RoadmapSlide as RoadmapSlideType,
+} from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { renderMarkdown } from "../../lib/markdown";
 import { COLUMN_HUE, type ColumnAccent } from "../../lib/section-styles";
@@ -27,8 +31,50 @@ interface PartItem {
 interface PartGroup {
   /** A caps label over the group, in its theme's colour. */
   label?: string;
-  theme?: string;
-  items: PartItem[];
+  theme: string;
+  rows: PartRow[];
+}
+
+interface PartRow {
+  item: PartItem;
+  delay: number;
+}
+
+interface RoadmapPart {
+  label: string;
+  title: string;
+  subtitle?: string;
+  hue: (typeof COLUMN_HUE)[ColumnAccent] | undefined;
+  groups: PartGroup[];
+  delay: number;
+}
+
+function normalizeRoadmapPart(column: RoadmapColumn, index: number): RoadmapPart {
+  const hue = Object.hasOwn(COLUMN_HUE, column.accent) ? COLUMN_HUE[column.accent] : undefined;
+  const fallback = hue === "teal" ? "primary" : "secondary";
+  const delay = 0.15 + index * 0.05;
+  const groups = column.phases || [
+    { label: undefined, items: column.items ?? [], theme: fallback },
+  ];
+  let firstRow = 0;
+  const normalizedGroups = groups.map((group) => {
+    const requested = group.theme ?? "secondary";
+    const theme = Object.hasOwn(themeDotColor, requested) ? requested : fallback;
+    const rows = group.items.map((item, i) => ({
+      item,
+      delay: delay + 0.05 + (firstRow + i) * 0.04,
+    }));
+    firstRow += rows.length;
+    return { label: group.label, theme, rows };
+  });
+  return {
+    label: column.label,
+    title: column.title,
+    subtitle: column.subtitle,
+    hue,
+    groups: normalizedGroups,
+    delay,
+  };
 }
 
 /** A row's own marker colour, from `tone` or the class its deprecated `dotColor` names. */
@@ -39,22 +85,8 @@ function markerColour(item: PartItem): string | undefined {
 
 /** One part: the accent rule, a square label, title and subtitle, then groups of rows, each a
  *  marker or a number, a bold title and a grey line. */
-function PartCard({
-  label,
-  title,
-  subtitle,
-  accent,
-  groups,
-  delay,
-}: {
-  label: string;
-  title: string;
-  subtitle?: string;
-  accent: ColumnAccent;
-  groups: PartGroup[];
-  delay: number;
-}) {
-  const hue = COLUMN_HUE[accent];
+function PartCard({ part }: { part: RoadmapPart }) {
+  const { label, title, subtitle, hue, groups, delay } = part;
 
   return (
     <BlurFade delay={delay} duration={0.5}>
@@ -78,61 +110,9 @@ function PartCard({
           )}
 
           <div className="mt-6 space-y-6">
-            {groups.map((group, g) => {
-              const firstRow = groups
-                .slice(0, g)
-                .reduce((rows, prior) => rows + prior.items.length, 0);
-              const theme =
-                group.theme && Object.hasOwn(themeDotColor, group.theme)
-                  ? group.theme
-                  : hue === "teal"
-                    ? "primary"
-                    : "secondary";
-              const dot = themeDotColor[theme];
-              return (
-                <div key={g}>
-                  {group.label && (
-                    <p
-                      className="hw-label mb-3 [--hw-label-size:var(--text-base)]"
-                      data-hue={themeHue[theme]}
-                    >
-                      {group.label}
-                    </p>
-                  )}
-                  <ul className="space-y-4">
-                    {group.items.map((item, i) => (
-                      <BlurFade
-                        key={i}
-                        delay={delay + 0.05 + (firstRow + i) * 0.04}
-                        duration={0.35}
-                        as="li"
-                        className="flex items-baseline gap-4 text-xl leading-snug"
-                      >
-                        {item.number === undefined ? (
-                          <span className={`hw-marker ${markerColour(item) ?? dot}`} />
-                        ) : (
-                          <span
-                            className={`w-10 shrink-0 font-heading text-xl font-bold tabular-nums ${themeLabelColor[theme]}`}
-                          >
-                            {item.number}
-                          </span>
-                        )}
-                        <div className="flex-1">
-                          <p className="font-heading text-xl leading-snug font-bold text-text">
-                            {renderMarkdown(item.title)}
-                          </p>
-                          {item.description && (
-                            <p className="card-text-base mt-1 leading-snug text-text-muted">
-                              {renderMarkdown(item.description)}
-                            </p>
-                          )}
-                        </div>
-                      </BlurFade>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
+            {groups.map((group, i) => (
+              <RoadmapPhase key={i} group={group} />
+            ))}
           </div>
         </div>
       </SlideCard>
@@ -141,12 +121,7 @@ function PartCard({
 }
 
 export function RoadmapSlide({ slide }: Props) {
-  const parts = slide.columns.map((c) => ({
-    ...c,
-    groups: c.phases
-      ? c.phases.map((p) => ({ ...p, theme: p.theme ?? "secondary" }))
-      : [{ items: c.items ?? [] }],
-  }));
+  const parts = slide.columns.map(normalizeRoadmapPart);
 
   return (
     <SlideShell overflowHidden>
@@ -171,11 +146,60 @@ export function RoadmapSlide({ slide }: Props) {
         <div className="slide-body">
           <div className="grid w-full grid-cols-2 gap-8">
             {parts.map((part, i) => (
-              <PartCard key={i} {...part} delay={0.15 + i * 0.05} />
+              <PartCard key={i} part={part} />
             ))}
           </div>
         </div>
       </TitledContent>
     </SlideShell>
+  );
+}
+
+function RoadmapPhase({ group }: { group: PartGroup }) {
+  const { theme } = group;
+  return (
+    <div>
+      {group.label && (
+        <p className="hw-label mb-3 [--hw-label-size:var(--text-base)]" data-hue={themeHue[theme]}>
+          {group.label}
+        </p>
+      )}
+      <ul className="space-y-4">
+        {group.rows.map(({ item, delay }, i) => (
+          <RoadmapPhaseRow key={i} item={item} theme={theme} delay={delay} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function RoadmapPhaseRow({ item, theme, delay }: { item: PartItem; theme: string; delay: number }) {
+  return (
+    <BlurFade
+      delay={delay}
+      duration={0.35}
+      as="li"
+      className="flex items-baseline gap-4 text-xl leading-snug"
+    >
+      {item.number === undefined ? (
+        <span className={`hw-marker ${markerColour(item) ?? themeDotColor[theme]}`} />
+      ) : (
+        <span
+          className={`w-10 shrink-0 font-heading text-xl font-bold tabular-nums ${themeLabelColor[theme]}`}
+        >
+          {item.number}
+        </span>
+      )}
+      <div className="flex-1">
+        <p className="font-heading text-xl leading-snug font-bold text-text">
+          {renderMarkdown(item.title)}
+        </p>
+        {item.description && (
+          <p className="card-text-base mt-1 leading-snug text-text-muted">
+            {renderMarkdown(item.description)}
+          </p>
+        )}
+      </div>
+    </BlurFade>
   );
 }

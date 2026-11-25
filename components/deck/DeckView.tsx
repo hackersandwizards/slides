@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect } from "react";
 import type { Presentation } from "../../types/slide";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
-import { slideFrame, slideTitle } from "../../lib/slide-utils";
+import { slideFrame } from "../../lib/slide-framing";
+import { slideTitle } from "../../lib/slide-utils";
 import { usePathname } from "../../lib/navigate";
 import { SlideContainer } from "../slides/SlideContainer";
 import { SlideNavigation } from "../slides/SlideNavigation";

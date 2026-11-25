@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from "react";
-import { readStored, writeStored } from "./slide-utils";
+import { readStored, writeStored } from "./browser-storage";
 
 const SPLIT_KEY = "slide-presenter-split";
 /** The share of the height below the header that the slides take; the notes get the rest. */

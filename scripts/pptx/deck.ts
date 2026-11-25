@@ -15,30 +15,17 @@ import type {
 import { trendTicks } from "../../components/slides/ChartPlots";
 import { groundOf } from "../../components/slides/SlideShell";
 import { HW_LOGO } from "../../lib/logo";
-import {
-  isDeepDive,
-  isHighlightPhase,
-  isOpening,
-  isVideo,
-  linkLabel,
-  claimParts,
-  closingClaim,
-  continuation,
-  deckLang,
-  personAccent,
-  pipelineAsFlow,
-  leadingWords,
-  minus,
-  numbersGrid,
-  profileLabel,
-  qrAlt,
-  speakerLine,
-  labeledGridAsCards,
-  teamTypesDrawn,
-  companiesWithLogo,
-  TWO_COLUMN_TONES,
-  type SideTone,
-} from "../../lib/slide-utils";
+import { isDeepDive } from "../../lib/slide-framing";
+import { continuation, isHighlightPhase } from "../../lib/process-layout";
+import { isOpening, speakerLine } from "../../lib/title-slide";
+import { isVideo } from "../../lib/gallery-media";
+import { linkLabel, profileLabel, qrAlt } from "../../lib/link-labels";
+import { claimParts, companiesWithLogo } from "../../lib/closing-copy";
+import { closingClaim, deckLang } from "../../lib/slide-utils";
+import { personAccent, teamTypesDrawn } from "../../lib/people-slides";
+import { labeledGridAsCards, pipelineAsFlow } from "../../lib/content-block-aliases";
+import { leadingWords, minus, numbersGrid } from "../../lib/figure-layout";
+import { TWO_COLUMN_TONES, type SideTone } from "../../lib/two-column-tones";
 import { centredMark, footer, footerAt, footerOf, frame, header } from "./chrome";
 import { chip, chipAdvance, chipWidth, rowSize } from "./chips";
 import { assetFile, altText, brandCut } from "./images";
@@ -2115,7 +2102,7 @@ const CHART = {
   tick: 12 / 144,
   bottom: (8 + 56) / 144,
 };
-/** A bar's name sizes, `TICK_STEPS` in `ChartPlots`: the web's text-base, text-sm and text-xs. */
+/** A bar's name sizes, `CHART_TICK_STEPS` in `ChartCategoryLayout.tsx`: the web's text-base, text-sm and text-xs. */
 const TICK_STEPS = [PT.sm, 13.33, 12];
 
 type Render = (sheet: Sheet, slide: never) => void;

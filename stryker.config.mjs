@@ -15,7 +15,7 @@ export default {
     "lib/markdown.tsx",
     "lib/presenter-sync.ts",
     "lib/section-styles.ts",
-    "lib/slide-utils.ts",
+    "lib/{browser-storage,catalog-classification,closing-copy,content-block-aliases,content-redraw,figure-layout,gallery-media,link-labels,people-slides,process-layout,regular-sections,slide-aliases,slide-arrival,slide-framing,slide-input,slide-timing,slide-utils,slide-words,stage-fit,title-slide,two-column-tones}.ts",
     "lib/vite.ts",
     "scripts/pptx/{faces,lines,overflow,xml}.ts",
     "scripts/usage.ts",

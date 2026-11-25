@@ -56,7 +56,8 @@ it(
     await page.close();
     // Closing, profiles, single profile, grid quote and statement quotation each show one.
     expect(fits.length).toBeGreaterThanOrEqual(5);
-    expect(fits.filter(({ avatar, off }) => !avatar || off > TOLERANCE)).toEqual([]);
+    expect(fits.filter(({ avatar }) => !avatar)).toEqual([]);
+    expect(fits.filter(({ off }) => off > TOLERANCE)).toEqual([]);
   },
   limit(60_000),
 );

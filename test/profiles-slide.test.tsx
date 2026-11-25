@@ -22,3 +22,29 @@ describe("ProfilesSlide", () => {
     expect(footers(slide)).toBe(0);
   });
 });
+
+it("keeps each profile's portrait, role, bullets and address together", () => {
+  const { getByRole, getByText } = render(
+    <ProfilesSlide
+      slide={{
+        ...slide,
+        profiles: [
+          {
+            name: "Guide",
+            title: "Facilitator",
+            company: "Studio",
+            imageSrc: "/portrait.png",
+            bullets: ["Runs workshops"],
+            linkedIn: "https://www.linkedin.com/in/example/",
+          },
+        ],
+      }}
+    />,
+  );
+  const card = getByRole("heading", { name: "Guide" }).closest(".hw-card");
+  expect(card).toContainElement(getByRole("img", { name: "Guide" }));
+  expect(card).toContainElement(getByText("Facilitator"));
+  expect(card).toContainElement(getByText("Studio"));
+  expect(card).toContainElement(getByText("Runs workshops"));
+  expect(card).toContainElement(getByRole("link", { name: "in/example" }));
+});

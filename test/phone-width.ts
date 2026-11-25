@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import { NARROW } from "../lib/slide-utils";
+import { NARROW } from "../lib/stage-fit";
 
 /** A window under 48rem: the engine's narrow query matches. Undone by `vi.restoreAllMocks()`. */
 export const phoneWidth = () => {

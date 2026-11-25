@@ -4,7 +4,7 @@ import { useContext, useId, type ReactNode } from "react";
 import { domAnimation, LazyMotion, m, useReducedMotion } from "motion/react";
 import { usePrintMode } from "../../lib/print-context";
 import { useChartPlotMotion } from "../../lib/use-chart-plot-motion";
-import { WORDS } from "../../lib/slide-utils";
+import { WORDS } from "../../lib/slide-words";
 import type { ChartSegment, ChartSlide as ChartSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { DeckLang } from "./SlideShell";

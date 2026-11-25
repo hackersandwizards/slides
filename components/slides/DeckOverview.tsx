@@ -5,7 +5,7 @@ import type { Presentation } from "../../types/slide";
 import { goToSlide } from "../../lib/navigate";
 import { PrintProvider } from "../../lib/print-context";
 import { deckSync } from "../../lib/presenter-sync";
-import { ignoredKey } from "../../lib/slide-utils";
+import { ignoredKey } from "../../lib/slide-input";
 import { PrintSlide } from "./PrintSlide";
 
 /** A stable ref, so only the dialog's mount opens it, as for the keyboard overlay. */

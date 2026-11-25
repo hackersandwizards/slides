@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import type { VisualBlock } from "../../types/slide";
 import { renderMarkdown } from "../../lib/markdown";
-import { numbersGrid } from "../../lib/slide-utils";
+import { numbersGrid } from "../../lib/figure-layout";
 import { Figure, figureFit, loneFigureSize } from "./Figure";
 import { VISUAL_CAPTION, VISUAL_COLUMNS, VisualSource, visualColumns } from "./DiagramVocabulary";
 

@@ -5,7 +5,8 @@ import { useSlideKeyboard } from "./use-slide-keyboard";
 import { usePrintMode } from "./print-context";
 import { useHydratedRevealArrival } from "./use-hydrated-reveal-arrival";
 import { usePhone } from "./use-progressive-reveal";
-import { directionKey, writeStored } from "./slide-utils";
+import { directionKey } from "./slide-arrival";
+import { writeStored } from "./browser-storage";
 
 interface UseCarouselOptions {
   /** Number of steps; the index clamps to [min, count - 1]. */

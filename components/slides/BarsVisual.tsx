@@ -1,7 +1,7 @@
 import { type ReactNode, useContext } from "react";
 import type { VisualBlock } from "../../types/slide";
 import { renderMarkdown } from "../../lib/markdown";
-import { WORDS } from "../../lib/slide-utils";
+import { WORDS } from "../../lib/slide-words";
 import { DeckLang } from "./SlideShell";
 import { VISUAL_CAPTION, VisualSource } from "./DiagramVocabulary";
 

@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { isDeepDive } from "../lib/slide-utils";
+import { assert, describe, expect, it } from "vitest";
+import { isDeepDive } from "../lib/slide-framing";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import type { Slide } from "../types/slide";
 
@@ -20,25 +20,27 @@ describe("deep-dive slides stand on night", () => {
   });
 
   // The night class alone leaves the brand elements on day. These two attributes turn on night.
-  const dark = { theme: "dark", night: true };
-  it.each<[string, Slide, typeof dark | null]>([
-    ["deep-dive-divider", { type: "deep-dive-divider", headline: "Part two" }, dark],
-    ["deepdive phased-pills", pills("deepdive"), dark],
-    ["secondary phased-pills", pills("secondary"), null],
-    [
-      "deepdive content",
-      { type: "content", headline: "H", sectionTheme: "deepdive", content: [] },
-      dark,
-    ],
-    ["day content", { type: "content", headline: "H", content: [] }, null],
-  ])("%s has the expected night shell", (_case, slide, expected) => {
+  it.each<[string, Slide]>([
+    ["deep-dive-divider", { type: "deep-dive-divider", headline: "Part two" }],
+    ["deepdive phased-pills", pills("deepdive")],
+    ["deepdive content", { type: "content", headline: "H", sectionTheme: "deepdive", content: [] }],
+  ])("%s sets night attributes on the night shell", (_case, slide) => {
     const Component = slideComponents[slide.type];
     const { container } = render(<Component slide={slide} />);
     const shell = container.querySelector(".slide-night");
-    const night = shell && {
+    assert(shell, "night slide has a night shell");
+    expect({
       theme: shell.getAttribute("data-theme"),
       night: shell.hasAttribute("data-hw-night"),
-    };
-    expect(night).toEqual(expected);
+    }).toEqual({ theme: "dark", night: true });
+  });
+
+  it.each<[string, Slide]>([
+    ["secondary phased-pills", pills("secondary")],
+    ["day content", { type: "content", headline: "H", content: [] }],
+  ])("%s has no night shell", (_case, slide) => {
+    const Component = slideComponents[slide.type];
+    const { container } = render(<Component slide={slide} />);
+    expect(container.querySelector(".slide-night")).toBeNull();
   });
 });

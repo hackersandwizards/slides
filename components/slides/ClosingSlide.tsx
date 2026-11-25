@@ -15,14 +15,11 @@ import {
   SlideTitle,
   TitledContent,
 } from "./primitives";
-import {
-  claimParts,
-  closingClaim,
-  companiesWithLogo,
-  personAccent,
-  profileLabel,
-  WORDS,
-} from "../../lib/slide-utils";
+import { claimParts, companiesWithLogo } from "../../lib/closing-copy";
+import { closingClaim } from "../../lib/slide-utils";
+import { personAccent } from "../../lib/people-slides";
+import { profileLabel } from "../../lib/link-labels";
+import { WORDS } from "../../lib/slide-words";
 
 interface Props {
   slide: ClosingSlideType;

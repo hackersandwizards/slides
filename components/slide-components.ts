@@ -25,7 +25,7 @@ import { DecisionSlide } from "./slides/DecisionSlide";
 import { ActivitySlide } from "./slides/ActivitySlide";
 import { createElement } from "react";
 import type { DualPillOverviewSlide, EvolutionSlide, Slide } from "../types/slide";
-import { dualPillAsRoadmap, evolutionAsProcess } from "../lib/slide-utils";
+import { dualPillAsRoadmap, evolutionAsProcess } from "../lib/slide-aliases";
 
 type SlideComponent = React.ComponentType<{ slide: Slide }>;
 

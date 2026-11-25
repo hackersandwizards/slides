@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { WORDS } from "../../lib/slide-utils";
+import { WORDS } from "../../lib/slide-words";
 
 const ARROW = (
   <span className="hw-arrow" aria-hidden="true">

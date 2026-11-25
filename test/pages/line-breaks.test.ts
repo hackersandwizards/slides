@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import puppeteer, { type Browser, type Page } from "puppeteer";
 import { claim } from "@hackersandwizards/brand/verbal.json";
-import { afterAll, beforeAll, expect, it } from "vitest";
+import { afterAll, assert, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
 import { limit, newPage } from "./limit";
 
@@ -19,40 +19,41 @@ afterAll(async () => {
   served?.close();
 });
 
-/** The number of lines a run of text starting at `from` and `length` long covers inside the first
- *  element under `scope` whose text starts with `starts`. */
-const linesOf = (page: Page, scope: string, starts: string, from: string, length: number) =>
-  page.evaluate(
-    (scope, starts, from, length) => {
-      const box = [...document.querySelectorAll(`${scope} *`)].find(
-        (e) => e.textContent?.startsWith(starts) && !e.querySelector("p"),
-      );
-      if (!box) return 0;
-      const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
-      const range = document.createRange();
-      let start = -1;
-      let seen = 0;
-      const text = box.textContent ?? "";
-      const at = text.indexOf(from);
-      while (walker.nextNode()) {
-        const node = walker.currentNode as Text;
-        if (start < 0 && seen + node.length > at) {
-          range.setStart(node, at - seen);
-          start = at;
-        }
-        if (start >= 0 && seen + node.length >= at + length) {
-          range.setEnd(node, at + length - seen);
-          break;
-        }
-        seen += node.length;
+type RenderedTextSpan = {
+  scope: string;
+  starts: string;
+  run: string;
+};
+
+/** The number of lines `run` covers inside the first element under `scope` whose text starts with
+ *  `starts`. */
+const linesOf = (page: Page, span: RenderedTextSpan) =>
+  page.evaluate(({ scope, starts, run }) => {
+    const box = [...document.querySelectorAll(`${scope} *`)].find(
+      (e) => e.textContent?.startsWith(starts) && !e.querySelector("p"),
+    );
+    if (!box) return 0;
+    const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+    const range = document.createRange();
+    let start = -1;
+    let seen = 0;
+    const text = box.textContent ?? "";
+    const at = text.indexOf(run);
+    const end = at + run.length;
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      if (start < 0 && seen + node.length > at) {
+        range.setStart(node, at - seen);
+        start = at;
       }
-      return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
-    },
-    scope,
-    starts,
-    from,
-    length,
-  );
+      if (start >= 0 && seen + node.length >= end) {
+        range.setEnd(node, end - seen);
+        break;
+      }
+      seen += node.length;
+    }
+    return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+  }, span);
 
 // The built frames page keeps the specimen's `\n` as text, so only the stylesheet can break it.
 it(
@@ -67,7 +68,8 @@ it(
         [...document.querySelectorAll("p")].find((e) => e.textContent?.startsWith(c))?.textContent,
       closing,
     );
-    expect(await linesOf(page, "body", closing, closing, (text ?? "").length)).toBe(2);
+    assert(text, "The specimen statement must contain its closing text");
+    expect(await linesOf(page, { scope: "body", starts: closing, run: text })).toBe(2);
     await page.close();
   },
   limit(60_000),
@@ -82,24 +84,27 @@ it.each(["en", "de"] as const)(
     await page.setViewport({ width: 1920, height: 1080 });
     await page.goto(pathToFileURL(FRAMES).href, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
-    const rows = await page.evaluate(
-      (built, word, text) => {
-        // The specimen deck is English, so the built page accents the English word.
-        const accent = [...document.querySelectorAll("p > span.text-primary")].find(
-          (s) => s.textContent === built,
-        );
-        const line = accent?.parentElement;
-        if (!line) return 0;
+    // The specimen deck is English, so the built page accents the English word.
+    const accentHandle = await page.evaluateHandle(
+      (built) =>
+        [...document.querySelectorAll("p > span.text-primary")].find(
+          (span) => span.textContent === built,
+        ),
+      claim.word.en,
+    );
+    const accent = accentHandle.asElement();
+    assert(accent, "The specimen contact closing must accent the English claim");
+    const rows = await accent.evaluate(
+      (span, { word, text }) => {
+        const line = span.parentNode as HTMLParagraphElement;
         const at = text.indexOf(word);
-        accent.textContent = word;
-        line.replaceChildren(text.slice(0, at), accent, text.slice(at + word.length));
+        span.textContent = word;
+        line.replaceChildren(text.slice(0, at), span, text.slice(at + word.length));
         const range = document.createRange();
         range.selectNodeContents(line);
         return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
       },
-      claim.word.en,
-      claim.word[lang],
-      claim[lang],
+      { word: claim.word[lang], text: claim[lang] },
     );
     await page.close();
     expect(rows).toBe(1);
@@ -120,7 +125,11 @@ it.each([1366, 1440])(
     await page.evaluate(() => document.fonts.ready);
     const compound = "self-service";
     expect(
-      await linesOf(page, ".decision-grid", "Can it be offered", compound, compound.length),
+      await linesOf(page, {
+        scope: ".decision-grid",
+        starts: "Can it be offered",
+        run: compound,
+      }),
     ).toBe(1);
     await page.close();
   },
@@ -155,15 +164,16 @@ it.each(
         return {
           text: chip.textContent,
           lines: tops.size,
-          inside:
-            chip.getBoundingClientRect().left >= 0 &&
-            chip.getBoundingClientRect().right <= document.documentElement.clientWidth,
+          left: chip.getBoundingClientRect().left,
+          rightOverflow: chip.getBoundingClientRect().right - document.documentElement.clientWidth,
         };
       }),
     );
     await page.close();
     expect(chips.length).toBeGreaterThan(0);
-    expect(chips.filter((c) => c.lines !== 1 || !c.inside)).toEqual([]);
+    expect(chips.filter((c) => c.lines !== 1)).toEqual([]);
+    expect(chips.filter((c) => c.left < 0)).toEqual([]);
+    expect(chips.filter((c) => c.rightOverflow > 0)).toEqual([]);
   },
   limit(60_000),
 );
@@ -188,10 +198,14 @@ function figureHeights(selector: string) {
   });
 }
 const STAGE_WIDTHS = [1920, 1440];
+const FIGURE_VIEWPORTS = [
+  ...STAGE_WIDTHS.map((width) => ({ width, height: (width * 9) / 16 })),
+  { width: 390, height: 844 },
+];
 const PLACE = {
-  "content-slide/visual-numbers-one": "beside",
-  "content-slide/numbers-long-figure": "beside",
-  "content-slide/numbers-label-below": "below",
+  "content-slide/visual-numbers-one": false,
+  "content-slide/numbers-long-figure": false,
+  "content-slide/numbers-label-below": true,
 } as const;
 const wrapped = (figures: ReturnType<typeof figureHeights>) =>
   figures.filter(({ set, one, over }) => set > one + 1 || over > 1);
@@ -224,12 +238,12 @@ it.each(
     // "−90 %" overflows its column on a phone without the timeline's cap.
     "content-slide/visual-timeline-segments",
     "content-slide/visual-timeline-staggered",
-  ].flatMap((story) => [...STAGE_WIDTHS, 390].map((width) => [story, width] as const)),
+  ].flatMap((story) => FIGURE_VIEWPORTS.map((viewport) => ({ story, ...viewport }))),
 )(
-  "keeps every figure of %s on one line and inside its row at %i px",
-  async (story, width) => {
+  "keeps every figure of $story on one line and inside its row at $width px",
+  async ({ story, width, height }) => {
     const page = await newPage(browser);
-    await page.setViewport({ width, height: width > 800 ? (width * 9) / 16 : 844 });
+    await page.setViewport({ width, height });
     await page.goto(`${served.origin}/slides/stories/Types/${story}/`, {
       waitUntil: "networkidle0",
     });
@@ -245,12 +259,12 @@ it.each(
 
 // A lone figure's label stands beside it on the stage while its longest word finds room there.
 it.each(
-  Object.entries(PLACE).flatMap(([story, place]) =>
-    STAGE_WIDTHS.map((width) => [story, width, place] as const),
+  Object.entries(PLACE).flatMap(([story, expectedBelow]) =>
+    STAGE_WIDTHS.map((width) => ({ story, width, expectedBelow })),
   ),
 )(
-  "places the label of %s at %i px %s the figure",
-  async (story, width, place) => {
+  "places the label of $story at $width px (below the figure: $expectedBelow)",
+  async ({ story, width, expectedBelow }) => {
     const page = await newPage(browser);
     await page.setViewport({ width, height: (width * 9) / 16 });
     await page.goto(`${served.origin}/slides/stories/Types/${story}/`, {
@@ -262,7 +276,7 @@ it.each(
       return label.top >= figure.bottom;
     });
     await page.close();
-    expect(below ? "below" : "beside").toBe(place);
+    expect(below).toBe(expectedBelow);
   },
   limit(60_000),
 );

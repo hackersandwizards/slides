@@ -6,7 +6,7 @@ import Minus from "lucide-react/icons/minus";
 import Pencil from "lucide-react/icons/pencil";
 import Plus from "lucide-react/icons/plus";
 import X from "lucide-react/icons/x";
-import { readStored, writeStored } from "../../lib/slide-utils";
+import { readStored, writeStored } from "../../lib/browser-storage";
 import { PresenterIconButton } from "./PresenterIconButton";
 
 const NOTES_SIZE_KEY = "slide-notes-size";

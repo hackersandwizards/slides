@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import puppeteer, { type Browser, type Page } from "puppeteer";
-import { afterAll, beforeAll, expect, it } from "vitest";
+import { afterAll, assert, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
 import { limit, newPage } from "./limit";
 
@@ -162,7 +162,7 @@ it.each([
     });
     await page.close();
     expect(stages.length).toBeGreaterThan(2);
-    expect(stages.every((top, i) => i === 0 || top > stages[i - 1])).toBe(true);
+    expect(stages.slice(0, -1).map((top, i) => top < stages[i + 1])).not.toContain(false);
     expect(over).toEqual([]);
   },
   limit(60_000),
@@ -186,25 +186,30 @@ it.each([1440, 390])(
           right: r.right,
           top: r.top,
           bottom: r.bottom,
-          inside: r.left >= box.left - 1 && r.right <= box.right + 1,
+          over: Math.max(box.left - r.left, r.right - box.right),
         };
       });
       return { labels, teal: "var(--color-teal)" };
     });
     await page.close();
-    const overlap = (a: (typeof labels)[number], b: (typeof labels)[number]) =>
-      a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
-    expect(labels.filter((l) => !l.inside)).toEqual([]);
+    const category = labels.filter((label) => label.x);
+    const other = labels.filter((label) => !label.x);
+    expect(labels.filter((label) => label.over > 1)).toEqual([]);
     // Angled category names overlap as boxes, not as glyphs: every other pair is compared.
-    expect(
-      labels.flatMap((a, i) => labels.slice(i + 1).filter((b) => !(a.x && b.x) && overlap(a, b))),
-    ).toEqual([]);
-    expect(labels.some((l) => !l.x)).toBe(true);
+    expect([
+      ...overlapping(other),
+      ...other.flatMap((a) => category.filter((b) => boxClearance(a, b) < 0)),
+    ]).toEqual([]);
+    expect(other.length).toBeGreaterThan(0);
     // The marked category alone takes the marker's colour, and no name stands over the point.
     expect(labels.filter((l) => l.fill === teal).map((l) => l.text)).toEqual([
       expect.stringMatching(/^Month ?0$/),
     ]);
-    expect(labels.filter((l) => /^Month ?12$/.test(l.text ?? ""))).toHaveLength(1);
+    const labelTexts = labels.map(({ text }) => {
+      assert(text, "Each rendered chart label must have text");
+      return text;
+    });
+    expect(labelTexts.filter((text) => /^Month ?12$/.test(text))).toHaveLength(1);
   },
   limit(60_000),
 );
@@ -332,7 +337,7 @@ it(
 // Eight long names leave 30 px a band on a phone: angled, they crossed each other and took the
 // plot's whole height. There each bar stands as a row under its whole name; short names keep the plot.
 it(
-  "draws a bar chart of long names as rows on a phone, as a plot on the stage",
+  "draws a bar chart of long names as proportional rows on a phone",
   async () => {
     const page = await open("chart-slide/bar-long-names", 390);
     await page.waitForSelector("[data-chart-plot] li");
@@ -350,7 +355,13 @@ it(
     // The 31 is the longest and the 6 about a fifth of it.
     expect(rows[0].bar).toBeGreaterThan(rows[3].bar * 4.5);
     expect(rows[0].bar).toBeLessThan(rows[3].bar * 5.8);
+  },
+  limit(60_000),
+);
 
+it(
+  "draws a bar chart of long names on a stage axis",
+  async () => {
     const stage = await open("chart-slide/bar-long-names", 1440);
     await stage.waitForSelector(".recharts-xAxis");
     expect(await stage.$("[data-chart-plot] li")).toBeNull();
@@ -361,12 +372,13 @@ it(
 
 // Boxes the text sweep cannot see: an annotated picture's number tiles stood on each other in the
 // picture's short gutter, and the six cards of a loop's circle covered one another's text.
-const overlapping = (boxes: DOMRect[]) =>
-  boxes.flatMap((a, i) =>
-    boxes
-      .slice(i + 1)
-      .filter((b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom),
-  );
+type BoxEdges = Pick<DOMRect, "left" | "right" | "top" | "bottom">;
+
+const boxClearance = (a: BoxEdges, b: BoxEdges) =>
+  Math.max(a.left - b.right, b.left - a.right, a.top - b.bottom, b.top - a.bottom);
+
+const overlapping = (boxes: BoxEdges[]) =>
+  boxes.flatMap((a, i) => boxes.slice(i + 1).filter((b) => boxClearance(a, b) < 0));
 
 it(
   "keeps an annotated picture's number tiles apart on a phone",
@@ -470,12 +482,8 @@ it(
     expect(plot!.height).toBeGreaterThanOrEqual(296);
     expect(labels.length).toBeGreaterThan(0);
     expect(note!.top).toBeGreaterThan(Math.max(...labels.map((l) => l.bottom)));
-    expect(dot).toBeDefined();
-    expect(
-      labels.filter(
-        (l) => l.top < dot.bottom && dot.top < l.bottom && l.left < dot.right && dot.left < l.right,
-      ),
-    ).toEqual([]);
+    assert(dot, "The marked trend must draw a reference dot");
+    expect(labels.filter((label) => boxClearance(label, dot) < 0)).toEqual([]);
   },
   limit(60_000),
 );

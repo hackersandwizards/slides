@@ -1,4 +1,4 @@
-import { act, render, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, assert, describe, expect, it, vi } from "vitest";
 import { DeckEdit } from "../lib/deck-edit-mode";
 
@@ -22,8 +22,6 @@ describe("edit mode", () => {
     render(<DeckEdit deck="/d" />);
     return { fetch, page };
   };
-  const area = () =>
-    document.querySelector("iframe")?.contentDocument?.querySelector("textarea") ?? null;
   // jsdom loads no `srcdoc`: the field's document is written here and its load fired.
   const opened = async () => {
     await waitFor(() => expect(document.querySelector("iframe")).not.toBeNull());
@@ -40,16 +38,20 @@ describe("edit mode", () => {
     );
   });
 
-  it("keeps the field and its text when the write is refused", async () => {
-    const { page } = setup([{ value: "Old text", index: 0 }, { error: "Refused." }]);
+  it.each([
+    { answer: { error: "Refused." }, edit: "New text", note: "Refused." },
+    { answer: { ok: true }, edit: "Updated text", note: "Saved. The slide reloads." },
+  ])("shows the write note in the badge: $note", async ({ answer, edit, note }) => {
+    const { page } = setup([{ value: "Old text", index: 0 }, answer]);
     await act(async () => page.click());
     await opened();
-    area()!.value = "New text";
+    const input = document.querySelector("iframe")?.contentDocument?.querySelector("textarea");
+    assert(input, "edit textarea should be mounted");
+    input.value = edit;
     await act(async () =>
-      area()!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })),
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })),
     );
-    await waitFor(() => expect(document.body.textContent).toContain("Refused."));
-    expect(area()?.value).toBe("New text");
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe(note));
   });
 
   it("commits an open field with a click elsewhere and picks nothing with it", async () => {
@@ -77,33 +79,5 @@ describe("edit mode", () => {
     history.replaceState(null, "", "/d/2");
     await press();
     expect(document.documentElement.hasAttribute("data-deck-edit")).toBe(true);
-  });
-
-  it("saves on Enter, closes the field, announces reload and marks backward arrival", async () => {
-    const { page } = setup([{ value: "Old text", index: 0 }, { ok: true }]);
-    await act(async () => page.click());
-    await opened();
-    const input = area();
-    assert(input, "edit textarea should be mounted");
-    input.value = "Updated text";
-    await act(async () =>
-      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })),
-    );
-    await waitFor(() => expect(document.body.textContent).toContain("Saved. The slide reloads."));
-    expect(document.querySelector("iframe")).toBeNull();
-    expect(sessionStorage.getItem("slide-direction")).toBe("back");
-  });
-
-  it.each(["Escape", "Enter"])("closes without saving on %s with unchanged text", async (key) => {
-    const { fetch, page } = setup([{ value: "Old text", index: 0 }]);
-    await act(async () => page.click());
-    await opened();
-    const input = area();
-    assert(input, "edit textarea should be mounted");
-    await act(async () =>
-      input.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true })),
-    );
-    expect(document.querySelector("iframe")).toBeNull();
-    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

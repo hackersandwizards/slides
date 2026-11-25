@@ -1,7 +1,7 @@
 "use client";
 
 import type { DeepDiveDividerSlide as DeepDiveDividerSlideType } from "../../types/slide";
-import { deepDiveAsTransition } from "../../lib/slide-utils";
+import { deepDiveAsTransition } from "../../lib/slide-aliases";
 import { TransitionSlide } from "./TransitionSlide";
 
 /** The deprecated deep-dive divider, drawn as the night transition that replaces it. */

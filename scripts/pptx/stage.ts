@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tokens } from "@hackersandwizards/brand/tokens";
-import { STAGE } from "../../lib/slide-utils";
+import { STAGE } from "../../lib/figure-layout";
 import { family, MONO, SANS } from "./faces";
 
 // The print route's 1920 px stage on a 13.333 in slide: 144 px to the inch, so a CSS px is half a

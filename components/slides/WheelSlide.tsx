@@ -24,11 +24,15 @@ function arc(from: number, to: number) {
   return `M ${point(R_OUT, from)} A ${R_OUT} ${R_OUT} 0 ${large} 1 ${point(R_OUT, to)} L ${point(R_IN, to)} A ${R_IN} ${R_IN} 0 ${large} 0 ${point(R_IN, from)} Z`;
 }
 
+function segmentCentre(count: number, index: number) {
+  return -90 + (360 * (index + 0.5)) / count;
+}
+
 // Segments run clockwise from the top. Each label goes to the side its segment's centre lies on,
 // top to bottom; a segment centred on the vertical axis goes to the shorter column. The PPTX
 // exporter places them by the same rule.
 function wheelSides(n: number) {
-  const centres = Array.from({ length: n }, (_, k) => -90 + (360 * (k + 0.5)) / n);
+  const centres = Array.from({ length: n }, (_, k) => segmentCentre(n, k));
   const cos = centres.map((a) => Math.cos((a * Math.PI) / 180));
   const right = cos.flatMap((c, k) => (c > 1e-6 ? [k] : []));
   const left = cos.flatMap((c, k) => (c < -1e-6 ? [k] : []));
@@ -37,22 +41,11 @@ function wheelSides(n: number) {
   });
   const bySin = (a: number, b: number) =>
     Math.sin((centres[a] * Math.PI) / 180) - Math.sin((centres[b] * Math.PI) / 180);
-  return { left: left.sort(bySin), right: right.sort(bySin), centres };
+  return { left: left.sort(bySin), right: right.sort(bySin) };
 }
 
 export function WheelSlide({ slide }: Props) {
-  const n = slide.segments.length;
-  const { left, right, centres } = wheelSides(n);
-
-  const label = (k: number) => (
-    <div key={k} className="flex gap-3">
-      <NumberTile size="sm">{k + 1}</NumberTile>
-      <div>
-        <p className="card-title text-xl leading-tight text-text">{slide.segments[k].title}</p>
-        <p className="mt-1 text-base leading-snug text-text-muted">{slide.segments[k].text}</p>
-      </div>
-    </div>
-  );
+  const { left, right } = wheelSides(slide.segments.length);
 
   return (
     <SlideShell>
@@ -64,35 +57,26 @@ export function WheelSlide({ slide }: Props) {
           <BlurFade delay={0.2} duration={0.5}>
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-8">
               {/* Both columns sit against the ring, so the left one keeps the right one's gap. */}
-              <div className="flex flex-col gap-7 justify-self-end">{left.map(label)}</div>
-              {/* As wide as its column allows, so a phone's narrower row keeps the ring on the screen. */}
-              <div className="relative aspect-square w-96 max-w-full">
-                <svg viewBox="0 0 200 200" className="h-full w-full" aria-hidden>
-                  {slide.segments.map((segment, k) => {
-                    const from = -90 + (360 * k) / n + GAP;
-                    const to = -90 + (360 * (k + 1)) / n - GAP;
-                    const [x, y] = point((R_OUT + R_IN) / 2, centres[k]).split(" ");
-                    return (
-                      <g key={segment.title}>
-                        <path d={arc(from, to)} className="fill-primary/40" />
-                        <text
-                          x={x}
-                          y={y}
-                          textAnchor="middle"
-                          dominantBaseline="central"
-                          className="fill-text text-(length:--slide-wheel-label) font-bold"
-                        >
-                          {k + 1}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </svg>
-                <div className="absolute inset-(--slide-wheel-hub) flex items-center justify-center rounded-full bg-ink/7 p-4 text-center text-base leading-tight font-bold text-text">
-                  {slide.center}
-                </div>
+              <div className="flex flex-col gap-7 justify-self-end">
+                {left.map((index) => (
+                  <WheelSegmentDescription
+                    key={index}
+                    segment={slide.segments[index]}
+                    index={index}
+                  />
+                ))}
               </div>
-              <div className="flex flex-col gap-7">{right.map(label)}</div>
+              {/* As wide as its column allows, so a phone's narrower row keeps the ring on the screen. */}
+              <WheelDiagram segments={slide.segments} center={slide.center} />
+              <div className="flex flex-col gap-7">
+                {right.map((index) => (
+                  <WheelSegmentDescription
+                    key={index}
+                    segment={slide.segments[index]}
+                    index={index}
+                  />
+                ))}
+              </div>
             </div>
           </BlurFade>
 
@@ -100,5 +84,55 @@ export function WheelSlide({ slide }: Props) {
         </div>
       </TitledContent>
     </SlideShell>
+  );
+}
+
+function WheelDiagram({ segments, center }: Pick<WheelSlideType, "segments" | "center">) {
+  const n = segments.length;
+  return (
+    <div className="relative aspect-square w-96 max-w-full">
+      <svg viewBox="0 0 200 200" className="h-full w-full" aria-hidden>
+        {segments.map((segment, k) => {
+          const from = -90 + (360 * k) / n + GAP;
+          const to = -90 + (360 * (k + 1)) / n - GAP;
+          const [x, y] = point((R_OUT + R_IN) / 2, segmentCentre(n, k)).split(" ");
+          return (
+            <g key={segment.title}>
+              <path d={arc(from, to)} className="fill-primary/40" />
+              <text
+                x={x}
+                y={y}
+                textAnchor="middle"
+                dominantBaseline="central"
+                className="fill-text text-(length:--slide-wheel-label) font-bold"
+              >
+                {k + 1}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+      <div className="absolute inset-(--slide-wheel-hub) flex items-center justify-center rounded-full bg-ink/7 p-4 text-center text-base leading-tight font-bold text-text">
+        {center}
+      </div>
+    </div>
+  );
+}
+
+function WheelSegmentDescription({
+  segment,
+  index,
+}: {
+  segment: WheelSlideType["segments"][number];
+  index: number;
+}) {
+  return (
+    <div className="flex gap-3">
+      <NumberTile size="sm">{index + 1}</NumberTile>
+      <div>
+        <p className="card-title text-xl leading-tight text-text">{segment.title}</p>
+        <p className="mt-1 text-base leading-snug text-text-muted">{segment.text}</p>
+      </div>
+    </div>
   );
 }

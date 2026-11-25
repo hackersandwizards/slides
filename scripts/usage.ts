@@ -8,20 +8,17 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { GUIDANCE } from "../catalog/guidance";
 import { DEFAULT_SECTION_STYLE, getSectionStyle } from "../lib/section-styles";
+import { anchorSlug, variantOf } from "../lib/catalog-classification";
+import { centeredAsStatement, twoColumnAsSplit } from "../lib/content-redraw";
 import {
-  anchorSlug,
-  centeredAsStatement,
   fourColumnAsCards,
-  gridAsContent,
   labeledGridAsCards,
-  mediaAsContent,
-  namedLang,
   pipelineAsFlow,
-  regularAsContent,
-  replacedBy,
-  twoColumnAsSplit,
-  variantOf,
-} from "../lib/slide-utils";
+} from "../lib/content-block-aliases";
+import { gridAsContent } from "../lib/slide-aliases";
+import { mediaAsContent } from "../lib/gallery-media";
+import { namedLang, replacedBy } from "../lib/slide-utils";
+import { regularAsContent } from "../lib/regular-sections";
 import type { ContentBlock, ContentSlide, Presentation, SectionTheme, Slide } from "../types/slide";
 
 type BlockResolver<K extends ContentBlock["type"]> =

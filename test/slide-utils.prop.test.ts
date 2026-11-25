@@ -1,13 +1,10 @@
 import { fc, test, unicodeString } from "@hackersandwizards/scaffolding/property";
 import { expect } from "vitest";
-import {
-  bulletsAsStatement,
-  figureChars,
-  formatDuration,
-  numbersGrid,
-  pageLabel,
-  personAccent,
-} from "../lib/slide-utils";
+import { figureChars, numbersGrid } from "../lib/figure-layout";
+import { bulletsAsStatement } from "../lib/content-redraw";
+import { formatDuration } from "../lib/slide-timing";
+import { pageLabel } from "../lib/slide-framing";
+import { personAccent } from "../lib/people-slides";
 import { logoPlaces, resolveSlideLogo, HW_LOGO } from "../lib/logo";
 import { DEFAULT_SECTION_STYLE, getSectionStyle, SECTION_STYLES } from "../lib/section-styles";
 

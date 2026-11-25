@@ -43,7 +43,7 @@
   --slide-footer-band: calc(var(--slide-footer-inset) + var(--slide-footer-mark) + 2rem);
   /* A QR code's card: the picture height, grown by about the quiet zone its padding takes. */
   --slide-qr: calc(var(--slide-picture-max) * 1.15);
-  /* A space too small to draw, which still reaches a PDF's text as a space (Visuals' Figure). */
+  /* A space too small to draw, which still reaches a PDF's text as a space (components/slides/Figure.tsx). */
   --slide-figure-space: 1%;
   /* One digit of the position pill: above Inter's and its fallback's tabular figure, so the pill's
      width follows the deck's length and never the face drawing it. */

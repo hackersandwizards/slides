@@ -3,7 +3,7 @@
 import type { ContentBlock, SectionTheme } from "../../types/slide";
 import { renderMarkdown } from "../../lib/markdown";
 import { getSectionStyle } from "../../lib/section-styles";
-import { TWO_COLUMN_TONES, type SideTone } from "../../lib/slide-utils";
+import { TWO_COLUMN_TONES, type SideTone } from "../../lib/two-column-tones";
 import { FencedColumnCode } from "./ContentCodeBlocks";
 import { SlideCard, type CardTone } from "./primitives";
 

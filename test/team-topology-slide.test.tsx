@@ -1,25 +1,35 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import type { Slide } from "../types/slide";
 import { wholeText } from "./fixtures/whole-text";
 import { teamTopologySlide } from "./fixtures/team-topology";
 import { DeckLang } from "../components/slides/SlideShell";
-import { WORDS } from "../lib/slide-utils";
+import { WORDS } from "../lib/slide-words";
 
 describe("TeamTopologySlide", () => {
   it("renders every team of all four types with its chips from the registry", () => {
     const SlideComponent = slideComponents["team-topology"];
     const { getAllByText } = render(<SlideComponent slide={teamTopologySlide as Slide} />);
-    const { streamAligned, platform, enabling, complicatedSubsystem = [] } = teamTopologySlide;
-    expect(complicatedSubsystem.length).toBeGreaterThan(0);
-    for (const label of [
+    const { streamAligned, platform, enabling, complicatedSubsystem } = teamTopologySlide;
+    assert(complicatedSubsystem, "fixture has complicated subsystems");
+    expect(complicatedSubsystem).toHaveLength(3);
+    const labels = [
       ...[...streamAligned, ...platform, ...enabling, ...complicatedSubsystem].map((t) => t.name),
       ...streamAligned.flatMap((t) => t.roles),
-      ...platform.flatMap((t) => [...(t.roles ?? []), t.description ?? ""]),
+      ...platform.flatMap((team) => {
+        assert(team.roles, "platform fixture has roles");
+        assert(team.description, "platform fixture has a description");
+        return [...team.roles, team.description];
+      }),
       ...enabling.flatMap((t) => t.experts),
-      ...complicatedSubsystem.map((t) => t.description ?? ""),
-    ]) {
+      ...complicatedSubsystem.map((team) => {
+        assert(team.description, "subsystem fixture has a description");
+        return team.description;
+      }),
+    ];
+    expect(labels).toHaveLength(38);
+    for (const label of labels) {
       expect(getAllByText(wholeText(label)).length).toBeGreaterThan(0);
     }
   });

@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import type { Slide } from "../types/slide";
 
@@ -12,26 +12,53 @@ const draw = (slide: Slide) => {
 // br-label-style (the website's mono caps) and br-gradient-behind-content (no tint behind text):
 // the kicker is the brand's label (hw-label, mono caps in teal-dark) in its default tone.
 describe("the kicker above a slide title", () => {
-  const slides: Slide[] = [
-    { type: "content", headline: "H", sectionLabel: "K", sectionTheme: "secondary", content: [] },
-    { type: "content", headline: "H", sectionLabel: "K", sectionTheme: "deepdive", content: [] },
-    { type: "grid", headline: "H", sectionLabel: "K", sectionTheme: "accent", cards: [] },
-    { type: "deep-dive-divider", headline: "H", partLabel: "Part two", kicker: "K" },
-    { type: "transition", headline: "H", preText: "Stepping Back" },
-  ] as Slide[];
-
-  it.each(slides.map((s) => [`${s.type} ${"sectionTheme" in s ? s.sectionTheme : ""}`, s]))(
-    "%s is teal mono caps on an untinted ground",
-    (_, slide) => {
-      const container = draw(slide as Slide);
-      const kicker = [...container.querySelectorAll(".hw-label")].find((el) =>
-        /^(K|Part two · K|Stepping Back)$/.test(el.textContent ?? ""),
-      );
-      expect(kicker).toBeDefined();
-      expect(kicker?.hasAttribute("data-tone")).toBe(false);
-      expect(container.querySelector('[class*="from-primary/7"]')).toBeNull();
+  it.each<{ name: string; slide: Slide; text: string }>([
+    {
+      name: "content secondary",
+      slide: {
+        type: "content",
+        headline: "H",
+        sectionLabel: "K",
+        sectionTheme: "secondary",
+        content: [],
+      },
+      text: "K",
     },
-  );
+    {
+      name: "content deepdive",
+      slide: {
+        type: "content",
+        headline: "H",
+        sectionLabel: "K",
+        sectionTheme: "deepdive",
+        content: [],
+      },
+      text: "K",
+    },
+    {
+      name: "grid accent",
+      slide: { type: "grid", headline: "H", sectionLabel: "K", sectionTheme: "accent", cards: [] },
+      text: "K",
+    },
+    {
+      name: "deep-dive divider",
+      slide: { type: "deep-dive-divider", headline: "H", partLabel: "Part two", kicker: "K" },
+      text: "Part two · K",
+    },
+    {
+      name: "transition",
+      slide: { type: "transition", headline: "H", preText: "Stepping Back" },
+      text: "Stepping Back",
+    },
+  ])("$name is teal mono caps on an untinted ground", ({ slide, text }) => {
+    const container = draw(slide);
+    const kicker = [...container.querySelectorAll(".hw-label")].find(
+      (el) => el.textContent === text,
+    );
+    assert(kicker, "kicker has the expected text and brand label class");
+    expect(kicker.hasAttribute("data-tone")).toBe(false);
+    expect(container.querySelector('[class*="from-primary/7"]')).toBeNull();
+  });
 });
 
 // Every titled slide type a talk shows between its section dividers carries the section label in

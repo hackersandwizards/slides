@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { Area, ReferenceDot, ReferenceLine } from "recharts";
 import type { ChartDataPoint, ChartSlide } from "../../types/slide";
-import { WORDS } from "../../lib/slide-utils";
+import { WORDS } from "../../lib/slide-words";
 import { DeckLang } from "./SlideShell";
 
 export function trendTimeline(data: ChartDataPoint[], marker?: string) {

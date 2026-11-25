@@ -45,9 +45,10 @@ it(
     await tab.setViewport({ width: 1440, height: 900 });
     const failed: string[] = [];
     tab.on("requestfailed", (request) => failed.push(request.url()));
-    tab.on("response", (response) => {
-      if (response.status() >= 400) failed.push(`${response.status()} ${response.url()}`);
-    });
+    const responses: { status: number; url: string }[] = [];
+    tab.on("response", (response) =>
+      responses.push({ status: response.status(), url: response.url() }),
+    );
     await tab.goto(page("").slice(0, -1), { waitUntil: "load" });
     const tiles = ".hw-catalog-preview iframe";
     const count = await tab.$$eval(tiles, (all) => all.length);
@@ -65,6 +66,7 @@ it(
     expect(count).toBeGreaterThan(20);
     expect(await tab.evaluate(allDrawn, tiles)).toBe(true);
     expect(failed).toEqual([]);
+    expect(responses.filter(({ status }) => status >= 400)).toEqual([]);
     await tab.close();
   },
   limit(120_000),
@@ -111,12 +113,12 @@ it.each([
   "loads %s's images from under the Pages base once hydrated",
   async (path) => {
     const tab = await newTab();
-    const missing: string[] = [];
-    tab.on("response", (response) => {
-      if (response.status() === 404) missing.push(response.url());
-    });
+    const responses: { status: number; url: string }[] = [];
+    tab.on("response", (response) =>
+      responses.push({ status: response.status(), url: response.url() }),
+    );
     await tab.goto(page(path), { waitUntil: "networkidle0" });
-    expect(missing).toEqual([]);
+    expect(responses.filter(({ status }) => status === 404)).toEqual([]);
     await tab.close();
   },
   limit(60_000),
@@ -261,70 +263,87 @@ it.each(["bar", "bar-long-names", "trend", "trend-marked"])(
 // (the stage follows the height alone). Its --hw-zoom is the zoom Chrome applies, a 32-bit float:
 // written as the double the guard computed, it stood above that at 0.9683333, and the frame's
 // label marker on talks' print page sat 1 px low.
-it(
-  "draws a shrunk slide at the slide's full width or height",
-  async () => {
-    const tab = await newTab();
-    await tab.setViewport({ width: 1920, height: 1080 });
-    const read = async (story: string, selector: string, narrow = false) => {
-      await tab.goto(page(`stories/Types/${story}`), { waitUntil: "load" });
-      await tab.waitForSelector(`${selector}[style*="zoom"]`);
-      return tab.evaluate(
-        async (selector, narrow) => {
-          const settle = async () => {
-            for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
-          };
-          await document.fonts.ready;
-          await settle();
-          const box = document.querySelector<HTMLElement>(selector)!;
-          // Narrowed once the fit the font's arrival sets off has run.
-          if (narrow) {
-            await new Promise((r) => setTimeout(r, 300));
-            box.parentElement!.style.maxWidth = "1600px";
-            await settle();
-          }
-          const outer = box.parentElement!;
-          const cs = getComputedStyle(outer);
-          const r = box.getBoundingClientRect();
-          const o = outer.getBoundingClientRect();
-          return {
-            zoom: Number(box.style.zoom),
-            hwZoom: Number(box.style.getPropertyValue("--hw-zoom")),
-            applied: box.currentCSSZoom,
-            width: box.style.width,
-            drawn: {
-              left: r.left - o.left,
-              right: o.right - r.right,
-              top: r.top - o.top,
-              height: r.height,
-            },
-            inner: o.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
-            outer: { width: o.width, height: o.height },
-          };
-        },
-        selector,
-        narrow,
-      );
+const DENSITY = { story: "content-slide/density", selector: ".slide-body" };
+const CONTACT = { story: "closing-slide/contact", selector: ".slide-content" };
+
+async function openZoomStory({ story, selector }: { story: string; selector: string }) {
+  const tab = await newTab();
+  await tab.setViewport({ width: 1920, height: 1080 });
+  await tab.goto(page(`stories/Types/${story}`), { waitUntil: "load" });
+  await tab.waitForSelector(`${selector}[style*="zoom"]`);
+  return tab;
+}
+
+const measureZoomedBox = (tab: Page, selector: string) =>
+  tab.evaluate(async (selector) => {
+    await document.fonts.ready;
+    for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
+    const box = document.querySelector<HTMLElement>(selector)!;
+    const outer = box.parentElement!;
+    const cs = getComputedStyle(outer);
+    const r = box.getBoundingClientRect();
+    const o = outer.getBoundingClientRect();
+    return {
+      zoom: Number(box.style.zoom),
+      hwZoom: Number(box.style.getPropertyValue("--hw-zoom")),
+      applied: box.currentCSSZoom,
+      width: box.style.width,
+      drawn: {
+        left: r.left - o.left,
+        right: o.right - r.right,
+        top: r.top - o.top,
+        height: r.height,
+      },
+      inner: o.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+      outer: { width: o.width, height: o.height },
     };
-    const body = await read("content-slide/density", ".slide-body");
-    expect(body.zoom).toBeGreaterThan(0.5);
-    expect(body.zoom).toBeLessThan(1);
-    expect(body.hwZoom).toBe(body.applied);
+  }, selector);
+
+it.each([DENSITY, CONTACT])(
+  "sets $story's fit zoom to the value Chrome applies",
+  async (fixture) => {
+    const tab = await openZoomStory(fixture);
+    const { zoom, hwZoom, applied } = await measureZoomedBox(tab, fixture.selector);
+    await tab.close();
+    expect(zoom).toBeGreaterThan(0.5);
+    expect(zoom).toBeLessThan(1);
+    expect(hwZoom).toBe(applied);
+  },
+  limit(60_000),
+);
+
+it(
+  "fills the slide's width with a shrunk titled body before and after narrowing",
+  async () => {
+    const tab = await openZoomStory(DENSITY);
+    const body = await measureZoomedBox(tab, DENSITY.selector);
     expect(body.width).toMatch(/px$/);
     expect(body.outer.width - body.drawn.left - body.drawn.right).toBeCloseTo(body.inner, 0);
-    const resized = await read("content-slide/density", ".slide-body", true);
+
+    // Narrowed once the fit the font's arrival sets off has run.
+    await new Promise((r) => setTimeout(r, 300));
+    await tab.$eval(DENSITY.selector, (box) => {
+      box.parentElement!.style.maxWidth = "1600px";
+    });
+    const resized = await measureZoomedBox(tab, DENSITY.selector);
+    await tab.close();
     expect(resized.outer.width - resized.drawn.left - resized.drawn.right).toBeCloseTo(
       resized.inner,
       0,
     );
-    const content = await read("closing-slide/contact", ".slide-content");
-    expect(content.zoom).toBeGreaterThan(0.5);
-    expect(content.zoom).toBeLessThan(1);
-    expect(content.hwZoom).toBe(content.applied);
+  },
+  limit(60_000),
+);
+
+it(
+  "fills the slide's height with a centred shrunk contact closing",
+  async () => {
+    const tab = await openZoomStory(CONTACT);
+    const content = await measureZoomedBox(tab, CONTACT.selector);
+    await tab.close();
     expect(content.drawn.top).toBeCloseTo(0, 0);
     expect(content.drawn.height).toBeCloseTo(content.outer.height, 0);
     expect(content.drawn.left).toBeCloseTo(content.drawn.right, 0);
-    await tab.close();
   },
   limit(60_000),
 );

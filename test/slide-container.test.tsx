@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { SlideContainer } from "../components/slides/SlideContainer";
 import { logoSizes } from "../lib/brand-logos";
 import { HW_LOGO } from "../lib/logo";
-import { slideFrame } from "../lib/slide-utils";
+import { slideFrame } from "../lib/slide-framing";
 import type { LogoConfig } from "../types/slide";
 
 const logo = (name: string): LogoConfig => ({ src: `/${name}.png`, alt: name });

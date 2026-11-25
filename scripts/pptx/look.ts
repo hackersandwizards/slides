@@ -1,4 +1,5 @@
-import { WORDS, type deckLang } from "../../lib/slide-utils";
+import type { deckLang } from "../../lib/slide-utils";
+import { WORDS } from "../../lib/slide-words";
 import { parasHeight } from "./fit";
 import { mixColor, type Palette } from "./palette";
 import { H } from "./stage";

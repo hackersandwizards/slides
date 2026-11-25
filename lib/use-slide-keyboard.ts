@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useReportPendingReveal } from "./use-progressive-reveal";
-import { ignoredKey } from "./slide-utils";
+import { ignoredKey } from "./slide-input";
 
 interface UseSlideKeyboardOptions {
   onRight?: () => boolean | void;

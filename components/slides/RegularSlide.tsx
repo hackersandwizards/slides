@@ -4,7 +4,7 @@ import type { RegularSlide as RegularSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import User from "lucide-react/icons/user";
-import { regularAsContent } from "../../lib/slide-utils";
+import { regularAsContent } from "../../lib/regular-sections";
 import { AgendaSlide } from "./AgendaSlide";
 import { LinkCaption, Portrait, SlideTitle, TitledContent } from "./primitives";
 import { ContentSlide } from "./ContentSlide";
@@ -53,10 +53,6 @@ export function RegularSlide({ slide }: Props) {
 }
 
 function ProfileRegularSlide({ slide }: Props) {
-  const { revealedCount, stepped } = useProgressiveReveal({ totalSteps: slide.sections.length });
-  // Live, earlier sections step back so the room follows the newest one. A page shows them all.
-  const printMode = usePrintMode();
-
   return (
     <SlideShell className="text-text">
       <TitledContent>
@@ -71,71 +67,100 @@ function ProfileRegularSlide({ slide }: Props) {
               </div>
             )}
 
-            <div className="flex min-w-0 flex-1 flex-col">
-              <div className="flex flex-col gap-6 md:gap-8">
-                {slide.sections.map((section, index) => {
-                  const isRevealed = index < revealedCount;
-                  // Opened fully revealed (a backward arrival), no step was taken: all are active.
-                  const isActive = stepped ? index === revealedCount - 1 : isRevealed;
-
-                  return (
-                    <div
-                      key={index}
-                      inert={!isRevealed}
-                      className={`transition-all duration-500 ${
-                        isRevealed
-                          ? "translate-y-0 opacity-100"
-                          : "pointer-events-none translate-y-6 opacity-0"
-                      }`}
-                    >
-                      <div
-                        className={`flex flex-col gap-3 transition-opacity duration-300 md:gap-4 ${
-                          isActive || printMode ? "opacity-100" : isRevealed ? "opacity-70" : ""
-                        }`}
-                      >
-                        {section.title && (
-                          <h2 className="font-heading text-xl font-bold text-teal sm:text-2xl md:text-3xl">
-                            {section.title}
-                          </h2>
-                        )}
-                        {section.text && (
-                          <p className="text-base leading-relaxed text-text-muted sm:text-lg md:text-xl lg:text-2xl">
-                            {section.text}
-                          </p>
-                        )}
-                        {section.items && (
-                          <ul className="flex flex-col gap-2 md:gap-3">
-                            {section.items.map((item, itemIndex) => (
-                              <li
-                                key={itemIndex}
-                                className="flex items-baseline gap-3 text-base text-text-muted sm:text-lg md:gap-4 md:text-xl lg:text-2xl"
-                              >
-                                <span className="hw-marker" />
-                                <span>{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                        {section.link && (
-                          <a
-                            href={section.link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hw-button w-fit"
-                            data-variant="secondary"
-                          >
-                            {section.link.label}
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <ProfileNarrative sections={slide.sections} />
           </div>
         </div>
       </TitledContent>
     </SlideShell>
+  );
+}
+
+function ProfileNarrative({ sections }: Pick<RegularSlideType, "sections">) {
+  const { revealedCount, stepped } = useProgressiveReveal({ totalSteps: sections.length });
+  // Live, earlier sections step back so the room follows the newest one. A page shows them all.
+  const printMode = usePrintMode();
+
+  return (
+    <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex flex-col gap-6 md:gap-8">
+        {sections.map((section, index) => {
+          const isRevealed = index < revealedCount;
+          // Opened fully revealed (a backward arrival), no step was taken: all are active.
+          const isActive = stepped ? index === revealedCount - 1 : isRevealed;
+          return (
+            <ProfileNarrativeSection
+              key={index}
+              section={section}
+              revealed={isRevealed}
+              emphasized={isActive || printMode}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ProfileNarrativeSection({
+  section,
+  revealed,
+  emphasized,
+}: {
+  section: RegularSlideType["sections"][number];
+  revealed: boolean;
+  emphasized: boolean;
+}) {
+  return (
+    <div
+      inert={!revealed}
+      className={`transition-all duration-500 ${
+        revealed ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"
+      }`}
+    >
+      <div
+        className={`flex flex-col gap-3 transition-opacity duration-300 md:gap-4 ${
+          emphasized ? "opacity-100" : revealed ? "opacity-70" : ""
+        }`}
+      >
+        {section.title && (
+          <h2 className="font-heading text-xl font-bold text-teal sm:text-2xl md:text-3xl">
+            {section.title}
+          </h2>
+        )}
+        {section.text && (
+          <p className="text-base leading-relaxed text-text-muted sm:text-lg md:text-xl lg:text-2xl">
+            {section.text}
+          </p>
+        )}
+        {section.items && <ProfileNarrativeItems items={section.items} />}
+        {section.link && (
+          <a
+            href={section.link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hw-button w-fit"
+            data-variant="secondary"
+          >
+            {section.link.label}
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProfileNarrativeItems({ items }: { items: string[] }) {
+  return (
+    <ul className="flex flex-col gap-2 md:gap-3">
+      {items.map((item, itemIndex) => (
+        <li
+          key={itemIndex}
+          className="flex items-baseline gap-3 text-base text-text-muted sm:text-lg md:gap-4 md:text-xl lg:text-2xl"
+        >
+          <span className="hw-marker" />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

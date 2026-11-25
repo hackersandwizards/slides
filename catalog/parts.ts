@@ -3,7 +3,7 @@ import * as primitives from "../components/slides/primitives";
 import { AxisTick, TICK_GAP, tickLayout } from "../components/slides/ChartPlots";
 import * as chrome from "../components/slides/SlideChrome";
 import { CodeLines } from "../lib/use-code-highlight";
-import { qrAlt } from "../lib/slide-utils";
+import { qrAlt } from "../lib/link-labels";
 import { specimenImages } from "../specimen/slide-catalog";
 
 const {
