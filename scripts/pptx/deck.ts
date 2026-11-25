@@ -25,7 +25,11 @@ import { closingClaim, deckLang } from "../../lib/slide-utils";
 import { personAccent, teamTypesDrawn } from "../../lib/people-slides";
 import { labeledGridAsCards, pipelineAsFlow } from "../../lib/content-block-aliases";
 import { leadingWords, minus, numbersGrid } from "../../lib/figure-layout";
-import { TWO_COLUMN_TONES, type SideTone } from "../../lib/two-column-tones";
+import { kindOf } from "./blocks";
+import { beforeAfter, beforeAfterHeight, highlightPara } from "./blocks/before-after";
+import { code } from "./blocks/code";
+import { bodyO, type Slot } from "./blocks/kind";
+import { CALLOUT_PAD } from "./blocks/text";
 import { centredMark, footer, footerAt, footerOf, frame, header } from "./chrome";
 import {
   chipAdvance,
@@ -46,7 +50,7 @@ import { longest, wrap } from "./lines";
 import { Look } from "./look";
 import { checkSlide } from "./overflow";
 import { hex, mixColor, palette, THEME, type Palette } from "./palette";
-import { Sheet, drySheet, type ChartFix, type Output, type PSlide } from "./sheet";
+import { Sheet, drySheet, type ChartFix, type Output } from "./sheet";
 import { slideDrawn } from "./slides";
 import {
   W,
@@ -73,9 +77,7 @@ import {
   md,
   plain,
   literal,
-  breaks,
   bulletParas,
-  type MarkerHue,
   type Para,
   type BoxOpts,
   type Run,
@@ -122,201 +124,6 @@ function eventParas(
   ];
 }
 
-const bodyO = (c: Palette, k: number, extra: Partial<BoxOpts> = {}): BoxOpts => ({
-  size: PT.base * k,
-  color: c.ink,
-  ...extra,
-});
-
-/** A card with a title and items or text, as two-column, four-column and comparison sides draw. */
-function itemCard(
-  sheet: Sheet,
-  a: Area,
-  k: number,
-  o: {
-    title?: string;
-    subtitle?: string;
-    items?: string[];
-    text?: string;
-    tone?: string;
-    marker?: MarkerHue;
-  },
-) {
-  const { c } = sheet;
-  sheet.card(a, { fill: c.card, line: o.tone ?? c.border });
-  const pad = 0.2;
-  const paras: Para[] = [];
-  if (o.title)
-    paras.push({
-      runs: md(o.title, c, { color: o.tone ?? c.ink }),
-      ...TITLE,
-      rel: PT.h4 / PT.base,
-      after: 6,
-    });
-  if (o.subtitle) paras.push({ runs: md(o.subtitle, c, { color: c.muted }), rel: 0.9, after: 6 });
-  if (o.text) paras.push({ runs: md(o.text, c), after: 6 });
-  for (const it of o.items ?? []) {
-    paras.push({ runs: md(it, c), bullet: true, marker: o.marker, after: 5 });
-  }
-  sheet.box(paras, { x: a.x + pad, y: a.y + pad, w: a.w - 2 * pad, h: a.h - 2 * pad }, bodyO(c, k));
-}
-
-/** The web's circle-x or circle-check icon at x, y in diameter d, drawn in lines. */
-function circleMark(s: PSlide, x: number, y: number, d: number, color: string, check: boolean) {
-  const line = { color, width: 1.5 };
-  s.addShape("ellipse", { x, y, w: d, h: d, fill: { type: "none" }, line });
-  const strokes = check
-    ? [
-        [0.3, 0.52, 0.45, 0.67],
-        [0.45, 0.67, 0.72, 0.36],
-      ]
-    : [
-        [0.35, 0.35, 0.65, 0.65],
-        [0.65, 0.35, 0.35, 0.65],
-      ];
-  for (const [x1, y1, x2, y2] of strokes)
-    s.addShape("line", {
-      x: x + d * Math.min(x1, x2),
-      y: y + d * Math.min(y1, y2),
-      w: d * Math.abs(x2 - x1),
-      h: d * Math.abs(y2 - y1),
-      flipV: (x2 - x1) * (y2 - y1) < 0,
-      line,
-    });
-}
-
-type BeforeAfterSide = { label: string; items: string[]; highlight?: string };
-
-/** A two-sided comparison side's highlight, as the web's caps label under the side's title. */
-const highlightPara = (text: string, color: string): Para => ({
-  runs: [caps(text, { color })],
-  mono: true,
-  bold: true,
-  rel: 0.8,
-  after: 8,
-});
-
-/** Side i of a before-after in width w: its label row, with the web's circle icon on an after
- *  side that does not add and on a struck before side, and its highlight and plain items under it, struck through
- *  on a struck before side, with the heights both need. */
-function beforeAfterSide(
-  look: Look,
-  sd: BeforeAfterSide,
-  i: number,
-  strike: boolean,
-  w: number,
-  o: BoxOpts,
-  k: number,
-  adds: boolean,
-) {
-  const { c } = look;
-  const tone = i ? c.teal : c.muted;
-  const icon = (i && !adds) || (!i && strike) ? (o.size * 1.3) / 72 : 0;
-  const indent = icon && icon + 0.12;
-  const item = !i && strike ? { color: c.muted, strike: "sngStrike" as const } : {};
-  // The web prints a before-after label as typed.
-  const label: Para = {
-    runs: [{ text: sd.label, options: { color: tone } }],
-    ...TITLE,
-    rel: PT.h4 / PT.base,
-  };
-  const rest = [
-    ...(sd.highlight ? [highlightPara(sd.highlight, tone)] : []),
-    ...sd.items.map((it) => ({ runs: md(it, c, item), after: 6 })),
-  ];
-  const inner = w - 2 * BA_PAD * k;
-  return {
-    tone,
-    icon,
-    indent,
-    label,
-    rest,
-    labelH: Math.max(icon, look.need(label, inner - indent, o)),
-    restH: look.need(rest, inner, o),
-  };
-}
-
-const BA_PAD = 0.25;
-const BA_GAP = 0.7;
-
-function beforeAfterHeight(
-  look: Look,
-  sides: BeforeAfterSide[],
-  strike: boolean,
-  w: number,
-  o: BoxOpts,
-  k = 1,
-  adds = false,
-) {
-  return Math.max(
-    ...sides.map((sd, i) => {
-      const l = beforeAfterSide(look, sd, i, strike, (w - BA_GAP * k) / 2, o, k, adds);
-      return (2 * BA_PAD + 0.15 + 0.1) * k + l.labelH + l.restH;
-    }),
-  );
-}
-
-/** The before and the after side by side with an arrow between, as the web's BeforeAfterSides
- *  draws a comparison's `before-after` and the transform block: plain items, the before side
- *  muted on white and, with `strike`, crossed out, struck through and greyed. */
-function beforeAfter(
-  sheet: Sheet,
-  a: Area,
-  o: BoxOpts,
-  sides: BeforeAfterSide[],
-  strike: boolean,
-  k = 1,
-  adds = false,
-) {
-  const { slide: s } = sheet;
-  const { c } = sheet;
-  // The web shrinks a block whole: its paddings and gap with its text.
-  const pad = BA_PAD * k;
-  const gap = BA_GAP * k;
-  const half = (a.w - gap) / 2;
-  sides.forEach((sd, i) => {
-    const x = a.x + i * (half + gap);
-    const l = beforeAfterSide(sheet, sd, i, strike, half, o, k, adds);
-    if (i) sheet.card({ x, y: a.y, w: half, h: a.h }, sheet.c.litCard);
-    else
-      sheet.card(
-        { x, y: a.y, w: half, h: a.h },
-        { fill: strike ? mixColor(c.muted, c.bg, 0.07) : c.card, line: c.border },
-      );
-    const top = a.y + pad;
-    if (l.icon) circleMark(s, x + pad, top + (l.labelH - l.icon) / 2, l.icon, l.tone, i === 1);
-    sheet.box(
-      l.label,
-      { x: x + pad + l.indent, y: top, w: half - 2 * pad - l.indent, h: l.labelH },
-      {
-        ...o,
-        valign: "middle",
-      },
-    );
-    const ry = top + l.labelH + 0.15 * k;
-    sheet.box(l.rest, { x: x + pad, y: ry, w: half - 2 * pad, h: a.y + a.h - pad - ry }, o);
-  });
-  const ay = a.y + a.h / 2;
-  if (adds)
-    sheet.box(
-      "+",
-      { x: a.x + half, y: ay - gap / 2, w: gap, h: gap },
-      {
-        size: PT.title * k,
-        bold: true,
-        color: c.teal,
-        align: "center",
-        valign: "middle",
-      },
-    );
-  else
-    sheet.arrow(
-      { x: a.x + half + 0.12 * k, y: ay },
-      { x: a.x + half + gap - 0.12 * k, y: ay },
-      c.teal,
-    );
-}
-
 /** A two-sided comparison's punchline and footnotes under its sides from y, as the web sets them:
  *  the punchline 2.5 rem under in a 48 rem column, balanced, the footnotes 1.5 rem under that in a
  *  56 rem column. Draws where `s` is given; returns the height. */
@@ -356,126 +163,20 @@ function comparisonFoot(sheet: Sheet, d: { punchline?: string; footnotes?: strin
   return h;
 }
 
-/** The hue a two-column side's tone (`TWO_COLUMN_TONES`) takes. */
-const SIDE_HUES: Record<SideTone, MarkerHue | "muted"> = {
-  success: "green",
-  error: "red",
-  neutral: "muted",
-};
-
-/** The height of each row of a table at scale k in width w, its header first. */
-function tableRows(look: Look, b: Extract<ContentBlock, { type: "table" }>, { w, k }: Measure) {
-  const { c } = look;
-  const cols = Math.max(b.headers?.length ?? 0, ...b.rows.map((r) => r.length));
-  const o = bodyO(c, k);
-  const row = (r: string[]) =>
-    Math.max(...r.map((t) => look.need(t, w / cols - 0.2, { ...o, size: PT.base * 0.875 * k }))) +
-    0.3;
-  return [...(b.headers ? [row(b.headers)] : []), ...b.rows.map(row)];
-}
-
-/** A code block's lines without their common indent, as the web shows them. */
-function codeLines(code: string) {
-  const lines = code.split("\n");
-  const cut = Math.min(
-    ...lines.filter((l) => l.trim()).map((l) => l.length - l.trimStart().length),
-  );
-  return lines.map((l) => l.slice(Number.isFinite(cut) ? cut : 0));
-}
-
-/** A quote block's paragraphs, each with its type size: the words, then the source in grey. */
-function quoteParas(b: Extract<ContentBlock, { type: "quote" }>, c: Palette, k: number) {
-  const words: [Para, number] = [{ runs: md(b.text, c), after: 8 }, PT.h3 * k];
-  return b.source
-    ? [words, [{ runs: md(b.source, c, { color: c.muted }) }, PT.lead * k] as [Para, number]]
-    : [words];
-}
-
 function blockHeight(look: Look, b: ContentBlock, m: Measure): number {
+  const match = kindOf(b);
+  if (match?.kind.height) return match.kind.height(look, match.block, m);
   const { w, k } = m;
   const { c } = look;
   if (b.type === "labeled-grid") return blockHeight(look, labeledGridAsCards(b), m);
   const o = bodyO(c, k);
   switch (b.type) {
-    case "paragraph":
-      return look.need(b.text, w, o);
-    case "bullets":
-      return look.need(bulletParas(b.items, c, b.ordered), w, o);
-    case "quote":
-      return quoteParas(b, c, k).reduce(
-        (h, [p, size]) => h + look.need(p, w - QUOTE_INDENT * k, { ...o, size }) + 0.1,
-        0,
-      );
-    case "callout":
-      return look.need(b.text, w - 2 * CALLOUT_PAD * k, o) + 2 * CALLOUT_PAD * k;
-    case "table":
-      return tableRows(look, b, m).reduce((x, y) => x + y, 0);
-    case "terminal":
-      return (b.commands.length * PT.sm * k * 1.5) / 72 + 0.45;
-    case "code":
-    case "annotated-code": {
-      const codeW = b.type === "annotated-code" && b.notes.length ? w * 0.62 : w;
-      const lines = codeLines(b.code).map((l) => ({ runs: [{ text: l || " " }] }));
-      return (
-        look.need(lines, codeW - 0.4, {
-          size: PT.sm * k,
-          mono: true,
-          line: 1.3,
-          color: c.codeInk,
-        }) + 0.4
-      );
-    }
-    case "transform":
-      return beforeAfterHeight(look, [b.before, b.after], false, w, o, k);
-    case "positions":
-      return positions(drySheet(look), b, { x: 0, y: 0, w }, k);
-    case "two-column": {
-      const sides = [b.left, b.right];
-      return (
-        Math.max(
-          ...sides.map((sd) =>
-            look.need(
-              [
-                { runs: [{ text: "x" }], rel: 1.2, after: 6 },
-                ...(sd.items ?? []).map((i) => ({
-                  runs: md(i, c),
-                  bullet: true as const,
-                  after: 5,
-                })),
-                ...(sd.text ? [{ runs: md(sd.text, c) }] : []),
-              ],
-              w / 2 - 0.6,
-              o,
-            ),
-          ),
-        ) + 0.45
-      );
-    }
-    case "four-column":
-      return (
-        Math.max(
-          ...b.columns.map((col) =>
-            look.need(
-              [
-                { runs: [{ text: col.title }], rel: 1.2, after: 6 },
-                ...col.items.map((i) => ({ runs: md(i, c), bullet: true as const, after: 5 })),
-              ],
-              w / b.columns.length - 0.5,
-              o,
-            ),
-          ),
-        ) + 0.5
-      );
-    case "hooks":
-      return b.items.length * ((PT.base * k * 1.9) / 72 + 0.12);
     case "cards":
       return cardsLayout(look, b, m).h;
     case "pipeline":
       return blockHeight(look, pipelineAsFlow(b), m);
     case "flow":
       return flowBlock(drySheet(look), b, { x: 0, y: 0, w }, k);
-    case "layers":
-      return b.layers.length * (0.5 * k + 0.1);
     case "timeline":
       return (
         0.6 +
@@ -495,19 +196,8 @@ function blockHeight(look: Look, b: ContentBlock, m: Measure): number {
     case "annotated":
     case "image-and-grid":
       return 99;
-    case "code-and-text":
-      return Math.max(
-        (b.code.split("\n").length * PT.sm * k * 1.3) / 72 + 0.4,
-        look.need(
-          b.sections.flatMap((sc) => [
-            { runs: [{ text: sc.title }], after: 4 },
-            { runs: md(sc.text, c), after: 8 },
-          ]),
-          w / 2 - 0.2,
-          o,
-        ),
-      );
   }
+  return NaN;
 }
 
 const GROWS = new Set([
@@ -569,244 +259,15 @@ function gallery(sheet: Sheet, b: Extract<ContentBlock, { type: "gallery" }>, ar
   }
 }
 
-interface Slot {
-  area: Area;
-  k: number;
-  centered: boolean;
-}
-
-function drawBlock(sheet: Sheet, b: ContentBlock, slot: Slot) {
+function drawBlock(sheet: Sheet, b: ContentBlock, slot: Slot): void {
+  const match = kindOf(b);
+  if (match) return match.kind.draw(sheet, match.block, slot);
   const { slide: s } = sheet;
   if (b.type === "labeled-grid") return drawBlock(sheet, labeledGridAsCards(b), slot);
   const { area: a, k, centered } = slot;
   const { c } = sheet;
   const o = bodyO(c, k, centered ? { align: "center" } : {});
   switch (b.type) {
-    case "paragraph":
-      return sheet.box(
-        { runs: md(b.text, c), align: b.centered || centered ? "center" : "left" },
-        a,
-        o,
-      );
-    case "bullets":
-      return sheet.box(bulletParas(b.items, c, b.ordered), a, {
-        ...o,
-        align: "left",
-      });
-    case "quote": {
-      // Brand's quote: a purple rule, the words in ink behind it, the source under them.
-      sheet.rect({ x: a.x, y: a.y, w: 2 / 144, h: a.h }, c.purple);
-      return sheet.box(
-        quoteParas(b, c, k).map(([p, size]) => ({ ...p, rel: size / (PT.base * k) })),
-        { x: a.x + QUOTE_INDENT * k, y: a.y, w: a.w - QUOTE_INDENT * k, h: a.h },
-        { ...o, align: "left" },
-      );
-    }
-    case "callout": {
-      if (centered) {
-        const w = Math.min(a.w, 7.5);
-        sheet.card({ x: a.x + (a.w - w) / 2, y: a.y, w, h: a.h }, sheet.c.plainCard);
-        return sheet.box(
-          b.text,
-          { x: a.x + (a.w - w) / 2 + 0.3, y: a.y + 0.15, w: w - 0.6, h: a.h - 0.3 },
-          {
-            ...o,
-            size: PT.lead * k,
-            color: c.muted,
-            align: "center",
-            valign: "middle",
-          },
-        );
-      }
-      // The web's callouts: the info one brand's purple one, in ink; a warning or success the tone at 7 % on
-      // the ground with its border at 25 %, the text the tone mixed 60 % with ink.
-      const tone =
-        b.variant === "warning" ? c.amber : b.variant === "success" ? c.green : undefined;
-      const ink = tone ? mixColor(tone, c.ink, 0.6) : c.ink;
-      // As wide as its text, at the body size, brand's callout padding round it.
-      const pad = CALLOUT_PAD * k;
-      const w = b.fullWidth ? a.w : Math.min(a.w, textWidth(b.text, o) + 2 * pad + 0.02);
-      const fill = tone ? mixColor(tone, c.bg, 0.07) : c.callout(c.purple);
-      sheet.card(
-        { x: a.x, y: a.y, w, h: a.h },
-        { fill: fill, line: tone && mixColor(tone, c.bg, 0.25) },
-      );
-      return sheet.box(
-        b.text,
-        { x: a.x + pad, y: a.y + pad, w: w - 2 * pad, h: a.h - 2 * pad },
-        {
-          ...o,
-          color: ink,
-          align: "left",
-          valign: "middle",
-        },
-      );
-    }
-    case "table": {
-      const cols = Math.max(b.headers?.length ?? 0, ...b.rows.map((r) => r.length));
-      const total = b.widths?.reduce((x, y) => x + y, 0);
-      const colW = Array.from({ length: cols }, (_, i) =>
-        b.widths && total ? (b.widths[i] / total) * a.w : a.w / cols,
-      );
-      // The web's table: body and headers at the small step, headers as mono capitals, the head
-      // and every second body row tinted alike.
-      const size = Math.max(7, Math.round(PT.base * 0.875 * k * 2) / 2);
-      const cell = (t: string, head: boolean, tinted = head): PptxGenJS.TableCell => ({
-        text: breaks(
-          md(
-            t,
-            c,
-            head ? { bold: true, fontFace: MONO, color: c.ink, fontSize: size, lang: CAPS } : {},
-          ),
-        ) as PptxGenJS.TableCell[],
-        options: { fill: { color: tinted ? c.tint : c.card } },
-      });
-      const rows = [
-        ...(b.headers ? [b.headers.map((t) => cell(t, true))] : []),
-        // The web sets a table's first column in bold, as the row's name.
-        ...b.rows.map((r, i) =>
-          r.map((t, j) => {
-            const td = cell(t, false, i % 2 === 1);
-            return j === 0 ? { ...td, options: { ...td.options, bold: true } } : td;
-          }),
-        ),
-      ];
-      s.addTable(rows, {
-        x: a.x,
-        y: a.y,
-        w: a.w,
-        colW,
-        // The planned row heights, so the table fills the area the layout gave it.
-        rowH: tableRows(sheet, b, { w: a.w, k }),
-        fontFace: SANS,
-        fontSize: size,
-        color: c.ink,
-        border: { type: "solid", pt: 0.75, color: c.border },
-        // Inches, as pptxgenjs reads a table's margin.
-        margin: [0.1, 0.1, 0.1, 0.1],
-        valign: "middle",
-        autoPage: false,
-      });
-      return;
-    }
-    case "code":
-    case "annotated-code": {
-      sheet.rounded(a, { fill: c.code }, 0.06);
-      const lines = codeLines(b.code);
-      const notes = b.type === "annotated-code" ? b.notes : [];
-      const codeW = notes.length ? a.w * 0.62 : a.w;
-      const lh = (PT.sm * k * 1.3) / 72;
-      for (const n of notes)
-        sheet.rect(
-          { x: a.x, y: a.y + 0.2 + (n.line - 1) * lh, w: codeW, h: lh },
-          mixColor(c.teal, c.code, 0.35),
-        );
-      sheet.box(
-        lines.map((l) => ({ runs: [{ text: l || " " }] })),
-        { x: a.x + 0.25, y: a.y + 0.2, w: codeW - 0.4, h: a.h - 0.3 },
-        { size: PT.sm * k, mono: true, color: c.codeInk, line: 1.3, floor: 0.5 },
-      );
-      notes.forEach((n, i) => {
-        const y = a.y + 0.2 + (n.line - 1) * lh;
-        sheet.box(
-          {
-            runs: [
-              { text: `${i + 1}  `, options: { bold: true, color: c.teal } },
-              ...md(n.text, c),
-            ],
-          },
-          { x: a.x + a.w * 0.64 + 0.2, y: y - 0.02, w: a.w * 0.36 - 0.3, h: Math.max(lh * 2, 0.4) },
-          { size: PT.sm * k, color: c.codeInk, floor: 0.7 },
-        );
-      });
-      return;
-    }
-    case "terminal": {
-      sheet.rounded(a, { fill: c.code }, 0.06);
-      sheet.box(
-        b.commands.map((cmd) => ({
-          runs: [{ text: `${cmd.prefix} `, options: { color: c.codeGreen } }, { text: cmd.text }],
-          after: 4,
-        })),
-        { x: a.x + 0.25, y: a.y + 0.2, w: a.w - 0.5, h: a.h - 0.3 },
-        { size: PT.sm * k, mono: true, color: c.codeInk, line: 1.3 },
-      );
-      return;
-    }
-    case "code-and-text": {
-      const half = a.w / 2 - 0.15;
-      drawBlock(
-        sheet,
-        { type: "code", language: b.language ?? "", code: b.code },
-        { ...slot, area: { ...a, w: half }, centered: false },
-      );
-      sheet.box(
-        b.sections.flatMap((sc) => [
-          {
-            runs: md(sc.title, c, { color: c.amber, lang: CAPS }),
-            mono: true,
-            bold: true,
-            after: 4,
-          },
-          { runs: md(sc.text, c), after: 10 },
-        ]),
-        { x: a.x + half + 0.3, y: a.y, w: half, h: a.h },
-        o,
-      );
-      return;
-    }
-    case "two-column": {
-      // A deck's JSON is read unchecked: a variant the map lacks draws neutral, as on the web.
-      const [lt, rt] = (TWO_COLUMN_TONES[b.variant ?? "neutral"] ?? TWO_COLUMN_TONES.neutral).map(
-        (tone) => {
-          const hue = SIDE_HUES[tone];
-          return hue === "muted" ? {} : { tone: c[hue], marker: hue };
-        },
-      );
-      const half = a.w / 2 - 0.15;
-      itemCard(sheet, { ...a, w: half }, k, { ...b.left, ...lt });
-      itemCard(sheet, { ...a, x: a.x + half + 0.3, w: half }, k, { ...b.right, ...rt });
-      return;
-    }
-    case "four-column": {
-      const n = b.columns.length;
-      const cw = (a.w - (n - 1) * 0.2) / n;
-      b.columns.forEach((col, i) =>
-        itemCard(sheet, { ...a, x: a.x + i * (cw + 0.2), w: cw }, k, col),
-      );
-      return;
-    }
-    case "transform":
-      return beforeAfter(sheet, a, bodyO(c, k), [b.before, b.after], false, k);
-    case "positions":
-      positions(sheet, b, a, k);
-      return;
-    case "hooks": {
-      // The web's hook list: one row per event, its name as a mono chip before the description.
-      const rh = Math.min(
-        (PT.base * k * 1.9) / 72,
-        (a.h - (b.items.length - 1) * 0.12) / b.items.length,
-      );
-      b.items.forEach((it, i) => {
-        const y = a.y + i * (rh + 0.12);
-        sheet.rounded({ x: a.x, y, w: a.w, h: rh }, sheet.c.plainCard, rh / 2);
-        const name: Chip = { text: it.name, size: PT.sm * k, fill: c.tint, color: c.ink };
-        const chipBox = chipArea(name, { x: a.x + 0.1, y: y + rh / 2 - (PT.sm * k * 1.9) / 144 });
-        drawChip(sheet, name, chipBox);
-        const w = chipBox.w;
-        sheet.box(
-          { runs: md(it.description, c) },
-          { x: a.x + w + 0.25, y, w: a.w - w - 0.4, h: rh },
-          {
-            ...o,
-            size: PT.sm * k,
-            color: c.muted,
-            valign: "middle",
-          },
-        );
-      });
-      return;
-    }
     case "cards": {
       const L = cardsLayout(sheet, b, { w: a.w, k });
       let rowY = a.y;
@@ -857,29 +318,6 @@ function drawBlock(sheet: Sheet, b: ContentBlock, slot: Slot) {
     case "flow":
       flowBlock(sheet, b, a, k);
       return;
-    case "layers": {
-      const n = b.layers.length;
-      const lh = (a.h - (n - 1) * 0.1) / n;
-      b.layers.forEach((l, i) => {
-        const y = a.y + i * (lh + 0.1);
-        const hi = i === b.highlight;
-        sheet.rounded({ x: a.x, y, w: a.w, h: lh }, hi ? sheet.c.litCard : sheet.c.plainCard, 0.05);
-        sheet.box(
-          {
-            runs: [
-              ...(b.ordered
-                ? [{ text: `${i + 1}  `, options: { color: c.teal, bold: true } }]
-                : []),
-              { text: l.title, options: { bold: true, fontFace: MONO } },
-              ...(l.text ? [{ text: "   " }, ...md(l.text, c, { color: c.muted })] : []),
-            ],
-          },
-          { x: a.x + 0.25, y, w: a.w - 0.5, h: lh },
-          { ...o, valign: "middle", align: "left" },
-        );
-      });
-      return;
-    }
     case "timeline": {
       if (b.labels) {
         const lw = 1.2;
@@ -1257,9 +695,6 @@ function drawBlock(sheet: Sheet, b: ContentBlock, slot: Slot) {
   }
 }
 
-/** The rule and its gap before a quote's words: brand's 2 px and 1.25 rem on the 1920 stage. */
-const QUOTE_INDENT = 2 / 144 + 1.25 * REM;
-
 /** A bars block as `Bars` sets it: four bars and more one row each, the label left of its track,
  *  fewer with the label above; a highlight in teal and bold, the other bars context in grey; without
  *  a named scale each figure follows its bar's end. */
@@ -1580,71 +1015,6 @@ function topology(
   return total;
 }
 
-/** Two stances and their resolution as the web's `Positions`: in a 72 rem column, each stance on
- *  a card under its holder's name, its quote under it, then the middle word and the resolution as
- *  a display line, centred. Draws where `s` is given; returns the height at scale k. */
-function positions(
-  sheet: Sheet,
-  b: Extract<ContentBlock, { type: "positions" }>,
-  a: { x: number; y: number; w: number },
-  k: number,
-): number {
-  const { c } = sheet;
-  const rem = REM * k;
-  const w = Math.min(a.w, 72 * rem);
-  const x0 = a.x + (a.w - w) / 2;
-  const [gap, pad] = [2 * rem, 2 * rem];
-  const cw = (w - gap) / 2;
-  const inner = cw - 2 * pad;
-  const nameO: BoxOpts = { size: PT.sm * k, mono: true, color: c.muted, tracking: 0.06, line: 1.4 };
-  const stanceO: BoxOpts = { size: 32 * k, ...TITLE, color: c.ink, line: 1.25, tracking: -0.015 };
-  const quoteO: BoxOpts = { size: PT.h4 * k, color: c.muted, line: 1.375 };
-  const parts = (sd: typeof b.left): [Para, BoxOpts, number][] => [
-    [{ runs: [caps(sd.name)] }, nameO, 0],
-    [{ runs: [{ text: sd.stance }] }, stanceO, rem],
-    [{ runs: md(`“${sd.quote}”`, c) }, quoteO, 1.5 * rem],
-  ];
-  // A column of paragraphs in width pw, drawn at x, y where both are given; returns its height.
-  const stack = (list: [Para, BoxOpts, number][], pw: number, x?: number, y = 0) =>
-    list.reduce((h, [p, o, g]) => {
-      const ph = sheet.need(p, pw, o);
-      if (!sheet.dry && x !== undefined) sheet.box(p, { x, y: y + h + g, w: pw, h: ph }, o);
-      return h + g + ph;
-    }, 0);
-  const ch = Math.max(...[b.left, b.right].map((sd) => stack(parts(sd), inner))) + 2 * pad;
-  const resO: BoxOpts = {
-    size: 32 * k,
-    mono: true,
-    bold: true,
-    color: c.ink,
-    line: LEADING.display,
-    tracking: -0.04,
-    align: "center",
-  };
-  const res: [Para, BoxOpts, number][] = [
-    ...(b.middle
-      ? [
-          [{ runs: [caps(b.middle)] }, { ...nameO, align: "center" as const }, 0] as [
-            Para,
-            BoxOpts,
-            number,
-          ],
-        ]
-      : []),
-    [{ runs: md(b.resolution, c), balance: true }, resO, b.middle ? rem : 0],
-  ];
-  const resH = stack(res, w);
-  if (!sheet.dry) {
-    [b.left, b.right].forEach((sd, i) => {
-      const x = x0 + i * (cw + gap);
-      sheet.card({ x, y: a.y, w: cw, h: ch }, sheet.c.plainCard);
-      stack(parts(sd), inner, x + pad, a.y + pad);
-    });
-    stack(res, w, x0, a.y + ch + 3 * rem);
-  }
-  return ch + 3 * rem + resH;
-}
-
 /** Steps on one line as the web's `FlowSteps` draws them: a tile each, numbered unless a label
  *  counts already, a grey line with an arrowhead from tile to tile, the title, subtitle, text and
  *  badge centred under the tile, and a `loop` back above, labelled when non-empty. Draws where `s`
@@ -1903,9 +1273,6 @@ function flowBlock(
   }
   return h;
 }
-
-/** brand's callout padding at 1920, 1.75 rem. */
-const CALLOUT_PAD = 1.75 * REM;
 
 /** A cards block as `Cards` sets it: the grid, the padding and gaps of each size, a short teal
  *  rule over the title or a number tile, every card in a row as tall as the tallest. */
@@ -2968,7 +2335,7 @@ const RENDER: {
     const lh = rows.height - 0.12;
     let yy = y;
     if (d.codeSnippet) {
-      drawBlock(
+      code.draw(
         sheet,
         { type: "code", ...d.codeSnippet },
         { area: { x: EDGE, y: yy, w: CW, h: codeH - 0.1 }, k: 1, centered: false },
