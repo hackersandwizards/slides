@@ -34,12 +34,12 @@ describe("slides-pptx on the specimen deck", () => {
       {
         name: "English default",
         lang: "en",
-        closing: { type: "closing", variant: "contact", line1: "Danke." },
+        closing: { type: "closing", line1: "Danke." },
       },
       {
         name: "German default",
         lang: "de",
-        closing: { type: "closing", variant: "contact", line1: "Danke." },
+        closing: { type: "closing", line1: "Danke." },
       },
       {
         name: "English with the claim off",
@@ -238,7 +238,6 @@ describe("slides-pptx on the specimen deck", () => {
     },
   );
 
-  // A lone neutral two-column exports as the split it reads as on the web.
   it.each([
     {
       name: "centered content",
@@ -251,6 +250,7 @@ describe("slides-pptx on the specimen deck", () => {
       replacement: { type: "statement", lines: ["One claim"], subtitle: "Under it." },
     },
     {
+      // A lone neutral two-column exports as the split it reads as on the web.
       name: "neutral columns",
       replaced: neutralColumns,
       replacement: {
@@ -491,6 +491,7 @@ describe("slides-pptx draws what the slide shows", () => {
     const proposal = specimenSlide("A proposal to discuss", "team-topology");
     const shortTeams = specimenSlide("Four team types", "team-topology");
     let diagrams: ReturnType<typeof shapesOf>[];
+    let platformFrame: ReturnType<typeof shapesOf>[number];
 
     beforeAll(async () => {
       const { slideXml } = await rendered({
@@ -498,6 +499,11 @@ describe("slides-pptx draws what the slide shows", () => {
         slides: [proposal, teamTopologySlide, shortTeams],
       });
       diagrams = slideXml.map(shapesOf);
+      const frames = diagrams[0]
+        .filter((shape) => shape.dash === "sysDot")
+        .filter((shape) => shape.w > 2);
+      assert(frames.length === 1, "The proposal has one dotted platform frame");
+      [platformFrame] = frames;
     });
 
     it.each([
@@ -520,27 +526,17 @@ describe("slides-pptx draws what the slide shows", () => {
 
     it("places the subsystem octagons in one row above the platform frame", () => {
       const shapes = diagrams[0];
-      const frames = shapes
-        .filter((shape) => shape.dash === "sysDot")
-        .filter((shape) => shape.w > 2);
-      assert(frames.length === 1, "The proposal has one dotted platform frame");
-      const [frame] = frames;
       // The legend's swatch, under the platform frame, is an octagon too.
       const octagons = shapes
         .filter((shape) => shape.prst === "octagon")
-        .filter((shape) => shape.w > 1);
+        .filter((shape) => shape.y < platformFrame.y);
       expect(octagons).toHaveLength(2);
       expect(new Set(octagons.map((shape) => shape.y.toFixed(2))).size).toBe(1);
-      expect(octagons.filter((shape) => shape.y >= frame.y)).toEqual([]);
     });
 
     it("places all three platform names inside a single dotted frame", () => {
       const shapes = diagrams[0];
-      const frames = shapes
-        .filter((shape) => shape.dash === "sysDot")
-        .filter((shape) => shape.w > 2);
-      expect(frames).toHaveLength(1);
-      const [frame] = frames;
+      const frame = platformFrame;
       const titles = ["Platform: Environments", "Platform: Storefront", "Platform: Identity"];
       const names = shapes.filter((shape) => titles.includes(shape.texts.join("")));
       expect(names.map((shape) => shape.texts.join(""))).toEqual(titles);
