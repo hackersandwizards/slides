@@ -8,7 +8,15 @@ import { limit, newPage } from "./limit";
 // started at `md`.
 const DECK = "/slides/stories/Deck/deck-view/specimen-deck/";
 const NEXT = 'button[aria-label="Next slide"]';
-const WIDTHS = [320, 360, 390, 412, 639, 640, 700, 767, 768, 820, 1024, 1280, 1440, 1920];
+const COMPACT_WIDTHS = [320, 360, 390, 412, 639, 640, 700, 767];
+const WIDE_WIDTHS = [768, 820, 1024, 1280, 1440, 1920];
+const NAVIGATION_CASES: { width: number; movePointer: (page: Page) => Promise<void> | void }[] = [
+  ...COMPACT_WIDTHS.map((width) => ({ width, movePointer: () => undefined })),
+  ...WIDE_WIDTHS.map((width) => ({
+    width,
+    movePointer: (page: Page) => page.mouse.move(width / 2, 300),
+  })),
+];
 let browser: Browser;
 let served: Served;
 
@@ -83,18 +91,24 @@ it("fits the confidentiality line above the lockup and controls at 320 px", asyn
     range.selectNodeContents(note);
     const text = range.getBoundingClientRect();
     const logo = mark.getBoundingClientRect();
-    return (
-      text.width > 0 &&
-      text.right <= innerWidth &&
-      text.bottom <= logo.top &&
-      logo.bottom <= controls.getBoundingClientRect().top
-    );
+    return {
+      textWidth: text.width,
+      textRight: text.right,
+      viewportRight: innerWidth,
+      textBottom: text.bottom,
+      logoTop: logo.top,
+      logoBottom: logo.bottom,
+      controlsTop: controls.getBoundingClientRect().top,
+    };
   });
   await page.close();
-  expect(footer).toBe(true);
+  expect(footer.textWidth).toBeGreaterThan(0);
+  expect(footer.textRight).toBeLessThanOrEqual(footer.viewportRight);
+  expect(footer.textBottom).toBeLessThanOrEqual(footer.logoTop);
+  expect(footer.logoBottom).toBeLessThanOrEqual(footer.controlsTop);
 });
 
-it.each(WIDTHS.filter((width) => width < 768))(
+it.each(COMPACT_WIDTHS)(
   "%i px shows the buttons with no pointer move",
   async (width) => {
     const page = await deck(width);
@@ -105,11 +119,11 @@ it.each(WIDTHS.filter((width) => width < 768))(
   limit(30_000),
 );
 
-it.each(WIDTHS)(
-  "%i px: a position and working buttons",
-  async (width) => {
+it.each(NAVIGATION_CASES)(
+  "$width px: a position and working buttons",
+  async ({ width, movePointer }) => {
     const page = await deck(width);
-    if (width >= 768) await page.mouse.move(width / 2, 300);
+    await movePointer(page);
     await shown(page);
     const before = await bar(page);
     expect(before).toMatchObject({ hit: true, inside: true });
@@ -149,10 +163,14 @@ it(
     await page.mouse.up();
     await new Promise((resolve) => setTimeout(resolve, 400));
     expect((await bar(page)).opacity).toBe(0);
-    for (let i = 0; i < 12; i++) {
-      await page.keyboard.press("Tab");
-      if (await page.$eval(NEXT, (next) => next === document.activeElement)) break;
-    }
+    await page.$eval(".slide-controls", (controls) => {
+      const tabStart = document.createElement("span");
+      tabStart.tabIndex = -1;
+      controls.before(tabStart);
+      tabStart.focus();
+    });
+    await page.keyboard.press("Tab");
+    expect(await page.$eval(NEXT, (next) => next === document.activeElement)).toBe(true);
     await shown(page);
     await page.close();
   },
@@ -240,24 +258,26 @@ it(
 // buttons; a phone hides the corner counter, and a title slide has none, so both keep the pill.
 const counted = slideCatalog.slides.findIndex((s) => s.type !== "title") + 1;
 it.each([
-  [390, counted, true],
-  [1440, counted, false],
-  [1440, 1, true],
+  { width: 390, slide: counted, position: { pill: true, corner: false } },
+  { width: 1440, slide: counted, position: { pill: false, corner: true } },
+  { width: 1440, slide: 1, position: { pill: true, corner: false } },
 ])(
-  "%i px, slide %i: the bar shows the position: %s",
-  async (width, slide, inBar) => {
+  "$width px, slide $slide: the bar shows the position: $position.pill",
+  async ({ width, slide, position }) => {
     const page = await deck(width);
     for (let i = 1; i < slide; i++) await page.keyboard.press("ArrowRight");
     await reached(page, slide);
     const seen = await page.$eval(NEXT, (next) => {
       const pill = next.previousElementSibling as HTMLElement;
-      const corner = document.querySelector<HTMLElement>("[data-page-counter]");
-      const drawn = (e: HTMLElement | null) => !!e && e.getBoundingClientRect().width > 1;
-      return { pill: drawn(pill), corner: drawn(corner), read: pill.textContent };
+      const corners = [...document.querySelectorAll("[data-page-counter]")];
+      return {
+        pill: pill.getBoundingClientRect().width > 1,
+        corner: corners.some((corner) => corner.getBoundingClientRect().width > 1),
+        read: pill.textContent,
+      };
     });
     expect(seen).toEqual({
-      pill: inBar,
-      corner: !inBar && width >= 768,
+      ...position,
       read: `${slide} / ${slideCatalog.slides.length}`,
     });
     await page.close();

@@ -15,49 +15,74 @@ import { limit, newPage } from "./limit";
 const TOLERANCE = 0.5; // CSS px at 1920x1080; a numeral's own overshoot accounts for up to 0.2
 const DIST = join(import.meta.dirname, "..", "..", "dist");
 
+type Reading = { label: string; offset: number };
+type BadgeTile = { tile: Element; numeral: Element; text: string };
+
+function readBadgeTiles(): BadgeTile[] {
+  function assertBadgeText(text: string | null): asserts text is string {
+    if (text === null) throw new Error("A drawn element must have text content");
+  }
+  const drawn = new Set(
+    [...document.querySelectorAll("body *")].filter((el) => {
+      const style = getComputedStyle(el);
+      return style.backgroundColor !== "rgba(0, 0, 0, 0)" || parseFloat(style.borderTopWidth) > 0;
+    }),
+  );
+  return [...drawn].flatMap((tile) => {
+    const content = tile.textContent;
+    assertBadgeText(content);
+    const text = content.trim();
+    if (!/^\d{1,2}$/.test(text) || tile.getBoundingClientRect().height < 12) return [];
+    if (!tile.children.length) return [{ tile, numeral: tile, text }];
+    // A tile may draw its numeral in a span of its own.
+    return [...tile.children]
+      .filter(
+        (child) =>
+          !child.children.length && !drawn.has(child) && child.textContent?.trim() === text,
+      )
+      .map((numeral) => ({ tile, numeral, text }));
+  });
+}
+
 /** Runs in the page: each numeral on a fill or border of its own, with its ink's offset from the
  *  badge's centre, positive below. */
-function measure(): { label: string; offset: number }[] {
+function measureBadgeCentres(tiles: BadgeTile[]): Reading[] {
   const ctx = document.createElement("canvas").getContext("2d")!;
-  const drawn = (el: Element) => {
-    const style = getComputedStyle(el);
-    return style.backgroundColor !== "rgba(0, 0, 0, 0)" || parseFloat(style.borderTopWidth) > 0;
-  };
-  return [...document.querySelectorAll("body *")].flatMap((el) => {
-    const text = el.textContent!.trim();
-    if (el.children.length || !/^\d{1,2}$/.test(text)) return [];
-    // A tile may draw its numeral in a span of its own.
-    const parent = el.parentElement;
-    const tile = drawn(el) ? el : parent?.textContent!.trim() === text && drawn(parent) && parent;
-    if (!tile) return [];
+  return tiles.map(({ tile, numeral, text }) => {
     const box = tile.getBoundingClientRect();
-    if (box.height < 12) return [];
     const probe = document.createElement("span");
     probe.style.cssText = "display: inline-block; width: 0; height: 0";
-    el.append(probe);
+    numeral.append(probe);
     const baseline = probe.getBoundingClientRect().bottom;
     probe.remove();
-    const style = getComputedStyle(el);
+    const style = getComputedStyle(numeral);
     ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
     const ink = ctx.measureText(text);
     const centre = baseline + (ink.actualBoundingBoxDescent - ink.actualBoundingBoxAscent) / 2;
     const label = `${tile.className.toString().slice(0, 50)} "${text}"`;
-    const found = [{ label, offset: centre - (box.top + box.height / 2) }];
+    return { label, offset: centre - (box.top + box.height / 2) };
+  });
+}
+
+function measureCodeLineBadges(tiles: BadgeTile[]): Reading[] {
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (!ctx) throw new Error("The code badge probe requires a 2D canvas");
+  return tiles.flatMap(({ tile, text }) => {
     // A code line's badge stands between the middles of its line's capitals and lower case.
     const line = tile.closest("pre") && tile.parentElement?.nextElementSibling;
-    if (line) {
-      const strut = probe.cloneNode() as HTMLElement;
-      line.prepend(strut);
-      const base = strut.getBoundingClientRect().bottom;
-      strut.remove();
-      const code = getComputedStyle(line);
-      ctx.font = `${code.fontWeight} ${code.fontSize} ${code.fontFamily}`;
-      const [cap, x] = ["H", "x"].map((c) => base - ctx.measureText(c).actualBoundingBoxAscent / 2);
-      const middle = box.top + box.height / 2;
-      const offset = middle < cap! ? middle - cap! : middle > x! ? middle - x! : 0;
-      found.push({ label: `${label} on its line`, offset });
-    }
-    return found;
+    if (!line) return [];
+    const strut = document.createElement("span");
+    strut.style.cssText = "display: inline-block; width: 0; height: 0";
+    line.prepend(strut);
+    const base = strut.getBoundingClientRect().bottom;
+    strut.remove();
+    const code = getComputedStyle(line);
+    ctx.font = `${code.fontWeight} ${code.fontSize} ${code.fontFamily}`;
+    const [cap, x] = ["H", "x"].map((c) => base - ctx.measureText(c).actualBoundingBoxAscent / 2);
+    const box = tile.getBoundingClientRect();
+    const middle = box.top + box.height / 2;
+    const offset = middle < cap! ? middle - cap! : middle > x! ? middle - x! : 0;
+    return [{ label: `${tile.className.toString().slice(0, 50)} "${text}" on its line`, offset }];
   });
 }
 
@@ -92,20 +117,38 @@ const codeStories = readdirSync(join(DIST, "stories"), { recursive: true, encodi
 const CONTROL =
   ".tabular-nums > span { text-box: none !important } pre div { align-items: start !important } pre div > span:first-child { padding-top: calc(var(--spacing) * 1) }";
 
-type Reading = { label: string; offset: number };
+const ALIGNMENTS = [
+  { name: "numbered badges centre their numerals", kind: "centres", measure: measureBadgeCentres },
+  { name: "code badges align with their lines", kind: "codeLines", measure: measureCodeLineBadges },
+] as const;
+
+type AlignmentReadings = { found: Reading[]; control: Reading[] };
+const readings: Record<(typeof ALIGNMENTS)[number]["kind"], AlignmentReadings> = {
+  centres: { found: [], control: [] },
+  codeLines: { found: [], control: [] },
+};
 
 /** Each badge's offset on every print frame and code story, as drawn and under the control. */
-async function offsets() {
+beforeAll(async () => {
   const page = await newPage(browser);
-  const found: Reading[] = [];
-  const control: Reading[] = [];
+  const readAlignments = async (where: string, mode: keyof AlignmentReadings) => {
+    const tiles = await page.evaluateHandle(readBadgeTiles);
+    try {
+      for (const alignment of ALIGNMENTS) {
+        const measured = await tiles.evaluate(alignment.measure);
+        readings[alignment.kind][mode].push(
+          ...measured.map((item) => ({ ...item, label: `${where}: ${item.label}` })),
+        );
+      }
+    } finally {
+      await tiles.dispose();
+    }
+  };
   const read = async (where: string) => {
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
-    for (const f of await page.evaluate(measure))
-      found.push({ ...f, label: `${where}: ${f.label}` });
+    await readAlignments(where, "found");
     await page.addStyleTag({ content: CONTROL });
-    for (const f of await page.evaluate(measure))
-      control.push({ ...f, label: `${where}: ${f.label}` });
+    await readAlignments(where, "control");
   };
   try {
     await page.setViewport({ width: 1920, height: 1080 });
@@ -122,25 +165,23 @@ async function offsets() {
   } finally {
     await page.close();
   }
-  return { found, control };
-}
+}, limit(300_000));
 
 const outside = (readings: Reading[]) =>
   readings
     .filter(({ offset }) => Math.abs(offset) > TOLERANCE)
     .map(({ label, offset }) => `${label}: ${offset.toFixed(2)} px`);
 
-it(
-  "every numbered badge on the specimen slides centres its numeral",
-  async () => {
-    const { found, control } = await offsets();
-    expect(found.filter(({ label }) => label.startsWith(served.origin)).length).toBeGreaterThan(0);
-    expect(found.length).toBeGreaterThan(20);
-    expect(outside(found)).toEqual([]);
-    expect(outside(control).length).toBeGreaterThan(10);
-    expect(outside(control).filter((line) => line.includes("on its line")).length).toBeGreaterThan(
-      0,
-    );
-  },
-  limit(300_000),
-);
+it.each(ALIGNMENTS)("$name", ({ kind }) => {
+  expect(readings[kind].found.length).toBeGreaterThan(0);
+  expect(outside(readings[kind].found)).toEqual([]);
+});
+
+it("covers specimen badges in stories and detects deliberate misalignment", () => {
+  const found = Object.values(readings).flatMap((reading) => reading.found);
+  const control = Object.values(readings).flatMap((reading) => reading.control);
+  expect(found.filter(({ label }) => label.startsWith(served.origin)).length).toBeGreaterThan(0);
+  expect(found.length).toBeGreaterThan(20);
+  expect(outside(control).length).toBeGreaterThan(10);
+  expect(outside(readings.codeLines.control).length).toBeGreaterThan(0);
+});

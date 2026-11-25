@@ -49,14 +49,15 @@ function collect(): Probe[] {
     width: r.right - r.left,
     height: r.bottom - r.top,
   });
-  const found: [Element, Text][] = [];
-  for (const mark of document.querySelectorAll("li *, .flex > *")) {
-    if (mark.children.length || !/^\d{1,2}\.?$/.test(mark.textContent!.trim())) continue;
+  const lineHeadedByNumeral = (mark: Element): [Element, Text][] => {
+    if (mark.children.length || !/^\d{1,2}\.?$/.test(mark.textContent!.trim())) return [];
     const text = after(mark);
-    if (!text || !bare(mark) || !bare(mark.parentElement!)) continue;
+    if (!text || !bare(mark) || !bare(mark.parentElement!)) return [];
     const [m, t] = [mark.getBoundingClientRect(), rectOf(text)];
-    if (t.left >= m.right && t.top < m.bottom && t.bottom > m.top) found.push([mark, text]);
-  }
+    if (t.left >= m.right && t.top < m.bottom && t.bottom > m.top) return [[mark, text]];
+    return [];
+  };
+  const found = [...document.querySelectorAll("li *, .flex > *")].flatMap(lineHeadedByNumeral);
   // The line's first words become "xxxx", so its ink's bottom is the baseline.
   for (const [, text] of found) text.data = "xxxx " + text.data.trimStart();
   return found.map(([mark, text]) => ({
@@ -163,9 +164,10 @@ it("every marker class in the components is defined", () => {
     .join("\n");
   const root = join(import.meta.dirname, "..", "..");
   const undefinedClasses = globSync("components/**/*.tsx", { cwd: root }).flatMap((file) =>
-    [...readFileSync(join(root, file), "utf8").matchAll(/className=(?:"([^"]*)"|\{`([^`]*)`\})/g)]
-      .flatMap(([, plain, template]) => (plain ?? template).split(/\s+/))
-      .filter((name) => /^[\w-]*marker[\w-]*$/.test(name) && !css.includes(`.${name} `))
+    [...readFileSync(join(root, file), "utf8").matchAll(/className=("[^"]*"|\{`[^`]*`\})/g)]
+      .flatMap(([, literal]) => literal.replace(/^(?:"|\{`)|(?:"|`\})$/g, "").split(/\s+/))
+      .filter((name) => /^[\w-]*marker[\w-]*$/.test(name))
+      .filter((name) => !css.includes(`.${name} `))
       .map((name) => `${file}: ${name}`),
   );
   expect(undefinedClasses).toEqual([]);
@@ -189,8 +191,7 @@ it(
   "every step number on the specimen slides sits on its line",
   async () => {
     const page = await newPage(browser);
-    const off: string[] = [];
-    let found = 0;
+    const readings: { label: string; offset: number }[] = [];
     try {
       await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: SCALE });
       // One navigation sets the base every frame's relative links resolve against: setContent keeps
@@ -207,17 +208,19 @@ it(
             SCALE,
           ));
         for (const p of await page.evaluate(collect)) {
-          found++;
           const offset = (await read(p.number)) - (await read(p.text));
-          if (Math.abs(offset) > TOLERANCE)
-            off.push(`${title}: ${p.label}: ${offset.toFixed(2)} px`);
+          readings.push({ label: `${title}: ${p.label}`, offset });
         }
       }
     } finally {
       await page.close();
     }
-    expect(found).toBeGreaterThan(5);
-    expect(off).toEqual([]);
+    expect(readings.length).toBeGreaterThan(5);
+    expect(
+      readings
+        .filter(({ offset }) => Math.abs(offset) > TOLERANCE)
+        .map(({ label, offset }) => `${label}: ${offset.toFixed(2)} px`),
+    ).toEqual([]);
   },
   limit(120_000),
 );
