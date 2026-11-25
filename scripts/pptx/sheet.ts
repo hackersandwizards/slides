@@ -32,6 +32,12 @@ export interface Output {
   charts: Map<number, ChartFix>;
 }
 
+export interface RowHeight {
+  what: string;
+  cap: number;
+  floor: number;
+}
+
 /** A slide that draws nothing, to measure a layout drawn top-down before placing it. */
 const DRY = new Proxy({}, { get: () => () => undefined }) as PSlide;
 
@@ -298,6 +304,14 @@ export class Sheet extends Look {
       flipV: y2 < y1,
       line: { color, width: 1.25, endArrowType: "triangle" },
     });
+  }
+
+  /** Each of `n` rows' share of `room`, at most `cap`; below `floor` the rows run past the slide,
+   *  which warns. */
+  rowShare({ what, cap, floor }: RowHeight, room: number, n: number): number {
+    const share = Math.min(cap, room / n);
+    if (share < floor) this.warn(`${what}: ${n} rows taller than the slide holds`);
+    return Math.max(floor, share);
   }
 
   warn(message: string): void {

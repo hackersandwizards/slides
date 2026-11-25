@@ -36,7 +36,7 @@ import {
 } from "./chips";
 import { brandCut } from "./images";
 import { profileLink } from "./people";
-import { cellAreas, rowShare, type RowHeight } from "./cells";
+import { cellAreas } from "./cells";
 import { MONO, PITCH, SANS } from "./faces";
 import { spansOf, textWidth } from "./fit";
 import { wrap } from "./lines";
@@ -44,7 +44,7 @@ import { flowSteps, type FlowStep } from "./flow-steps";
 import { Look } from "./look";
 import { checkSlide } from "./overflow";
 import { hex, mixColor, palette, THEME } from "./palette";
-import { Sheet, drySheet, type ChartFix, type Output } from "./sheet";
+import { Sheet, drySheet, type ChartFix, type Output, type RowHeight } from "./sheet";
 import { slideDrawn } from "./slides";
 import {
   W,
@@ -391,6 +391,30 @@ const TICK_STEPS = [PT.sm, 13.33, 12];
 
 const LANE_ROWS: RowHeight = { what: "lanes", cap: 0.87, floor: 0.27 };
 const GANTT_ROWS: RowHeight = { what: "gantt", cap: 30 * 0.25 * REM, floor: 0.15 };
+
+function drawLaneStages(sheet: Sheet, labels: string[], lane: Area) {
+  const { c } = sheet;
+  const stages: ChipRow = {
+    labels: labels.map((text) => ({ text, fill: c.card })),
+    size: PT.sm,
+    color: c.ink,
+    gap: 0.3,
+  };
+  const origin = lane.x + 2;
+  const layout = layoutChipRow(stages, origin, lane.x + lane.w - 0.25 - origin);
+  const middle = lane.y + lane.h / 2;
+  const y = middle - (layout.size * 1.9) / 144;
+  // Advancing by width and then gap preserves the lane's existing PPTX coordinates.
+  let x = origin;
+  drawChipRow(sheet, layout, ({ chip, w }, i) => {
+    const area = chipArea(chip, { x, y }, w);
+    drawChip(sheet, chip, area);
+    x = area.x + area.w;
+    if (i === layout.cells.length - 1) return;
+    sheet.arrow({ x: x + 0.05, y: middle }, { x: x + 0.25, y: middle }, c.purple);
+    x += stages.gap;
+  });
+}
 
 type Render = (sheet: Sheet, slide: never) => void;
 
@@ -1233,9 +1257,7 @@ const RENDER: {
       ? (d.codeSnippet.code.split("\n").length * PT.sm * 1.3) / 72 + 0.45
       : 0;
     const foot = footerOf(sheet, d.footer);
-    const rows = rowShare(LANE_ROWS, BOTTOM - y - codeH - foot.h - 0.3, d.lanes.length);
-    if (rows.warning) sheet.warn(rows.warning);
-    const lh = rows.height - 0.12;
+    const lh = sheet.rowShare(LANE_ROWS, BOTTOM - y - codeH - foot.h - 0.3, d.lanes.length) - 0.12;
     let yy = y;
     if (d.codeSnippet) {
       code.draw(
@@ -1248,8 +1270,9 @@ const RENDER: {
     d.lanes.forEach((lane, i) => {
       const ly = yy + i * (lh + 0.12);
       const first = i === 0;
+      const area = { x: EDGE, y: ly, w: CW, h: lh };
       sheet.rounded(
-        { x: EDGE, y: ly, w: CW, h: lh },
+        area,
         { fill: first ? c.purpleTint : c.card, line: first ? c.purple : c.border },
         0.08,
       );
@@ -1264,16 +1287,7 @@ const RENDER: {
           valign: "middle",
         },
       );
-      const stages: ChipRow = {
-        labels: lane.stages.map((text) => ({ text, fill: c.card })),
-        size: PT.sm,
-        color: c.ink,
-        gap: 0.3,
-        arrowColor: c.purple,
-      };
-      const x = EDGE + 2;
-      const layout = layoutChipRow(stages, { x, y: ly + lh / 2 }, EDGE + CW - 0.25 - x);
-      drawChipRow(sheet, layout);
+      drawLaneStages(sheet, lane.stages, area);
     });
     footer(sheet, foot);
   },
@@ -2033,9 +2047,7 @@ const RENDER: {
       ...[...Map.groupBy(d.milestones ?? [], (m) => m.column).values()].map((ms) => ms.length),
     );
     const msH = stack ? sp(3) + 2 / 144 + sp(1.5) + stack * lh : 0;
-    const rows = rowShare(GANTT_ROWS, BOTTOM - top - foot.h - msH + sp(2), d.rows.length);
-    if (rows.warning) sheet.warn(rows.warning);
-    const pitch = rows.height;
+    const pitch = sheet.rowShare(GANTT_ROWS, BOTTOM - top - foot.h - msH + sp(2), d.rows.length);
     // Rows squeezed below their gap and label line keep a share of each.
     const rh = pitch - Math.min(sp(2), pitch / 4);
     d.rows.forEach((r, i) => {
@@ -2566,8 +2578,10 @@ function pillPhases(
       color: c.ink,
       gap: 0.12,
     };
-    const layout = layoutChipRow(pills, { x: a.x, y: py + 0.32 }, a.w);
-    drawChipRow(sheet, layout);
+    const layout = layoutChipRow(pills, a.x, a.w);
+    drawChipRow(sheet, layout, ({ chip, x, w }) => {
+      drawChip(sheet, chip, chipArea(chip, { x, y: py + 0.32 }, w));
+    });
   });
 }
 

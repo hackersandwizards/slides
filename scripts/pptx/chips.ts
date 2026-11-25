@@ -16,7 +16,6 @@ export interface ChipRow {
   size: number;
   color: string;
   gap: number;
-  arrowColor?: string;
 }
 
 /** A chip's text width in inches per point of size, in the face a chip sets it in. */
@@ -39,38 +38,29 @@ function fitChipRow({ labels, size, gap }: ChipRow, width: number) {
   return { advances, size: Math.max(size / 2, Math.min(size, fit)), warning };
 }
 
-export function layoutChipRow(row: ChipRow, at: Place, width: number) {
+export function layoutChipRow(row: ChipRow, origin: number, width: number) {
   const { advances, size, warning } = fitChipRow(row, width);
-  const { arrowColor, color, gap } = row;
-  const y = arrowColor === undefined ? at.y : at.y - (size * 1.9) / 144;
-  let x = at.x;
+  const { color, gap } = row;
+  let x = origin;
   const cells = row.labels.map((label, i) => {
     const chip = { ...label, size, color, mono: false };
     const w = advances[i] * size + 0.3;
-    const area = chipArea(chip, { x, y }, w);
-    if (arrowColor === undefined) {
-      x += w + gap;
-      return { chip, area };
-    }
-    x += w;
-    if (i === row.labels.length - 1) return { chip, area };
-    const arrow = {
-      from: { x: x + 0.05, y: at.y },
-      to: { x: x + 0.25, y: at.y },
-      color: arrowColor,
-    };
-    x += gap;
-    return { chip, area, arrow };
+    const cell = { chip, x, w };
+    x += w + gap;
+    return cell;
   });
-  return { cells, warning };
+  return { cells, size, warning };
 }
 
-export function drawChipRow(sheet: Sheet, { cells, warning }: ReturnType<typeof layoutChipRow>) {
+type ChipRowLayout = ReturnType<typeof layoutChipRow>;
+
+export function drawChipRow(
+  sheet: Sheet,
+  { cells, warning }: ChipRowLayout,
+  drawCell: (cell: ChipRowLayout["cells"][number], index: number) => void,
+) {
   if (warning) sheet.warn(warning);
-  for (const { chip, area, arrow } of cells) {
-    drawChip(sheet, chip, area);
-    if (arrow) sheet.arrow(arrow.from, arrow.to, arrow.color);
-  }
+  cells.forEach(drawCell);
 }
 
 export function chipArea(chip: Chip, { x, y }: Place, w = chipWidth(chip)): Area {
