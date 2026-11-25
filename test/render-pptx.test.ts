@@ -3,12 +3,13 @@ import type JSZip from "jszip";
 import { assert, beforeAll, describe, expect, it } from "vitest";
 import { HW_LOGO } from "../lib/logo";
 import { slideDrawn } from "../scripts/pptx/slides";
-import { slideCatalog } from "../specimen/slide-catalog";
-import type { ContentSlide, Slide } from "../types/slide";
+import { slideCatalog, specimenImages } from "../specimen/slide-catalog";
+import type { Presentation, Slide } from "../types/slide";
 import {
   norm,
   rendered,
   specimen,
+  specimenAt,
   specimenSlide,
   texts,
   unescapeNamedEntities,
@@ -17,26 +18,110 @@ import {
 // The slide is 13.33 by 7.5 in, in EMU.
 const [SLIDE_W, SLIDE_H] = [12192000, 6858000];
 
-/** What PowerPoint draws off the slide, at a negative size, or cropped outside the picture: each
- *  shape's offset and extent against the slide, and each crop's edges against 0 to 100 %. */
-function misplaced(xml: string): string[] {
-  const out: string[] = [];
-  for (const [, x, y, cx, cy] of xml.matchAll(
-    /<a:off x="(-?\d+)" y="(-?\d+)"\/><a:ext cx="(-?\d+)" cy="(-?\d+)"\/>/g,
-  )) {
-    const [l, t, w, h] = [x, y, cx, cy].map(Number);
-    if (w < 0 || h < 0) out.push(`negative size ${w} x ${h}`);
-    // A rounding tenth of a millimetre past the edge is no defect.
-    if (l < -3600 || t < -3600 || l + w > SLIDE_W + 3600 || t + h > SLIDE_H + 3600)
-      out.push(
-        `off the slide at ${(l / 914400).toFixed(2)}, ${(t / 914400).toFixed(2)} in, ${(w / 914400).toFixed(2)} x ${(h / 914400).toFixed(2)} in`,
-      );
-  }
-  for (const [rect] of xml.matchAll(/<a:srcRect [^>]*\/>/g))
-    for (const [, edge, value] of rect.matchAll(/ ([lrtb])="(-?\d+)"/g))
-      if (+value < 0 || +value > 100000) out.push(`crop ${edge}=${value}`);
-  return out;
-}
+const assetsRoot = join(import.meta.dirname, "..");
+const qrHref = "https://example.com/talk?utm_source=deck&utm_medium=qr";
+
+// Slides the specimen keeps within bounds, pushed past them: a link with `&`, a stack taller than
+// the slide, chip rows wider than it, a picture without alt text (F02, F05, F07, F12).
+const overFullDeck: Presentation = {
+  name: "T",
+  slides: [
+    {
+      type: "title",
+      kicker: "Field report",
+      name: "Lumen Harness",
+      title: "Four hundred engineers, one delivery harness, twelve months",
+      speakers: ["Mara Lindqvist", "Jonas Okafor"],
+      event: "Delivery Days 2026 · 14 May · Rotterdam",
+      qr: { src: specimenImages["qr-example.png"], href: qrHref },
+      notes: "title: a talk's opening, every field, the QR code to a fictional link.",
+    },
+    {
+      type: "content",
+      headline: "A table taller than the slide",
+      content: [
+        {
+          type: "table",
+          headers: ["Team", "Lead time", "Failure rate"],
+          rows: Array.from({ length: 10 }, (_, i) => [`Team ${i}`, `${i} days`, `${i}%`]),
+        },
+        { type: "paragraph", text: "Under it." },
+      ],
+    },
+    {
+      type: "lanes",
+      headline: "Three tickets at once",
+      sectionLabel: "Lanes",
+      principle: "In parallel",
+      footer: "Each lane is one agent.",
+      notes: "lanes: three lanes, kicker, principle, footer.",
+      lanes: [
+        { label: "LF-142", stages: Array.from({ length: 6 }, (_, i) => `Stage number ${i + 1}`) },
+        { label: "LF-143", stages: ["Plan", "Build"] },
+        { label: "LF-144", stages: ["Plan"] },
+      ],
+    },
+    {
+      type: "phased-pills",
+      title: "Pipeline stages",
+      phases: [
+        {
+          label: "Plan",
+          theme: "primary",
+          items: Array.from({ length: 6 }, (_, i) => ({ number: i, title: "Long item" })),
+        },
+        {
+          label: "Build",
+          theme: "primary",
+          items: [
+            { number: 3, title: "Implement" },
+            { number: 4, title: "Test" },
+          ],
+        },
+        {
+          label: "Ship",
+          theme: "primary",
+          items: [
+            { number: 5, title: "Review" },
+            { number: 6, title: "Deploy" },
+          ],
+        },
+      ],
+      notes: "phased-pills: three phases, new and active states.",
+    },
+    {
+      type: "content",
+      sectionLabel: "Block: image",
+      headline: "A screenshot at its full size",
+      content: [{ type: "image", src: specimenImages["screen-team-board.png"] }],
+      notes: "content blocks: image.",
+    },
+    {
+      type: "lanes",
+      headline: "Three tickets at once",
+      sectionLabel: "Lanes",
+      principle: "In parallel",
+      footer: "Each lane is one agent.",
+      notes: "lanes: three lanes, kicker, principle, footer.",
+      lanes: Array.from({ length: 30 }, (_, i) => ({ label: `L${i}`, stages: ["a"] })),
+    },
+    {
+      type: "gantt",
+      headline: "The programme at a glance",
+      sectionLabel: "Plan",
+      principle: "A month is a planning unit",
+      columns: ["M1", "M2", "M3", "M4", "M5", "M6"],
+      rows: Array.from({ length: 40 }, (_, i) => ({ label: `R${i}`, bars: [] })),
+      milestones: [
+        { label: "Baseline", column: 1 },
+        { label: "Handover", column: 6 },
+      ],
+      milestonesLabel: "Milestones",
+      footer: "Fictional plan.",
+      notes: "gantt: kicker, principle, sublabels, continuous bar, milestones, footer.",
+    },
+  ],
+};
 
 let zip: JSZip;
 let slideXml: string[];
@@ -53,95 +138,6 @@ describe("slides-pptx on the specimen deck", () => {
 
   it("writes one slide per deck slide", () => {
     expect(slideXml).toHaveLength(slideCatalog.slides.length);
-  });
-
-  // A malformed part opens in no viewer: Quick Look hangs on it and PowerPoint offers a repair.
-  it("writes well-formed XML in every part", async () => {
-    const parts = Object.keys(zip.files).filter((f) => /\.(xml|rels)$/.test(f));
-    for (const part of parts) {
-      const doc = new DOMParser().parseFromString(
-        await zip.file(part)!.async("string"),
-        "application/xml",
-      );
-      expect(doc.getElementsByTagName("parsererror"), part).toHaveLength(0);
-    }
-  });
-
-  it("keeps every shape on the slide, with a positive size and a crop inside the picture", () => {
-    expect(slideXml.flatMap((xml, i) => misplaced(xml).map((m) => `slide ${i + 1}: ${m}`))).toEqual(
-      [],
-    );
-  });
-
-  // Slides the specimen keeps within bounds, pushed past them: a link with `&`, a stack taller than
-  // the slide, chip rows wider than it, a picture without alt text (F02, F05, F07, F12).
-  it("keeps over-full slides on the slide and their parts well-formed", async () => {
-    const at = (type: string) => structuredClone(slideCatalog.slides.find((x) => x.type === type)!);
-    const href = "https://example.com/talk?utm_source=deck&utm_medium=qr";
-    const title = structuredClone(slideCatalog.slides.find((x) => "qr" in x && x.qr)!) as Slide;
-    (title as { qr: { href: string } }).qr.href = href;
-    const rows = Array.from({ length: 10 }, (_, i) => [`Team ${i}`, `${i} days`, `${i}%`]);
-    const tall = {
-      type: "content",
-      headline: "A table taller than the slide",
-      content: [
-        { type: "table", headers: ["Team", "Lead time", "Failure rate"], rows },
-        { type: "paragraph", text: "Under it." },
-      ],
-    } as Slide;
-    const lanes = at("lanes") as Extract<Slide, { type: "lanes" }>;
-    lanes.lanes[0].stages = Array.from({ length: 6 }, (_, i) => `Stage number ${i + 1}`);
-    const pills = at("phased-pills") as Extract<Slide, { type: "phased-pills" }>;
-    pills.phases[0].items = Array.from({ length: 6 }, (_, i) => ({
-      number: i,
-      title: "Long item",
-    }));
-    const manyLanes = at("lanes") as Extract<Slide, { type: "lanes" }>;
-    manyLanes.lanes = Array.from({ length: 30 }, (_, i) => ({ label: `L${i}`, stages: ["a"] }));
-    const gantt = at("gantt") as Extract<Slide, { type: "gantt" }>;
-    gantt.rows = Array.from({ length: 40 }, (_, i) => ({ label: `R${i}`, bars: [] }));
-    const pictured = structuredClone(
-      slideCatalog.slides.find(
-        (x) => x.type === "content" && x.content.some((b) => b.type === "image"),
-      )!,
-    ) as ContentSlide;
-    for (const b of pictured.content) if (b.type === "image") delete b.alt;
-    const root = join(import.meta.dirname, "..");
-    const { warnings, zip: probe } = await rendered(
-      { name: "T", slides: [title, tall, lanes, pills, pictured, manyLanes, gantt] },
-      root,
-    );
-    // The overflow check finds text the three over-full slides cannot hold, and nothing elsewhere.
-    const [own, found] = [
-      warnings.filter((w) => !w.startsWith("slide ")),
-      warnings.filter((w) => w.startsWith("slide ")),
-    ];
-    expect(own).toEqual([
-      expect.stringMatching(/^blocks table, paragraph: .* taller/),
-      "lanes: 30 rows taller than the slide holds",
-      "gantt: 40 rows taller than the slide holds",
-    ]);
-    expect(found.filter((w) => !/^slide [267]: /.test(w))).toEqual([]);
-    expect(found.length).toBeGreaterThan(0);
-    expect(await probe.file("ppt/slides/_rels/slide1.xml.rels")!.async("string")).toContain(
-      `Target="${href.replace("&", "&amp;")}"`,
-    );
-    const problems: string[] = [];
-    for (const part of Object.keys(probe.files).filter((f) => /\.(xml|rels)$/.test(f))) {
-      const xml = await probe.file(part)!.async("string");
-      const doc = new DOMParser().parseFromString(xml, "application/xml");
-      if (doc.getElementsByTagName("parsererror").length) problems.push(`${part}: malformed`);
-      // The lanes and the gantt hold more rows than fit: they warn, and stay well-formed.
-      const warned = /slides\/slide[67]\.xml$/.test(part);
-      if (/slides\/slide\d+\.xml$/.test(part))
-        problems.push(
-          ...misplaced(xml)
-            .filter((m) => !warned || !m.startsWith("off the slide"))
-            .map((m) => `${part}: ${m}`),
-        );
-      if (xml.includes(root)) problems.push(`${part}: names a local path`);
-    }
-    expect(problems).toEqual([]);
   });
 
   const stats = specimenSlide("Numbers after six months", "grid");
@@ -250,54 +246,106 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("places pictures only for a deck's images and the h&w mark", () => {
-    slideCatalog.slides.forEach((slide: Slide, i) => {
-      const images =
-        JSON.stringify(slide).match(
-          /"(src|imageSrc|logo)":"[^"]+\.(png|jpe?g|webp|gif|svg|mp4|webm|mov)(\?[^"]*)?"/g,
-        ) ?? [];
-      const pictures = slideXml[i].match(/<p:pic>/g) ?? [];
-      expect(pictures.length, `slide ${i + 1} (${slide.type})`).toBeLessThanOrEqual(
-        images.length + 1,
-      );
-    });
+    const slidesWithExtraPictures = slideCatalog.slides
+      .map((slide, i) => ({
+        slide: i + 1,
+        pictures: [...slideXml[i].matchAll(/<p:pic>/g)].length,
+        allowed:
+          1 +
+          [
+            ...JSON.stringify(slide).matchAll(
+              /"(src|imageSrc|logo)":"[^"]+\.(png|jpe?g|webp|gif|svg|mp4|webm|mov)(\?[^"]*)?"/g,
+            ),
+          ].length,
+      }))
+      .filter(({ pictures, allowed }) => pictures > allowed);
+    expect(slidesWithExtraPictures).toEqual([]);
   });
+
+  const portraitSlides = [
+    specimenSlide("Regular slide with a profile sidebar", "regular"),
+    slideCatalog.slides[
+      specimenAt(
+        (slide) =>
+          slide.type === "statement" &&
+          slide.lines[0] === "We stopped asking how fast the agent types",
+      )
+    ],
+    specimenSlide("Two who changed how they review", "grid"),
+    specimenSlide("Your trainers", "profiles"),
+    slideCatalog.slides[
+      specimenAt(
+        (slide) =>
+          slide.type === "closing" && slide.speakers?.some((speaker) => speaker.imageSrc) === true,
+      )
+    ],
+    slideCatalog.slides[
+      specimenAt(
+        (slide) => slide.type === "statement" && slide.lines[0] === "The build time set the pace",
+      )
+    ],
+  ];
 
   it("crops every portrait to a circle, as the slides' avatar", () => {
-    const portraits = slideCatalog.slides.flatMap((slide: Slide, i) =>
-      /"imageSrc":"[^"]*portrait-/.test(JSON.stringify(slide)) ? [slideXml[i]] : [],
-    );
+    const portraits = slideCatalog.slides
+      .map((slide, i) => ({ slide, i }))
+      .filter(({ slide }) => /"imageSrc":"[^"]*portrait-/.test(JSON.stringify(slide)));
     expect(portraits.length).toBeGreaterThanOrEqual(5);
-    for (const xml of portraits) expect(xml).toMatch(/<p:pic>(?:(?!<\/p:pic>).)*prst="ellipse"/s);
+    expect(portraits.map(({ slide }) => slide)).toEqual(portraitSlides);
+    expect(
+      portraits.filter(({ i }) => !/<p:pic>(?:(?!<\/p:pic>).)*prst="ellipse"/s.test(slideXml[i])),
+    ).toEqual([]);
   });
 
-  it("draws tables as tables and trend and bar charts as charts", () => {
-    const slides = slideCatalog.slides.map((slide, i) => ({ slide, i }));
-    const tables = slides.filter(
-      ({ slide }) => slide.type === "content" && slide.content.some((b) => b.type === "table"),
-    );
-    expect(tables.length, "table slides").toBeGreaterThan(0);
-    for (const { i } of tables) expect(slideXml[i], `table slide ${i + 1}`).toContain("<a:tbl>");
+  const contentSlides = slideCatalog.slides.filter((slide) => slide.type === "content");
+  const chartSlides = slideCatalog.slides.filter((slide) => slide.type === "chart");
 
-    for (const variant of ["trend", "bar"]) {
-      const charts = slides.filter(
-        ({ slide }) => slide.type === "chart" && slide.variant === variant,
-      );
-      expect(charts.length, `${variant} slides`).toBeGreaterThan(0);
-      for (const { i } of charts)
-        expect(slideXml[i], `${variant} slide ${i + 1}`).toContain("drawingml/2006/chart");
-    }
+  it.each([
+    {
+      kind: "table",
+      covered: contentSlides.filter((slide) =>
+        slide.content.some((block) => block.type === "table"),
+      ),
+      slides: [
+        specimenSlide("Table, full and compact", "content"),
+        specimenSlide("Table, revealed row by row", "content"),
+      ],
+      markup: "<a:tbl>",
+    },
+    {
+      kind: "trend chart",
+      covered: chartSlides.filter((slide) => slide.variant === "trend"),
+      slides: [
+        specimenSlide("Lead time fell, review wait did not", "chart"),
+        specimenSlide("Every run measures against the first", "chart"),
+      ],
+      markup: "drawingml/2006/chart",
+    },
+    {
+      kind: "bar chart",
+      covered: chartSlides.filter((slide) => slide.variant === "bar"),
+      slides: [
+        specimenSlide("Build holds the most tickets", "chart"),
+        specimenSlide("Review time goes to waiting", "chart"),
+      ],
+      markup: "drawingml/2006/chart",
+    },
+  ])("draws each $kind as editable PowerPoint content", ({ slides, covered, markup }) => {
+    expect(covered).toEqual(slides);
+    expect(
+      slides.filter((slide) => !slideXml[slideCatalog.slides.indexOf(slide)].includes(markup)),
+    ).toEqual([]);
   });
 
   // F32: a timed agenda aligned with tabs and set no tab stops, so each viewer's default ones did.
   it("sets tab stops on every paragraph that aligns with a tab", () => {
-    const tabbed = slideXml.flatMap((xml, i) =>
-      [...xml.matchAll(/<a:p>.*?<\/a:p>/gs)]
-        .map(([p]) => p)
-        .filter((p) => /<a:t>[^<]*\t/.test(p) && !p.includes("<a:tabLst>"))
-        .map(() => i + 1),
+    const paragraphs = slideXml.flatMap((xml, i) =>
+      [...xml.matchAll(/<a:p>.*?<\/a:p>/gs)].map(([xml]) => ({ slide: i + 1, xml })),
     );
-    expect(tabbed).toEqual([]);
-    expect(slideXml.some((xml) => xml.includes("<a:tabLst>"))).toBe(true);
+    const tabbed = new Set(paragraphs.filter(({ xml }) => /<a:t>[^<]*\t/.test(xml)));
+    const stopped = new Set(paragraphs.filter(({ xml }) => xml.includes("<a:tabLst>")));
+    expect(tabbed.size).toBeGreaterThan(0);
+    expect(tabbed.difference(stopped)).toEqual(new Set());
   });
 
   it("names the brand fonts with their pitch, so a machine without them substitutes in kind", () => {
@@ -305,6 +353,134 @@ describe("slides-pptx on the specimen deck", () => {
     expect(all).toContain('typeface="Inter" pitchFamily="34" charset="0"');
     expect(all).toContain('typeface="JetBrains Mono" pitchFamily="49" charset="0"');
     expect(all).not.toMatch(/typeface="JetBrains Mono" pitchFamily="34"/);
+  });
+});
+
+/** What PowerPoint draws off the slide, at a negative size, or cropped outside the picture: each
+ *  shape's offset and extent against the slide, and each crop's edges against 0 to 100 %. */
+describe("slides-pptx package and shape bounds", () => {
+  let overFull: Awaited<ReturnType<typeof rendered>>;
+  beforeAll(async () => {
+    overFull = await rendered(overFullDeck, assetsRoot);
+  });
+
+  it("warns when the table, lanes and gantt exceed the available height", () => {
+    expect(overFull.warnings.filter((warning) => !warning.startsWith("slide "))).toEqual([
+      expect.stringMatching(/^blocks table, paragraph: .* taller/),
+      "lanes: 30 rows taller than the slide holds",
+      "gantt: 40 rows taller than the slide holds",
+    ]);
+  });
+
+  // The overflow check finds text the three over-full slides cannot hold, and nothing elsewhere.
+  it("reports text overflow only on over-full slides", () => {
+    const warnings = overFull.warnings.filter((warning) => warning.startsWith("slide "));
+    expect(warnings.length).toBeGreaterThan(0);
+    expect(warnings.filter((warning) => !/^slide [267]: /.test(warning))).toEqual([]);
+  });
+
+  it("escapes the QR picture's link in its relationship", async () => {
+    const part = overFull.zip.file("ppt/slides/_rels/slide1.xml.rels");
+    assert(part, "The QR slide has a relationships part");
+    const slide = new DOMParser().parseFromString(overFull.slideXml[0], "application/xml");
+    const links = Array.from(slide.getElementsByTagName("p:pic")).flatMap((picture) =>
+      Array.from(picture.getElementsByTagName("a:hlinkClick")),
+    );
+    expect(links).toHaveLength(1);
+    const id = links[0].getAttribute("r:id");
+    assert(id, "The QR picture has a relationship ID");
+    const rels = [...(await part.async("string")).matchAll(/<Relationship [^>]*\/>/g)];
+    expect(rels.map(([rel]) => rel).filter((rel) => rel.includes(`Id="${id}"`))).toEqual([
+      expect.stringContaining(
+        'Target="https://example.com/talk?utm_source=deck&amp;utm_medium=qr"',
+      ),
+    ]);
+  });
+
+  it("keeps the local asset path out of every XML part", async () => {
+    const parts = Object.values(overFull.zip.files).filter(({ name }) =>
+      /\.(xml|rels)$/.test(name),
+    );
+    const entries = await Promise.all(
+      parts.map(async (part) => ({ name: part.name, xml: await part.async("string") })),
+    );
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries.filter(({ xml }) => xml.includes(assetsRoot)).map(({ name }) => name)).toEqual(
+      [],
+    );
+  });
+
+  // The lanes and the gantt hold more rows than fit: they warn, and stay well-formed.
+  describe.each([
+    {
+      deck: "specimen",
+      output: () => ({ zip, slideXml }),
+      boundedSlides: slideCatalog.slides.length,
+    },
+    { deck: "over-full", output: () => overFull, boundedSlides: 5 },
+  ])("$deck deck", ({ output, boundedSlides }) => {
+    let parts: JSZip.JSZipObject[];
+    let slides: string[];
+    let frames: { slide: number; l: number; t: number; w: number; h: number }[];
+
+    beforeAll(() => {
+      const { zip, slideXml } = output();
+      slides = slideXml;
+      parts = Object.values(zip.files).filter(({ name }) => /\.(xml|rels)$/.test(name));
+      frames = slides.flatMap((xml, i) =>
+        [
+          ...xml.matchAll(/<a:off x="(-?\d+)" y="(-?\d+)"\/><a:ext cx="(-?\d+)" cy="(-?\d+)"\/>/g),
+        ].map(([, x, y, cx, cy]) => ({ slide: i + 1, l: +x, t: +y, w: +cx, h: +cy })),
+      );
+    });
+
+    // A malformed part opens in no viewer: Quick Look hangs on it and PowerPoint offers a repair.
+    it("writes well-formed XML in every part", async () => {
+      expect(parts.length).toBeGreaterThan(0);
+      const parsed = await Promise.all(
+        parts.map(async (part) => ({
+          name: part.name,
+          document: new DOMParser().parseFromString(await part.async("string"), "application/xml"),
+        })),
+      );
+      expect(
+        parsed
+          .filter(({ document }) => document.getElementsByTagName("parsererror").length)
+          .map(({ name }) => name),
+      ).toEqual([]);
+    });
+
+    it("keeps shapes at non-negative sizes", () => {
+      expect(frames.length).toBeGreaterThan(0);
+      const negative = frames.filter(({ w, h }) => Math.min(w, h) < 0);
+      expect(negative).toEqual([]);
+    });
+
+    it("keeps shapes on slides that fit", () => {
+      expect(frames.length).toBeGreaterThan(0);
+      const bounded = frames.filter(({ slide }) => slide <= boundedSlides);
+      // A rounding tenth of a millimetre past the edge is no defect.
+      const allowed = 3600;
+      const outside = bounded.filter(
+        ({ l, t, w, h }) => Math.max(-l, -t, l + w - SLIDE_W, t + h - SLIDE_H) > allowed,
+      );
+      expect(outside).toEqual([]);
+    });
+
+    it("keeps picture crops within the picture", () => {
+      const edges = slides.flatMap((xml, i) =>
+        [...xml.matchAll(/<a:srcRect [^>]*\/>/g)].flatMap(([rect]) =>
+          [...rect.matchAll(/ ([lrtb])="(-?\d+)"/g)].map(([, edge, value]) => ({
+            slide: i + 1,
+            edge,
+            value: +value,
+          })),
+        ),
+      );
+      expect(edges.filter(({ value }) => value !== Math.min(100000, Math.max(0, value)))).toEqual(
+        [],
+      );
+    });
   });
 });
 
