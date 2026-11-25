@@ -5,7 +5,6 @@ import { BRAND_MARK } from "../../lib/logo";
 import type { Area } from "./stage";
 
 interface ImageFormat {
-  name: string;
   is: (buf: Buffer) => boolean;
   size: (buf: Buffer) => [number, number] | undefined;
 }
@@ -25,23 +24,19 @@ function jpegSize(buf: Buffer): [number, number] | undefined {
 
 const IMAGE_FORMATS: readonly ImageFormat[] = [
   {
-    name: "png",
     is: (buf) => buf.readUInt32BE(0) === 0x89504e47,
     size: (buf) => [buf.readUInt32BE(16), buf.readUInt32BE(20)],
   },
   {
-    name: "gif",
     is: (buf) => buf.toString("ascii", 0, 3) === "GIF",
     size: (buf) => [buf.readUInt16LE(6), buf.readUInt16LE(8)],
   },
   {
-    name: "webp-vp8x",
     is: (buf) =>
       buf.toString("ascii", 8, 12) === "WEBP" && buf.toString("ascii", 12, 16) === "VP8X",
     size: (buf) => [1 + buf.readUIntLE(24, 3), 1 + buf.readUIntLE(27, 3)],
   },
   {
-    name: "webp-vp8l",
     is: (buf) =>
       buf.toString("ascii", 8, 12) === "WEBP" && buf.toString("ascii", 12, 16) === "VP8L",
     size: (buf) => {
@@ -50,12 +45,10 @@ const IMAGE_FORMATS: readonly ImageFormat[] = [
     },
   },
   {
-    name: "webp-vp8",
     is: (buf) => buf.toString("ascii", 8, 12) === "WEBP",
     size: (buf) => [buf.readUInt16LE(26) & 0x3fff, buf.readUInt16LE(28) & 0x3fff],
   },
   {
-    name: "jpeg",
     is: (buf) => buf[0] === 0xff && buf[1] === 0xd8,
     size: jpegSize,
   },

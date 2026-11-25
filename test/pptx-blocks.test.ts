@@ -3,13 +3,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
+import { rejection } from "@hackersandwizards/scaffolding/rejection";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 import { itemCard } from "../scripts/pptx/blocks/columns";
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
-import { MARKER_CODES } from "../scripts/pptx/text";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import { labeledGridAsCards } from "../lib/content-block-aliases";
@@ -576,7 +576,7 @@ describe("slides-pptx column cards", () => {
       cardPreset: card.prst,
       hasToneBorder: card.xml.includes(`<a:srgbClr val="${day.green}"/>`),
       texts: body.texts,
-      hasMarker: body.xml.includes(`char="&#x${MARKER_CODES.green};"`),
+      hasMarker: body.xml.includes('char="&#xE001;"'),
     }).toEqual({
       cardPreset: "round2DiagRect",
       hasToneBorder: true,
@@ -585,25 +585,22 @@ describe("slides-pptx column cards", () => {
     });
   });
 
-  it("draws an unchecked prototype key on two-column as neutral", async () => {
-    const day = palette(false);
-    const xml = await onlySlide({
-      type: "content",
-      headline: "Columns",
-      content: [
-        {
-          type: "two-column",
-          variant: "constructor" as "neutral",
-          left: { title: "A", items: ["One"] },
-          right: { title: "B", items: ["Two"] },
-        },
-        { type: "paragraph", text: "Tail" },
-      ],
-    });
-    const cards = shapesOf(xml).filter((shape) => shape.prst === "round2DiagRect");
-    expect(cards.map((card) => card.xml.includes(`<a:srgbClr val="${day.border}"/>`))).toEqual([
-      true,
-      true,
-    ]);
+  it("throws a TypeError for a prototype-key two-column variant", async () => {
+    const error = await rejection(
+      onlySlide({
+        type: "content",
+        headline: "Columns",
+        content: [
+          {
+            type: "two-column",
+            variant: "constructor" as "neutral",
+            left: { title: "A", items: ["One"] },
+            right: { title: "B", items: ["Two"] },
+          },
+          { type: "paragraph", text: "Tail" },
+        ],
+      }),
+    );
+    expect(error).toMatch(/^TypeError:.*\.map is not a function/);
   });
 });

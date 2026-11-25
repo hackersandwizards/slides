@@ -44,6 +44,8 @@ export function brandStrip(sheet: Sheet): void {
   }
 }
 
+/** Draws the corner logo and optional page counter; returns the left edge of the corner region
+ *  with the 1.8 in page-counter slot already subtracted. */
 export function slideCorner(sheet: Sheet, deck: Presentation, index: number): number {
   const slide = deck.slides[index];
   // A closing that stands the h&w lockup in its centre column hides the corner, counter included,
@@ -91,6 +93,7 @@ export function slideCorner(sheet: Sheet, deck: Presentation, index: number): nu
   return x - 1.8;
 }
 
+/** Draws any start logos on the left; returns the next free x including the trailing 1.25 rem gap. */
 export function startLogos(sheet: Sheet, deck: Presentation, index: number): number {
   const { start } = logoPlaces(resolveSlideLogo(deck, index));
   const confidential = deck.confidential?.trim();
@@ -133,6 +136,7 @@ export function frame(sheet: Sheet, deck: Presentation, index: number) {
   if (slide.notes) sheet.slide.addNotes(slide.notes);
 }
 
+/** Draws the kicker label and optional principle pill; returns the extra height when the pill wraps. */
 export function kickerBand(sheet: Sheet, h: Head): number {
   const { c } = sheet;
   const y = 58 / 144;

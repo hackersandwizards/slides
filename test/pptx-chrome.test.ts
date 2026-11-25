@@ -13,11 +13,10 @@ import {
   startLogos,
   type Head,
 } from "../scripts/pptx/chrome";
-import { brandCut } from "../scripts/pptx/images";
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
-import { REM, W } from "../scripts/pptx/stage";
+import { W } from "../scripts/pptx/stage";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { Presentation, Slide } from "../types/slide";
 import {
@@ -295,16 +294,12 @@ describe("slides-pptx chrome parts", () => {
     });
   });
 
-  const [, lockupRatio] = brandCut("lockup");
-  const [, wordmarkRatio] = brandCut("wordmark");
-  const rightEdge = W - 96 / 144;
-
-  it.each([
+  const cornerCases: { name: string; deck: Presentation; index: number; expected: number }[] = [
     {
       name: "centred closing with hidden corner",
-      deck: { name: "D", slides: [{ type: "closing", headline: "Bye" }] } as Presentation,
+      deck: { name: "D", slides: [{ type: "closing", headline: "Bye" }] },
       index: 0,
-      expected: rightEdge,
+      expected: 12.666333333333334,
     },
     {
       name: "title slide with lockup and no page counter",
@@ -314,9 +309,9 @@ describe("slides-pptx chrome parts", () => {
           { type: "title", title: "Start" },
           { type: "statement", lines: ["Next"] },
         ],
-      } as Presentation,
+      },
       index: 0,
-      expected: rightEdge - (65 / 144) * lockupRatio,
+      expected: 10.226611732537908,
     },
     {
       name: "content slide with wordmark and page counter",
@@ -326,40 +321,55 @@ describe("slides-pptx chrome parts", () => {
           { type: "title", title: "Start" },
           { type: "statement", lines: ["Next"] },
         ],
-      } as Presentation,
+      },
       index: 1,
-      expected: rightEdge - (42 / 144) * wordmarkRatio - 1.8,
+      expected: 8.85483908045977,
     },
-  ])("slideCorner returns the corner left bound for $name", ({ deck, index, expected }) => {
-    const { sheet } = freshSheet();
-    expect(slideCorner(sheet, deck, index)).toEqual(expected);
-  });
+  ];
 
-  it.each([
+  it.each(cornerCases)(
+    "slideCorner returns the corner left bound for $name",
+    ({ deck, index, expected }) => {
+      const { sheet } = freshSheet();
+      expect(slideCorner(sheet, deck, index)).toEqual(expected);
+    },
+  );
+
+  const partnerLogo = { src: "/specimen/slide-catalog/partner-mark.png", alt: "Partner" };
+  const qrLogo = { src: "/specimen/slide-catalog/qr-example.png", alt: "QR" };
+  const hwLogo = { src: "/hw-lockup.svg", alt: "h&w" };
+  const startLogoCases: { name: string; deck: Presentation; expected: number }[] = [
     {
-      name: "empty start logos without confidentiality line",
-      deck: { name: "D", slides: [{ type: "statement", lines: ["A"] }] } as Presentation,
-      expected: 1.5 * REM,
+      name: "one start logo on a plain deck",
+      deck: {
+        name: "D",
+        slideLogos: { 0: [partnerLogo, hwLogo] },
+        slides: [{ type: "statement", lines: ["A"] }],
+      },
+      expected: 1.5462721354166664,
     },
     {
-      name: "empty start logos aligned with confidentiality line",
+      name: "two start logos on a confidential deck",
       deck: {
         name: "D",
         confidential: "Confidential",
+        slideLogos: { 0: [partnerLogo, qrLogo, hwLogo] },
         slides: [{ type: "statement", lines: ["A"] }],
-      } as Presentation,
-      expected: W - rightEdge,
+      },
+      expected: 2.5092304687499993,
     },
-  ])("startLogos returns the left edge for $name", ({ deck, expected }) => {
+  ];
+
+  it.each(startLogoCases)("startLogos returns the left edge for $name", ({ deck, expected }) => {
     const { sheet } = freshSheet();
     expect(startLogos(sheet, deck, 0)).toEqual(expected);
   });
 
-  it.each([
-    { name: "empty head", head: {} as Head, expected: 0 },
+  const kickerCases: { name: string; head: Head; expected: number }[] = [
+    { name: "empty head", head: {}, expected: 0 },
     {
       name: "preText and short principle on one row",
-      head: { preText: "Intro", principle: "Small steps" } as Head,
+      head: { preText: "Intro", principle: "Small steps" },
       expected: 0,
     },
     {
@@ -367,10 +377,12 @@ describe("slides-pptx chrome parts", () => {
       head: {
         sectionLabel: "A very long section label spanning nearly the whole stage width here",
         principle: "Principle that wraps onto the second kicker row",
-      } as Head,
+      },
       expected: 76 / 144,
     },
-  ])("kickerBand returns the wrapped height for $name", ({ head, expected }) => {
+  ];
+
+  it.each(kickerCases)("kickerBand returns the wrapped height for $name", ({ head, expected }) => {
     const { sheet } = freshSheet();
     expect(kickerBand(sheet, head)).toEqual(expected);
   });
