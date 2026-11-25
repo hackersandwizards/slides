@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { fromLocalPage, literals, replace, resolve } from "../lib/deck-edit";
 
 const DECK = `// A comment with an apostrophe: don't
@@ -114,6 +114,11 @@ describe("substitutions and escapes", () => {
     expect(literals(source).map(({ value }) => value)).toEqual(["\nu{41}", "\nx41", "A"]);
   });
 
+  it("decodes four-digit Unicode escapes and joins line continuations", () => {
+    const source = '["\\u0041", "a\\\nb", "c\\\r\nd"]';
+    expect(literals(source).map(({ value }) => value)).toEqual(["A", "ab", "cd"]);
+  });
+
   it("can edit text after a tagged template with an out-of-range Unicode escape", () => {
     const source = 'const raw = String.raw`\\u{000000110000}`; const title = "Before";';
 
@@ -135,7 +140,8 @@ describe("substitutions and escapes", () => {
     });
     const written = replace(source, "two", "a\rb");
     expect(written).toEqual({ source: source.replace("`two`", "`a\\rb`") });
-    expect("source" in written && literals(written.source).map((l) => l.value)).toContain("a\rb");
+    assert("source" in written, "replace should return rewritten source");
+    expect(literals(written.source).map((l) => l.value)).toContain("a\rb");
   });
 });
 
@@ -147,15 +153,17 @@ describe("fromLocalPage", () => {
     expect(fromLocalPage("talks.localhost", "https://talks.localhost", "4324")).toBe(true);
   });
 
-  it("refuses a foreign Host or Origin, another port and an opaque origin", () => {
-    expect(fromLocalPage("evil.example:4324", null, "4324")).toBe(false);
-    expect(fromLocalPage("127.0.0.1:4324", "http://evil.example", "4324")).toBe(false);
-    expect(fromLocalPage("127.0.0.1:8080", null, "4324")).toBe(false);
-    expect(fromLocalPage("127.0.0.1:4324", "null", "4324")).toBe(false);
-    expect(fromLocalPage("localhost.evil.example:4324", null, "4324")).toBe(false);
-    expect(fromLocalPage("talks.localhost", "http://evil.localhost", "4324")).toBe(false);
-    expect(fromLocalPage("localhost:4324", "http://127.0.0.1:4324", "4324")).toBe(false);
-    expect(fromLocalPage(null, null, "4324")).toBe(false);
+  it.each<[string, string | null, string | null]>([
+    ["a foreign host", "evil.example:4324", null],
+    ["a foreign origin", "127.0.0.1:4324", "http://evil.example"],
+    ["another port", "127.0.0.1:8080", null],
+    ["an opaque origin", "127.0.0.1:4324", "null"],
+    ["a localhost prefix on a foreign domain", "localhost.evil.example:4324", null],
+    ["a different .localhost origin", "talks.localhost", "http://evil.localhost"],
+    ["a mismatched loopback host and origin", "localhost:4324", "http://127.0.0.1:4324"],
+    ["a missing host", null, null],
+  ])("refuses %s", (_label, host, origin) => {
+    expect(fromLocalPage(host, origin, "4324")).toBe(false);
   });
 });
 
@@ -173,8 +181,9 @@ export const deck = { title: "./parts", note: "./lazy" };
     });
     expect(replace(source, "./more", "data:x")).toHaveProperty("error");
     const edited = replace(source, "./parts", "Parts");
-    expect("source" in edited && edited.source).toContain('import { a } from "./parts"');
-    expect("source" in edited && edited.source).toContain('title: "Parts"');
+    assert("source" in edited, "replace should rewrite the matching deck text");
+    expect(edited.source).toContain('import { a } from "./parts"');
+    expect(edited.source).toContain('title: "Parts"');
     expect(resolve(source, ["./lazy"])).toEqual({ value: "./lazy", index: 0 });
   });
 });

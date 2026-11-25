@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { deckSync } from "./presenter-sync";
 import { dialogOpen, directionKey, readStored, writeStored } from "./slide-utils";
 import { useMounted } from "./use-mounted";
@@ -50,13 +50,211 @@ width:100%;height:100%;border:0;padding:${token("--slide-edit-field-padding")};f
 color:${token("--color-ink")};background:${token("--color-white")};resize:none;outline:none}</style><textarea spellcheck="false"></textarea>`;
 };
 
-export function DeckEdit({ deck }: { deck: string }) {
+type EditNote = { text: string; error: boolean };
+type EditTarget = { deck: string; element: Element; value: string };
+
+function editFieldBox(
+  rect: Pick<DOMRect, "left" | "top" | "width">,
+  viewport: { width: number; height: number },
+) {
+  const width = Math.min(Math.max(rect.width + 16, 360), viewport.width - 16);
+  const left = Math.min(Math.max(rect.left - 8, 8), viewport.width - width - 8);
+  const top = Math.min(Math.max(rect.top - 8, 8), viewport.height - 120);
+  return { left, top, width };
+}
+
+function createEditFrame(element: Element): HTMLIFrameElement {
+  const box = editFieldBox(element.getBoundingClientRect(), {
+    width: innerWidth,
+    height: innerHeight,
+  });
+  const frame = document.createElement("iframe");
+  frame.title = "Edit text";
+  Object.assign(frame.style, {
+    position: "fixed",
+    left: `${box.left}px`,
+    top: `${box.top}px`,
+    width: `${box.width}px`,
+    height: "var(--slide-edit-field)",
+    zIndex: "90",
+    border: `var(--slide-edit-outline) solid ${LEAD}`,
+    borderRadius: "var(--radius-sm)",
+    background: "var(--color-white)",
+    boxShadow: "var(--shadow-overlay)",
+  });
+  frame.srcdoc = fieldDoc();
+  return frame;
+}
+
+async function submitDeckEdit(deck: string, from: string, to: string): Promise<Answer> {
+  // The save reloads the slide. Arriving "backwards" opens it fully revealed, so the
+  // result shows; a host that refreshes in place keeps the slide, and the mark is dropped.
+  writeStored("session", directionKey(), "back");
+  setTimeout(() => writeStored("session", directionKey(), null), 3000);
+  const answer = await ask({ deck, from, to });
+  // Nothing was saved, so a reload must open the slide as it was.
+  if (!answer.ok) writeStored("session", directionKey(), null);
+  return answer;
+}
+
+async function resolveDeckClick(
+  deck: string,
+  chain: Element[],
+): Promise<{ element: Element; value: string } | { error: string }> {
+  const texts = chain.map((element) => (element.textContent ?? "").slice(0, 4000));
+  const answer = await ask({ deck, texts });
+  if (answer.value !== undefined && answer.index !== undefined)
+    return { element: chain[answer.index], value: answer.value };
+  return { error: answer.error ?? "This text cannot be edited here." };
+}
+
+function collectElementChain(target: EventTarget | null): Element[] {
+  const chain: Element[] = [];
+  for (
+    let element = target as Element | null;
+    element && element !== document.body && chain.length < 12;
+    element = element.parentElement
+  )
+    chain.push(element);
+  return chain;
+}
+
+// A refusal opens no field, so the refused text itself shows it, next to where the eye is.
+// Each outlined element keeps its own outline and one timer: a second refusal while the first
+// shows restarts the timer and still restores the element's own outline, never the red.
+class RefusalMarks {
+  private readonly marks = new Map<
+    HTMLElement,
+    { outline: string; timer: ReturnType<typeof setTimeout> }
+  >();
+
+  mark(element: Element) {
+    if (!(element instanceof HTMLElement)) return;
+    const outline = this.marks.get(element)?.outline ?? element.style.outline;
+    clearTimeout(this.marks.get(element)?.timer);
+    element.style.outline = "var(--slide-rule-strong) solid var(--color-red)";
+    this.marks.set(element, { outline, timer: setTimeout(() => this.restore(element), 2500) });
+  }
+
+  restore(element: HTMLElement) {
+    const entry = this.marks.get(element);
+    if (!entry) return;
+    clearTimeout(entry.timer);
+    element.style.outline = entry.outline;
+    this.marks.delete(element);
+  }
+
+  clear = () => this.marks.forEach((_, element) => this.restore(element));
+}
+
+type CloseField = (field?: EditField) => void;
+
+class EditField {
+  private readonly frame: HTMLIFrameElement;
+  private done = false;
+  private readonly target: EditTarget;
+  private readonly onNote: (note: EditNote) => void;
+  private readonly close: CloseField;
+
+  constructor(target: EditTarget, onNote: (note: EditNote) => void, close: CloseField) {
+    this.target = target;
+    this.onNote = onNote;
+    this.close = close;
+    this.frame = createEditFrame(target.element);
+    this.frame.addEventListener("load", this.bindTextarea);
+    document.body.append(this.frame);
+  }
+
+  remove = () => this.frame.remove();
+
+  private fit(area: HTMLTextAreaElement) {
+    const top = Number.parseFloat(this.frame.style.top);
+    this.frame.style.height = "0";
+    this.frame.style.height = `${Math.min(Math.max(area.scrollHeight + 4, 64), innerHeight - top - 8)}px`;
+  }
+
+  // The field stays open until the write answers, so a refused one keeps what was typed.
+  private async save(area: HTMLTextAreaElement) {
+    if (this.done) return;
+    this.done = true;
+    const { deck, value } = this.target;
+    const to = area.value;
+    if (to === value) return this.close();
+    const answer = await submitDeckEdit(deck, value, to);
+    if (answer.ok) {
+      this.close(this);
+      this.onNote({ text: "Saved. The slide reloads.", error: false });
+    } else {
+      this.onNote({ text: answer.error ?? "The write failed.", error: true });
+      this.done = false;
+      area.focus();
+    }
+  }
+
+  private bindTextarea = () => {
+    const area = this.frame.contentDocument?.querySelector("textarea");
+    if (!area) return;
+    const { value } = this.target;
+    area.value = value;
+    this.fit(area);
+    area.focus();
+    area.setSelectionRange(value.length, value.length);
+    area.addEventListener("input", () => this.fit(area));
+    // A click elsewhere on the page saves; switching to another app keeps the field open.
+    area.addEventListener("blur", () =>
+      setTimeout(() => {
+        if (document.hasFocus()) void this.save(area);
+      }),
+    );
+    area.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        void this.save(area);
+      } else if (event.key === "Escape") {
+        this.done = true;
+        this.close();
+      }
+    });
+  };
+}
+
+function createEditOverlay(onNote: (note: EditNote) => void) {
+  let current: EditField | null = null;
+  const close = (field?: EditField) => {
+    if (field && field !== current) return;
+    current?.remove();
+    current = null;
+  };
+  return {
+    isOpen: () => current !== null,
+    close,
+    open(target: EditTarget) {
+      close();
+      current = new EditField(target, onNote, close);
+    },
+  };
+}
+
+function useFlashNote() {
+  const [note, setNote] = useState<EditNote | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const clear = useCallback(() => {
+    clearTimeout(timer.current);
+    setNote(null);
+  }, []);
+  const flash = useCallback((next: EditNote) => {
+    clearTimeout(timer.current);
+    setNote(next);
+    timer.current = setTimeout(() => setNote(null), next.error ? 6000 : 2500);
+  }, []);
+  return { note, flash, clear };
+}
+
+function useEditModeToggle(): boolean {
   // Stays on across the reload a save causes: read after hydration, so the server render agrees.
   const mounted = useMounted();
   const [choice, setChoice] = useState<boolean | null>(null);
   const on = choice ?? (mounted && readStored("session", STORAGE_KEY) === "on");
-  const [note, setNote] = useState<{ text: string; error: boolean } | null>(null);
-  const badge = useRef<HTMLDivElement>(null);
   // The audience window only: the speaker window's slide sits inert under the speaker view, which
   // edits notes itself, and its frames are previews.
   const [audience] = useState(() => deckSync.role() === "audience");
@@ -83,128 +281,29 @@ export function DeckEdit({ deck }: { deck: string }) {
     return () => window.removeEventListener("keydown", toggle);
   }, [active]);
 
+  return on && active;
+}
+
+function useDeckEditSession(
+  deck: string,
+  enabled: boolean,
+  badge: RefObject<HTMLDivElement | null>,
+): EditNote | null {
+  const { note, flash, clear } = useFlashNote();
+
   useEffect(() => {
-    if (!on || !active) return;
+    if (!enabled) return;
     document.documentElement.dataset.deckEdit = "";
-    let field: HTMLIFrameElement | null = null;
     // A press outside an open field commits that field: the click it ends picks nothing.
     let committing = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-
-    const flash = (text: string, error = false) => {
-      clearTimeout(timer);
-      setNote({ text, error });
-      timer = setTimeout(() => setNote(null), error ? 6000 : 2500);
-    };
-    // A refusal opens no field, so the refused text itself shows it, next to where the eye is.
-    // Each outlined element keeps its own outline and one timer: a second refusal while the first
-    // shows restarts the timer and still restores the element's own outline, never the red.
-    const refused = new Map<
-      HTMLElement,
-      { outline: string; timer: ReturnType<typeof setTimeout> }
-    >();
-    const restore = (element: HTMLElement) => {
-      const mark = refused.get(element);
-      if (!mark) return;
-      clearTimeout(mark.timer);
-      element.style.outline = mark.outline;
-      refused.delete(element);
-    };
-    const refuse = (element: Element, text: string) => {
-      flash(text, true);
-      if (!(element instanceof HTMLElement)) return;
-      const outline = refused.get(element)?.outline ?? element.style.outline;
-      clearTimeout(refused.get(element)?.timer);
-      element.style.outline = "var(--slide-rule-strong) solid var(--color-red)";
-      refused.set(element, { outline, timer: setTimeout(() => restore(element), 2500) });
-    };
-    const close = () => {
-      field?.remove();
-      field = null;
-    };
-
-    const open = (element: Element, value: string) => {
-      close();
-      const rect = element.getBoundingClientRect();
-      const frame = document.createElement("iframe");
-      frame.title = "Edit text";
-      const width = Math.min(Math.max(rect.width + 16, 360), innerWidth - 16);
-      const left = Math.min(Math.max(rect.left - 8, 8), innerWidth - width - 8);
-      const top = Math.min(Math.max(rect.top - 8, 8), innerHeight - 120);
-      Object.assign(frame.style, {
-        position: "fixed",
-        left: `${left}px`,
-        top: `${top}px`,
-        width: `${width}px`,
-        height: "var(--slide-edit-field)",
-        zIndex: "90",
-        border: `var(--slide-edit-outline) solid ${LEAD}`,
-        borderRadius: "var(--radius-sm)",
-        background: "var(--color-white)",
-        boxShadow: "var(--shadow-overlay)",
-      });
-      frame.srcdoc = fieldDoc();
-      frame.addEventListener("load", () => {
-        const area = frame.contentDocument?.querySelector("textarea");
-        if (!area) return;
-        let done = false;
-        const fit = () => {
-          frame.style.height = "0";
-          frame.style.height = `${Math.min(Math.max(area.scrollHeight + 4, 64), innerHeight - top - 8)}px`;
-        };
-        // The field stays open until the write answers, so a refused one keeps what was typed.
-        const save = async () => {
-          if (done) return;
-          done = true;
-          const to = area.value;
-          if (to === value) return close();
-          // The save reloads the slide. Arriving "backwards" opens it fully revealed, so the
-          // result shows; a host that refreshes in place keeps the slide, and the mark is dropped.
-          writeStored("session", directionKey(), "back");
-          setTimeout(() => writeStored("session", directionKey(), null), 3000);
-          const answer = await ask({ deck, from: value, to });
-          if (answer.ok) {
-            if (field === frame) close();
-            flash("Saved. The slide reloads.");
-          } else {
-            // Nothing was saved, so a reload must open the slide as it was.
-            writeStored("session", directionKey(), null);
-            flash(answer.error ?? "The write failed.", true);
-            done = false;
-            area.focus();
-          }
-        };
-        area.value = value;
-        fit();
-        area.focus();
-        area.setSelectionRange(value.length, value.length);
-        area.addEventListener("input", fit);
-        // A click elsewhere on the page saves; switching to another app keeps the field open.
-        area.addEventListener("blur", () =>
-          setTimeout(() => {
-            if (document.hasFocus()) void save();
-          }),
-        );
-        area.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            void save();
-          } else if (event.key === "Escape") {
-            done = true;
-            close();
-          }
-        });
-      });
-      document.body.append(frame);
-      field = frame;
-    };
-
+    const marks = new RefusalMarks();
+    const overlay = createEditOverlay(flash);
     const outside = (event: Event) => !badge.current?.contains(event.target as Node);
     // Propagation only: the default moves focus, which blurs an open field and so saves it.
     const swallow = (event: Event) => {
       if (!outside(event)) return;
       event.stopPropagation();
-      committing = !!field;
+      committing = overlay.isOpen();
     };
     const pick = (event: MouseEvent) => {
       if (!outside(event)) return;
@@ -214,23 +313,16 @@ export function DeckEdit({ deck }: { deck: string }) {
         committing = false;
         return;
       }
-      const chain: Element[] = [];
-      for (
-        let element = event.target as Element | null;
-        element && element !== document.body && chain.length < 12;
-        element = element.parentElement
-      )
-        chain.push(element);
+      const chain = collectElementChain(event.target);
       // A click on the page itself, outside every element, has no text to edit.
       if (!chain.length) return;
-      const texts = chain.map((element) => (element.textContent ?? "").slice(0, 4000));
-      ask({ deck, texts })
-        .then((answer) => {
-          if (answer.value !== undefined && answer.index !== undefined)
-            open(chain[answer.index], answer.value);
-          else refuse(chain[0], answer.error ?? "This text cannot be edited here.");
+      void resolveDeckClick(deck, chain)
+        .then((result) => {
+          if ("value" in result) return overlay.open({ deck, ...result });
+          flash({ text: result.error, error: true });
+          marks.mark(chain[0]);
         })
-        .catch(() => flash("This text cannot be edited here.", true));
+        .catch(() => flash({ text: "This text cannot be edited here.", error: true }));
     };
 
     // Capture on the window runs before the slide's own pointer handlers, the laser among them.
@@ -240,14 +332,21 @@ export function DeckEdit({ deck }: { deck: string }) {
       window.removeEventListener("mousedown", swallow, true);
       window.removeEventListener("click", pick, true);
       delete document.documentElement.dataset.deckEdit;
-      clearTimeout(timer);
-      refused.forEach((_, element) => restore(element));
-      setNote(null);
-      close();
+      marks.clear();
+      clear();
+      overlay.close();
     };
-  }, [on, active, deck]);
+  }, [enabled, deck, badge, flash, clear]);
 
-  if (!on || !active) return null;
+  return note;
+}
+
+export function DeckEdit({ deck }: { deck: string }) {
+  const enabled = useEditModeToggle();
+  const badge = useRef<HTMLDivElement>(null);
+  const note = useDeckEditSession(deck, enabled, badge);
+
+  if (!enabled) return null;
   return (
     <>
       <style>{STYLE}</style>

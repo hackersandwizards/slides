@@ -14,7 +14,7 @@ export const GROUNDS: Record<SlideGround, string> = {
 /** A slide's ground from `ground`, or from the class its deprecated `background` names. */
 export function groundOf(slide: Grounded): SlideGround {
   const named = slide.ground ?? slide.background?.slice("bg-section-".length);
-  return named && named in GROUNDS ? (named as SlideGround) : "intro";
+  return named && Object.hasOwn(GROUNDS, named) ? (named as SlideGround) : "intro";
 }
 
 /** Whether the deck holding the slide stands on night (`theme-brand-dark`): SlideContainer and
@@ -24,6 +24,12 @@ export const DeckNight = createContext(false);
 /** The deck's language (`deckLang`), for the words a slide takes from brand, such as the claim on
  *  a contact closing: PrintSlide and SlideContainer's `lang` provide it, English outside a frame. */
 export const DeckLang = createContext<"en" | "de">("en");
+
+const SHELL_DIRECTIONS = new Map<string, string>([["col", "flex-col"]]);
+
+function groundClass(ground: SlideGround) {
+  return Object.hasOwn(GROUNDS, ground) ? GROUNDS[ground] : undefined;
+}
 
 // The theme is set on every slide, "light" included: the brand's night stops at the nearest light
 // theme, so a dark page around a day slide (talks' and trainer-hub's <html>) leaves its elements day.
@@ -48,9 +54,9 @@ export function SlideShell({
   const deckNight = useContext(DeckNight);
   const classes = [
     "slide-shell relative flex min-h-screen items-center justify-center",
-    direction === "col" && "flex-col",
+    SHELL_DIRECTIONS.get(direction),
     overflowHidden && "overflow-hidden",
-    GROUNDS[ground],
+    groundClass(ground),
     night && "slide-night",
     className,
   ]

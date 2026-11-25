@@ -81,3 +81,36 @@ describe("a contact closing's partners", () => {
     expect(container.textContent).toContain("Partner Co");
   });
 });
+
+describe("a contact closing with speaker portraits", () => {
+  it("draws each portrait speaker with contact links, a divider between speakers, and a closing quote", () => {
+    const { container, getByText } = render(
+      <ClosingSlide
+        slide={{
+          ...closing,
+          claim: false,
+          closingQuote: "Build small.",
+          speakers: [
+            {
+              name: "Ada",
+              company: "Studio A",
+              imageSrc: "/ada.png",
+              contact: "ada@example.com",
+              linkedIn: "https://linkedin.com/in/ada",
+            },
+            {
+              name: "Lin",
+              company: "Studio B",
+              imageSrc: "/lin.png",
+            },
+          ],
+        }}
+      />,
+    );
+    expect(container.querySelectorAll(".hw-avatar")).toHaveLength(2);
+    expect(container.querySelector('a[href="mailto:ada@example.com"]')).not.toBeNull();
+    expect(container.querySelector('a[href="https://linkedin.com/in/ada"]')).not.toBeNull();
+    expect(container.querySelectorAll('[aria-hidden="true"].w-px')).toHaveLength(1);
+    expect(getByText("Build small.")).toBeTruthy();
+  });
+});

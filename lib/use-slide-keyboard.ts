@@ -17,6 +17,23 @@ interface UseSlideKeyboardOptions {
   undoable?: boolean;
 }
 
+interface SlideKeyAction {
+  handler: "onRight" | "onLeft" | "onSpace" | "onBackspace";
+  consumeBeforeHandler: boolean;
+}
+
+const slideKeyActions = new Map<string, SlideKeyAction>([
+  ["ArrowRight", { handler: "onRight", consumeBeforeHandler: false }],
+  ["ArrowLeft", { handler: "onLeft", consumeBeforeHandler: false }],
+  [" ", { handler: "onSpace", consumeBeforeHandler: true }],
+  ["Backspace", { handler: "onBackspace", consumeBeforeHandler: true }],
+]);
+
+function consumeSlideKey(event: KeyboardEvent) {
+  event.preventDefault();
+  event.stopPropagation();
+}
+
 export function useSlideKeyboard(options: UseSlideKeyboardOptions) {
   const optionsRef = useRef(options);
   const enabled = options.enabled !== false;
@@ -30,32 +47,22 @@ export function useSlideKeyboard(options: UseSlideKeyboardOptions) {
     if (options.enabled === false) return;
 
     function handleKeyDown(event: KeyboardEvent) {
-      const { onRight, onLeft, onSpace, onBackspace, onKey, enabled } = optionsRef.current;
-      if (enabled === false || ignoredKey(event)) return;
+      const current = optionsRef.current;
+      if (current.enabled === false || ignoredKey(event)) return;
 
-      if (event.key === "ArrowRight" && onRight) {
-        const handled = onRight();
-        if (handled !== false) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-      } else if (event.key === "ArrowLeft" && onLeft) {
-        const handled = onLeft();
-        if (handled !== false) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-      } else if (event.key === " " && onSpace) {
-        event.preventDefault();
-        event.stopPropagation();
-        onSpace();
-      } else if (event.key === "Backspace" && onBackspace) {
-        event.preventDefault();
-        event.stopPropagation();
-        onBackspace();
-      } else if (onKey) {
-        onKey(event.key);
+      const action = slideKeyActions.get(event.key);
+      const handler = action && current[action.handler];
+      if (!action || !handler) {
+        const { onKey } = current;
+        onKey?.(event.key);
+        return;
       }
+      if (action.consumeBeforeHandler) {
+        consumeSlideKey(event);
+        handler();
+        return;
+      }
+      if (handler() !== false) consumeSlideKey(event);
     }
 
     window.addEventListener("keydown", handleKeyDown, true);

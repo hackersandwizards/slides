@@ -1,6 +1,7 @@
 import { act, render, screen, fireEvent } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, assert, describe, expect, it, onTestFinished, vi } from "vitest";
 import { SlideNavigation } from "../components/slides/SlideNavigation";
+import { useProgressiveReveal } from "../lib/use-progressive-reveal";
 
 const goToSlide = vi.fn<typeof import("../lib/navigate").goToSlide>();
 vi.mock("../lib/navigate", () => ({
@@ -33,13 +34,18 @@ describe("SlideNavigation clicker keys", () => {
   });
 
   it("lets a capture-phase reveal consume a clicker step, as it does an arrow", () => {
-    const reveal = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") e.stopPropagation();
-    };
-    window.addEventListener("keydown", reveal, true);
-    render(<SlideNavigation currentIndex={1} totalSlides={3} basePath="/d" />);
+    function RevealStep() {
+      const { revealedCount } = useProgressiveReveal({ totalSteps: 1 });
+      return <output>{revealedCount}</output>;
+    }
+    render(
+      <>
+        <RevealStep />
+        <SlideNavigation currentIndex={1} totalSlides={3} basePath="/d" />
+      </>,
+    );
     press("PageDown");
-    window.removeEventListener("keydown", reveal, true);
+    expect(screen.getByRole("status")).toHaveTextContent("1");
     expect(goToSlide).not.toHaveBeenCalled();
   });
 
@@ -61,6 +67,21 @@ describe("SlideNavigation clicker keys", () => {
     openOverlay();
     press("?");
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("lets a target stop the second ? before it reaches the window", () => {
+    const { dialog } = openOverlay();
+    dialog.addEventListener("keydown", (event) => event.stopPropagation(), { once: true });
+    fireEvent.keyDown(dialog, { key: "?" });
+    expect(screen.getByRole("dialog")).toBe(dialog);
+  });
+
+  it("closes on a bubbled ? without preventing its default", () => {
+    const { dialog } = openOverlay();
+    const event = new KeyboardEvent("keydown", { key: "?", bubbles: true, cancelable: true });
+    fireEvent(dialog, event);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(event.defaultPrevented).toBe(false);
   });
 
   it("takes no swipe made on the open overlay", () => {
@@ -88,4 +109,45 @@ describe("SlideNavigation clicker keys", () => {
     rerender(<SlideNavigation currentIndex={2} totalSlides={3} basePath="/d" />);
     expect(dialog.hasAttribute("open")).toBe(false);
   });
+
+  it("toggles fullscreen on F", () => {
+    const request = vi.fn(() => Promise.resolve());
+    const exit = vi.fn(() => Promise.resolve());
+    const fullscreenElement = vi.fn<() => Element | null>().mockReturnValue(null);
+    assert(!Object.hasOwn(document.documentElement, "requestFullscreen"));
+    assert(!Object.hasOwn(document, "exitFullscreen"));
+    assert(!Object.hasOwn(document, "fullscreenElement"));
+    Object.defineProperty(document.documentElement, "requestFullscreen", {
+      configurable: true,
+      value: request,
+    });
+    Object.defineProperties(document, {
+      exitFullscreen: { configurable: true, value: exit },
+      fullscreenElement: { configurable: true, get: fullscreenElement },
+    });
+    onTestFinished(() => {
+      Reflect.deleteProperty(document.documentElement, "requestFullscreen");
+      Reflect.deleteProperty(document, "exitFullscreen");
+      Reflect.deleteProperty(document, "fullscreenElement");
+    });
+    render(<SlideNavigation currentIndex={1} totalSlides={3} basePath="/d" />);
+    press("f");
+    expect(request).toHaveBeenCalledTimes(1);
+    fullscreenElement.mockReturnValue(document.documentElement);
+    press("F");
+    expect(exit).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { startX: 300, endX: 100, path: "/d/2", direction: "forward" },
+    { startX: 100, endX: 300, path: "/d/0", direction: "back" },
+  ] as const)(
+    "swipes horizontally from $startX to $endX to navigate $path ($direction)",
+    ({ startX, endX, path, direction }) => {
+      render(<SlideNavigation currentIndex={1} totalSlides={3} basePath="/d" />);
+      fireEvent.touchStart(window, { touches: [{ clientX: startX, clientY: 10 }] });
+      fireEvent.touchEnd(window, { changedTouches: [{ clientX: endX, clientY: 10 }] });
+      expect(goToSlide).toHaveBeenCalledWith(path, direction);
+    },
+  );
 });

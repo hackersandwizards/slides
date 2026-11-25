@@ -1,0 +1,36 @@
+@media screen and (width < 48rem) {
+  /* A lone figure stands above its label, the label taking the full width, and each figure is
+     capped at the size that fits its column on one line (`--slide-figure-fit`, in cqi). */
+  .slide-figure-row {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 4);
+  }
+  .slide-figure-row,
+  .slide-figure-cell {
+    container-type: inline-size;
+  }
+  .slide-figure-row > :first-child {
+    font-size: min(var(--slide-figure-hero), var(--slide-figure-fit, var(--slide-figure-hero)));
+  }
+  /* A label's word wider than the screen, "Mitarbeiterzufriedenheit" 387 px in a 350 px row,
+     breaks inside the row rather than running past it: one line of the column, unwrapped, is the
+     row's width, which the label stretches to. It breaks at a syllable where a browser keeps the
+     limit of 14 letters a boxed heading hyphenates under (slides.css), else at the row's edge. */
+  .slide-figure-row > :last-child {
+    align-self: stretch;
+  }
+  @supports (hyphenate-limit-chars: 14 6 6) {
+    .slide-figure-row > :last-child {
+      hyphens: auto;
+      hyphenate-limit-chars: 14 6 6;
+    }
+  }
+  .slide-figure-cell > :first-child {
+    font-size: min(
+      var(--slide-figure-grid-size, var(--slide-figure-size)),
+      var(--slide-figure-fit, var(--slide-figure-size))
+    );
+  }
+}

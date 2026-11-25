@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { renderMarkdown } from "../lib/markdown";
 
 function renderMd(text: string): HTMLElement {
@@ -31,6 +31,26 @@ describe("renderMarkdown", () => {
   it("renders `code` as a <code>", () => {
     expect(renderMd("run `cmd` now").querySelector("code")?.textContent).toBe("cmd");
   });
+
+  it.each(["x".repeat(24), "dir/" + "x".repeat(36)])(
+    "keeps a trailing comma with a chip at its length limit (%s)",
+    (code) => {
+      const el = renderMd(`\`${code}\`,**next**`);
+      const wrapper = el.querySelector("span.whitespace-nowrap");
+      assert(wrapper, "Expected the chip and comma to share a wrapper");
+      expect(wrapper.textContent).toBe(`${code},`);
+      expect(el.textContent).toBe(`${code},next`);
+    },
+  );
+
+  it.each(["x".repeat(25), "dir/" + "x".repeat(37)])(
+    "leaves the trailing comma outside a chip past its length limit (%s)",
+    (code) => {
+      const el = renderMd(`\`${code}\`,**next**`);
+      expect(el.querySelector("span.whitespace-nowrap")).toBeNull();
+      expect(el.textContent).toBe(`${code},next`);
+    },
+  );
 
   it("does not treat spaced asterisks as emphasis", () => {
     const el = renderMd("math: 2 * 3 * 4");

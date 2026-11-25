@@ -76,16 +76,19 @@ test.prop([state, state], {
   },
 );
 
-test.prop([state, fc.nat({ max: 5 }), unicodeString, fc.nat()], {
+const deckState = fc
+  .tuple(state, fc.record({ at: fc.nat(), from: unicodeString }))
+  .map(([position, stamp]) => ({ ...position, ...stamp }));
+
+test.prop([deckState, fc.nat({ max: 5 })], {
   examples: [
-    [{ slide: 0, step: 0, back: true }, 0, "", 0],
-    [{ slide: 0, step: 7, back: false }, 1, "/舞台".repeat(512), 1],
+    [{ slide: 0, step: 0, back: true, at: 0, from: "" }, 0],
+    [{ slide: 0, step: 7, back: false, at: 1, from: "/舞台".repeat(512) }, 1],
   ],
 })(
   "only a preview targets the next in-range slide, fully revealed and at step zero",
-  (state, remaining, from, at) => {
-    const remote = { ...state, at, from };
-    const total = state.slide + remaining + 1;
+  (remote, remaining) => {
+    const total = remote.slide + remaining + 1;
     for (const role of ["audience", "follow", "presenter"] as const)
       expect(targetFor(role, remote, total)).toEqual(remote);
     expect(targetFor("preview", remote, total)).toEqual(

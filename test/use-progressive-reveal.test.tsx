@@ -1,6 +1,6 @@
 import { act, render, renderHook } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import {
   hasPendingReveal,
   usePendingReveal,
@@ -24,6 +24,29 @@ function press(key: "ArrowRight" | "ArrowLeft"): boolean {
 }
 const pressRight = () => press("ArrowRight");
 const pressLeft = () => press("ArrowLeft");
+
+function watchRevealNavigation() {
+  const navigationKeys: string[] = [];
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  document.addEventListener("keydown", (event) => navigationKeys.push(event.key), {
+    signal: controller.signal,
+  });
+  return navigationKeys;
+}
+
+function dispatchRevealKey(metaKey = false) {
+  const event = new KeyboardEvent("keydown", {
+    key: "ArrowRight",
+    bubbles: true,
+    cancelable: true,
+    metaKey,
+  });
+  act(() => {
+    document.body.dispatchEvent(event);
+  });
+  return event.defaultPrevented;
+}
 
 afterEach(() => {
   sessionStorage.clear();
@@ -51,31 +74,41 @@ describe("useProgressiveReveal", () => {
     expect(pressRight()).toBe(false);
   });
 
-  it("reveals the footer after the last step when hasFooter is set", () => {
+  it.each([
+    { prior: 0, beforeFooter: false, beforeStepped: false, consumed: true, visible: false },
+    { prior: 1, beforeFooter: false, beforeStepped: true, consumed: true, visible: true },
+    { prior: 2, beforeFooter: true, beforeStepped: true, consumed: false, visible: true },
+  ])("takes the next forward move with a footer after $prior presses", (row) => {
     const { result } = renderHook(() => useProgressiveReveal({ totalSteps: 1, hasFooter: true }));
-    expect(result.current.footerVisible).toBe(false);
-    expect(pressRight()).toBe(true);
-    expect(result.current.revealedCount).toBe(1);
-    expect(result.current.footerVisible).toBe(false);
-    expect(pressRight()).toBe(true);
-    expect(result.current.footerVisible).toBe(true);
-    expect(pressRight()).toBe(false);
+    Array.from({ length: row.prior }, pressRight);
+
+    expect(result.current.footerVisible).toBe(row.beforeFooter);
+    expect(result.current.stepped).toBe(row.beforeStepped);
+    expect(pressRight()).toBe(row.consumed);
+    expect(result.current).toEqual({
+      revealedCount: 1,
+      footerVisible: row.visible,
+      stepped: true,
+    });
   });
 
-  it("takes the footer, then each step back with ArrowLeft, then lets it through", () => {
+  it.each([
+    { prior: 0, beforeFooter: true, consumed: true, count: 2 },
+    { prior: 1, beforeFooter: false, consumed: true, count: 1 },
+    { prior: 2, beforeFooter: false, consumed: true, count: 0 },
+    { prior: 3, beforeFooter: false, consumed: false, count: 0 },
+  ])("takes the next backward move with a footer after $prior undos", (row) => {
     const { result } = renderHook(() => useProgressiveReveal({ totalSteps: 2, hasFooter: true }));
-    pressRight();
-    pressRight();
-    pressRight();
-    expect(result.current.footerVisible).toBe(true);
-    expect(pressLeft()).toBe(true);
-    expect(result.current.footerVisible).toBe(false);
-    expect(result.current.revealedCount).toBe(2);
-    expect(pressLeft()).toBe(true);
-    expect(result.current.revealedCount).toBe(1);
-    expect(pressLeft()).toBe(true);
-    expect(result.current.revealedCount).toBe(0);
-    expect(pressLeft()).toBe(false);
+    Array.from({ length: 3 }, pressRight);
+    Array.from({ length: row.prior }, pressLeft);
+
+    expect(result.current.footerVisible).toBe(row.beforeFooter);
+    expect(pressLeft()).toBe(row.consumed);
+    expect(result.current).toEqual({
+      revealedCount: row.count,
+      footerVisible: false,
+      stepped: true,
+    });
   });
 
   it("steps back from a backward arrival", () => {
@@ -156,42 +189,87 @@ describe("useProgressiveReveal", () => {
     expect(result.current.revealedCount).toBe(2);
   });
 
-  it("steps two reveal blocks on one slide one after the other", () => {
-    const { result } = renderHook(() => [
-      useProgressiveReveal({ totalSteps: 1 }).revealedCount,
-      useProgressiveReveal({ totalSteps: 1 }).revealedCount,
-    ]);
-    pressRight();
-    expect(result.current).toEqual([1, 0]);
-    pressRight();
-    expect(result.current).toEqual([1, 1]);
-    expect(pressRight()).toBe(false);
-    pressLeft();
-    expect(result.current).toEqual([1, 0]);
-    pressLeft();
-    expect(result.current).toEqual([0, 0]);
-    expect(pressLeft()).toBe(false);
+  it.each([
+    {
+      direction: "forward",
+      press: pressRight,
+      priorForwardPresses: 0,
+      first: [1, 0],
+      second: [1, 1],
+    },
+    {
+      direction: "backward",
+      press: pressLeft,
+      priorForwardPresses: 2,
+      first: [1, 0],
+      second: [0, 0],
+    },
+  ])(
+    "steps two reveal blocks in $direction order",
+    ({ press, priorForwardPresses, first, second }) => {
+      const { result } = renderHook(() => [
+        useProgressiveReveal({ totalSteps: 1 }).revealedCount,
+        useProgressiveReveal({ totalSteps: 1 }).revealedCount,
+      ]);
+      Array.from({ length: priorForwardPresses }, pressRight);
+
+      press();
+      expect(result.current).toEqual(first);
+      press();
+      expect(result.current).toEqual(second);
+      expect(press()).toBe(false);
+    },
+  );
+
+  it.each([
+    { phase: "collapsed", presses: [], hints: [true, false] },
+    { phase: "step revealed", presses: [pressRight], hints: [true, true] },
+    { phase: "footer revealed", presses: [pressRight, pressRight], hints: [false, true] },
+    {
+      phase: "footer undone",
+      presses: [pressRight, pressRight, pressLeft],
+      hints: [true, true],
+    },
+    {
+      phase: "step undone",
+      presses: [pressRight, pressRight, pressLeft, pressLeft],
+      hints: [true, false],
+    },
+  ])("reports next and previous availability with the $phase", ({ presses, hints }) => {
+    const { result } = renderHook(() => {
+      useProgressiveReveal({ totalSteps: 1, hasFooter: true });
+      return [usePendingReveal(), usePendingReveal("behind")];
+    });
+    presses.forEach((press) => press());
+    expect(result.current).toEqual(hints);
   });
 
-  it("reports whether the next and previous arrows have a step or a footer to change", () => {
+  it("clears a reveal block's navigation state when it unmounts", () => {
     const hints = renderHook(() => [usePendingReveal(), usePendingReveal("behind")]);
     const slide = renderHook(() => useProgressiveReveal({ totalSteps: 1, hasFooter: true }));
-
-    expect(hints.result.current).toEqual([true, false]);
-    expect(hasPendingReveal()).toBe(true);
-    expect(slide.result.current.stepped).toBe(false);
     pressRight();
     expect(hints.result.current).toEqual([true, true]);
-    expect(slide.result.current.stepped).toBe(true);
-    pressRight();
-    expect(hints.result.current).toEqual([false, true]);
-    expect(hasPendingReveal()).toBe(false);
-    pressLeft();
-    expect(hints.result.current).toEqual([true, true]);
-    pressLeft();
-    expect(hints.result.current).toEqual([true, false]);
     slide.unmount();
     expect(hints.result.current).toEqual([false, false]);
+    expect(pressRight()).toBe(false);
+  });
+
+  it("reports pending reveals to the synchronous navigation check until the footer is shown", () => {
+    renderHook(() => useProgressiveReveal({ totalSteps: 1, hasFooter: true }));
+    expect(hasPendingReveal()).toBe(true);
+    pressRight();
+    pressRight();
+    expect(hasPendingReveal()).toBe(false);
+  });
+
+  it("marks a step as highlighted only after an arrow reveals it", () => {
+    const { result } = renderHook(() => {
+      const slide = useProgressiveReveal({ totalSteps: 3 });
+      return { ...slide, pending: usePendingReveal() };
+    });
+    expect(result.current.stepped).toBe(false);
+    pressRight();
+    expect(result.current).toMatchObject({ revealedCount: 1, stepped: true, pending: true });
   });
 
   it("takes the pending hint from the current slide only after hydration", () => {
@@ -228,47 +306,39 @@ describe("useProgressiveReveal", () => {
     expect(result.current).toBe(false);
   });
 
-  it("passes browser shortcuts through and keeps a reveal press away from deck navigation", () => {
+  it.each([
+    {
+      scenario: "a browser shortcut",
+      metaKey: true,
+      count: 0,
+      consumed: false,
+      delivered: ["ArrowRight"],
+    },
+    {
+      scenario: "a reveal press",
+      metaKey: false,
+      count: 1,
+      consumed: true,
+      delivered: [],
+    },
+  ])("handles deck propagation for $scenario", ({ metaKey, count, consumed, delivered }) => {
+    const { result } = renderHook(() => useProgressiveReveal({ totalSteps: 1 }));
+    const navigationKeys = watchRevealNavigation();
+
+    expect(dispatchRevealKey(metaKey)).toBe(consumed);
+    expect(result.current.revealedCount).toBe(count);
+    expect(navigationKeys).toEqual(delivered);
+  });
+
+  it("lets the deck handle Right after a reveal block with a pending step unmounts", () => {
     const { result, unmount } = renderHook(() => useProgressiveReveal({ totalSteps: 1 }));
-    const navigationKeys: string[] = [];
-    const controller = new AbortController();
-    document.addEventListener("keydown", (event) => navigationKeys.push(event.key), {
-      signal: controller.signal,
-    });
-    const arrow = (options: KeyboardEventInit = {}) =>
-      new KeyboardEvent("keydown", {
-        key: "ArrowRight",
-        bubbles: true,
-        cancelable: true,
-        ...options,
-      });
-    const browserShortcut = arrow({ metaKey: true });
-    const reveal = arrow();
-    const nextSlide = arrow();
-    const dispatch = (event: KeyboardEvent) => {
-      act(() => {
-        document.body.dispatchEvent(event);
-      });
-    };
+    const navigationKeys = watchRevealNavigation();
 
-    try {
-      dispatch(browserShortcut);
-      expect(browserShortcut.defaultPrevented).toBe(false);
-      expect(result.current.revealedCount).toBe(0);
-      expect(navigationKeys).toEqual(["ArrowRight"]);
+    unmount();
 
-      dispatch(reveal);
-      expect(reveal.defaultPrevented).toBe(true);
-      expect(result.current.revealedCount).toBe(1);
-      expect(navigationKeys).toEqual(["ArrowRight"]);
-
-      unmount();
-      dispatch(nextSlide);
-      expect(nextSlide.defaultPrevented).toBe(false);
-      expect(navigationKeys).toEqual(["ArrowRight", "ArrowRight"]);
-    } finally {
-      controller.abort();
-    }
+    expect(dispatchRevealKey()).toBe(false);
+    expect(result.current.revealedCount).toBe(0);
+    expect(navigationKeys).toEqual(["ArrowRight"]);
   });
 });
 
@@ -305,7 +375,6 @@ describe("on a phone", () => {
     };
 
     pressRight();
-    expect(result.current).toMatchObject({ revealedCount: 1, stepped: true, pending: true });
     resize(true);
     expect(result.current).toEqual({
       revealedCount: 3,

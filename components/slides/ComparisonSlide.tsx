@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type {
   ComparisonGuidanceSlide,
   ComparisonSide,
@@ -10,11 +10,9 @@ import type {
 } from "../../types/slide";
 import { usePrintMode } from "../../lib/print-context";
 import { useCarousel } from "../../lib/use-carousel";
-import { usePhone } from "../../lib/use-progressive-reveal";
 import { BlurFade } from "../ui/blur-fade";
 import Image from "../ui/image";
-import { DeckLang, SlideShell } from "./SlideShell";
-import { WORDS } from "../../lib/slide-utils";
+import { SlideShell } from "./SlideShell";
 import {
   BeforeAfterSides,
   DisplayHeading,
@@ -24,6 +22,7 @@ import {
   SlideTitle,
 } from "./primitives";
 import { SectionHeader } from "./SectionHeader";
+import { ComparisonGuidance } from "./ComparisonGuidance";
 
 /** Consumers import it from this path. */
 export { BeforeAfterSides } from "./primitives";
@@ -87,6 +86,48 @@ function Footnotes({ notes }: { notes?: string[] }) {
   );
 }
 
+function VsSideCard({ side, active }: { side: ComparisonSide; active: boolean }) {
+  const pros = side.items.filter((item) => !item.startsWith("-"));
+  const cons = side.items.filter((item) => item.startsWith("-"));
+
+  return (
+    <SlideCard
+      tone={active ? "primary" : "neutral"}
+      className="h-full transition-all duration-300 card-pad-8"
+    >
+      <SideHead side={side} />
+
+      <SideHighlight text={side.highlight} muted={!active} />
+
+      {pros.length > 0 && (
+        <div className="mb-4">
+          <ul className="space-y-2.5">
+            {pros.map((pro, j) => (
+              <MarkedItem key={j} mark="+" tone="text-green-dark">
+                {renderMarkdown(pro.startsWith("+") ? pro.slice(1).trim() : pro)}
+              </MarkedItem>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {cons.length > 0 && (
+        // The rule separates the minus items from the plus items above them, so a side
+        // of minus items alone carries none.
+        <div className={pros.length > 0 ? "mt-4 border-t border-border pt-4" : ""}>
+          <ul className="space-y-2.5">
+            {cons.map((con, j) => (
+              <MarkedItem key={j} mark={"\u2212"} tone="text-red">
+                {renderMarkdown(con.slice(1).trim())}
+              </MarkedItem>
+            ))}
+          </ul>
+        </div>
+      )}
+    </SlideCard>
+  );
+}
+
 function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
   const printMode = usePrintMode();
   // With `revealPunchline`, step 2 keeps the right side lit and adds the punchline.
@@ -103,50 +144,11 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
   return (
     <>
       <div className="grid w-full grid-cols-2 gap-8">
-        {sides.map((side, i) => {
-          const isActive = !stepped || Math.min(activeIndex, 1) === i;
-          const pros = side.items.filter((item) => !item.startsWith("-"));
-          const cons = side.items.filter((item) => item.startsWith("-"));
-
-          return (
-            <BlurFade key={i} delay={0.2 + i * 0.1} duration={0.6}>
-              <SlideCard
-                tone={isActive ? "primary" : "neutral"}
-                className="h-full transition-all duration-300 card-pad-8"
-              >
-                <SideHead side={side} />
-
-                <SideHighlight text={side.highlight} muted={!isActive} />
-
-                {pros.length > 0 && (
-                  <div className="mb-4">
-                    <ul className="space-y-2.5">
-                      {pros.map((pro, j) => (
-                        <MarkedItem key={j} mark="+" tone="text-green-dark">
-                          {renderMarkdown(pro.startsWith("+") ? pro.slice(1).trim() : pro)}
-                        </MarkedItem>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {cons.length > 0 && (
-                  // The rule separates the minus items from the plus items above them, so a side
-                  // of minus items alone carries none.
-                  <div className={pros.length > 0 ? "mt-4 border-t border-border pt-4" : ""}>
-                    <ul className="space-y-2.5">
-                      {cons.map((con, j) => (
-                        <MarkedItem key={j} mark={"\u2212"} tone="text-red">
-                          {renderMarkdown(con.slice(1).trim())}
-                        </MarkedItem>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </SlideCard>
-            </BlurFade>
-          );
-        })}
+        {sides.map((side, i) => (
+          <BlurFade key={i} delay={0.2 + i * 0.1} duration={0.6}>
+            <VsSideCard side={side} active={!stepped || Math.min(activeIndex, 1) === i} />
+          </BlurFade>
+        ))}
       </div>
 
       {slide.punchline && (
@@ -270,86 +272,31 @@ export function Positions({
   );
 }
 
-function GuidanceVariant({ slide }: { slide: ComparisonGuidanceSlide }) {
-  const { intro, points, examples } = slide;
-  const lang = useContext(DeckLang);
-  // Print and a phone show every example; a screen steps through them.
-  const printMode = usePrintMode();
-  const phone = usePhone();
-  const all = printMode || phone;
-  const [activeExample] = useCarousel({ count: examples.length, enabled: !all });
-  const renderExamples = all ? examples : examples.slice(activeExample, activeExample + 1);
+type ComparisonVariantSlides = Record<
+  NonNullable<ComparisonSidesSlide["variant"]>,
+  ComparisonSidesSlide
+> & {
+  positions: ComparisonPositionsSlide;
+  guidance: ComparisonGuidanceSlide;
+};
 
-  return (
-    <div className="w-full max-w-6xl self-start">
-      {intro && (
-        <BlurFade delay={0.15} duration={0.6}>
-          <p className="mb-6 text-xl text-text-muted">{intro}</p>
-        </BlurFade>
-      )}
+const COMPARISON_VARIANTS: {
+  [Variant in keyof ComparisonVariantSlides]: (
+    slide: ComparisonVariantSlides[Variant],
+  ) => ReactNode;
+} = {
+  vs: (slide) => <VsVariant slide={slide} />,
+  "before-after": (slide) => <BeforeAfterVariant slide={slide} />,
+  split: (slide) => <SplitVariant slide={slide} />,
+  positions: (slide) => <Positions block={slide} />,
+  guidance: (slide) => <ComparisonGuidance slide={slide} />,
+};
 
-      {points && points.length > 0 && (
-        <BlurFade delay={0.2} duration={0.6}>
-          <ul className="mb-8 space-y-2">
-            {points.map((point, i) => (
-              <li key={i} className="flex items-baseline gap-3 text-lg text-text-muted">
-                <span className="hw-marker" />
-                <span>{point}</span>
-              </li>
-            ))}
-          </ul>
-        </BlurFade>
-      )}
-
-      {renderExamples.map((example, i) => (
-        <BlurFade key={all ? i : activeExample} delay={0.25} duration={0.5}>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl text-text">{example.title}</h2>
-              {!all && examples.length > 1 && (
-                <span className="text-base font-medium text-text-subtle">
-                  {activeExample + 1} / {examples.length}
-                </span>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <SlideCard tone="error" look="soft" className="card-pad-6">
-                <p className="hw-label mb-3 [--hw-label-size:var(--text-sm)]" data-hue="red">
-                  {WORDS[lang].bad}
-                </p>
-                <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
-                  {example.bad}
-                </pre>
-              </SlideCard>
-
-              <SlideCard tone="success" look="soft" className="card-pad-6">
-                <p className="hw-label mb-3 [--hw-label-size:var(--text-sm)]" data-hue="green">
-                  {WORDS[lang].good}
-                </p>
-                <pre className="overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap text-text-muted">
-                  {example.good}
-                </pre>
-              </SlideCard>
-            </div>
-          </div>
-        </BlurFade>
-      ))}
-
-      {!all && examples.length > 1 && (
-        <div className="mt-6 flex justify-center gap-2">
-          {examples.map((_, i) => (
-            <div
-              key={i}
-              className={`h-2.5 w-2.5 transition-colors ${
-                i === activeExample ? "bg-primary" : "bg-primary-border"
-              }`}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+function renderComparisonBody<Variant extends keyof ComparisonVariantSlides>(
+  variant: Variant,
+  slide: NoInfer<ComparisonVariantSlides[Variant]>,
+) {
+  return Object.hasOwn(COMPARISON_VARIANTS, variant) && COMPARISON_VARIANTS[variant](slide);
 }
 
 export function ComparisonSlide({ slide }: Props) {
@@ -372,19 +319,7 @@ export function ComparisonSlide({ slide }: Props) {
         )}
         {subtitle && <SlideSubtitle delay={0.22}>{renderMarkdown(subtitle)}</SlideSubtitle>}
 
-        <div className="slide-body items-center">
-          {slide.variant === "guidance" ? (
-            <GuidanceVariant slide={slide} />
-          ) : slide.variant === "positions" ? (
-            <Positions block={slide} />
-          ) : (
-            <>
-              {variant === "vs" && <VsVariant slide={slide} />}
-              {variant === "before-after" && <BeforeAfterVariant slide={slide} />}
-              {variant === "split" && <SplitVariant slide={slide} />}
-            </>
-          )}
-        </div>
+        <div className="slide-body items-center">{renderComparisonBody(variant, slide)}</div>
       </div>
     </SlideShell>
   );
