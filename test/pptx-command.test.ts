@@ -1,4 +1,11 @@
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -11,7 +18,7 @@ let dir: string;
 let zip: JSZip;
 
 beforeAll(async () => {
-  dir = mkdtempSync(join(tmpdir(), "slides-pptx-"));
+  dir = realpathSync(mkdtempSync(join(tmpdir(), "slides-pptx-")));
   ({ zip } = await specimen());
 }, 60_000);
 
@@ -22,6 +29,7 @@ describe("slides-pptx as a command", () => {
 
   const deck = JSON.stringify({
     name: "T",
+    lang: "en",
     slides: [{ type: "content", headline: "H", content: [{ type: "image", src: "/missing.png" }] }],
   });
 
@@ -31,11 +39,97 @@ describe("slides-pptx as a command", () => {
       input: deck,
     });
 
-  it("writes the file and reports a warning, and exits 1 on one under --strict", () => {
-    const loose = run();
-    expect(loose.status).toBe(0);
-    expect(loose.stderr).toContain("warning: image /missing.png");
+  it("exits 1 on a warning under --strict", () => {
     expect(run("--strict").status).toBe(1);
+  });
+
+  const readyDeck = JSON.stringify({
+    name: "Ready",
+    lang: "en",
+    slides: [{ type: "statement", lines: ["Ready"] }],
+  });
+  const usage =
+    "Usage: slides-pptx <deck.json|-> <out.pptx> [--assets <dir>] [--strict] [--embed-fonts]";
+  const invalidDeck = "is not a presentation: it needs a name and a slides array.";
+
+  beforeAll(() => {
+    writeFileSync(join(dir, "missing-name.json"), JSON.stringify({ slides: [] }));
+    writeFileSync(join(dir, "invalid-slides.json"), JSON.stringify({ name: "Ready", slides: {} }));
+  });
+
+  it.each([
+    {
+      label: "no arguments",
+      args: [],
+      input: "",
+      output: "no-input.pptx",
+      expected: { status: 1, stdout: "", stderr: usage, written: false },
+    },
+    {
+      label: "one argument",
+      args: ["-"],
+      input: readyDeck,
+      output: "no-output.pptx",
+      expected: { status: 1, stdout: "", stderr: usage, written: false },
+    },
+    {
+      label: "an output suffix other than .pptx",
+      args: ["-", "invalid-output.zip"],
+      input: readyDeck,
+      output: "invalid-output.zip",
+      expected: { status: 1, stdout: "", stderr: usage, written: false },
+    },
+    {
+      label: "a JSON file without a name",
+      args: ["missing-name.json", "from-unnamed.pptx"],
+      input: "",
+      output: "from-unnamed.pptx",
+      expected: {
+        status: 1,
+        stdout: "",
+        stderr: `missing-name.json ${invalidDeck}`,
+        written: false,
+      },
+    },
+    {
+      label: "a JSON file without a slides array",
+      args: ["invalid-slides.json", "from-invalid-slides.pptx"],
+      input: "",
+      output: "from-invalid-slides.pptx",
+      expected: {
+        status: 1,
+        stdout: "",
+        stderr: `invalid-slides.json ${invalidDeck}`,
+        written: false,
+      },
+    },
+    {
+      label: "a deck on standard input",
+      args: ["-", "from-stdin.pptx"],
+      input: readyDeck,
+      output: "from-stdin.pptx",
+      expected: { status: 0, stdout: "Wrote from-stdin.pptx: 1 slides", stderr: "", written: true },
+    },
+    {
+      label: "a missing image without --strict",
+      args: ["-", "with-warning.pptx", "--assets", "."],
+      input: deck,
+      output: "with-warning.pptx",
+      expected: {
+        status: 0,
+        stdout: "Wrote with-warning.pptx: 1 slides",
+        stderr: "warning: image /missing.png: not found under <assets>",
+        written: true,
+      },
+    },
+  ])("reports the result for $label", ({ args, input, output, expected }) => {
+    const result = spawnSync("bun", [script, ...args], { cwd: dir, encoding: "utf8", input });
+    expect({
+      status: result.status,
+      stdout: result.stdout.trimEnd(),
+      stderr: result.stderr.replaceAll(dir, "<assets>").split("\n")[0],
+      written: existsSync(join(dir, output)),
+    }).toEqual(expected);
   });
 
   // A mistyped flag ran the export loose and exited 0 in a gate that asked for --strict.
