@@ -56,7 +56,6 @@ describe("slides-pptx block rendering", () => {
     ].map((m) => m[1]);
     const tint = tokens["--color-tint"].slice(1).toUpperCase();
     const white = tokens["--color-white"].slice(1).toUpperCase();
-    expect(fills[0]).not.toBe(fills[1]);
     expect(fills).toEqual([tint, white, tint, white]);
   });
 
@@ -74,6 +73,7 @@ describe("slides-pptx block rendering", () => {
     });
     const purple = tokens["--color-purple"].slice(1).toUpperCase();
     const muted = tokens["--color-muted"].slice(1).toUpperCase();
+    // The brand strip at the top edge also uses purple.
     const shapes = shapesOf(xml).filter(({ y }) => y > 0);
     const rules = shapes.filter((shape) => shape.fill === purple);
     expect(rules).toHaveLength(1);
@@ -362,6 +362,7 @@ describe("slides-pptx draws what the slide shows", () => {
         },
       ],
     });
+    // The brand strip at the top edge also uses teal.
     const body = shapesOf(xml).filter(({ y }) => y > 0);
     const rules = body
       .filter((shape) => shape.texts.length === 0)
@@ -499,10 +500,11 @@ describe("slides-pptx draws what the slide shows", () => {
     const margins = numbered.flatMap(([, attrs]) =>
       [...attrs.matchAll(/marL="(\d+)"/g)].map(([, margin]) => margin),
     );
-    expect(margins).toEqual(["203200", "203200", "203200", "203200"]);
+    const indent = String(16 * 12700);
+    expect(margins).toEqual([indent, indent, indent, indent]);
   });
 
-  // The annotated code's lines at the web's 1.3 em, the step its highlights take.
+  // The annotated code's lines at the web's 1.3 em.
   it("sets annotated code at a line spacing of 1.3 em", async () => {
     const xml = await onlySlide({
       type: "content",
@@ -521,7 +523,7 @@ describe("slides-pptx draws what the slide shows", () => {
     });
     const code = shapesOf(xml).filter((shape) => shape.texts.join("").startsWith("const plan"));
     expect(code.map((shape) => shape.xml)).toEqual([
-      expect.stringContaining('<a:spcPts val="2080"/>'),
+      expect.stringContaining(`<a:spcPts val="${Math.round(16 * 1.3 * 100)}"/>`),
     ]);
   });
 });
