@@ -44,17 +44,8 @@ import {
 } from "../../lib/slide-utils";
 import { centredMark } from "./chrome";
 import { MONO, PITCH, SANS } from "./faces";
-import {
-  breakAt,
-  BULLET_INDENT,
-  fitScale,
-  lineOf,
-  marginOf,
-  paraType,
-  spansOf,
-  textWidth,
-} from "./fit";
-import { balance, longest, pretty, wrap } from "./lines";
+import { BULLET_INDENT, spansOf, textWidth } from "./fit";
+import { longest, wrap } from "./lines";
 import { Look } from "./look";
 import { checkSlide } from "./overflow";
 import { hex, mixColor, palette, THEME, type Palette } from "./palette";
@@ -78,7 +69,6 @@ import {
   type Measure,
 } from "./stage";
 import {
-  MARKER_CODES,
   HUE_OF_MARKER,
   MARKER_SQUARE,
   CAPS,
@@ -87,7 +77,6 @@ import {
   plain,
   literal,
   breaks,
-  asParas,
   bulletParas,
   type MarkerHue,
   type Para,
@@ -95,139 +84,22 @@ import {
   type Run,
 } from "./text";
 
-/** A text box at x, y, w, h whose paragraphs shrink together until their measure fits. */
-function box(
-  s: PSlide,
-  c: Palette,
-  content: Para[] | Para | string,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  o: BoxOpts,
-) {
-  const paras = asParas(content, c).filter((p) => p.runs.some((r) => r.text));
-  if (!paras.length) return;
-  // A box too short for its lines keeps their size and closes their leading first, down to the
-  // size itself: a box cut to a label's height on the web holds the label at its size.
-  const area = { w, h };
-  let k = fitScale(paras, o, area);
-  if (k < 1) {
-    const base = Math.min(...paras.map((p) => p.line ?? o.line ?? LEADING.body));
-    for (let sc = 0.98; sc * base >= 1; sc -= 0.02)
-      if (fitScale(paras, { ...o, lineScale: sc }, area) === 1) {
-        o = { ...o, lineScale: sc };
-        k = 1;
-        break;
-      }
-  }
-  const runs: Run[] = [];
-  paras.forEach((p, i) => {
-    const last = i === paras.length - 1;
-    const { size, face: fontFace, bold } = paraType(p, o, k);
-    const lines = (o.balance || p.balance ? balance : pretty)(
-      spansOf(p, o, k),
-      (w - marginOf(p)) * 72,
-    );
-    breaks(breakAt(p.runs, lines)).forEach((r, j, all) => {
-      runs.push({
-        text: r.text,
-        options: {
-          fontFace,
-          fontSize: size,
-          color: o.color,
-          bold,
-          italic: o.italic,
-          ...(o.tracking ? { charSpacing: Math.round(o.tracking * size * 10) / 10 } : {}),
-          align: p.align ?? o.align ?? "left",
-          // Exact points, the web's line box: a percentage would multiply the face's own line
-          // height, a fifth to a third taller than the size.
-          lineSpacing: lineOf(p, o, k),
-          paraSpaceAfter: last ? 0 : (p.after ?? 0) * k,
-          ...(p.tabs
-            ? { tabStops: p.tabs.map((at) => ({ position: at * k, alignment: "l" as const })) }
-            : {}),
-          ...(p.bullet
-            ? {
-                bullet:
-                  p.bullet === "number"
-                    ? { type: "number", indent: BULLET_INDENT }
-                    : {
-                        code: p.marker ? MARKER_CODES[p.marker] : MARKER_SQUARE,
-                        indent: BULLET_INDENT,
-                      },
-                indentLevel: p.indent ?? 0,
-              }
-            : {}),
-          ...r.options,
-          ...(j === all.length - 1 && !last ? { breakLine: true } : {}),
-        },
-      });
-    });
-  });
-  // The box 1 % wider than the width its lines were measured at, on the side its text runs to:
-  // LibreOffice sets a line up to 0.7 % wider than the faces' advances add up to, and would wrap
-  // a line the measure fills. A filled box keeps its size.
-  const spare = o.fill ? 0 : w * 0.01;
-  const align = paras.some((p) => p.align === "center") ? "center" : (o.align ?? "left");
-  const dx = align === "center" ? spare / 2 : align === "right" ? spare : 0;
-  s.addText(runs, {
-    x: x - dx,
-    y,
-    w: w + spare,
-    h,
-    margin: 0,
-    valign: o.valign ?? "top",
-    fit: "none",
-    ...(o.fill ? { fill: { color: o.fill } } : {}),
-  });
-}
-
-/** A card: the brand's corners, or every corner `r` round where given, as a pill or a label box. */
-function card(
-  s: PSlide,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  fill: string,
-  line?: string,
-  r?: number,
-) {
-  s.addShape(r === undefined ? "round2DiagRect" : "roundRect", {
-    x,
-    y,
-    w,
-    h,
-    rectRadius: Math.min(r ?? CORNER, w / 2, h / 2),
-    fill: { color: fill },
-    line: line ? { color: line, width: 1 } : { type: "none" },
-  });
-}
-
 /** A process slide's footer, `SlideCaption` on the web: brand's teal callout as wide as its
  *  text, centred, at `y`; returns its height. */
 function caption(sheet: Sheet, text: string, y: number) {
-  const { slide: s, c } = sheet;
+  const { c } = sheet;
   const o: BoxOpts = { size: PT.base, color: c.ink, align: "center", valign: "middle" };
   const fw = Math.min(CW, 1365 / 144, textWidth(text, o) + 2 * CALLOUT_PAD + 0.02);
   const th = sheet.need(text, fw - 2 * CALLOUT_PAD, o);
   const h = th + 2 * CALLOUT_PAD;
   if (sheet.dry) return h;
-  card(s, (W - fw) / 2, y, fw, h, c.callout(c.teal));
-  box(s, c, text, (W - fw) / 2 + CALLOUT_PAD, y + CALLOUT_PAD, fw - 2 * CALLOUT_PAD, th, o);
+  sheet.card({ x: (W - fw) / 2, y, w: fw, h }, { fill: c.callout(c.teal) });
+  sheet.box(
+    text,
+    { x: (W - fw) / 2 + CALLOUT_PAD, y: y + CALLOUT_PAD, w: fw - 2 * CALLOUT_PAD, h: th },
+    o,
+  );
   return h;
-}
-
-function rect(s: PSlide, x: number, y: number, w: number, h: number, fill: string, line?: string) {
-  s.addShape("rect", {
-    x,
-    y,
-    w,
-    h,
-    fill: { color: fill },
-    line: line ? { color: line, width: 1 } : { type: "none" },
-  });
 }
 
 function arrow(
@@ -274,8 +146,7 @@ function rowShare(sheet: Sheet, what: string, room: number, n: number, cap: numb
 }
 
 function chip(
-  s: PSlide,
-  c: Palette,
+  sheet: Sheet,
   text: string,
   x: number,
   y: number,
@@ -288,16 +159,24 @@ function chip(
   line?: string,
 ) {
   const w = chipWidth(text, size, mono);
-  card(s, x, y, w, (size * 1.9) / 72, fill, line, line ? (0.46875 * W) / 90 : (size * 1.9) / 144);
-  box(s, c, { runs: [{ text: plain(text) }] }, x, y, w, (size * 1.9) / 72, {
-    size,
-    mono,
-    bold: mono,
-    color,
-    align: "center",
-    valign: "middle",
-    floor: 0.8,
-  });
+  sheet.rounded(
+    { x, y, w, h: (size * 1.9) / 72 },
+    { fill: fill, line: line },
+    line ? (0.46875 * W) / 90 : (size * 1.9) / 144,
+  );
+  sheet.box(
+    { runs: [{ text: plain(text) }] },
+    { x, y, w, h: (size * 1.9) / 72 },
+    {
+      size,
+      mono,
+      bold: mono,
+      color,
+      align: "center",
+      valign: "middle",
+      floor: 0.8,
+    },
+  );
   return w;
 }
 
@@ -380,13 +259,17 @@ function picture(
     sheet.warn(
       `image ${src}: ${existsSync(path) ? "unreadable format" : `not found under ${sheet.out.assets}`}`,
     );
-    card(s, x, y, w, h, sheet.c.tint, sheet.c.border);
-    box(s, sheet.c, o.alt || src, x + 0.1, y + 0.1, w - 0.2, h - 0.2, {
-      size: PT.sm,
-      color: sheet.c.muted,
-      align: "center",
-      valign: "middle",
-    });
+    sheet.card({ x, y, w, h }, { fill: sheet.c.tint, line: sheet.c.border });
+    sheet.box(
+      o.alt || src,
+      { x: x + 0.1, y: y + 0.1, w: w - 0.2, h: h - 0.2 },
+      {
+        size: PT.sm,
+        color: sheet.c.muted,
+        align: "center",
+        valign: "middle",
+      },
+    );
     return { x, y, w, h };
   }
   const [iw, ih] = size;
@@ -451,12 +334,8 @@ function frame(sheet: Sheet, deck: Presentation, index: number) {
   for (let i = 0; i < steps; i++) {
     // Each step overlaps the next by a hundredth, so no seam shows; the last ends at the edge.
     const x = (W / steps) * i;
-    rect(
-      s,
-      x,
-      0,
-      Math.min(W / steps + 0.01, W - x),
-      16 / 144,
+    sheet.rect(
+      { x, y: 0, w: Math.min(W / steps + 0.01, W - x), h: 16 / 144 },
       mixColor(c.purple, c.teal, i / (steps - 1)),
     );
   }
@@ -489,14 +368,18 @@ function frame(sheet: Sheet, deck: Presentation, index: number) {
     end = x;
     if (page) {
       end -= 1.8;
-      box(s, c, { runs: [{ text: page }] }, x - 1.8, baseY - 0.14, 1.6, 0.28, {
-        size: PT.label,
-        mono: true,
-        bold: true,
-        color: c.muted,
-        align: "right",
-        valign: "middle",
-      });
+      sheet.box(
+        { runs: [{ text: page }] },
+        { x: x - 1.8, y: baseY - 0.14, w: 1.6, h: 0.28 },
+        {
+          size: PT.label,
+          mono: true,
+          bold: true,
+          color: c.muted,
+          align: "right",
+          valign: "middle",
+        },
+      );
     }
   }
   // A deck with a footer line moves the start logos onto the corner's centre line.
@@ -510,14 +393,9 @@ function frame(sheet: Sheet, deck: Presentation, index: number) {
     left += drawn.w + 1.25 * REM;
   }
   if (confidential && end > left + 1.25 * REM) {
-    box(
-      s,
-      c,
+    sheet.box(
       { runs: [{ text: confidential }] },
-      left,
-      baseY - 0.14,
-      end - left - 1.25 * REM,
-      0.28,
+      { x: left, y: baseY - 0.14, w: end - left - 1.25 * REM, h: 0.28 },
       {
         size: PT.label,
         color: c.muted,
@@ -588,16 +466,19 @@ function footer(
     h: 0.001,
     line: { color: sheet.c.border, width: 0.75 },
   });
-  box(s, sheet.c, text, EDGE, top + 0.15, CW, h - 0.15, {
-    size: PT.base,
-    color: sheet.c.ink,
-    align: centered ? "center" : "left",
-  });
+  sheet.box(
+    text,
+    { x: EDGE, y: top + 0.15, w: CW, h: h - 0.15 },
+    {
+      size: PT.base,
+      color: sheet.c.ink,
+      align: centered ? "center" : "left",
+    },
+  );
 }
 
 /** Kicker, principle pill, title and subtitle; returns where the body starts. */
 function header(sheet: Sheet, h: Head, centered = false): number {
-  const { slide: s } = sheet;
   const { c } = sheet;
   let y = 58 / 144;
   // The kicker band's second row, where the principle pill wraps as on the web.
@@ -610,14 +491,18 @@ function header(sheet: Sheet, h: Head, centered = false): number {
       // The web's label line, 1.4 of its size, as wide as its capitals.
       const kw =
         textWidth(kicker.toUpperCase(), { size: PT.base, mono: true, tracking: 0.06 }) + 0.02;
-      box(s, c, { runs: [caps(kicker)] }, x, 0.38, Math.min(kw, CW), 0.35, {
-        size: PT.base,
-        mono: true,
-        color: c.teal,
-        tracking: 0.06,
-        valign: "middle",
-        line: 1.4,
-      });
+      sheet.box(
+        { runs: [caps(kicker)] },
+        { x, y: 0.38, w: Math.min(kw, CW), h: 0.35 },
+        {
+          size: PT.base,
+          mono: true,
+          color: c.teal,
+          tracking: 0.06,
+          valign: "middle",
+          line: 1.4,
+        },
+      );
       x += kw + 0.18;
     }
     if (h.principle) {
@@ -627,7 +512,7 @@ function header(sheet: Sheet, h: Head, centered = false): number {
         wrapped = 76 / 144;
         x = EDGE;
       }
-      chip(s, c, h.principle, x, y + row + 0.02, PT.sm, c.tint, c.ink, false);
+      chip(sheet, h.principle, x, y + row + 0.02, PT.sm, c.tint, c.ink, false);
     }
   }
   y = TOP + wrapped;
@@ -644,13 +529,13 @@ function header(sheet: Sheet, h: Head, centered = false): number {
       align: centered ? "center" : "left",
     };
     const hh = Math.min(1.1, sheet.need(h.headline, CW, o));
-    box(s, c, h.headline, EDGE, y, CW, Math.max(hh, 0.45), o);
+    sheet.box(h.headline, { x: EDGE, y, w: CW, h: Math.max(hh, 0.45) }, o);
     y += Math.max(hh, 0.45) + 0.08;
   }
   if (h.subtitle) {
     const o: BoxOpts = { size: PT.base, color: c.muted, align: centered ? "center" : "left" };
     const sh = Math.min(0.7, sheet.need(h.subtitle, CW, o));
-    box(s, c, h.subtitle, EDGE, y, CW, sh, o);
+    sheet.box(h.subtitle, { x: EDGE, y, w: CW, h: sh }, o);
     y += sh;
   }
   return y + 0.3;
@@ -676,9 +561,8 @@ function itemCard(
     marker?: MarkerHue;
   },
 ) {
-  const { slide: s } = sheet;
   const { c } = sheet;
-  card(s, a.x, a.y, a.w, a.h, c.card, o.tone ?? c.border);
+  sheet.card(a, { fill: c.card, line: o.tone ?? c.border });
   const pad = 0.2;
   const paras: Para[] = [];
   if (o.title)
@@ -693,7 +577,7 @@ function itemCard(
   for (const it of o.items ?? []) {
     paras.push({ runs: md(it, c), bullet: true, marker: o.marker, after: 5 });
   }
-  box(s, c, paras, a.x + pad, a.y + pad, a.w - 2 * pad, a.h - 2 * pad, bodyO(c, k));
+  sheet.box(paras, { x: a.x + pad, y: a.y + pad, w: a.w - 2 * pad, h: a.h - 2 * pad }, bodyO(c, k));
 }
 
 /** The web's circle-x or circle-check icon at x, y in diameter d, drawn in lines. */
@@ -812,26 +696,38 @@ function beforeAfter(
   sides.forEach((sd, i) => {
     const x = a.x + i * (half + gap);
     const l = beforeAfterSide(sheet, sd, i, strike, half, o, k, adds);
-    if (i) card(s, x, a.y, half, a.h, c.tealTint, c.teal);
-    else card(s, x, a.y, half, a.h, strike ? mixColor(c.muted, c.bg, 0.07) : c.card, c.border);
+    if (i) sheet.card({ x, y: a.y, w: half, h: a.h }, sheet.c.litCard);
+    else
+      sheet.card(
+        { x, y: a.y, w: half, h: a.h },
+        { fill: strike ? mixColor(c.muted, c.bg, 0.07) : c.card, line: c.border },
+      );
     const top = a.y + pad;
     if (l.icon) circleMark(s, x + pad, top + (l.labelH - l.icon) / 2, l.icon, l.tone, i === 1);
-    box(s, c, l.label, x + pad + l.indent, top, half - 2 * pad - l.indent, l.labelH, {
-      ...o,
-      valign: "middle",
-    });
+    sheet.box(
+      l.label,
+      { x: x + pad + l.indent, y: top, w: half - 2 * pad - l.indent, h: l.labelH },
+      {
+        ...o,
+        valign: "middle",
+      },
+    );
     const ry = top + l.labelH + 0.15 * k;
-    box(s, c, l.rest, x + pad, ry, half - 2 * pad, a.y + a.h - pad - ry, o);
+    sheet.box(l.rest, { x: x + pad, y: ry, w: half - 2 * pad, h: a.y + a.h - pad - ry }, o);
   });
   const ay = a.y + a.h / 2;
   if (adds)
-    box(s, c, "+", a.x + half, ay - gap / 2, gap, gap, {
-      size: PT.title * k,
-      bold: true,
-      color: c.teal,
-      align: "center",
-      valign: "middle",
-    });
+    sheet.box(
+      "+",
+      { x: a.x + half, y: ay - gap / 2, w: gap, h: gap },
+      {
+        size: PT.title * k,
+        bold: true,
+        color: c.teal,
+        align: "center",
+        valign: "middle",
+      },
+    );
   else arrow(s, c, a.x + half + 0.12 * k, ay, a.x + half + gap - 0.12 * k, ay, c.teal);
 }
 
@@ -839,7 +735,7 @@ function beforeAfter(
  *  the punchline 2.5 rem under in a 48 rem column, balanced, the footnotes 1.5 rem under that in a
  *  56 rem column. Draws where `s` is given; returns the height. */
 function comparisonFoot(sheet: Sheet, d: { punchline?: string; footnotes?: string[] }, y: number) {
-  const { slide: s, c } = sheet;
+  const { c } = sheet;
   const punchO: BoxOpts = {
     size: PT.h4,
     mono: true,
@@ -863,12 +759,12 @@ function comparisonFoot(sheet: Sheet, d: { punchline?: string; footnotes?: strin
   let h = 0;
   if (ph) {
     h += 2.5 * REM;
-    if (!sheet.dry) box(s, c, punch, (W - pw) / 2, y + h, pw, ph, punchO);
+    if (!sheet.dry) sheet.box(punch, { x: (W - pw) / 2, y: y + h, w: pw, h: ph }, punchO);
     h += ph;
   }
   if (nh) {
     h += 1.5 * REM;
-    if (!sheet.dry) box(s, c, notes, (W - nw) / 2, y + h, nw, nh, noteO);
+    if (!sheet.dry) sheet.box(notes, { x: (W - nw) / 2, y: y + h, w: nw, h: nh }, noteO);
     h += nh;
   }
   return h;
@@ -1041,7 +937,6 @@ const GROWS = new Set([
 /** A gallery: its pictures and videos in a row or grid of equal cells, each over its caption, and
  *  its tags as chips under them. */
 function gallery(sheet: Sheet, b: Extract<ContentBlock, { type: "gallery" }>, area: Area) {
-  const { slide: s } = sheet;
   const { c } = sheet;
   const tagH = b.tags?.length ? 0.4 : 0;
   const a = { ...area, h: area.h - tagH };
@@ -1066,17 +961,21 @@ function gallery(sheet: Sheet, b: Extract<ContentBlock, { type: "gallery" }>, ar
     }
     picture(sheet, src.src, x, yy, cw, rh - capH, { alt: src.alt });
     if (src.caption)
-      box(s, c, src.caption, x, yy + rh - capH + 0.05, cw, capH - 0.05, {
-        size: PT.sm,
-        color: c.muted,
-        align: "center",
-      });
+      sheet.box(
+        src.caption,
+        { x, y: yy + rh - capH + 0.05, w: cw, h: capH - 0.05 },
+        {
+          size: PT.sm,
+          color: c.muted,
+          align: "center",
+        },
+      );
   });
   if (!b.tags?.length) return;
   const row = b.tags.reduce((sum, t) => sum + chipWidth(t, PT.label, false) + 0.1, -0.1);
   let x = a.x + (a.w - row) / 2;
   for (const t of b.tags)
-    x += chip(s, c, t, x, a.y + a.h + 0.1, PT.label, c.card, c.ink, false) + 0.1;
+    x += chip(sheet, t, x, a.y + a.h + 0.1, PT.label, c.card, c.ink, false) + 0.1;
 }
 
 function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: boolean) {
@@ -1086,46 +985,40 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
   const o = bodyO(c, k, centered ? { align: "center" } : {});
   switch (b.type) {
     case "paragraph":
-      return box(
-        s,
-        c,
+      return sheet.box(
         { runs: md(b.text, c), align: b.centered || centered ? "center" : "left" },
-        a.x,
-        a.y,
-        a.w,
-        a.h,
+        a,
         o,
       );
     case "bullets":
-      return box(s, c, bulletParas(b.items, c, b.ordered), a.x, a.y, a.w, a.h, {
+      return sheet.box(bulletParas(b.items, c, b.ordered), a, {
         ...o,
         align: "left",
       });
     case "quote": {
       // Brand's quote: a purple rule, the words in ink behind it, the source under them.
-      rect(s, a.x, a.y, 2 / 144, a.h, c.purple);
-      return box(
-        s,
-        c,
+      sheet.rect({ x: a.x, y: a.y, w: 2 / 144, h: a.h }, c.purple);
+      return sheet.box(
         quoteParas(b, c, k).map(([p, size]) => ({ ...p, rel: size / (PT.base * k) })),
-        a.x + QUOTE_INDENT * k,
-        a.y,
-        a.w - QUOTE_INDENT * k,
-        a.h,
+        { x: a.x + QUOTE_INDENT * k, y: a.y, w: a.w - QUOTE_INDENT * k, h: a.h },
         { ...o, align: "left" },
       );
     }
     case "callout": {
       if (centered) {
         const w = Math.min(a.w, 7.5);
-        card(s, a.x + (a.w - w) / 2, a.y, w, a.h, c.card, c.border);
-        return box(s, c, b.text, a.x + (a.w - w) / 2 + 0.3, a.y + 0.15, w - 0.6, a.h - 0.3, {
-          ...o,
-          size: PT.lead * k,
-          color: c.muted,
-          align: "center",
-          valign: "middle",
-        });
+        sheet.card({ x: a.x + (a.w - w) / 2, y: a.y, w, h: a.h }, sheet.c.plainCard);
+        return sheet.box(
+          b.text,
+          { x: a.x + (a.w - w) / 2 + 0.3, y: a.y + 0.15, w: w - 0.6, h: a.h - 0.3 },
+          {
+            ...o,
+            size: PT.lead * k,
+            color: c.muted,
+            align: "center",
+            valign: "middle",
+          },
+        );
       }
       // The web's callouts: the info one brand's purple one, in ink; a warning or success the tone at 7 % on
       // the ground with its border at 25 %, the text the tone mixed 60 % with ink.
@@ -1136,13 +1029,20 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       const pad = CALLOUT_PAD * k;
       const w = b.fullWidth ? a.w : Math.min(a.w, textWidth(b.text, o) + 2 * pad + 0.02);
       const fill = tone ? mixColor(tone, c.bg, 0.07) : c.callout(c.purple);
-      card(s, a.x, a.y, w, a.h, fill, tone && mixColor(tone, c.bg, 0.25));
-      return box(s, c, b.text, a.x + pad, a.y + pad, w - 2 * pad, a.h - 2 * pad, {
-        ...o,
-        color: ink,
-        align: "left",
-        valign: "middle",
-      });
+      sheet.card(
+        { x: a.x, y: a.y, w, h: a.h },
+        { fill: fill, line: tone && mixColor(tone, c.bg, 0.25) },
+      );
+      return sheet.box(
+        b.text,
+        { x: a.x + pad, y: a.y + pad, w: w - 2 * pad, h: a.h - 2 * pad },
+        {
+          ...o,
+          color: ink,
+          align: "left",
+          valign: "middle",
+        },
+      );
     }
     case "table": {
       const cols = Math.max(b.headers?.length ?? 0, ...b.rows.map((r) => r.length));
@@ -1193,57 +1093,44 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
     }
     case "code":
     case "annotated-code": {
-      card(s, a.x, a.y, a.w, a.h, c.code, undefined, 0.06);
+      sheet.rounded(a, { fill: c.code }, 0.06);
       const lines = codeLines(b.code);
       const notes = b.type === "annotated-code" ? b.notes : [];
       const codeW = notes.length ? a.w * 0.62 : a.w;
       const lh = (PT.sm * k * 1.3) / 72;
       for (const n of notes)
-        rect(s, a.x, a.y + 0.2 + (n.line - 1) * lh, codeW, lh, mixColor(c.teal, c.code, 0.35));
-      box(
-        s,
-        c,
+        sheet.rect(
+          { x: a.x, y: a.y + 0.2 + (n.line - 1) * lh, w: codeW, h: lh },
+          mixColor(c.teal, c.code, 0.35),
+        );
+      sheet.box(
         lines.map((l) => ({ runs: [{ text: l || " " }] })),
-        a.x + 0.25,
-        a.y + 0.2,
-        codeW - 0.4,
-        a.h - 0.3,
-        // The web's 1.3 em code leading, which the highlights above step by.
+        { x: a.x + 0.25, y: a.y + 0.2, w: codeW - 0.4, h: a.h - 0.3 },
         { size: PT.sm * k, mono: true, color: c.codeInk, line: 1.3, floor: 0.5 },
       );
       notes.forEach((n, i) => {
         const y = a.y + 0.2 + (n.line - 1) * lh;
-        box(
-          s,
-          c,
+        sheet.box(
           {
             runs: [
               { text: `${i + 1}  `, options: { bold: true, color: c.teal } },
               ...md(n.text, c),
             ],
           },
-          a.x + a.w * 0.64 + 0.2,
-          y - 0.02,
-          a.w * 0.36 - 0.3,
-          Math.max(lh * 2, 0.4),
+          { x: a.x + a.w * 0.64 + 0.2, y: y - 0.02, w: a.w * 0.36 - 0.3, h: Math.max(lh * 2, 0.4) },
           { size: PT.sm * k, color: c.codeInk, floor: 0.7 },
         );
       });
       return;
     }
     case "terminal": {
-      card(s, a.x, a.y, a.w, a.h, c.code, undefined, 0.06);
-      box(
-        s,
-        c,
+      sheet.rounded(a, { fill: c.code }, 0.06);
+      sheet.box(
         b.commands.map((cmd) => ({
           runs: [{ text: `${cmd.prefix} `, options: { color: c.codeGreen } }, { text: cmd.text }],
           after: 4,
         })),
-        a.x + 0.25,
-        a.y + 0.2,
-        a.w - 0.5,
-        a.h - 0.3,
+        { x: a.x + 0.25, y: a.y + 0.2, w: a.w - 0.5, h: a.h - 0.3 },
         { size: PT.sm * k, mono: true, color: c.codeInk, line: 1.3 },
       );
       return;
@@ -1257,9 +1144,7 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
         k,
         false,
       );
-      box(
-        s,
-        c,
+      sheet.box(
         b.sections.flatMap((sc) => [
           {
             runs: md(sc.title, c, { color: c.amber, lang: CAPS }),
@@ -1269,10 +1154,7 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
           },
           { runs: md(sc.text, c), after: 10 },
         ]),
-        a.x + half + 0.3,
-        a.y,
-        half,
-        a.h,
+        { x: a.x + half + 0.3, y: a.y, w: half, h: a.h },
         o,
       );
       return;
@@ -1311,10 +1193,9 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       );
       b.items.forEach((it, i) => {
         const y = a.y + i * (rh + 0.12);
-        card(s, a.x, y, a.w, rh, c.card, c.border, rh / 2);
+        sheet.rounded({ x: a.x, y, w: a.w, h: rh }, sheet.c.plainCard, rh / 2);
         const w = chip(
-          s,
-          c,
+          sheet,
           it.name,
           a.x + 0.1,
           y + rh / 2 - (PT.sm * k * 1.9) / 144,
@@ -1322,12 +1203,16 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
           c.tint,
           c.ink,
         );
-        box(s, c, { runs: md(it.description, c) }, a.x + w + 0.25, y, a.w - w - 0.4, rh, {
-          ...o,
-          size: PT.sm * k,
-          color: c.muted,
-          valign: "middle",
-        });
+        sheet.box(
+          { runs: md(it.description, c) },
+          { x: a.x + w + 0.25, y, w: a.w - w - 0.4, h: rh },
+          {
+            ...o,
+            size: PT.sm * k,
+            color: c.muted,
+            valign: "middle",
+          },
+        );
       });
       return;
     }
@@ -1338,39 +1223,24 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
         const [r, col] = [Math.floor(i / L.cols), i % L.cols];
         if (col === 0 && r) rowY += L.rowH[r - 1] + L.gap;
         const x = a.x + col * (L.cw + L.gap);
-        card(
-          s,
-          x,
-          rowY,
-          L.cw,
-          L.rowH[r],
-          cell.hi ? c.tealTint : c.card,
-          cell.hi ? c.teal : c.border,
+        sheet.card(
+          { x, y: rowY, w: L.cw, h: L.rowH[r] },
+          cell.hi ? sheet.c.litCard : sheet.c.plainCard,
         );
         const ix = x + L.padX;
         let y = rowY + L.padY;
         if (b.numbered || cell.it.icon) {
           // `NumberTile` lg: the number white on teal, or an icon's soft tile.
           const solid = b.numbered || cell.hi;
-          card(
-            s,
-            ix,
-            y,
-            cell.mark,
-            cell.mark,
-            solid ? c.teal : mixColor(c.teal, c.card, 0.07),
-            undefined,
+          sheet.rounded(
+            { x: ix, y, w: cell.mark, h: cell.mark },
+            { fill: solid ? c.teal : mixColor(c.teal, c.card, 0.07) },
             10 / 144,
           );
           if (b.numbered)
-            box(
-              s,
-              c,
+            sheet.box(
               { runs: [{ text: String(i + (b.numberFrom ?? 1)) }] },
-              ix,
-              y,
-              cell.mark,
-              cell.mark,
+              { x: ix, y, w: cell.mark, h: cell.mark },
               {
                 size: PT.lead * k,
                 mono: true,
@@ -1381,13 +1251,13 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
                 line: 1,
               },
             );
-        } else if (cell.mark) rect(s, ix, y, 4 * REM * k, cell.mark, c.teal);
+        } else if (cell.mark) sheet.rect({ x: ix, y, w: 4 * REM * k, h: cell.mark }, c.teal);
         if (cell.mark) y += cell.mark + L.inGap;
         if (cell.title) {
-          box(s, c, cell.title, ix, y, L.inner, cell.th, L.titleO);
+          sheet.box(cell.title, { x: ix, y, w: L.inner, h: cell.th }, L.titleO);
           y += cell.th + L.inGap;
         }
-        if (cell.body.length) box(s, c, cell.body, ix, y, L.inner, cell.bh, L.textO);
+        if (cell.body.length) sheet.box(cell.body, { x: ix, y, w: L.inner, h: cell.bh }, L.textO);
       });
       return;
     }
@@ -1402,10 +1272,8 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       b.layers.forEach((l, i) => {
         const y = a.y + i * (lh + 0.1);
         const hi = i === b.highlight;
-        card(s, a.x, y, a.w, lh, hi ? c.tealTint : c.card, hi ? c.teal : c.border, 0.05);
-        box(
-          s,
-          c,
+        sheet.rounded({ x: a.x, y, w: a.w, h: lh }, hi ? sheet.c.litCard : sheet.c.plainCard, 0.05);
+        sheet.box(
           {
             runs: [
               ...(b.ordered
@@ -1415,10 +1283,7 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
               ...(l.text ? [{ text: "   " }, ...md(l.text, c, { color: c.muted })] : []),
             ],
           },
-          a.x + 0.25,
-          y,
-          a.w - 0.5,
-          lh,
+          { x: a.x + 0.25, y, w: a.w - 0.5, h: lh },
           { ...o, valign: "middle", align: "left" },
         );
       });
@@ -1434,13 +1299,17 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
         ];
         for (const [label, ly, size] of rows) {
           if (label)
-            box(s, c, { runs: [{ text: label }] }, a.x, ly, lw - 0.1, 0.25, {
-              size: size * k,
-              mono: true,
-              bold: true,
-              color: c.muted,
-              align: "right",
-            });
+            sheet.box(
+              { runs: [{ text: label }] },
+              { x: a.x, y: ly, w: lw - 0.1, h: 0.25 },
+              {
+                size: size * k,
+                mono: true,
+                bold: true,
+                color: c.muted,
+                align: "right",
+              },
+            );
         }
         return drawBlock(
           sheet,
@@ -1492,28 +1361,40 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
         // A segment's label breaks the middle of the line that leads to its event, as on the web.
         if (e.segment && i > 0) {
           const tw = textWidth(e.segment, { size: PT.label * k, mono: true }) + 0.16;
-          box(s, c, { runs: [{ text: e.segment }] }, cx - ew / 2 - tw / 2, ly - 0.11, tw, 0.22, {
-            size: PT.label * k,
-            mono: true,
-            bold: true,
-            color: c.muted,
-            align: "center",
-            valign: "middle",
-            fill: c.bg,
-          });
+          sheet.box(
+            { runs: [{ text: e.segment }] },
+            { x: cx - ew / 2 - tw / 2, y: ly - 0.11, w: tw, h: 0.22 },
+            {
+              size: PT.label * k,
+              mono: true,
+              bold: true,
+              color: c.muted,
+              align: "center",
+              valign: "middle",
+              fill: c.bg,
+            },
+          );
         }
         if (e.when)
-          box(s, c, { runs: [{ text: e.when }] }, cx - ew / 2 + 0.05, a.y, ew - 0.1, 0.22, {
-            size: PT.label * k,
-            mono: true,
-            bold: true,
-            color: c.muted,
+          sheet.box(
+            { runs: [{ text: e.when }] },
+            { x: cx - ew / 2 + 0.05, y: a.y, w: ew - 0.1, h: 0.22 },
+            {
+              size: PT.label * k,
+              mono: true,
+              bold: true,
+              color: c.muted,
+              align: "center",
+            },
+          );
+        sheet.box(
+          eventParas(e, c, hi),
+          { x: cx - ew / 2 + 0.07, y: ly + 0.2, w: ew - 0.14, h: a.h - 0.55 },
+          {
+            ...o,
             align: "center",
-          });
-        box(s, c, eventParas(e, c, hi), cx - ew / 2 + 0.07, ly + 0.2, ew - 0.14, a.h - 0.55, {
-          ...o,
-          align: "center",
-        });
+          },
+        );
       });
       return;
     }
@@ -1521,41 +1402,47 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       const L = barsLayout(sheet, b, { w: a.w, k });
       for (const r of L.rows) {
         const y = a.y + r.y;
-        box(s, c, r.label, a.x, y + r.labelY, L.labelW, r.labelH, L.labelO);
+        sheet.box(r.label, { x: a.x, y: y + r.labelY, w: L.labelW, h: r.labelH }, L.labelO);
         const ty = y + r.barY;
         if (b.max != null) {
           // The track ends on a rule and marks its quarters in the ground, under the bar.
-          rect(s, a.x + L.trackX, ty, L.trackW, L.barH, mixColor(c.ink, c.bg, 0.07));
-          rect(
-            s,
-            a.x + L.trackX + L.trackW - 4 / 144,
-            ty,
-            4 / 144,
-            L.barH,
+          sheet.rect(
+            { x: a.x + L.trackX, y: ty, w: L.trackW, h: L.barH },
+            mixColor(c.ink, c.bg, 0.07),
+          );
+          sheet.rect(
+            { x: a.x + L.trackX + L.trackW - 4 / 144, y: ty, w: 4 / 144, h: L.barH },
             mixColor(c.ink, c.bg, 0.25),
           );
           for (const q of [0.25, 0.5, 0.75])
-            rect(s, a.x + L.trackX + q * L.trackW - 1 / 144, ty, 2 / 144, L.barH, c.bg);
+            sheet.rect(
+              { x: a.x + L.trackX + q * L.trackW - 1 / 144, y: ty, w: 2 / 144, h: L.barH },
+              c.bg,
+            );
         }
         // A range starts at its low end, as on the web slide.
-        rect(s, a.x + L.trackX + r.from, ty, r.barW, L.barH, r.fill);
-        box(s, c, r.value, a.x + r.valueX, ty, L.valueW, L.barH, r.valueO);
+        sheet.rect({ x: a.x + L.trackX + r.from, y: ty, w: r.barW, h: L.barH }, r.fill);
+        sheet.box(r.value, { x: a.x + r.valueX, y: ty, w: L.valueW, h: L.barH }, r.valueO);
       }
       if (b.max != null)
         for (const t of L.ticks) {
           const tw = 4 * REM * k;
           const x = a.x + L.trackX + (t.q / 100) * L.trackW - tw / 2;
-          box(s, c, literal(t.text), x, a.y + L.scaleY, tw, L.h - L.sourceH - L.scaleY, L.scaleO);
+          sheet.box(
+            literal(t.text),
+            { x, y: a.y + L.scaleY, w: tw, h: L.h - L.sourceH - L.scaleY },
+            L.scaleO,
+          );
         }
       if (b.source)
-        box(
-          s,
-          c,
+        sheet.box(
           b.source,
-          a.x,
-          a.y + L.h - L.sourceH + 2.5 * REM * k,
-          a.w,
-          L.sourceH - 2.5 * REM * k,
+          {
+            x: a.x,
+            y: a.y + L.h - L.sourceH + 2.5 * REM * k,
+            w: a.w,
+            h: L.sourceH - 2.5 * REM * k,
+          },
           {
             ...o,
             size: PT.sm * k,
@@ -1568,7 +1455,7 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       const L = numbersLayout(sheet, b, { w: a.w, k });
       L.cells.forEach((cell) => {
         const [x, y] = [a.x + cell.x, a.y + cell.y];
-        box(s, c, cell.figure, x, y, L.cw, L.fig, L.figO);
+        sheet.box(cell.figure, { x, y, w: L.cw, h: L.fig }, L.figO);
         if (L.rule)
           s.addShape("line", {
             x,
@@ -1577,17 +1464,12 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
             h: 0,
             line: { color: c.border, width: 2 * k },
           });
-        box(s, c, cell.paras, x, y + L.fig + L.over, L.cw, cell.h, L.o);
+        sheet.box(cell.paras, { x, y: y + L.fig + L.over, w: L.cw, h: cell.h }, L.o);
       });
       if (b.source)
-        box(
-          s,
-          c,
+        sheet.box(
           b.source,
-          a.x,
-          a.y + L.h - L.sourceH + L.sourceGap,
-          a.w,
-          L.sourceH - L.sourceGap,
+          { x: a.x, y: a.y + L.h - L.sourceH + L.sourceGap, w: a.w, h: L.sourceH - L.sourceGap },
           {
             ...o,
             size: PT.sm * k,
@@ -1605,12 +1487,16 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       const h = a.h - (last.caption ? 0.35 : 0);
       picture(sheet, last.src, a.x, a.y, a.w, h, { alt: b.alt, native: true });
       if (last.caption)
-        box(s, c, last.caption, a.x, a.y + h + 0.08, a.w, 0.27, {
-          ...o,
-          size: PT.sm,
-          color: c.muted,
-          align: "center",
-        });
+        sheet.box(
+          last.caption,
+          { x: a.x, y: a.y + h + 0.08, w: a.w, h: 0.27 },
+          {
+            ...o,
+            size: PT.sm,
+            color: c.muted,
+            align: "center",
+          },
+        );
       return;
     }
     case "gallery":
@@ -1624,14 +1510,9 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
         native: true,
       });
       if (b.href)
-        box(
-          s,
-          c,
+        sheet.box(
           { runs: [{ text: `↗ ${linkLabel(b.href)}`, options: { hyperlink: { url: b.href } } }] },
-          a.x,
-          p.y + p.h + 0.08,
-          a.w,
-          0.32,
+          { x: a.x, y: p.y + p.h + 0.08, w: a.w, h: 0.32 },
           { ...o, size: PT.base, mono: true, color: c.teal, align: "center" },
         );
       return;
@@ -1658,21 +1539,29 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
         });
       } else {
         sheet.warn(`video ${b.src}: not found under ${sheet.out.assets}`);
-        card(s, a.x, a.y, a.w, h, c.tint, c.border);
-        box(s, c, b.alt || b.src, a.x, a.y, a.w, h, {
-          ...o,
-          align: "center",
-          valign: "middle",
-          color: c.muted,
-        });
+        sheet.card({ x: a.x, y: a.y, w: a.w, h }, { fill: c.tint, line: c.border });
+        sheet.box(
+          b.alt || b.src,
+          { x: a.x, y: a.y, w: a.w, h },
+          {
+            ...o,
+            align: "center",
+            valign: "middle",
+            color: c.muted,
+          },
+        );
       }
       if (b.caption)
-        box(s, c, b.caption, a.x, a.y + h + 0.08, a.w, 0.27, {
-          ...o,
-          size: PT.sm,
-          color: c.muted,
-          align: "center",
-        });
+        sheet.box(
+          b.caption,
+          { x: a.x, y: a.y + h + 0.08, w: a.w, h: 0.27 },
+          {
+            ...o,
+            size: PT.sm,
+            color: c.muted,
+            align: "center",
+          },
+        );
       return;
     }
     case "annotated": {
@@ -1715,27 +1604,26 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
           fill: { color: c.teal },
           line: { type: "none" },
         });
-        box(s, c, { runs: [{ text: String(i + 1) }] }, a.x + pw - 0.14, y - 0.14, 0.28, 0.28, {
-          size: PT.label,
-          mono: true,
-          bold: true,
-          color: c.card,
-          align: "center",
-          valign: "middle",
-        });
-        box(
-          s,
-          c,
+        sheet.box(
+          { runs: [{ text: String(i + 1) }] },
+          { x: a.x + pw - 0.14, y: y - 0.14, w: 0.28, h: 0.28 },
+          {
+            size: PT.label,
+            mono: true,
+            bold: true,
+            color: c.card,
+            align: "center",
+            valign: "middle",
+          },
+        );
+        sheet.box(
           {
             runs: [
               { text: `${i + 1}  `, options: { bold: true, color: c.teal } },
               ...md(n.text, c),
             ],
           },
-          a.x + iw + 0.35,
-          y - 0.2,
-          a.w - iw - 0.35,
-          0.6,
+          { x: a.x + iw + 0.35, y: y - 0.2, w: a.w - iw - 0.35, h: 0.6 },
           { ...o, size: PT.sm * k },
         );
       });
@@ -1746,11 +1634,15 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       picture(sheet, b.image.src, a.x, a.y, iw, a.h, { alt: b.image.alt });
       let y = a.y;
       if (b.gridTitle) {
-        box(s, c, b.gridTitle, a.x + iw + 0.3, y, a.w - iw - 0.3, 0.3, {
-          ...o,
-          mono: true,
-          bold: true,
-        });
+        sheet.box(
+          b.gridTitle,
+          { x: a.x + iw + 0.3, y, w: a.w - iw - 0.3, h: 0.3 },
+          {
+            ...o,
+            mono: true,
+            bold: true,
+          },
+        );
         y += 0.4;
       }
       drawBlock(
@@ -1911,7 +1803,7 @@ function topology(
     for (const [p, o, gap] of parts) {
       const ph = sheet.need(p, w, o);
       h += gap;
-      if (!sheet.dry && x !== undefined) box(s, c, p, x, y + h, w, ph, o);
+      if (!sheet.dry && x !== undefined) sheet.box(p, { x, y: y + h, w, h: ph }, o);
       h += ph;
     }
     return h;
@@ -2044,25 +1936,20 @@ function topology(
     const tx = mx + bd + sp(5);
     const ty = sy + bd + sp(3);
     const line = st.beside ? Math.max(st.nh, st.rh) : st.nh;
-    box(
-      s,
-      c,
+    sheet.box(
       name(st.t.name, c.ink),
-      tx,
-      ty + (line - st.nh) / 2,
-      st.beside ? st.nw : sIn,
-      st.nh,
+      { x: tx, y: ty + (line - st.nh) / 2, w: st.beside ? st.nw : sIn, h: st.nh },
       titleO,
     );
     if (st.t.roles.length)
-      box(
-        s,
-        c,
+      sheet.box(
         st.r,
-        st.beside ? tx + st.nw + sp(6) : tx,
-        st.beside ? ty + (line - st.rh) / 2 : ty + st.nh + sp(2),
-        st.beside ? st.rw + 0.02 : sIn,
-        st.rh,
+        {
+          x: st.beside ? tx + st.nw + sp(6) : tx,
+          y: st.beside ? ty + (line - st.rh) / 2 : ty + st.nh + sp(2),
+          w: st.beside ? st.rw + 0.02 : sIn,
+          h: st.rh,
+        },
         textO,
       );
     sy += st.h + sp(3);
@@ -2090,11 +1977,11 @@ function topology(
     for (const it of legend) {
       const ly = y + sp(4) + it.row * (legRow + sp(3));
       shape(it.type, a.x + it.x, ly + (legRow - sp(8)) / 2, sp(14), sp(8), (10 / 144) * k);
-      box(s, c, words[it.type], a.x + it.x + sp(17), ly, it.tw, legRow, legO);
+      sheet.box(words[it.type], { x: a.x + it.x + sp(17), y: ly, w: it.tw, h: legRow }, legO);
     }
     y += legH + sp(4);
   }
-  if (d.caption) box(s, c, d.caption, a.x, y + sp(2), a.w, capH - sp(2), capO);
+  if (d.caption) sheet.box(d.caption, { x: a.x, y: y + sp(2), w: a.w, h: capH - sp(2) }, capO);
   return total;
 }
 
@@ -2107,7 +1994,7 @@ function positions(
   a: { x: number; y: number; w: number },
   k: number,
 ): number {
-  const { slide: s, c } = sheet;
+  const { c } = sheet;
   const rem = REM * k;
   const w = Math.min(a.w, 72 * rem);
   const x0 = a.x + (a.w - w) / 2;
@@ -2126,7 +2013,7 @@ function positions(
   const stack = (list: [Para, BoxOpts, number][], pw: number, x?: number, y = 0) =>
     list.reduce((h, [p, o, g]) => {
       const ph = sheet.need(p, pw, o);
-      if (!sheet.dry && x !== undefined) box(s, c, p, x, y + h + g, pw, ph, o);
+      if (!sheet.dry && x !== undefined) sheet.box(p, { x, y: y + h + g, w: pw, h: ph }, o);
       return h + g + ph;
     }, 0);
   const ch = Math.max(...[b.left, b.right].map((sd) => stack(parts(sd), inner))) + 2 * pad;
@@ -2155,7 +2042,7 @@ function positions(
   if (!sheet.dry) {
     [b.left, b.right].forEach((sd, i) => {
       const x = x0 + i * (cw + gap);
-      card(s, x, a.y, cw, ch, c.card, c.border);
+      sheet.card({ x, y: a.y, w: cw, h: ch }, sheet.c.plainCard);
       stack(parts(sd), inner, x + pad, a.y + pad);
     });
     stack(res, w, x0, a.y + ch + 3 * rem);
@@ -2232,7 +2119,7 @@ function flowSteps(
       const pw = Math.min(colW, Math.max(inner, longest(spansOf(p, po, 1)) / 72 + 0.02));
       const ph = sheet.need(p, pw, po);
       y += gap;
-      if (!sheet.dry) box(s, c, p, centre(i) - pw / 2, y, pw, ph, po);
+      if (!sheet.dry) sheet.box(p, { x: centre(i) - pw / 2, y, w: pw, h: ph }, po);
       y += ph;
     }
     h = Math.max(h, y - a.y);
@@ -2249,16 +2136,20 @@ function flowSteps(
     });
     const mark = st.label && inTile ? st.label : counted ? numbers[i] : undefined;
     if (mark !== undefined)
-      box(s, c, { runs: [{ text: String(mark) }] }, tx, tileY, tile, tile, {
-        size: (o.dense ? 17.33 : PT.h3) * k,
-        mono: true,
-        bold: true,
-        color: on ? c.card : tone,
-        align: "center",
-        valign: "middle",
-        line: 1,
-        floor: 0.5,
-      });
+      sheet.box(
+        { runs: [{ text: String(mark) }] },
+        { x: tx, y: tileY, w: tile, h: tile },
+        {
+          size: (o.dense ? 17.33 : PT.h3) * k,
+          mono: true,
+          bold: true,
+          color: on ? c.card : tone,
+          align: "center",
+          valign: "middle",
+          line: 1,
+          floor: 0.5,
+        },
+      );
     if (i < n - 1) {
       // The line from this tile to the arrowhead, which stops `--slide-arrow-inset` short of the
       // next tile's centre.
@@ -2304,14 +2195,9 @@ function flowSteps(
       const lw = textWidth(o.loop, { size: PT.h4 * k, bold: true }) + sp(12);
       // At least a line high, so the fit keeps the label at its size.
       const lh = Math.max(sp(7), (PT.h4 * k * 1.4) / 72);
-      box(
-        s,
-        c,
+      sheet.box(
         { runs: [{ text: o.loop }], bold: true },
-        (x0 + x1) / 2 - lw / 2,
-        top - lh / 2,
-        lw,
-        lh,
+        { x: (x0 + x1) / 2 - lw / 2, y: top - lh / 2, w: lw, h: lh },
         {
           size: PT.h4 * k,
           color: c.ink,
@@ -2376,15 +2262,19 @@ function flowBlock(
   let y = a.y + pad;
   if (label) {
     const m = 10 / 144;
-    rect(s, a.x + pad, y + (labelH - m) / 2, m, m, c.teal);
-    box(s, c, { runs: [caps(label)] }, a.x + pad + m + sp(2), y, a.w - 2 * pad, labelH, {
-      size: 13.33 * k,
-      mono: true,
-      color: c.teal,
-      tracking: 0.06,
-      line: 1.4,
-      valign: "middle",
-    });
+    sheet.rect({ x: a.x + pad, y: y + (labelH - m) / 2, w: m, h: m }, c.teal);
+    sheet.box(
+      { runs: [caps(label)] },
+      { x: a.x + pad + m + sp(2), y, w: a.w - 2 * pad, h: labelH },
+      {
+        size: 13.33 * k,
+        mono: true,
+        color: c.teal,
+        tracking: 0.06,
+        line: 1.4,
+        valign: "middle",
+      },
+    );
     y += labelH + sp(4);
   }
   flowSteps(sheet, b.steps, { x: a.x + pad, y: y + (rowH - stepsH) / 2, w: stepsW }, opts);
@@ -2397,7 +2287,11 @@ function flowBlock(
       h: sp(16),
       line: { color: tint, width: 0.75 },
     });
-    box(s, c, noteParas, rx + sp(6), y + (rowH - notesH) / 2, notesW, notesH, noteO);
+    sheet.box(
+      noteParas,
+      { x: rx + sp(6), y: y + (rowH - notesH) / 2, w: notesW, h: notesH },
+      noteO,
+    );
   }
   y += rowH;
   if (footer) {
@@ -2410,7 +2304,7 @@ function flowBlock(
       line: { color: tint, width: 0.75 },
     });
     y += sp(3);
-    box(s, c, footer, a.x + pad, y, a.w - 2 * pad, footH, footO);
+    sheet.box(footer, { x: a.x + pad, y, w: a.w - 2 * pad, h: footH }, footO);
   }
   return h;
 }
@@ -2648,9 +2542,7 @@ function portrait(
   if (src) picture(sheet, src, x, y, d, d, { round: true, alt: name });
   else {
     s.addShape("ellipse", { x, y, w: d, h: d, fill: { color: tone }, line: { type: "none" } });
-    box(
-      s,
-      sheet.c,
+    sheet.box(
       {
         runs: [
           {
@@ -2662,10 +2554,7 @@ function portrait(
           },
         ],
       },
-      x,
-      y,
-      d,
-      d,
+      { x, y, w: d, h: d },
       {
         size: d * 24,
         mono: true,
@@ -2684,7 +2573,6 @@ type Render = (sheet: Sheet, slide: never) => void;
  *  the left, centred above the bottom row and kept 2rem clear of it, where speakers and event stand
  *  beside the QR code and its link. */
 function opening(sheet: Sheet, d: TitleSlide) {
-  const { slide: s } = sheet;
   const lang = d.lang ?? sheet.lang;
   const { c } = sheet;
   const qr = 256 / 144;
@@ -2735,7 +2623,7 @@ function opening(sheet: Sheet, d: TitleSlide) {
   let y = TOP + (headEnd - TOP - total * k) / 2;
   lines.forEach(([text, o, gap], i) => {
     if (i) y += gap * k;
-    box(s, c, text, EDGE, y, CW, heights[i], o);
+    sheet.box(text, { x: EDGE, y, w: CW, h: heights[i] }, o);
     y += heights[i];
   });
   const mid = rowY + rowH / 2;
@@ -2746,30 +2634,33 @@ function opening(sheet: Sheet, d: TitleSlide) {
   const left = (speakers ? 53 / 144 : 0) + (d.event ? (speakers ? 17 / 144 : 0) + 49 / 144 : 0);
   let ly = mid - left / 2;
   if (speakers) {
-    box(s, c, speakers, EDGE, ly, textW, 53 / 144, {
-      size: PT.h3,
-      mono: true,
-      bold: true,
-      color: c.ink,
-    });
+    sheet.box(
+      speakers,
+      { x: EDGE, y: ly, w: textW, h: 53 / 144 },
+      {
+        size: PT.h3,
+        mono: true,
+        bold: true,
+        color: c.ink,
+      },
+    );
     ly += 70 / 144;
   }
   if (d.event)
-    box(s, c, literal(d.event), EDGE, ly, textW, 49 / 144, { size: PT.base, color: c.muted });
+    sheet.box(
+      literal(d.event),
+      { x: EDGE, y: ly, w: textW, h: 49 / 144 },
+      { size: PT.base, color: c.muted },
+    );
   if (d.qr && label) {
     const colX = W - EDGE - colW;
     picture(sheet, d.qr.src, colX + (colW - qr) / 2, rowY, qr, qr, {
       alt: qrAlt(d.qr.href, lang),
       href: d.qr.href,
     });
-    box(
-      s,
-      c,
+    sheet.box(
       { runs: [{ text: label, options: { hyperlink: { url: d.qr.href } } }] },
-      colX,
-      rowY + qr + 12 / 144,
-      colW,
-      52 / 144,
+      { x: colX, y: rowY + qr + 12 / 144, w: colW, h: 52 / 144 },
       { size: PT.base, mono: true, color: c.teal, align: "center" },
     );
   }
@@ -2786,7 +2677,6 @@ const RENDER: {
   [K in RenderedSlide["type"]]: (sheet: Sheet, slide: Extract<RenderedSlide, { type: K }>) => void;
 } = {
   title(sheet, d) {
-    const { slide: s } = sheet;
     if (isOpening(d)) return opening(sheet, d);
     const { c } = sheet;
     const o: BoxOpts = {
@@ -2807,23 +2697,25 @@ const RENDER: {
       ? Math.min(1.2, sheet.need(subtitle, CW - 2, { size: PT.lead, color: c.ink }))
       : 0;
     const y = (H - th - sh - 0.5) / 2;
-    box(s, c, title, EDGE + 0.5, y, CW - 1, th, o);
+    sheet.box(title, { x: EDGE + 0.5, y, w: CW - 1, h: th }, o);
     if (subtitle)
-      box(s, c, subtitle, EDGE + 1, y + th + 0.5, CW - 2, sh, {
-        size: PT.lead,
-        color: c.ink,
-        align: "center",
-      });
+      sheet.box(
+        subtitle,
+        { x: EDGE + 1, y: y + th + 0.5, w: CW - 2, h: sh },
+        {
+          size: PT.lead,
+          color: c.ink,
+          align: "center",
+        },
+      );
   },
 
   content(sheet, d) {
-    const { slide: s } = sheet;
     const centered = d.layout === "centered";
     let y = header(sheet, d, centered);
     if (d.badge)
       chip(
-        s,
-        sheet.c,
+        sheet,
         d.badge,
         W - EDGE - (d.badge.length * PT.label * 0.62) / 72 - 0.24,
         TOP - 0.32,
@@ -2834,17 +2726,21 @@ const RENDER: {
     if (d.stageMarker?.length) {
       let x = EDGE;
       if (d.stagePrefix) {
-        box(s, sheet.c, d.stagePrefix, x, y - 0.15, 1.5, 0.25, {
-          size: PT.label,
-          mono: true,
-          bold: true,
-          color: sheet.c.muted,
-          valign: "middle",
-        });
+        sheet.box(
+          d.stagePrefix,
+          { x, y: y - 0.15, w: 1.5, h: 0.25 },
+          {
+            size: PT.label,
+            mono: true,
+            bold: true,
+            color: sheet.c.muted,
+            valign: "middle",
+          },
+        );
         x += (d.stagePrefix.length * PT.label * 0.62) / 72 + 0.15;
       }
       for (const m of d.stageMarker)
-        x += chip(s, sheet.c, m, x, y - 0.15, PT.label, sheet.c.tealTint, sheet.c.teal) + 0.1;
+        x += chip(sheet, m, x, y - 0.15, PT.label, sheet.c.tealTint, sheet.c.teal) + 0.1;
       y += 0.25;
     }
     const footH = footerHeight(sheet, d.footer);
@@ -2853,7 +2749,6 @@ const RENDER: {
   },
 
   regular(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     const y = header(sheet, d);
     let a = BODY(y);
@@ -2874,7 +2769,7 @@ const RENDER: {
         ...(d.profile.linkedIn ? [{ ...profileLink(d.profile.linkedIn, c), rel: 0.9 }] : []),
       ];
       const o: BoxOpts = { size: PT.base, color: c.ink, align: "center" };
-      box(s, c, who, a.x, a.y + 1.75, pw, Math.max(0.9, sheet.need(who, pw, o)), o);
+      sheet.box(who, { x: a.x, y: a.y + 1.75, w: pw, h: Math.max(0.9, sheet.need(who, pw, o)) }, o);
       a = { ...a, x: a.x + pw + 0.5, w: a.w - pw - 0.5 };
     }
     const secs = d.sections;
@@ -2906,22 +2801,16 @@ const RENDER: {
           ]
         : []),
     ];
-    box(
-      s,
-      c,
+    sheet.box(
       secs.flatMap((sec) =>
         paras(sec).map((p, j, arr) => (j === arr.length - 1 ? { ...p, after: 14 } : p)),
       ),
-      a.x,
-      a.y,
-      a.w,
-      a.h,
+      a,
       { size: PT.base, color: c.ink },
     );
   },
 
   statement(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     // The picture beside the statement, as the slide picks it: a quotation keeps its portrait and
     // drops a QR code, and a screenshot's or QR code's link is on the picture.
@@ -3056,7 +2945,7 @@ const RENDER: {
       let y = top + Math.max(0, (bottom - top - total) / 2);
       parts.forEach(([p, o, pw, gap], i) => {
         y += gap;
-        box(s, c, p, (W - pw) / 2, y, pw, heights[i], o);
+        sheet.box(p, { x: (W - pw) / 2, y, w: pw, h: heights[i] }, o);
         y += heights[i];
       });
       footer(sheet, d.footer, footH);
@@ -3123,24 +3012,19 @@ const RENDER: {
       let y = top;
       parts.forEach(([p, o, gap], i) => {
         y += gap;
-        box(s, c, p, EDGE, y, w, heights[i], o);
+        sheet.box(p, { x: EDGE, y, w, h: heights[i] }, o);
         y += heights[i];
       });
       const x = W - EDGE - colW + (colW - q) / 2;
       const pad = 2.5 * REM;
-      card(s, x, top, q, q, "FFFFFF", c.border, CORNER);
+      sheet.rounded({ x, y: top, w: q, h: q }, { fill: "FFFFFF", line: c.border }, CORNER);
       picture(sheet, qr.src, x + pad, top + pad, q - 2 * pad, q - 2 * pad, {
         alt: qrAlt(qr.href, sheet.lang),
         href: qr.href,
       });
-      box(
-        s,
-        c,
+      sheet.box(
         { runs: [{ text: label, options: { hyperlink: { url: qr.href } } }] },
-        W - EDGE - colW,
-        top + q + REM,
-        colW,
-        labelH,
+        { x: W - EDGE - colW, y: top + q + REM, w: colW, h: labelH },
         { size: PT.base, mono: true, color: c.teal, align: "center" },
       );
       footer(sheet, d.footer, footH);
@@ -3227,7 +3111,7 @@ const RENDER: {
       floor: 0.5,
     };
     const footH = footerHeight(sheet, d.footer);
-    box(s, c, paras, EDGE, TOP, w, BOTTOM - TOP - footH, o);
+    sheet.box(paras, { x: EDGE, y: TOP, w, h: BOTTOM - TOP - footH }, o);
     footer(sheet, d.footer, footH);
     if (side) {
       // A quotation's portrait is round at the web's size, 384 px at 1920, centred in the side.
@@ -3246,7 +3130,6 @@ const RENDER: {
   },
 
   grid(sheet, d) {
-    const { slide: s } = sheet;
     // Quotes as the web's QuoteCard: the brand quote, upright ink behind a purple rule with no
     // card, and under it the author in teal, a round portrait beside, in the web's columns.
     const { c } = sheet;
@@ -3270,25 +3153,28 @@ const RENDER: {
       const x = left + (i % cols) * (cw + gap);
       const yy = top + Math.floor(i / cols) * (ch + gap);
       const h = ch - 0.25 - who;
-      rect(s, x, yy, rule, h, c.purple);
-      box(s, c, quote(cd), x + indent, yy, cw - indent, h, o);
+      sheet.rect({ x, y: yy, w: rule, h }, c.purple);
+      sheet.box(quote(cd), { x: x + indent, y: yy, w: cw - indent, h }, o);
       let ax = x;
       if (cd.imageSrc) {
         portrait(sheet, cd.imageSrc, cd.author ?? "", x, yy + ch - who, who, c.teal);
         ax += who + 0.11;
       }
       if (cd.author)
-        box(s, c, cd.author, ax, yy + ch - who, cw - (ax - x), who, {
-          size: PT.base,
-          bold: true,
-          color: c.teal,
-          valign: "middle",
-        });
+        sheet.box(
+          cd.author,
+          { x: ax, y: yy + ch - who, w: cw - (ax - x), h: who },
+          {
+            size: PT.base,
+            bold: true,
+            color: c.teal,
+            valign: "middle",
+          },
+        );
     });
   },
 
   comparison(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     const y = header(sheet, d);
     const footH = comparisonFoot(drySheet(sheet), d, 0);
@@ -3358,7 +3244,7 @@ const RENDER: {
     const top = place(ch);
     sides.forEach((sd, i) => {
       const x = area.x + i * (cw + gap);
-      card(s, x, top, cw, ch, vs ? c.tealTint : c.card, vs ? c.teal : c.border);
+      sheet.card({ x, y: top, w: cw, h: ch }, vs ? sheet.c.litCard : sheet.c.plainCard);
       let ty = top + pad;
       if (sd.logo) {
         picture(sheet, sd.logo, x + pad, ty, 1.4, 48 / 144, {
@@ -3367,15 +3253,14 @@ const RENDER: {
         });
         ty += logoH;
       }
-      box(s, c, label(sd), x + pad, ty, cw - 2 * pad, parts[i].th, titleO);
+      sheet.box(label(sd), { x: x + pad, y: ty, w: cw - 2 * pad, h: parts[i].th }, titleO);
       ty += parts[i].th + 1.5 * REM;
-      box(s, c, items(sd), x + pad, ty, cw - 2 * pad, top + ch - pad - ty, itemO);
+      sheet.box(items(sd), { x: x + pad, y: ty, w: cw - 2 * pad, h: top + ch - pad - ty }, itemO);
     });
     comparisonFoot(sheet, d, top + ch);
   },
 
   guidance(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     let y = header(sheet, d);
     const intro: Para[] = [
@@ -3384,7 +3269,7 @@ const RENDER: {
     ];
     if (intro.length) {
       const ih = Math.min(1.6, sheet.need(intro, CW, { size: PT.base, color: c.muted }));
-      box(s, c, intro, EDGE, y, CW, ih, { size: PT.base, color: c.muted });
+      sheet.box(intro, { x: EDGE, y, w: CW, h: ih }, { size: PT.base, color: c.muted });
       y += ih + 0.2;
     }
     const a = BODY(y);
@@ -3397,12 +3282,16 @@ const RENDER: {
     );
     d.examples.forEach((ex, i) => {
       const ey = a.y + i * (eh + 0.2);
-      box(s, c, { runs: md(ex.title, c) }, EDGE, ey, CW, 0.3, {
-        size: PT.base,
-        mono: true,
-        bold: true,
-        color: c.ink,
-      });
+      sheet.box(
+        { runs: md(ex.title, c) },
+        { x: EDGE, y: ey, w: CW, h: 0.3 },
+        {
+          size: PT.base,
+          mono: true,
+          bold: true,
+          color: c.ink,
+        },
+      );
       row(
         [
           [sheet.words.bad, ex.bad, c.red, c.redTint],
@@ -3411,10 +3300,8 @@ const RENDER: {
         { x: EDGE, y: ey + 0.35, w: CW, h: eh - 0.35 },
         0.25,
         ([label, text, tone, tint], r) => {
-          card(s, r.x, r.y, r.w, r.h, tint, tone);
-          box(
-            s,
-            c,
+          sheet.card(r, { fill: tint, line: tone });
+          sheet.box(
             [
               {
                 runs: [caps(label, { color: tone })],
@@ -3424,10 +3311,7 @@ const RENDER: {
               },
               ...text.split("\n").map((l) => ({ runs: [{ text: l || " " }] })),
             ],
-            r.x + 0.2,
-            r.y + 0.15,
-            r.w - 0.4,
-            r.h - 0.25,
+            { x: r.x + 0.2, y: r.y + 0.15, w: r.w - 0.4, h: r.h - 0.25 },
             { size: PT.sm, mono: true, color: c.muted, line: 1.3 },
           );
         },
@@ -3436,7 +3320,6 @@ const RENDER: {
   },
 
   profiles(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     const y = header(sheet, d);
     const footH = footerHeight(sheet, d.footer);
@@ -3459,26 +3342,25 @@ const RENDER: {
     );
     row(d.profiles, { ...a, h: ch }, 0.3, (p, r, i) => {
       const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
-      card(s, r.x, r.y, r.w, r.h, c.card, c.border);
+      sheet.card(r, sheet.c.plainCard);
       portrait(sheet, p.imageSrc, p.name, r.x + 0.25, r.y + 0.25, 0.9, tone);
-      box(
-        s,
-        c,
+      sheet.box(
         [
           { runs: [{ text: p.name }], ...TITLE, rel: PT.h4 / PT.base, after: 2 },
           { runs: [{ text: p.title, options: { color: tone } }], after: 2 },
           { runs: [{ text: p.company, options: { color: c.muted } }] },
         ],
-        r.x + 1.35,
-        r.y + 0.25,
-        r.w - 1.6,
-        1.1,
+        { x: r.x + 1.35, y: r.y + 0.25, w: r.w - 1.6, h: 1.1 },
         { size: PT.base, color: c.ink, valign: "middle" },
       );
-      box(s, c, body(p), r.x + 0.25, r.y + 1.45, r.w - 0.5, r.h - 1.6, {
-        size: PT.base,
-        color: c.ink,
-      });
+      sheet.box(
+        body(p),
+        { x: r.x + 0.25, y: r.y + 1.45, w: r.w - 0.5, h: r.h - 1.6 },
+        {
+          size: PT.base,
+          color: c.ink,
+        },
+      );
     });
     footer(sheet, d.footer, footH);
   },
@@ -3539,18 +3421,26 @@ const RENDER: {
     d.lanes.forEach((lane, i) => {
       const ly = yy + i * (lh + 0.12);
       const first = i === 0;
-      card(s, EDGE, ly, CW, lh, first ? c.purpleTint : c.card, first ? c.purple : c.border, 0.08);
-      box(s, c, { runs: [{ text: lane.label }] }, EDGE + 0.25, ly, 1.6, lh, {
-        size: PT.sm,
-        mono: true,
-        bold: true,
-        color: first ? c.purple : c.muted,
-        valign: "middle",
-      });
+      sheet.rounded(
+        { x: EDGE, y: ly, w: CW, h: lh },
+        { fill: first ? c.purpleTint : c.card, line: first ? c.purple : c.border },
+        0.08,
+      );
+      sheet.box(
+        { runs: [{ text: lane.label }] },
+        { x: EDGE + 0.25, y: ly, w: 1.6, h: lh },
+        {
+          size: PT.sm,
+          mono: true,
+          bold: true,
+          color: first ? c.purple : c.muted,
+          valign: "middle",
+        },
+      );
       let x = EDGE + 2;
       const size = rowSize(sheet, lane.stages, PT.sm, 0.3, EDGE + CW - 0.25 - x);
       lane.stages.forEach((st, j) => {
-        const w = chip(s, c, st, x, ly + lh / 2 - (size * 1.9) / 144, size, c.card, c.ink, false);
+        const w = chip(sheet, st, x, ly + lh / 2 - (size * 1.9) / 144, size, c.card, c.ink, false);
         x += w;
         if (j < lane.stages.length - 1) {
           arrow(s, c, x + 0.05, ly + lh / 2, x + 0.25, ly + lh / 2, c.purple);
@@ -3569,11 +3459,15 @@ const RENDER: {
     // The web's `Annotation`, under the card or the drawing.
     const annotate = (x: number, top: number, w: number, h: number) =>
       d.annotation &&
-      box(s, c, d.annotation, x, top, w, h, {
-        size: PT.base,
-        color: c.purple,
-        align: "center",
-      });
+      sheet.box(
+        d.annotation,
+        { x, y: top, w, h },
+        {
+          size: PT.base,
+          color: c.purple,
+          align: "center",
+        },
+      );
     if ((d.variant === "trend" || d.variant === "bar") && d.data?.length) {
       const data = d.data;
       const trend = d.variant === "trend";
@@ -3613,7 +3507,7 @@ const RENDER: {
         w: CHART.w,
         h,
       };
-      card(s, f.x, f.y, f.w, f.h, c.card, c.border);
+      sheet.card(f, sheet.c.plainCard);
       annotate(f.x, f.y + f.h + CHART.note, f.w, 2 * CHART.noteLine);
       // `Axes`: the y label and the note over the plot, the x label under it.
       const inner = {
@@ -3630,7 +3524,7 @@ const RENDER: {
         w: number,
         align: BoxOpts["align"],
         h = CHART.line,
-      ) => text && box(s, c, text, x, top, w, h, { ...labelO, align });
+      ) => text && sheet.box(text, { x, y: top, w, h }, { ...labelO, align });
       const note = trend ? d.futureNote : undefined;
       // The y label and the note in one row 2 rem apart, each shrinking by its share of the
       // overflow and wrapping, as the web's flex row sets them.
@@ -3699,12 +3593,16 @@ const RENDER: {
             });
             labels.forEach((name, i) => {
               const lw = Math.min(wide, 2 * edge(i) + 0.1);
-              box(s, c, name, g.x + xAt(i) - lw / 2, g.y + g.h + CHART.tick, lw, CHART.line, {
-                size: PT.sm,
-                color: i === now ? c.teal : c.muted,
-                bold: i === now,
-                align: "center",
-              });
+              sheet.box(
+                name,
+                { x: g.x + xAt(i) - lw / 2, y: g.y + g.h + CHART.tick, w: lw, h: CHART.line },
+                {
+                  size: PT.sm,
+                  color: i === now ? c.teal : c.muted,
+                  bold: i === now,
+                  align: "center",
+                },
+              );
             });
           };
         const filled = now < 0 ? data.length : now + 1;
@@ -3798,17 +3696,12 @@ const RENDER: {
           });
         }
         const cur = i === d.currentSegmentIndex;
-        box(
-          s,
-          c,
+        sheet.box(
           [
             { runs: [{ text: seg.label }], bold: cur },
             { runs: [{ text: `${seg.percentage}%`, options: { color: c.muted } }] },
           ],
-          g.x + from * g.w,
-          g.y + g.h + 0.1,
-          (acc - from) * g.w,
-          0.6,
+          { x: g.x + from * g.w, y: g.y + g.h + 0.1, w: (acc - from) * g.w, h: 0.6 },
           { size: PT.sm, color: cur ? c.teal : c.ink, align: "center" },
         );
       });
@@ -3826,20 +3719,32 @@ const RENDER: {
       });
       s.addShape("line", { x: g.x, y: g.y, w: 0.001, h: g.h, line: { color: c.muted, width: 1 } });
       if (d.xLabel)
-        box(s, c, d.xLabel, g.x, g.y + g.h + 0.1, g.w, 0.3, {
-          size: PT.sm,
-          color: c.muted,
-          align: "center",
-        });
+        sheet.box(
+          d.xLabel,
+          { x: g.x, y: g.y + g.h + 0.1, w: g.w, h: 0.3 },
+          {
+            size: PT.sm,
+            color: c.muted,
+            align: "center",
+          },
+        );
       if (d.yLabel)
-        box(s, c, d.yLabel, a.x, g.y + g.h / 2 - 0.3, 1.4, 0.6, {
-          size: PT.sm,
-          color: c.muted,
-          align: "right",
-          valign: "middle",
-        });
+        sheet.box(
+          d.yLabel,
+          { x: a.x, y: g.y + g.h / 2 - 0.3, w: 1.4, h: 0.6 },
+          {
+            size: PT.sm,
+            color: c.muted,
+            align: "right",
+            valign: "middle",
+          },
+        );
       if (d.futureNote)
-        box(s, c, d.futureNote, g.x + 0.1, g.y, g.w / 2, 0.3, { size: PT.sm, color: c.muted });
+        sheet.box(
+          d.futureNote,
+          { x: g.x + 0.1, y: g.y, w: g.w / 2, h: 0.3 },
+          { size: PT.sm, color: c.muted },
+        );
       if (d.currentMarker) {
         const t = 60 / 99;
         const mx = g.x + t * g.w;
@@ -3852,20 +3757,23 @@ const RENDER: {
           fill: { color: c.teal },
           line: { color: c.card, width: 1.5 },
         });
-        box(s, c, d.currentMarker, mx - 1.6, my - 0.4, 1.5, 0.3, {
-          size: PT.sm,
-          mono: true,
-          bold: true,
-          color: c.teal,
-          align: "right",
-        });
+        sheet.box(
+          d.currentMarker,
+          { x: mx - 1.6, y: my - 0.4, w: 1.5, h: 0.3 },
+          {
+            size: PT.sm,
+            mono: true,
+            bold: true,
+            color: c.teal,
+            align: "right",
+          },
+        );
       }
     }
     annotate(EDGE, BOTTOM - 0.35, CW, 0.35);
   },
 
   question(sheet, d) {
-    const { slide: s } = sheet;
     // As QuestionSlide in print: the headline as a display heading, under it the options as white
     // cards in a 56 rem column, each its letter, its text and its count, centred above the footer band.
     const { c } = sheet;
@@ -3884,38 +3792,49 @@ const RENDER: {
     const oh = 2.5 * REM + (PT.h4 * 1.4) / 72;
     const total = hh + 3.5 * REM + d.options.length * (oh + REM) - REM;
     const top = Math.max(TOP, (BOTTOM - total) / 2);
-    box(s, c, hp, EDGE, top, CW, hh, head);
+    sheet.box(hp, { x: EDGE, y: top, w: CW, h: hh }, head);
     const x = (W - w) / 2;
     d.options.forEach((op, i) => {
       const oy = top + hh + 3.5 * REM + i * (oh + REM);
-      card(s, x, oy, w, oh, c.card, c.border);
+      sheet.card({ x, y: oy, w, h: oh }, sheet.c.plainCard);
       const mid = { valign: "middle" } as const;
-      box(s, c, literal(op.label), x + 1.5 * REM, oy, 2 * REM, oh, {
-        size: 14,
-        mono: true,
-        bold: true,
-        color: c.muted,
-        ...mid,
-      });
-      box(s, c, op.text, x + 4.5 * REM, oy, w - 10 * REM, oh, {
-        size: 17.5,
-        color: c.ink,
-        line: 1.4,
-        ...mid,
-      });
-      box(s, c, literal("0"), x + w - 5.5 * REM, oy, 4 * REM, oh, {
-        size: PT.h4,
-        mono: true,
-        bold: true,
-        color: c.teal,
-        align: "right",
-        ...mid,
-      });
+      sheet.box(
+        literal(op.label),
+        { x: x + 1.5 * REM, y: oy, w: 2 * REM, h: oh },
+        {
+          size: 14,
+          mono: true,
+          bold: true,
+          color: c.muted,
+          ...mid,
+        },
+      );
+      sheet.box(
+        op.text,
+        { x: x + 4.5 * REM, y: oy, w: w - 10 * REM, h: oh },
+        {
+          size: 17.5,
+          color: c.ink,
+          line: 1.4,
+          ...mid,
+        },
+      );
+      sheet.box(
+        literal("0"),
+        { x: x + w - 5.5 * REM, y: oy, w: 4 * REM, h: oh },
+        {
+          size: PT.h4,
+          mono: true,
+          bold: true,
+          color: c.teal,
+          align: "right",
+          ...mid,
+        },
+      );
     });
   },
 
   transition(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     const paras: Para[] = [];
     if (d.preText)
@@ -3939,13 +3858,11 @@ const RENDER: {
     };
     const th = Math.min(BOTTOM - TOP - speakerH, sheet.need(paras, CW - 1, o) + 0.2);
     const ty = TOP + (BOTTOM - TOP - th - speakerH) / 2;
-    box(s, c, paras, EDGE + 0.5, ty, CW - 1, th, o);
+    sheet.box(paras, { x: EDGE + 0.5, y: ty, w: CW - 1, h: th }, o);
     if (d.speakerName) {
       const sw = Math.max(2.6, (d.speakerName.length * PT.h3 * 0.62) / 72 + 0.8);
-      card(s, (W - sw) / 2, ty + th + 0.2, sw, 0.85, c.card, c.border);
-      box(
-        s,
-        c,
+      sheet.card({ x: (W - sw) / 2, y: ty + th + 0.2, w: sw, h: 0.85 }, sheet.c.plainCard);
+      sheet.box(
         [
           {
             runs: [{ text: d.speakerName, options: { color: c.teal } }],
@@ -3955,17 +3872,13 @@ const RENDER: {
           },
           ...(d.speakerCompany ? [{ runs: [{ text: d.speakerCompany }], rel: 0.65 }] : []),
         ],
-        (W - sw) / 2,
-        ty + th + 0.2,
-        sw,
-        0.85,
+        { x: (W - sw) / 2, y: ty + th + 0.2, w: sw, h: 0.85 },
         { size: PT.h3, color: c.ink, align: "center", valign: "middle" },
       );
     }
   },
 
   closing(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     if (d.variant === "discussion") {
       const y = header(sheet, { headline: d.headline ?? d.line1 ?? sheet.words.discussion });
@@ -3979,8 +3892,8 @@ const RENDER: {
       const total = hs.reduce((sum, h) => sum + h + 2 * padY, 0) + Math.max(0, qs.length - 1) * gap;
       let qy = a.y + Math.max(0, a.h - total) / 2.25;
       qs.forEach((q, i) => {
-        card(s, a.x, qy, a.w, hs[i] + 2 * padY, c.card, c.border);
-        box(s, c, literal(q), a.x + padX, qy + padY, a.w - 2 * padX, hs[i], o);
+        sheet.card({ x: a.x, y: qy, w: a.w, h: hs[i] + 2 * padY }, sheet.c.plainCard);
+        sheet.box(literal(q), { x: a.x + padX, y: qy + padY, w: a.w - 2 * padX, h: hs[i] }, o);
         qy += hs[i] + 2 * padY + gap;
       });
       return;
@@ -4002,7 +3915,7 @@ const RENDER: {
           align: "center",
         };
         const hh = sheet.need(literal(head), CW, o);
-        box(s, c, { ...literal(head), balance: true }, EDGE, y, CW, hh, o);
+        sheet.box({ ...literal(head), balance: true }, { x: EDGE, y, w: CW, h: hh }, o);
         y += hh + gap;
       }
       const speakers = d.speakers ?? [];
@@ -4020,12 +3933,16 @@ const RENDER: {
         let x = (W - lockW - partnerW.reduce((sum, w) => sum + w + 2 * pad + times, 0)) / 2;
         partners.forEach((p, i) => {
           picture(sheet, p.src, x, y, partnerW[i], lockH, { alt: p.alt ?? p.company });
-          box(s, c, "×", x + partnerW[i] + pad, y, times, lockH, {
-            size: PT.s6,
-            color: c.muted,
-            align: "center",
-            valign: "middle",
-          });
+          sheet.box(
+            "×",
+            { x: x + partnerW[i] + pad, y, w: times, h: lockH },
+            {
+              size: PT.s6,
+              color: c.muted,
+              align: "center",
+              valign: "middle",
+            },
+          );
           x += partnerW[i] + 2 * pad + times;
         });
         s.addImage({
@@ -4082,7 +3999,7 @@ const RENDER: {
           ];
           const po: BoxOpts = { size: 17.5, color: c.ink, line: 1.4, align: "center" };
           const ph = sheet.need(paras, CW, po);
-          box(s, c, paras, EDGE, y, CW, ph, po);
+          sheet.box(paras, { x: EDGE, y, w: CW, h: ph }, po);
           y += ph + 2 * REM;
         }
         y += gap - 2 * REM;
@@ -4095,9 +4012,7 @@ const RENDER: {
           const x = sx + i * sw;
           const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
           portrait(sheet, sp.imageSrc, sp.name, x + sw / 2 - 0.55, y, 1.1, tone);
-          box(
-            s,
-            c,
+          sheet.box(
             [
               { runs: [{ text: sp.name }], mono: true, bold: true, after: 2 },
               {
@@ -4127,10 +4042,7 @@ const RENDER: {
                 : []),
               ...(sp.linkedIn ? [{ ...profileLink(sp.linkedIn, c), rel: 0.8 }] : []),
             ],
-            x,
-            y + 1.2,
-            sw,
-            1 + linked,
+            { x, y: y + 1.2, w: sw, h: 1 + linked },
             { size: PT.h4, color: c.ink, align: "center" },
           );
         });
@@ -4175,7 +4087,7 @@ const RENDER: {
         // max-w-7xl less the web line's 5vw sides (--slide-closing-side), EDGE at the 1920 stage.
         const tw = Math.min(CW, 80 * REM) - 2 * EDGE;
         const th = sheet.need(tail, tw, o);
-        box(s, c, tail, (W - tw) / 2, y, tw, th, o);
+        sheet.box(tail, { x: (W - tw) / 2, y, w: tw, h: th }, o);
         return y + th;
       }
       return y - gap;
@@ -4188,7 +4100,6 @@ const RENDER: {
   // As the web's RoadmapSlide: each column a card holding its items, or its phases as groups of
   // rows under a caps label.
   roadmap(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     // A row's own marker colour: `tone`, or the class its deprecated `dotColor` names.
     const marker = (it: Pick<RoadmapItem, "tone" | "dotColor">) => {
@@ -4209,11 +4120,10 @@ const RENDER: {
             items: p.items,
           }))
         : [{ hue: tone, items: col.items ?? [] }];
-      card(s, r.x, r.y, r.w, r.h, mixColor(tone, c.bg, 0.05), c.border);
-      rect(s, r.x + 0.15, r.y, r.w - 0.3, 0.05, tone);
+      sheet.card(r, { fill: mixColor(tone, c.bg, 0.05), line: c.border });
+      sheet.rect({ x: r.x + 0.15, y: r.y, w: r.w - 0.3, h: 0.05 }, tone);
       chip(
-        s,
-        c,
+        sheet,
         col.label,
         r.x + 0.25,
         r.y + 0.25,
@@ -4221,9 +4131,7 @@ const RENDER: {
         mixColor(tone, c.bg, 0.15),
         tone,
       );
-      box(
-        s,
-        c,
+      sheet.box(
         [
           { runs: md(col.title, c), mono: true, bold: true, rel: PT.h3 / PT.base, after: 4 },
           ...(col.subtitle ? [{ runs: md(col.subtitle, c, { color: c.muted }), after: 10 }] : []),
@@ -4258,17 +4166,13 @@ const RENDER: {
             ]),
           ]),
         ],
-        r.x + 0.25,
-        r.y + 0.65,
-        r.w - 0.5,
-        r.h - 0.8,
+        { x: r.x + 0.25, y: r.y + 0.65, w: r.w - 0.5, h: r.h - 0.8 },
         { size: PT.base, color: c.ink },
       );
     });
   },
 
   gantt(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     const y = header(sheet, d);
     const footH = footerHeight(sheet, d.footer);
@@ -4284,14 +4188,18 @@ const RENDER: {
     const lh = (PT.label * 1.25) / 72;
     const head = (PT.label * 1.4) / 72;
     d.columns.forEach((col, i) => {
-      box(s, c, { runs: [caps(col)] }, cx(i + 1), y, colW, head, {
-        size: PT.label,
-        mono: true,
-        color: c.muted,
-        tracking: 0.06,
-        align: "center",
-      });
-      rect(s, cx(i + 1), y + head + sp(1.5), colW, 2 / 144, c.border);
+      sheet.box(
+        { runs: [caps(col)] },
+        { x: cx(i + 1), y, w: colW, h: head },
+        {
+          size: PT.label,
+          mono: true,
+          color: c.muted,
+          tracking: 0.06,
+          align: "center",
+        },
+      );
+      sheet.rect({ x: cx(i + 1), y: y + head + sp(1.5), w: colW, h: 2 / 144 }, c.border);
     });
     const top = y + head + sp(1.5) + 2 / 144 + sp(2);
     const stack = Math.max(
@@ -4310,9 +4218,7 @@ const RENDER: {
     const rh = pitch - Math.min(sp(2), pitch / 4);
     d.rows.forEach((r, i) => {
       const ry = top + i * pitch;
-      box(
-        s,
-        c,
+      sheet.box(
         [
           { runs: [{ text: r.label }] },
           ...(r.sublabel
@@ -4324,48 +4230,42 @@ const RENDER: {
               ]
             : []),
         ],
-        EDGE,
-        ry,
-        sp(80),
-        rh,
+        { x: EDGE, y: ry, w: sp(80), h: rh },
         { size: PT.base, color: c.ink, align: "right", valign: "middle", line: 1.25 },
       );
       const by = ry + Math.min(lh + sp(1.5), rh / 2);
       d.columns.forEach((_, k) =>
-        card(s, cx(k + 1), by, colW, ry + rh - by, c.card, undefined, radius),
+        sheet.rounded({ x: cx(k + 1), y: by, w: colW, h: ry + rh - by }, { fill: c.card }, radius),
       );
       for (const bar of r.bars) {
         // One data hue, as on the web slide; continuous work at the ladder's 40 % with a 70 % edge.
         const tone = c.teal;
-        card(
-          s,
-          cx(bar.start),
-          by,
-          span(bar.span),
-          ry + rh - by,
-          bar.continuous ? mixColor(tone, c.card, 0.4) : tone,
-          bar.continuous ? mixColor(tone, c.card, 0.7) : undefined,
+        sheet.rounded(
+          { x: cx(bar.start), y: by, w: span(bar.span), h: ry + rh - by },
+          {
+            fill: bar.continuous ? mixColor(tone, c.card, 0.4) : tone,
+            line: bar.continuous ? mixColor(tone, c.card, 0.7) : undefined,
+          },
           radius,
         );
-        box(s, c, bar.label, cx(bar.start), ry, span(bar.span), lh, {
-          size: PT.label,
-          bold: true,
-          color: tone,
-          valign: "bottom",
-          line: 1.25,
-        });
+        sheet.box(
+          bar.label,
+          { x: cx(bar.start), y: ry, w: span(bar.span), h: lh },
+          {
+            size: PT.label,
+            bold: true,
+            color: tone,
+            valign: "bottom",
+            line: 1.25,
+          },
+        );
       }
     });
     if (stack) {
       const my = top + d.rows.length * pitch - (pitch - rh) + sp(3);
-      box(
-        s,
-        c,
+      sheet.box(
         { runs: [caps(d.milestonesLabel ?? sheet.words.milestones)] },
-        EDGE,
-        my,
-        sp(80),
-        lh,
+        { x: EDGE, y: my, w: sp(80), h: lh },
         {
           size: PT.label,
           mono: true,
@@ -4376,16 +4276,16 @@ const RENDER: {
       );
       // Milestones of one column stack under one rule, as on the web.
       for (const [column, ms] of Map.groupBy(d.milestones!, (m) => m.column)) {
-        rect(s, cx(column), my, colW, 2 / 144, c.purple);
+        sheet.rect({ x: cx(column), y: my, w: colW, h: 2 / 144 }, c.purple);
         ms.forEach((m, k) =>
-          box(
-            s,
-            c,
+          sheet.box(
             m.label,
-            cx(column),
-            my + 2 / 144 + sp(1.5) + k * lh,
-            Math.min(colW * 1.5, W - EDGE - cx(column)),
-            lh,
+            {
+              x: cx(column),
+              y: my + 2 / 144 + sp(1.5) + k * lh,
+              w: Math.min(colW * 1.5, W - EDGE - cx(column)),
+              h: lh,
+            },
             { size: PT.label, bold: true, color: c.purple, line: 1.25 },
           ),
         );
@@ -4405,7 +4305,6 @@ const RENDER: {
   },
 
   agenda(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     const y = header(sheet, d);
     const items = d.items.map((it) => (typeof it === "string" ? { title: it } : it));
@@ -4440,15 +4339,18 @@ const RENDER: {
         : []),
     ]);
     const footH = footerHeight(sheet, d.footer);
-    box(s, c, paras, EDGE, y + 0.2, CW * 0.8, BOTTOM - y - 0.2 - footH, {
-      size: PT.h3,
-      color: c.ink,
-    });
+    sheet.box(
+      paras,
+      { x: EDGE, y: y + 0.2, w: CW * 0.8, h: BOTTOM - y - 0.2 - footH },
+      {
+        size: PT.h3,
+        color: c.ink,
+      },
+    );
     footer(sheet, d.footer, footH);
   },
 
   activity(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     const label =
       d.label ?? { exercise: "Hands-on", demo: "Live demo", debrief: "Debrief" }[d.kind];
@@ -4458,11 +4360,15 @@ const RENDER: {
     let top = y + 0.3;
     if (d.prompt) {
       const ph = sheet.need(d.prompt, CW - 0.6, { size: PT.lead, color: c.ink }) + 0.3;
-      card(s, EDGE, top, CW, ph, c.tealTint, c.teal);
-      box(s, c, d.prompt, EDGE + 0.3, top + 0.15, CW - 0.6, ph - 0.3, {
-        size: PT.lead,
-        color: c.ink,
-      });
+      sheet.card({ x: EDGE, y: top, w: CW, h: ph }, sheet.c.litCard);
+      sheet.box(
+        d.prompt,
+        { x: EDGE + 0.3, y: top + 0.15, w: CW - 0.6, h: ph - 0.3 },
+        {
+          size: PT.lead,
+          color: c.ink,
+        },
+      );
       top += ph + 0.3;
     }
     const paras: Para[] = d.items.map((it, i) => ({
@@ -4475,17 +4381,19 @@ const RENDER: {
       bullet: d.kind === "demo",
       after: 10,
     }));
-    box(s, c, paras, EDGE, top, CW - fw - (fw ? 0.5 : 0), BOTTOM - top, {
-      size: PT.lead,
-      color: c.ink,
-    });
+    sheet.box(
+      paras,
+      { x: EDGE, y: top, w: CW - fw - (fw ? 0.5 : 0), h: BOTTOM - top },
+      {
+        size: PT.lead,
+        color: c.ink,
+      },
+    );
     if (!frame.length) return;
     const fx = EDGE + CW - fw;
     const fh = 0.5 + frame.length * 0.55;
-    card(s, fx, top, fw, fh, c.card, c.border);
-    box(
-      s,
-      c,
+    sheet.card({ x: fx, y: top, w: fw, h: fh }, sheet.c.plainCard);
+    sheet.box(
       frame.map((t, i) => ({
         runs: md(t, c, i === 0 && d.duration ? {} : { color: c.muted }),
         mono: i === 0 && !!d.duration,
@@ -4493,10 +4401,7 @@ const RENDER: {
         rel: i === 0 && d.duration ? 1.4 : 1,
         after: 8,
       })),
-      fx + 0.3,
-      top + 0.25,
-      fw - 0.6,
-      fh - 0.5,
+      { x: fx + 0.3, y: top + 0.25, w: fw - 0.6, h: fh - 0.5 },
       { size: PT.base, color: c.ink },
     );
   },
@@ -4556,14 +4461,9 @@ const RENDER: {
       });
       const r = 78 * unit;
       const rad = (centres[k] * Math.PI) / 180;
-      box(
-        s,
-        c,
+      sheet.box(
         { runs: [{ text: String(k + 1) }] },
-        cx + r * Math.cos(rad) - 0.2,
-        cy + r * Math.sin(rad) - 0.15,
-        0.4,
-        0.3,
+        { x: cx + r * Math.cos(rad) - 0.2, y: cy + r * Math.sin(rad) - 0.15, w: 0.4, h: 0.3 },
         {
           size: Math.round(14 * unit * 72 * 2) / 2,
           bold: true,
@@ -4583,14 +4483,9 @@ const RENDER: {
       fill: { color: mixColor(c.ink, c.bg, 0.07) },
       line: { type: "none" },
     });
-    box(
-      s,
-      c,
+    sheet.box(
       { runs: md(d.center, c), bold: true },
-      cx - hub / 2 + REM,
-      cy - hub / 2 + REM,
-      hub - 2 * REM,
-      hub - 2 * REM,
+      { x: cx - hub / 2 + REM, y: cy - hub / 2 + REM, w: hub - 2 * REM, h: hub - 2 * REM },
       {
         size: PT.sm,
         color: c.ink,
@@ -4603,26 +4498,30 @@ const RENDER: {
       let ly = cy - colH(list) / 2;
       for (const k of list) {
         const sg = d.segments[k];
-        card(s, x, ly, tile, tile, c.teal, undefined, 10 / 144);
-        box(s, c, { runs: [{ text: String(k + 1) }] }, x, ly, tile, tile, {
-          size: 17.33,
-          mono: true,
-          bold: true,
-          color: c.card,
-          align: "center",
-          valign: "middle",
-          line: 1,
-        });
+        sheet.rounded({ x, y: ly, w: tile, h: tile }, { fill: c.teal }, 10 / 144);
+        sheet.box(
+          { runs: [{ text: String(k + 1) }] },
+          { x, y: ly, w: tile, h: tile },
+          {
+            size: 17.33,
+            mono: true,
+            bold: true,
+            color: c.card,
+            align: "center",
+            valign: "middle",
+            line: 1,
+          },
+        );
         const th = sheet.need(sg.title, w, titleO);
-        box(s, c, sg.title, x + tile + 0.75 * REM, ly, w, th, titleO);
-        box(
-          s,
-          c,
+        sheet.box(sg.title, { x: x + tile + 0.75 * REM, y: ly, w, h: th }, titleO);
+        sheet.box(
           sg.text,
-          x + tile + 0.75 * REM,
-          ly + th + 0.25 * REM,
-          w,
-          sheet.need(sg.text, w, textO),
+          {
+            x: x + tile + 0.75 * REM,
+            y: ly + th + 0.25 * REM,
+            w,
+            h: sheet.need(sg.text, w, textO),
+          },
           textO,
         );
         ly += itemH(k) + 1.75 * REM;
@@ -4644,7 +4543,7 @@ const RENDER: {
     );
     column(left, a.x + colW - Math.min(colW, leftW), Math.min(textW, leftW - tile - 0.75 * REM));
     column(right, cx + dia / 2 + 2 * REM);
-    if (d.caption) box(s, c, d.caption, a.x, top + h + REM, a.w, capH - REM, capO);
+    if (d.caption) sheet.box(d.caption, { x: a.x, y: top + h + REM, w: a.w, h: capH - REM }, capO);
   },
 
   decision(sheet, d) {
@@ -4689,7 +4588,8 @@ const RENDER: {
     const mid = top + gridH / 2;
     const thick = 0.25 * REM;
     const line = { color: c.teal, width: 2 };
-    const bar = (x: number, w: number, yy: number) => rect(s, x, yy - thick / 2, w, thick, c.teal);
+    const bar = (x: number, w: number, yy: number) =>
+      sheet.rect({ x, y: yy - thick / 2, w, h: thick }, c.teal);
     const head = (tip: number, yy: number) => {
       const [len, half] = [0.9 * REM, 0.6 * REM];
       s.addShape("triangle", {
@@ -4702,27 +4602,21 @@ const RENDER: {
         line: { type: "none" },
       });
     };
-    card(
-      s,
-      col(0),
-      mid - needH / 2,
-      fixed[0],
-      needH,
-      mixColor(c.teal, c.card, 0.07),
-      mixColor(c.teal, c.card, 0.4),
+    sheet.card(
+      { x: col(0), y: mid - needH / 2, w: fixed[0], h: needH },
+      { fill: mixColor(c.teal, c.card, 0.07), line: mixColor(c.teal, c.card, 0.4) },
     );
-    box(s, c, d.need, col(0) + 1.25 * REM, mid - needH / 2 + REM, needIn, needH - 2 * REM, bold);
+    sheet.box(
+      d.need,
+      { x: col(0) + 1.25 * REM, y: mid - needH / 2 + REM, w: needIn, h: needH - 2 * REM },
+      bold,
+    );
     bar(col(1), fixed[1], mid);
     head(col(2), mid);
-    card(s, col(2), mid - qH / 2, fixed[2], qH, c.card, c.teal);
-    box(
-      s,
-      c,
+    sheet.card({ x: col(2), y: mid - qH / 2, w: fixed[2], h: qH }, { fill: c.card, line: c.teal });
+    sheet.box(
       { runs: md(d.question, c), align: "center" },
-      col(2) + 1.25 * REM,
-      mid - qH / 2 + 1.25 * REM,
-      qIn,
-      qH - 2.5 * REM,
+      { x: col(2) + 1.25 * REM, y: mid - qH / 2 + 1.25 * REM, w: qIn, h: qH - 2.5 * REM },
       { ...bold, align: "center" },
     );
     bar(col(3), 2 * REM, mid);
@@ -4736,14 +4630,14 @@ const RENDER: {
       s.addShape("line", { x: forkX, y: cy, w: col(4) - forkX, h: 0, line });
       head(col(4), cy);
       const lh = (PT.h4 * 1.4) / 72;
-      box(
-        s,
-        c,
+      sheet.box(
         { runs: [caps(br.label)] },
-        forkX + 0.75 * REM,
-        r ? cy + 3 * REM - lh : cy - 3 * REM,
-        fixed[3] - 2.75 * REM,
-        lh,
+        {
+          x: forkX + 0.75 * REM,
+          y: r ? cy + 3 * REM - lh : cy - 3 * REM,
+          w: fixed[3] - 2.75 * REM,
+          h: lh,
+        },
         {
           size: PT.h4,
           mono: true,
@@ -4752,14 +4646,9 @@ const RENDER: {
           line: 1.4,
         },
       );
-      card(
-        s,
-        col(4),
-        by,
-        fixed[4],
-        rowH,
-        mixColor(teamLine(br.team), c.card, 0.15),
-        teamLine(br.team),
+      sheet.card(
+        { x: col(4), y: by, w: fixed[4], h: rowH },
+        { fill: mixColor(teamLine(br.team), c.card, 0.15), line: teamLine(br.team) },
       );
       const parts = branch(br);
       const inner = parts.reduce((sum, [p, o, gap]) => sum + gap + sheet.need(p, bIn, o), 0);
@@ -4767,7 +4656,7 @@ const RENDER: {
       for (const [p, o, gap] of parts) {
         const ph = sheet.need(p, bIn, o);
         ty += gap;
-        box(s, c, p, col(4) + 1.5 * REM, ty, bIn, ph, o);
+        sheet.box(p, { x: col(4) + 1.5 * REM, y: ty, w: bIn, h: ph }, o);
         ty += ph;
       }
       s.addShape("line", { x: col(5), y: cy, w: joinX - col(5), h: 0, line });
@@ -4775,9 +4664,21 @@ const RENDER: {
     });
     bar(joinX, col(6) - joinX, mid);
     head(col(6), mid);
-    card(s, col(6), mid - oH / 2, fixed[6], oH, mixColor(c.ink, c.bg, 0.07));
-    box(s, c, d.outcome, col(6) + 1.25 * REM, mid - oH / 2 + REM, oIn, oH - 2 * REM, bold);
-    if (d.caption) box(s, c, d.caption, a.x, top + gridH + 1.5 * REM, a.w, capH - 1.5 * REM, capO);
+    sheet.card(
+      { x: col(6), y: mid - oH / 2, w: fixed[6], h: oH },
+      { fill: mixColor(c.ink, c.bg, 0.07) },
+    );
+    sheet.box(
+      d.outcome,
+      { x: col(6) + 1.25 * REM, y: mid - oH / 2 + REM, w: oIn, h: oH - 2 * REM },
+      bold,
+    );
+    if (d.caption)
+      sheet.box(
+        d.caption,
+        { x: a.x, y: top + gridH + 1.5 * REM, w: a.w, h: capH - 1.5 * REM },
+        capO,
+      );
   },
 };
 
@@ -4821,18 +4722,21 @@ function pillPhases(
   }[],
   a: Area,
 ) {
-  const { slide: s } = sheet;
   const { c } = sheet;
   const ph = Math.min(1, a.h / phases.length);
   phases.forEach((p, i) => {
     const py = a.y + i * ph;
     const tone = c[THEME[p.theme ?? "primary"]] as string;
-    box(s, c, { runs: [{ text: "• " }, caps(p.label)] }, a.x, py, a.w, 0.25, {
-      size: PT.label,
-      mono: true,
-      bold: true,
-      color: tone,
-    });
+    sheet.box(
+      { runs: [{ text: "• " }, caps(p.label)] },
+      { x: a.x, y: py, w: a.w, h: 0.25 },
+      {
+        size: PT.label,
+        mono: true,
+        bold: true,
+        color: tone,
+      },
+    );
     let x = a.x;
     const title = (it: (typeof p.items)[number]) =>
       it.number === undefined ? it.title : `#${it.number} ${it.title}`;
@@ -4840,8 +4744,7 @@ function pillPhases(
     for (const it of p.items) {
       const on = it.state === "active" || it.state === "new";
       const w = chip(
-        s,
-        c,
+        sheet,
         title(it),
         x,
         py + 0.32,
