@@ -177,10 +177,12 @@ describe("slides-pptx on the specimen deck", () => {
       rows: [{ label: "Training", bars: [{ label: "Cohorts", start: 1, span: 3 }] }],
     });
     const shapes = shapesOf(xml);
-    const [pill] = shapes.filter(({ texts }) => texts.join("") === principle);
-    const [title] = shapes.filter(({ texts }) => texts.join("") === headline);
-    assert(pill, "The principle has a shape");
-    assert(title, "The headline has a shape");
+    const pills = shapes.filter(({ texts }) => texts.join("") === principle);
+    const titles = shapes.filter(({ texts }) => texts.join("") === headline);
+    expect(pills).toHaveLength(1);
+    expect(titles).toHaveLength(1);
+    const [pill] = pills;
+    const [title] = titles;
     // The pill keeps the print route's place; the title's box starts below it.
     expect(title.y).toBeGreaterThan(pill.y + pill.h);
   });

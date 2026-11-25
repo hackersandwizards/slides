@@ -138,7 +138,7 @@ describe("slides-pptx on the specimen deck", () => {
 
     // The y label and the note over the plot as text, the note no longer in the annotation; a
     // line break the export sets reads as the space it replaces.
-    it("writes both axis titles and the future note as slide text", () => {
+    it("writes the axis titles, future note and annotation as separate slide texts", () => {
       const texts = [...xml.matchAll(/<p:txBody>(.*?)<\/p:txBody>/gs)].map(([, body]) =>
         [...body.replace(/<a:br\/>/g, "<a:t> </a:t>").matchAll(/<a:t>([^<]*)<\/a:t>/g)]
           .map((m) => m[1])
@@ -151,6 +151,7 @@ describe("slides-pptx on the specimen deck", () => {
           "Teams on the harness",
           "Baseline → repeat run → progress view → adoption over time",
           "Time",
+          "Fictional figures.",
         ]),
       );
     });
