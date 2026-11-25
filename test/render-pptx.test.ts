@@ -1,7 +1,6 @@
 import { join } from "node:path";
 import type JSZip from "jszip";
 import { assert, beforeAll, describe, expect, it } from "vitest";
-import { HW_LOGO } from "../lib/logo";
 import { slideDrawn } from "../scripts/pptx/slides";
 import { slideCatalog, specimenImages } from "../specimen/slide-catalog";
 import type { Presentation, Slide } from "../types/slide";
@@ -9,7 +8,6 @@ import {
   norm,
   rendered,
   specimen,
-  specimenAt,
   specimenSlide,
   texts,
   unescapeNamedEntities,
@@ -120,6 +118,19 @@ const overFullDeck: Presentation = {
       footer: "Fictional plan.",
       notes: "gantt: kicker, principle, sublabels, continuous bar, milestones, footer.",
     },
+    {
+      type: "profiles",
+      headline: "A cropped portrait",
+      profiles: [
+        {
+          name: "Ari Example",
+          title: "Guide",
+          company: "Example",
+          bullets: [],
+          imageSrc: specimenImages["portrait-a.png"],
+        },
+      ],
+    },
   ],
 };
 
@@ -143,21 +154,33 @@ describe("slides-pptx on the specimen deck", () => {
   const stats = specimenSlide("Numbers after six months", "grid");
   const versus = specimenSlide("Prompting against a harness", "comparison");
   const imageSteps = specimenSlide("One board, built up step by step", "content");
-  const questions = slideCatalog.slides.find(
-    (slide) => slide.type === "closing" && slide.line1 === "Questions?",
-  );
-  const partnerClosing = slideCatalog.slides.find(
-    (slide) => slide.type === "closing" && slide.partners?.length === 1,
-  );
-  assert(questions, "Specimen contact closing without portraits");
-  assert(partnerClosing, "Specimen contact closing with the partner logo");
+  const closings = slideCatalog.slides.filter((slide) => slide.type === "closing");
+  const [questions, partnerClosing, portraitClosing] = [
+    { name: "Questions?", matches: closings.filter((slide) => slide.line1 === "Questions?") },
+    {
+      name: "Closing with the partner logo",
+      matches: closings.filter((slide) =>
+        slide.partners?.some((partner) => partner.company === "Northwind"),
+      ),
+    },
+    {
+      name: "Closing with speaker portraits",
+      matches: closings.filter((slide) => slide.speakers?.some((speaker) => speaker.imageSrc)),
+    },
+  ].map(({ name, matches }) => {
+    assert(
+      matches.length === 1,
+      `Expected one specimen slide for "${name}", found ${matches.length}`,
+    );
+    return matches[0];
+  });
 
   // A stats card shows its label in place of its title, as the web card does.
   // A closing whose mark stands centred shows the h&w lockup, and each partner's logo, in place
   // of the company's name.
   // A vs comparison item's leading + or - is its mark, not its text.
   // Image steps show their last step, as print does: a file has no arrow steps.
-  const specialTextSlides = new Set([stats, versus, imageSteps, questions, partnerClosing]);
+  const specialTextSlides = new Set<Slide>([stats, versus, imageSteps, questions, partnerClosing]);
 
   // An overview draws as phased pills, its stage descriptions gone, as on the web.
   it("sets every text of a slide as text on that slide", () => {
@@ -198,12 +221,17 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it.each([
-    { name: "lockup", slide: questions, companies: [HW_LOGO.alt], labels: [HW_LOGO.alt] },
+    {
+      name: "lockup",
+      slide: questions,
+      companies: ["hackers&wizards"],
+      labels: ["hackers&wizards"],
+    },
     {
       name: "partner logo and lockup",
       slide: partnerClosing,
-      companies: [HW_LOGO.alt, "Northwind"],
-      labels: ["Northwind", HW_LOGO.alt],
+      companies: ["hackers&wizards", "Northwind"],
+      labels: ["Northwind", "hackers&wizards"],
     },
   ])(
     "shows the $name in place of the centred closing's company text",
@@ -262,28 +290,25 @@ describe("slides-pptx on the specimen deck", () => {
     expect(slidesWithExtraPictures).toEqual([]);
   });
 
+  const statements = slideCatalog.slides.filter((slide) => slide.type === "statement");
+  const [leadPortrait, keynotePortrait] = [
+    "We stopped asking how fast the agent types",
+    "The build time set the pace",
+  ].map((line) => {
+    const matches = statements.filter((slide) => slide.lines[0] === line);
+    assert(
+      matches.length === 1,
+      `Expected one specimen statement opening with "${line}", found ${matches.length}`,
+    );
+    return matches[0];
+  });
   const portraitSlides = [
     specimenSlide("Regular slide with a profile sidebar", "regular"),
-    slideCatalog.slides[
-      specimenAt(
-        (slide) =>
-          slide.type === "statement" &&
-          slide.lines[0] === "We stopped asking how fast the agent types",
-      )
-    ],
+    leadPortrait,
     specimenSlide("Two who changed how they review", "grid"),
     specimenSlide("Your trainers", "profiles"),
-    slideCatalog.slides[
-      specimenAt(
-        (slide) =>
-          slide.type === "closing" && slide.speakers?.some((speaker) => speaker.imageSrc) === true,
-      )
-    ],
-    slideCatalog.slides[
-      specimenAt(
-        (slide) => slide.type === "statement" && slide.lines[0] === "The build time set the pace",
-      )
-    ],
+    portraitClosing,
+    keynotePortrait,
   ];
 
   it("crops every portrait to a circle, as the slides' avatar", () => {
@@ -356,8 +381,6 @@ describe("slides-pptx on the specimen deck", () => {
   });
 });
 
-/** What PowerPoint draws off the slide, at a negative size, or cropped outside the picture: each
- *  shape's offset and extent against the slide, and each crop's edges against 0 to 100 %. */
 describe("slides-pptx package and shape bounds", () => {
   let overFull: Awaited<ReturnType<typeof rendered>>;
   beforeAll(async () => {
@@ -411,14 +434,16 @@ describe("slides-pptx package and shape bounds", () => {
   });
 
   // The lanes and the gantt hold more rows than fit: they warn, and stay well-formed.
+  /** What PowerPoint draws off the slide, at a negative size, or cropped outside the picture: each
+   *  shape's offset and extent against the slide, and each crop's edges against 0 to 100 %. */
   describe.each([
     {
       deck: "specimen",
       output: () => ({ zip, slideXml }),
-      boundedSlides: slideCatalog.slides.length,
+      overflowSlides: new Set<number>(),
     },
-    { deck: "over-full", output: () => overFull, boundedSlides: 5 },
-  ])("$deck deck", ({ output, boundedSlides }) => {
+    { deck: "over-full", output: () => overFull, overflowSlides: new Set([6, 7]) },
+  ])("$deck deck", ({ output, overflowSlides }) => {
     let parts: JSZip.JSZipObject[];
     let slides: string[];
     let frames: { slide: number; l: number; t: number; w: number; h: number }[];
@@ -458,7 +483,7 @@ describe("slides-pptx package and shape bounds", () => {
 
     it("keeps shapes on slides that fit", () => {
       expect(frames.length).toBeGreaterThan(0);
-      const bounded = frames.filter(({ slide }) => slide <= boundedSlides);
+      const bounded = frames.filter(({ slide }) => !overflowSlides.has(slide));
       // A rounding tenth of a millimetre past the edge is no defect.
       const allowed = 3600;
       const outside = bounded.filter(
@@ -477,6 +502,7 @@ describe("slides-pptx package and shape bounds", () => {
           })),
         ),
       );
+      expect(edges.length).toBeGreaterThan(0);
       expect(edges.filter(({ value }) => value !== Math.min(100000, Math.max(0, value)))).toEqual(
         [],
       );
