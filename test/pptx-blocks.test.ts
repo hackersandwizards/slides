@@ -12,7 +12,6 @@ import {
   rendered,
   shapesOf,
   specimen,
-  specimenAt,
   specimenSlide,
   TEAL,
 } from "./fixtures/rendered-deck";
@@ -397,72 +396,133 @@ describe("slides-pptx draws what the slide shows", () => {
     expect(figure.xml).toContain('typeface="JetBrains Mono"');
   });
 
-  it("writes a timeline figure's minus as the web's", () => {
-    const i = specimenAt(
-      (x) =>
-        x.type === "content" &&
-        x.content.some((b) => b.type === "timeline" && b.events.some((e) => e.figure === "-90 %")),
-    );
-    expect(slideXml[i]).toContain("<a:t>−90 %</a:t>");
-    expect(slideXml[i]).not.toContain("-90");
+  it("writes a timeline figure's minus as the web's", async () => {
+    const xml = await onlySlide({
+      type: "content",
+      headline: "Two weeks to the first live version, two more to the measured result",
+      content: [
+        {
+          type: "timeline",
+          continues: "in",
+          highlight: 2,
+          events: [
+            {
+              title: "Plan",
+              text: "Written from the tested prototype, not before it, and split into tasks the agent works on.",
+            },
+            {
+              segment: "2 weeks",
+              title: "Built and rolled out",
+              text: "First live version behind a feature flag, then iterated and opened to everyone.",
+            },
+            {
+              segment: "2 weeks",
+              title: "Measured",
+              text: "Against the team's metric: time per product text before and after.",
+              figure: "-90 %",
+            },
+          ],
+        },
+      ],
+    });
+    expect(xml).toContain("<a:t>−90 %</a:t>");
+    expect(xml).not.toContain("-90");
   });
 
   // A figure's box is one line high, so a wrapped figure warns as text taller than its box.
-  it("keeps a five-digit figure with its unit on one line in every numbers layout", async () => {
-    type Numbers = Extract<ContentSlide["content"][number], { type: "numbers" }>;
-    const lone = (b: ContentSlide["content"][number]): b is Numbers =>
-      b.type === "numbers" && b.items.length === 1;
-    const one = slideCatalog.slides.find(
-      (x) => x.type === "content" && x.content.some(lone),
-    ) as ContentSlide;
-    const block = one.content.find(lone)!;
-    const slides = [1, 2, 4, 6].map((n) => ({
-      ...one,
+  it.each([1, 2, 4, 6])(
+    "keeps a five-digit figure with its unit on one line with %i figures",
+    async (count) => {
+      const { warnings } = await rendered({
+        name: "Numbers",
+        slides: [
+          {
+            type: "content",
+            sectionLabel: "Visual: numbers, one figure",
+            headline: "One figure carries the slide",
+            content: [
+              {
+                type: "numbers",
+                items: Array.from({ length: count }, () => ({
+                  value: "12.345 %",
+                  label: "of teams review every plan",
+                  text: "A decimal comma and a spaced unit, as a German deck writes them",
+                })),
+                source: "Fictional figures",
+              },
+            ],
+          },
+        ],
+      });
+      expect(warnings).toEqual([]);
+    },
+  );
+
+  it("numbers a named scale's ends and quarters under its last track, as the web's Bars", async () => {
+    const xml = await onlySlide({
+      type: "content",
+      headline: "Ranges on a track",
       content: [
         {
-          ...block,
-          items: Array(n).fill({ ...block.items[0], value: "12.345 %" }),
+          type: "bars",
+          max: 100,
+          bars: [
+            { label: "Weekly digest", from: 45, value: 60, display: "45 to 60%", highlight: true },
+            { label: "Chat summary", from: 55, value: 70, display: "55 to 70%", highlight: true },
+            { label: "Status answers", from: 30, value: 55, display: "30 to 55%", highlight: true },
+            { label: "Risk alerts", from: 50, value: 75, display: "50 to 75%", highlight: true },
+            { label: "Audio recap", from: 15, value: 40, display: "15 to 40%" },
+            { label: "Slide export", from: 20, value: 30, display: "20 to 30%" },
+          ],
+          source: "Fictional forecast: the chance to hit each option's success model",
         },
       ],
-    }));
-    expect(
-      (await rendered({ name: "T", slides }, join(import.meta.dirname, ".."))).warnings,
-    ).toEqual([]);
+    });
+    const ticks = shapesOf(xml).filter((shape) => /^(0|25|50|75|100)$/.test(shape.texts.join("")));
+    expect(ticks.map((shape) => shape.texts.join(""))).toEqual(["0", "25", "50", "75", "100"]);
+    expect(new Set(ticks.map((shape) => shape.y.toFixed(2))).size).toBe(1);
   });
 
-  it("numbers a named scale's ends and quarters under its last track, as the web's Bars", () => {
-    const i = specimenAt(
-      (x) =>
-        x.type === "content" &&
-        x.content.some(
-          (b) => b.type === "bars" && b.max === 100 && b.bars.some((r) => r.from != null),
-        ),
+  it("indents a numbered list as far as the measure assumes", async () => {
+    const xml = await onlySlide({
+      type: "content",
+      headline: "Numbered steps",
+      content: [
+        {
+          type: "bullets",
+          ordered: true,
+          items: ["Write the plan", "Review the plan", "Let the agent build", "Review the result"],
+        },
+      ],
+    });
+    const numbered = [...xml.matchAll(/<a:pPr([^>]*)>(?:(?!<\/a:pPr>).)*<a:buAutoNum/g)];
+    const margins = numbered.flatMap(([, attrs]) =>
+      [...attrs.matchAll(/marL="(\d+)"/g)].map(([, margin]) => margin),
     );
-    const ticks = shapesOf(slideXml[i]).filter((sh) =>
-      /^(0|25|50|75|100)$/.test(sh.texts.join("")),
-    );
-    expect(ticks.map((sh) => sh.texts.join(""))).toEqual(["0", "25", "50", "75", "100"]);
-    expect(new Set(ticks.map((sh) => sh.y!.toFixed(2))).size).toBe(1);
+    expect(margins).toEqual(["203200", "203200", "203200", "203200"]);
   });
 
-  it("indents a numbered list as far as the measure assumes, and steps code highlights by its lines", () => {
-    const ordered =
-      slideXml[
-        specimenAt(
-          (x) => x.type === "content" && x.content.some((b) => b.type === "bullets" && !!b.ordered),
-        )
-      ];
-    const numbered = [...ordered.matchAll(/<a:pPr([^>]*)>(?:(?!<\/a:pPr>).)*<a:buAutoNum/g)];
-    expect(numbered.length).toBeGreaterThan(0);
-    for (const [, attrs] of numbered) expect(attrs).toContain(`marL="${16 * 12700}"`);
-    // The annotated code's lines at the web's 1.3 em, the step its highlights take.
-    const code =
-      slideXml[
-        specimenAt(
-          (x) => x.type === "content" && x.content.some((b) => b.type === "annotated-code"),
-        )
-      ];
-    expect(code).toContain(`<a:spcPts val="${Math.round(16 * 1.3 * 100)}"/>`);
+  // The annotated code's lines at the web's 1.3 em, the step its highlights take.
+  it("sets annotated code at a line spacing of 1.3 em", async () => {
+    const xml = await onlySlide({
+      type: "content",
+      headline: "Annotated code marks the lines that matter",
+      content: [
+        {
+          type: "annotated-code",
+          language: "typescript",
+          code: "const plan = await agent.plan(ticket);\nawait review(plan);\nconst diff = await agent.build(plan);\nawait review(diff);",
+          notes: [
+            { line: 2, text: "A person reads the plan first" },
+            { line: 4, text: "and the diff last" },
+          ],
+        },
+      ],
+    });
+    const code = shapesOf(xml).filter((shape) => shape.texts.join("").startsWith("const plan"));
+    expect(code.map((shape) => shape.xml)).toEqual([
+      expect.stringContaining('<a:spcPts val="2080"/>'),
+    ]);
   });
 });
 
