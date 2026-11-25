@@ -1,5 +1,10 @@
 import type { ComparisonSide, Slide } from "../../../types/slide";
-import { beforeAfter, beforeAfterHeight, highlightPara } from "../blocks/before-after";
+import {
+  beforeAfterLayout,
+  drawBeforeAfter,
+  highlightPara,
+  type BeforeAfterMode,
+} from "../blocks/before-after";
 import { header } from "../chrome";
 import { textWidth } from "../fit";
 import { drySheet, type Sheet } from "../sheet";
@@ -55,18 +60,18 @@ export function drawComparison(
   const area = BODY(y);
   const sides = [d.left, d.right];
   const variant = d.variant ?? "vs";
-  const o = { size: PT.base, color: c.ink };
   // The sides, punchline and footnotes stand as one group where the web's slide body puts it.
   const place = (ch: number) => area.y + Math.max(0, area.h - ch - footH) / 2.25;
   if (variant === "before-after") {
-    const strike = d.strike !== false;
-    const adds = !strike && d.adds;
-    const ch = Math.min(
-      area.h - footH,
-      beforeAfterHeight(sheet, sides, strike, area.w, o, 1, adds),
+    const mode: BeforeAfterMode = d.strike !== false ? "replace" : d.adds ? "add" : "transition";
+    const layout = beforeAfterLayout(
+      sheet,
+      { before: d.left, after: d.right, mode },
+      { w: area.w, k: 1 },
     );
+    const ch = Math.min(area.h - footH, layout.h);
     const top = place(ch);
-    beforeAfter(sheet, { ...area, y: top, h: ch }, o, sides, strike, 1, adds);
+    drawBeforeAfter(sheet, layout, { ...area, y: top, h: ch });
     comparisonFoot(sheet, d, top + ch);
     return;
   }

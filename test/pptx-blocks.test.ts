@@ -1,8 +1,15 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import JSZip from "jszip";
+import PptxGenJS from "pptxgenjs";
+import { rejection } from "@hackersandwizards/scaffolding/rejection";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
+import { itemCard } from "../scripts/pptx/blocks/columns";
+import { Look } from "../scripts/pptx/look";
+import { palette } from "../scripts/pptx/palette";
+import { Sheet } from "../scripts/pptx/sheet";
 import { slideCatalog, specimenImages } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import { labeledGridAsCards } from "../lib/content-block-aliases";
@@ -722,5 +729,66 @@ describe("slides-pptx picture headers", () => {
     expect(warnings).toEqual(["image unreadable.bin: unreadable format"]);
     expect(shapes.filter((shape) => shape.prst === "round2DiagRect")).toHaveLength(1);
     expect(shapes.flatMap((shape) => shape.texts)).toContain("Picture unavailable");
+  });
+});
+
+describe("slides-pptx column cards", () => {
+  it("draws an itemCard with its tone border, title, subtitle, text and marker bullet", async () => {
+    const pptx = new PptxGenJS();
+    pptx.layout = "LAYOUT_WIDE";
+    const day = palette(false);
+    const sheet = new Sheet(new Look(day, "en", false), pptx.addSlide(), {
+      pptx,
+      assets: "",
+      warnings: [],
+      charts: new Map(),
+    });
+    itemCard(
+      sheet,
+      {
+        title: "Keep",
+        subtitle: "Every day",
+        text: "Short note",
+        items: ["Small steps"],
+        tone: day.green,
+        marker: "green",
+      },
+      { area: { x: 1, y: 1, w: 5, h: 4 }, k: 1, centered: false },
+    );
+    const out = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
+    const file = out.file("ppt/slides/slide1.xml");
+    assert(file, "slide1.xml");
+    const xml = await file.async("string");
+    const [card, body] = shapesOf(xml);
+    expect({
+      cardPreset: card.prst,
+      hasToneBorder: card.xml.includes(`<a:srgbClr val="${day.green}"/>`),
+      texts: body.texts,
+      hasMarker: body.xml.includes('char="&#xE001;"'),
+    }).toEqual({
+      cardPreset: "round2DiagRect",
+      hasToneBorder: true,
+      texts: ["Keep", "Every day", "Short note", "Small steps"],
+      hasMarker: true,
+    });
+  });
+
+  it("throws a TypeError for a prototype-key two-column variant", async () => {
+    const error = await rejection(
+      onlySlide({
+        type: "content",
+        headline: "Columns",
+        content: [
+          {
+            type: "two-column",
+            variant: "constructor" as "neutral",
+            left: { title: "A", items: ["One"] },
+            right: { title: "B", items: ["Two"] },
+          },
+          { type: "paragraph", text: "Tail" },
+        ],
+      }),
+    );
+    expect(error).toMatch(/^TypeError:.*\.map is not a function/);
   });
 });

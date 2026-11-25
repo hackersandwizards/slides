@@ -1,7 +1,19 @@
 import { MONO, SANS } from "./faces";
-import { longest, wrap, type pretty, type Span } from "./lines";
+import { balance, longest, pretty, wrap, type Span } from "./lines";
 import { LEADING, type Area, type Measure } from "./stage";
-import { CAPS, plain, type BoxOpts, type Para, type Run, type TextType } from "./text";
+import {
+  breaks,
+  CAPS,
+  MARKER_CODES,
+  MARKER_SQUARE,
+  plain,
+  type BoxOpts,
+  type MarkerHue,
+  type Para,
+  type Run,
+  type TextProps,
+  type TextType,
+} from "./text";
 
 /** Width in inches of `text` set in one face, with 1 % to spare: LibreOffice sets a line up to
  *  0.7 % wider than the faces' advances add up to, so a box sized to its text keeps it on a line. */
@@ -104,4 +116,96 @@ export function breakAt(runs: Run[], lines: ReturnType<typeof pretty>): Run[] {
     out.push({ ...r, text: t });
   }
   return out;
+}
+
+const MARKER_BULLETS = Object.fromEntries(
+  Object.entries(MARKER_CODES).map(([hue, code]) => [
+    hue,
+    (): TextProps["bullet"] => ({ code, indent: BULLET_INDENT }),
+  ]),
+) as Record<MarkerHue, () => TextProps["bullet"]>;
+
+const BULLET_OF: Record<"number" | "square" | MarkerHue, () => TextProps["bullet"]> = {
+  number: () => ({ type: "number", indent: BULLET_INDENT }),
+  square: () => ({ code: MARKER_SQUARE, indent: BULLET_INDENT }),
+  ...MARKER_BULLETS,
+};
+
+// A box too short for its lines keeps their size and closes their leading first, down to the
+// size itself: a box cut to a label's height on the web holds the label at its size.
+export function boxFit(
+  paras: Para[],
+  o: BoxOpts,
+  area: Pick<Area, "w" | "h">,
+): { k: number; o: BoxOpts } {
+  const k = fitScale(paras, o, area);
+  if (k < 1) {
+    const base = Math.min(...paras.map((p) => p.line ?? o.line ?? LEADING.body));
+    for (let sc = 0.98; sc * base >= 1; sc -= 0.02) {
+      const tight = { ...o, lineScale: sc };
+      if (fitScale(paras, tight, area) === 1) return { k: 1, o: tight };
+    }
+  }
+  return { k, o };
+}
+
+export function paraBullet(p: Para): Pick<TextProps, "bullet" | "indentLevel"> {
+  if (!p.bullet) return {};
+  const key = p.bullet === "number" ? "number" : (p.marker ?? "square");
+  return { bullet: BULLET_OF[key](), indentLevel: p.indent ?? 0 };
+}
+
+export function paraProps(p: Para, o: BoxOpts, k: number): TextProps {
+  const { size, face: fontFace, bold } = paraType(p, o, k);
+  return {
+    fontFace,
+    fontSize: size,
+    color: o.color,
+    bold,
+    italic: o.italic,
+    ...(o.tracking ? { charSpacing: Math.round(o.tracking * size * 10) / 10 } : {}),
+    align: p.align ?? o.align ?? "left",
+    // Exact points, the web's line box: a percentage would multiply the face's own line
+    // height, a fifth to a third taller than the size.
+    lineSpacing: lineOf(p, o, k),
+    paraSpaceAfter: (p.after ?? 0) * k,
+    ...(p.tabs
+      ? { tabStops: p.tabs.map((at) => ({ position: at * k, alignment: "l" as const })) }
+      : {}),
+    ...paraBullet(p),
+  };
+}
+
+export function paraRuns(p: Para, o: BoxOpts, { w, k }: Measure): Run[] {
+  const base = paraProps(p, o, k);
+  const lines = (o.balance || p.balance ? balance : pretty)(
+    spansOf(p, o, k),
+    (w - marginOf(p)) * 72,
+  );
+  return breaks(breakAt(p.runs, lines)).map((r) => ({
+    text: r.text,
+    options: { ...base, ...r.options },
+  }));
+}
+
+export function boxRuns(paras: Para[], o: BoxOpts, m: Measure): Run[] {
+  return paras.flatMap((p, i) => {
+    const last = i === paras.length - 1;
+    const runs = paraRuns(last ? { ...p, after: 0 } : p, o, m);
+    if (!last && runs.length) {
+      const tail = runs[runs.length - 1];
+      runs[runs.length - 1] = { ...tail, options: { ...tail.options, breakLine: true } };
+    }
+    return runs;
+  });
+}
+
+// The box 1 % wider than the width its lines were measured at, on the side its text runs to:
+// LibreOffice sets a line up to 0.7 % wider than the faces' advances add up to, and would wrap
+// a line the measure fills. A filled box keeps its size.
+export function boxPlace(area: Area, o: BoxOpts, paras: Para[]): Area {
+  const spare = o.fill ? 0 : area.w * 0.01;
+  const align = paras.some((p) => p.align === "center") ? "center" : (o.align ?? "left");
+  const dx = align === "center" ? spare / 2 : align === "right" ? spare : 0;
+  return { x: area.x - dx, y: area.y, w: area.w + spare, h: area.h };
 }

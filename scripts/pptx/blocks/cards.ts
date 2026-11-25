@@ -1,134 +1,253 @@
 import type { Look } from "../look";
-import { mixColor } from "../palette";
-import { PT, REM, TITLE, spacing, type Measure } from "../stage";
+import { mixColor, type Palette, type Surface } from "../palette";
+import type { Sheet } from "../sheet";
+import { PT, REM, TITLE, spacing, type Area, type Measure, type Place } from "../stage";
 import { md, type BoxOpts, type Para } from "../text";
+import { rowGrid, type GridCell } from "./grid";
 import type { Block, BlockKind } from "./kind";
 
-/** A cards block as `Cards` sets it: the grid, the padding and gaps of each size, a short teal
- *  rule over the title or a number tile, every card in a row as tall as the tallest. */
-function cardsLayout(look: Look, b: Block<"cards">, { w, k }: Measure) {
-  const { c } = look;
-  const n = b.items.length;
-  const cols = b.columns ?? (n === 4 ? 2 : Math.min(n, 3));
-  const wide = cols >= 4;
-  const dense = !!b.dense;
-  const sp = (v: number) => spacing(v, k);
-  const gap = sp(dense ? 5 : 6);
-  const [padY, padX] = dense ? (wide ? [5, 5] : [6, 6]) : wide ? [6, 6] : [8, 9];
-  const cw = (w - gap * (cols - 1)) / cols;
-  const inner = cw - 2 * sp(padX);
-  const inGap = sp(dense ? 1 : 5);
+export type CardScale = "denseWide" | "dense" | "wide" | "normal";
+
+interface CardStyleSpec {
+  gap: number;
+  padY: number;
+  padX: number;
+  inGap: number;
+  titleSize: number;
+  titleLine: number;
+  balanceTitle: boolean;
+  mutedText: boolean;
+  textLine: number;
+  itemAfter: number;
+}
+
+const CARD_STYLES: Record<CardScale, CardStyleSpec> = {
+  denseWide: {
+    gap: 5,
+    padY: 5,
+    padX: 5,
+    inGap: 1,
+    titleSize: 17.33,
+    titleLine: 1.4,
+    balanceTitle: false,
+    mutedText: true,
+    textLine: 1.5,
+    itemAfter: 2,
+  },
+  dense: {
+    gap: 5,
+    padY: 6,
+    padX: 6,
+    inGap: 1,
+    titleSize: PT.h4,
+    titleLine: 1.4,
+    balanceTitle: false,
+    mutedText: true,
+    textLine: 1.5,
+    itemAfter: 2,
+  },
+  wide: {
+    gap: 6,
+    padY: 6,
+    padX: 6,
+    inGap: 5,
+    titleSize: PT.lead,
+    titleLine: 1.25,
+    balanceTitle: true,
+    mutedText: false,
+    textLine: 1.375,
+    itemAfter: 3,
+  },
+  normal: {
+    gap: 6,
+    padY: 8,
+    padX: 9,
+    inGap: 5,
+    titleSize: PT.h3,
+    titleLine: 1.25,
+    balanceTitle: true,
+    mutedText: false,
+    textLine: 1.375,
+    itemAfter: 3,
+  },
+};
+
+export type CardMark =
+  { kind: "number"; label: string } | { kind: "tile"; fill: string } | { kind: "rule" };
+
+const MARK_SPACING: Record<CardMark["kind"], number> = {
+  number: 16,
+  tile: 16,
+  rule: 1.5,
+};
+
+export interface CardCellLayout {
+  surface: Surface;
+  mark?: CardMark;
+  markH: number;
+  title?: Para;
+  body: Para[];
+  th: number;
+  bh: number;
+  h: number;
+}
+
+export interface CardsLayout {
+  cols: number;
+  cw: number;
+  gap: number;
+  padX: number;
+  padY: number;
+  inner: number;
+  inGap: number;
+  tileSize: number;
+  ruleW: number;
+  ruleH: number;
+  titleO: BoxOpts;
+  textO: BoxOpts;
+  numO: BoxOpts;
+  cells: (CardCellLayout & GridCell)[];
+  rowH: number[];
+  h: number;
+}
+
+function cardScale(dense: boolean, wide: boolean): CardScale {
+  if (dense) return wide ? "denseWide" : "dense";
+  return wide ? "wide" : "normal";
+}
+
+function cardTypography(c: Palette, style: CardStyleSpec, k: number) {
   const titleO: BoxOpts = {
-    size: (dense ? (wide ? 17.33 : PT.h4) : wide ? PT.lead : PT.h3) * k,
+    size: style.titleSize * k,
     ...TITLE,
     color: c.ink,
-    line: dense ? 1.4 : 1.25,
+    line: style.titleLine,
     tracking: -0.015,
-    balance: !dense,
+    balance: style.balanceTitle,
   };
   const textO: BoxOpts = {
     size: PT.base * k,
-    color: dense ? c.muted : c.ink,
-    line: dense ? 1.5 : 1.375,
+    color: style.mutedText ? c.muted : c.ink,
+    line: style.textLine,
   };
-  const cells = b.items.map((it, i) => {
+  const numO: BoxOpts = {
+    size: PT.lead * k,
+    mono: true,
+    bold: true,
+    color: c.card,
+    align: "center",
+    valign: "middle",
+    line: 1,
+  };
+  return { titleO, textO, numO };
+}
+
+function cardBody(item: Block<"cards">["items"][number], c: Palette, afterPt: number): Para[] {
+  return [
+    ...(item.text ? [{ runs: md(item.text, c), after: item.items?.length ? afterPt : 0 }] : []),
+    ...(item.items ?? []).map((line) => ({ runs: md(line, c), bullet: true, after: afterPt })),
+  ];
+}
+
+/** Decides a card's top mark from the block, item index and palette: a numbered tile, an icon's
+ *  tile, a short teal rule on non-dense plain cards, or undefined when none is drawn. */
+export function cardMark(b: Block<"cards">, index: number, c: Palette): CardMark | undefined {
+  if (b.numbered) return { kind: "number", label: String(index + (b.numberFrom ?? 1)) };
+  const item = b.items[index];
+  if (item.icon) {
+    const fill = b.highlight === index ? c.teal : mixColor(c.teal, c.card, 0.07);
+    return { kind: "tile", fill };
+  }
+  return b.dense ? undefined : { kind: "rule" };
+}
+
+/** A cards block as `Cards` sets it: the grid, the padding and gaps of each size, a short teal
+ *  rule over the title or a number tile, every card in a row as tall as the tallest. Returns the
+ *  measured grid layout and total height `h`. */
+export function cardsLayout(look: Look, b: Block<"cards">, { w, k }: Measure): CardsLayout {
+  const { c } = look;
+  const n = b.items.length;
+  const cols = b.columns ?? (n === 4 ? 2 : Math.min(n, 3));
+  const style = CARD_STYLES[cardScale(!!b.dense, cols >= 4)];
+  const sp = (v: number) => spacing(v, k);
+  const gap = sp(style.gap);
+  const [padX, padY, inGap] = [sp(style.padX), sp(style.padY), sp(style.inGap)];
+  const cw = (w - gap * (cols - 1)) / cols;
+  const inner = cw - 2 * padX;
+  const afterPt = sp(style.itemAfter) * 72;
+  const { titleO, textO, numO } = cardTypography(c, style, k);
+  const measured = b.items.map((it, i): CardCellLayout => {
     const hi = b.highlight === i;
-    const mark = b.numbered || it.icon ? sp(16) : dense ? 0 : sp(1.5);
+    const mark = cardMark(b, i, c);
+    const markH = mark ? sp(MARK_SPACING[mark.kind]) : 0;
     const title: Para | undefined = it.title
       ? { runs: md(it.title, c, { color: hi ? c.teal : c.ink }) }
       : undefined;
-    const body: Para[] = [
-      ...(it.text
-        ? [{ runs: md(it.text, c), after: it.items?.length ? sp(dense ? 2 : 3) * 72 : 0 }]
-        : []),
-      ...(it.items ?? []).map((line) => ({
-        runs: md(line, c),
-        bullet: true,
-        after: sp(dense ? 2 : 3) * 72,
-      })),
-    ];
+    const body = cardBody(it, c, afterPt);
     const th = title ? look.need(title, inner, titleO) : 0;
     const bh = body.length ? look.need(body, inner, textO) : 0;
-    const parts = [mark, th, bh].filter(Boolean);
-    return {
-      it,
-      hi,
-      mark,
-      title,
-      body,
-      th,
-      bh,
-      h: parts.reduce((x, y) => x + y, 0) + inGap * (parts.length - 1) + 2 * sp(padY),
-    };
+    const parts = [markH, th, bh].filter(Boolean);
+    const h = parts.reduce((x, y) => x + y, 0) + inGap * (parts.length - 1) + 2 * padY;
+    return { surface: hi ? c.litCard : c.plainCard, mark, markH, title, body, th, bh, h };
   });
-  const rows = Math.ceil(n / cols);
-  const rowH = Array.from({ length: rows }, (_, r) =>
-    Math.max(...cells.slice(r * cols, r * cols + cols).map((x) => x.h)),
-  );
-  const h = rowH.reduce((x, y) => x + y, 0) + gap * (rows - 1);
+  const grid = rowGrid(measured, { cols, cw, gapX: gap, gapY: gap });
   return {
     cols,
     cw,
     gap,
-    padX: sp(padX),
-    padY: sp(padY),
+    padX,
+    padY,
     inner,
     inGap,
+    tileSize: sp(16),
+    ruleW: 4 * REM * k,
+    ruleH: sp(1.5),
     titleO,
     textO,
-    cells,
-    rowH,
-    h,
+    numO,
+    cells: grid.cells,
+    rowH: grid.rowH,
+    h: grid.h,
   };
+}
+
+/** Draws a measured cards grid at `at`: each card surface, optional top mark, title and body. */
+export function drawCards(sheet: Sheet, layout: CardsLayout, at: Place): void {
+  const { c } = sheet;
+  const drawMark = (mark: CardMark, x: number, y: number) => {
+    if (mark.kind === "rule") {
+      sheet.rect({ x, y, w: layout.ruleW, h: layout.ruleH }, c.teal);
+      return;
+    }
+    // `NumberTile` lg: the number white on teal, or an icon's soft tile.
+    const tile: Area = { x, y, w: layout.tileSize, h: layout.tileSize };
+    sheet.rounded(tile, { fill: mark.kind === "number" ? c.teal : mark.fill }, 10 / 144);
+    if (mark.kind === "number") sheet.box({ runs: [{ text: mark.label }] }, tile, layout.numO);
+  };
+  for (const cell of layout.cells) {
+    const x = at.x + cell.x;
+    const rowY = at.y + cell.y;
+    sheet.card({ x, y: rowY, w: layout.cw, h: cell.rowH }, cell.surface);
+    const ix = x + layout.padX;
+    let y = rowY + layout.padY;
+    if (cell.mark) {
+      drawMark(cell.mark, ix, y);
+      y += cell.markH + layout.inGap;
+    }
+    if (cell.title) {
+      sheet.box(cell.title, { x: ix, y, w: layout.inner, h: cell.th }, layout.titleO);
+      y += cell.th + layout.inGap;
+    }
+    if (cell.body.length)
+      sheet.box(cell.body, { x: ix, y, w: layout.inner, h: cell.bh }, layout.textO);
+  }
 }
 
 export const cards: BlockKind<"cards"> = {
   height(look, b, m) {
     return cardsLayout(look, b, m).h;
   },
-  draw(sheet, b, { area: a, k }) {
-    const { c } = sheet;
-    const L = cardsLayout(sheet, b, { w: a.w, k });
-    let rowY = a.y;
-    L.cells.forEach((cell, i) => {
-      const [r, col] = [Math.floor(i / L.cols), i % L.cols];
-      if (col === 0 && r) rowY += L.rowH[r - 1] + L.gap;
-      const x = a.x + col * (L.cw + L.gap);
-      sheet.card(
-        { x, y: rowY, w: L.cw, h: L.rowH[r] },
-        cell.hi ? sheet.c.litCard : sheet.c.plainCard,
-      );
-      const ix = x + L.padX;
-      let y = rowY + L.padY;
-      if (b.numbered || cell.it.icon) {
-        // `NumberTile` lg: the number white on teal, or an icon's soft tile.
-        const solid = b.numbered || cell.hi;
-        sheet.rounded(
-          { x: ix, y, w: cell.mark, h: cell.mark },
-          { fill: solid ? c.teal : mixColor(c.teal, c.card, 0.07) },
-          10 / 144,
-        );
-        if (b.numbered)
-          sheet.box(
-            { runs: [{ text: String(i + (b.numberFrom ?? 1)) }] },
-            { x: ix, y, w: cell.mark, h: cell.mark },
-            {
-              size: PT.lead * k,
-              mono: true,
-              bold: true,
-              color: c.card,
-              align: "center",
-              valign: "middle",
-              line: 1,
-            },
-          );
-      } else if (cell.mark) sheet.rect({ x: ix, y, w: 4 * REM * k, h: cell.mark }, c.teal);
-      if (cell.mark) y += cell.mark + L.inGap;
-      if (cell.title) {
-        sheet.box(cell.title, { x: ix, y, w: L.inner, h: cell.th }, L.titleO);
-        y += cell.th + L.inGap;
-      }
-      if (cell.body.length) sheet.box(cell.body, { x: ix, y, w: L.inner, h: cell.bh }, L.textO);
-    });
+  draw(sheet, b, { area, k }) {
+    drawCards(sheet, cardsLayout(sheet, b, { w: area.w, k }), area);
   },
 };
