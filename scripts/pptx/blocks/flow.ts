@@ -1,5 +1,5 @@
 import { BULLET_INDENT, textWidth } from "../fit";
-import { flowSteps } from "../flow-steps";
+import { drawSteps, stepsLayout } from "../flow-steps";
 import { mixColor } from "../palette";
 import { drySheet, type Sheet } from "../sheet";
 import { CORNER, spacing } from "../stage";
@@ -16,8 +16,11 @@ function flowBlock(
   k: number,
 ): number {
   const { slide: s, c } = sheet;
-  const opts = { highlight: b.highlight, loop: b.loop, dense: b.dense, k };
-  if (!b.frame) return flowSteps(sheet, b.steps, a, opts);
+  if (!b.frame) {
+    const stepsL = stepsLayout(sheet, b, { w: a.w, k });
+    if (!sheet.dry) drawSteps(sheet, stepsL, a);
+    return stepsL.h;
+  }
   const sp = (v: number) => spacing(v, k);
   const { label, notes = [], footer } = b.frame;
   const pad = sp(6);
@@ -36,7 +39,8 @@ function flowBlock(
       )
     : 0;
   const stepsW = a.w - 2 * pad - (notes.length ? notesW + 2 * sp(6) : 0);
-  const stepsH = flowSteps(drySheet(sheet), b.steps, { x: 0, y: 0, w: stepsW }, opts);
+  const stepsL = stepsLayout(sheet, b, { w: stepsW, k });
+  const stepsH = stepsL.h;
   const notesH = notes.length ? sheet.need(noteParas, notesW, noteO) : 0;
   const rowH = Math.max(stepsH, notesH, notes.length ? sp(16) : 0);
   const footO: BoxOpts = { size: 16 * k, color: c.muted, line: 1.45 };
@@ -71,7 +75,7 @@ function flowBlock(
     );
     y += labelH + sp(4);
   }
-  flowSteps(sheet, b.steps, { x: a.x + pad, y: y + (rowH - stepsH) / 2, w: stepsW }, opts);
+  drawSteps(sheet, stepsL, { x: a.x + pad, y: y + (rowH - stepsH) / 2 });
   if (notes.length) {
     const rx = a.x + pad + stepsW + sp(6);
     s.addShape("line", {

@@ -3,7 +3,7 @@ import { isHighlightPhase } from "../../../lib/process-layout";
 import { CALLOUT_PAD } from "../blocks/text";
 import { header } from "../chrome";
 import { textWidth } from "../fit";
-import { flowSteps, type FlowStep } from "../flow-steps";
+import { drawSteps, stepsLayout, type FlowStep } from "../flow-steps";
 import { drySheet, type Sheet } from "../sheet";
 import { W, CW, PT, BODY } from "../stage";
 import type { BoxOpts } from "../text";
@@ -40,15 +40,16 @@ export function drawProcess(sheet: Sheet, d: Extract<Slide, { type: "process" }>
     numbered: n.numbered,
   }));
   const named = d.nodes.findIndex((n) => isHighlightPhase(n.title, d.highlightPhase));
-  const o = {
+  const flow = {
+    steps,
     highlight: named < 0 ? undefined : named,
     loop: d.loop === false ? undefined : "",
-    k: 1,
   };
   const a = BODY(y);
-  const sh = flowSteps(drySheet(sheet), steps, a, o);
+  const layout = stepsLayout(sheet, flow, { w: a.w, k: 1 });
+  const sh = layout.h;
   const capH = d.footer ? caption(drySheet(sheet), d.footer, 0) + 0.37 : 0;
   const top = a.y + Math.max(0, a.h - sh - capH) / 2.25;
-  flowSteps(sheet, steps, { ...a, y: top }, o);
+  drawSteps(sheet, layout, { x: a.x, y: top });
   if (d.footer) caption(sheet, d.footer, top + sh + 0.37);
 }
