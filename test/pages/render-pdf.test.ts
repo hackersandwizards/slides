@@ -14,7 +14,9 @@ it("names the status of a print route that fails", async () => {
   const { port } = server.address() as { port: number };
   try {
     expect(
-      await rejection(renderPdf(`http://127.0.0.1:${port}/d/print`, "/dev/null", "T", 1)),
+      await rejection(
+        renderPdf(`http://127.0.0.1:${port}/d/print`, "/dev/null", { title: "T", slideCount: 1 }),
+      ),
     ).toMatch(/HTTP 500/);
   } finally {
     server.close();
@@ -44,7 +46,7 @@ it("prints a slow print route only once every slide is fitted", async () => {
   const dir = await mkdtemp(join(tmpdir(), "render-pdf-"));
   try {
     const out = join(dir, "deck.pdf");
-    await renderPdf(`http://127.0.0.1:${port}/d/print`, out, "T", 2);
+    await renderPdf(`http://127.0.0.1:${port}/d/print`, out, { title: "T", slideCount: 2 });
     expect((await stat(out)).size).toBeGreaterThan(0);
   } finally {
     server.close();
@@ -91,7 +93,7 @@ it("downsamples oversized raster images while keeping SVGs and transparent PNGs"
   const dir = await mkdtemp(join(tmpdir(), "render-pdf-img-"));
   try {
     const out = join(dir, "images.pdf");
-    await renderPdf(`http://127.0.0.1:${port}/d/print`, out, "Images", 1);
+    await renderPdf(`http://127.0.0.1:${port}/d/print`, out, { title: "Images", slideCount: 1 });
     expect((await stat(out)).size).toBeGreaterThan(0);
   } finally {
     server.close();

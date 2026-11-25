@@ -1,10 +1,102 @@
-import puppeteer from "puppeteer";
+import puppeteer, { type Page } from "puppeteer";
+
+/** The deck metadata stamped onto and verified against a printed PDF. */
+export interface PdfDeck {
+  title: string;
+  slideCount: number;
+}
+
+export interface ImageMetrics {
+  src: string;
+  naturalWidth: number;
+  naturalHeight: number;
+  width: number;
+  height: number;
+  objectFit: string;
+}
+
+const SVG_SRC = /\.svg($|\?)|^data:image\/svg\+xml/i;
+
+/** Target pixel dimensions for downsampling a raster image to twice its displayed box, or
+ *  undefined when the image is vector, unloaded, hidden, or already within that resolution. */
+export function rasterTargetSize(img: ImageMetrics): { width: number; height: number } | undefined {
+  if (SVG_SRC.test(img.src) || !img.naturalWidth) return;
+  // `object-contain` shows the whole image inside its box, so the tighter side sets its size.
+  const fit = img.objectFit === "contain" ? Math.min : Math.max;
+  const scale = fit((2 * img.width) / img.naturalWidth, (2 * img.height) / img.naturalHeight);
+  // A hidden image has no box, and a canvas of no size breaks the export: it stays as it is.
+  if (!scale || scale >= 1) return;
+  return {
+    width: Math.round(img.naturalWidth * scale),
+    height: Math.round(img.naturalHeight * scale),
+  };
+}
+
+/** Redraws one raster image inside the browser at `size`, replacing its `src` with the smaller of
+ *  PNG and JPEG when opaque. Runs inside `ElementHandle.evaluate`, so it uses only browser globals. */
+async function redrawImage(
+  img: HTMLImageElement,
+  size: { width: number; height: number },
+): Promise<void> {
+  const canvas = document.createElement("canvas");
+  canvas.width = size.width;
+  canvas.height = size.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  // A picture from another origin taints the canvas, which then refuses to be read: it stays
+  // as it is.
+  let alpha: Uint8ClampedArray;
+  try {
+    alpha = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  } catch {
+    return;
+  }
+  let opaque = true;
+  for (let i = 3; i < alpha.length; i += 4) {
+    if (alpha[i] < 255) {
+      opaque = false;
+      break;
+    }
+  }
+  img.srcset = "";
+  const png = canvas.toDataURL("image/png");
+  const jpeg = opaque ? canvas.toDataURL("image/jpeg", 0.9) : png;
+  img.src = jpeg.length < png.length ? jpeg : png;
+  await img.decode();
+}
+
+/** Chrome embeds every image at its source resolution: a 3456px screenshot shown 1100px wide and
+ *  a 7920px logo were most of a deck's megabytes. Redraws each oversized raster image at twice its
+ *  displayed size, leaving SVGs untouched. */
+async function downsamplePrintImages(page: Page): Promise<void> {
+  const handles = await page.$$(".print-slide img");
+  for (const handle of handles) {
+    try {
+      const metrics = await handle.evaluate((img): ImageMetrics => {
+        const { width, height } = img.getBoundingClientRect();
+        return {
+          src: img.currentSrc,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+          width,
+          height,
+          objectFit: getComputedStyle(img).objectFit,
+        };
+      });
+      const target = rasterTargetSize(metrics);
+      if (target) await handle.evaluate(redrawImage, target);
+    } finally {
+      await handle.dispose();
+    }
+  }
+}
 
 /** Prints a deck's print route to a PDF through Chrome's own print pipeline, one slide per page
  *  with selectable text; a raster PDF stitched from screenshots has no text, takes about a hundred
  *  times as long and ran to 30 MB for a 74-slide deck. Each repo's `export-pdf.ts` resolves the
  *  deck, the URL and the file name, and calls this, which refuses any URL but http(s). */
-export async function renderPdf(url: string, out: string, title: string, slideCount: number) {
+export async function renderPdf(url: string, out: string, deck: PdfDeck) {
   // A deck's print route, served: a file:// or other local URL would print whatever file it names.
   const { protocol } = new URL(url);
   if (protocol !== "http:" && protocol !== "https:")
@@ -20,53 +112,12 @@ export async function renderPdf(url: string, out: string, title: string, slideCo
     await settlePrintPage(page, url, { fitted: true });
 
     const slides = await page.$$eval(".print-slide", (nodes) => nodes.length);
-    if (slides !== slideCount) {
-      throw new Error(`page rendered ${slides} slides, the deck holds ${slideCount}`);
+    if (slides !== deck.slideCount) {
+      throw new Error(`page rendered ${slides} slides, the deck holds ${deck.slideCount}`);
     }
 
-    // Chrome embeds every image at its source resolution: a 3456px screenshot shown 1100px wide and
-    // a 7920px logo were most of a deck's megabytes. Each raster image is redrawn at twice its
-    // displayed size, as the smaller of PNG and JPEG where it has no transparency. An SVG, by file
-    // or as a data URL, is vector and stays.
-    await page.evaluate(async () => {
-      for (const img of document.querySelectorAll<HTMLImageElement>(".print-slide img")) {
-        if (/\.svg($|\?)|^data:image\/svg\+xml/i.test(img.currentSrc) || !img.naturalWidth)
-          continue;
-        const { width, height } = img.getBoundingClientRect();
-        // `object-contain` shows the whole image inside its box, so the tighter side sets its size.
-        const fit = getComputedStyle(img).objectFit === "contain" ? Math.min : Math.max;
-        const scale = fit((2 * width) / img.naturalWidth, (2 * height) / img.naturalHeight);
-        // A hidden image has no box, and a canvas of no size breaks the export: it stays as it is.
-        if (!scale || scale >= 1) continue;
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.naturalWidth * scale);
-        canvas.height = Math.round(img.naturalHeight * scale);
-        const ctx = canvas.getContext("2d");
-        if (!ctx) continue;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        // A picture from another origin taints the canvas, which then refuses to be read: it stays
-        // as it is.
-        let alpha: Uint8ClampedArray;
-        try {
-          alpha = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-        } catch {
-          continue;
-        }
-        let opaque = true;
-        for (let i = 3; i < alpha.length; i += 4) {
-          if (alpha[i] < 255) {
-            opaque = false;
-            break;
-          }
-        }
-        img.srcset = "";
-        const png = canvas.toDataURL("image/png");
-        const jpeg = opaque ? canvas.toDataURL("image/jpeg", 0.9) : png;
-        img.src = jpeg.length < png.length ? jpeg : png;
-        await img.decode();
-      }
-    });
-    await page.evaluate((t) => (document.title = t), title);
+    await downsamplePrintImages(page);
+    await page.evaluate((t) => (document.title = t), deck.title);
     await page.pdf({
       path: out,
       // Explicit, not `preferCSSPageSize`: with the CSS page size Chrome evaluated the media queries
