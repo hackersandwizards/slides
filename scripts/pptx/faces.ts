@@ -67,23 +67,21 @@ export function woff2Tables(buf: Buffer): Map<string, Buffer> {
   return tables;
 }
 
-/** A cmap's code points to glyph ids, from its format 4 or 12 Unicode subtable. */
-function cmapOf(t: Buffer): Map<number, number> {
+/** Glyph IDs from the consecutive code points in a format 12 subtable's groups. */
+export function readCmapFormat12(t: Buffer, pick: number): Map<number, number> {
   const map = new Map<number, number>();
-  const n = t.readUInt16BE(2);
-  const subs = Array.from({ length: n }, (_, i) => t.readUInt32BE(4 + i * 8 + 4));
-  const pick =
-    subs.find((o) => t.readUInt16BE(o) === 12) ?? subs.find((o) => t.readUInt16BE(o) === 4);
-  if (pick === undefined) throw new Error("no Unicode cmap");
-  if (t.readUInt16BE(pick) === 12) {
-    const groups = t.readUInt32BE(pick + 12);
-    for (let g = 0; g < groups; g++) {
-      const o = pick + 16 + g * 12;
-      const [start, end, gid] = [t.readUInt32BE(o), t.readUInt32BE(o + 4), t.readUInt32BE(o + 8)];
-      for (let cp = start; cp <= end; cp++) map.set(cp, gid + cp - start);
-    }
-    return map;
+  const groups = t.readUInt32BE(pick + 12);
+  for (let g = 0; g < groups; g++) {
+    const o = pick + 16 + g * 12;
+    const [start, end, gid] = [t.readUInt32BE(o), t.readUInt32BE(o + 4), t.readUInt32BE(o + 8)];
+    for (let cp = start; cp <= end; cp++) map.set(cp, gid + cp - start);
   }
+  return map;
+}
+
+/** Glyph IDs from the deltas and glyph arrays in a format 4 subtable's segments. */
+export function readCmapFormat4(t: Buffer, pick: number): Map<number, number> {
+  const map = new Map<number, number>();
   const segs = t.readUInt16BE(pick + 6) / 2;
   const ends = pick + 14;
   const starts = ends + segs * 2 + 2;
@@ -100,6 +98,22 @@ function cmapOf(t: Buffer): Map<number, number> {
     }
   }
   return map;
+}
+
+const CMAP_READERS = new Map([
+  [12, readCmapFormat12],
+  [4, readCmapFormat4],
+]);
+
+/** A cmap's code points to glyph ids, from its format 4 or 12 Unicode subtable. */
+function cmapOf(t: Buffer): Map<number, number> {
+  const n = t.readUInt16BE(2);
+  const subs = Array.from({ length: n }, (_, i) => t.readUInt32BE(4 + i * 8 + 4));
+  for (const [format, read] of CMAP_READERS) {
+    const pick = subs.find((o) => t.readUInt16BE(o) === format);
+    if (pick !== undefined) return read(t, pick);
+  }
+  throw new Error("no Unicode cmap");
 }
 
 /** A face's metrics from its WOFF2 files, the first file holding a code point giving its advance,
