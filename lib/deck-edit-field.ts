@@ -1,22 +1,6 @@
-import { writeStored } from "./browser-storage";
-import { directionKey } from "./slide-arrival";
+import { submitDeckEdit } from "./deck-edit-client";
 
-const ENDPOINT = "/api/deck-edit";
-
-type Answer = { value?: string; index?: number; error?: string; ok?: boolean };
-
-async function ask(body: object): Promise<Answer> {
-  try {
-    const response = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    return (await response.json()) as Answer;
-  } catch {
-    return { error: "The dev server did not answer." };
-  }
-}
+export const DECK_EDIT_LEAD = "var(--color-teal)";
 
 // The field is its own document, where the deck's custom properties do not reach: its tokens are
 // read off the deck when the field opens.
@@ -55,35 +39,13 @@ function createEditFrame(element: Element): HTMLIFrameElement {
     width: `${box.width}px`,
     height: "var(--slide-edit-field)",
     zIndex: "90",
-    border: `var(--slide-edit-outline) solid var(--color-teal)`,
+    border: `var(--slide-edit-outline) solid ${DECK_EDIT_LEAD}`,
     borderRadius: "var(--radius-sm)",
     background: "var(--color-white)",
     boxShadow: "var(--shadow-overlay)",
   });
   frame.srcdoc = fieldDoc();
   return frame;
-}
-
-async function submitDeckEdit(deck: string, from: string, to: string): Promise<Answer> {
-  // The save reloads the slide. Arriving "backwards" opens it fully revealed, so the
-  // result shows; a host that refreshes in place keeps the slide, and the mark is dropped.
-  writeStored("session", directionKey(), "back");
-  setTimeout(() => writeStored("session", directionKey(), null), 3000);
-  const answer = await ask({ deck, from, to });
-  // Nothing was saved, so a reload must open the slide as it was.
-  if (!answer.ok) writeStored("session", directionKey(), null);
-  return answer;
-}
-
-export async function resolveDeckClick(
-  deck: string,
-  chain: Element[],
-): Promise<{ element: Element; value: string } | { error: string }> {
-  const texts = chain.map((element) => (element.textContent ?? "").slice(0, 4000));
-  const answer = await ask({ deck, texts });
-  if (answer.value !== undefined && answer.index !== undefined)
-    return { element: chain[answer.index], value: answer.value };
-  return { error: answer.error ?? "This text cannot be edited here." };
 }
 
 type CloseField = (field?: EditField) => void;

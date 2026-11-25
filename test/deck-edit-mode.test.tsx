@@ -1,5 +1,5 @@
-import { act, render, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, assert, describe, expect, it, vi } from "vitest";
 import { DeckEdit } from "../lib/deck-edit-mode";
 
 // F30: a refused write closed the field, losing the typed text, and the click that committed a
@@ -36,6 +36,22 @@ describe("edit mode", () => {
     await waitFor(() =>
       expect(document.body.textContent).toContain("This text cannot be edited here."),
     );
+  });
+
+  it.each([
+    { answer: { error: "Refused." }, edit: "New text", note: "Refused." },
+    { answer: { ok: true }, edit: "Updated text", note: "Saved. The slide reloads." },
+  ])("shows the write note in the badge: $note", async ({ answer, edit, note }) => {
+    const { page } = setup([{ value: "Old text", index: 0 }, answer]);
+    await act(async () => page.click());
+    await opened();
+    const input = document.querySelector("iframe")?.contentDocument?.querySelector("textarea");
+    assert(input, "edit textarea should be mounted");
+    input.value = edit;
+    await act(async () =>
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })),
+    );
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe(note));
   });
 
   it("commits an open field with a click elsewhere and picks nothing with it", async () => {

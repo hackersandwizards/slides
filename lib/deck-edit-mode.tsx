@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { createEditOverlay, resolveDeckClick, type EditNote } from "./deck-edit-field";
+import { resolveDeckClick } from "./deck-edit-client";
+import { createEditOverlay, DECK_EDIT_LEAD, type EditNote } from "./deck-edit-field";
 import { deckSync } from "./presenter-sync";
 import { dialogOpen } from "./slide-input";
 import { readStored, writeStored } from "./browser-storage";
@@ -20,11 +21,10 @@ const STORAGE_KEY = "deck-edit";
 /** Set by `?edit` for the tab's session, which survives the reload a save causes and the
  *  navigation that drops the query. */
 const ARMED_KEY = "deck-edit-armed";
-const LEAD = "var(--color-teal)";
 
 const STYLE = `
 html[data-deck-edit] body :is(h1,h2,h3,h4,h5,h6,p,li,blockquote,figcaption,td,th,dt,dd):hover,
-html[data-deck-edit] body *:not(:has(*)):hover { outline: var(--slide-edit-outline) dashed ${LEAD}; outline-offset: var(--slide-edit-outline); cursor: text; }`;
+html[data-deck-edit] body *:not(:has(*)):hover { outline: var(--slide-edit-outline) dashed ${DECK_EDIT_LEAD}; outline-offset: var(--slide-edit-outline); cursor: text; }`;
 
 function collectElementChain(target: EventTarget | null): Element[] {
   const chain: Element[] = [];
@@ -183,7 +183,7 @@ export function DeckEdit({ deck }: { deck: string }) {
       <div
         ref={badge}
         role="status"
-        style={{ zIndex: 90, background: note?.error ? "var(--color-red)" : LEAD }}
+        style={{ zIndex: 90, background: note?.error ? "var(--color-red)" : DECK_EDIT_LEAD }}
         className="fixed bottom-4 left-4 max-w-md rounded-sm px-3 py-2 font-sans text-sm text-white shadow-overlay"
       >
         {note?.text ?? "Edit mode: click a text. Enter saves, Esc cancels, E ends."}
