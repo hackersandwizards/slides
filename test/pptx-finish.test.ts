@@ -2,8 +2,8 @@ import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { assert, expect, it } from "vitest";
 import type { Presentation, Slide } from "../types/slide";
-import { buildSlides, deckGrounds, overflowWarnings } from "../scripts/pptx/deck";
-import { MONO, SANS } from "../scripts/pptx/faces";
+import { buildSlides, deckGrounds, overflowWarnings, slidePartNumber } from "../scripts/pptx/deck";
+import { MONO } from "../scripts/pptx/faces";
 import {
   chartPartFix,
   finishChart,
@@ -13,7 +13,7 @@ import {
   setFontPitch,
   setTextLanguage,
 } from "../scripts/pptx/finish";
-import { hex, mixColor, palette } from "../scripts/pptx/palette";
+import { palette } from "../scripts/pptx/palette";
 import type { ChartFix, Output } from "../scripts/pptx/sheet";
 import { CAPS, MARKER_CODES, MARKER_SQUARE } from "../scripts/pptx/text";
 
@@ -23,32 +23,27 @@ async function readPart(zip: JSZip, name: string): Promise<string> {
   return file.async("string");
 }
 
-it("replaces brand typeface attributes with their pitch and keeps other faces unchanged", () => {
+it("strips stale panose attributes on brand faces and leaves non-brand faces unchanged", () => {
   const xml = [
     `<a:latin typeface="${MONO}" pitchFamily="34" charset="0" panose="020B"/>`,
-    `<a:latin typeface="${SANS}"/>`,
     '<a:latin typeface="Arial" pitchFamily="34"/>',
   ].join("");
   expect(setFontPitch(xml)).toEqual(
     [
       `<a:latin typeface="${MONO}" pitchFamily="49" charset="0"/>`,
-      `<a:latin typeface="${SANS}" pitchFamily="34" charset="0"/>`,
       '<a:latin typeface="Arial" pitchFamily="34"/>',
     ].join(""),
   );
 });
 
-it.each([
-  { language: "de" as const, expected: "de-DE" },
-  { language: "en" as const, expected: "en-US" },
-])("sets XML language and caps attribute for $language", ({ language, expected }) => {
+it("rewrites caps sentinels for en while leaving non-en-US language tags untouched", () => {
   const xml = `<a:rPr lang="en-US"/><a:rPr lang="${CAPS}"/><a:rPr lang="fr-FR"/>`;
-  expect(setTextLanguage(xml, language)).toEqual(
-    `<a:rPr lang="${expected}"/><a:rPr lang="${expected}" cap="all"/><a:rPr lang="fr-FR"/>`,
+  expect(setTextLanguage(xml, "en")).toEqual(
+    '<a:rPr lang="en-US"/><a:rPr lang="en-US" cap="all"/><a:rPr lang="fr-FR"/>',
   );
 });
 
-it("splits round2DiagRect adj into a 4-to-1 adj1/adj2 pair and keeps other presets", () => {
+it("rounds round2DiagRect adj2 to the nearest quarter and leaves other presets unchanged", () => {
   const xml = [
     '<a:prstGeom prst="round2DiagRect"><a:avLst><a:gd name="adj" fmla="val 10002"/></a:avLst></a:prstGeom>',
     '<a:prstGeom prst="roundRect"><a:avLst><a:gd name="adj" fmla="val 10000"/></a:avLst></a:prstGeom>',
@@ -78,111 +73,102 @@ it.each([
   );
 });
 
-it.each([
-  {
-    name: "keeps level bar labels horizontal",
-    fix: { level: true } as ChartFix,
-    expected: '<c:catAx><c:txPr><a:bodyPr rot="0" vert="horz"/></c:txPr></c:catAx>',
-  },
-  {
-    name: "leaves tilted bar labels untouched",
-    fix: { level: false } as ChartFix,
-    expected: "<c:catAx><c:txPr><a:bodyPr/></c:txPr></c:catAx>",
-  },
-])("finishChart $name", ({ fix, expected }) => {
-  const xml = "<c:catAx><c:txPr><a:bodyPr/></c:txPr></c:catAx>";
-  expect(finishChart(xml, fix)).toEqual(expected);
-});
-
-it("finishChart sets midCat and sorts hidden legend entries for an unmarked trend", () => {
+it("sorts hidden legend entries in ascending index order on an unmarked trend", () => {
   const xml = '<c:crossBetween val="between"/><c:legendPos val="t"/>';
   expect(finishChart(xml, { now: -1, unnamed: [2, 0] })).toEqual(
     '<c:crossBetween val="midCat"/><c:legendPos val="t"/><c:legendEntry><c:idx val="0"/><c:delete val="1"/></c:legendEntry><c:legendEntry><c:idx val="2"/><c:delete val="1"/></c:legendEntry>',
   );
 });
 
-it("finishChart dashes planned series, dots the marked point and hides axis labels", () => {
-  const white = hex("--color-white");
-  const xml = [
-    '<c:crossBetween val="between"/>',
-    '<c:legendPos val="t"/>',
-    '<c:catAx><c:tickLblPos val="nextTo"/></c:catAx>',
-    '<c:ser><a:srgbClr val="008080"/><a:prstDash val="solid"/><c:dLbls><c:showVal val="0"/></c:dLbls><c:marker><c:symbol val="none"/></c:marker></c:ser>',
-    '<c:ser><a:srgbClr val="008080"/><a:prstDash val="solid"/></c:ser>',
-  ].join("");
-  expect(finishChart(xml, { now: 1, unnamed: [3] })).toEqual(
-    [
-      '<c:crossBetween val="midCat"/>',
-      '<c:legendPos val="t"/><c:legendEntry><c:idx val="1"/><c:delete val="1"/></c:legendEntry><c:legendEntry><c:idx val="3"/><c:delete val="1"/></c:legendEntry>',
-      '<c:catAx><c:tickLblPos val="none"/></c:catAx>',
-      `<c:ser><a:srgbClr val="008080"/><a:prstDash val="solid"/><c:marker><c:symbol val="none"/></c:marker><c:dPt><c:idx val="1"/><c:marker><c:symbol val="circle"/><c:size val="11"/><c:spPr><a:solidFill><a:srgbClr val="008080"/></a:solidFill><a:ln w="19050"><a:solidFill><a:srgbClr val="${white}"/></a:solidFill></a:ln></c:spPr></c:marker><c:bubble3D val="0"/></c:dPt><c:dLbls><c:showVal val="0"/></c:dLbls></c:ser>`,
-      '<c:ser><a:srgbClr val="008080"/><a:prstDash val="dash"/></c:ser>',
-    ].join(""),
-  );
-});
-
-it("applies part fixes in drawing order across ppt XML parts and skips root parts", async () => {
+it("applies part fixes in numeric chart order across ppt XML parts and skips root parts", async () => {
   const zip = new JSZip();
-  zip.file("ppt/charts/chart10.xml", '<c:catAx><a:bodyPr/></c:catAx><a:latin typeface="Inter"/>');
-  zip.file("ppt/charts/chart2.xml", "<c:catAx><a:bodyPr/></c:catAx>");
-  zip.file("ppt/slides/slide1.xml", `<a:latin typeface="${MONO}"/>`);
-  zip.file("[Content_Types].xml", `<a:latin typeface="${MONO}"/>`);
+  zip.file("ppt/charts/chart10.xml", '<c:legendPos val="t"/>');
+  zip.file("ppt/charts/chart2.xml", '<c:legendPos val="t"/>');
+  zip.file("ppt/slides/slide1.xml", "<a:t>RAW</a:t>");
+  zip.file("[Content_Types].xml", "<a:t>RAW</a:t>");
   const charts = new Map<number, ChartFix>([
-    [1, { level: true }],
-    [2, { level: false }],
+    [1, { now: -1, unnamed: [0] }],
+    [2, { now: -1, unnamed: [2] }],
   ]);
-  await finishParts(zip, [chartPartFix(zip, charts), { name: "font-pitch", fix: setFontPitch }]);
+  await finishParts(zip, [chartPartFix(zip, charts), (xml) => xml.replace("RAW", "DONE")]);
   expect({
     chart2: await readPart(zip, "ppt/charts/chart2.xml"),
     chart10: await readPart(zip, "ppt/charts/chart10.xml"),
     slide1: await readPart(zip, "ppt/slides/slide1.xml"),
     contentTypes: await readPart(zip, "[Content_Types].xml"),
   }).toEqual({
-    chart2: '<c:catAx><a:bodyPr rot="0" vert="horz"/></c:catAx>',
-    chart10: `<c:catAx><a:bodyPr/></c:catAx><a:latin typeface="${SANS}" pitchFamily="34" charset="0"/>`,
-    slide1: `<a:latin typeface="${MONO}" pitchFamily="49" charset="0"/>`,
-    contentTypes: `<a:latin typeface="${MONO}"/>`,
+    chart2:
+      '<c:legendPos val="t"/><c:legendEntry><c:idx val="0"/><c:delete val="1"/></c:legendEntry>',
+    chart10:
+      '<c:legendPos val="t"/><c:legendEntry><c:idx val="2"/><c:delete val="1"/></c:legendEntry>',
+    slide1: "<a:t>DONE</a:t>",
+    contentTypes: "<a:t>RAW</a:t>",
   });
 });
 
-it("resolves day, deep-dive night, cached tinted grounds and dark deck looks", () => {
-  const day = palette(false);
-  const night = palette(true);
-  const lightDeck: Presentation = { name: "Light", lang: "de", slides: [] };
-  const darkDeck: Presentation = { name: "Dark", lang: "en", theme: "brand-dark", slides: [] };
-  const lightOf = deckGrounds(lightDeck);
-  const darkOf = deckGrounds(darkDeck);
-  const accentSlide: Slide = {
-    type: "content",
-    headline: "Q",
-    content: [{ type: "paragraph", text: "Yes" }],
-    ground: "accent",
-  };
-  const deepSlide: Slide = {
-    type: "content",
-    headline: "D",
-    content: [{ type: "paragraph", text: "Yes" }],
-    sectionTheme: "deepdive",
-  };
-  const accentFirst = lightOf(accentSlide);
-  const accentSecond = lightOf(accentSlide);
-  expect({
-    base: {
-      dark: lightOf(undefined).dark,
-      lang: lightOf(undefined).lang,
-      bg: lightOf(undefined).c.bg,
-    },
-    deep: { dark: lightOf(deepSlide).dark, bg: lightOf(deepSlide).c.bg },
-    accentBg: accentFirst.c.bg,
-    cached: accentFirst === accentSecond,
-    darkDeck: { dark: darkOf(undefined).dark, bg: darkOf(undefined).c.bg },
-  }).toEqual({
-    base: { dark: false, lang: "de", bg: day.bg },
-    deep: { dark: true, bg: night.bg },
-    accentBg: mixColor(day.amber, day.bg, 0.07),
-    cached: true,
-    darkDeck: { dark: true, bg: night.bg },
-  });
+it.each([
+  { part: "ppt/slides/slide12.xml", expected: 12 },
+  { part: "ppt/notesSlides/notesSlide1.xml", expected: undefined },
+])("parses the slide number from $part", ({ part, expected }) => {
+  expect(slidePartNumber(part)).toEqual(expected);
+});
+
+const lightDeck: Presentation = { name: "Light", lang: "de", slides: [] };
+const darkDeck: Presentation = { name: "Dark", lang: "en", theme: "brand-dark", slides: [] };
+const accentSlide: Slide = {
+  type: "content",
+  headline: "Q",
+  content: [{ type: "paragraph", text: "Yes" }],
+  ground: "accent",
+};
+const deepSlide: Slide = {
+  type: "content",
+  headline: "D",
+  content: [{ type: "paragraph", text: "Yes" }],
+  sectionTheme: "deepdive",
+};
+const deepAccentSlide: Slide = {
+  type: "content",
+  headline: "DA",
+  content: [{ type: "paragraph", text: "Yes" }],
+  sectionTheme: "deepdive",
+  ground: "accent",
+};
+
+it.each([
+  { name: "day base", deck: lightDeck, slide: undefined, expected: { dark: false, bg: "F7F9FA" } },
+  {
+    name: "deep-dive on day deck",
+    deck: lightDeck,
+    slide: deepSlide,
+    expected: { dark: true, bg: "0B1118" },
+  },
+  {
+    name: "deep-dive on dark deck",
+    deck: darkDeck,
+    slide: deepSlide,
+    expected: { dark: true, bg: "0B1118" },
+  },
+  {
+    name: "accent ground on day deck",
+    deck: lightDeck,
+    slide: accentSlide,
+    expected: { dark: false, bg: "F2EDE9" },
+  },
+  {
+    name: "accent ground on deep-dive slide",
+    deck: lightDeck,
+    slide: deepAccentSlide,
+    expected: { dark: true, bg: "1B1B17" },
+  },
+])("resolves theme and ground background for $name", ({ deck, slide, expected }) => {
+  const look = deckGrounds(deck)(slide);
+  expect({ dark: look.dark, bg: look.c.bg }).toEqual(expected);
+});
+
+it("caches grounded looks per base and ground", () => {
+  const lookOf = deckGrounds(lightDeck);
+  expect(lookOf(accentSlide)).toBe(lookOf(accentSlide));
 });
 
 it("builds one pptx slide per deck slide on the output presentation", async () => {

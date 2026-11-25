@@ -8,6 +8,7 @@ import {
   MARKER_SQUARE,
   plain,
   type BoxOpts,
+  type MarkerHue,
   type Para,
   type Run,
   type TextProps,
@@ -117,11 +118,17 @@ export function breakAt(runs: Run[], lines: ReturnType<typeof pretty>): Run[] {
   return out;
 }
 
-const BULLET_OF = {
-  number: (): TextProps["bullet"] => ({ type: "number", indent: BULLET_INDENT }),
-  green: (): TextProps["bullet"] => ({ code: MARKER_CODES.green, indent: BULLET_INDENT }),
-  red: (): TextProps["bullet"] => ({ code: MARKER_CODES.red, indent: BULLET_INDENT }),
-  square: (): TextProps["bullet"] => ({ code: MARKER_SQUARE, indent: BULLET_INDENT }),
+const MARKER_BULLETS = Object.fromEntries(
+  Object.entries(MARKER_CODES).map(([hue, code]) => [
+    hue,
+    (): TextProps["bullet"] => ({ code, indent: BULLET_INDENT }),
+  ]),
+) as Record<MarkerHue, () => TextProps["bullet"]>;
+
+const BULLET_OF: Record<"number" | "square" | MarkerHue, () => TextProps["bullet"]> = {
+  number: () => ({ type: "number", indent: BULLET_INDENT }),
+  square: () => ({ code: MARKER_SQUARE, indent: BULLET_INDENT }),
+  ...MARKER_BULLETS,
 };
 
 // A box too short for its lines keeps their size and closes their leading first, down to the

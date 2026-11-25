@@ -7,10 +7,7 @@ import { CAPS, HUE_OF_MARKER, MARKER_SQUARE } from "./text";
 
 type Lang = ReturnType<typeof deckLang>;
 
-export interface PartFix {
-  name: string;
-  fix: (xml: string, part: string) => string;
-}
+export type PartFix = (xml: string, part: string) => string;
 
 const XML_LANG: Record<Lang, string> = { de: "de-DE", en: "en-US" };
 
@@ -59,12 +56,9 @@ export function chartPartFix(zip: JSZip, charts: Map<number, ChartFix>): PartFix
   const chartFiles = Object.keys(zip.files)
     .filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
     .sort((a, b) => parseInt(a.match(/\d+/)![0]) - parseInt(b.match(/\d+/)![0]));
-  return {
-    name: "chart",
-    fix: (xml, part) => {
-      const fix = charts.get(chartFiles.indexOf(part) + 1);
-      return fix ? finishChart(xml, fix) : xml;
-    },
+  return (xml, part) => {
+    const fix = charts.get(chartFiles.indexOf(part) + 1);
+    return fix ? finishChart(xml, fix) : xml;
   };
 }
 
@@ -116,7 +110,7 @@ export function setBulletMarkers(xml: string, c: Palette): string {
 export async function finishParts(zip: JSZip, fixes: readonly PartFix[]): Promise<void> {
   for (const name of Object.keys(zip.files).filter((f) => /^ppt\/.+\.xml$/.test(f))) {
     let xml = await zip.file(name)!.async("string");
-    for (const { fix } of fixes) xml = fix(xml, name);
+    for (const fix of fixes) xml = fix(xml, name);
     zip.file(name, xml);
   }
 }

@@ -23,6 +23,11 @@ import { W, H } from "./stage";
 
 type Render = (sheet: Sheet, slide: never) => void;
 
+export function slidePartNumber(part: string): number | undefined {
+  const match = /^ppt\/slides\/slide(\d+)\.xml$/.exec(part);
+  return match ? Number(match[1]) : undefined;
+}
+
 export function deckGrounds(deck: Presentation): (slide?: Slide) => Look {
   const deckLanguage = deckLang(deck);
   const dark = deck.theme === "brand-dark";
@@ -70,10 +75,10 @@ export function buildSlides(
 export async function overflowWarnings(zip: JSZip): Promise<string[]> {
   const warnings: string[] = [];
   for (const name of Object.keys(zip.files)) {
-    const n = /^ppt\/slides\/slide(\d+)\.xml$/.exec(name);
-    if (!n) continue;
+    const n = slidePartNumber(name);
+    if (n === undefined) continue;
     for (const found of checkSlide(await zip.file(name)!.async("string"), W, H))
-      warnings.push(`slide ${n[1]}: ${found}`);
+      warnings.push(`slide ${n}: ${found}`);
   }
   return warnings;
 }
@@ -87,24 +92,21 @@ export async function renderPptx(
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE";
   pptx.title = deck.name;
+  const deckLanguage = deckLang(deck);
   const lookOf = deckGrounds(deck);
   if (deck.speakers?.length) pptx.author = deck.speakers.join(", ");
   pptx.theme = { headFontFace: MONO, bodyFontFace: SANS };
   const out: Output = { pptx, assets, warnings: [], charts: new Map() };
   buildSlides(deck, out, lookOf);
   const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
-  const deckLanguage = lookOf(undefined).lang;
   await finishParts(zip, [
     chartPartFix(zip, out.charts),
-    { name: "font-pitch", fix: setFontPitch },
-    { name: "language", fix: (xml) => setTextLanguage(xml, deckLanguage) },
-    { name: "brand-corners", fix: setBrandCorners },
-    {
-      name: "bullet-markers",
-      fix: (xml, part) => {
-        const n = /^ppt\/slides\/slide(\d+)\.xml$/.exec(part);
-        return setBulletMarkers(xml, lookOf(n ? deck.slides[Number(n[1]) - 1] : undefined).c);
-      },
+    setFontPitch,
+    (xml) => setTextLanguage(xml, deckLanguage),
+    setBrandCorners,
+    (xml, part) => {
+      const n = slidePartNumber(part);
+      return setBulletMarkers(xml, lookOf(n !== undefined ? deck.slides[n - 1] : undefined).c);
     },
   ]);
   out.warnings.push(...(await overflowWarnings(zip)));

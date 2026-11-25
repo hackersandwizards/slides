@@ -98,6 +98,11 @@ it.each([
     expected: { bullet: { code: MARKER_CODES.green, indent: BULLET_INDENT }, indentLevel: 2 },
   },
   {
+    name: "an indented red marker",
+    para: { runs: [{ text: "Risk" }], bullet: true, marker: "red", indent: 1 } as Para,
+    expected: { bullet: { code: MARKER_CODES.red, indent: BULLET_INDENT }, indentLevel: 1 },
+  },
+  {
     name: "a default square marker",
     para: { runs: [{ text: "Item" }], bullet: true } as Para,
     expected: { bullet: { code: MARKER_SQUARE, indent: BULLET_INDENT }, indentLevel: 0 },
@@ -106,15 +111,12 @@ it.each([
   expect(paraBullet(para)).toEqual(expected);
 });
 
-it("builds scaled paragraph properties with tracking, tabs and marker bullet", () => {
+it("builds scaled paragraph properties with tracking and tabs", () => {
   const para: Para = {
     runs: [{ text: "Step\tDetails" }],
     align: "right",
     after: 10,
     tabs: [1.5, 3],
-    bullet: true,
-    marker: "red",
-    indent: 1,
   };
   const o: BoxOpts = { size: 20, color: "112233", italic: true, tracking: 0.05, line: 1.4 };
   expect(paraProps(para, o, 0.5)).toEqual({
@@ -131,8 +133,6 @@ it("builds scaled paragraph properties with tracking, tabs and marker bullet", (
       { position: 0.75, alignment: "l" },
       { position: 1.5, alignment: "l" },
     ],
-    bullet: { code: MARKER_CODES.red, indent: BULLET_INDENT },
-    indentLevel: 1,
   });
 });
 
