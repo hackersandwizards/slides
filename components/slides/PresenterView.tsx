@@ -1,32 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import Check from "lucide-react/icons/check";
-import ChevronLeft from "lucide-react/icons/chevron-left";
-import ChevronRight from "lucide-react/icons/chevron-right";
-import Minus from "lucide-react/icons/minus";
-import Pause from "lucide-react/icons/pause";
-import Pencil from "lucide-react/icons/pencil";
-import Play from "lucide-react/icons/play";
-import Plus from "lucide-react/icons/plus";
-import RotateCcw from "lucide-react/icons/rotate-ccw";
-import X from "lucide-react/icons/x";
 import { useMounted } from "../../lib/use-mounted";
 import { usePendingReveal } from "../../lib/use-progressive-reveal";
-import {
-  arrowEvent,
-  deckSync,
-  ROLE_NAMES,
-  type ArrowKey,
-  type DeckState,
-} from "../../lib/presenter-sync";
-import {
-  directionKey,
-  formatDuration,
-  parseStoredJson,
-  readStored,
-  writeStored,
-} from "../../lib/slide-utils";
+import { deckSync, ROLE_NAMES, type DeckState } from "../../lib/presenter-sync";
+import { directionKey, writeStored } from "../../lib/slide-utils";
+import { MAX_SPLIT, MIN_SPLIT, usePresenterSplit } from "../../lib/use-presenter-split";
+import { PresenterHeader } from "./PresenterHeader";
+import { SpeakerNotes } from "./SpeakerNotes";
 
 interface Props {
   /** Every slide's speaker notes, in deck order. */
@@ -34,24 +15,18 @@ interface Props {
   basePath: string;
 }
 
-const NOTES_SIZE_KEY = "slide-notes-size";
-const TIMER_KEY = "slide-speaker-timer";
-const SPLIT_KEY = "slide-presenter-split";
-/** The share of the height below the header that the slides take; the notes get the rest. */
-const DEFAULT_SPLIT = 0.6;
-const MIN_SPLIT = 0.1;
-const MAX_SPLIT = 0.9;
-const SPLIT_STEP = 0.05;
+interface FrameSources {
+  follow: string;
+  preview: string;
+  back: boolean;
+}
+
 /** The slides keep their headings and a visible frame, the notes their heading and a few lines,
  *  whatever the window's height. */
 const MIN_SLIDES_PX = 120;
 const MIN_NOTES_PX = 176;
 /** 16:9 at the largest size its box allows, so a shorter box narrows the slide. */
 const FRAME_SIZE = "aspect-video w-(--slide-presenter-frame)";
-/** Editing notes writes the deck file through the edit mode's endpoint, which only the dev server
- *  serves; the condition folds to false in a build, which drops the button with it. */
-const EDITABLE = import.meta.env.DEV;
-const EDIT_ENDPOINT = "/api/deck-edit";
 const SERVER_STATE: DeckState = { slide: -1, back: false, step: 0, at: 0, from: "" };
 
 /** The speaker window: the slide as the audience sees it, the next slide, the notes, a timer and
@@ -72,15 +47,11 @@ function SpeakerWindow({ notes, basePath }: Props) {
   const pending = usePendingReveal();
   const total = notes.length;
   const frames = useFrameSources(state, basePath, total);
-  const [size, setSize] = useNotesSize();
   const slide = Math.max(state.slide, 0);
-  const edit = useNotesEdit(notes, basePath);
-  const note = edit.current(slide)?.trim();
   const last = slide >= total - 1;
   useInertSlide();
-  const notesBox = useNotesKeys(slide);
   const region = useRef<HTMLDivElement>(null);
-  const [split, dividerHandlers] = useSplit(region);
+  const [split, dividerHandlers] = usePresenterSplit(region);
 
   return (
     <div
@@ -88,165 +59,94 @@ function SpeakerWindow({ notes, basePath }: Props) {
       data-hw-scale="dense"
       className="slide-presenter fixed inset-0 z-[55] flex flex-col gap-4 bg-night p-4 font-sans text-night-ink"
     >
-      <header className="flex items-center gap-6 text-lg">
-        <span className="font-mono text-2xl font-bold tabular-nums">
-          {slide + 1} / {total}
-        </span>
-        <span
-          className={`rounded-full px-3 py-1 text-sm font-semibold ${pending ? "bg-amber text-night" : "bg-night-ink/15 text-night-muted"}`}
-        >
-          {pending ? "More on this slide" : last ? "Last slide" : "Next press: next slide"}
-        </span>
-        <span className="flex-1" />
-        <StepButton label="Previous" keyName="ArrowLeft" icon={<ChevronLeft />} />
-        <StepButton label="Next" keyName="ArrowRight" icon={<ChevronRight />} />
-        <Timer />
-        <Clock />
-      </header>
+      <PresenterHeader slide={slide} total={total} pending={pending} />
 
       {/* The slides on top, the notes across the full width below: the notes are what this
           window is for, and a wide line of them reads at a glance. The divider between them
           trades the slides' height for the notes'. */}
       <div ref={region} className="flex min-h-0 flex-1 flex-col">
-        <div
-          className="grid min-h-0 grid-cols-[3fr_2fr] gap-4"
-          style={{
-            height: `clamp(${MIN_SLIDES_PX}px, ${split * 100}%, calc(100% - ${MIN_NOTES_PX}px))`,
-          }}
-        >
-          <section aria-label="Current slide" className="flex min-h-0 flex-col gap-2">
-            <h2 className="text-sm font-bold tracking-wide text-night-muted">Now</h2>
-            <div className="[container-type:size] min-h-0 flex-1">
-              {frames && (
-                <Frame
-                  name={ROLE_NAMES.follow}
-                  src={frames.follow}
-                  back={frames.back}
-                  title="Current slide"
-                />
-              )}
-            </div>
-          </section>
-
-          <section aria-label="Next slide" className="flex min-h-0 flex-col gap-2">
-            <h2 className="text-sm font-bold tracking-wide text-night-muted">Next slide</h2>
-            <div className="[container-type:size] min-h-0 flex-1">
-              <div className={last ? "hidden" : "contents"}>
-                {frames && (
-                  <Frame name={ROLE_NAMES.preview} src={frames.preview} back title="Next slide" />
-                )}
-              </div>
-              {last && (
-                <p
-                  className={`${FRAME_SIZE} flex items-center justify-center rounded-brand border border-night-ink/15 text-night-muted`}
-                >
-                  End of the deck
-                </p>
-              )}
-            </div>
-          </section>
-        </div>
-
-        <div
-          role="separator"
-          aria-orientation="horizontal"
-          aria-label="Resize slides and notes"
-          aria-valuemin={MIN_SPLIT * 100}
-          aria-valuemax={MAX_SPLIT * 100}
-          aria-valuenow={Math.round(split * 100)}
-          tabIndex={0}
-          title="Drag to resize, double-click to reset"
-          {...dividerHandlers}
-          className="group flex h-4 shrink-0 cursor-row-resize touch-none items-center justify-center outline-none"
-        >
-          <span className="h-1 w-16 rounded-full bg-night-ink/25 group-hover:bg-night-ink/40 group-focus-visible:bg-amber" />
-        </div>
-
-        <section aria-label="Speaker notes" className="flex min-h-0 flex-1 flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <h2 className="flex-1 text-sm font-bold tracking-wide text-night-muted">
-              {edit.open && edit.open.slide !== slide
-                ? `Notes of slide ${edit.open.slide + 1}, being edited`
-                : "Notes"}
-            </h2>
-            <span role="alert" className="text-sm text-red-night">
-              {edit.error}
-            </span>
-            {EDITABLE &&
-              (edit.open ? (
-                <>
-                  <IconButton label="Cancel editing" onClick={edit.cancel}>
-                    <X />
-                  </IconButton>
-                  <IconButton
-                    label={edit.saving ? "Saving" : "Save notes"}
-                    onClick={() => void edit.save()}
-                  >
-                    <Check />
-                  </IconButton>
-                </>
-              ) : (
-                <IconButton label="Edit notes" onClick={() => edit.start(slide)}>
-                  <Pencil />
-                </IconButton>
-              ))}
-            <IconButton label="Smaller notes" onClick={() => setSize(size - 2)}>
-              <Minus />
-            </IconButton>
-            <IconButton label="Larger notes" onClick={() => setSize(size + 2)}>
-              <Plus />
-            </IconButton>
-          </div>
-          {edit.open ? (
-            <textarea
-              aria-label="Speaker notes text"
-              autoFocus
-              spellCheck={false}
-              value={edit.open.draft}
-              onChange={(event) => edit.change(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") edit.cancel();
-                else if (event.key === "Enter" && (event.metaKey || event.ctrlKey))
-                  void edit.save();
-              }}
-              className="min-h-0 flex-1 resize-none rounded-brand bg-night-2 px-5 py-4 leading-relaxed text-night-ink outline-2 outline-amber"
-              style={{ fontSize: size }}
-            />
-          ) : (
-            <div
-              ref={notesBox}
-              className="min-h-0 flex-1 overflow-y-auto rounded-brand bg-night-2 px-5 py-4 leading-relaxed whitespace-pre-line"
-              style={{ fontSize: size }}
-            >
-              {note || <span className="text-night-muted">No notes on this slide.</span>}
-            </div>
-          )}
-        </section>
+        <SlidePreviewRow frames={frames} last={last} split={split} />
+        <SplitDivider split={split} handlers={dividerHandlers} />
+        <SpeakerNotes notes={notes} slide={slide} basePath={basePath} />
       </div>
     </div>
   );
 }
 
-/** Up and Down scroll the notes by most of a screen; a new slide opens its notes at the top. The
- *  deck takes neither key. */
-function useNotesKeys(slide: number) {
-  const box = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    box.current?.scrollTo({ top: 0 });
-  }, [slide]);
-  useEffect(() => {
-    function scroll(event: KeyboardEvent) {
-      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-      const element = box.current;
-      if (!element) return;
-      event.preventDefault();
-      const by = element.clientHeight * 0.8;
-      element.scrollBy({ top: event.key === "ArrowDown" ? by : -by, behavior: "smooth" });
-    }
-    window.addEventListener("keydown", scroll);
-    return () => window.removeEventListener("keydown", scroll);
-  }, []);
-  return box;
+function SlidePreviewRow({
+  frames,
+  last,
+  split,
+}: {
+  frames: FrameSources | null;
+  last: boolean;
+  split: number;
+}) {
+  return (
+    <div
+      className="grid min-h-0 grid-cols-[3fr_2fr] gap-4"
+      style={{
+        height: `clamp(${MIN_SLIDES_PX}px, ${split * 100}%, calc(100% - ${MIN_NOTES_PX}px))`,
+      }}
+    >
+      <section aria-label="Current slide" className="flex min-h-0 flex-col gap-2">
+        <h2 className="text-sm font-bold tracking-wide text-night-muted">Now</h2>
+        <div className="[container-type:size] min-h-0 flex-1">
+          {frames && (
+            <Frame
+              name={ROLE_NAMES.follow}
+              src={frames.follow}
+              back={frames.back}
+              title="Current slide"
+            />
+          )}
+        </div>
+      </section>
+
+      <section aria-label="Next slide" className="flex min-h-0 flex-col gap-2">
+        <h2 className="text-sm font-bold tracking-wide text-night-muted">Next slide</h2>
+        <div className="[container-type:size] min-h-0 flex-1">
+          <div className={last ? "hidden" : "contents"}>
+            {frames && (
+              <Frame name={ROLE_NAMES.preview} src={frames.preview} back title="Next slide" />
+            )}
+          </div>
+          {last && (
+            <p
+              className={`${FRAME_SIZE} flex items-center justify-center rounded-brand border border-night-ink/15 text-night-muted`}
+            >
+              End of the deck
+            </p>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SplitDivider({
+  split,
+  handlers,
+}: {
+  split: number;
+  handlers: ReturnType<typeof usePresenterSplit>[1];
+}) {
+  return (
+    <div
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label="Resize slides and notes"
+      aria-valuemin={MIN_SPLIT * 100}
+      aria-valuemax={MAX_SPLIT * 100}
+      aria-valuenow={Math.round(split * 100)}
+      tabIndex={0}
+      title="Drag to resize, double-click to reset"
+      {...handlers}
+      className="group flex h-4 shrink-0 cursor-row-resize touch-none items-center justify-center outline-none"
+    >
+      <span className="h-1 w-16 rounded-full bg-night-ink/25 group-hover:bg-night-ink/40 group-focus-visible:bg-amber" />
+    </div>
+  );
 }
 
 /** This window's own copy of the slide, under the speaker view, takes no focus and no clicks: Tab
@@ -270,9 +170,7 @@ function useInertSlide() {
  *  role's key, written here before it loads: the live frame opens as revealed as this window, the
  *  preview fully revealed. */
 function useFrameSources(state: DeckState, basePath: string, total: number) {
-  const [frames, setFrames] = useState<{ follow: string; preview: string; back: boolean } | null>(
-    null,
-  );
+  const [frames, setFrames] = useState<FrameSources | null>(null);
   const { slide, back } = state;
   if (frames === null && slide >= 0) {
     setFrames({
@@ -331,258 +229,4 @@ function Frame({
       />
     </div>
   );
-}
-
-function StepButton({
-  label,
-  keyName,
-  icon,
-}: {
-  label: string;
-  keyName: ArrowKey;
-  icon: React.ReactNode;
-}) {
-  return (
-    <IconButton label={label} onClick={() => document.body.dispatchEvent(arrowEvent(keyName))}>
-      {icon}
-    </IconButton>
-  );
-}
-
-/** Space keeps stepping the deck while a button has focus, rather than pressing the button too;
- *  Enter presses it. */
-function IconButton({
-  label,
-  onClick,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      onKeyUp={(event) => {
-        if (event.key === " ") event.preventDefault();
-      }}
-      className="hw-icon-button"
-    >
-      {children}
-    </button>
-  );
-}
-
-function useNotesSize(): [number, (size: number) => void] {
-  const [size, setSize] = useState(() => {
-    const stored = Number(readStored("local", NOTES_SIZE_KEY));
-    return stored >= 14 && stored <= 48 ? stored : 24;
-  });
-  return [
-    size,
-    (next) => {
-      const clamped = Math.min(48, Math.max(14, next));
-      setSize(clamped);
-      writeStored("local", NOTES_SIZE_KEY, String(clamped));
-    },
-  ];
-}
-
-/** Edit and save a slide's notes, dev server only. Save replaces the note's string in the deck
- *  file, the one literal holding exactly the text the deck loaded; the endpoint refuses rather than
- *  guess when that literal is gone or appears twice. A saved note shows at once, before the dev
- *  server reloads the deck. While the field is open the page carries the edit mode's flag, so the
- *  deck's shortcuts ignore what is typed and the clicker waits until the field closes. */
-function useNotesEdit(notes: Array<string | undefined>, basePath: string) {
-  const [saved, setSaved] = useState<Record<number, string>>({});
-  const [open, setOpen] = useState<{ slide: number; draft: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const current = (slide: number) => saved[slide] ?? notes[slide];
-  const editing = open !== null;
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (!editing || "deckEdit" in root.dataset) return;
-    root.dataset.deckEdit = "";
-    return () => {
-      delete root.dataset.deckEdit;
-    };
-  }, [editing]);
-
-  return {
-    open,
-    error,
-    saving,
-    current,
-    start(slide: number) {
-      setError(null);
-      setOpen({ slide, draft: current(slide) ?? "" });
-    },
-    change: (draft: string) => setOpen((was) => was && { ...was, draft }),
-    cancel() {
-      setError(null);
-      setOpen(null);
-    },
-    async save() {
-      if (!open || saving) return;
-      const from = current(open.slide);
-      if (from === undefined) {
-        setError("This slide has no notes field. Add one in the deck file.");
-        return;
-      }
-      if (open.draft === from) {
-        setOpen(null);
-        return;
-      }
-      setSaving(true);
-      try {
-        const response = await fetch(EDIT_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ deck: basePath, from, to: open.draft }),
-        });
-        const answer = (await response.json()) as { ok?: boolean; error?: string };
-        if (!answer.ok) throw new Error(answer.error ?? "The deck file was not changed.");
-        setSaved((was) => ({ ...was, [open.slide]: open.draft }));
-        setError(null);
-        setOpen(null);
-      } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "The dev server did not answer.");
-      } finally {
-        setSaving(false);
-      }
-    },
-  };
-}
-
-/** The divider between slides and notes: Up, Down, Home and End stop here, so they neither scroll
- *  the notes nor reach the deck; Left, Right and the clicker keep stepping the deck. */
-function useSplit(region: React.RefObject<HTMLDivElement | null>) {
-  const [split, setSplit] = useState(() => {
-    const stored = Number(readStored("local", SPLIT_KEY));
-    return stored >= MIN_SPLIT && stored <= MAX_SPLIT ? stored : DEFAULT_SPLIT;
-  });
-  const clamp = (value: number) => Math.min(MAX_SPLIT, Math.max(MIN_SPLIT, value));
-  const save = (value: number | null) => {
-    const next = value === null ? DEFAULT_SPLIT : clamp(value);
-    live.current = next;
-    setSplit(next);
-    writeStored("local", SPLIT_KEY, value === null ? null : String(next));
-  };
-  // Where on the divider the pointer grabbed it: the divider scales with the slide scale's rem.
-  const grab = useRef(0);
-  // The last dragged value: the release can arrive before React renders the last move.
-  const live = useRef(split);
-  const handlers = {
-    onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
-      if (event.button !== 0) return;
-      // No mousedown follows, so the laser pointer neither draws nor cancels the focus.
-      event.preventDefault();
-      event.currentTarget.focus();
-      event.currentTarget.setPointerCapture(event.pointerId);
-      grab.current = event.clientY - event.currentTarget.getBoundingClientRect().top;
-    },
-    onPointerMove(event: React.PointerEvent<HTMLDivElement>) {
-      const box = region.current?.getBoundingClientRect();
-      if (event.currentTarget.hasPointerCapture(event.pointerId) && box && box.height > 0)
-        setSplit((live.current = clamp((event.clientY - grab.current - box.top) / box.height)));
-    },
-    // Fires on release and on a cancelled drag alike, so no drag ends unsaved.
-    onLostPointerCapture: () => save(live.current),
-    onDoubleClick: () => save(null),
-    onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
-      const next =
-        event.key === "ArrowUp"
-          ? split - SPLIT_STEP
-          : event.key === "ArrowDown"
-            ? split + SPLIT_STEP
-            : event.key === "Home"
-              ? MIN_SPLIT
-              : event.key === "End"
-                ? MAX_SPLIT
-                : null;
-      if (next === null) return;
-      event.preventDefault();
-      event.stopPropagation();
-      save(next);
-    },
-  };
-  return [split, handlers] as const;
-}
-
-/** Elapsed time since the speaker window opened, as reveal.js counts it. Kept in sessionStorage,
- *  so a reload of the speaker window keeps the count. */
-type TimerState = { start: number; pausedAt: number | null };
-
-function readTimer(): TimerState {
-  const stored = parseStoredJson(readStored("session", TIMER_KEY)) as TimerState | null;
-  if (stored && typeof stored.start === "number") return stored;
-  const fresh = { start: Date.now(), pausedAt: null };
-  writeStored("session", TIMER_KEY, JSON.stringify(fresh));
-  return fresh;
-}
-
-function Timer() {
-  const [timer, setTimer] = useState(readTimer);
-  const now = useNow();
-  const save = (next: TimerState) => {
-    writeStored("session", TIMER_KEY, JSON.stringify(next));
-    setTimer(next);
-  };
-  const elapsed = (timer.pausedAt ?? now) - timer.start;
-  const paused = timer.pausedAt !== null;
-  return (
-    <span className="flex items-center gap-2">
-      <span
-        className={`font-mono text-2xl tabular-nums ${paused ? "text-night-muted" : ""}`}
-        aria-label="Elapsed time"
-      >
-        {formatDuration(elapsed)}
-      </span>
-      <IconButton
-        label={paused ? "Resume timer" : "Pause timer"}
-        onClick={() =>
-          save(
-            paused
-              ? { start: timer.start + Date.now() - (timer.pausedAt ?? Date.now()), pausedAt: null }
-              : { ...timer, pausedAt: Date.now() },
-          )
-        }
-      >
-        {paused ? <Play /> : <Pause />}
-      </IconButton>
-      <IconButton
-        label="Reset timer"
-        onClick={() => save({ start: Date.now(), pausedAt: paused ? Date.now() : null })}
-      >
-        <RotateCcw />
-      </IconButton>
-    </span>
-  );
-}
-
-function Clock() {
-  const now = useNow();
-  return (
-    <span className="font-mono text-2xl text-night-muted tabular-nums" aria-label="Clock">
-      {new Date(now).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hourCycle: "h23",
-      })}
-    </span>
-  );
-}
-
-function useNow() {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, []);
-  return now;
 }

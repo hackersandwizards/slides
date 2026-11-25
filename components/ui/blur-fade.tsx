@@ -10,6 +10,31 @@ const MAX_DELAY = 0.3;
 const MAX_DURATION = 0.45;
 const OFFSET = 6;
 
+type FadeDirection = "up" | "down" | "left" | "right";
+
+const VISIBLE_VARIANT = {
+  x: 0,
+  y: 0,
+  opacity: 1,
+  filter: "blur(0px)",
+  // A filter left on, even blur(0px), keeps the text on its own layer, whose bounds came from the
+  // fallback face: after the web font swapped in, descenders stayed clipped until a repaint.
+  transitionEnd: { filter: "none" },
+};
+
+const FADE_VARIANTS: Record<FadeDirection, Variants> = {
+  up: { hidden: { y: OFFSET, opacity: 0, filter: "blur(6px)" }, visible: VISIBLE_VARIANT },
+  down: { hidden: { y: -OFFSET, opacity: 0, filter: "blur(6px)" }, visible: VISIBLE_VARIANT },
+  left: { hidden: { x: OFFSET, opacity: 0, filter: "blur(6px)" }, visible: VISIBLE_VARIANT },
+  right: { hidden: { x: -OFFSET, opacity: 0, filter: "blur(6px)" }, visible: VISIBLE_VARIANT },
+};
+
+function variantsForDirection(direction: FadeDirection): Variants {
+  return Object.hasOwn(FADE_VARIANTS, direction) ? FADE_VARIANTS[direction] : FADE_VARIANTS.up;
+}
+
+const MOTION_TAGS = { div: m.div, li: m.li } as const;
+
 // No layout or drag, which no slide uses: the fade draws with the DOM animations alone
 // (LazyMotion below).
 interface BlurFadeProps extends Omit<
@@ -20,7 +45,7 @@ interface BlurFadeProps extends Omit<
   className?: string;
   duration?: number;
   delay?: number;
-  direction?: "up" | "down" | "left" | "right";
+  direction?: FadeDirection;
   /** Waits until the element scrolls into view; otherwise it fades in on mount. */
   inView?: boolean;
   /** `li` where the fade is an item of a list, which may hold only list items. */
@@ -49,32 +74,14 @@ export function BlurFade({
     return <Tag className={className}>{children}</Tag>;
   }
 
-  const axis = direction === "left" || direction === "right" ? "x" : "y";
-  const variants: Variants = {
-    hidden: {
-      [axis]: direction === "right" || direction === "down" ? -OFFSET : OFFSET,
-      opacity: 0,
-      filter: "blur(6px)",
-    },
-    visible: {
-      x: 0,
-      y: 0,
-      opacity: 1,
-      filter: "blur(0px)",
-      // A filter left on, even blur(0px), keeps the text on its own layer, whose bounds came from the
-      // fallback face: after the web font swapped in, descenders stayed clipped until a repaint.
-      transitionEnd: { filter: "none" },
-    },
-  };
-
-  const Motion = Tag === "li" ? m.li : m.div;
+  const Motion = Object.hasOwn(MOTION_TAGS, Tag) ? MOTION_TAGS[Tag] : MOTION_TAGS.div;
   return (
     <LazyMotion features={domAnimation}>
       <Motion
         ref={ref}
         initial={hydrating ? false : "hidden"}
         animate={isInView ? "visible" : "hidden"}
-        variants={variants}
+        variants={variantsForDirection(direction)}
         // A slide's text is fully in within 0.8s, whatever its stagger: a later delay or a longer
         // fade read as a slow slide in a video call.
         transition={{

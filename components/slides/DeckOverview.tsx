@@ -37,6 +37,71 @@ function Thumbnail({ presentation, index }: { presentation: Presentation; index:
   );
 }
 
+function useOverviewShortcut(onOpen: (open: boolean) => void) {
+  useEffect(() => {
+    // The frames inside the speaker window only follow.
+    if (deckSync.follows()) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.defaultPrevented || ignoredKey(event) || deckSync.isReplayed(event)) return;
+      if (event.key === "o" || event.key === "O") onOpen(true);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onOpen]);
+}
+
+function overviewGridStep(columns: number, key: string): number | undefined {
+  const steps: Record<string, number> = {
+    ArrowRight: 1,
+    ArrowLeft: -1,
+    ArrowDown: columns,
+    ArrowUp: -columns,
+  };
+  return steps[key];
+}
+
+/** Arrow keys move the focus one tile, or one row up and down. */
+function moveOverviewFocus(event: ReactKeyboardEvent<HTMLOListElement>) {
+  const list = event.currentTarget;
+  const tiles = [...list.querySelectorAll<HTMLButtonElement>(":scope > li > button")];
+  const at = tiles.indexOf(document.activeElement as HTMLButtonElement);
+  if (at < 0) return;
+  const columns = getComputedStyle(list)
+    .getPropertyValue("grid-template-columns")
+    .split(" ").length;
+  const step = overviewGridStep(columns, event.key);
+  if (!step) return;
+  event.preventDefault();
+  tiles[Math.min(tiles.length - 1, Math.max(0, at + step))].focus();
+}
+
+function OverviewTile({
+  presentation,
+  index,
+  current,
+  onSelect,
+}: {
+  presentation: Presentation;
+  index: number;
+  current: boolean;
+  onSelect: (target: number) => void;
+}) {
+  return (
+    <li>
+      <button
+        type="button"
+        autoFocus={current}
+        aria-current={current ? "page" : undefined}
+        onClick={() => onSelect(index)}
+        className={`hw-focus-ring block w-full overflow-hidden rounded-brand-sm border-2 text-left ${current ? "border-primary" : "border-border"}`}
+      >
+        <Thumbnail presentation={presentation} index={index} />
+        <span className="block px-2 py-1 text-xs text-text-muted tabular-nums">{index + 1}</span>
+      </button>
+    </li>
+  );
+}
+
 /** Every slide of the deck as a tile, on `o`: arrow keys or Tab move between them, Enter or a
  *  click opens one, Esc closes. A modal dialog, so the slide's own keys rest while it is open. The
  *  tiles are the printed pages, which a dialog holds in one `PrintProvider`: they show every step,
@@ -51,18 +116,7 @@ export function DeckOverview({
   basePath: string;
 }) {
   const [open, setOpen] = useState(false);
-  const grid = useRef<HTMLOListElement>(null);
-
-  useEffect(() => {
-    // The frames inside the speaker window only follow.
-    if (deckSync.follows()) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.defaultPrevented || ignoredKey(event) || deckSync.isReplayed(event)) return;
-      if (event.key === "o" || event.key === "O") setOpen(true);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  useOverviewShortcut(setOpen);
 
   if (!open) return null;
 
@@ -72,22 +126,6 @@ export function DeckOverview({
     const direction = target < index ? "back" : "forward";
     goToSlide(`${basePath}/${target}`, direction);
     deckSync.navigated(target, direction);
-  }
-
-  /** Arrow keys move the focus one tile, or one row up and down. */
-  function move(event: ReactKeyboardEvent<HTMLOListElement>) {
-    const tiles = [
-      ...(grid.current?.querySelectorAll<HTMLButtonElement>(":scope > li > button") ?? []),
-    ];
-    const at = tiles.indexOf(document.activeElement as HTMLButtonElement);
-    if (at < 0) return;
-    const columns = getComputedStyle(grid.current!)
-      .getPropertyValue("grid-template-columns")
-      .split(" ").length;
-    const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: columns, ArrowUp: -columns }[event.key];
-    if (!step) return;
-    event.preventDefault();
-    tiles[Math.min(tiles.length - 1, Math.max(0, at + step))].focus();
   }
 
   return (
@@ -101,22 +139,15 @@ export function DeckOverview({
     >
       <div className="hw-dialog-body">
         <PrintProvider>
-          <ol ref={grid} className="grid grid-cols-2 gap-4 md:grid-cols-4" onKeyDown={move}>
+          <ol className="grid grid-cols-2 gap-4 md:grid-cols-4" onKeyDown={moveOverviewFocus}>
             {presentation.slides.map((_, i) => (
-              <li key={i}>
-                <button
-                  type="button"
-                  autoFocus={i === index}
-                  aria-current={i === index ? "page" : undefined}
-                  onClick={() => jump(i)}
-                  className={`hw-focus-ring block w-full overflow-hidden rounded-brand-sm border-2 text-left ${i === index ? "border-primary" : "border-border"}`}
-                >
-                  <Thumbnail presentation={presentation} index={i} />
-                  <span className="block px-2 py-1 text-xs text-text-muted tabular-nums">
-                    {i + 1}
-                  </span>
-                </button>
-              </li>
+              <OverviewTile
+                key={i}
+                presentation={presentation}
+                index={i}
+                current={i === index}
+                onSelect={jump}
+              />
             ))}
           </ol>
         </PrintProvider>

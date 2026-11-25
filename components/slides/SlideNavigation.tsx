@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Fragment,
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   useCallback,
@@ -16,7 +15,7 @@ import { MotionGlobalConfig } from "motion/react";
 import { useMounted } from "../../lib/use-mounted";
 import { goToSlide } from "../../lib/navigate";
 import { usePendingReveal } from "../../lib/use-progressive-reveal";
-import { arrowEvent, deckSync, ROLE_NAMES } from "../../lib/presenter-sync";
+import { arrowEvent, deckSync, ROLE_NAMES, type ArrowKey } from "../../lib/presenter-sync";
 import {
   arrivedBackwards as readArrivedBackwards,
   dialogOpen,
@@ -25,6 +24,7 @@ import {
   revealedUrl,
   writeStored,
 } from "../../lib/slide-utils";
+import { ShortcutsDialog } from "./ShortcutsDialog";
 
 // The preview of the next slide in the speaker window shows where the slide ends up, not how it
 // gets there.
@@ -56,52 +56,29 @@ const POINTER_IDLE_MS = 3000;
 let pointerMovedAt = -Infinity;
 const pointerActive = () => performance.now() - pointerMovedAt < POINTER_IDLE_MS;
 
-/** What a presenter can press, for the "?" overlay. A clicker sends PageDown and PageUp. */
-const KEYS: Array<[string[], string]> = [
-  [["→", "PageDown", "Space"], "next step or slide"],
-  [["←", "PageUp", "Shift+Space"], "previous step or slide"],
-  [["F"], "fullscreen on and off"],
-  [["S"], "speaker view in a second window"],
-  [["O"], "overview of every slide"],
-  [["H"], "hints on and off"],
-  [["?"], "this overlay"],
-];
-if (process.env.NODE_ENV === "development")
-  KEYS.push([["E"], "edit text, dev only, in a tab opened with ?edit"]);
-
-/** A stable ref, so only the dialog's mount opens it: an inline one runs on every render and
- *  would reopen it between Esc and its queued `close` event. */
-const openModal = (dialog: HTMLDialogElement | null) => dialog?.showModal();
-
-/** Whether a press or click lies outside the panel: the backdrop's events reach the dialog element. */
-function onBackdrop(event: ReactMouseEvent<HTMLDialogElement>) {
-  const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect();
-  const { clientX: x, clientY: y } = event;
-  return x < left || x > right || y < top || y > bottom;
+function toggleFullscreen() {
+  if (document.fullscreenElement) void document.exitFullscreen();
+  else void document.documentElement.requestFullscreen?.();
 }
 
-export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) {
-  const [help, setHelp] = useState(false);
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
-  const pressedBackdrop = useRef(false);
-  const currentIndexRef = useRef(currentIndex);
-  // The last slide still takes Next while it holds a reveal step.
-  const pending = usePendingReveal();
-  const atEnd = currentIndex === totalSlides - 1 && !pending;
-  // The first slide still takes Previous while it holds a step to take back.
-  const undoable = usePendingReveal("behind");
-  const atStart = currentIndex === 0 && !undoable;
-  // Read during render, as every reveal hook on the slide reads it; consumed once they all have,
-  // so a reload or a browser Forward onto the next slide does not open it revealed.
-  const [arrivedBackwards] = useState(readArrivedBackwards);
-  useEffect(() => writeStored("session", directionKey(), null), []);
+function openSpeakerView(basePath: string) {
+  const { slide, back } = deckSync.getState();
+  // A new window starts with a copy of this one's sessionStorage: it opens the slide as
+  // revealed as it is here.
+  writeStored("session", directionKey(ROLE_NAMES.presenter), back ? "back" : "forward");
+  window.open(
+    `${basePath}/${Math.max(slide, 0)}`,
+    ROLE_NAMES.presenter,
+    "popup,width=1280,height=800",
+  );
+}
 
-  // As for the hints: the frames that mirror a slide, an audience window with a speaker window
-  // open and a `?revealed` page show the slide alone.
-  const mounted = useMounted();
-  const speakerOpen = useSyncExternalStore(deckSync.subscribe, deckSync.speakerOpen, () => false);
-  const slideAlone = mounted && (speakerOpen || deckSync.follows() || revealedUrl());
+function dispatchArrow(event: KeyboardEvent, key: ArrowKey) {
+  event.preventDefault();
+  (event.target ?? window).dispatchEvent(arrowEvent(key));
+}
+
+function usePointerAwake() {
   const [awake, setAwake] = useState(pointerActive);
   useEffect(() => {
     let sleep: ReturnType<typeof setTimeout>;
@@ -112,16 +89,13 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
         Math.max(0, POINTER_IDLE_MS - (performance.now() - pointerMovedAt)),
       );
     };
-    function wake() {
-      pointerMovedAt = performance.now();
-      setAwake(true);
-      arm();
-    }
     function onPointer(event: PointerEvent) {
       // A drag with the mouse is the laser pointer or the highlighter; a mouse wakes the bar only
       // by moving.
       if (event.pointerType === "mouse" && (event.type !== "pointermove" || event.buttons)) return;
-      wake();
+      pointerMovedAt = performance.now();
+      setAwake(true);
+      arm();
     }
     arm();
     window.addEventListener("pointermove", onPointer);
@@ -133,7 +107,15 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
       window.removeEventListener("click", onPointer);
     };
   }, []);
+  return awake;
+}
 
+function useDeckSyncNavigation(currentIndex: number, totalSlides: number, basePath: string) {
+  const currentIndexRef = useRef(currentIndex);
+  // Read during render, as every reveal hook on the slide reads it; consumed once they all have,
+  // so a reload or a browser Forward onto the next slide does not open it revealed.
+  const [arrivedBackwards] = useState(readArrivedBackwards);
+  useEffect(() => writeStored("session", directionKey(), null), []);
   useEffect(() => {
     currentIndexRef.current = currentIndex;
   }, [currentIndex]);
@@ -151,7 +133,7 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
     };
   }, [basePath, totalSlides, currentIndex, arrivedBackwards]);
 
-  const navigate = useCallback(
+  return useCallback(
     (direction: "back" | "forward") => {
       const idx = currentIndexRef.current;
       const targetIndex = direction === "back" ? idx - 1 : idx + 1;
@@ -163,31 +145,83 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
     },
     [totalSlides, basePath],
   );
+}
 
+function useSlideTouchSwipe() {
   useEffect(() => {
     // The frames inside the speaker window only follow.
     const follows = deckSync.follows();
+    let startX: number | null = null;
+    let startY: number | null = null;
 
-    /** Capture phase, consumes nothing. Once the press has run through every handler, reports
-     *  whether the slide took it as a step, which the other windows of the deck replay. */
+    function onTouchStart(event: TouchEvent) {
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+    }
+    function onTouchEnd(event: TouchEvent) {
+      if (follows || dialogOpen() || startX === null || startY === null) return;
+      const deltaX = event.changedTouches[0].clientX - startX;
+      const deltaY = event.changedTouches[0].clientY - startY;
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+        if (deltaX > 0) stepBack();
+        else stepForward();
+      }
+      startX = null;
+      startY = null;
+    }
+
+    window.addEventListener("touchstart", onTouchStart);
+    window.addEventListener("touchend", onTouchEnd);
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, []);
+}
+
+/** Capture phase, consumes nothing. Once the press has run through every handler, reports
+ *  whether the slide took it as a step, which the other windows of the deck replay. */
+function useArrowSyncObserver(currentIndex: number) {
+  useEffect(() => {
     function observeArrow(event: KeyboardEvent) {
       if ((event.key !== "ArrowRight" && event.key !== "ArrowLeft") || ignoredKey(event)) return;
       // The slide on screen, which is the one that may consume the press: after a navigation
       // from here the deck's state already names the next one while this one is still mounted.
       setTimeout(() => deckSync.pressed(event, currentIndex, event.defaultPrevented));
     }
+    window.addEventListener("keydown", observeArrow, true);
+    return () => window.removeEventListener("keydown", observeArrow, true);
+  }, [currentIndex]);
+}
 
-    function openSpeakerView() {
-      const { slide, back } = deckSync.getState();
-      // A new window starts with a copy of this one's sessionStorage: it opens the slide as
-      // revealed as it is here.
-      writeStored("session", directionKey(ROLE_NAMES.presenter), back ? "back" : "forward");
-      window.open(
-        `${basePath}/${Math.max(slide, 0)}`,
-        ROLE_NAMES.presenter,
-        "popup,width=1280,height=800",
-      );
-    }
+function useSlideKeyShortcuts(
+  navigate: (direction: "back" | "forward") => void,
+  onOpenHelp: () => void,
+  basePath: string,
+) {
+  useEffect(() => {
+    // The frames inside the speaker window only follow.
+    const follows = deckSync.follows();
+    const openHelp = () => {
+      if (!dialogOpen()) onOpenHelp();
+    };
+    const openSpeaker = () => {
+      if (deckSync.role() === "audience") openSpeakerView(basePath);
+    };
+    const arrowRight = (event: KeyboardEvent) => dispatchArrow(event, "ArrowRight");
+    const arrowLeft = (event: KeyboardEvent) => dispatchArrow(event, "ArrowLeft");
+    const actions = new Map<string, (event: KeyboardEvent) => void>([
+      ["ArrowLeft", () => navigate("back")],
+      ["ArrowRight", () => navigate("forward")],
+      ["PageDown", arrowRight],
+      ["PageUp", arrowLeft],
+      [" ", (event) => dispatchArrow(event, event.shiftKey ? "ArrowLeft" : "ArrowRight")],
+      ["?", openHelp],
+      ["f", toggleFullscreen],
+      ["F", toggleFullscreen],
+      ["s", openSpeaker],
+      ["S", openSpeaker],
+    ]);
 
     /** Bubble phase, consumes what it handles. A clicker key is re-sent as the arrow it stands
      *  for, from the same target, so the capture-phase reveal and slide handlers see an arrow and
@@ -196,145 +230,93 @@ export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) 
       // A press replayed from another window steps the slide and never changes it. A press the
       // slide consumed is checked here too: Chrome runs this listener after a consuming capture
       // listener's stopPropagation when the press was dispatched on window itself.
-      if (follows || deckSync.isReplayed(event) || event.defaultPrevented) return;
-      const { key, shiftKey } = event;
-      if (key === "?" && dialogOpen() && !event.metaKey && !event.ctrlKey && !event.altKey)
-        return setHelp(false);
-      if (ignoredKey(event)) return;
-      const asArrow =
-        key === "PageDown" || (key === " " && !shiftKey)
-          ? "ArrowRight"
-          : key === "PageUp" || (key === " " && shiftKey)
-            ? "ArrowLeft"
-            : null;
-      if (key === "ArrowLeft") navigate("back");
-      else if (key === "ArrowRight") navigate("forward");
-      else if (asArrow) {
-        event.preventDefault();
-        (event.target ?? window).dispatchEvent(arrowEvent(asArrow));
-      } else if (key === "?") setHelp(true);
-      else if (key === "f" || key === "F") {
-        if (document.fullscreenElement) void document.exitFullscreen();
-        else void document.documentElement.requestFullscreen?.();
-      } else if ((key === "s" || key === "S") && deckSync.role() === "audience") {
-        openSpeakerView();
-      }
+      if (follows || deckSync.isReplayed(event) || event.defaultPrevented || ignoredKey(event))
+        return;
+      actions.get(event.key)?.(event);
     }
 
-    function handleTouchStart(event: TouchEvent) {
-      touchStartX.current = event.touches[0].clientX;
-      touchStartY.current = event.touches[0].clientY;
-    }
-
-    function handleTouchEnd(event: TouchEvent) {
-      if (follows || dialogOpen()) return;
-      if (touchStartX.current === null || touchStartY.current === null) return;
-
-      const deltaX = event.changedTouches[0].clientX - touchStartX.current;
-      const deltaY = event.changedTouches[0].clientY - touchStartY.current;
-
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-        if (deltaX > 0) stepBack();
-        else stepForward();
-      }
-
-      touchStartX.current = null;
-      touchStartY.current = null;
-    }
-
-    window.addEventListener("keydown", observeArrow, true);
     window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("touchstart", handleTouchStart);
-    window.addEventListener("touchend", handleTouchEnd);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate, onOpenHelp, basePath]);
+}
 
-    return () => {
-      window.removeEventListener("keydown", observeArrow, true);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [navigate, basePath, currentIndex]);
+function SlideControlsBar({
+  currentIndex,
+  totalSlides,
+  awake,
+}: {
+  currentIndex: number;
+  totalSlides: number;
+  awake: boolean;
+}) {
+  // The last slide still takes Next while it holds a reveal step.
+  const pending = usePendingReveal();
+  const atEnd = currentIndex === totalSlides - 1 && !pending;
+  // The first slide still takes Previous while it holds a step to take back.
+  const undoable = usePendingReveal("behind");
+  const atStart = currentIndex === 0 && !undoable;
+  return (
+    <div
+      data-hw-scale="screen"
+      data-awake={awake || undefined}
+      className="slide-controls fixed z-50 flex w-max items-center gap-3 transition-opacity print:hidden"
+    >
+      <button
+        onClick={press(stepBack)}
+        disabled={atStart}
+        className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
+        data-on="picture"
+        aria-label="Previous slide"
+      >
+        <ChevronLeft />
+      </button>
+
+      <div
+        className="slide-position box-content min-w-(--slide-position-min) rounded-full border border-night-ink/15 bg-night-2 p-[calc(var(--hw-control-size)*6/44)_calc(var(--hw-control-size)*12/44)] text-center text-[length:calc(var(--hw-control-size)*21/44)] leading-(--type-label-line-height) whitespace-nowrap text-night-muted tabular-nums"
+        // Both numbers at the total's length, and the " / " about as wide as 1.5 digits.
+        style={
+          {
+            "--slide-position-min": `calc(var(--slide-position-digit) * ${2 * String(totalSlides).length + 1.5})`,
+          } as CSSProperties
+        }
+      >
+        {currentIndex + 1} / {totalSlides}
+      </div>
+
+      <button
+        onClick={press(stepForward)}
+        disabled={atEnd}
+        className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
+        data-on="picture"
+        aria-label="Next slide"
+      >
+        <ChevronRight />
+      </button>
+    </div>
+  );
+}
+
+export function SlideNavigation({ currentIndex, totalSlides, basePath }: Props) {
+  const [help, setHelp] = useState(false);
+  const openHelp = useCallback(() => setHelp(true), []);
+  const closeHelp = useCallback(() => setHelp(false), []);
+  // As for the hints: the frames that mirror a slide, an audience window with a speaker window
+  // open and a `?revealed` page show the slide alone.
+  const mounted = useMounted();
+  const speakerOpen = useSyncExternalStore(deckSync.subscribe, deckSync.speakerOpen, () => false);
+  const slideAlone = mounted && (speakerOpen || deckSync.follows() || revealedUrl());
+  const awake = usePointerAwake();
+  const navigate = useDeckSyncNavigation(currentIndex, totalSlides, basePath);
+
+  useSlideTouchSwipe();
+  useArrowSyncObserver(currentIndex);
+  useSlideKeyShortcuts(navigate, openHelp, basePath);
 
   return (
     <>
-      {help && (
-        // Closes on a press and release both on the backdrop: a selection that starts in the panel
-        // and ends outside it is no click on the backdrop.
-        <dialog
-          ref={openModal}
-          className="hw-dialog"
-          data-hw-scale="dense"
-          data-size="large"
-          aria-label="Keyboard shortcuts"
-          onClose={() => setHelp(false)}
-          onMouseDown={(event) => {
-            pressedBackdrop.current = onBackdrop(event);
-          }}
-          onClick={(event) => {
-            if (pressedBackdrop.current && onBackdrop(event)) setHelp(false);
-          }}
-        >
-          <div className="hw-dialog-body [--hw-field-size:var(--text-sm)]">
-            <dl className="grid gap-y-4 [--hw-kbd-size:var(--text-sm)] sm:grid-cols-[auto_auto] sm:items-center sm:gap-x-6 sm:gap-y-2">
-              {KEYS.map(([keys, what]) => (
-                <div key={what} className="grid gap-y-1 sm:contents">
-                  <dt className="flex flex-wrap gap-1">
-                    {keys.map((key) => (
-                      <span key={key} className="flex items-center gap-1">
-                        {key.split("+").map((part, i) => (
-                          <Fragment key={part}>
-                            {i > 0 && "+"}
-                            <kbd className="hw-kbd">{part}</kbd>
-                          </Fragment>
-                        ))}
-                      </span>
-                    ))}
-                  </dt>
-                  <dd>{what}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </dialog>
-      )}
+      {help && <ShortcutsDialog onClose={closeHelp} />}
       {!slideAlone && (
-        <div
-          data-hw-scale="screen"
-          data-awake={awake || undefined}
-          className="slide-controls fixed z-50 flex w-max items-center gap-3 transition-opacity print:hidden"
-        >
-          <button
-            onClick={press(stepBack)}
-            disabled={atStart}
-            className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
-            data-on="picture"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft />
-          </button>
-
-          <div
-            className="slide-position box-content min-w-(--slide-position-min) rounded-full border border-night-ink/15 bg-night-2 p-[calc(var(--hw-control-size)*6/44)_calc(var(--hw-control-size)*12/44)] text-center text-[length:calc(var(--hw-control-size)*21/44)] leading-(--type-label-line-height) whitespace-nowrap text-night-muted tabular-nums"
-            // Both numbers at the total's length, and the " / " about as wide as 1.5 digits.
-            style={
-              {
-                "--slide-position-min": `calc(var(--slide-position-digit) * ${2 * String(totalSlides).length + 1.5})`,
-              } as CSSProperties
-            }
-          >
-            {currentIndex + 1} / {totalSlides}
-          </div>
-
-          <button
-            onClick={press(stepForward)}
-            disabled={atEnd}
-            className="hw-focus-ring hw-icon-button disabled:cursor-not-allowed disabled:opacity-25"
-            data-on="picture"
-            aria-label="Next slide"
-          >
-            <ChevronRight />
-          </button>
-        </div>
+        <SlideControlsBar currentIndex={currentIndex} totalSlides={totalSlides} awake={awake} />
       )}
     </>
   );

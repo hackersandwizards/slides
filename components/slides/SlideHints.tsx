@@ -24,15 +24,14 @@ function deckPath(): string {
   return typeof window === "undefined" ? "" : location.pathname.replace(/\/[^/]*\/?$/, "");
 }
 
-export function SlideHints({ slideIndex }: Props) {
-  const mounted = useMounted();
-  const pending = usePendingReveal();
-  const speakerOpen = useSyncExternalStore(deckSync.subscribe, deckSync.speakerOpen, () => false);
-  const [visible, setVisible] = useState(
-    () => typeof window === "undefined" || readStored("local", HINTS_STORAGE_KEY) !== "false",
-  );
-  const [intro, setIntro] = useState(() => (introEndsAt.get(deckPath()) ?? Infinity) > Date.now());
+const INTRO_HINTS = [
+  { key: "→", text: "to go to next slide" },
+  { key: "⌥", text: "drag to highlight" },
+  { key: "Esc", text: "to clear" },
+] as const;
 
+function useIntroWindow(): boolean {
+  const [intro, setIntro] = useState(() => (introEndsAt.get(deckPath()) ?? Infinity) > Date.now());
   useEffect(() => {
     const deck = deckPath();
     const endsAt = introEndsAt.get(deck) ?? Date.now() + INTRO_MS;
@@ -40,7 +39,13 @@ export function SlideHints({ slideIndex }: Props) {
     const timer = setTimeout(() => setIntro(false), endsAt - Date.now());
     return () => clearTimeout(timer);
   }, []);
+  return intro;
+}
 
+function useHintsVisible(): boolean {
+  const [visible, setVisible] = useState(
+    () => typeof window === "undefined" || readStored("local", HINTS_STORAGE_KEY) !== "false",
+  );
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (ignoredKey(event)) return;
@@ -51,10 +56,27 @@ export function SlideHints({ slideIndex }: Props) {
         });
       }
     }
-
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, []);
+  return visible;
+}
+
+function activeSlideHints(slideIndex: number, intro: boolean, pending: boolean) {
+  const hints: { key: string; text: string }[] = [];
+  if (slideIndex === 0 && intro) hints.push(...INTRO_HINTS);
+  // Only while the next arrow press reveals a step: an attendee watching a screen share sees the
+  // hint too, and on a slide with nothing left to reveal it promises something that never comes.
+  if (pending) hints.push({ key: "→", text: "to reveal" });
+  return hints;
+}
+
+export function SlideHints({ slideIndex }: Props) {
+  const mounted = useMounted();
+  const pending = usePendingReveal();
+  const speakerOpen = useSyncExternalStore(deckSync.subscribe, deckSync.speakerOpen, () => false);
+  const visible = useHintsVisible();
+  const intro = useIntroWindow();
 
   // The hints are for whoever holds the keyboard: with a speaker window open the audience window
   // is on the projector and shows the slide alone, and so do the frames that mirror it and a
@@ -62,20 +84,7 @@ export function SlideHints({ slideIndex }: Props) {
   if (!mounted || !visible || speakerOpen || deckSync.role() === "preview" || revealedUrl())
     return null;
 
-  const hints: { key: string; text: string }[] = [];
-
-  if (slideIndex === 0 && intro) {
-    hints.push({ key: "→", text: "to go to next slide" });
-    hints.push({ key: "⌥", text: "drag to highlight" });
-    hints.push({ key: "Esc", text: "to clear" });
-  }
-
-  // Only while the next arrow press reveals a step: an attendee watching a screen share sees the
-  // hint too, and on a slide with nothing left to reveal it promises something that never comes.
-  if (pending) {
-    hints.push({ key: "→", text: "to reveal" });
-  }
-
+  const hints = activeSlideHints(slideIndex, intro, pending);
   if (hints.length === 0) return null;
 
   return (

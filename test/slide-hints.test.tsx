@@ -87,4 +87,20 @@ describe("SlideHints", () => {
       history.pushState(null, "", "/");
     }
   });
+
+  it("toggles hint visibility on H and persists the preference", () => {
+    history.replaceState(null, "", "/toggle-deck/0");
+    const { queryByText } = render(<SlideHints slideIndex={0} />);
+    expect(queryByText("to go to next slide")).not.toBeNull();
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "h", cancelable: true }));
+    });
+    expect(queryByText("to go to next slide")).toBeNull();
+    expect(localStorage.getItem("slide-hints-visible")).toBe("false");
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "H", cancelable: true }));
+    });
+    expect(queryByText("to go to next slide")).not.toBeNull();
+    expect(localStorage.getItem("slide-hints-visible")).toBe("true");
+  });
 });
