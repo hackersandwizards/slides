@@ -22,10 +22,26 @@ import {
   twoColumnAsSplit,
   variantOf,
 } from "../lib/slide-utils";
-import type { ContentBlock, Presentation, Slide } from "../types/slide";
+import type { ContentBlock, ContentSlide, Presentation, SectionTheme, Slide } from "../types/slide";
 
-/** A block's entry where it is not `block-<type>`. */
-const BLOCK_ENTRY: Record<string, string> = {
+type BlockResolver<K extends ContentBlock["type"]> =
+  string | null | ((block: Extract<ContentBlock, { type: K }>) => string);
+
+/** Every block type's catalogue entry, a resolver where variants split across entries, or null for
+ *  the default `block-<type>`. Exhaustive over `ContentBlock["type"]`. */
+const BLOCK_ENTRY: { [K in ContentBlock["type"]]: BlockResolver<K> } = {
+  cards: (b) =>
+    b.dense ? "block-cards-dense" : b.columns === 4 ? "block-cards-four-columns" : "block-cards",
+  numbers: (b) =>
+    b.items.length === 1
+      ? "block-numbers-one-figure"
+      : b.items.length > 4
+        ? "block-numbers-six-figures"
+        : "block-numbers",
+  bars: (b) => (b.bars.some((bar) => bar.from != null) ? "block-bars-as-ranges" : "block-bars"),
+  flow: (b) => (b.frame ? "block-flow-framed" : "block-flow"),
+  "image-and-grid": (b) =>
+    b.image.sketch ? "block-image-and-grid-sketch" : "block-image-and-grid",
   annotated: "block-annotated-image",
   "annotated-code": "block-code",
   "code-and-text": "block-code",
@@ -33,6 +49,23 @@ const BLOCK_ENTRY: Record<string, string> = {
   hooks: "block-terminal-and-hooks",
   positions: "comparison-positions",
   transform: "comparison-before-after",
+  bullets: null,
+  callout: null,
+  code: null,
+  "four-column": null,
+  gallery: null,
+  image: null,
+  "image-steps": null,
+  "labeled-grid": null,
+  layers: null,
+  "linked-image": null,
+  paragraph: null,
+  pipeline: null,
+  quote: null,
+  table: null,
+  timeline: null,
+  "two-column": null,
+  video: null,
 };
 
 /** A deck as the command reads it: `slug`, where a consumer sets one, names it in errors. */
@@ -50,48 +83,12 @@ function drawnBlock(block: ContentBlock): ContentBlock {
   return block;
 }
 
-/** A block's entry, for the blocks the catalogue shows in more than one form. */
+/** A block's catalogue entry. */
 function blockEntry(block: ContentBlock): string {
-  switch (block.type) {
-    case "cards":
-      if (block.dense) return "block-cards-dense";
-      return block.columns === 4 ? "block-cards-four-columns" : "block-cards";
-    case "numbers":
-      if (block.items.length === 1) return "block-numbers-one-figure";
-      return block.items.length > 4 ? "block-numbers-six-figures" : "block-numbers";
-    case "bars":
-      return block.bars.some((bar) => bar.from != null) ? "block-bars-as-ranges" : "block-bars";
-    case "flow":
-      return block.frame ? "block-flow-framed" : "block-flow";
-    case "image-and-grid":
-      return block.image.sketch ? "block-image-and-grid-sketch" : "block-image-and-grid";
-    case "annotated-code":
-    case "annotated":
-    case "bullets":
-    case "callout":
-    case "code-and-text":
-    case "code":
-    case "four-column":
-    case "gallery":
-    case "hooks":
-    case "image-steps":
-    case "image":
-    case "labeled-grid":
-    case "layers":
-    case "linked-image":
-    case "paragraph":
-    case "pipeline":
-    case "positions":
-    case "quote":
-    case "table":
-    case "terminal":
-    case "timeline":
-    case "transform":
-    case "two-column":
-    case "video":
-      break;
-  }
-  return BLOCK_ENTRY[block.type] ?? `block-${block.type}`;
+  const entry = Object.hasOwn(BLOCK_ENTRY, block.type) ? BLOCK_ENTRY[block.type] : null;
+  return typeof entry === "function"
+    ? (entry as (b: ContentBlock) => string)(block)
+    : (entry ?? `block-${block.type}`);
 }
 
 /** The slide a slide draws as, where it draws as another: a replaced form as its heir. */
@@ -101,26 +98,29 @@ function drawnAs(slide: Slide): Slide | undefined {
   if (slide.type === "regular") return regularAsContent(slide);
 }
 
+/** The catalogue entries a content slide uses, including redrawn statement and split forms. */
+function contentEntries(slide: ContentSlide): string[] {
+  // A slide of one or two short bullets still draws as bullets: the print page marks it, and
+  // it counts as what it draws.
+  if (centeredAsStatement(slide)) return ["statement"];
+  if (twoColumnAsSplit(slide)) return ["comparison-split"];
+  const blocks = slide.content.map((b) => blockEntry(drawnBlock(b)));
+  const strays = blocks.filter((b) => !known(b) && !PLAIN.has(b));
+  if (strays.length) throw new Error(`no catalogue entry for ${strays.join(", ")}`);
+  const form = slide.layout === "centered" ? "content-centered" : "content";
+  const entries = new Set([form, ...blocks.filter(known)]);
+  if (blocks.filter((b) => b === "block-image").length > 1) {
+    entries.delete("block-image");
+    entries.add("block-two-images");
+  }
+  return [...entries];
+}
+
 /** The catalogue entries a slide uses, read off what it draws: a replaced form counts as its heir. */
 export function entriesOf(slide: Slide): string[] {
   const drawn = drawnAs(slide);
   if (drawn) return entriesOf(drawn);
-  if (slide.type === "content") {
-    // A slide of one or two short bullets still draws as bullets: the print page marks it, and
-    // it counts as what it draws.
-    if (centeredAsStatement(slide)) return ["statement"];
-    if (twoColumnAsSplit(slide)) return ["comparison-split"];
-    const blocks = slide.content.map((b) => blockEntry(drawnBlock(b)));
-    const strays = blocks.filter((b) => !known(b) && !PLAIN.has(b));
-    if (strays.length) throw new Error(`no catalogue entry for ${strays.join(", ")}`);
-    const form = slide.layout === "centered" ? "content-centered" : "content";
-    const entries = new Set([form, ...blocks.filter(known)]);
-    if (blocks.filter((b) => b === "block-image").length > 1) {
-      entries.delete("block-image");
-      entries.add("block-two-images");
-    }
-    return [...entries];
-  }
+  if (slide.type === "content") return contentEntries(slide);
   const to = replacedBy(slide)?.to ?? slide.type;
   const form = anchorSlug(to);
   const variant = form === slide.type ? variantOf(slide) : "";
@@ -130,37 +130,53 @@ export function entriesOf(slide: Slide): string[] {
   return entry ? [entry] : [];
 }
 
+/** The content slide a slide draws as, or undefined when it draws as another slide type. */
+function contentOf(slide: Slide): ContentSlide | undefined {
+  const drawn = drawnAs(slide) ?? slide;
+  return drawn.type === "content" ? drawn : undefined;
+}
+
+/** Cards blocks that set `numberFrom` without being numbered. */
+function ignoredNumberFrom(slide: Slide): string[] {
+  const content = contentOf(slide);
+  if (!content) return [];
+  const reason =
+    slide.type === "grid"
+      ? "numberFrom: a grid numbers its pillars only where no card names an icon"
+      : "numberFrom: the cards block is not numbered";
+  return content.content
+    .filter((b) => b.type === "cards" && b.numberFrom != null && !b.numbered)
+    .map(() => reason);
+}
+
+/** Whether a non-deepdive section theme visibly changes what a content slide draws: its footer
+ *  or centred-paragraph rule, its principle pill, or keeping a lone neutral two-column block
+ *  from becoming a comparison. A centred slide draws none of them. */
+function sectionThemeDraws(slide: ContentSlide, theme: SectionTheme): boolean {
+  if (slide.layout === "centered") return false;
+  const style = getSectionStyle(theme);
+  const ruled = !!slide.footer || slide.content.some((b) => b.type === "paragraph" && b.centered);
+  if (ruled && style.border !== DEFAULT_SECTION_STYLE.border) return true;
+  if (slide.principle && style.pill !== DEFAULT_SECTION_STYLE.pill) return true;
+  return !!twoColumnAsSplit({ ...slide, sectionTheme: undefined });
+}
+
+/** A non-deepdive `sectionTheme` that changes no rule, pill or slide type. */
+function ignoredSectionTheme(slide: Slide): string[] {
+  if (!("sectionTheme" in slide) || !slide.sectionTheme || slide.sectionTheme === "deepdive")
+    return [];
+  const content = contentOf(slide);
+  if (content && sectionThemeDraws(content, slide.sectionTheme)) return [];
+  return [`sectionTheme: ${slide.sectionTheme} changes no rule, pill or slide type here`];
+}
+
+const FIELD_CHECKS = [ignoredNumberFrom, ignoredSectionTheme];
+
 /** The fields a slide sets that change nothing it draws, each with the reason: removing one leaves
  *  the slide as it was. A field no slide draws leaves the types instead; these draw on some slides.
  *  `sectionTheme: "deepdive"` always counts, since it sets the slide at night. */
 export function ignoredFields(slide: Slide): string[] {
-  const found: string[] = [];
-  const drawn = drawnAs(slide) ?? slide;
-  const content = drawn.type === "content" ? drawn : undefined;
-  for (const block of content?.content ?? [])
-    if (block.type === "cards" && block.numberFrom != null && !block.numbered)
-      found.push(
-        slide.type === "grid"
-          ? "numberFrom: a grid numbers its pillars only where no card names an icon"
-          : "numberFrom: the cards block is not numbered",
-      );
-  const theme = "sectionTheme" in slide ? slide.sectionTheme : undefined;
-  if (theme && theme !== "deepdive") {
-    // On a content slide the section's style draws the footer's and a centred paragraph's rule and
-    // the principle's pill, where it differs from the default, and any section keeps one neutral
-    // two-column block from becoming a comparison. A centred slide draws none of them.
-    const style = getSectionStyle(theme);
-    const plain = content?.layout !== "centered" ? content : undefined;
-    const ruled =
-      !!plain?.footer || !!plain?.content.some((b) => b.type === "paragraph" && b.centered);
-    const draws =
-      !!plain &&
-      ((ruled && style.border !== DEFAULT_SECTION_STYLE.border) ||
-        (!!plain.principle && style.pill !== DEFAULT_SECTION_STYLE.pill) ||
-        !!twoColumnAsSplit({ ...plain, sectionTheme: undefined }));
-    if (!draws) found.push(`sectionTheme: ${theme} changes no rule, pill or slide type here`);
-  }
-  return found;
+  return FIELD_CHECKS.flatMap((check) => check(slide));
 }
 
 /** The command that writes `out` again: the consumer's package script where its text calls
