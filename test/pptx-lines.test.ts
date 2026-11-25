@@ -17,8 +17,8 @@ describe("slides-pptx draws what the slide shows", () => {
     },
     {
       name: "keeps a word alone when joining it would break a word",
-      spans: [{ ...style, text: "Autonomous team", bold: true }],
-      width: 115.2734375,
+      spans: [{ ...style, size: 0, tracking: 1, text: "Autonomous team" }],
+      width: 12,
       expected: undefined,
     },
   ])("pretty $name", ({ spans, width, expected }) => {

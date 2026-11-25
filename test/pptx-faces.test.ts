@@ -33,7 +33,7 @@ it("refuses a transformed hmtx directory entry", () => {
   expect(() => woff2Tables(font)).toThrow("a transformed hmtx table");
 });
 
-it("maps both range groups in a format 12 subtable at a nonzero offset", () => {
+it("maps successive range groups in a format 12 subtable", () => {
   const cmap = Buffer.alloc(48);
   const at = 8;
   cmap.writeUInt16BE(12, at);
@@ -91,6 +91,21 @@ it("refuses a WOFF2 table length that continues after five UIntBase128 bytes", (
   expect(() => woff2Tables(font)).toThrow("bad UIntBase128");
 });
 
+function woff2WithCmap(cmap: Buffer): Buffer {
+  const head = Buffer.alloc(20);
+  head.writeUInt16BE(1000, 18);
+  const hhea = Buffer.alloc(36);
+  hhea.writeInt16BE(800, 4);
+  hhea.writeInt16BE(-200, 6);
+  hhea.writeUInt16BE(3, 34);
+  const hmtx = Buffer.alloc(12);
+  hmtx.writeUInt16BE(500, 4);
+  hmtx.writeUInt16BE(750, 8);
+
+  const directory = [0, cmap.length, 1, head.length, 2, hhea.length, 3, hmtx.length];
+  return woff2WithDirectory(4, directory, Buffer.concat([cmap, head, hhea, hmtx]));
+}
+
 it("reads the advances of a supplementary range in a format 12 cmap", () => {
   const cmap = Buffer.alloc(40);
   cmap.writeUInt16BE(1, 2);
@@ -104,18 +119,38 @@ it("reads the advances of a supplementary range in a format 12 cmap", () => {
   cmap.writeUInt32BE(0x10001, 32);
   cmap.writeUInt32BE(1, 36);
 
-  const head = Buffer.alloc(20);
-  head.writeUInt16BE(1000, 18);
-  const hhea = Buffer.alloc(36);
-  hhea.writeInt16BE(800, 4);
-  hhea.writeInt16BE(-200, 6);
-  hhea.writeUInt16BE(3, 34);
-  const hmtx = Buffer.alloc(12);
-  hmtx.writeUInt16BE(500, 4);
-  hmtx.writeUInt16BE(750, 8);
-
-  const directory = [0, cmap.length, 1, head.length, 2, hhea.length, 3, hmtx.length];
-  const font = woff2WithDirectory(4, directory, Buffer.concat([cmap, head, hhea, hmtx]));
-  const { advance } = faceMetrics([font]);
+  const { advance } = faceMetrics([woff2WithCmap(cmap)]);
   expect([advance(0x10000), advance(0x10001), advance(0x10002)]).toEqual([0.5, 0.75, undefined]);
+});
+
+it("prefers format 12 when an earlier format 4 maps the same code point", () => {
+  const cmap = Buffer.alloc(80);
+  cmap.writeUInt16BE(2, 2);
+  cmap.writeUInt16BE(3, 4);
+  cmap.writeUInt16BE(1, 6);
+  cmap.writeUInt32BE(20, 8);
+  cmap.writeUInt16BE(3, 12);
+  cmap.writeUInt16BE(10, 14);
+  cmap.writeUInt32BE(52, 16);
+
+  const bmp = 20;
+  cmap.writeUInt16BE(4, bmp);
+  cmap.writeUInt16BE(32, bmp + 2);
+  cmap.writeUInt16BE(4, bmp + 6);
+  cmap.writeUInt16BE(0x41, bmp + 14);
+  cmap.writeUInt16BE(0xffff, bmp + 16);
+  cmap.writeUInt16BE(0x41, bmp + 20);
+  cmap.writeUInt16BE(0xffff, bmp + 22);
+  cmap.writeInt16BE(-64, bmp + 24);
+  cmap.writeInt16BE(1, bmp + 26);
+
+  const full = 52;
+  cmap.writeUInt16BE(12, full);
+  cmap.writeUInt32BE(28, full + 4);
+  cmap.writeUInt32BE(1, full + 12);
+  cmap.writeUInt32BE(0x41, full + 16);
+  cmap.writeUInt32BE(0x41, full + 20);
+  cmap.writeUInt32BE(2, full + 24);
+
+  expect(faceMetrics([woff2WithCmap(cmap)]).advance(0x41)).toEqual(0.75);
 });
