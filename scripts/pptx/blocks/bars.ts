@@ -77,7 +77,8 @@ export function barRoleStyle(role: BarRole, c: Palette): BarRoleStyle {
   return BAR_ROLES[role](c);
 }
 
-function barRole(highlighted: boolean, anyHighlight: boolean): BarRole {
+/** Chooses a bar's visual role from whether it is highlighted and whether any bar highlights. */
+export function barRole(highlighted: boolean, anyHighlight: boolean): BarRole {
   if (highlighted) return "highlight";
   return anyHighlight ? "context" : "plain";
 }
@@ -171,23 +172,48 @@ export function barSpan(
   };
 }
 
+export interface BarsTrackGeometry {
+  mode: BarMode;
+  follow: boolean;
+  gap: number;
+  barH: number;
+  rowGap: number;
+  labelW: number;
+  valueW: number;
+  trackX: number;
+  trackW: number;
+}
+
+/** Computes a bars block's row mode, following-value flag, and horizontal/vertical track geometry. */
+export function barsTrack(b: Block<"bars">, { w, k }: Measure): BarsTrackGeometry {
+  const mode: BarMode = b.bars.length > 3 ? "inline" : "stacked";
+  const spec = BAR_MODES[mode];
+  const follow = b.max == null && b.bars.every((x) => x.from == null);
+  const gap = 2 * REM * k;
+  const barH = spec.barHRem * REM * k;
+  const rowGap = spec.rowGapRem * REM * k;
+  const labelW = spec.labelW(w, k);
+  const valueW = 14 * REM * k;
+  const trackX = spec.trackX(labelW, gap);
+  // Without a scale the longest bar ends where the value column would start.
+  const trackW = w - trackX - (follow ? 16 * REM * k : valueW + gap);
+  return { mode, follow, gap, barH, rowGap, labelW, valueW, trackX, trackW };
+}
+
 /** A bars block as `Bars` sets it: four bars and more one row each, the label left of its track,
  *  fewer with the label above; a highlight in teal and bold, the other bars context in grey;
- *  without a named scale each figure follows its bar's end. Returns the measured rows, scale
- *  ticks, source height, and total height `h`. */
+ *  without a named scale each figure follows its bar's end. */
 export function barsLayout(look: Look, b: Block<"bars">, { w, k }: Measure): BarsLayout {
   const { c } = look;
   const list = b.order === "given" ? b.bars : [...b.bars].sort((p, q) => q.value - p.value);
   const max = b.max ?? (Math.max(...list.map((x) => x.value), 0) || 1);
-  const mode = BAR_MODES[list.length > 3 ? "inline" : "stacked"];
   const anyHighlight = list.some((x) => x.highlight);
-  const follow = b.max == null && list.every((x) => x.from == null);
-  const [gap, barH, rowGap, valueW] = [2, mode.barHRem, mode.rowGapRem, 14].map((v) => v * REM * k);
-  const labelW = mode.labelW(w, k);
-  const trackX = mode.trackX(labelW, gap);
-  // Without a scale the longest bar ends where the value column would start.
-  const trackW = w - trackX - (follow ? 16 * REM * k : valueW + gap);
-  const labelO = mode.labelO(c, k);
+  const { mode, follow, gap, barH, rowGap, labelW, valueW, trackX, trackW } = barsTrack(b, {
+    w,
+    k,
+  });
+  const spec = BAR_MODES[mode];
+  const labelO = spec.labelO(c, k);
   const format = (n: number) => look.words.figure(n);
   let y = 0;
   const rows = list.map((bar): BarRowLayout => {
@@ -198,10 +224,10 @@ export function barsLayout(look: Look, b: Block<"bars">, { w, k }: Measure): Bar
       balance: true,
     };
     const labelH = look.need(label, labelW, labelO);
-    const { rowH, labelY, barY } = mode.placeRow(labelH, barH, k);
+    const { rowH, labelY, barY } = spec.placeRow(labelH, barH, k);
     const { from, barW } = barSpan(bar, max, trackW);
     const value: Para = { runs: [{ text: barValueText(bar, format) }], bold: style.bold };
-    const valueO = mode.valueO(style.tone, k);
+    const valueO = spec.valueO(style.tone, k);
     const valueX = trackX + (follow ? from + barW + gap : trackW + gap);
     const rowY = y;
     y += rowH + rowGap;

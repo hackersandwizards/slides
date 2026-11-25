@@ -1,41 +1,34 @@
-export interface GridSpec {
-  cols: number;
-  cw: number;
-  gapX: number;
-  gapY: number;
-}
-
-export interface GridCell {
-  x: number;
+export interface GridSlot {
+  row: number;
+  col: number;
   y: number;
   rowH: number;
 }
 
 export interface GridLayout<T> {
-  cells: (T & GridCell)[];
+  cells: (T & GridSlot)[];
   rowH: number[];
   h: number;
 }
 
-/** Places `items` left-to-right in `spec.cols` columns where every row is as tall as its tallest
- *  item, returning each item with relative `x`, `y`, and `rowH`, the per-row heights, and total
- *  grid height `h`. */
+/** Places `items` in rows of `cols` columns, each row as tall as its tallest item, separated
+ *  vertically by `gapY`. */
 export function rowGrid<T extends { h: number }>(
   items: readonly T[],
-  spec: GridSpec,
+  cols: number,
+  gapY: number,
 ): GridLayout<T> {
-  const { cols, cw, gapX, gapY } = spec;
   const rows = Math.ceil(items.length / cols);
   const rowH = Array.from({ length: rows }, (_, r) =>
     Math.max(...items.slice(r * cols, r * cols + cols).map((item) => item.h)),
   );
   let y = 0;
   const cells = items.map((item, i) => {
-    const r = Math.floor(i / cols);
+    const row = Math.floor(i / cols);
     const col = i % cols;
-    if (col === 0 && r > 0) y += rowH[r - 1] + gapY;
-    return { ...item, x: col * (cw + gapX), y, rowH: rowH[r] };
+    if (col === 0 && row > 0) y += rowH[row - 1] + gapY;
+    return { ...item, row, col, y, rowH: rowH[row] };
   });
-  const h = rows ? rowH.reduce((sum, rh) => sum + rh, 0) + gapY * (rows - 1) : 0;
+  const h = rowH.reduce((sum, rh) => sum + rh, 0) + gapY * (rows - 1);
   return { cells, rowH, h };
 }

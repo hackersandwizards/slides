@@ -1,12 +1,22 @@
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { assert, describe, expect, it } from "vitest";
-import { cardMark, cardsLayout, drawCards, type CardMark } from "../scripts/pptx/blocks/cards";
+import {
+  cardBody,
+  cardMark,
+  cardScale,
+  cardTypography,
+  cardsLayout,
+  drawCards,
+  type CardMark,
+  type CardScale,
+} from "../scripts/pptx/blocks/cards";
 import { rowGrid } from "../scripts/pptx/blocks/grid";
 import type { Block } from "../scripts/pptx/blocks/kind";
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
+import type { BoxOpts, Para } from "../scripts/pptx/text";
 import { shapesOf } from "./fixtures/rendered-deck";
 
 async function drawOnSheet(draw: (sheet: Sheet) => void) {
@@ -26,18 +36,31 @@ async function drawOnSheet(draw: (sheet: Sheet) => void) {
 }
 
 describe("rowGrid", () => {
-  const spec = { cols: 2, cw: 3, gapX: 0.5, gapY: 0.25 };
-
   it.each<{
     label: string;
     items: { id: string; h: number }[];
+    cols: number;
+    gapY: number;
     expected: {
-      cells: { id: string; h: number; x: number; y: number; rowH: number }[];
+      cells: { id: string; h: number; row: number; col: number; y: number; rowH: number }[];
       rowH: number[];
       h: number;
     };
   }>([
-    { label: "no items", items: [], expected: { cells: [], rowH: [], h: 0 } },
+    {
+      label: "no items with positive columns (preserves -gapY height)",
+      items: [],
+      cols: 2,
+      gapY: 0.25,
+      expected: { cells: [], rowH: [], h: -0.25 },
+    },
+    {
+      label: "no items with zero columns (preserves NaN height)",
+      items: [],
+      cols: 0,
+      gapY: 0.25,
+      expected: { cells: [], rowH: [], h: Number.NaN },
+    },
     {
       label: "two rows sized to their tallest item",
       items: [
@@ -45,18 +68,146 @@ describe("rowGrid", () => {
         { id: "b", h: 2 },
         { id: "c", h: 1.5 },
       ],
+      cols: 2,
+      gapY: 0.25,
       expected: {
         cells: [
-          { id: "a", h: 1, x: 0, y: 0, rowH: 2 },
-          { id: "b", h: 2, x: 3.5, y: 0, rowH: 2 },
-          { id: "c", h: 1.5, x: 0, y: 2.25, rowH: 1.5 },
+          { id: "a", h: 1, row: 0, col: 0, y: 0, rowH: 2 },
+          { id: "b", h: 2, row: 0, col: 1, y: 0, rowH: 2 },
+          { id: "c", h: 1.5, row: 1, col: 0, y: 2.25, rowH: 1.5 },
         ],
         rowH: [2, 1.5],
         h: 3.75,
       },
     },
-  ])("places $label", ({ items, expected }) => {
-    expect(rowGrid(items, spec)).toEqual(expected);
+  ])("places $label", ({ items, cols, gapY, expected }) => {
+    expect(rowGrid(items, cols, gapY)).toEqual(expected);
+  });
+});
+
+describe("cardScale", () => {
+  it.each<{ dense: boolean; wide: boolean; expected: CardScale }>([
+    { dense: false, wide: false, expected: "normal" },
+    { dense: false, wide: true, expected: "wide" },
+    { dense: true, wide: false, expected: "dense" },
+    { dense: true, wide: true, expected: "denseWide" },
+  ])("picks $expected when dense=$dense and wide=$wide", ({ dense, wide, expected }) => {
+    expect(cardScale(dense, wide)).toBe(expected);
+  });
+});
+
+describe("cardTypography", () => {
+  const day = palette(false);
+  const numO: BoxOpts = {
+    size: 20,
+    mono: true,
+    bold: true,
+    color: "FFFFFF",
+    align: "center",
+    valign: "middle",
+    line: 1,
+  };
+
+  it.each<{ scale: CardScale; expected: { titleO: BoxOpts; textO: BoxOpts; numO: BoxOpts } }>([
+    {
+      scale: "normal",
+      expected: {
+        titleO: {
+          size: 24,
+          mono: true,
+          bold: true,
+          color: "19283A",
+          line: 1.25,
+          tracking: -0.015,
+          balance: true,
+        },
+        textO: { size: 18, color: "19283A", line: 1.375 },
+        numO,
+      },
+    },
+    {
+      scale: "wide",
+      expected: {
+        titleO: {
+          size: 20,
+          mono: true,
+          bold: true,
+          color: "19283A",
+          line: 1.25,
+          tracking: -0.015,
+          balance: true,
+        },
+        textO: { size: 18, color: "19283A", line: 1.375 },
+        numO,
+      },
+    },
+    {
+      scale: "dense",
+      expected: {
+        titleO: {
+          size: 18,
+          mono: true,
+          bold: true,
+          color: "19283A",
+          line: 1.4,
+          tracking: -0.015,
+          balance: false,
+        },
+        textO: { size: 18, color: "545861", line: 1.5 },
+        numO,
+      },
+    },
+    {
+      scale: "denseWide",
+      expected: {
+        titleO: {
+          size: 17.33,
+          mono: true,
+          bold: true,
+          color: "19283A",
+          line: 1.4,
+          tracking: -0.015,
+          balance: false,
+        },
+        textO: { size: 18, color: "545861", line: 1.5 },
+        numO,
+      },
+    },
+  ])("builds the $scale typography styles", ({ scale, expected }) => {
+    expect(cardTypography(day, scale, 1)).toEqual(expected);
+  });
+});
+
+describe("cardBody", () => {
+  const day = palette(false);
+
+  it.each<{ label: string; item: Block<"cards">["items"][number]; expected: Para[] }>([
+    {
+      label: "prose text alone with zero trailing space",
+      item: { title: "A", text: "Only text" },
+      expected: [{ runs: [{ text: "Only text", options: {} }], after: 0 }],
+    },
+    {
+      label: "prose text followed by bulleted items with trailing space",
+      item: { title: "B", text: "Intro", items: ["One", "Two"] },
+      expected: [
+        { runs: [{ text: "Intro", options: {} }], after: 6 },
+        { runs: [{ text: "One", options: {} }], bullet: true, after: 6 },
+        { runs: [{ text: "Two", options: {} }], bullet: true, after: 6 },
+      ],
+    },
+    {
+      label: "bulleted items without prose text",
+      item: { title: "C", items: ["Solo"] },
+      expected: [{ runs: [{ text: "Solo", options: {} }], bullet: true, after: 6 }],
+    },
+    {
+      label: "an item with neither prose text nor bullets",
+      item: { title: "D" },
+      expected: [],
+    },
+  ])("builds paragraphs for $label", ({ item, expected }) => {
+    expect(cardBody(item, day, 6)).toEqual(expected);
   });
 });
 
@@ -260,5 +411,38 @@ describe("drawCards", () => {
       tileFills: ["1A7285", "1A7285"],
       numbers: ["5", "6"],
     });
+  });
+
+  it.each<{
+    label: string;
+    block: Block<"cards">;
+    expected: { tiles: string[]; rules: string[] };
+  }>([
+    {
+      label: "an icon tile mark",
+      block: { type: "cards", items: [{ title: "Icon", icon: "shield" }] },
+      expected: { tiles: ["EFF5F6"], rules: [] },
+    },
+    {
+      label: "a plain teal rule mark",
+      block: { type: "cards", items: [{ title: "Plain" }] },
+      expected: { tiles: [], rules: ["1A7285"] },
+    },
+    {
+      label: "no mark on a dense plain card",
+      block: { type: "cards", dense: true, items: [{ title: "Dense" }] },
+      expected: { tiles: [], rules: [] },
+    },
+  ])("draws $label", async ({ block, expected }) => {
+    const shapes = await drawOnSheet((sheet) => {
+      drawCards(sheet, cardsLayout(sheet, block, { w: 10, k: 1 }), { x: 1, y: 1.5 });
+    });
+    expect({
+      tiles: shapes.filter((sh) => sh.prst === "roundRect").map((sh) => sh.fill),
+      rules: shapes
+        .filter((sh) => sh.texts.length === 0)
+        .filter((sh) => sh.prst === "rect")
+        .map((sh) => sh.fill),
+    }).toEqual(expected);
   });
 });

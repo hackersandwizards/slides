@@ -3,7 +3,7 @@ import { SANS } from "../faces";
 import type { Look } from "../look";
 import { PT, REM, type Measure } from "../stage";
 import { md, type BoxOpts, type Para, type TextProps } from "../text";
-import { rowGrid, type GridCell } from "./grid";
+import { rowGrid, type GridSlot } from "./grid";
 import { bodyO, type Block, type BlockKind } from "./kind";
 
 export type NumbersMode = "single" | "wrapped";
@@ -53,7 +53,7 @@ export interface NumberCellLayout {
 }
 
 export interface NumbersLayout {
-  cells: (NumberCellLayout & GridCell)[];
+  cells: (NumberCellLayout & GridSlot & { x: number })[];
   cw: number;
   fig: number;
   over: number;
@@ -75,8 +75,7 @@ export function figurePara(raw: string, leadStyle: TextProps): Para {
 }
 
 /** A numbers block as `Numbers` sets it: the grid `numbersGrid` picks, each figure at its one size
- *  with any leading words small, a rule over the label in one row, the label, its note. Returns
- *  placed grid cells, typography, source geometry, and total height `h`. */
+ *  with any leading words small, a rule over the label in one row, the label, its note. */
 export function numbersLayout(look: Look, b: Block<"numbers">, { w, k }: Measure): NumbersLayout {
   const { c } = look;
   const { cols, wrapped, size } = numbersGrid(b.items.map((i) => i.value));
@@ -115,11 +114,12 @@ export function numbersLayout(look: Look, b: Block<"numbers">, { w, k }: Measure
     const textH = look.need(paras, cw, o);
     return { figure, paras, textH, h: fig + over + textH };
   });
-  const grid = rowGrid(measured, { cols, cw, gapX, gapY });
+  const grid = rowGrid(measured, cols, gapY);
+  const cells = grid.cells.map((cell) => ({ ...cell, x: cell.col * (cw + gapX) }));
   const sourceGap = style.sourceGapRem * REM * k;
   const sourceH = b.source ? sourceGap + look.need(b.source, w, { ...o, size: PT.sm * k }) : 0;
   const h = grid.h + sourceH;
-  return { cells: grid.cells, cw, fig, over, figO, o, rule: style.rule, sourceGap, sourceH, h };
+  return { cells, cw, fig, over, figO, o, rule: style.rule, sourceGap, sourceH, h };
 }
 
 export const numbers: BlockKind<"numbers"> = {
