@@ -1,8 +1,10 @@
+import { existsSync } from "node:fs";
 import PptxGenJS from "pptxgenjs";
+import { altText, imageFile, pictureLink, type PictureMetadata, type PictureOpts } from "./images";
 import { breakAt, BULLET_INDENT, fitScale, lineOf, marginOf, paraType, spansOf } from "./fit";
 import { balance, pretty } from "./lines";
 import type { Surface } from "./palette";
-import { CORNER, LEADING, type Area } from "./stage";
+import { CORNER, LEADING, PT, type Area, type Disc, type Place } from "./stage";
 import {
   asParas,
   breaks,
@@ -162,6 +164,96 @@ export class Sheet extends Look {
       h,
       fill: { color: fill },
       line: { type: "none" },
+    });
+  }
+
+  /** A deck image, from the consumer's public directory, contained in the box. The engine's own
+   *  logo paths take the brand package's PNG cut, since PowerPoint shows an SVG without a raster
+   *  fallback as a broken picture in older viewers. */
+  picture(src: string, area: Area, o: PictureOpts): Area {
+    const { x, y, w, h } = area;
+    const image = imageFile(this.out.assets, src);
+    const { path, size } = image;
+    if (!size) return this.missingPicture(image, area, o.alt);
+    const [iw, ih] = size;
+    const k = Math.min(w / iw, h / ih, o.native ? 1 / 144 : Infinity);
+    const pw = iw * k;
+    const ph = ih * k;
+    const px = o.align === "left" ? x : o.align === "right" ? x + w - pw : x + (w - pw) / 2;
+    const py = y + (h - ph) / 2;
+    this.slide.addImage({
+      path,
+      x: px,
+      y: py,
+      w: pw,
+      h: ph,
+      altText: altText(o.alt),
+      ...pictureLink(o.href),
+    });
+    return { x: px, y: py, w: pw, h: ph };
+  }
+
+  /** Cropped to a circle that it fills, as a portrait. */
+  avatar(src: string, disc: Disc, { alt, href }: PictureMetadata): Area {
+    const { x, y, d: diameter } = disc;
+    const w = diameter;
+    const h = diameter;
+    const image = imageFile(this.out.assets, src);
+    const { path, size } = image;
+    if (!size) return this.missingPicture(image, { x, y, w, h }, alt);
+    const [iw, ih] = size;
+    // Filled and anchored at the top, as the web's hw-avatar (object-position: top).
+    const d = Math.min(w, h);
+    const k = d / Math.min(iw, ih);
+    const [px, py] = [x + (w - d) / 2, y + (h - d) / 2];
+    this.slide.addImage({
+      path,
+      x: px,
+      y: py,
+      w: iw * k,
+      h: ih * k,
+      sizing: { type: "crop", x: (iw * k - d) / 2, y: 0, w: d, h: d },
+      rounding: true,
+      altText: altText(alt),
+      ...pictureLink(href),
+    });
+    return { x: px, y: py, w: d, h: d };
+  }
+
+  private missingPicture(
+    { src, path }: ReturnType<typeof imageFile>,
+    area: Area,
+    alt?: string,
+  ): Area {
+    const { x, y, w, h } = area;
+    this.warn(
+      `image ${src}: ${existsSync(path) ? "unreadable format" : `not found under ${this.out.assets}`}`,
+    );
+    this.card({ x, y, w, h }, { fill: this.c.tint, line: this.c.border });
+    this.box(
+      alt || src,
+      { x: x + 0.1, y: y + 0.1, w: w - 0.2, h: h - 0.2 },
+      {
+        size: PT.sm,
+        color: this.c.muted,
+        align: "center",
+        valign: "middle",
+      },
+    );
+    return { x, y, w, h };
+  }
+
+  arrow(from: Place, to: Place, color: string): void {
+    const { x: x1, y: y1 } = from;
+    const { x: x2, y: y2 } = to;
+    this.slide.addShape("line", {
+      x: Math.min(x1, x2),
+      y: Math.min(y1, y2),
+      w: Math.abs(x2 - x1) || 0.001,
+      h: Math.abs(y2 - y1) || 0.001,
+      flipH: x2 < x1,
+      flipV: y2 < y1,
+      line: { color, width: 1.25, endArrowType: "triangle" },
     });
   }
 

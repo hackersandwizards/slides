@@ -1,6 +1,4 @@
 import { readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
-import { createRequire } from "node:module";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import type {
@@ -16,14 +14,13 @@ import type {
 } from "../../types/slide";
 import { trendTicks } from "../../components/slides/ChartPlots";
 import { groundOf } from "../../components/slides/SlideShell";
-import { BRAND_MARK, HW_LOGO, cornerMark, logoPlaces, resolveSlideLogo } from "../../lib/logo";
+import { HW_LOGO } from "../../lib/logo";
 import {
   isDeepDive,
   isHighlightPhase,
   isOpening,
   isVideo,
   linkLabel,
-  pageLabel,
   claimParts,
   closingClaim,
   continuation,
@@ -42,7 +39,11 @@ import {
   TWO_COLUMN_TONES,
   type SideTone,
 } from "../../lib/slide-utils";
-import { centredMark } from "./chrome";
+import { centredMark, footer, footerAt, footerOf, frame, header } from "./chrome";
+import { chip, chipAdvance, chipWidth, rowSize } from "./chips";
+import { assetFile, altText, brandCut } from "./images";
+import { portrait, profileLink } from "./people";
+import { cellAreas, rowShare } from "./cells";
 import { MONO, PITCH, SANS } from "./faces";
 import { BULLET_INDENT, spansOf, textWidth } from "./fit";
 import { longest, wrap } from "./lines";
@@ -102,319 +103,6 @@ function caption(sheet: Sheet, text: string, y: number) {
   return h;
 }
 
-function arrow(
-  s: PSlide,
-  c: Palette,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  color = c.muted,
-) {
-  s.addShape("line", {
-    x: Math.min(x1, x2),
-    y: Math.min(y1, y2),
-    w: Math.abs(x2 - x1) || 0.001,
-    h: Math.abs(y2 - y1) || 0.001,
-    flipH: x2 < x1,
-    flipV: y2 < y1,
-    line: { color, width: 1.25, endArrowType: "triangle" },
-  });
-}
-
-/** A chip's text width in inches per point of size, in the face a chip sets it in. */
-const chipAdvance = (text: string, mono: boolean) => textWidth(text, { size: 1, mono, bold: mono });
-const chipWidth = (text: string, size: number, mono: boolean) =>
-  chipAdvance(text, mono) * size + 0.3;
-
-/** The type size at which a row of chips in the sans face `gap` apart fits `width`: `size`, or
- *  smaller where the row would run past it, down to half of it, past which it warns. */
-function rowSize(sheet: Sheet, texts: string[], size: number, gap: number, width: number) {
-  const fixed = texts.length * 0.3 + (texts.length - 1) * gap;
-  const per = texts.reduce((sum, t) => sum + chipAdvance(t, false), 0);
-  const fit = (width - fixed) / per;
-  if (fit < size / 2) sheet.warn(`chips ${texts.join(", ")}: wider than the slide holds`);
-  return Math.max(size / 2, Math.min(size, fit));
-}
-
-/** Each of `n` rows' share of `room`, at most `cap`; below `floor` the rows run past the slide,
- *  which warns. */
-function rowShare(sheet: Sheet, what: string, room: number, n: number, cap: number, floor = 0.15) {
-  const share = Math.min(cap, room / n);
-  if (share < floor) sheet.warn(`${what}: ${n} rows taller than the slide holds`);
-  return Math.max(floor, share);
-}
-
-function chip(
-  sheet: Sheet,
-  text: string,
-  x: number,
-  y: number,
-  size: number,
-  fill: string,
-  color: string,
-  mono = true,
-  /** A label box instead of a pill: its line and the small corner (`--slide-radius-sm`, 0.46875
-   *  of the stage's 90 rem). */
-  line?: string,
-) {
-  const w = chipWidth(text, size, mono);
-  sheet.rounded(
-    { x, y, w, h: (size * 1.9) / 72 },
-    { fill: fill, line: line },
-    line ? (0.46875 * W) / 90 : (size * 1.9) / 144,
-  );
-  sheet.box(
-    { runs: [{ text: plain(text) }] },
-    { x, y, w, h: (size * 1.9) / 72 },
-    {
-      size,
-      mono,
-      bold: mono,
-      color,
-      align: "center",
-      valign: "middle",
-      floor: 0.8,
-    },
-  );
-  return w;
-}
-
-function imageSize(buf: Buffer): [number, number] | undefined {
-  if (buf.readUInt32BE(0) === 0x89504e47) return [buf.readUInt32BE(16), buf.readUInt32BE(20)];
-  if (buf.toString("ascii", 0, 3) === "GIF") return [buf.readUInt16LE(6), buf.readUInt16LE(8)];
-  if (buf.toString("ascii", 8, 12) === "WEBP") {
-    const kind = buf.toString("ascii", 12, 16);
-    if (kind === "VP8X") return [1 + buf.readUIntLE(24, 3), 1 + buf.readUIntLE(27, 3)];
-    if (kind === "VP8L") {
-      const b = buf.readUInt32LE(21);
-      return [1 + (b & 0x3fff), 1 + ((b >> 14) & 0x3fff)];
-    }
-    return [buf.readUInt16LE(26) & 0x3fff, buf.readUInt16LE(28) & 0x3fff];
-  }
-  if (buf[0] === 0xff && buf[1] === 0xd8) {
-    let i = 2;
-    while (i < buf.length) {
-      const marker = buf[i + 1];
-      const len = buf.readUInt16BE(i + 2);
-      if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
-        return [buf.readUInt16BE(i + 7), buf.readUInt16BE(i + 5)];
-      }
-      i += 2 + len;
-    }
-  }
-  return undefined;
-}
-
-function brandLogo(name: string): string {
-  return createRequire(import.meta.url).resolve(`@hackersandwizards/brand/logos/${name}.png`);
-}
-
-/** A brand logo's path and its width over its height, read from the file, since each cut has its
- *  own (the night lockup is wider than the day one). */
-const cuts = new Map<string, [string, number]>();
-function brandCut(name: string): [string, number] {
-  const known = cuts.get(name);
-  if (known) return known;
-  const path = brandLogo(name);
-  const [w, h] = imageSize(readFileSync(path))!;
-  cuts.set(name, [path, w / h]);
-  return [path, w / h];
-}
-
-/** A deck file's path: a root path under the consumer's public directory, else a file path as it
- *  stands, which is what Bun gives an imported image, the specimen's among them. Vite's dev URL
- *  for one keeps its query. */
-const assetFile = (sheet: Sheet, src: string) => {
-  const path = src.replace(/\?.*$/, "");
-  const inAssets = join(sheet.out.assets, path.replace(/^\//, ""));
-  return existsSync(inAssets) || !existsSync(path) ? inAssets : path;
-};
-
-/** A deck image, from the consumer's public directory, contained in the box. The engine's own
- *  logo paths take the brand package's PNG cut, since PowerPoint shows an SVG without a raster
- *  fallback as a broken picture in older viewers. */
-function picture(
-  sheet: Sheet,
-  src: string,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  o: {
-    alt?: string;
-    href?: string;
-    /** Cropped to a circle that it fills, as a portrait. */
-    round?: boolean;
-    align?: "center" | "left" | "right";
-    /** Never drawn larger than the file at 144 px to the inch, as the slide never scales one up. */
-    native?: boolean;
-  } = {},
-) {
-  const { slide: s } = sheet;
-  const logo = BRAND_MARK.exec(src);
-  const path = logo ? brandLogo(logo[1]) : assetFile(sheet, src);
-  const size = existsSync(path) ? imageSize(readFileSync(path)) : undefined;
-  if (!size) {
-    sheet.warn(
-      `image ${src}: ${existsSync(path) ? "unreadable format" : `not found under ${sheet.out.assets}`}`,
-    );
-    sheet.card({ x, y, w, h }, { fill: sheet.c.tint, line: sheet.c.border });
-    sheet.box(
-      o.alt || src,
-      { x: x + 0.1, y: y + 0.1, w: w - 0.2, h: h - 0.2 },
-      {
-        size: PT.sm,
-        color: sheet.c.muted,
-        align: "center",
-        valign: "middle",
-      },
-    );
-    return { x, y, w, h };
-  }
-  const [iw, ih] = size;
-  if (o.round) {
-    // Filled and anchored at the top, as the web's hw-avatar (object-position: top).
-    const d = Math.min(w, h);
-    const k = d / Math.min(iw, ih);
-    const [px, py] = [x + (w - d) / 2, y + (h - d) / 2];
-    s.addImage({
-      path,
-      x: px,
-      y: py,
-      w: iw * k,
-      h: ih * k,
-      sizing: { type: "crop", x: (iw * k - d) / 2, y: 0, w: d, h: d },
-      rounding: true,
-      altText: altText(o.alt),
-      ...pictureLink(o.href),
-    });
-    return { x: px, y: py, w: d, h: d };
-  }
-  const k = Math.min(w / iw, h / ih, o.native ? 1 / 144 : Infinity);
-  const pw = iw * k;
-  const ph = ih * k;
-  const px = o.align === "left" ? x : o.align === "right" ? x + w - pw : x + (w - pw) / 2;
-  const py = y + (h - ph) / 2;
-  s.addImage({
-    path,
-    x: px,
-    y: py,
-    w: pw,
-    h: ph,
-    altText: altText(o.alt),
-    ...pictureLink(o.href),
-  });
-  return { x: px, y: py, w: pw, h: ph };
-}
-
-/** A picture's description. pptxgenjs describes a picture without one by its file path, which
- *  names the exporting machine's user and folders: a space describes it as nothing. */
-const altText = (alt?: string) => alt || " ";
-
-/** A picture's link. pptxgenjs escapes a text run's link, never a picture's, which it writes into
- *  the slide's relationships as it stands: a raw `&` there leaves the part malformed. */
-const pictureLink = (href?: string) =>
-  href
-    ? {
-        hyperlink: {
-          url: href.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"),
-        },
-      }
-    : {};
-
-/** The brand strip and footer, where the web stands them. */
-function frame(sheet: Sheet, deck: Presentation, index: number) {
-  const { slide: s } = sheet;
-  const { c } = sheet;
-  s.background = { color: c.bg };
-  // The strip's teal-to-purple gradient as twenty-four steps, since a pptxgenjs shape takes no
-  // gradient fill.
-  const steps = 24;
-  for (let i = 0; i < steps; i++) {
-    // Each step overlaps the next by a hundredth, so no seam shows; the last ends at the edge.
-    const x = (W / steps) * i;
-    sheet.rect(
-      { x, y: 0, w: Math.min(W / steps + 0.01, W - x), h: 16 / 144 },
-      mixColor(c.purple, c.teal, i / (steps - 1)),
-    );
-  }
-  const slide = deck.slides[index];
-  const mark = cornerMark(deck, index);
-  const closingCentred = slide.type === "closing" && centredMark(slide);
-  const markH = 42 / 144;
-  const lockupH = 65 / 144;
-  const right = W - 96 / 144;
-  const baseY = 1024 / 144;
-  const confidential = deck.confidential?.trim();
-  let end = right;
-  const { corner, start } = logoPlaces(resolveSlideLogo(deck, index));
-  // `h-9`, as the slide draws a deck's logos.
-  const logoH = 2.25 * REM;
-  // A closing that stands the h&w lockup in its centre column hides the corner, counter included,
-  // as ClosingSlide.css does.
-  if (!closingCentred) {
-    let x: number;
-    if (corner.src === HW_LOGO.src) {
-      const [path, ratio] = brandCut(`${mark}${sheet.dark ? "-night" : ""}`);
-      const h = mark === "lockup" ? lockupH : markH;
-      x = right - h * ratio;
-      s.addImage({ path, x, y: baseY - h / 2, w: h * ratio, h, altText: HW_LOGO.alt });
-    } else {
-      const at = { alt: corner.alt, align: "right" as const };
-      x = picture(sheet, corner.src, right - 2.4, baseY - logoH / 2, 2.4, logoH, at).x;
-    }
-    const page = pageLabel(deck.slides, index);
-    end = x;
-    if (page) {
-      end -= 1.8;
-      sheet.box(
-        { runs: [{ text: page }] },
-        { x: x - 1.8, y: baseY - 0.14, w: 1.6, h: 0.28 },
-        {
-          size: PT.label,
-          mono: true,
-          bold: true,
-          color: c.muted,
-          align: "right",
-          valign: "middle",
-        },
-      );
-    }
-  }
-  // A deck with a footer line moves the start logos onto the corner's centre line.
-  let left = confidential ? W - right : 1.5 * REM;
-  const y = confidential ? baseY - logoH / 2 : H - 1.5 * REM - logoH;
-  for (const l of start) {
-    const drawn = picture(sheet, l.src, left, y, 2.4, logoH, {
-      alt: l.alt,
-      align: "left",
-    });
-    left += drawn.w + 1.25 * REM;
-  }
-  if (confidential && end > left + 1.25 * REM) {
-    sheet.box(
-      { runs: [{ text: confidential }] },
-      { x: left, y: baseY - 0.14, w: end - left - 1.25 * REM, h: 0.28 },
-      {
-        size: PT.label,
-        color: c.muted,
-        valign: "middle",
-      },
-    );
-  }
-  if (slide.notes) s.addNotes(slide.notes);
-}
-
-interface Head {
-  sectionLabel?: string;
-  sectionTheme?: SectionTheme;
-  principle?: string;
-  headline?: string;
-  subtitle?: string;
-  preText?: string;
-}
-
 /** A timeline event's title, text and result in the figure face, as `EventBody` sets them on the
  *  web: one list, so the measured height is the drawn one. */
 function eventParas(
@@ -436,109 +124,6 @@ function eventParas(
         ]
       : []),
   ];
-}
-
-/** A person's LinkedIn address in muted ink, linked: `LinkCaption`'s linkedin variant. */
-const profileLink = (url: string, c: Palette): Para => ({
-  runs: [{ text: profileLabel(url), options: { color: c.muted, hyperlink: { url } } }],
-});
-
-/** The height a slide's footer takes above the bottom edge: its line under a rule. */
-function footerHeight(look: Look, text?: string): number {
-  return text ? Math.min(0.6, look.need(text, CW, { size: PT.base, color: look.c.ink })) + 0.25 : 0;
-}
-
-/** The slide's footer (`SlideFooter` on the web): one line under a rule, at the bottom or at
- *  `top`, where it follows the body. */
-function footer(
-  sheet: Sheet,
-  text: string | undefined,
-  h: number,
-  centered = false,
-  top = BOTTOM - h,
-) {
-  const { slide: s } = sheet;
-  if (!text) return;
-  s.addShape("line", {
-    x: EDGE,
-    y: top + 0.05,
-    w: CW,
-    h: 0.001,
-    line: { color: sheet.c.border, width: 0.75 },
-  });
-  sheet.box(
-    text,
-    { x: EDGE, y: top + 0.15, w: CW, h: h - 0.15 },
-    {
-      size: PT.base,
-      color: sheet.c.ink,
-      align: centered ? "center" : "left",
-    },
-  );
-}
-
-/** Kicker, principle pill, title and subtitle; returns where the body starts. */
-function header(sheet: Sheet, h: Head, centered = false): number {
-  const { c } = sheet;
-  let y = 58 / 144;
-  // The kicker band's second row, where the principle pill wraps as on the web.
-  let wrapped = 0;
-  const kicker = h.sectionLabel ?? h.preText;
-  if (kicker || h.principle) {
-    let x = EDGE;
-    // Teal in every section, the website's mono caps.
-    if (kicker) {
-      // The web's label line, 1.4 of its size, as wide as its capitals.
-      const kw =
-        textWidth(kicker.toUpperCase(), { size: PT.base, mono: true, tracking: 0.06 }) + 0.02;
-      sheet.box(
-        { runs: [caps(kicker)] },
-        { x, y: 0.38, w: Math.min(kw, CW), h: 0.35 },
-        {
-          size: PT.base,
-          mono: true,
-          color: c.teal,
-          tracking: 0.06,
-          valign: "middle",
-          line: 1.4,
-        },
-      );
-      x += kw + 0.18;
-    }
-    if (h.principle) {
-      // On the print route a wrapped pill stands 65 px below the label's row, the title 76 px.
-      const row = x + chipWidth(h.principle, PT.sm, false) > W - EDGE ? 65 / 144 : 0;
-      if (row) {
-        wrapped = 76 / 144;
-        x = EDGE;
-      }
-      chip(sheet, h.principle, x, y + row + 0.02, PT.sm, c.tint, c.ink, false);
-    }
-  }
-  y = TOP + wrapped;
-  if (h.headline) {
-    const o: BoxOpts = {
-      size: PT.title,
-      mono: true,
-      bold: true,
-      color: c.ink,
-      line: LEADING.title,
-      floor: 0.7,
-      tracking: -0.035,
-      balance: true,
-      align: centered ? "center" : "left",
-    };
-    const hh = Math.min(1.1, sheet.need(h.headline, CW, o));
-    sheet.box(h.headline, { x: EDGE, y, w: CW, h: Math.max(hh, 0.45) }, o);
-    y += Math.max(hh, 0.45) + 0.08;
-  }
-  if (h.subtitle) {
-    const o: BoxOpts = { size: PT.base, color: c.muted, align: centered ? "center" : "left" };
-    const sh = Math.min(0.7, sheet.need(h.subtitle, CW, o));
-    sheet.box(h.subtitle, { x: EDGE, y, w: CW, h: sh }, o);
-    y += sh;
-  }
-  return y + 0.3;
 }
 
 const bodyO = (c: Palette, k: number, extra: Partial<BoxOpts> = {}): BoxOpts => ({
@@ -728,7 +313,12 @@ function beforeAfter(
         valign: "middle",
       },
     );
-  else arrow(s, c, a.x + half + 0.12 * k, ay, a.x + half + gap - 0.12 * k, ay, c.teal);
+  else
+    sheet.arrow(
+      { x: a.x + half + 0.12 * k, y: ay },
+      { x: a.x + half + gap - 0.12 * k, y: ay },
+      c.teal,
+    );
 }
 
 /** A two-sided comparison's punchline and footnotes under its sides from y, as the web sets them:
@@ -959,7 +549,7 @@ function gallery(sheet: Sheet, b: Extract<ContentBlock, { type: "gallery" }>, ar
       );
       return;
     }
-    picture(sheet, src.src, x, yy, cw, rh - capH, { alt: src.alt });
+    sheet.picture(src.src, { x, y: yy, w: cw, h: rh - capH }, { alt: src.alt });
     if (src.caption)
       sheet.box(
         src.caption,
@@ -975,7 +565,12 @@ function gallery(sheet: Sheet, b: Extract<ContentBlock, { type: "gallery" }>, ar
   const row = b.tags.reduce((sum, t) => sum + chipWidth(t, PT.label, false) + 0.1, -0.1);
   let x = a.x + (a.w - row) / 2;
   for (const t of b.tags)
-    x += chip(sheet, t, x, a.y + a.h + 0.1, PT.label, c.card, c.ink, false) + 0.1;
+    x +=
+      chip(
+        sheet,
+        { text: t, size: PT.label, fill: c.card, color: c.ink, mono: false },
+        { x, y: a.y + a.h + 0.1 },
+      ) + 0.1;
 }
 
 function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: boolean) {
@@ -1196,12 +791,8 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
         sheet.rounded({ x: a.x, y, w: a.w, h: rh }, sheet.c.plainCard, rh / 2);
         const w = chip(
           sheet,
-          it.name,
-          a.x + 0.1,
-          y + rh / 2 - (PT.sm * k * 1.9) / 144,
-          PT.sm * k,
-          c.tint,
-          c.ink,
+          { text: it.name, size: PT.sm * k, fill: c.tint, color: c.ink },
+          { x: a.x + 0.1, y: y + rh / 2 - (PT.sm * k * 1.9) / 144 },
         );
         sheet.box(
           { runs: md(it.description, c) },
@@ -1479,13 +1070,13 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       return;
     }
     case "image":
-      picture(sheet, b.src, a.x, a.y, a.w, a.h, { alt: b.alt, native: true });
+      sheet.picture(b.src, a, { alt: b.alt, native: true });
       return;
     case "image-steps": {
       // A file has no arrow steps: the last picture, the one the slide ends on, as print shows it.
       const last = b.steps[b.steps.length - 1];
       const h = a.h - (last.caption ? 0.35 : 0);
-      picture(sheet, last.src, a.x, a.y, a.w, h, { alt: b.alt, native: true });
+      sheet.picture(last.src, { x: a.x, y: a.y, w: a.w, h }, { alt: b.alt, native: true });
       if (last.caption)
         sheet.box(
           last.caption,
@@ -1504,11 +1095,15 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
     case "linked-image": {
       // The link spelled out under the picture, as on the slide.
       const line = b.href ? 0.42 : 0;
-      const p = picture(sheet, b.src, a.x, a.y, a.w, a.h - line, {
-        alt: b.alt,
-        href: b.href,
-        native: true,
-      });
+      const p = sheet.picture(
+        b.src,
+        { x: a.x, y: a.y, w: a.w, h: a.h - line },
+        {
+          alt: b.alt,
+          href: b.href,
+          native: true,
+        },
+      );
       if (b.href)
         sheet.box(
           { runs: [{ text: `↗ ${linkLabel(b.href)}`, options: { hyperlink: { url: b.href } } }] },
@@ -1518,12 +1113,12 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       return;
     }
     case "video": {
-      const path = assetFile(sheet, b.src);
+      const path = assetFile(sheet.out.assets, b.src);
       const h = a.h - (b.caption ? 0.35 : 0);
       if (existsSync(path)) {
         const w = Math.min(a.w, (h * 16) / 9);
         // pptxgenjs stores the cover as a PNG part whatever its bytes: anything else stays out.
-        const poster = b.poster && assetFile(sheet, b.poster);
+        const poster = b.poster && assetFile(sheet.out.assets, b.poster);
         const cover = poster && existsSync(poster) ? readFileSync(poster) : undefined;
         const png = cover?.toString("latin1", 1, 4) === "PNG";
         if (b.poster && !png)
@@ -1575,7 +1170,7 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       const k2 = Math.min(iw / srcW, a.h / srcH);
       const pw = srcW * k2;
       const ph = srcH * k2;
-      const path = assetFile(sheet, b.src);
+      const path = assetFile(sheet.out.assets, b.src);
       if (existsSync(path)) {
         s.addImage({
           path,
@@ -1631,7 +1226,7 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
     }
     case "image-and-grid": {
       const iw = a.w * 0.42;
-      picture(sheet, b.image.src, a.x, a.y, iw, a.h, { alt: b.image.alt });
+      sheet.picture(b.image.src, { x: a.x, y: a.y, w: iw, h: a.h }, { alt: b.image.alt });
       let y = a.y;
       if (b.gridTitle) {
         sheet.box(
@@ -2523,50 +2118,6 @@ const CHART = {
 /** A bar's name sizes, `TICK_STEPS` in `ChartPlots`: the web's text-base, text-sm and text-xs. */
 const TICK_STEPS = [PT.sm, 13.33, 12];
 
-function row<T>(items: T[], a: Area, gap: number, draw: (it: T, r: Area, i: number) => void) {
-  const w = (a.w - (items.length - 1) * gap) / items.length;
-  items.forEach((it, i) => draw(it, { x: a.x + i * (w + gap), y: a.y, w, h: a.h }, i));
-}
-
-function portrait(
-  sheet: Sheet,
-  src: string | undefined,
-  name: string,
-  x: number,
-  y: number,
-  d: number,
-  tone: string,
-) {
-  const { slide: s } = sheet;
-  // Round, as the web's hw-avatar.
-  if (src) picture(sheet, src, x, y, d, d, { round: true, alt: name });
-  else {
-    s.addShape("ellipse", { x, y, w: d, h: d, fill: { color: tone }, line: { type: "none" } });
-    sheet.box(
-      {
-        runs: [
-          {
-            text: name
-              .split(/\s+/)
-              .map((p) => p[0])
-              .join("")
-              .slice(0, 2),
-          },
-        ],
-      },
-      { x, y, w: d, h: d },
-      {
-        size: d * 24,
-        mono: true,
-        bold: true,
-        color: hex("--color-white"),
-        align: "center",
-        valign: "middle",
-      },
-    );
-  }
-}
-
 type Render = (sheet: Sheet, slide: never) => void;
 
 /** A talk's opening as TitleSlide draws it, measured off the print route: kicker, name and title on
@@ -2654,10 +2205,14 @@ function opening(sheet: Sheet, d: TitleSlide) {
     );
   if (d.qr && label) {
     const colX = W - EDGE - colW;
-    picture(sheet, d.qr.src, colX + (colW - qr) / 2, rowY, qr, qr, {
-      alt: qrAlt(d.qr.href, lang),
-      href: d.qr.href,
-    });
+    sheet.picture(
+      d.qr.src,
+      { x: colX + (colW - qr) / 2, y: rowY, w: qr, h: qr },
+      {
+        alt: qrAlt(d.qr.href, lang),
+        href: d.qr.href,
+      },
+    );
     sheet.box(
       { runs: [{ text: label, options: { hyperlink: { url: d.qr.href } } }] },
       { x: colX, y: rowY + qr + 12 / 144, w: colW, h: 52 / 144 },
@@ -2716,12 +2271,8 @@ const RENDER: {
     if (d.badge)
       chip(
         sheet,
-        d.badge,
-        W - EDGE - (d.badge.length * PT.label * 0.62) / 72 - 0.24,
-        TOP - 0.32,
-        PT.label,
-        sheet.c.tealTint,
-        sheet.c.teal,
+        { text: d.badge, size: PT.label, fill: sheet.c.tealTint, color: sheet.c.teal },
+        { x: W - EDGE - (d.badge.length * PT.label * 0.62) / 72 - 0.24, y: TOP - 0.32 },
       );
     if (d.stageMarker?.length) {
       let x = EDGE;
@@ -2740,12 +2291,17 @@ const RENDER: {
         x += (d.stagePrefix.length * PT.label * 0.62) / 72 + 0.15;
       }
       for (const m of d.stageMarker)
-        x += chip(sheet, m, x, y - 0.15, PT.label, sheet.c.tealTint, sheet.c.teal) + 0.1;
+        x +=
+          chip(
+            sheet,
+            { text: m, size: PT.label, fill: sheet.c.tealTint, color: sheet.c.teal },
+            { x, y: y - 0.15 },
+          ) + 0.1;
       y += 0.25;
     }
-    const footH = footerHeight(sheet, d.footer);
-    const end = blocks(sheet, d.content, BODY(y), centered, footH && footH + 0.1);
-    footer(sheet, d.footer, footH, centered, end + 0.1);
+    const foot = footerOf(sheet, d.footer);
+    const end = blocks(sheet, d.content, BODY(y), centered, foot.h && foot.h + 0.1);
+    footerAt(sheet, { ...foot, centered }, end + 0.1);
   },
 
   regular(sheet, d) {
@@ -2756,12 +2312,8 @@ const RENDER: {
       const pw = 2.6;
       portrait(
         sheet,
-        d.profile.imageSrc,
-        d.profile.name,
-        a.x + (pw - 1.4) / 2,
-        a.y + 0.2,
-        1.4,
-        c.teal,
+        { image: d.profile.imageSrc, name: d.profile.name, tone: c.teal },
+        { x: a.x + (pw - 1.4) / 2, y: a.y + 0.2, d: 1.4 },
       );
       const who: Para[] = [
         { runs: [{ text: d.profile.name }], ...TITLE, after: 4 },
@@ -2850,7 +2402,7 @@ const RENDER: {
       // As the web's centred statement: the kicker, each line a display heading balanced on its
       // own, 64 pt where nothing else stands, 48 pt otherwise, the subtitle in its narrower column,
       // the points and closing under it, all centred in the slide or above its footer.
-      const footH = footerHeight(sheet, d.footer);
+      const foot = footerOf(sheet, d.footer);
       const simple =
         !d.points?.length && !d.closing && !d.subtitle && !d.highlighted && !d.crossedOut;
       const w = d.footer ? CW : W - 2 * 4 * REM;
@@ -2941,20 +2493,20 @@ const RENDER: {
       }
       const heights = parts.map(([p, o, pw]) => sheet.need(p, pw, o));
       const total = heights.reduce((sum, h, i) => sum + h + parts[i][3], 0);
-      const [top, bottom] = d.footer ? [TOP, BOTTOM - footH - 0.1] : [0, BOTTOM];
+      const [top, bottom] = d.footer ? [TOP, BOTTOM - foot.h - 0.1] : [0, BOTTOM];
       let y = top + Math.max(0, (bottom - top - total) / 2);
       parts.forEach(([p, o, pw, gap], i) => {
         y += gap;
         sheet.box(p, { x: (W - pw) / 2, y, w: pw, h: heights[i] }, o);
         y += heights[i];
       });
-      footer(sheet, d.footer, footH);
+      footer(sheet, foot);
       return;
     }
     if (qr) {
       // As QrStatement: the words at the left, the code on the right in a white card whose padding
       // is its quiet zone, its address under it, the row top-aligned and centred above the footer.
-      const footH = footerHeight(sheet, d.footer);
+      const foot = footerOf(sheet, d.footer);
       const q = (0.45 * 1.15 * 1080) / 144;
       const label = `↗ ${linkLabel(qr.href)}`;
       const colW = Math.max(q, textWidth(label, { size: PT.base, mono: true }) + 0.1);
@@ -3007,7 +2559,7 @@ const RENDER: {
       const textH = heights.reduce((sum, h, i) => sum + h + parts[i][2], 0);
       const labelH = sheet.need(label, colW, { size: PT.base, mono: true, color: c.teal });
       const figH = q + REM + labelH;
-      const bottom = BOTTOM - footH - (d.footer ? 0.1 : 0);
+      const bottom = BOTTOM - foot.h - (d.footer ? 0.1 : 0);
       const top = TOP + Math.max(0, (bottom - TOP - Math.max(textH, figH)) / 2);
       let y = top;
       parts.forEach(([p, o, gap], i) => {
@@ -3018,16 +2570,20 @@ const RENDER: {
       const x = W - EDGE - colW + (colW - q) / 2;
       const pad = 2.5 * REM;
       sheet.rounded({ x, y: top, w: q, h: q }, { fill: "FFFFFF", line: c.border }, CORNER);
-      picture(sheet, qr.src, x + pad, top + pad, q - 2 * pad, q - 2 * pad, {
-        alt: qrAlt(qr.href, sheet.lang),
-        href: qr.href,
-      });
+      sheet.picture(
+        qr.src,
+        { x: x + pad, y: top + pad, w: q - 2 * pad, h: q - 2 * pad },
+        {
+          alt: qrAlt(qr.href, sheet.lang),
+          href: qr.href,
+        },
+      );
       sheet.box(
         { runs: [{ text: label, options: { hyperlink: { url: qr.href } } }] },
         { x: W - EDGE - colW, y: top + q + REM, w: colW, h: labelH },
         { size: PT.base, mono: true, color: c.teal, align: "center" },
       );
-      footer(sheet, d.footer, footH);
+      footer(sheet, foot);
       return;
     }
     const paras: Para[] = d.lines.map((l) => ({
@@ -3110,22 +2666,19 @@ const RENDER: {
       line: 1.2,
       floor: 0.5,
     };
-    const footH = footerHeight(sheet, d.footer);
-    sheet.box(paras, { x: EDGE, y: TOP, w, h: BOTTOM - TOP - footH }, o);
-    footer(sheet, d.footer, footH);
+    const foot = footerOf(sheet, d.footer);
+    sheet.box(paras, { x: EDGE, y: TOP, w, h: BOTTOM - TOP - foot.h }, o);
+    footer(sheet, foot);
     if (side) {
       // A quotation's portrait is round at the web's size, 384 px at 1920, centred in the side.
-      const [x, h] = [EDGE + w + 0.4, BOTTOM - TOP - footH];
+      const [x, h] = [EDGE + w + 0.4, BOTTOM - TOP - foot.h];
       const r = "round" in side && side.round ? 384 / 144 : 0;
-      picture(
-        sheet,
-        side.src,
-        r ? x + (imgW - r) / 2 : x,
-        r ? TOP + (h - r) / 2 : TOP,
-        r || imgW,
-        r || h,
-        { alt: side.alt, href: side.href, round: !!r },
-      );
+      const metadata = { alt: side.alt, href: side.href };
+      if (r) {
+        sheet.avatar(side.src, { x: x + (imgW - r) / 2, y: TOP + (h - r) / 2, d: r }, metadata);
+      } else {
+        sheet.picture(side.src, { x, y: TOP, w: imgW, h }, metadata);
+      }
     }
   },
 
@@ -3157,7 +2710,11 @@ const RENDER: {
       sheet.box(quote(cd), { x: x + indent, y: yy, w: cw - indent, h }, o);
       let ax = x;
       if (cd.imageSrc) {
-        portrait(sheet, cd.imageSrc, cd.author ?? "", x, yy + ch - who, who, c.teal);
+        portrait(
+          sheet,
+          { image: cd.imageSrc, name: cd.author ?? "", tone: c.teal },
+          { x, y: yy + ch - who, d: who },
+        );
         ax += who + 0.11;
       }
       if (cd.author)
@@ -3247,10 +2804,14 @@ const RENDER: {
       sheet.card({ x, y: top, w: cw, h: ch }, vs ? sheet.c.litCard : sheet.c.plainCard);
       let ty = top + pad;
       if (sd.logo) {
-        picture(sheet, sd.logo, x + pad, ty, 1.4, 48 / 144, {
-          align: "left",
-          alt: plain(sd.label),
-        });
+        sheet.picture(
+          sd.logo,
+          { x: x + pad, y: ty, w: 1.4, h: 48 / 144 },
+          {
+            align: "left",
+            alt: plain(sd.label),
+          },
+        );
         ty += logoH;
       }
       sheet.box(label(sd), { x: x + pad, y: ty, w: cw - 2 * pad, h: parts[i].th }, titleO);
@@ -3292,14 +2853,13 @@ const RENDER: {
           color: c.ink,
         },
       );
-      row(
-        [
-          [sheet.words.bad, ex.bad, c.red, c.redTint],
-          [sheet.words.good, ex.good, c.green, c.greenTint],
-        ] as const,
-        { x: EDGE, y: ey + 0.35, w: CW, h: eh - 0.35 },
-        0.25,
-        ([label, text, tone, tint], r) => {
+      const sides = [
+        [sheet.words.bad, ex.bad, c.red, c.redTint],
+        [sheet.words.good, ex.good, c.green, c.greenTint],
+      ] as const;
+      cellAreas(sides.length, { x: EDGE, y: ey + 0.35, w: CW, h: eh - 0.35 }, 0.25).forEach(
+        (r, i) => {
+          const [label, text, tone, tint] = sides[i];
           sheet.card(r, { fill: tint, line: tone });
           sheet.box(
             [
@@ -3322,8 +2882,8 @@ const RENDER: {
   profiles(sheet, d) {
     const { c } = sheet;
     const y = header(sheet, d);
-    const footH = footerHeight(sheet, d.footer);
-    const a = { ...BODY(y), h: BOTTOM - y - footH };
+    const foot = footerOf(sheet, d.footer);
+    const a = { ...BODY(y), h: BOTTOM - y - foot.h };
     const body = (p: (typeof d.profiles)[number]): Para[] => [
       ...bulletParas(p.bullets ?? [], c),
       ...(p.linkedIn ? [profileLink(p.linkedIn, c)] : []),
@@ -3340,10 +2900,15 @@ const RENDER: {
           ),
         ),
     );
-    row(d.profiles, { ...a, h: ch }, 0.3, (p, r, i) => {
+    cellAreas(d.profiles.length, { ...a, h: ch }, 0.3).forEach((r, i) => {
+      const p = d.profiles[i];
       const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
       sheet.card(r, sheet.c.plainCard);
-      portrait(sheet, p.imageSrc, p.name, r.x + 0.25, r.y + 0.25, 0.9, tone);
+      portrait(
+        sheet,
+        { image: p.imageSrc, name: p.name, tone },
+        { x: r.x + 0.25, y: r.y + 0.25, d: 0.9 },
+      );
       sheet.box(
         [
           { runs: [{ text: p.name }], ...TITLE, rel: PT.h4 / PT.base, after: 2 },
@@ -3362,7 +2927,7 @@ const RENDER: {
         },
       );
     });
-    footer(sheet, d.footer, footH);
+    footer(sheet, foot);
   },
 
   "phased-pills"(sheet, d) {
@@ -3398,15 +2963,18 @@ const RENDER: {
   },
 
   lanes(sheet, d) {
-    const { slide: s } = sheet;
     const { c } = sheet;
     const y = header(sheet, d);
     const codeH = d.codeSnippet
       ? (d.codeSnippet.code.split("\n").length * PT.sm * 1.3) / 72 + 0.45
       : 0;
-    const footH = footerHeight(sheet, d.footer);
+    const foot = footerOf(sheet, d.footer);
     const lh =
-      rowShare(sheet, "lanes", BOTTOM - y - codeH - footH - 0.3, d.lanes.length, 0.87, 0.27) - 0.12;
+      rowShare(
+        sheet,
+        { what: "lanes", n: d.lanes.length, cap: 0.87, floor: 0.27 },
+        BOTTOM - y - codeH - foot.h - 0.3,
+      ) - 0.12;
     let yy = y;
     if (d.codeSnippet) {
       drawBlock(
@@ -3438,17 +3006,25 @@ const RENDER: {
         },
       );
       let x = EDGE + 2;
-      const size = rowSize(sheet, lane.stages, PT.sm, 0.3, EDGE + CW - 0.25 - x);
+      const size = rowSize(
+        sheet,
+        { texts: lane.stages, size: PT.sm, gap: 0.3 },
+        EDGE + CW - 0.25 - x,
+      );
       lane.stages.forEach((st, j) => {
-        const w = chip(sheet, st, x, ly + lh / 2 - (size * 1.9) / 144, size, c.card, c.ink, false);
+        const w = chip(
+          sheet,
+          { text: st, size, fill: c.card, color: c.ink, mono: false },
+          { x, y: ly + lh / 2 - (size * 1.9) / 144 },
+        );
         x += w;
         if (j < lane.stages.length - 1) {
-          arrow(s, c, x + 0.05, ly + lh / 2, x + 0.25, ly + lh / 2, c.purple);
+          sheet.arrow({ x: x + 0.05, y: ly + lh / 2 }, { x: x + 0.25, y: ly + lh / 2 }, c.purple);
           x += 0.3;
         }
       });
     });
-    footer(sheet, d.footer, footH);
+    footer(sheet, foot);
   },
 
   chart(sheet, d) {
@@ -3680,7 +3256,7 @@ const RENDER: {
       const segs = d.segments ?? [];
       const g = { x: a.x + 1, y: a.y + 0.3, w: a.w - 2, h: a.h - 1.1 };
       const bell = (t: number) => Math.exp(-0.5 * ((t - 0.5) / 0.18) ** 2);
-      curve(sheet, g, bell, true);
+      curve(sheet, g, bell);
       let acc = 0;
       segs.forEach((seg, i) => {
         const from = acc;
@@ -3709,7 +3285,7 @@ const RENDER: {
       // The graph variant as the web draws it: a curve rising to the right, a marked point at 60 of
       // its 100 steps, the axis labels beside it.
       const g = { x: a.x + 1.5, y: a.y + 0.2, w: a.w - 3, h: a.h - 0.8 };
-      curve(sheet, g, (t) => Math.exp(t * 3) / Math.exp(3), true);
+      curve(sheet, g, (t) => Math.exp(t * 3) / Math.exp(3));
       s.addShape("line", {
         x: g.x,
         y: g.y + g.h,
@@ -3932,7 +3508,7 @@ const RENDER: {
         const partnerW = partners.map((p) => (lockH * p.width) / p.height);
         let x = (W - lockW - partnerW.reduce((sum, w) => sum + w + 2 * pad + times, 0)) / 2;
         partners.forEach((p, i) => {
-          picture(sheet, p.src, x, y, partnerW[i], lockH, { alt: p.alt ?? p.company });
+          sheet.picture(p.src, { x, y, w: partnerW[i], h: lockH }, { alt: p.alt ?? p.company });
           sheet.box(
             "×",
             { x: x + partnerW[i] + pad, y, w: times, h: lockH },
@@ -4011,7 +3587,11 @@ const RENDER: {
         speakers.forEach((sp, i) => {
           const x = sx + i * sw;
           const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
-          portrait(sheet, sp.imageSrc, sp.name, x + sw / 2 - 0.55, y, 1.1, tone);
+          portrait(
+            sheet,
+            { image: sp.imageSrc, name: sp.name, tone },
+            { x: x + sw / 2 - 0.55, y, d: 1.1 },
+          );
           sheet.box(
             [
               { runs: [{ text: sp.name }], mono: true, bold: true, after: 2 },
@@ -4107,7 +3687,8 @@ const RENDER: {
       return t ? (c[THEME[t as MarkerTone]] as string) : undefined;
     };
     const y = header(sheet, d);
-    row(d.columns, BODY(y), 0.35, (col, r) => {
+    cellAreas(d.columns.length, BODY(y), 0.35).forEach((r, i) => {
+      const col = d.columns[i];
       const tone = col.accent === "deepdive" ? c.purple : c.teal;
       const groups: {
         label?: string;
@@ -4124,12 +3705,8 @@ const RENDER: {
       sheet.rect({ x: r.x + 0.15, y: r.y, w: r.w - 0.3, h: 0.05 }, tone);
       chip(
         sheet,
-        col.label,
-        r.x + 0.25,
-        r.y + 0.25,
-        PT.label * 0.85,
-        mixColor(tone, c.bg, 0.15),
-        tone,
+        { text: col.label, size: PT.label * 0.85, fill: mixColor(tone, c.bg, 0.15), color: tone },
+        { x: r.x + 0.25, y: r.y + 0.25 },
       );
       sheet.box(
         [
@@ -4175,7 +3752,7 @@ const RENDER: {
   gantt(sheet, d) {
     const { c } = sheet;
     const y = header(sheet, d);
-    const footH = footerHeight(sheet, d.footer);
+    const foot = footerOf(sheet, d.footer);
     // GanttSlide's grid, in the spacing scale: a 20 rem label column, 0.25 rem between columns, and
     // per row a label line over a bar that fills the row, the row at most 7 rem tall.
     const sp = (v: number) => v * 0.25 * REM;
@@ -4209,10 +3786,8 @@ const RENDER: {
     const msH = stack ? sp(3) + 2 / 144 + sp(1.5) + stack * lh : 0;
     const pitch = rowShare(
       sheet,
-      "gantt",
-      BOTTOM - top - footH - msH + sp(2),
-      d.rows.length,
-      sp(30),
+      { what: "gantt", n: d.rows.length, cap: sp(30), floor: 0.15 },
+      BOTTOM - top - foot.h - msH + sp(2),
     );
     // Rows squeezed below their gap and label line keep a share of each.
     const rh = pitch - Math.min(sp(2), pitch / 4);
@@ -4291,7 +3866,7 @@ const RENDER: {
         );
       }
     }
-    footer(sheet, d.footer, footH);
+    footer(sheet, foot);
   },
 
   "team-topology"(sheet, d) {
@@ -4338,16 +3913,16 @@ const RENDER: {
           ]
         : []),
     ]);
-    const footH = footerHeight(sheet, d.footer);
+    const foot = footerOf(sheet, d.footer);
     sheet.box(
       paras,
-      { x: EDGE, y: y + 0.2, w: CW * 0.8, h: BOTTOM - y - 0.2 - footH },
+      { x: EDGE, y: y + 0.2, w: CW * 0.8, h: BOTTOM - y - 0.2 - foot.h },
       {
         size: PT.h3,
         color: c.ink,
       },
     );
-    footer(sheet, d.footer, footH);
+    footer(sheet, foot);
   },
 
   activity(sheet, d) {
@@ -4684,24 +4259,22 @@ const RENDER: {
 
 /** A function over [0, 1] drawn as a polyline in the area, its values in [0, 1] from the bottom,
  *  with the area under it tinted. */
-function curve(sheet: Sheet, g: Area, f: (t: number) => number, fill: boolean) {
+function curve(sheet: Sheet, g: Area, f: (t: number) => number) {
   const { slide: s } = sheet;
   const n = 100;
   const pts = Array.from({ length: n }, (_, i) => ({
     x: (i / (n - 1)) * g.w,
     y: g.h - f(i / (n - 1)) * g.h,
   }));
-  if (fill) {
-    s.addShape("custGeom" as PptxGenJS.SHAPE_NAME, {
-      x: g.x,
-      y: g.y,
-      w: g.w,
-      h: g.h,
-      fill: { color: mixColor(sheet.c.teal, sheet.c.bg, 0.18) },
-      line: { type: "none" },
-      points: [{ x: 0, y: g.h, moveTo: true }, ...pts, { x: g.w, y: g.h }, { close: true }],
-    });
-  }
+  s.addShape("custGeom" as PptxGenJS.SHAPE_NAME, {
+    x: g.x,
+    y: g.y,
+    w: g.w,
+    h: g.h,
+    fill: { color: mixColor(sheet.c.teal, sheet.c.bg, 0.18) },
+    line: { type: "none" },
+    points: [{ x: 0, y: g.h, moveTo: true }, ...pts, { x: g.w, y: g.h }, { close: true }],
+  });
   s.addShape("custGeom" as PptxGenJS.SHAPE_NAME, {
     x: g.x,
     y: g.y,
@@ -4740,18 +4313,19 @@ function pillPhases(
     let x = a.x;
     const title = (it: (typeof p.items)[number]) =>
       it.number === undefined ? it.title : `#${it.number} ${it.title}`;
-    const size = rowSize(sheet, p.items.map(title), PT.sm * 0.9, 0.12, a.w);
+    const size = rowSize(sheet, { texts: p.items.map(title), size: PT.sm * 0.9, gap: 0.12 }, a.w);
     for (const it of p.items) {
       const on = it.state === "active" || it.state === "new";
       const w = chip(
         sheet,
-        title(it),
-        x,
-        py + 0.32,
-        size,
-        on ? mixColor(tone, c.bg, 0.15) : c.card,
-        c.ink,
-        false,
+        {
+          text: title(it),
+          size,
+          fill: on ? mixColor(tone, c.bg, 0.15) : c.card,
+          color: c.ink,
+          mono: false,
+        },
+        { x, y: py + 0.32 },
       );
       x += w + 0.12;
     }
