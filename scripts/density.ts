@@ -23,6 +23,7 @@ import { serveDir } from "./serve-dir";
 
 const FAIL = 0.8;
 const NOTICE = 0.9;
+const SLIDE_FIT = { unfittedSelector: UNFITTED_SLIDE, styleProperties: [...FIT_STYLE] };
 const PAGES = 4;
 const WORD =
   "a heading's word is wider than its box and shrinks the heading: shorten the word or give it a wider box";
@@ -113,12 +114,8 @@ async function check(browser: Browser, url: string): Promise<string[]> {
   try {
     await page.setViewport({ width: 1920, height: 1080 });
     await settlePrintPage(page, url);
-    const metrics = await page.$$eval(".print-slide", readSlideMetrics, UNFITTED_SLIDE);
-    const shrunk = metrics.filter((m) => !m.unfitted && !m.use && m.scale < NOTICE).map((m) => m.i);
-    const layouts = shrunk.length
-      ? await page.$$eval(".print-slide", readBlockLayout, shrunk, [...FIT_STYLE])
-      : {};
-    const rows = metrics.flatMap((m) => classifySlide(m, layouts[m.i]));
+    const snapshots = await page.$$eval(".print-slide", snapshotSlides, SLIDE_FIT, NOTICE);
+    const rows = snapshots.flatMap(classifySlide);
     return rows.map((r) => {
       if ("unfitted" in r) {
         failed++;
@@ -154,32 +151,38 @@ async function check(browser: Browser, url: string): Promise<string[]> {
 
 /** A slide the fit guard never fitted, one of the wrong type, one with a heading shrunk to fit a
  *  word, or one the fit guard shrank. */
-export type Row =
+type Row =
   | { i: number; title: string; unfitted: true }
   | { i: number; title: string; use: true }
   | { i: number; title: string; word: number }
   | { i: number; title: string; scale: number; label: string; groups: number; split: string };
 
-export interface SlideMetrics {
-  i: number;
-  title: string;
-  unfitted: boolean;
-  use: boolean;
-  word: number;
-  scale: number;
-}
-
-export interface BlockLayout {
-  label: "list item" | "block";
+interface BlockLayout {
+  tag: string;
   avail: number;
   blocks: { top: number; bottom: number }[];
 }
 
-/** Reads each printed slide's fit state, misuse mark, heading word scale and box zoom in-page. */
-function readSlideMetrics(nodes: Element[], unfittedSelector: string): SlideMetrics[] {
-  return nodes.map((slide, i) => {
-    const title = slide.querySelector("h1, h2")?.textContent?.trim().slice(0, 60) ?? "";
-    const unfitted = !!slide.querySelector(unfittedSelector);
+type SlideSnapshot =
+  | { i: number; title: string; unfitted: true }
+  | {
+      i: number;
+      title: string;
+      unfitted: false;
+      use: boolean;
+      word: number;
+      scale: number;
+      layout?: BlockLayout;
+    };
+
+function snapshotSlides(
+  nodes: Element[],
+  { styleProperties, unfittedSelector }: typeof SLIDE_FIT,
+  notice: number,
+): SlideSnapshot[] {
+  return nodes.map((slide, i): SlideSnapshot => {
+    const title = slide.querySelector("h1, h2")?.textContent ?? "";
+    if (slide.querySelector(unfittedSelector)) return { i, title, unfitted: true };
     const use = !!(slide as HTMLElement).dataset.use;
     // A heading the fit guard shrank so that its widest word fits (SlideShell's fitWords).
     const word = Math.min(
@@ -191,25 +194,13 @@ function readSlideMetrics(nodes: Element[], unfittedSelector: string): SlideMetr
     const box = slide.querySelector<HTMLElement>(
       ".slide-body[style*='zoom'], .slide-content[style*='zoom']",
     );
-    const scale = box ? parseFloat(box.style.zoom) || 1 : 1;
-    return { i, title, unfitted, use, word, scale };
-  });
-}
-
-/** Lays each shrunk slide out at full size in-page to measure where its blocks fall. */
-function readBlockLayout(
-  slides: Element[],
-  indices: number[],
-  fitStyle: string[],
-): Record<number, BlockLayout> {
-  const layouts: Record<number, BlockLayout> = {};
-  for (const i of indices) {
-    const box = slides[i]?.querySelector<HTMLElement>(
-      ".slide-body[style*='zoom'], .slide-content[style*='zoom']",
-    );
-    if (!box) continue;
-    const kept = fitStyle.map((p) => box.style.getPropertyValue(p));
-    fitStyle.forEach((p) => box.style.removeProperty(p));
+    if (!box) return { i, title, unfitted: false, use, word, scale: 1 };
+    const scale = parseFloat(box.style.zoom) || 1;
+    if (use || scale >= notice) return { i, title, unfitted: false, use, word, scale };
+    // Lay the box out at full size and natural width, as the fit guard measures it, to see where
+    // its blocks fall.
+    const kept = styleProperties.map((p) => box.style.getPropertyValue(p));
+    styleProperties.forEach((p) => box.style.removeProperty(p));
     let parent: Element = box;
     while (parent.children.length === 1) parent = parent.children[0];
     const blocks = [...parent.children]
@@ -219,13 +210,19 @@ function readBlockLayout(
         return { top, bottom };
       });
     const avail = box.clientHeight * 0.9;
-    fitStyle.forEach((p, k) => box.style.setProperty(p, kept[k]));
-    layouts[i] = { label: parent.tagName === "UL" ? "list item" : "block", avail, blocks };
-  }
-  return layouts;
+    styleProperties.forEach((p, k) => box.style.setProperty(p, kept[k]));
+    return {
+      i,
+      title,
+      unfitted: false,
+      use,
+      word,
+      scale,
+      layout: { tag: parent.tagName, avail, blocks },
+    };
+  });
 }
 
-/** Groups measured block boxes (1-based) into slides whose height stays within `avail`. */
 export function planSplit(
   blocks: readonly { top: number; bottom: number }[],
   avail: number,
@@ -246,21 +243,21 @@ export function planSplit(
   return { groups: groups.length, split };
 }
 
-/** Turns one slide's measured metrics and optional full-size block layout into density rows. */
-export function classifySlide(slide: SlideMetrics, layout?: BlockLayout): Row[] {
-  const { i, title } = slide;
-  // The page did not hydrate, so no scale below can be read.
+function classifySlide(slide: SlideSnapshot): Row[] {
+  const { i } = slide;
+  const title = slide.title.trim().slice(0, 60);
   if (slide.unfitted) return [{ i, title, unfitted: true }];
   const rows: Row[] = [];
   if (slide.use) rows.push({ i, title, use: true });
   if (slide.word < NOTICE) rows.push({ i, title, word: slide.word });
-  if (!slide.use && slide.scale < NOTICE && layout) {
+  if (!slide.use && slide.scale < NOTICE && slide.layout) {
+    const label = slide.layout.tag === "UL" ? "list item" : "block";
     rows.push({
       i,
       title,
       scale: slide.scale,
-      label: layout.label,
-      ...planSplit(layout.blocks, layout.avail),
+      label,
+      ...planSplit(slide.layout.blocks, slide.layout.avail),
     });
   }
   return rows;

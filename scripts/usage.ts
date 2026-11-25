@@ -27,8 +27,6 @@ import type { ContentBlock, ContentSlide, Presentation, SectionTheme, Slide } fr
 type BlockResolver<K extends ContentBlock["type"]> =
   string | null | ((block: Extract<ContentBlock, { type: K }>) => string);
 
-/** Every block type's catalogue entry, a resolver where variants split across entries, or null for
- *  the default `block-<type>`. Exhaustive over `ContentBlock["type"]`. */
 const BLOCK_ENTRY: { [K in ContentBlock["type"]]: BlockResolver<K> } = {
   cards: (b) =>
     b.dense ? "block-cards-dense" : b.columns === 4 ? "block-cards-four-columns" : "block-cards",
@@ -83,9 +81,11 @@ function drawnBlock(block: ContentBlock): ContentBlock {
   return block;
 }
 
-/** A block's catalogue entry. */
 function blockEntry(block: ContentBlock): string {
-  const entry = Object.hasOwn(BLOCK_ENTRY, block.type) ? BLOCK_ENTRY[block.type] : null;
+  const entry =
+    typeof block.type === "string" && Object.hasOwn(BLOCK_ENTRY, block.type)
+      ? BLOCK_ENTRY[block.type]
+      : null;
   return typeof entry === "function"
     ? (entry as (b: ContentBlock) => string)(block)
     : (entry ?? `block-${block.type}`);
@@ -98,7 +98,6 @@ function drawnAs(slide: Slide): Slide | undefined {
   if (slide.type === "regular") return regularAsContent(slide);
 }
 
-/** The catalogue entries a content slide uses, including redrawn statement and split forms. */
 function contentEntries(slide: ContentSlide): string[] {
   // A slide of one or two short bullets still draws as bullets: the print page marks it, and
   // it counts as what it draws.
@@ -130,13 +129,11 @@ export function entriesOf(slide: Slide): string[] {
   return entry ? [entry] : [];
 }
 
-/** The content slide a slide draws as, or undefined when it draws as another slide type. */
 function contentOf(slide: Slide): ContentSlide | undefined {
   const drawn = drawnAs(slide) ?? slide;
   return drawn.type === "content" ? drawn : undefined;
 }
 
-/** Cards blocks that set `numberFrom` without being numbered. */
 function ignoredNumberFrom(slide: Slide): string[] {
   const content = contentOf(slide);
   if (!content) return [];
@@ -144,14 +141,14 @@ function ignoredNumberFrom(slide: Slide): string[] {
     slide.type === "grid"
       ? "numberFrom: a grid numbers its pillars only where no card names an icon"
       : "numberFrom: the cards block is not numbered";
-  return content.content
+  return (content.content ?? [])
     .filter((b) => b.type === "cards" && b.numberFrom != null && !b.numbered)
     .map(() => reason);
 }
 
-/** Whether a non-deepdive section theme visibly changes what a content slide draws: its footer
- *  or centred-paragraph rule, its principle pill, or keeping a lone neutral two-column block
- *  from becoming a comparison. A centred slide draws none of them. */
+// On a content slide the section's style draws the footer's and a centred paragraph's rule and
+// the principle's pill, where it differs from the default, and any section keeps one neutral
+// two-column block from becoming a comparison. A centred slide draws none of them.
 function sectionThemeDraws(slide: ContentSlide, theme: SectionTheme): boolean {
   if (slide.layout === "centered") return false;
   const style = getSectionStyle(theme);
@@ -161,7 +158,6 @@ function sectionThemeDraws(slide: ContentSlide, theme: SectionTheme): boolean {
   return !!twoColumnAsSplit({ ...slide, sectionTheme: undefined });
 }
 
-/** A non-deepdive `sectionTheme` that changes no rule, pill or slide type. */
 function ignoredSectionTheme(slide: Slide): string[] {
   if (!("sectionTheme" in slide) || !slide.sectionTheme || slide.sectionTheme === "deepdive")
     return [];

@@ -2,11 +2,11 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GUIDANCE } from "../catalog/guidance";
 import { readUsage } from "../catalog/usage";
-import { entriesOf, ignoredFields } from "../scripts/usage";
 import { twoColumnAsSplit } from "../lib/slide-utils";
+import { entriesOf, ignoredFields } from "../scripts/usage";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 
@@ -147,28 +147,50 @@ describe("slides-usage", () => {
     expect(empty.stderr).toContain("no deck");
   });
 
+  const validDeck = { lang: "en", slides: [{ type: "agenda", headline: "h", items: [] }] };
+
   it.each([
     [
-      "its slug",
-      { lang: "en", slug: "kickoff", slides: [{ type: "nope" }] },
+      "its slug at index 1",
+      [validDeck, { lang: "en", slug: "kickoff", slides: [{ type: "nope" }] }],
       /kickoff \(\S+\[1\]\) slide 1: type nope/,
     ],
     [
-      "its name when slug is empty",
-      { lang: "en", slug: "", name: "Retro", slides: [{ type: "nope" }] },
-      /Retro \(\S+\[1\]\) slide 1: type nope/,
+      "its name when slug is empty at index 2",
+      [validDeck, validDeck, { lang: "en", slug: "", name: "Retro", slides: [{ type: "nope" }] }],
+      /Retro \(\S+\[2\]\) slide 1: type nope/,
     ],
     [
-      "its file and index when unnamed",
-      { lang: "en", slides: [{ type: "nope" }] },
-      /\.json\[1\] slide 1: type nope/,
+      "its file and index when unnamed at index 3",
+      [validDeck, validDeck, validDeck, { lang: "en", slides: [{ type: "nope" }] }],
+      /\.json\[3\] slide 1: type nope/,
     ],
-    ["its name when the item is no deck", { name: "Draft" }, /Draft \(\S+\[1\]\) is no deck/],
-  ])("names a broken deck in an array by %s", (_label, broken, expected) => {
-    const deck = { lang: "en", slides: [{ type: "agenda", headline: "h", items: [] }] };
-    const { code, err } = run([deck, broken]);
+    [
+      "its name when the item is no deck at index 1",
+      [validDeck, { name: "Draft" }],
+      /Draft \(\S+\[1\]\) is no deck/,
+    ],
+  ])("names a broken deck in an array by %s", (_label, decks, expected) => {
+    const { code, err } = run(decks);
     expect(code).toBe(1);
     expect(err).toMatch(expected);
+  });
+
+  const deckWithBlockType = (type: unknown) => ({
+    lang: "en",
+    slides: [{ type: "content", headline: "h", content: [{ type }] }],
+  });
+
+  it("counts an array block type without invoking the string type's resolver", () => {
+    const { code, json } = run(deckWithBlockType(["image-and-grid"]));
+    expect(code).toBe(0);
+    expect(json).toMatchObject({ entries: { content: 1, "block-image-and-grid": 1 } });
+  });
+
+  it("reports constructor as an unknown block type", () => {
+    const { code, err } = run(deckWithBlockType("constructor"));
+    expect(code).toBe(1);
+    expect(err).toMatch(/slide 1: malformed, no catalogue entry for block-constructor\n$/);
   });
 
   // A deck-data lint for what the type checker cannot see: each rule hit by a planted field, and
@@ -181,7 +203,7 @@ describe("slides-usage", () => {
     ],
     [
       "a grid without icons",
-      { type: "grid", headline: "h", numberFrom: 3, cards: [{ title: "t" }] },
+      { type: "grid", headline: "h", numberFrom: 3, cards: [{ title: "t", icon: undefined }] },
       [],
     ],
     [
@@ -200,6 +222,11 @@ describe("slides-usage", () => {
         headline: "h",
         content: [{ type: "cards", items: [], numberFrom: 4, numbered: true }],
       },
+      [],
+    ],
+    [
+      "a content slide whose content list is null",
+      { type: "content", headline: "h", content: null },
       [],
     ],
   ])("checks numberFrom on %s", (_label, slide, expected) => {
@@ -287,37 +314,52 @@ describe("slides-usage", () => {
     expect(run({ slides: [{ type: "title", title: "t", lang: "de" }, agenda] }).code).toBe(0);
   });
 
-  const usageOut = (deck: string, ...args: string[]) =>
-    spawnSync("bun", [script, ...args, deck], {
-      encoding: "utf8",
-      env: { ...process.env, npm_lifecycle_event: "", npm_lifecycle_script: "" },
+  describe("--out and --check", () => {
+    const deck = join(dir, "check.json");
+    const staleHint = (file: string) =>
+      `slides-usage: ${file} is stale: run "slides-usage --out ${file} ${deck}" and commit it\n`;
+    const usageOut = (file: string, ...args: string[]) =>
+      spawnSync("bun", [script, "--out", file, ...args, deck], {
+        encoding: "utf8",
+        env: { ...process.env, npm_lifecycle_event: "", npm_lifecycle_script: "" },
+      });
+
+    beforeAll(() => {
+      writeFileSync(deck, JSON.stringify(validDeck));
     });
 
-  it("writes counts to --out and passes --check when the file matches", () => {
-    const deck = join(dir, "write.json");
-    writeFileSync(
-      deck,
-      JSON.stringify({ lang: "en", slides: [{ type: "agenda", headline: "h", items: [] }] }),
-    );
-    const file = join(dir, "written-usage.json");
-    expect(usageOut(deck, "--out", file).status).toBe(0);
-    expect(JSON.parse(readFileSync(file, "utf8"))).toMatchObject({ entries: { agenda: 1 } });
-    expect(usageOut(deck, "--out", file, "--check").status).toBe(0);
-  });
+    it("writes its counts to --out", () => {
+      const file = join(dir, "usage.json");
+      expect(usageOut(file).status).toBe(0);
+      expect(JSON.parse(readFileSync(file, "utf8"))).toMatchObject({ entries: { agenda: 1 } });
+    });
 
-  it("fails --check when the output file is missing or differs, naming the re-run command", () => {
-    const deck = join(dir, "check.json");
-    writeFileSync(
-      deck,
-      JSON.stringify({ lang: "en", slides: [{ type: "agenda", headline: "h", items: [] }] }),
-    );
-    const missing = join(dir, "missing-usage.json");
-    expect(usageOut(deck, "--out", missing, "--check").status).toBe(1);
-    const file = join(dir, "stale-usage.json");
-    writeFileSync(file, "{}");
-    const stale = usageOut(deck, "--out", file, "--check");
-    expect(stale.status).toBe(1);
-    expect(stale.stderr).toContain(`is stale: run "slides-usage --out ${file} ${deck}" and commit`);
+    it.each([
+      {
+        label: "fails when the file is missing and names the re-run command",
+        prepare: () => {},
+        status: 1,
+        stderr: staleHint,
+      },
+      {
+        label: "passes when the file matches",
+        prepare: (file: string) => usageOut(file),
+        status: 0,
+        stderr: () => "",
+      },
+      {
+        label: "fails when the file differs and names the re-run command",
+        prepare: (file: string) => writeFileSync(file, "{}"),
+        status: 1,
+        stderr: staleHint,
+      },
+    ])("with --check $label", ({ prepare, status, stderr }) => {
+      const file = join(mkdtempSync(join(dir, "check-")), "usage.json");
+      prepare(file);
+      const result = usageOut(file, "--check");
+      expect(result.status).toBe(status);
+      expect(result.stderr).toBe(stderr(file));
+    });
   });
 
   it("names the re-run of a stale file a consumer can type: its script, or the pipe's command", () => {
