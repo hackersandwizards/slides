@@ -28,18 +28,23 @@ type BlockResolver<K extends ContentBlock["type"]> =
   string | null | ((block: Extract<ContentBlock, { type: K }>) => string);
 
 const BLOCK_ENTRY: { [K in ContentBlock["type"]]: BlockResolver<K> } = {
-  cards: (b) =>
-    b.dense ? "block-cards-dense" : b.columns === 4 ? "block-cards-four-columns" : "block-cards",
-  numbers: (b) =>
-    b.items.length === 1
+  cards: (block) =>
+    block.dense
+      ? "block-cards-dense"
+      : block.columns === 4
+        ? "block-cards-four-columns"
+        : "block-cards",
+  numbers: (block) =>
+    block.items.length === 1
       ? "block-numbers-one-figure"
-      : b.items.length > 4
+      : block.items.length > 4
         ? "block-numbers-six-figures"
         : "block-numbers",
-  bars: (b) => (b.bars.some((bar) => bar.from != null) ? "block-bars-as-ranges" : "block-bars"),
-  flow: (b) => (b.frame ? "block-flow-framed" : "block-flow"),
-  "image-and-grid": (b) =>
-    b.image.sketch ? "block-image-and-grid-sketch" : "block-image-and-grid",
+  bars: (block) =>
+    block.bars.some((bar) => bar.from != null) ? "block-bars-as-ranges" : "block-bars",
+  flow: (block) => (block.frame ? "block-flow-framed" : "block-flow"),
+  "image-and-grid": (block) =>
+    block.image.sketch ? "block-image-and-grid-sketch" : "block-image-and-grid",
   annotated: "block-annotated-image",
   "annotated-code": "block-code",
   "code-and-text": "block-code",
@@ -82,13 +87,13 @@ function drawnBlock(block: ContentBlock): ContentBlock {
 }
 
 function blockEntry(block: ContentBlock): string {
-  const entry =
-    typeof block.type === "string" && Object.hasOwn(BLOCK_ENTRY, block.type)
-      ? BLOCK_ENTRY[block.type]
-      : null;
-  return typeof entry === "function"
-    ? (entry as (b: ContentBlock) => string)(block)
-    : (entry ?? `block-${block.type}`);
+  const key = String(block.type);
+  const entry = Object.hasOwn(BLOCK_ENTRY, key) ? BLOCK_ENTRY[key as ContentBlock["type"]] : null;
+  if (typeof entry === "string") return entry;
+  // The old switch matched variants strictly; only the alias lookup coerced the key.
+  if (typeof entry === "function" && block.type === key)
+    return (entry as (block: ContentBlock) => string)(block);
+  return `block-${key}`;
 }
 
 /** The slide a slide draws as, where it draws as another: a replaced form as its heir. */

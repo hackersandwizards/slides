@@ -176,21 +176,38 @@ describe("slides-usage", () => {
     expect(err).toMatch(expected);
   });
 
+  it("reports every broken deck in one run", () => {
+    const unknownTypes = ["nope-first", "nope-second", "nope-third"];
+    const brokenDecks = unknownTypes.map((type) => ({ lang: "en", slides: [{ type }] }));
+    const { code, err } = run([validDeck, ...brokenDecks]);
+    expect(code).toBe(1);
+    expect(err.match(/(?<=: type )\S+/g)).toEqual(unknownTypes);
+  });
+
   const deckWithBlockType = (type: unknown) => ({
     lang: "en",
     slides: [{ type: "content", headline: "h", content: [{ type }] }],
   });
 
-  it("counts an array block type without invoking the string type's resolver", () => {
-    const { code, json } = run(deckWithBlockType(["image-and-grid"]));
+  it.each([
+    ["image-and-grid", "block-image-and-grid"],
+    ["terminal", "block-terminal-and-hooks"],
+  ])("counts an array block type containing %s", (type, entry) => {
+    const { code, json } = run(deckWithBlockType([type]));
     expect(code).toBe(0);
-    expect(json).toMatchObject({ entries: { content: 1, "block-image-and-grid": 1 } });
+    expect(json).toMatchObject({ entries: { content: 1, [entry]: 1 } });
   });
 
   it("reports constructor as an unknown block type", () => {
     const { code, err } = run(deckWithBlockType("constructor"));
     expect(code).toBe(1);
     expect(err).toMatch(/slide 1: malformed, no catalogue entry for block-constructor\n$/);
+  });
+
+  it("reports a missing image using the block expression in the diagnostic", () => {
+    const { code, err } = run(deckWithBlockType("image-and-grid"));
+    expect(code).toBe(1);
+    expect(err).toContain("(evaluating 'block.image.sketch')");
   });
 
   // A deck-data lint for what the type checker cannot see: each rule hit by a planted field, and
