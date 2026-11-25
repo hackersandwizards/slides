@@ -2,10 +2,24 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
 import verbal from "@hackersandwizards/brand/verbal.json";
+import JSZip from "jszip";
+import PptxGenJS from "pptxgenjs";
 import { assert, beforeAll, describe, expect, it } from "vitest";
-import { centredMark } from "../scripts/pptx/chrome";
+import {
+  brandStrip,
+  centredMark,
+  kickerBand,
+  slideCorner,
+  startLogos,
+  type Head,
+} from "../scripts/pptx/chrome";
+import { brandCut } from "../scripts/pptx/images";
+import { Look } from "../scripts/pptx/look";
+import { palette } from "../scripts/pptx/palette";
+import { Sheet } from "../scripts/pptx/sheet";
+import { REM, W } from "../scripts/pptx/stage";
 import { slideCatalog } from "../specimen/slide-catalog";
-import type { Slide } from "../types/slide";
+import type { Presentation, Slide } from "../types/slide";
 import {
   rendered,
   shapesOf,
@@ -242,5 +256,122 @@ describe("slides-pptx contact links", () => {
     const rels = zip.file("ppt/slides/_rels/slide1.xml.rels");
     assert(rels, "slide relationships");
     expect(await rels.async("string")).not.toContain("mailto:");
+  });
+});
+
+function freshSheet(): { pptx: PptxGenJS; sheet: Sheet } {
+  const pptx = new PptxGenJS();
+  pptx.layout = "LAYOUT_WIDE";
+  const sheet = new Sheet(new Look(palette(false), "en", false), pptx.addSlide(), {
+    pptx,
+    assets: join(import.meta.dirname, ".."),
+    warnings: [],
+    charts: new Map(),
+  });
+  return { pptx, sheet };
+}
+
+describe("slides-pptx chrome parts", () => {
+  it("draws the brand strip in 24 steps from teal to purple across the slide width", async () => {
+    const { pptx, sheet } = freshSheet();
+    brandStrip(sheet);
+    const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
+    const file = zip.file("ppt/slides/slide1.xml");
+    assert(file, "slide1.xml");
+    const rects = shapesOf(await file.async("string"));
+    const day = palette(false);
+    expect({
+      count: rects.length,
+      firstX: rects[0].x,
+      firstFill: rects[0].fill,
+      lastFill: rects[rects.length - 1].fill,
+      rightEdge: Math.round((rects[rects.length - 1].x + rects[rects.length - 1].w) * 100) / 100,
+    }).toEqual({
+      count: 24,
+      firstX: 0,
+      firstFill: day.teal,
+      lastFill: day.purple,
+      rightEdge: Math.round(W * 100) / 100,
+    });
+  });
+
+  const [, lockupRatio] = brandCut("lockup");
+  const [, wordmarkRatio] = brandCut("wordmark");
+  const rightEdge = W - 96 / 144;
+
+  it.each([
+    {
+      name: "centred closing with hidden corner",
+      deck: { name: "D", slides: [{ type: "closing", headline: "Bye" }] } as Presentation,
+      index: 0,
+      expected: rightEdge,
+    },
+    {
+      name: "title slide with lockup and no page counter",
+      deck: {
+        name: "D",
+        slides: [
+          { type: "title", title: "Start" },
+          { type: "statement", lines: ["Next"] },
+        ],
+      } as Presentation,
+      index: 0,
+      expected: rightEdge - (65 / 144) * lockupRatio,
+    },
+    {
+      name: "content slide with wordmark and page counter",
+      deck: {
+        name: "D",
+        slides: [
+          { type: "title", title: "Start" },
+          { type: "statement", lines: ["Next"] },
+        ],
+      } as Presentation,
+      index: 1,
+      expected: rightEdge - (42 / 144) * wordmarkRatio - 1.8,
+    },
+  ])("slideCorner returns the corner left bound for $name", ({ deck, index, expected }) => {
+    const { sheet } = freshSheet();
+    expect(slideCorner(sheet, deck, index)).toEqual(expected);
+  });
+
+  it.each([
+    {
+      name: "empty start logos without confidentiality line",
+      deck: { name: "D", slides: [{ type: "statement", lines: ["A"] }] } as Presentation,
+      expected: 1.5 * REM,
+    },
+    {
+      name: "empty start logos aligned with confidentiality line",
+      deck: {
+        name: "D",
+        confidential: "Confidential",
+        slides: [{ type: "statement", lines: ["A"] }],
+      } as Presentation,
+      expected: W - rightEdge,
+    },
+  ])("startLogos returns the left edge for $name", ({ deck, expected }) => {
+    const { sheet } = freshSheet();
+    expect(startLogos(sheet, deck, 0)).toEqual(expected);
+  });
+
+  it.each([
+    { name: "empty head", head: {} as Head, expected: 0 },
+    {
+      name: "preText and short principle on one row",
+      head: { preText: "Intro", principle: "Small steps" } as Head,
+      expected: 0,
+    },
+    {
+      name: "long sectionLabel that wraps the principle pill",
+      head: {
+        sectionLabel: "A very long section label spanning nearly the whole stage width here",
+        principle: "Principle that wraps onto the second kicker row",
+      } as Head,
+      expected: 76 / 144,
+    },
+  ])("kickerBand returns the wrapped height for $name", ({ head, expected }) => {
+    const { sheet } = freshSheet();
+    expect(kickerBand(sheet, head)).toEqual(expected);
   });
 });

@@ -24,13 +24,15 @@ export interface Head {
   preText?: string;
 }
 
-/** The brand strip and footer, where the web stands them. */
-export function frame(sheet: Sheet, deck: Presentation, index: number) {
-  const { slide: s } = sheet;
+const CORNER_RIGHT = W - 96 / 144;
+const FOOTER_BASE_Y = 1024 / 144;
+// `h-9`, as the slide draws a deck's logos.
+const LOGO_H = 2.25 * REM;
+
+// The strip's teal-to-purple gradient as twenty-four steps, since a pptxgenjs shape takes no
+// gradient fill.
+export function brandStrip(sheet: Sheet): void {
   const { c } = sheet;
-  s.background = { color: c.bg };
-  // The strip's teal-to-purple gradient as twenty-four steps, since a pptxgenjs shape takes no
-  // gradient fill.
   const steps = 24;
   for (let i = 0; i < steps; i++) {
     // Each step overlaps the next by a hundredth, so no seam shows; the last ends at the edge.
@@ -40,60 +42,65 @@ export function frame(sheet: Sheet, deck: Presentation, index: number) {
       mixColor(c.purple, c.teal, i / (steps - 1)),
     );
   }
+}
+
+export function slideCorner(sheet: Sheet, deck: Presentation, index: number): number {
   const slide = deck.slides[index];
-  const mark = cornerMark(deck, index);
-  const closingCentred = slide.type === "closing" && centredMark(slide);
-  const markH = 42 / 144;
-  const lockupH = 65 / 144;
-  const right = W - 96 / 144;
-  const baseY = 1024 / 144;
-  const confidential = deck.confidential?.trim();
-  let end = right;
-  const { corner, start } = logoPlaces(resolveSlideLogo(deck, index));
-  // `h-9`, as the slide draws a deck's logos.
-  const logoH = 2.25 * REM;
   // A closing that stands the h&w lockup in its centre column hides the corner, counter included,
   // as ClosingSlide.css does.
-  if (!closingCentred) {
-    let x: number;
-    if (corner.src === HW_LOGO.src) {
-      const [path, ratio] = brandCut(`${mark}${sheet.dark ? "-night" : ""}`);
-      const h = mark === "lockup" ? lockupH : markH;
-      x = right - h * ratio;
-      s.addImage({ path, x, y: baseY - h / 2, w: h * ratio, h, altText: HW_LOGO.alt });
-    } else {
-      const at = { alt: corner.alt, align: "right" as const };
-      x = sheet.picture(
-        corner.src,
-        { x: right - 2.4, y: baseY - logoH / 2, w: 2.4, h: logoH },
-        at,
-      ).x;
-    }
-    const page = pageLabel(deck.slides, index);
-    end = x;
-    if (page) {
-      end -= 1.8;
-      sheet.box(
-        { runs: [{ text: page }] },
-        { x: x - 1.8, y: baseY - 0.14, w: 1.6, h: 0.28 },
-        {
-          size: PT.label,
-          mono: true,
-          bold: true,
-          color: c.muted,
-          align: "right",
-          valign: "middle",
-        },
-      );
-    }
+  if (slide.type === "closing" && centredMark(slide)) return CORNER_RIGHT;
+  const { corner } = logoPlaces(resolveSlideLogo(deck, index));
+  const mark = cornerMark(deck, index);
+  const markH = 42 / 144;
+  const lockupH = 65 / 144;
+  let x: number;
+  if (corner.src === HW_LOGO.src) {
+    const [path, ratio] = brandCut(`${mark}${sheet.dark ? "-night" : ""}`);
+    const h = mark === "lockup" ? lockupH : markH;
+    x = CORNER_RIGHT - h * ratio;
+    sheet.slide.addImage({
+      path,
+      x,
+      y: FOOTER_BASE_Y - h / 2,
+      w: h * ratio,
+      h,
+      altText: HW_LOGO.alt,
+    });
+  } else {
+    const at = { alt: corner.alt, align: "right" as const };
+    x = sheet.picture(
+      corner.src,
+      { x: CORNER_RIGHT - 2.4, y: FOOTER_BASE_Y - LOGO_H / 2, w: 2.4, h: LOGO_H },
+      at,
+    ).x;
   }
+  const page = pageLabel(deck.slides, index);
+  if (!page) return x;
+  sheet.box(
+    { runs: [{ text: page }] },
+    { x: x - 1.8, y: FOOTER_BASE_Y - 0.14, w: 1.6, h: 0.28 },
+    {
+      size: PT.label,
+      mono: true,
+      bold: true,
+      color: sheet.c.muted,
+      align: "right",
+      valign: "middle",
+    },
+  );
+  return x - 1.8;
+}
+
+export function startLogos(sheet: Sheet, deck: Presentation, index: number): number {
+  const { start } = logoPlaces(resolveSlideLogo(deck, index));
+  const confidential = deck.confidential?.trim();
   // A deck with a footer line moves the start logos onto the corner's centre line.
-  let left = confidential ? W - right : 1.5 * REM;
-  const y = confidential ? baseY - logoH / 2 : H - 1.5 * REM - logoH;
+  let left = confidential ? W - CORNER_RIGHT : 1.5 * REM;
+  const y = confidential ? FOOTER_BASE_Y - LOGO_H / 2 : H - 1.5 * REM - LOGO_H;
   for (const l of start) {
     const drawn = sheet.picture(
       l.src,
-      { x: left, y, w: 2.4, h: logoH },
+      { x: left, y, w: 2.4, h: LOGO_H },
       {
         alt: l.alt,
         align: "left",
@@ -101,67 +108,82 @@ export function frame(sheet: Sheet, deck: Presentation, index: number) {
     );
     left += drawn.w + 1.25 * REM;
   }
+  return left;
+}
+
+/** The brand strip and footer, where the web stands them. */
+export function frame(sheet: Sheet, deck: Presentation, index: number) {
+  sheet.slide.background = { color: sheet.c.bg };
+  brandStrip(sheet);
+  const end = slideCorner(sheet, deck, index);
+  const left = startLogos(sheet, deck, index);
+  const confidential = deck.confidential?.trim();
   if (confidential && end > left + 1.25 * REM) {
     sheet.box(
       { runs: [{ text: confidential }] },
-      { x: left, y: baseY - 0.14, w: end - left - 1.25 * REM, h: 0.28 },
+      { x: left, y: FOOTER_BASE_Y - 0.14, w: end - left - 1.25 * REM, h: 0.28 },
       {
         size: PT.label,
-        color: c.muted,
+        color: sheet.c.muted,
         valign: "middle",
       },
     );
   }
-  if (slide.notes) s.addNotes(slide.notes);
+  const slide = deck.slides[index];
+  if (slide.notes) sheet.slide.addNotes(slide.notes);
+}
+
+export function kickerBand(sheet: Sheet, h: Head): number {
+  const { c } = sheet;
+  const y = 58 / 144;
+  // The kicker band's second row, where the principle pill wraps as on the web.
+  let wrapped = 0;
+  const kicker = h.sectionLabel ?? h.preText;
+  if (!kicker && !h.principle) return 0;
+  let x = EDGE;
+  // Teal in every section, the website's mono caps.
+  if (kicker) {
+    // The web's label line, 1.4 of its size, as wide as its capitals.
+    const kw =
+      textWidth(kicker.toUpperCase(), { size: PT.base, mono: true, tracking: 0.06 }) + 0.02;
+    sheet.box(
+      { runs: [caps(kicker)] },
+      { x, y: 0.38, w: Math.min(kw, CW), h: 0.35 },
+      {
+        size: PT.base,
+        mono: true,
+        color: c.teal,
+        tracking: 0.06,
+        valign: "middle",
+        line: 1.4,
+      },
+    );
+    x += kw + 0.18;
+  }
+  if (h.principle) {
+    // On the print route a wrapped pill stands 65 px below the label's row, the title 76 px.
+    const principle: Chip = {
+      text: h.principle,
+      size: PT.sm,
+      fill: c.tint,
+      color: c.ink,
+      mono: false,
+    };
+    const width = chipWidth(principle);
+    const row = x + width > W - EDGE ? 65 / 144 : 0;
+    if (row) {
+      wrapped = 76 / 144;
+      x = EDGE;
+    }
+    drawChip(sheet, principle, chipArea(principle, { x, y: y + row + 0.02 }, width));
+  }
+  return wrapped;
 }
 
 /** Kicker, principle pill, title and subtitle; returns where the body starts. */
 export function header(sheet: Sheet, h: Head, centered = false): number {
   const { c } = sheet;
-  let y = 58 / 144;
-  // The kicker band's second row, where the principle pill wraps as on the web.
-  let wrapped = 0;
-  const kicker = h.sectionLabel ?? h.preText;
-  if (kicker || h.principle) {
-    let x = EDGE;
-    // Teal in every section, the website's mono caps.
-    if (kicker) {
-      // The web's label line, 1.4 of its size, as wide as its capitals.
-      const kw =
-        textWidth(kicker.toUpperCase(), { size: PT.base, mono: true, tracking: 0.06 }) + 0.02;
-      sheet.box(
-        { runs: [caps(kicker)] },
-        { x, y: 0.38, w: Math.min(kw, CW), h: 0.35 },
-        {
-          size: PT.base,
-          mono: true,
-          color: c.teal,
-          tracking: 0.06,
-          valign: "middle",
-          line: 1.4,
-        },
-      );
-      x += kw + 0.18;
-    }
-    if (h.principle) {
-      // On the print route a wrapped pill stands 65 px below the label's row, the title 76 px.
-      const principle: Chip = {
-        text: h.principle,
-        size: PT.sm,
-        fill: c.tint,
-        color: c.ink,
-        mono: false,
-      };
-      const width = chipWidth(principle);
-      const row = x + width > W - EDGE ? 65 / 144 : 0;
-      if (row) {
-        wrapped = 76 / 144;
-        x = EDGE;
-      }
-      drawChip(sheet, principle, chipArea(principle, { x, y: y + row + 0.02 }, width));
-    }
-  }
-  y = TOP + wrapped;
+  let y = TOP + kickerBand(sheet, h);
   if (h.headline) {
     const o: BoxOpts = {
       size: PT.title,
