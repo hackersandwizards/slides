@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { useCarousel } from "../lib/use-carousel";
 import { usePendingReveal } from "../lib/use-progressive-reveal";
 import { PrintProvider } from "../lib/print-context";
+import { deckSync } from "../lib/presenter-sync";
 import { phoneWidth } from "./phone-width";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import type { Slide } from "../types/slide";
@@ -65,6 +66,21 @@ describe("useCarousel", () => {
     expect(sessionStorage.getItem("slide-direction")).toBeNull();
     expect(pressKey("ArrowLeft")).toBe(true);
     expect(result.current[0]).toBe(1);
+  });
+
+  it("subscribes to phone changes before clearing a backward arrival", () => {
+    const directionAtSubscription: (string | null)[] = [];
+    const subscribe = deckSync.subscribe;
+    vi.spyOn(deckSync, "subscribe").mockImplementation((listener) => {
+      directionAtSubscription.push(sessionStorage.getItem("slide-direction"));
+      return subscribe(listener);
+    });
+
+    sessionStorage.setItem("slide-direction", "back");
+    renderHook(() => useCarousel({ count: 3 }));
+
+    expect(directionAtSubscription).toEqual(["back"]);
+    expect(sessionStorage.getItem("slide-direction")).toBeNull();
   });
 
   it("opens at the last step on a URL carrying ?revealed", () => {

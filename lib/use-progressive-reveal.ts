@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useSyncExternalStore } from "react";
-import { NARROW, opensRevealed, directionKey, ignoredKey, writeStored } from "./slide-utils";
+import { useState, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { NARROW, directionKey, ignoredKey, writeStored } from "./slide-utils";
 import { usePrintMode } from "./print-context";
-import { useMounted } from "./use-mounted";
+import { useHydratedRevealArrival } from "./use-hydrated-reveal-arrival";
 import { deckSync } from "./presenter-sync";
 import { useReportPendingReveal } from "./reveal-state";
 
@@ -66,6 +66,101 @@ interface UseProgressiveRevealResult {
   stepped: boolean;
 }
 
+type RevealSequence = Required<Pick<UseProgressiveRevealOptions, "totalSteps" | "hasFooter">>;
+type RevealMove = "step" | "footer" | null;
+
+interface RevealAction {
+  direction: keyof Stepper;
+  target: NonNullable<RevealMove>;
+}
+
+function applyRevealMove(
+  progress: UseProgressiveRevealResult,
+  { direction, target }: RevealAction,
+  totalSteps: number,
+): UseProgressiveRevealResult {
+  const forward = direction === "forward";
+  if (target === "footer") return { ...progress, footerVisible: forward };
+  return {
+    ...progress,
+    revealedCount: forward
+      ? Math.min(totalSteps, progress.revealedCount + 1)
+      : Math.max(0, progress.revealedCount - 1),
+    stepped: true,
+  };
+}
+
+function useRevealProgress(
+  { totalSteps, hasFooter }: RevealSequence,
+  full: boolean,
+  showArrival: boolean,
+) {
+  const arrivalCount = showArrival ? totalSteps : null;
+  const arrivalFooter = showArrival && hasFooter;
+  const [previousArrival, setPreviousArrival] = useState({ arrivalCount, arrivalFooter });
+  const [progress, setProgress] = useState({
+    revealedCount: full || showArrival ? totalSteps : 0,
+    footerVisible: full || arrivalFooter,
+    stepped: false,
+  });
+
+  if (
+    arrivalCount !== previousArrival.arrivalCount ||
+    arrivalFooter !== previousArrival.arrivalFooter
+  ) {
+    setPreviousArrival({ arrivalCount, arrivalFooter });
+    if (arrivalCount !== null) {
+      setProgress({ ...progress, revealedCount: arrivalCount, footerVisible: arrivalFooter });
+    }
+  }
+
+  const committed = useRef(progress);
+  useEffect(() => {
+    committed.current = progress;
+  });
+
+  const stepper = useMemo<Stepper>(() => {
+    const move = (direction: keyof Stepper) => {
+      const target = revealMoves({ totalSteps, hasFooter }, committed.current)[direction];
+      if (target === null) return false;
+      setProgress((previous) => applyRevealMove(previous, { direction, target }, totalSteps));
+      return true;
+    };
+    return { forward: () => move("forward"), back: () => move("back") };
+  }, [totalSteps, hasFooter]);
+
+  return { progress, stepper, moves: revealMoves({ totalSteps, hasFooter }, progress) };
+}
+
+// ArrowRight reveals the next step, then the footer; ArrowLeft takes them back in reverse, and
+// only a slide with nothing left to take back lets either key change slides. A slide that starts
+// full is static: it takes neither key, and its footer stays up.
+function revealMoves(
+  { totalSteps, hasFooter }: RevealSequence,
+  { revealedCount, footerVisible }: UseProgressiveRevealResult,
+): Record<keyof Stepper, RevealMove> {
+  const forward = revealedCount < totalSteps ? "step" : null;
+  const back = revealedCount > 0 ? "step" : null;
+  if (!hasFooter) return { forward, back };
+  if (footerVisible) return { forward, back: "footer" };
+  return { forward: forward ?? "footer", back };
+}
+
+function trackRevealStepper(stepper: Stepper) {
+  steppers.push(stepper);
+  if (steppers.length === 1) window.addEventListener("keydown", stepReveal, true);
+  return () => {
+    steppers.splice(steppers.indexOf(stepper), 1);
+    if (!steppers.length) window.removeEventListener("keydown", stepReveal, true);
+  };
+}
+
+function useRevealKeys(stepper: Stepper, listening: boolean) {
+  useEffect(() => {
+    if (listening) return trackRevealStepper(stepper);
+  }, [stepper, listening]);
+}
+
 export function useProgressiveReveal({
   totalSteps,
   startFull = false,
@@ -73,79 +168,25 @@ export function useProgressiveReveal({
 }: UseProgressiveRevealOptions): UseProgressiveRevealResult {
   const printMode = usePrintMode();
   const full = printMode || startFull;
-  // Read during render, applied after mount: the server cannot see sessionStorage and renders the
-  // slide unrevealed, and React keeps a hydrated tree's mismatched attributes as the server sent
-  // them, so revealing in the first client render left a backward arrival blank.
-  const [arrivedRevealed] = useState(() => !full && totalSteps > 0 && opensRevealed());
-  const showArrival = useMounted() && arrivedRevealed;
-  const arrivalCount = showArrival ? totalSteps : null;
-  const arrivalFooter = showArrival && hasFooter;
-  const [previousArrival, setPreviousArrival] = useState({ arrivalCount, arrivalFooter });
-  const [revealedCount, setRevealedCount] = useState(full || showArrival ? totalSteps : 0);
-  const [footerVisible, setFooterVisible] = useState(full || arrivalFooter);
-  const [stepped, setStepped] = useState(false);
-  if (
-    arrivalCount !== previousArrival.arrivalCount ||
-    arrivalFooter !== previousArrival.arrivalFooter
-  ) {
-    setPreviousArrival({ arrivalCount, arrivalFooter });
-    if (arrivalCount !== null) {
-      setRevealedCount(arrivalCount);
-      setFooterVisible(arrivalFooter);
-    }
-  }
+  const canStep = !full && totalSteps > 0;
+  const { showArrival } = useHydratedRevealArrival(canStep);
   // Followed, so a rotation into a phone reveals too, and a speaker window opening steps again
   // from the state the slide was in.
-  const phone = usePhone() && !full && totalSteps > 0;
+  const phone = usePhone() && canStep;
   // Consumed after mount, once every hook on the slide has read it in render, so a reload after a
   // backward arrival opens unrevealed. Here as well as in SlideNavigation: a story renders a slide without it.
   useEffect(() => writeStored("session", directionKey(), null), []);
 
-  const stateRef = useRef({ revealedCount, footerVisible });
-  useEffect(() => {
-    stateRef.current = { revealedCount, footerVisible };
-  });
-
-  // ArrowRight reveals the next step, then the footer; ArrowLeft takes them back in reverse, and
-  // only a slide with nothing left to take back lets either key change slides. A slide that starts
-  // full is static: it takes neither key, and its footer stays up.
-  const listening = !full && !phone && totalSteps > 0;
-  useEffect(() => {
-    if (!listening) return;
-    const stepper: Stepper = {
-      forward() {
-        const { revealedCount: count, footerVisible: footer } = stateRef.current;
-        if (count < totalSteps) {
-          setRevealedCount((prev) => Math.min(totalSteps, prev + 1));
-          setStepped(true);
-        } else if (hasFooter && !footer) setFooterVisible(true);
-        else return false;
-        return true;
-      },
-      back() {
-        const { revealedCount: count, footerVisible: footer } = stateRef.current;
-        if (hasFooter && footer) setFooterVisible(false);
-        else if (count > 0) {
-          setRevealedCount((prev) => Math.max(0, prev - 1));
-          setStepped(true);
-        } else return false;
-        return true;
-      },
-    };
-    steppers.push(stepper);
-    if (steppers.length === 1) window.addEventListener("keydown", stepReveal, true);
-    return () => {
-      steppers.splice(steppers.indexOf(stepper), 1);
-      if (!steppers.length) window.removeEventListener("keydown", stepReveal, true);
-    };
-  }, [listening, totalSteps, hasFooter]);
-
-  useReportPendingReveal(
-    listening && (revealedCount < totalSteps || (hasFooter && !footerVisible)),
-    listening && (revealedCount > 0 || (hasFooter && footerVisible)),
+  const { progress, stepper, moves } = useRevealProgress(
+    { totalSteps, hasFooter },
+    full,
+    showArrival,
   );
+  const listening = canStep && !phone;
+  useRevealKeys(stepper, listening);
+  useReportPendingReveal(listening && moves.forward !== null, listening && moves.back !== null);
 
   return phone
     ? { revealedCount: totalSteps, footerVisible: hasFooter, stepped: false }
-    : { revealedCount, footerVisible, stepped };
+    : { ...progress };
 }

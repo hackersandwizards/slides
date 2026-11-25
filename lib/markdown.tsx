@@ -44,86 +44,109 @@ export function keepCompounds(text: React.ReactNode): React.ReactNode {
 // break for a box narrower than the chip.
 const keepsWhole = (code: string) => code.length <= 24 || (/[ /.]/.test(code) && code.length <= 40);
 
+// The punctuation after a whole chip, which goes with it: a browser breaks a line after an
+// inline block even before a comma.
+function chipPunctuation(part: string | undefined, following: string | undefined) {
+  if (!part?.startsWith("`")) return "";
+  if (!keepsWhole(part.slice(1, -1))) return "";
+  return /^[,.;:!?)\]]+/.exec(following ?? "")?.[0] ?? "";
+}
+
+function renderInlineLink(part: string, index: number) {
+  const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);
+  if (!link) return part;
+  const [, label, href] = link;
+  // Only web, mail and relative targets become links; any other scheme stays plain text.
+  if (!/^(https?:|mailto:|[/#.]|[^:]*$)/i.test(href)) return label;
+  return (
+    <a key={index} href={href} target="_blank" rel="noreferrer" className="hw-link">
+      {label}
+    </a>
+  );
+}
+
+function renderBoldRun(part: string, index: number) {
+  return (
+    <strong key={index} className="font-bold text-text">
+      {keepCompounds(part.slice(2, -2))}
+    </strong>
+  );
+}
+
+function renderAccentRun(part: string, index: number) {
+  return (
+    <span key={index} className="font-semibold text-slide-accent">
+      {keepCompounds(part.slice(1, -1))}
+    </span>
+  );
+}
+
+// A path or file name breaks only after a slash or before a dot, so a table of paths never
+// splits `my-skill` at its hyphen or `settings.json` mid-word.
+function renderCodePath(text: string) {
+  return text
+    .replace(/\/|(?=\.)/g, "$&\0")
+    .split("\0")
+    .filter(Boolean)
+    .map((piece, index) => (
+      <React.Fragment key={index}>
+        {index > 0 && <wbr />}
+        <span className="inline-block max-w-full [overflow-wrap:anywhere]">{piece}</span>
+      </React.Fragment>
+    ));
+}
+
+function renderCodeChip(part: string, index: number, after: string) {
+  const text = part.slice(1, -1);
+  const path = /[/.]/.test(text) && !text.includes(" ");
+  const whole = keepsWhole(text);
+  // In teal's text colour: base teal on the chip's tint over a striped table row falls under
+  // 4.5:1. A whole chip moves to the next line whole and is at least its own width, one `ch`
+  // per character of the mono face and one for the padding, up to --slide-chip-hold: a table
+  // column or a phone's flow step grows to hold it, a fixed box narrower than that lets it
+  // stand past its edge (a percentage in the hold undoes both), and a chip wider than the hold
+  // wraps inside its box. A long chip runs with the line and may break anywhere.
+  const chip = `hw-inline-code text-teal-dark ${
+    whole ? "inline-block max-w-full whitespace-normal" : path ? "" : "[overflow-wrap:anywhere]"
+  }`;
+  const hold = whole
+    ? { minWidth: `min(${text.length + 1}ch, var(--slide-chip-hold))` }
+    : undefined;
+  const code = (
+    <code className={chip} style={hold}>
+      {path ? renderCodePath(text) : text}
+    </code>
+  );
+  return after ? (
+    <span key={index} className="whitespace-nowrap">
+      {code}
+      {after}
+    </span>
+  ) : (
+    <React.Fragment key={index}>{code}</React.Fragment>
+  );
+}
+
+const inlineRenderers = new Map<
+  string,
+  (part: string, index: number, after: string) => React.ReactNode
+>([
+  ["[", renderInlineLink],
+  ["**", renderBoldRun],
+  ["*", renderAccentRun],
+  ["`", renderCodeChip],
+]);
+
 export function renderMarkdown(text: string): React.ReactNode {
   const parts = text.split(INLINE_MARKDOWN);
-  // The punctuation after a whole chip, which goes with it: a browser breaks a line after an
-  // inline block even before a comma.
-  const trailing = (i: number) =>
-    i % 2 === 1 && parts[i].startsWith("`") && keepsWhole(parts[i].slice(1, -1))
-      ? (/^[,.;:!?)\]]+/.exec(parts[i + 1] ?? "")?.[0] ?? "")
-      : "";
-  return parts.map((part, i) => {
-    if (i % 2 === 0)
+  return parts.map((part, index) => {
+    if (index % 2 === 0) {
+      const consumed = chipPunctuation(parts[index - 1], part);
       return (
-        <React.Fragment key={i}>{keepCompounds(part.slice(trailing(i - 1).length))}</React.Fragment>
-      );
-    const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);
-    // Only web, mail and relative targets become links; any other scheme stays plain text.
-    if (link && !/^(https?:|mailto:|[/#.]|[^:]*$)/i.test(link[2])) return link[1];
-    if (link) {
-      return (
-        <a key={i} href={link[2]} target="_blank" rel="noreferrer" className="hw-link">
-          {link[1]}
-        </a>
+        <React.Fragment key={index}>{keepCompounds(part.slice(consumed.length))}</React.Fragment>
       );
     }
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={i} className="font-bold text-text">
-          {keepCompounds(part.slice(2, -2))}
-        </strong>
-      );
-    }
-    if (part.startsWith("*") && !part.startsWith("**")) {
-      return (
-        <span key={i} className="font-semibold text-slide-accent">
-          {keepCompounds(part.slice(1, -1))}
-        </span>
-      );
-    }
-    const text = part.slice(1, -1);
-    const path = /[/.]/.test(text) && !text.includes(" ");
-    const whole = keepsWhole(text);
-    // In teal's text colour: base teal on the chip's tint over a striped table row falls under
-    // 4.5:1. A whole chip moves to the next line whole and is at least its own width, one `ch`
-    // per character of the mono face and one for the padding, up to --slide-chip-hold: a table
-    // column or a phone's flow step grows to hold it, a fixed box narrower than that lets it
-    // stand past its edge (a percentage in the hold undoes both), and a chip wider than the hold
-    // wraps inside its box. A long chip runs with the line and may break anywhere.
-    const chip = `hw-inline-code text-teal-dark ${
-      whole ? "inline-block max-w-full whitespace-normal" : path ? "" : "[overflow-wrap:anywhere]"
-    }`;
-    const hold = whole
-      ? { minWidth: `min(${text.length + 1}ch, var(--slide-chip-hold))` }
-      : undefined;
-    // A path or file name breaks only after a slash or before a dot, so a table of paths never
-    // splits `my-skill` at its hyphen or `settings.json` mid-word.
-    const code = path ? (
-      <code className={chip} style={hold}>
-        {text
-          .replace(/\/|(?=\.)/g, "$&\0")
-          .split("\0")
-          .filter(Boolean)
-          .map((piece, j) => (
-            <React.Fragment key={j}>
-              {j > 0 && <wbr />}
-              <span className="inline-block max-w-full [overflow-wrap:anywhere]">{piece}</span>
-            </React.Fragment>
-          ))}
-      </code>
-    ) : (
-      <code className={chip} style={hold}>
-        {text}
-      </code>
-    );
-    const after = trailing(i);
-    return after ? (
-      <span key={i} className="whitespace-nowrap">
-        {code}
-        {after}
-      </span>
-    ) : (
-      <React.Fragment key={i}>{code}</React.Fragment>
-    );
+    const marker = part.startsWith("**") ? "**" : part[0];
+    return inlineRenderers.get(marker)?.(part, index, chipPunctuation(part, parts[index + 1]));
   });
 }

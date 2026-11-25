@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
 import { useSlideKeyboard } from "../lib/use-slide-keyboard";
 import { usePendingReveal } from "../lib/use-progressive-reveal";
 
@@ -13,50 +13,32 @@ function press(key: string): boolean {
   return event.defaultPrevented;
 }
 
+function observeSlideKeyDelivery() {
+  const navigationKeys: string[] = [];
+  const errors: string[] = [];
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  document.addEventListener("keydown", (event) => navigationKeys.push(event.key), {
+    signal: controller.signal,
+  });
+  window.addEventListener(
+    "error",
+    (event) => {
+      errors.push(event.message);
+      event.preventDefault();
+    },
+    { signal: controller.signal },
+  );
+  return { navigationKeys, errors };
+}
+
+function dispatchSlideKeyboardEvent(event: KeyboardEvent) {
+  act(() => {
+    document.body.dispatchEvent(event);
+  });
+}
+
 describe("useSlideKeyboard", () => {
-  it("calls onRight and prevents default when the handler returns void", () => {
-    const onRight = vi.fn();
-    renderHook(() => useSlideKeyboard({ onRight }));
-    expect(press("ArrowRight")).toBe(true);
-    expect(onRight).toHaveBeenCalledOnce();
-  });
-
-  // The load-bearing contract: a handler returning false means "I did not
-  // consume this" — the event must pass through so the page can navigate.
-  it("does not prevent default when onRight returns false", () => {
-    const onRight = vi.fn(() => false);
-    renderHook(() => useSlideKeyboard({ onRight }));
-    expect(press("ArrowRight")).toBe(false);
-    expect(onRight).toHaveBeenCalledOnce();
-  });
-
-  it("calls onLeft and prevents default, but passes through when it returns false", () => {
-    const handled = vi.fn();
-    const { rerender } = renderHook(
-      (opts: Parameters<typeof useSlideKeyboard>[0]) => useSlideKeyboard(opts),
-      { initialProps: { onLeft: handled } },
-    );
-    expect(press("ArrowLeft")).toBe(true);
-
-    const passthrough = vi.fn(() => false);
-    rerender({ onLeft: passthrough });
-    expect(press("ArrowLeft")).toBe(false);
-  });
-
-  it("calls onSpace and prevents default", () => {
-    const onSpace = vi.fn();
-    renderHook(() => useSlideKeyboard({ onSpace }));
-    expect(press(" ")).toBe(true);
-    expect(onSpace).toHaveBeenCalledOnce();
-  });
-
-  it("calls onBackspace and prevents default", () => {
-    const onBackspace = vi.fn();
-    renderHook(() => useSlideKeyboard({ onBackspace }));
-    expect(press("Backspace")).toBe(true);
-    expect(onBackspace).toHaveBeenCalledOnce();
-  });
-
   it("routes other keys to onKey without preventing default", () => {
     const onKey = vi.fn();
     renderHook(() => useSlideKeyboard({ onKey }));
@@ -98,67 +80,141 @@ describe("useSlideKeyboard", () => {
   it("updates the next and previous hints as a keyboard stepper is disabled or re-enabled", () => {
     const { result, rerender } = renderHook(
       (options) => {
-        useSlideKeyboard({ ...options, onRight: () => true });
+        useSlideKeyboard(options);
         return [usePendingReveal(), usePendingReveal("behind")];
       },
       { initialProps: { enabled: true, pending: true, undoable: false } },
     );
 
     expect(result.current).toEqual([true, false]);
-    expect(press("ArrowRight")).toBe(true);
     rerender({ enabled: false, pending: true, undoable: true });
     expect(result.current).toEqual([false, false]);
-    expect(press("ArrowRight")).toBe(false);
     rerender({ enabled: true, pending: false, undoable: true });
     expect(result.current).toEqual([false, true]);
-    expect(press("ArrowRight")).toBe(true);
   });
 
-  it("keeps handled keys away from the deck while leaving a browser shortcut and other keys alone", () => {
-    const stepped: string[] = [];
-    const navigationKeys: string[] = [];
-    const errors: string[] = [];
-    const controller = new AbortController();
-    document.addEventListener("keydown", (event) => navigationKeys.push(event.key), {
-      signal: controller.signal,
+  it("detaches and reattaches the arrow listener when enabled changes", () => {
+    const add = vi.spyOn(window, "addEventListener");
+    const remove = vi.spyOn(window, "removeEventListener");
+    onTestFinished(() => {
+      add.mockRestore();
+      remove.mockRestore();
     });
-    window.addEventListener(
-      "error",
-      (event) => {
-        errors.push(event.message);
-        event.preventDefault();
-      },
-      { signal: controller.signal },
-    );
+
+    const onRight = () => true;
+    const { rerender } = renderHook(({ enabled }) => useSlideKeyboard({ enabled, onRight }), {
+      initialProps: { enabled: true },
+    });
+
+    expect(press("ArrowRight")).toBe(true);
+    rerender({ enabled: false });
+    expect(press("ArrowRight")).toBe(false);
+    expect(remove).toHaveBeenCalledWith("keydown", expect.any(Function), true);
+    add.mockClear();
+    rerender({ enabled: true });
+    expect(press("ArrowRight")).toBe(true);
+    expect(add).toHaveBeenCalledWith("keydown", expect.any(Function), true);
+  });
+
+  // The load-bearing contract: a handler returning false means "I did not
+  // consume this" — the event must pass through so the page can navigate.
+  it.each([
+    {
+      key: "ArrowRight",
+      handler: "onRight",
+      response: undefined,
+      consumed: true,
+      before: false,
+      delivered: [],
+    },
+    {
+      key: "ArrowRight",
+      handler: "onRight",
+      response: false,
+      consumed: false,
+      before: false,
+      delivered: ["ArrowRight"],
+    },
+    {
+      key: "ArrowLeft",
+      handler: "onLeft",
+      response: undefined,
+      consumed: true,
+      before: false,
+      delivered: [],
+    },
+    {
+      key: "ArrowLeft",
+      handler: "onLeft",
+      response: false,
+      consumed: false,
+      before: false,
+      delivered: ["ArrowLeft"],
+    },
+    {
+      key: " ",
+      handler: "onSpace",
+      response: undefined,
+      consumed: true,
+      before: true,
+      delivered: [],
+    },
+    {
+      key: "Backspace",
+      handler: "onBackspace",
+      response: undefined,
+      consumed: true,
+      before: true,
+      delivered: [],
+    },
+  ])("dispatches '$key' when its handler returns $response", (row) => {
+    const event = new KeyboardEvent("keydown", { key: row.key, bubbles: true, cancelable: true });
+    const { navigationKeys, errors } = observeSlideKeyDelivery();
+    const calls: { handler: string; defaultPrevented: boolean }[] = [];
+    const record = (handler: string) => () => {
+      calls.push({ handler, defaultPrevented: event.defaultPrevented });
+      return row.response;
+    };
+    const onKey = vi.fn();
     renderHook(() =>
       useSlideKeyboard({
-        onRight: () => void stepped.push("right"),
-        onLeft: () => void stepped.push("left"),
-        onSpace: () => void stepped.push("space"),
-        onBackspace: () => void stepped.push("backspace"),
+        onRight: record("onRight"),
+        onLeft: record("onLeft"),
+        onSpace: record("onSpace"),
+        onBackspace: record("onBackspace"),
+        onKey,
       }),
     );
-    const fromSlide = (key: string, metaKey = false) => {
-      const event = new KeyboardEvent("keydown", { key, metaKey, bubbles: true, cancelable: true });
-      act(() => {
-        document.body.dispatchEvent(event);
-      });
-      return event.defaultPrevented;
-    };
+    dispatchSlideKeyboardEvent(event);
 
-    try {
-      expect(fromSlide("ArrowRight", true)).toBe(false);
-      expect(fromSlide("Escape")).toBe(false);
-      expect(errors).toEqual([]);
-      expect(fromSlide("ArrowRight")).toBe(true);
-      expect(fromSlide("ArrowLeft")).toBe(true);
-      expect(fromSlide(" ")).toBe(true);
-      expect(fromSlide("Backspace")).toBe(true);
-      expect(stepped).toEqual(["right", "left", "space", "backspace"]);
-      expect(navigationKeys).toEqual(["ArrowRight", "Escape"]);
-    } finally {
-      controller.abort();
-    }
+    expect(event.defaultPrevented).toBe(row.consumed);
+    expect(calls).toEqual([{ handler: row.handler, defaultPrevented: row.before }]);
+    expect(navigationKeys).toEqual(row.delivered);
+    expect(errors).toEqual([]);
+    expect(onKey).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { key: "ArrowRight", metaKey: true },
+    { key: "Escape", metaKey: false },
+  ])("leaves '$key' (metaKey=$metaKey) to the deck", ({ key, metaKey }) => {
+    const event = new KeyboardEvent("keydown", { key, metaKey, bubbles: true, cancelable: true });
+    const { navigationKeys, errors } = observeSlideKeyDelivery();
+    const onAction = vi.fn();
+    renderHook(() =>
+      useSlideKeyboard({
+        onRight: onAction,
+        onLeft: onAction,
+        onSpace: onAction,
+        onBackspace: onAction,
+      }),
+    );
+    dispatchSlideKeyboardEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(onAction).not.toHaveBeenCalled();
+    expect(navigationKeys).toEqual([key]);
+    expect(errors).toEqual([]);
   });
 
   it("passes keys with no dedicated handler to the fallback without consuming them", () => {

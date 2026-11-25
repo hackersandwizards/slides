@@ -3,9 +3,9 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useSlideKeyboard } from "./use-slide-keyboard";
 import { usePrintMode } from "./print-context";
-import { useMounted } from "./use-mounted";
+import { useHydratedRevealArrival } from "./use-hydrated-reveal-arrival";
 import { usePhone } from "./use-progressive-reveal";
-import { opensRevealed, directionKey, writeStored } from "./slide-utils";
+import { directionKey, writeStored } from "./slide-utils";
 
 interface UseCarouselOptions {
   /** Number of steps; the index clamps to [min, count - 1]. */
@@ -16,6 +16,19 @@ interface UseCarouselOptions {
   initial?: number;
   /** When false, arrow keys are ignored. Default true; print and a phone take none either. */
   enabled?: boolean;
+}
+
+function useCarouselIndex(lastIndex: number, firstIndex: number, showArrival: boolean) {
+  // A slide opening revealed opens at the last step, as a reveal slide does, after
+  // hydration so the server markup still matches.
+  const revealedIndex = showArrival ? lastIndex : null;
+  const [previousRevealedIndex, setPreviousRevealedIndex] = useState(revealedIndex);
+  const [index, setIndex] = useState(revealedIndex ?? firstIndex);
+  if (revealedIndex !== previousRevealedIndex) {
+    setPreviousRevealedIndex(revealedIndex);
+    if (revealedIndex !== null) setIndex(revealedIndex);
+  }
+  return [index, setIndex] as const;
 }
 
 /**
@@ -33,21 +46,14 @@ export function useCarousel({
   enabled = true,
 }: UseCarouselOptions): [number, Dispatch<SetStateAction<number>>, boolean] {
   const max = count - 1;
-  // A slide opening revealed opens at the last step, as a reveal slide does, after
-  // hydration so the server markup still matches.
   const printMode = usePrintMode();
-  const [revealed] = useState(() => enabled && !printMode && opensRevealed());
-  const revealedIndex = useMounted() && revealed ? max : null;
-  const [previousRevealedIndex, setPreviousRevealedIndex] = useState(revealedIndex);
-  const [index, setIndex] = useState(revealedIndex ?? initial ?? min);
-  if (revealedIndex !== previousRevealedIndex) {
-    setPreviousRevealedIndex(revealedIndex);
-    if (revealedIndex !== null) setIndex(revealedIndex);
-  }
+  const interactive = enabled && !printMode;
+  const { arrivedRevealed, showArrival } = useHydratedRevealArrival(interactive);
+  const [index, setIndex] = useCarouselIndex(max, initial ?? min, showArrival);
   // A phone shows the last step and lets Next change slides, as a reveal slide shows every step.
-  const phone = usePhone() && enabled && !printMode;
-  const keys = enabled && !printMode && !phone;
-  useEffect(() => writeStored("session", directionKey(), null), [revealed, max]);
+  const phone = usePhone() && interactive;
+  const keys = interactive && !phone;
+  useEffect(() => writeStored("session", directionKey(), null), [arrivedRevealed, max]);
 
   useSlideKeyboard({
     onRight: () => {
