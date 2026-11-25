@@ -35,12 +35,8 @@ const NAMED_COLOUR = /:[^;{}]*(?<![\w-])(white|black|red|green|blue|gr[ae]y|teal
 const code = (text: string) =>
   text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
 
-/** Every raw value in a component or lib source: a Tailwind bracket holding a length, a colour
- *  or a bare line height, and a string or numeric style value holding a length or a colour. A
- *  media query's breakpoint is Tailwind's `md`, which no custom property can name. */
-export function rawSourceValues(text: string): string[] {
+function tailwindBracketValues(source: string): string[] {
   const found: string[] = [];
-  const source = code(text);
   for (const [, utility, value] of source.matchAll(/([\w:-]*?)-\[([^\]\s"'`]+)\]/g))
     if (
       BRACKET_LENGTH.test(value) ||
@@ -49,6 +45,11 @@ export function rawSourceValues(text: string): string[] {
       /(^|:)leading$/.test(utility)
     )
       found.push(`${utility}-[${value}]`);
+  return found;
+}
+
+function quotedSourceValues(source: string): string[] {
+  const found: string[] = [];
   const strings = source.replace(/[\w:-]*-\[[^\]\s"'`]+\]/g, "");
   for (const [literal] of strings.matchAll(/"[^"\n]*"|'[^'\n]*'|`[^`]*`/g))
     if (
@@ -56,11 +57,28 @@ export function rawSourceValues(text: string): string[] {
       !/\(\s*(min-|max-)?width\s*[<>:]/.test(literal)
     )
       found.push(`literal ${literal}`);
+  return found;
+}
+
+function inlineStyleNumbers(source: string): string[] {
+  const found: string[] = [];
   for (const [, style] of source.matchAll(/\bstyle=\{\{([\s\S]*?)\}\}/g))
     for (const [declaration] of style.matchAll(/\b[a-zA-Z]+: -?(?!0\b)\d+(\.\d+)?\b(?!\s*[*/+-])/g))
       if (!/^(zIndex|opacity|flex|order|gridColumn|gridRow|scale)\b/.test(declaration))
         found.push(`style ${declaration}`);
   return found;
+}
+
+/** Every raw value in a component or lib source: a Tailwind bracket holding a length, a colour
+ *  or a bare line height, and a string or numeric style value holding a length or a colour. A
+ *  media query's breakpoint is Tailwind's `md`, which no custom property can name. */
+export function rawSourceValues(text: string): string[] {
+  const source = code(text);
+  return [
+    ...tailwindBracketValues(source),
+    ...quotedSourceValues(source),
+    ...inlineStyleNumbers(source),
+  ];
 }
 
 /** Every raw value in a stylesheet: a length, a colour, a named colour or a bare line height. A
@@ -150,6 +168,28 @@ describe("tokens", () => {
     it(`${file} names tokens only`, () => {
       expect(rawSourceValues(readFileSync(join(ROOT, file), "utf8"))).toEqual([]);
     });
+
+  it("reports raw colours and percentage widths in responsive Tailwind brackets", () => {
+    expect(tailwindBracketValues('className="md:text-[#abc] lg:w-[50%]"')).toEqual([
+      "md:text-[#abc]",
+      "lg:w-[50%]",
+    ]);
+  });
+
+  it("exempts quoted width breakpoints but reports quoted lengths outside brackets", () => {
+    expect(
+      quotedSourceValues(`'md:w-[12px]' "(max-width: 32rem)" "(min-width: 48rem)" '24px'`),
+    ).toEqual(["literal '24px'"]);
+  });
+
+  it("reports literal inline measurements across styles and exempts unitless settings", () => {
+    expect(
+      inlineStyleNumbers(
+        "<i style={{ margin: -2.5, height: 18 * scale, opacity: 0.5, flex: 2 }} />" +
+          "<i style={{ padding: 12, order: 2, gridColumn: 2, gridRow: 3, scale: 2 }} />",
+      ),
+    ).toEqual(["style margin: -2.5", "style padding: 12"]);
+  });
 
   it("control: every kind of raw value is caught, a token, a breakpoint and a comment are not", () => {
     expect(

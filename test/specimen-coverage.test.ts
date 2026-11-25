@@ -1,6 +1,6 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { slideCatalog, slideCatalogBrandDark, specimenImages } from "../specimen/slide-catalog";
 import { aliasTypes, slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { replacedBy } from "../lib/slide-utils";
@@ -69,11 +69,12 @@ const CALLOUT: Record<NonNullable<Extract<ContentBlock, { type: "callout" }>["va
   warning: true,
   success: true,
 };
-const GALLERY: Record<NonNullable<Extract<ContentBlock, { type: "gallery" }>["layout"]>, true> = {
-  grid: true,
-  row: true,
+type GalleryLayout = Extract<ContentBlock, { type: "gallery" }>["layout"];
+const GALLERY: Record<NonNullable<GalleryLayout>, GalleryLayout[]> = {
+  grid: ["grid", undefined],
+  row: ["row"],
 };
-const VARIANTS: Partial<Record<Slide["type"], Record<string, true>>> = {
+const VARIANTS = {
   grid: { pillars: true, stats: true, quotes: true } satisfies Record<
     NonNullable<GridSlide["variant"]>,
     true
@@ -93,7 +94,7 @@ const VARIANTS: Partial<Record<Slide["type"], Record<string, true>>> = {
     NonNullable<ClosingSlide["variant"]>,
     true
   >,
-};
+} satisfies Partial<Record<Extract<Slide, { variant?: string }>["type"], Record<string, true>>>;
 const THEMES: Record<SectionTheme, true> = {
   primary: true,
   secondary: true,
@@ -107,7 +108,8 @@ const THEMES: Record<SectionTheme, true> = {
 const ALIASES = new Set(Object.keys(aliasTypes));
 
 const slides = slideCatalog.slides;
-const blocks = slides.flatMap((s) => (s.type === "content" ? s.content : []));
+const contentSlides = slides.filter((slide) => slide.type === "content");
+const blocks = contentSlides.flatMap((slide) => slide.content);
 const missing = (wanted: object, seen: Iterable<unknown>) => {
   const have = new Set(seen);
   return Object.keys(wanted).filter((key) => !have.has(key));
@@ -132,75 +134,84 @@ describe("slide catalogue coverage", () => {
     ).toEqual([]);
   });
 
-  it("shows every two-column, callout and gallery variant", () => {
-    const of = <T extends ContentBlock["type"]>(type: T) =>
-      blocks.filter((b): b is Extract<ContentBlock, { type: T }> => b.type === type);
-    expect(
-      missing(
-        TWO_COLUMN,
-        of("two-column").map((b) => b.variant),
-      ),
-    ).toEqual([]);
-    expect(
-      missing(
-        CALLOUT,
-        of("callout").map((b) => b.variant),
-      ),
-    ).toEqual([]);
-    expect(
-      missing(
-        GALLERY,
-        of("gallery").map((b) => b.layout ?? "grid"),
-      ),
-    ).toEqual([]);
-    expect(
-      missing(
-        CONTINUES,
-        of("timeline").map((b) => b.continues),
-      ),
-    ).toEqual([]);
+  it.each([
+    {
+      block: "two-column",
+      wanted: TWO_COLUMN,
+      seen: blocks.filter((block) => block.type === "two-column").map((block) => block.variant),
+    },
+    {
+      block: "callout",
+      wanted: CALLOUT,
+      seen: blocks.filter((block) => block.type === "callout").map((block) => block.variant),
+    },
+    {
+      block: "timeline",
+      wanted: CONTINUES,
+      seen: blocks.filter((block) => block.type === "timeline").map((block) => block.continues),
+    },
+  ])("shows every $block variant", ({ wanted, seen }) => {
+    expect(missing(wanted, seen)).toEqual([]);
   });
 
-  it("shows every variant of the slide types that have them", () => {
-    for (const [type, wanted] of Object.entries(VARIANTS)) {
-      const seen = slides
-        .filter((s) => s.type === type)
-        .map((s) => ("variant" in s ? s.variant : "layout" in s ? s.layout : undefined));
-      expect(missing(wanted, seen), type).toEqual([]);
-    }
+  it.each(Object.entries(GALLERY))("shows the %s gallery layout", (_layout, acceptedLayouts) => {
+    const galleries = blocks.filter((block) => block.type === "gallery");
+    expect(galleries.some(({ layout }) => acceptedLayouts.includes(layout))).toBe(true);
+  });
+
+  it.each(Object.entries(VARIANTS))("shows every %s slide variant", (type, wanted) => {
+    const variants = slides
+      .filter((slide): slide is Slide & { variant: string | undefined } => "variant" in slide)
+      .filter((slide) => slide.type === type)
+      .map((slide) => slide.variant);
+    expect(missing(wanted, variants)).toEqual([]);
   });
 
   // The specimen's plain centred slide draws as a statement, which leaves the layout unseen.
   it("shows a centered content slide drawn as content", () => {
-    expect(
-      slides.some((s) => s.type === "content" && s.layout === "centered" && !replacedBy(s)),
-    ).toBe(true);
+    const centered = contentSlides.filter((slide) => slide.layout === "centered");
+    expect(centered.map(replacedBy)).toContain(undefined);
   });
 
-  it("shows the fields a component reads beyond the variants", () => {
-    expect(slides.some((s) => s.type === "closing" && s.closingQuote)).toBe(true);
-    expect(
-      slides.some(
-        (s) => s.type === "roadmap" && s.columns.some((c) => c.items?.some((i) => i.tone)),
-      ),
-    ).toBe(true);
+  it("shows a closing quote", () => {
+    const closing = slides.filter((slide) => slide.type === "closing");
+    expect(closing.some((slide) => slide.closingQuote)).toBe(true);
+  });
+
+  it("shows a roadmap item with a tone", () => {
+    const columns = slides
+      .filter((slide) => slide.type === "roadmap")
+      .flatMap((slide) => slide.columns);
+    expect(columns.some((column) => column.items?.some((item) => item.tone))).toBe(true);
   });
 
   // Each where it changes the drawing: `secondary` is the default section's style, so it shows
   // nowhere, and slides-usage names a slide that sets it (or any colour that draws nothing there).
-  it("shows every section theme that draws, and none where it draws nothing", () => {
-    const seen = slides.map((s) => ("sectionTheme" in s ? s.sectionTheme : undefined));
+  it("uses the default section style for the secondary theme", () => {
     expect(getSectionStyle("secondary")).toBe(DEFAULT_SECTION_STYLE);
+  });
+
+  it("shows every non-default section theme", () => {
+    const seen = slides
+      .filter(
+        (slide): slide is Slide & { sectionTheme: SectionTheme | undefined } =>
+          "sectionTheme" in slide,
+      )
+      .map((slide) => slide.sectionTheme);
     expect(missing(THEMES, [...seen, "secondary"])).toEqual([]);
+  });
+
+  it("sets only fields that affect the drawing", () => {
     expect(slides.filter((s) => ignoredFields(s).length).map((s) => s.notes)).toEqual([]);
   });
 
-  it("names the variant each slide shows in its notes", () => {
-    expect(
-      slides.filter(
-        (s) => !new RegExp(`^${s.type}[:, ]`).test(s.notes ?? "") && s.type !== "content",
-      ),
-    ).toEqual([]);
+  it.each(
+    slides
+      .map(({ type, notes }, index) => ({ type, notes, position: index + 1 }))
+      .filter(({ type }) => type !== "content"),
+  )("starts slide $position notes with its type ($type)", ({ type, notes, position }) => {
+    assert(notes, `Add notes to slide ${position} (${type})`);
+    expect(notes).toMatch(new RegExp(`^${type}[:, ]`));
   });
 
   // A consumer serves only the images the deck imports: one named by a root path is a 404 there.
