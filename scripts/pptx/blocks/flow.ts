@@ -1,117 +1,187 @@
 import { BULLET_INDENT, textWidth } from "../fit";
-import { drawSteps, stepsLayout } from "../flow-steps";
-import { mixColor } from "../palette";
-import { drySheet, type Sheet } from "../sheet";
-import { CORNER, spacing } from "../stage";
+import { drawSteps, stepsLayout, type StepsLayout } from "../flow-steps";
+import type { Look } from "../look";
+import { mixColor, type Surface } from "../palette";
+import type { Sheet } from "../sheet";
+import { CORNER, spacing, type Measure, type Place } from "../stage";
 import { caps, md, type BoxOpts, type Para } from "../text";
 import type { Block, BlockKind } from "./kind";
 
-/** A flow block as `Flow` draws it: its steps, framed as `Framed` frames them where it names a
- *  frame: the teal dashed frame, its label over the steps, its notes beside them under a rule, its
- *  footer under a line. Draws where `s` is given; returns the height. */
-function flowBlock(
-  sheet: Sheet,
-  b: Block<"flow">,
-  a: { x: number; y: number; w: number },
-  k: number,
-): number {
-  const { slide: s, c } = sheet;
-  if (!b.frame) {
-    const stepsL = stepsLayout(sheet, b, { w: a.w, k });
-    if (!sheet.dry) drawSteps(sheet, stepsL, a);
-    return stepsL.h;
-  }
+export type FramedFlow = Block<"flow"> & { frame: NonNullable<Block<"flow">["frame"]> };
+
+export interface FlowNotesLayout {
+  paras: Para[];
+  o: BoxOpts;
+  w: number;
+  h: number;
+}
+
+export interface FlowFrameLayout {
+  k: number;
+  w: number;
+  pad: number;
+  tint: string;
+  surface: Surface;
+  label?: string;
+  labelH: number;
+  labelO: BoxOpts;
+  steps: StepsLayout;
+  stepsW: number;
+  notes: FlowNotesLayout;
+  rowH: number;
+  footer?: string;
+  footH: number;
+  footO: BoxOpts;
+  h: number;
+}
+
+/** Measures the optional side notes column of a framed flow: as wide as the longest note,
+ *  capped at a third of the frame width so long notes wrap. */
+export function flowNotes(
+  look: Look,
+  notes: readonly string[],
+  { w, k }: Measure,
+): FlowNotesLayout {
+  const { c } = look;
   const sp = (v: number) => spacing(v, k);
-  const { label, notes = [], footer } = b.frame;
-  const pad = sp(6);
-  const labelH = label ? (13.33 * 1.4 * k) / 72 : 0;
-  const noteO: BoxOpts = { size: 16 * k, color: c.muted, line: 1.45 };
-  const noteParas: Para[] = notes.map((t) => ({
-    runs: md(t, c),
-    bullet: true,
-    after: sp(1.5) * 72,
-  }));
+  const o: BoxOpts = { size: 16 * k, color: c.muted, line: 1.45 };
+  const paras: Para[] = notes.map((t) => ({ runs: md(t, c), bullet: true, after: sp(1.5) * 72 }));
+  if (!notes.length) return { paras, o, w: 0, h: 0 };
   // As wide as the longest note, and never more than a third of the frame, so long notes wrap.
-  const notesW = notes.length
-    ? Math.min(
-        a.w / 3,
-        Math.max(...notes.map((t) => textWidth(t, noteO))) + BULLET_INDENT / 72 + 0.05,
-      )
-    : 0;
-  const stepsW = a.w - 2 * pad - (notes.length ? notesW + 2 * sp(6) : 0);
-  const stepsL = stepsLayout(sheet, b, { w: stepsW, k });
-  const stepsH = stepsL.h;
-  const notesH = notes.length ? sheet.need(noteParas, notesW, noteO) : 0;
-  const rowH = Math.max(stepsH, notesH, notes.length ? sp(16) : 0);
-  const footO: BoxOpts = { size: 16 * k, color: c.muted, line: 1.45 };
-  const footH = footer ? sheet.need(footer, a.w - 2 * pad, footO) : 0;
-  const h = pad + (label ? labelH + sp(4) : 0) + rowH + (footer ? sp(4) + sp(3) + footH : 0) + pad;
-  if (sheet.dry) return h;
+  const nw = Math.min(
+    w / 3,
+    Math.max(...notes.map((t) => textWidth(t, o))) + BULLET_INDENT / 72 + 0.05,
+  );
+  return { paras, o, w: nw, h: look.need(paras, nw, o) };
+}
+
+/** Measures a framed flow block as `Framed` frames it: the teal dashed frame, its label over the
+ *  steps, its notes beside them under a rule, and its footer under a line. Returns the measured
+ *  frame layout and total height `h`. */
+export function flowFrameLayout(look: Look, b: FramedFlow, { w, k }: Measure): FlowFrameLayout {
+  const { c } = look;
+  const sp = (v: number) => spacing(v, k);
+  const { label, notes: rawNotes = [], footer } = b.frame;
+  const pad = sp(6);
   const tint = mixColor(c.teal, c.bg, 0.25);
-  s.addShape("round2DiagRect", {
-    x: a.x,
-    y: a.y,
-    w: a.w,
+  const header = label
+    ? { h: (13.33 * 1.4 * k) / 72, surface: { fill: mixColor(c.teal, c.bg, 0.07), line: c.teal } }
+    : { h: 0, surface: { fill: c.card, line: tint } };
+  const labelO: BoxOpts = {
+    size: 13.33 * k,
+    mono: true,
+    color: c.teal,
+    tracking: 0.06,
+    line: 1.4,
+    valign: "middle",
+  };
+  const notes = flowNotes(look, rawNotes, { w, k });
+  const hasNotes = notes.paras.length > 0;
+  const stepsW = w - 2 * pad - (hasNotes ? notes.w + 2 * sp(6) : 0);
+  const steps = stepsLayout(look, b, { w: stepsW, k });
+  const rowH = Math.max(steps.h, notes.h, hasNotes ? sp(16) : 0);
+  const footO: BoxOpts = { size: 16 * k, color: c.muted, line: 1.45 };
+  const footH = footer ? look.need(footer, w - 2 * pad, footO) : 0;
+  const h =
+    pad + (label ? header.h + sp(4) : 0) + rowH + (footer ? sp(4) + sp(3) + footH : 0) + pad;
+  return {
+    k,
+    w,
+    pad,
+    tint,
+    surface: header.surface,
+    label,
+    labelH: header.h,
+    labelO,
+    steps,
+    stepsW,
+    notes,
+    rowH,
+    footer,
+    footH,
+    footO,
+    h,
+  };
+}
+
+/** Draws a framed flow's side divider rule and notes column starting at `at`. */
+export function drawFlowNotes(sheet: Sheet, layout: FlowFrameLayout, at: Place): void {
+  const { k, tint, notes, rowH } = layout;
+  if (!notes.paras.length) return;
+  const sp = (v: number) => spacing(v, k);
+  const rx = at.x + sp(6);
+  sheet.slide.addShape("line", {
+    x: rx,
+    y: at.y + (rowH - sp(16)) / 2,
+    w: 0,
+    h: sp(16),
+    line: { color: tint, width: 0.75 },
+  });
+  sheet.box(
+    notes.paras,
+    { x: rx + sp(6), y: at.y + (rowH - notes.h) / 2, w: notes.w, h: notes.h },
+    notes.o,
+  );
+}
+
+/** Draws a framed flow's horizontal rule and footer text below the steps row at `at`. */
+export function drawFlowFooter(sheet: Sheet, layout: FlowFrameLayout, at: Place): void {
+  const { k, w, pad, tint, footer, footH, footO } = layout;
+  if (!footer) return;
+  const sp = (v: number) => spacing(v, k);
+  const lineY = at.y + sp(4);
+  sheet.slide.addShape("line", {
+    x: at.x,
+    y: lineY,
+    w: w - 2 * pad,
+    h: 0,
+    line: { color: tint, width: 0.75 },
+  });
+  sheet.box(footer, { x: at.x, y: lineY + sp(3), w: w - 2 * pad, h: footH }, footO);
+}
+
+/** Draws a measured framed flow block at `at`: the dashed frame, optional label, steps, optional
+ *  side notes with divider rule, and optional footer under a rule. */
+export function drawFlowFrame(sheet: Sheet, layout: FlowFrameLayout, at: Place): void {
+  const { k, w, pad, surface, label, labelH, labelO, steps, stepsW, rowH, h } = layout;
+  const sp = (v: number) => spacing(v, k);
+  sheet.slide.addShape("round2DiagRect", {
+    x: at.x,
+    y: at.y,
+    w,
     h,
     rectRadius: Math.min(CORNER, h / 2),
-    fill: { color: label ? mixColor(c.teal, c.bg, 0.07) : c.card },
-    line: { color: label ? c.teal : tint, width: 1, dashType: "dash" },
+    fill: { color: surface.fill },
+    line: { color: surface.line, width: 1, dashType: "dash" },
   });
-  let y = a.y + pad;
+  let y = at.y + pad;
   if (label) {
     const m = 10 / 144;
-    sheet.rect({ x: a.x + pad, y: y + (labelH - m) / 2, w: m, h: m }, c.teal);
+    sheet.rect({ x: at.x + pad, y: y + (labelH - m) / 2, w: m, h: m }, sheet.c.teal);
     sheet.box(
       { runs: [caps(label)] },
-      { x: a.x + pad + m + sp(2), y, w: a.w - 2 * pad, h: labelH },
-      {
-        size: 13.33 * k,
-        mono: true,
-        color: c.teal,
-        tracking: 0.06,
-        line: 1.4,
-        valign: "middle",
-      },
+      { x: at.x + pad + m + sp(2), y, w: w - 2 * pad, h: labelH },
+      labelO,
     );
     y += labelH + sp(4);
   }
-  drawSteps(sheet, stepsL, { x: a.x + pad, y: y + (rowH - stepsH) / 2 });
-  if (notes.length) {
-    const rx = a.x + pad + stepsW + sp(6);
-    s.addShape("line", {
-      x: rx,
-      y: y + (rowH - sp(16)) / 2,
-      w: 0,
-      h: sp(16),
-      line: { color: tint, width: 0.75 },
-    });
-    sheet.box(
-      noteParas,
-      { x: rx + sp(6), y: y + (rowH - notesH) / 2, w: notesW, h: notesH },
-      noteO,
-    );
-  }
-  y += rowH;
-  if (footer) {
-    y += sp(4);
-    s.addShape("line", {
-      x: a.x + pad,
-      y,
-      w: a.w - 2 * pad,
-      h: 0,
-      line: { color: tint, width: 0.75 },
-    });
-    y += sp(3);
-    sheet.box(footer, { x: a.x + pad, y, w: a.w - 2 * pad, h: footH }, footO);
-  }
-  return h;
+  drawSteps(sheet, steps, { x: at.x + pad, y: y + (rowH - steps.h) / 2 });
+  drawFlowNotes(sheet, layout, { x: at.x + pad + stepsW, y });
+  drawFlowFooter(sheet, layout, { x: at.x + pad, y: y + rowH });
 }
 
+/** A flow block as `Flow` draws it: its steps, framed as `Framed` frames them where it names a
+ *  frame. */
 export const flow: BlockKind<"flow"> = {
-  height(look, b, { w, k }) {
-    return flowBlock(drySheet(look), b, { x: 0, y: 0, w }, k);
+  height(look, b, m) {
+    if (!b.frame) return stepsLayout(look, b, m).h;
+    return flowFrameLayout(look, { ...b, frame: b.frame }, m).h;
   },
-  draw(sheet, b, { area: a, k }) {
-    flowBlock(sheet, b, a, k);
+  draw(sheet, b, { area, k }) {
+    if (!b.frame) {
+      drawSteps(sheet, stepsLayout(sheet, b, { w: area.w, k }), area);
+      return;
+    }
+    drawFlowFrame(sheet, flowFrameLayout(sheet, { ...b, frame: b.frame }, { w: area.w, k }), area);
   },
 };
