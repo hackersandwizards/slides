@@ -86,20 +86,6 @@ function measureCodeLineBadges(tiles: BadgeTile[]): Reading[] {
   });
 }
 
-let browser: Browser;
-let served: Served;
-beforeAll(async () => {
-  served = await serveDist();
-  browser = await puppeteer.launch({
-    headless: true,
-    args: ["--use-mock-keychain", "--password-store=basic"],
-  });
-});
-afterAll(async () => {
-  await browser?.close();
-  served?.close();
-});
-
 // The print page leaves out the slides carrying code (catalog/print.ts): their stories, served
 // from dist under the Pages base, carry the annotated code's line badges. A story draws its slide
 // after hydration, from props naming the block or the lanes' snippet.
@@ -123,13 +109,14 @@ const ALIGNMENTS = [
 ] as const;
 
 type AlignmentReadings = { found: Reading[]; control: Reading[] };
-const readings: Record<(typeof ALIGNMENTS)[number]["kind"], AlignmentReadings> = {
-  centres: { found: [], control: [] },
-  codeLines: { found: [], control: [] },
-};
+type BadgeReadings = Record<(typeof ALIGNMENTS)[number]["kind"], AlignmentReadings>;
 
 /** Each badge's offset on every print frame and code story, as drawn and under the control. */
-beforeAll(async () => {
+async function collectBadgeReadings(browser: Browser, origin: string, stories: string[]) {
+  const readings: BadgeReadings = {
+    centres: { found: [], control: [] },
+    codeLines: { found: [], control: [] },
+  };
   const page = await newPage(browser);
   const readAlignments = async (where: string, mode: keyof AlignmentReadings) => {
     const tiles = await page.evaluateHandle(readBadgeTiles);
@@ -152,10 +139,10 @@ beforeAll(async () => {
   };
   try {
     await page.setViewport({ width: 1920, height: 1080 });
-    await page.goto(`${served.origin}/slides/catalog/print/frames.html`, { waitUntil: "load" });
+    await page.goto(`${origin}/slides/catalog/print/frames.html`, { waitUntil: "load" });
     await read("frames");
-    for (const path of codeStories) {
-      const url = `${served.origin}${path}`;
+    for (const path of stories) {
+      const url = `${origin}${path}`;
       await page.goto(url, { waitUntil: "networkidle0" });
       // The slide enters as one reached from the one before, and the code colours after load.
       await page.waitForFunction(() => !document.querySelector("[data-code-plain]"));
@@ -165,7 +152,24 @@ beforeAll(async () => {
   } finally {
     await page.close();
   }
+  return readings;
+}
+
+let browser: Browser;
+let served: Served;
+let readings: BadgeReadings;
+beforeAll(async () => {
+  served = await serveDist();
+  browser = await puppeteer.launch({
+    headless: true,
+    args: ["--use-mock-keychain", "--password-store=basic"],
+  });
+  readings = await collectBadgeReadings(browser, served.origin, codeStories);
 }, limit(300_000));
+afterAll(async () => {
+  await browser?.close();
+  served?.close();
+});
 
 const outside = (readings: Reading[]) =>
   readings
