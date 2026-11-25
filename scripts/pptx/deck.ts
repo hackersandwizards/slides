@@ -58,6 +58,7 @@ import { balance, longest, pretty, wrap } from "./lines";
 import { Look } from "./look";
 import { checkSlide } from "./overflow";
 import { hex, mixColor, palette, THEME, type Palette } from "./palette";
+import { Sheet, drySheet, type ChartFix, type Output, type PSlide } from "./sheet";
 import { slideDrawn } from "./slides";
 import {
   W,
@@ -94,8 +95,6 @@ import {
   type Run,
 } from "./text";
 
-type Pptx = InstanceType<typeof PptxGenJS>;
-type PSlide = ReturnType<Pptx["addSlide"]>;
 /** A text box at x, y, w, h whose paragraphs shrink together until their measure fits. */
 function box(
   s: PSlide,
@@ -208,13 +207,13 @@ function card(
 
 /** A process slide's footer, `SlideCaption` on the web: brand's teal callout as wide as its
  *  text, centred, at `y`; returns its height. */
-function caption(s: PSlide | undefined, look: Look, text: string, y: number) {
-  const { c } = look;
+function caption(sheet: Sheet, text: string, y: number) {
+  const { slide: s, c } = sheet;
   const o: BoxOpts = { size: PT.base, color: c.ink, align: "center", valign: "middle" };
   const fw = Math.min(CW, 1365 / 144, textWidth(text, o) + 2 * CALLOUT_PAD + 0.02);
-  const th = look.need(text, fw - 2 * CALLOUT_PAD, o);
+  const th = sheet.need(text, fw - 2 * CALLOUT_PAD, o);
   const h = th + 2 * CALLOUT_PAD;
-  if (!s) return h;
+  if (sheet.dry) return h;
   card(s, (W - fw) / 2, y, fw, h, c.callout(c.teal));
   box(s, c, text, (W - fw) / 2 + CALLOUT_PAD, y + CALLOUT_PAD, fw - 2 * CALLOUT_PAD, th, o);
   return h;
@@ -258,19 +257,19 @@ const chipWidth = (text: string, size: number, mono: boolean) =>
 
 /** The type size at which a row of chips in the sans face `gap` apart fits `width`: `size`, or
  *  smaller where the row would run past it, down to half of it, past which it warns. */
-function rowSize(ctx: Ctx, texts: string[], size: number, gap: number, width: number) {
+function rowSize(sheet: Sheet, texts: string[], size: number, gap: number, width: number) {
   const fixed = texts.length * 0.3 + (texts.length - 1) * gap;
   const per = texts.reduce((sum, t) => sum + chipAdvance(t, false), 0);
   const fit = (width - fixed) / per;
-  if (fit < size / 2) ctx.warnings.push(`chips ${texts.join(", ")}: wider than the slide holds`);
+  if (fit < size / 2) sheet.warn(`chips ${texts.join(", ")}: wider than the slide holds`);
   return Math.max(size / 2, Math.min(size, fit));
 }
 
 /** Each of `n` rows' share of `room`, at most `cap`; below `floor` the rows run past the slide,
  *  which warns. */
-function rowShare(ctx: Ctx, what: string, room: number, n: number, cap: number, floor = 0.15) {
+function rowShare(sheet: Sheet, what: string, room: number, n: number, cap: number, floor = 0.15) {
   const share = Math.min(cap, room / n);
-  if (share < floor) ctx.warnings.push(`${what}: ${n} rows taller than the slide holds`);
+  if (share < floor) sheet.warn(`${what}: ${n} rows taller than the slide holds`);
   return Math.max(floor, share);
 }
 
@@ -344,25 +343,12 @@ function brandCut(name: string): [string, number] {
   return [path, w / h];
 }
 
-/** A trend's marked point, -1 for none, and the series its legend leaves out, or whether a bar's
- *  names stay level. */
-type ChartFix = { now: number; unnamed: number[] } | { level: boolean };
-
-interface Ctx {
-  pptx: Pptx;
-  look: Look;
-  assets: string;
-  warnings: string[];
-  /** Per chart number, what `finishChart` sets on it. */
-  charts: Map<number, ChartFix>;
-}
-
 /** A deck file's path: a root path under the consumer's public directory, else a file path as it
  *  stands, which is what Bun gives an imported image, the specimen's among them. Vite's dev URL
  *  for one keeps its query. */
-const assetFile = (ctx: Ctx, src: string) => {
+const assetFile = (sheet: Sheet, src: string) => {
   const path = src.replace(/\?.*$/, "");
-  const inAssets = join(ctx.assets, path.replace(/^\//, ""));
+  const inAssets = join(sheet.out.assets, path.replace(/^\//, ""));
   return existsSync(inAssets) || !existsSync(path) ? inAssets : path;
 };
 
@@ -370,8 +356,7 @@ const assetFile = (ctx: Ctx, src: string) => {
  *  logo paths take the brand package's PNG cut, since PowerPoint shows an SVG without a raster
  *  fallback as a broken picture in older viewers. */
 function picture(
-  s: PSlide,
-  ctx: Ctx,
+  sheet: Sheet,
   src: string,
   x: number,
   y: number,
@@ -387,17 +372,18 @@ function picture(
     native?: boolean;
   } = {},
 ) {
+  const { slide: s } = sheet;
   const logo = BRAND_MARK.exec(src);
-  const path = logo ? brandLogo(logo[1]) : assetFile(ctx, src);
+  const path = logo ? brandLogo(logo[1]) : assetFile(sheet, src);
   const size = existsSync(path) ? imageSize(readFileSync(path)) : undefined;
   if (!size) {
-    ctx.warnings.push(
-      `image ${src}: ${existsSync(path) ? "unreadable format" : `not found under ${ctx.assets}`}`,
+    sheet.warn(
+      `image ${src}: ${existsSync(path) ? "unreadable format" : `not found under ${sheet.out.assets}`}`,
     );
-    card(s, x, y, w, h, ctx.look.c.tint, ctx.look.c.border);
-    box(s, ctx.look.c, o.alt || src, x + 0.1, y + 0.1, w - 0.2, h - 0.2, {
+    card(s, x, y, w, h, sheet.c.tint, sheet.c.border);
+    box(s, sheet.c, o.alt || src, x + 0.1, y + 0.1, w - 0.2, h - 0.2, {
       size: PT.sm,
-      color: ctx.look.c.muted,
+      color: sheet.c.muted,
       align: "center",
       valign: "middle",
     });
@@ -455,8 +441,9 @@ const pictureLink = (href?: string) =>
     : {};
 
 /** The brand strip and footer, where the web stands them. */
-function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
-  const { c } = ctx.look;
+function frame(sheet: Sheet, deck: Presentation, index: number) {
+  const { slide: s } = sheet;
+  const { c } = sheet;
   s.background = { color: c.bg };
   // The strip's teal-to-purple gradient as twenty-four steps, since a pptxgenjs shape takes no
   // gradient fill.
@@ -490,13 +477,13 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   if (!closingCentred) {
     let x: number;
     if (corner.src === HW_LOGO.src) {
-      const [path, ratio] = brandCut(`${mark}${ctx.look.dark ? "-night" : ""}`);
+      const [path, ratio] = brandCut(`${mark}${sheet.dark ? "-night" : ""}`);
       const h = mark === "lockup" ? lockupH : markH;
       x = right - h * ratio;
       s.addImage({ path, x, y: baseY - h / 2, w: h * ratio, h, altText: HW_LOGO.alt });
     } else {
       const at = { alt: corner.alt, align: "right" as const };
-      x = picture(s, ctx, corner.src, right - 2.4, baseY - logoH / 2, 2.4, logoH, at).x;
+      x = picture(sheet, corner.src, right - 2.4, baseY - logoH / 2, 2.4, logoH, at).x;
     }
     const page = pageLabel(deck.slides, index);
     end = x;
@@ -516,7 +503,7 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   let left = confidential ? W - right : 1.5 * REM;
   const y = confidential ? baseY - logoH / 2 : H - 1.5 * REM - logoH;
   for (const l of start) {
-    const drawn = picture(s, ctx, l.src, left, y, 2.4, logoH, {
+    const drawn = picture(sheet, l.src, left, y, 2.4, logoH, {
       alt: l.alt,
       align: "left",
     });
@@ -586,31 +573,32 @@ function footerHeight(look: Look, text?: string): number {
 /** The slide's footer (`SlideFooter` on the web): one line under a rule, at the bottom or at
  *  `top`, where it follows the body. */
 function footer(
-  s: PSlide,
-  ctx: Ctx,
+  sheet: Sheet,
   text: string | undefined,
   h: number,
   centered = false,
   top = BOTTOM - h,
 ) {
+  const { slide: s } = sheet;
   if (!text) return;
   s.addShape("line", {
     x: EDGE,
     y: top + 0.05,
     w: CW,
     h: 0.001,
-    line: { color: ctx.look.c.border, width: 0.75 },
+    line: { color: sheet.c.border, width: 0.75 },
   });
-  box(s, ctx.look.c, text, EDGE, top + 0.15, CW, h - 0.15, {
+  box(s, sheet.c, text, EDGE, top + 0.15, CW, h - 0.15, {
     size: PT.base,
-    color: ctx.look.c.ink,
+    color: sheet.c.ink,
     align: centered ? "center" : "left",
   });
 }
 
 /** Kicker, principle pill, title and subtitle; returns where the body starts. */
-function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
-  const { c } = ctx.look;
+function header(sheet: Sheet, h: Head, centered = false): number {
+  const { slide: s } = sheet;
+  const { c } = sheet;
   let y = 58 / 144;
   // The kicker band's second row, where the principle pill wraps as on the web.
   let wrapped = 0;
@@ -655,13 +643,13 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
       balance: true,
       align: centered ? "center" : "left",
     };
-    const hh = Math.min(1.1, ctx.look.need(h.headline, CW, o));
+    const hh = Math.min(1.1, sheet.need(h.headline, CW, o));
     box(s, c, h.headline, EDGE, y, CW, Math.max(hh, 0.45), o);
     y += Math.max(hh, 0.45) + 0.08;
   }
   if (h.subtitle) {
     const o: BoxOpts = { size: PT.base, color: c.muted, align: centered ? "center" : "left" };
-    const sh = Math.min(0.7, ctx.look.need(h.subtitle, CW, o));
+    const sh = Math.min(0.7, sheet.need(h.subtitle, CW, o));
     box(s, c, h.subtitle, EDGE, y, CW, sh, o);
     y += sh;
   }
@@ -676,8 +664,7 @@ const bodyO = (c: Palette, k: number, extra: Partial<BoxOpts> = {}): BoxOpts => 
 
 /** A card with a title and items or text, as two-column, four-column and comparison sides draw. */
 function itemCard(
-  s: PSlide,
-  ctx: Ctx,
+  sheet: Sheet,
   a: Area,
   k: number,
   o: {
@@ -689,7 +676,8 @@ function itemCard(
     marker?: MarkerHue;
   },
 ) {
-  const { c } = ctx.look;
+  const { slide: s } = sheet;
+  const { c } = sheet;
   card(s, a.x, a.y, a.w, a.h, c.card, o.tone ?? c.border);
   const pad = 0.2;
   const paras: Para[] = [];
@@ -807,8 +795,7 @@ function beforeAfterHeight(
  *  draws a comparison's `before-after` and the transform block: plain items, the before side
  *  muted on white and, with `strike`, crossed out, struck through and greyed. */
 function beforeAfter(
-  s: PSlide,
-  ctx: Ctx,
+  sheet: Sheet,
   a: Area,
   o: BoxOpts,
   sides: BeforeAfterSide[],
@@ -816,14 +803,15 @@ function beforeAfter(
   k = 1,
   adds = false,
 ) {
-  const { c } = ctx.look;
+  const { slide: s } = sheet;
+  const { c } = sheet;
   // The web shrinks a block whole: its paddings and gap with its text.
   const pad = BA_PAD * k;
   const gap = BA_GAP * k;
   const half = (a.w - gap) / 2;
   sides.forEach((sd, i) => {
     const x = a.x + i * (half + gap);
-    const l = beforeAfterSide(ctx.look, sd, i, strike, half, o, k, adds);
+    const l = beforeAfterSide(sheet, sd, i, strike, half, o, k, adds);
     if (i) card(s, x, a.y, half, a.h, c.tealTint, c.teal);
     else card(s, x, a.y, half, a.h, strike ? mixColor(c.muted, c.bg, 0.07) : c.card, c.border);
     const top = a.y + pad;
@@ -850,13 +838,8 @@ function beforeAfter(
 /** A two-sided comparison's punchline and footnotes under its sides from y, as the web sets them:
  *  the punchline 2.5 rem under in a 48 rem column, balanced, the footnotes 1.5 rem under that in a
  *  56 rem column. Draws where `s` is given; returns the height. */
-function comparisonFoot(
-  s: PSlide | undefined,
-  look: Look,
-  d: { punchline?: string; footnotes?: string[] },
-  y: number,
-) {
-  const { c } = look;
+function comparisonFoot(sheet: Sheet, d: { punchline?: string; footnotes?: string[] }, y: number) {
+  const { slide: s, c } = sheet;
   const punchO: BoxOpts = {
     size: PT.h4,
     mono: true,
@@ -875,17 +858,17 @@ function comparisonFoot(
   );
   const punch: Para = { runs: md(d.punchline ?? "", c), balance: true };
   const notes = (d.footnotes ?? []).map((f) => ({ runs: md(f, c) }));
-  const ph = d.punchline ? look.need(punch, pw, punchO) : 0;
-  const nh = notes.length ? look.need(notes, nw, noteO) : 0;
+  const ph = d.punchline ? sheet.need(punch, pw, punchO) : 0;
+  const nh = notes.length ? sheet.need(notes, nw, noteO) : 0;
   let h = 0;
   if (ph) {
     h += 2.5 * REM;
-    if (s) box(s, c, punch, (W - pw) / 2, y + h, pw, ph, punchO);
+    if (!sheet.dry) box(s, c, punch, (W - pw) / 2, y + h, pw, ph, punchO);
     h += ph;
   }
   if (nh) {
     h += 1.5 * REM;
-    if (s) box(s, c, notes, (W - nw) / 2, y + h, nw, nh, noteO);
+    if (!sheet.dry) box(s, c, notes, (W - nw) / 2, y + h, nw, nh, noteO);
     h += nh;
   }
   return h;
@@ -963,7 +946,7 @@ function blockHeight(look: Look, b: ContentBlock, m: Measure): number {
     case "transform":
       return beforeAfterHeight(look, [b.before, b.after], false, w, o, k);
     case "positions":
-      return positions(undefined, look, b, { x: 0, y: 0, w }, k);
+      return positions(drySheet(look), b, { x: 0, y: 0, w }, k);
     case "two-column": {
       const sides = [b.left, b.right];
       return (
@@ -1008,7 +991,7 @@ function blockHeight(look: Look, b: ContentBlock, m: Measure): number {
     case "pipeline":
       return blockHeight(look, pipelineAsFlow(b), m);
     case "flow":
-      return flowBlock(undefined, look, b, { x: 0, y: 0, w }, k);
+      return flowBlock(drySheet(look), b, { x: 0, y: 0, w }, k);
     case "layers":
       return b.layers.length * (0.5 * k + 0.1);
     case "timeline":
@@ -1057,8 +1040,9 @@ const GROWS = new Set([
 
 /** A gallery: its pictures and videos in a row or grid of equal cells, each over its caption, and
  *  its tags as chips under them. */
-function gallery(s: PSlide, ctx: Ctx, b: Extract<ContentBlock, { type: "gallery" }>, area: Area) {
-  const { c } = ctx.look;
+function gallery(sheet: Sheet, b: Extract<ContentBlock, { type: "gallery" }>, area: Area) {
+  const { slide: s } = sheet;
+  const { c } = sheet;
   const tagH = b.tags?.length ? 0.4 : 0;
   const a = { ...area, h: area.h - tagH };
   const n = b.items.length;
@@ -1072,8 +1056,7 @@ function gallery(s: PSlide, ctx: Ctx, b: Extract<ContentBlock, { type: "gallery"
     const capH = src.caption ? 0.3 : 0;
     if (isVideo(src)) {
       drawBlock(
-        s,
-        ctx,
+        sheet,
         { type: "video", src: src.src, alt: src.alt, caption: src.caption, poster: src.poster },
         { x, y: yy, w: cw, h: rh },
         1,
@@ -1081,7 +1064,7 @@ function gallery(s: PSlide, ctx: Ctx, b: Extract<ContentBlock, { type: "gallery"
       );
       return;
     }
-    picture(s, ctx, src.src, x, yy, cw, rh - capH, { alt: src.alt });
+    picture(sheet, src.src, x, yy, cw, rh - capH, { alt: src.alt });
     if (src.caption)
       box(s, c, src.caption, x, yy + rh - capH + 0.05, cw, capH - 0.05, {
         size: PT.sm,
@@ -1096,9 +1079,10 @@ function gallery(s: PSlide, ctx: Ctx, b: Extract<ContentBlock, { type: "gallery"
     x += chip(s, c, t, x, a.y + a.h + 0.1, PT.label, c.card, c.ink, false) + 0.1;
 }
 
-function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, centered: boolean) {
-  if (b.type === "labeled-grid") return drawBlock(s, ctx, labeledGridAsCards(b), a, k, centered);
-  const { c } = ctx.look;
+function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: boolean) {
+  const { slide: s } = sheet;
+  if (b.type === "labeled-grid") return drawBlock(sheet, labeledGridAsCards(b), a, k, centered);
+  const { c } = sheet;
   const o = bodyO(c, k, centered ? { align: "center" } : {});
   switch (b.type) {
     case "paragraph":
@@ -1195,7 +1179,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         w: a.w,
         colW,
         // The planned row heights, so the table fills the area the layout gave it.
-        rowH: tableRows(ctx.look, b, { w: a.w, k }),
+        rowH: tableRows(sheet, b, { w: a.w, k }),
         fontFace: SANS,
         fontSize: size,
         color: c.ink,
@@ -1267,8 +1251,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
     case "code-and-text": {
       const half = a.w / 2 - 0.15;
       drawBlock(
-        s,
-        ctx,
+        sheet,
         { type: "code", language: b.language ?? "", code: b.code },
         { ...a, w: half },
         k,
@@ -1303,22 +1286,22 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         },
       );
       const half = a.w / 2 - 0.15;
-      itemCard(s, ctx, { ...a, w: half }, k, { ...b.left, ...lt });
-      itemCard(s, ctx, { ...a, x: a.x + half + 0.3, w: half }, k, { ...b.right, ...rt });
+      itemCard(sheet, { ...a, w: half }, k, { ...b.left, ...lt });
+      itemCard(sheet, { ...a, x: a.x + half + 0.3, w: half }, k, { ...b.right, ...rt });
       return;
     }
     case "four-column": {
       const n = b.columns.length;
       const cw = (a.w - (n - 1) * 0.2) / n;
       b.columns.forEach((col, i) =>
-        itemCard(s, ctx, { ...a, x: a.x + i * (cw + 0.2), w: cw }, k, col),
+        itemCard(sheet, { ...a, x: a.x + i * (cw + 0.2), w: cw }, k, col),
       );
       return;
     }
     case "transform":
-      return beforeAfter(s, ctx, a, bodyO(c, k), [b.before, b.after], false, k);
+      return beforeAfter(sheet, a, bodyO(c, k), [b.before, b.after], false, k);
     case "positions":
-      positions(s, ctx.look, b, a, k);
+      positions(sheet, b, a, k);
       return;
     case "hooks": {
       // The web's hook list: one row per event, its name as a mono chip before the description.
@@ -1349,7 +1332,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "cards": {
-      const L = cardsLayout(ctx.look, b, { w: a.w, k });
+      const L = cardsLayout(sheet, b, { w: a.w, k });
       let rowY = a.y;
       L.cells.forEach((cell, i) => {
         const [r, col] = [Math.floor(i / L.cols), i % L.cols];
@@ -1409,9 +1392,9 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "pipeline":
-      return drawBlock(s, ctx, pipelineAsFlow(b), a, k, centered);
+      return drawBlock(sheet, pipelineAsFlow(b), a, k, centered);
     case "flow":
-      flowBlock(s, ctx.look, b, a, k);
+      flowBlock(sheet, b, a, k);
       return;
     case "layers": {
       const n = b.layers.length;
@@ -1460,8 +1443,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
             });
         }
         return drawBlock(
-          s,
-          ctx,
+          sheet,
           { ...b, labels: undefined },
           { ...a, x: a.x + lw, w: a.w - lw },
           k,
@@ -1536,7 +1518,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "bars": {
-      const L = barsLayout(ctx.look, b, { w: a.w, k });
+      const L = barsLayout(sheet, b, { w: a.w, k });
       for (const r of L.rows) {
         const y = a.y + r.y;
         box(s, c, r.label, a.x, y + r.labelY, L.labelW, r.labelH, L.labelO);
@@ -1583,7 +1565,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "numbers": {
-      const L = numbersLayout(ctx.look, b, { w: a.w, k });
+      const L = numbersLayout(sheet, b, { w: a.w, k });
       L.cells.forEach((cell) => {
         const [x, y] = [a.x + cell.x, a.y + cell.y];
         box(s, c, cell.figure, x, y, L.cw, L.fig, L.figO);
@@ -1615,13 +1597,13 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "image":
-      picture(s, ctx, b.src, a.x, a.y, a.w, a.h, { alt: b.alt, native: true });
+      picture(sheet, b.src, a.x, a.y, a.w, a.h, { alt: b.alt, native: true });
       return;
     case "image-steps": {
       // A file has no arrow steps: the last picture, the one the slide ends on, as print shows it.
       const last = b.steps[b.steps.length - 1];
       const h = a.h - (last.caption ? 0.35 : 0);
-      picture(s, ctx, last.src, a.x, a.y, a.w, h, { alt: b.alt, native: true });
+      picture(sheet, last.src, a.x, a.y, a.w, h, { alt: b.alt, native: true });
       if (last.caption)
         box(s, c, last.caption, a.x, a.y + h + 0.08, a.w, 0.27, {
           ...o,
@@ -1632,11 +1614,11 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "gallery":
-      return gallery(s, ctx, b, a);
+      return gallery(sheet, b, a);
     case "linked-image": {
       // The link spelled out under the picture, as on the slide.
       const line = b.href ? 0.42 : 0;
-      const p = picture(s, ctx, b.src, a.x, a.y, a.w, a.h - line, {
+      const p = picture(sheet, b.src, a.x, a.y, a.w, a.h - line, {
         alt: b.alt,
         href: b.href,
         native: true,
@@ -1655,16 +1637,16 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       return;
     }
     case "video": {
-      const path = assetFile(ctx, b.src);
+      const path = assetFile(sheet, b.src);
       const h = a.h - (b.caption ? 0.35 : 0);
       if (existsSync(path)) {
         const w = Math.min(a.w, (h * 16) / 9);
         // pptxgenjs stores the cover as a PNG part whatever its bytes: anything else stays out.
-        const poster = b.poster && assetFile(ctx, b.poster);
+        const poster = b.poster && assetFile(sheet, b.poster);
         const cover = poster && existsSync(poster) ? readFileSync(poster) : undefined;
         const png = cover?.toString("latin1", 1, 4) === "PNG";
         if (b.poster && !png)
-          ctx.warnings.push(`video ${b.src}: poster ${b.poster} is no PNG under ${ctx.assets}`);
+          sheet.warn(`video ${b.src}: poster ${b.poster} is no PNG under ${sheet.out.assets}`);
         s.addMedia({
           type: "video",
           path,
@@ -1675,7 +1657,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
           ...(png ? { cover: `data:image/png;base64,${cover!.toString("base64")}` } : {}),
         });
       } else {
-        ctx.warnings.push(`video ${b.src}: not found under ${ctx.assets}`);
+        sheet.warn(`video ${b.src}: not found under ${sheet.out.assets}`);
         card(s, a.x, a.y, a.w, h, c.tint, c.border);
         box(s, c, b.alt || b.src, a.x, a.y, a.w, h, {
           ...o,
@@ -1704,7 +1686,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const k2 = Math.min(iw / srcW, a.h / srcH);
       const pw = srcW * k2;
       const ph = srcH * k2;
-      const path = assetFile(ctx, b.src);
+      const path = assetFile(sheet, b.src);
       if (existsSync(path)) {
         s.addImage({
           path,
@@ -1722,7 +1704,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
             h: ph,
           } as unknown as PptxGenJS.ImageProps["sizing"],
         });
-      } else ctx.warnings.push(`image ${b.src}: not found under ${ctx.assets}`);
+      } else sheet.warn(`image ${b.src}: not found under ${sheet.out.assets}`);
       b.notes.forEach((n, i) => {
         const y = a.y + ((n.y - top) / (bottom - top)) * ph;
         s.addShape("ellipse", {
@@ -1761,7 +1743,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
     }
     case "image-and-grid": {
       const iw = a.w * 0.42;
-      picture(s, ctx, b.image.src, a.x, a.y, iw, a.h, { alt: b.image.alt });
+      picture(sheet, b.image.src, a.x, a.y, iw, a.h, { alt: b.image.alt });
       let y = a.y;
       if (b.gridTitle) {
         box(s, c, b.gridTitle, a.x + iw + 0.3, y, a.w - iw - 0.3, 0.3, {
@@ -1772,8 +1754,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         y += 0.4;
       }
       drawBlock(
-        s,
-        ctx,
+        sheet,
         { type: "labeled-grid", columns: 1, items: b.items },
         {
           x: a.x + iw + 0.3,
@@ -1885,13 +1866,13 @@ interface FlowStep {
  *  under them, the platform teams side by side in a dotted frame, then the legend and caption.
  *  Draws where `s` is given; returns the height at scale k. */
 function topology(
-  s: PSlide | undefined,
-  ctx: Ctx,
+  sheet: Sheet,
   d: Extract<Slide, { type: "team-topology" }>,
   a: Area,
   k: number,
 ): number {
-  const { c } = ctx.look;
+  const { slide: s } = sheet;
+  const { c } = sheet;
   const sp = (v: number) => spacing(v, k);
   const bd = (3 / 144) * k;
   // Sizes as drawn, in the half points pptxgenjs writes, so a box sized to its text holds it.
@@ -1928,9 +1909,9 @@ function topology(
   const column = (parts: [Para, BoxOpts, number][], w: number, x?: number, y = 0) => {
     let h = 0;
     for (const [p, o, gap] of parts) {
-      const ph = ctx.look.need(p, w, o);
+      const ph = sheet.need(p, w, o);
       h += gap;
-      if (s && x !== undefined) box(s, c, p, x, y + h, w, ph, o);
+      if (!sheet.dry && x !== undefined) box(s, c, p, x, y + h, w, ph, o);
       h += ph;
     }
     return h;
@@ -1974,8 +1955,8 @@ function topology(
     const r = roles(t.roles);
     const rw = textWidth(r.runs.map((x) => x.text).join(""), { size: textO.size, bold: true });
     const beside = t.roles.length > 0 && nw + sp(6) + rw <= sIn;
-    const nh = ctx.look.need(name(t.name, c.ink), sIn, titleO);
-    const rh = t.roles.length ? ctx.look.need(r, beside ? rw + 0.02 : sIn, textO) : 0;
+    const nh = sheet.need(name(t.name, c.ink), sIn, titleO);
+    const rh = t.roles.length ? sheet.need(r, beside ? rw + 0.02 : sIn, textO) : 0;
     return {
       t,
       r,
@@ -2022,7 +2003,7 @@ function topology(
       2 * bd
     : 0;
 
-  const words = ctx.look.words.teams;
+  const words = sheet.words.teams;
   const legO: BoxOpts = { size: pt(17.33), color: c.muted, line: 1.4, valign: "middle" };
   // The legend's items in rows as `flex-wrap` sets them: x and row of each.
   const legRow = Math.max(sp(8), (legO.size * 1.4) / 72);
@@ -2044,10 +2025,10 @@ function topology(
   const legRows = legend.length ? legend.at(-1)!.row + 1 : 0;
   const legH = legRows && sp(4) + legRows * legRow + (legRows - 1) * sp(3);
   const capO: BoxOpts = { size: pt(PT.h4), color: c.muted, line: 1.4 };
-  const capH = d.caption ? sp(2) + ctx.look.need(d.caption, a.w, capO) : 0;
+  const capH = d.caption ? sp(2) + sheet.need(d.caption, a.w, capO) : 0;
   const rows = [rowH, platH, legH, capH].filter(Boolean);
   const total = rows.reduce((sum, h) => sum + h, 0) + (rows.length - 1) * sp(4);
-  if (!s) return total;
+  if (sheet.dry) return total;
 
   let y = a.y;
   let x = a.x;
@@ -2121,13 +2102,12 @@ function topology(
  *  a card under its holder's name, its quote under it, then the middle word and the resolution as
  *  a display line, centred. Draws where `s` is given; returns the height at scale k. */
 function positions(
-  s: PSlide | undefined,
-  look: Look,
+  sheet: Sheet,
   b: Extract<ContentBlock, { type: "positions" }>,
   a: { x: number; y: number; w: number },
   k: number,
 ): number {
-  const { c } = look;
+  const { slide: s, c } = sheet;
   const rem = REM * k;
   const w = Math.min(a.w, 72 * rem);
   const x0 = a.x + (a.w - w) / 2;
@@ -2145,8 +2125,8 @@ function positions(
   // A column of paragraphs in width pw, drawn at x, y where both are given; returns its height.
   const stack = (list: [Para, BoxOpts, number][], pw: number, x?: number, y = 0) =>
     list.reduce((h, [p, o, g]) => {
-      const ph = look.need(p, pw, o);
-      if (s && x !== undefined) box(s, c, p, x, y + h + g, pw, ph, o);
+      const ph = sheet.need(p, pw, o);
+      if (!sheet.dry && x !== undefined) box(s, c, p, x, y + h + g, pw, ph, o);
       return h + g + ph;
     }, 0);
   const ch = Math.max(...[b.left, b.right].map((sd) => stack(parts(sd), inner))) + 2 * pad;
@@ -2172,7 +2152,7 @@ function positions(
     [{ runs: md(b.resolution, c), balance: true }, resO, b.middle ? rem : 0],
   ];
   const resH = stack(res, w);
-  if (s) {
+  if (!sheet.dry) {
     [b.left, b.right].forEach((sd, i) => {
       const x = x0 + i * (cw + gap);
       card(s, x, a.y, cw, ch, c.card, c.border);
@@ -2188,13 +2168,12 @@ function positions(
  *  badge centred under the tile, and a `loop` back above, labelled when non-empty. Draws where `s`
  *  is given; returns the height either way. */
 function flowSteps(
-  s: PSlide | undefined,
-  look: Look,
+  sheet: Sheet,
   steps: FlowStep[],
   a: { x: number; y: number; w: number },
   o: { highlight?: number; loop?: string; dense?: boolean; k: number },
 ): number {
-  const { c } = look;
+  const { slide: s, c } = sheet;
   const { k } = o;
   const n = steps.length;
   const sp = (v: number) => spacing(v, k);
@@ -2251,13 +2230,13 @@ function flowSteps(
       // A word wider than the text column, such as a path in a chip, stands past it into the
       // step's padding, as the web's chip does.
       const pw = Math.min(colW, Math.max(inner, longest(spansOf(p, po, 1)) / 72 + 0.02));
-      const ph = look.need(p, pw, po);
+      const ph = sheet.need(p, pw, po);
       y += gap;
-      if (s) box(s, c, p, centre(i) - pw / 2, y, pw, ph, po);
+      if (!sheet.dry) box(s, c, p, centre(i) - pw / 2, y, pw, ph, po);
       y += ph;
     }
     h = Math.max(h, y - a.y);
-    if (!s) return;
+    if (sheet.dry) return;
     const tx = centre(i) - tile / 2;
     s.addShape("roundRect", {
       x: tx,
@@ -2304,7 +2283,7 @@ function flowSteps(
       });
     }
   });
-  if (s && o.loop !== undefined) {
+  if (!sheet.dry && o.loop !== undefined) {
     // Out of the last tile, back along the top and down into the first, with its arrowhead.
     const top = a.y + (o.loop ? sp(6) : sp(2));
     const [x0, x1] = [centre(0), centre(n - 1)];
@@ -2351,15 +2330,14 @@ function flowSteps(
  *  frame: the teal dashed frame, its label over the steps, its notes beside them under a rule, its
  *  footer under a line. Draws where `s` is given; returns the height. */
 function flowBlock(
-  s: PSlide | undefined,
-  look: Look,
+  sheet: Sheet,
   b: Extract<ContentBlock, { type: "flow" }>,
   a: { x: number; y: number; w: number },
   k: number,
 ): number {
-  const { c } = look;
+  const { slide: s, c } = sheet;
   const opts = { highlight: b.highlight, loop: b.loop, dense: b.dense, k };
-  if (!b.frame) return flowSteps(s, look, b.steps, a, opts);
+  if (!b.frame) return flowSteps(sheet, b.steps, a, opts);
   const sp = (v: number) => spacing(v, k);
   const { label, notes = [], footer } = b.frame;
   const pad = sp(6);
@@ -2378,13 +2356,13 @@ function flowBlock(
       )
     : 0;
   const stepsW = a.w - 2 * pad - (notes.length ? notesW + 2 * sp(6) : 0);
-  const stepsH = flowSteps(undefined, look, b.steps, { x: 0, y: 0, w: stepsW }, opts);
-  const notesH = notes.length ? look.need(noteParas, notesW, noteO) : 0;
+  const stepsH = flowSteps(drySheet(sheet), b.steps, { x: 0, y: 0, w: stepsW }, opts);
+  const notesH = notes.length ? sheet.need(noteParas, notesW, noteO) : 0;
   const rowH = Math.max(stepsH, notesH, notes.length ? sp(16) : 0);
   const footO: BoxOpts = { size: 16 * k, color: c.muted, line: 1.45 };
-  const footH = footer ? look.need(footer, a.w - 2 * pad, footO) : 0;
+  const footH = footer ? sheet.need(footer, a.w - 2 * pad, footO) : 0;
   const h = pad + (label ? labelH + sp(4) : 0) + rowH + (footer ? sp(4) + sp(3) + footH : 0) + pad;
-  if (!s) return h;
+  if (sheet.dry) return h;
   const tint = mixColor(c.teal, c.bg, 0.25);
   s.addShape("round2DiagRect", {
     x: a.x,
@@ -2409,7 +2387,7 @@ function flowBlock(
     });
     y += labelH + sp(4);
   }
-  flowSteps(s, look, b.steps, { x: a.x + pad, y: y + (rowH - stepsH) / 2, w: stepsW }, opts);
+  flowSteps(sheet, b.steps, { x: a.x + pad, y: y + (rowH - stepsH) / 2, w: stepsW }, opts);
   if (notes.length) {
     const rx = a.x + pad + stepsW + sp(6);
     s.addShape("line", {
@@ -2600,25 +2578,18 @@ function numbersLayout(
  *  Image blocks take the space the others leave. Blocks that leave space stand as the web's body
  *  does, two spacers sharing it 1 to 1.25, so a little above the middle; `tail` is the height of
  *  what follows them in that body, a footer. */
-function blocks(
-  s: PSlide,
-  ctx: Ctx,
-  list: ContentBlock[],
-  a: Area,
-  centered = false,
-  tail = 0,
-): number {
+function blocks(sheet: Sheet, list: ContentBlock[], a: Area, centered = false, tail = 0): number {
   const gap = 0.25;
   let k = 1;
   const fixed = (kk: number) =>
     list
       .filter((b) => !GROWS.has(b.type))
-      .reduce((sum, b) => sum + blockHeight(ctx.look, b, { w: a.w, k: kk }), 0);
+      .reduce((sum, b) => sum + blockHeight(sheet, b, { w: a.w, k: kk }), 0);
   const grows = list.filter((b) => GROWS.has(b.type)).length;
   const room = a.h - tail - gap * (list.length - 1) - grows * 1.5;
   while (k > 0.62 && fixed(k) > room) k -= 0.04;
   if (fixed(k) > room)
-    ctx.warnings.push(
+    sheet.warn(
       `blocks ${list.map((b) => b.type).join(", ")}: ${(fixed(k) - room).toFixed(2)} in taller than the slide holds`,
     );
   const extra = grows ? (a.h - tail - gap * (list.length - 1) - fixed(k)) / grows : 0;
@@ -2628,8 +2599,8 @@ function blocks(
   for (const b of list) {
     const h = GROWS.has(b.type)
       ? Math.max(1, extra)
-      : Math.max(0, Math.min(blockHeight(ctx.look, b, { w: a.w, k }), a.y + a.h - tail - y));
-    drawBlock(s, ctx, b, { x: a.x, y, w: a.w, h }, k, centered);
+      : Math.max(0, Math.min(blockHeight(sheet, b, { w: a.w, k }), a.y + a.h - tail - y));
+    drawBlock(sheet, b, { x: a.x, y, w: a.w, h }, k, centered);
     y += h + gap;
   }
   return y - gap;
@@ -2664,8 +2635,7 @@ function row<T>(items: T[], a: Area, gap: number, draw: (it: T, r: Area, i: numb
 }
 
 function portrait(
-  s: PSlide,
-  ctx: Ctx,
+  sheet: Sheet,
   src: string | undefined,
   name: string,
   x: number,
@@ -2673,13 +2643,14 @@ function portrait(
   d: number,
   tone: string,
 ) {
+  const { slide: s } = sheet;
   // Round, as the web's hw-avatar.
-  if (src) picture(s, ctx, src, x, y, d, d, { round: true, alt: name });
+  if (src) picture(sheet, src, x, y, d, d, { round: true, alt: name });
   else {
     s.addShape("ellipse", { x, y, w: d, h: d, fill: { color: tone }, line: { type: "none" } });
     box(
       s,
-      ctx.look.c,
+      sheet.c,
       {
         runs: [
           {
@@ -2707,14 +2678,15 @@ function portrait(
   }
 }
 
-type Render = (s: PSlide, ctx: Ctx, slide: never) => void;
+type Render = (sheet: Sheet, slide: never) => void;
 
 /** A talk's opening as TitleSlide draws it, measured off the print route: kicker, name and title on
  *  the left, centred above the bottom row and kept 2rem clear of it, where speakers and event stand
  *  beside the QR code and its link. */
-function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
-  const lang = d.lang ?? ctx.look.lang;
-  const { c } = ctx.look;
+function opening(sheet: Sheet, d: TitleSlide) {
+  const { slide: s } = sheet;
+  const lang = d.lang ?? sheet.lang;
+  const { c } = sheet;
   const qr = 256 / 144;
   const rowH = d.qr ? 324 / 144 : 119 / 144;
   const rowY = BOTTOM - rowH;
@@ -2756,7 +2728,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
     ...(d.subtitle ? [[literal(d.subtitle), { size: PT.lead, color: c.muted }, 43 / 144]] : []),
   ] as [Para, BoxOpts, number][];
   // A heading taller than the space above the bottom row shrinks to fit it, as the fit guard does.
-  const full = lines.map(([text, o]) => Math.min(3, ctx.look.need(text, CW, o)));
+  const full = lines.map(([text, o]) => Math.min(3, sheet.need(text, CW, o)));
   const total = lines.reduce((sum, [, , gap], i) => sum + gap + full[i], 0) - lines[0][2];
   const k = Math.min(1, (headEnd - TOP) / total);
   const heights = full.map((h) => h * k);
@@ -2786,7 +2758,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
     box(s, c, literal(d.event), EDGE, ly, textW, 49 / 144, { size: PT.base, color: c.muted });
   if (d.qr && label) {
     const colX = W - EDGE - colW;
-    picture(s, ctx, d.qr.src, colX + (colW - qr) / 2, rowY, qr, qr, {
+    picture(sheet, d.qr.src, colX + (colW - qr) / 2, rowY, qr, qr, {
       alt: qrAlt(d.qr.href, lang),
       href: d.qr.href,
     });
@@ -2803,9 +2775,6 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   }
 }
 
-/** A slide that draws nothing, to measure a layout drawn top-down before placing it. */
-const DRY = new Proxy({}, { get: () => () => undefined }) as PSlide;
-
 type RenderedSlide = Exclude<
   Slide,
   | { type: "evolution" | "media" | "overview" | "deep-dive-divider" | "dual-pill-overview" }
@@ -2814,15 +2783,12 @@ type RenderedSlide = Exclude<
 >;
 
 const RENDER: {
-  [K in RenderedSlide["type"]]: (
-    s: PSlide,
-    ctx: Ctx,
-    slide: Extract<RenderedSlide, { type: K }>,
-  ) => void;
+  [K in RenderedSlide["type"]]: (sheet: Sheet, slide: Extract<RenderedSlide, { type: K }>) => void;
 } = {
-  title(s, ctx, d) {
-    if (isOpening(d)) return opening(s, ctx, d);
-    const { c } = ctx.look;
+  title(sheet, d) {
+    const { slide: s } = sheet;
+    if (isOpening(d)) return opening(sheet, d);
+    const { c } = sheet;
     const o: BoxOpts = {
       size: PT.display,
       mono: true,
@@ -2836,9 +2802,9 @@ const RENDER: {
     };
     const title = literal(d.title);
     const subtitle = d.subtitle ? literal(d.subtitle) : undefined;
-    const th = Math.min(3, ctx.look.need(title, CW - 1, o));
+    const th = Math.min(3, sheet.need(title, CW - 1, o));
     const sh = subtitle
-      ? Math.min(1.2, ctx.look.need(subtitle, CW - 2, { size: PT.lead, color: c.ink }))
+      ? Math.min(1.2, sheet.need(subtitle, CW - 2, { size: PT.lead, color: c.ink }))
       : 0;
     const y = (H - th - sh - 0.5) / 2;
     box(s, c, title, EDGE + 0.5, y, CW - 1, th, o);
@@ -2850,51 +2816,51 @@ const RENDER: {
       });
   },
 
-  content(s, ctx, d) {
+  content(sheet, d) {
+    const { slide: s } = sheet;
     const centered = d.layout === "centered";
-    let y = header(s, ctx, d, centered);
+    let y = header(sheet, d, centered);
     if (d.badge)
       chip(
         s,
-        ctx.look.c,
+        sheet.c,
         d.badge,
         W - EDGE - (d.badge.length * PT.label * 0.62) / 72 - 0.24,
         TOP - 0.32,
         PT.label,
-        ctx.look.c.tealTint,
-        ctx.look.c.teal,
+        sheet.c.tealTint,
+        sheet.c.teal,
       );
     if (d.stageMarker?.length) {
       let x = EDGE;
       if (d.stagePrefix) {
-        box(s, ctx.look.c, d.stagePrefix, x, y - 0.15, 1.5, 0.25, {
+        box(s, sheet.c, d.stagePrefix, x, y - 0.15, 1.5, 0.25, {
           size: PT.label,
           mono: true,
           bold: true,
-          color: ctx.look.c.muted,
+          color: sheet.c.muted,
           valign: "middle",
         });
         x += (d.stagePrefix.length * PT.label * 0.62) / 72 + 0.15;
       }
       for (const m of d.stageMarker)
-        x +=
-          chip(s, ctx.look.c, m, x, y - 0.15, PT.label, ctx.look.c.tealTint, ctx.look.c.teal) + 0.1;
+        x += chip(s, sheet.c, m, x, y - 0.15, PT.label, sheet.c.tealTint, sheet.c.teal) + 0.1;
       y += 0.25;
     }
-    const footH = footerHeight(ctx.look, d.footer);
-    const end = blocks(s, ctx, d.content, BODY(y), centered, footH && footH + 0.1);
-    footer(s, ctx, d.footer, footH, centered, end + 0.1);
+    const footH = footerHeight(sheet, d.footer);
+    const end = blocks(sheet, d.content, BODY(y), centered, footH && footH + 0.1);
+    footer(sheet, d.footer, footH, centered, end + 0.1);
   },
 
-  regular(s, ctx, d) {
-    const { c } = ctx.look;
-    const y = header(s, ctx, d);
+  regular(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
+    const y = header(sheet, d);
     let a = BODY(y);
     if (d.profile) {
       const pw = 2.6;
       portrait(
-        s,
-        ctx,
+        sheet,
         d.profile.imageSrc,
         d.profile.name,
         a.x + (pw - 1.4) / 2,
@@ -2908,7 +2874,7 @@ const RENDER: {
         ...(d.profile.linkedIn ? [{ ...profileLink(d.profile.linkedIn, c), rel: 0.9 }] : []),
       ];
       const o: BoxOpts = { size: PT.base, color: c.ink, align: "center" };
-      box(s, c, who, a.x, a.y + 1.75, pw, Math.max(0.9, ctx.look.need(who, pw, o)), o);
+      box(s, c, who, a.x, a.y + 1.75, pw, Math.max(0.9, sheet.need(who, pw, o)), o);
       a = { ...a, x: a.x + pw + 0.5, w: a.w - pw - 0.5 };
     }
     const secs = d.sections;
@@ -2954,13 +2920,14 @@ const RENDER: {
     );
   },
 
-  statement(s, ctx, d) {
-    const { c } = ctx.look;
+  statement(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
     // The picture beside the statement, as the slide picks it: a quotation keeps its portrait and
     // drops a QR code, and a screenshot's or QR code's link is on the picture.
     const qr = !d.attribution && d.qr;
     const side = qr
-      ? { src: qr.src, alt: qrAlt(qr.href, ctx.look.lang), href: qr.href }
+      ? { src: qr.src, alt: qrAlt(qr.href, sheet.lang), href: qr.href }
       : d.imageSrc
         ? { src: d.imageSrc, alt: d.imageAlt, href: undefined, round: !!d.attribution }
         : d.linkedImage;
@@ -2994,7 +2961,7 @@ const RENDER: {
       // As the web's centred statement: the kicker, each line a display heading balanced on its
       // own, 64 pt where nothing else stands, 48 pt otherwise, the subtitle in its narrower column,
       // the points and closing under it, all centred in the slide or above its footer.
-      const footH = footerHeight(ctx.look, d.footer);
+      const footH = footerHeight(sheet, d.footer);
       const simple =
         !d.points?.length && !d.closing && !d.subtitle && !d.highlighted && !d.crossedOut;
       const w = d.footer ? CW : W - 2 * 4 * REM;
@@ -3083,7 +3050,7 @@ const RENDER: {
           2.5 * REM,
         ]);
       }
-      const heights = parts.map(([p, o, pw]) => ctx.look.need(p, pw, o));
+      const heights = parts.map(([p, o, pw]) => sheet.need(p, pw, o));
       const total = heights.reduce((sum, h, i) => sum + h + parts[i][3], 0);
       const [top, bottom] = d.footer ? [TOP, BOTTOM - footH - 0.1] : [0, BOTTOM];
       let y = top + Math.max(0, (bottom - top - total) / 2);
@@ -3092,13 +3059,13 @@ const RENDER: {
         box(s, c, p, (W - pw) / 2, y, pw, heights[i], o);
         y += heights[i];
       });
-      footer(s, ctx, d.footer, footH);
+      footer(sheet, d.footer, footH);
       return;
     }
     if (qr) {
       // As QrStatement: the words at the left, the code on the right in a white card whose padding
       // is its quiet zone, its address under it, the row top-aligned and centred above the footer.
-      const footH = footerHeight(ctx.look, d.footer);
+      const footH = footerHeight(sheet, d.footer);
       const q = (0.45 * 1.15 * 1080) / 144;
       const label = `↗ ${linkLabel(qr.href)}`;
       const colW = Math.max(q, textWidth(label, { size: PT.base, mono: true }) + 0.1);
@@ -3147,9 +3114,9 @@ const RENDER: {
           1.5 * REM,
         ]);
       }
-      const heights = parts.map(([p, o]) => ctx.look.need(p, w, o));
+      const heights = parts.map(([p, o]) => sheet.need(p, w, o));
       const textH = heights.reduce((sum, h, i) => sum + h + parts[i][2], 0);
-      const labelH = ctx.look.need(label, colW, { size: PT.base, mono: true, color: c.teal });
+      const labelH = sheet.need(label, colW, { size: PT.base, mono: true, color: c.teal });
       const figH = q + REM + labelH;
       const bottom = BOTTOM - footH - (d.footer ? 0.1 : 0);
       const top = TOP + Math.max(0, (bottom - TOP - Math.max(textH, figH)) / 2);
@@ -3162,8 +3129,8 @@ const RENDER: {
       const x = W - EDGE - colW + (colW - q) / 2;
       const pad = 2.5 * REM;
       card(s, x, top, q, q, "FFFFFF", c.border, CORNER);
-      picture(s, ctx, qr.src, x + pad, top + pad, q - 2 * pad, q - 2 * pad, {
-        alt: qrAlt(qr.href, ctx.look.lang),
+      picture(sheet, qr.src, x + pad, top + pad, q - 2 * pad, q - 2 * pad, {
+        alt: qrAlt(qr.href, sheet.lang),
         href: qr.href,
       });
       box(
@@ -3176,7 +3143,7 @@ const RENDER: {
         labelH,
         { size: PT.base, mono: true, color: c.teal, align: "center" },
       );
-      footer(s, ctx, d.footer, footH);
+      footer(sheet, d.footer, footH);
       return;
     }
     const paras: Para[] = d.lines.map((l) => ({
@@ -3259,16 +3226,15 @@ const RENDER: {
       line: 1.2,
       floor: 0.5,
     };
-    const footH = footerHeight(ctx.look, d.footer);
+    const footH = footerHeight(sheet, d.footer);
     box(s, c, paras, EDGE, TOP, w, BOTTOM - TOP - footH, o);
-    footer(s, ctx, d.footer, footH);
+    footer(sheet, d.footer, footH);
     if (side) {
       // A quotation's portrait is round at the web's size, 384 px at 1920, centred in the side.
       const [x, h] = [EDGE + w + 0.4, BOTTOM - TOP - footH];
       const r = "round" in side && side.round ? 384 / 144 : 0;
       picture(
-        s,
-        ctx,
+        sheet,
         side.src,
         r ? x + (imgW - r) / 2 : x,
         r ? TOP + (h - r) / 2 : TOP,
@@ -3279,11 +3245,12 @@ const RENDER: {
     }
   },
 
-  grid(s, ctx, d) {
+  grid(sheet, d) {
+    const { slide: s } = sheet;
     // Quotes as the web's QuoteCard: the brand quote, upright ink behind a purple rule with no
     // card, and under it the author in teal, a round portrait beside, in the web's columns.
-    const { c } = ctx.look;
-    const y = header(s, ctx, d);
+    const { c } = sheet;
+    const y = header(sheet, d);
     const cols = d.columns === 2 ? 2 : d.columns === 4 ? 4 : 3;
     const rows = Math.ceil(d.cards.length / cols);
     const a = BODY(y);
@@ -3295,7 +3262,7 @@ const RENDER: {
     const who = 74.67 / 144;
     const o: BoxOpts = { size: PT.lead, color: c.ink };
     const quote = (cd: (typeof d.cards)[number]) => ({ runs: md(cd.description ?? cd.title, c) });
-    const qh = Math.max(...d.cards.map((cd) => ctx.look.need(quote(cd), cw - indent, o)));
+    const qh = Math.max(...d.cards.map((cd) => sheet.need(quote(cd), cw - indent, o)));
     const ch = Math.min((a.h - (rows - 1) * gap) / rows, qh + 0.25 + who);
     const left = a.x + (a.w - w) / 2;
     const top = a.y + Math.max(0, (a.h - rows * ch - (rows - 1) * gap) / 2);
@@ -3307,7 +3274,7 @@ const RENDER: {
       box(s, c, quote(cd), x + indent, yy, cw - indent, h, o);
       let ax = x;
       if (cd.imageSrc) {
-        portrait(s, ctx, cd.imageSrc, cd.author ?? "", x, yy + ch - who, who, c.teal);
+        portrait(sheet, cd.imageSrc, cd.author ?? "", x, yy + ch - who, who, c.teal);
         ax += who + 0.11;
       }
       if (cd.author)
@@ -3320,10 +3287,11 @@ const RENDER: {
     });
   },
 
-  comparison(s, ctx, d) {
-    const { c } = ctx.look;
-    const y = header(s, ctx, d);
-    const footH = comparisonFoot(undefined, ctx.look, d, 0);
+  comparison(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
+    const y = header(sheet, d);
+    const footH = comparisonFoot(drySheet(sheet), d, 0);
     const area = BODY(y);
     const sides = [d.left, d.right];
     const variant = d.variant ?? "vs";
@@ -3335,11 +3303,11 @@ const RENDER: {
       const adds = !strike && d.adds;
       const ch = Math.min(
         area.h - footH,
-        beforeAfterHeight(ctx.look, sides, strike, area.w, o, 1, adds),
+        beforeAfterHeight(sheet, sides, strike, area.w, o, 1, adds),
       );
       const top = place(ch);
-      beforeAfter(s, ctx, { ...area, y: top, h: ch }, o, sides, strike, 1, adds);
-      comparisonFoot(s, ctx.look, d, top + ch);
+      beforeAfter(sheet, { ...area, y: top, h: ch }, o, sides, strike, 1, adds);
+      comparisonFoot(sheet, d, top + ch);
       return;
     }
     // The print route shows both sides of a `vs` slide active, as its last reveal step does: a vs
@@ -3382,8 +3350,8 @@ const RENDER: {
     });
     const logoH = 48 / 144 + REM;
     const parts = sides.map((sd) => {
-      const th = ctx.look.need(label(sd), cw - 2 * pad, titleO);
-      const ih = ctx.look.need(items(sd), cw - 2 * pad, itemO);
+      const th = sheet.need(label(sd), cw - 2 * pad, titleO);
+      const ih = sheet.need(items(sd), cw - 2 * pad, itemO);
       return { th, ih, h: 2 * pad + (sd.logo ? logoH : 0) + th + 1.5 * REM + ih };
     });
     const ch = Math.min(area.h - footH, Math.max(...parts.map((p) => p.h)));
@@ -3393,7 +3361,7 @@ const RENDER: {
       card(s, x, top, cw, ch, vs ? c.tealTint : c.card, vs ? c.teal : c.border);
       let ty = top + pad;
       if (sd.logo) {
-        picture(s, ctx, sd.logo, x + pad, ty, 1.4, 48 / 144, {
+        picture(sheet, sd.logo, x + pad, ty, 1.4, 48 / 144, {
           align: "left",
           alt: plain(sd.label),
         });
@@ -3403,18 +3371,19 @@ const RENDER: {
       ty += parts[i].th + 1.5 * REM;
       box(s, c, items(sd), x + pad, ty, cw - 2 * pad, top + ch - pad - ty, itemO);
     });
-    comparisonFoot(s, ctx.look, d, top + ch);
+    comparisonFoot(sheet, d, top + ch);
   },
 
-  guidance(s, ctx, d) {
-    const { c } = ctx.look;
-    let y = header(s, ctx, d);
+  guidance(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
+    let y = header(sheet, d);
     const intro: Para[] = [
       ...(d.intro ? [{ runs: md(d.intro, c), after: 6 }] : []),
       ...bulletParas(d.points ?? [], c),
     ];
     if (intro.length) {
-      const ih = Math.min(1.6, ctx.look.need(intro, CW, { size: PT.base, color: c.muted }));
+      const ih = Math.min(1.6, sheet.need(intro, CW, { size: PT.base, color: c.muted }));
       box(s, c, intro, EDGE, y, CW, ih, { size: PT.base, color: c.muted });
       y += ih + 0.2;
     }
@@ -3436,8 +3405,8 @@ const RENDER: {
       });
       row(
         [
-          [ctx.look.words.bad, ex.bad, c.red, c.redTint],
-          [ctx.look.words.good, ex.good, c.green, c.greenTint],
+          [sheet.words.bad, ex.bad, c.red, c.redTint],
+          [sheet.words.good, ex.good, c.green, c.greenTint],
         ] as const,
         { x: EDGE, y: ey + 0.35, w: CW, h: eh - 0.35 },
         0.25,
@@ -3466,10 +3435,11 @@ const RENDER: {
     });
   },
 
-  profiles(s, ctx, d) {
-    const { c } = ctx.look;
-    const y = header(s, ctx, d);
-    const footH = footerHeight(ctx.look, d.footer);
+  profiles(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
+    const y = header(sheet, d);
+    const footH = footerHeight(sheet, d.footer);
     const a = { ...BODY(y), h: BOTTOM - y - footH };
     const body = (p: (typeof d.profiles)[number]): Para[] => [
       ...bulletParas(p.bullets ?? [], c),
@@ -3480,7 +3450,7 @@ const RENDER: {
       1.6 +
         Math.max(
           ...d.profiles.map((p) =>
-            ctx.look.need(body(p), a.w / d.profiles.length - 0.6, {
+            sheet.need(body(p), a.w / d.profiles.length - 0.6, {
               size: PT.base,
               color: c.ink,
             }),
@@ -3490,7 +3460,7 @@ const RENDER: {
     row(d.profiles, { ...a, h: ch }, 0.3, (p, r, i) => {
       const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
       card(s, r.x, r.y, r.w, r.h, c.card, c.border);
-      portrait(s, ctx, p.imageSrc, p.name, r.x + 0.25, r.y + 0.25, 0.9, tone);
+      portrait(sheet, p.imageSrc, p.name, r.x + 0.25, r.y + 0.25, 0.9, tone);
       box(
         s,
         c,
@@ -3510,18 +3480,18 @@ const RENDER: {
         color: c.ink,
       });
     });
-    footer(s, ctx, d.footer, footH);
+    footer(sheet, d.footer, footH);
   },
 
-  "phased-pills"(s, ctx, d) {
-    const y = d.title ? header(s, ctx, { headline: d.title }) : TOP;
-    pillPhases(s, ctx, d.phases, { x: EDGE + CW * 0.2, y, w: CW * 0.6, h: BOTTOM - y });
+  "phased-pills"(sheet, d) {
+    const y = d.title ? header(sheet, { headline: d.title }) : TOP;
+    pillPhases(sheet, d.phases, { x: EDGE + CW * 0.2, y, w: CW * 0.6, h: BOTTOM - y });
   },
 
-  process(s, ctx, d) {
+  process(sheet, d) {
     // `ProcessSlide` on a desktop and in print: the nodes as the flow block's steps, the loop back
     // above unless `loop: false`, the named phase lit, the footer as the caption under them.
-    const y = header(s, ctx, d);
+    const y = header(sheet, d);
     const steps: FlowStep[] = d.nodes.map((n) => ({
       title: n.title,
       text: n.description || undefined,
@@ -3538,27 +3508,27 @@ const RENDER: {
       k: 1,
     };
     const a = BODY(y);
-    const sh = flowSteps(undefined, ctx.look, steps, a, o);
-    const capH = d.footer ? caption(undefined, ctx.look, d.footer, 0) + 0.37 : 0;
+    const sh = flowSteps(drySheet(sheet), steps, a, o);
+    const capH = d.footer ? caption(drySheet(sheet), d.footer, 0) + 0.37 : 0;
     const top = a.y + Math.max(0, a.h - sh - capH) / 2.25;
-    flowSteps(s, ctx.look, steps, { ...a, y: top }, o);
-    if (d.footer) caption(s, ctx.look, d.footer, top + sh + 0.37);
+    flowSteps(sheet, steps, { ...a, y: top }, o);
+    if (d.footer) caption(sheet, d.footer, top + sh + 0.37);
   },
 
-  lanes(s, ctx, d) {
-    const { c } = ctx.look;
-    const y = header(s, ctx, d);
+  lanes(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
+    const y = header(sheet, d);
     const codeH = d.codeSnippet
       ? (d.codeSnippet.code.split("\n").length * PT.sm * 1.3) / 72 + 0.45
       : 0;
-    const footH = footerHeight(ctx.look, d.footer);
+    const footH = footerHeight(sheet, d.footer);
     const lh =
-      rowShare(ctx, "lanes", BOTTOM - y - codeH - footH - 0.3, d.lanes.length, 0.87, 0.27) - 0.12;
+      rowShare(sheet, "lanes", BOTTOM - y - codeH - footH - 0.3, d.lanes.length, 0.87, 0.27) - 0.12;
     let yy = y;
     if (d.codeSnippet) {
       drawBlock(
-        s,
-        ctx,
+        sheet,
         { type: "code", ...d.codeSnippet },
         { x: EDGE, y: yy, w: CW, h: codeH - 0.1 },
         1,
@@ -3578,7 +3548,7 @@ const RENDER: {
         valign: "middle",
       });
       let x = EDGE + 2;
-      const size = rowSize(ctx, lane.stages, PT.sm, 0.3, EDGE + CW - 0.25 - x);
+      const size = rowSize(sheet, lane.stages, PT.sm, 0.3, EDGE + CW - 0.25 - x);
       lane.stages.forEach((st, j) => {
         const w = chip(s, c, st, x, ly + lh / 2 - (size * 1.9) / 144, size, c.card, c.ink, false);
         x += w;
@@ -3588,13 +3558,14 @@ const RENDER: {
         }
       });
     });
-    footer(s, ctx, d.footer, footH);
+    footer(sheet, d.footer, footH);
   },
 
-  chart(s, ctx, d) {
-    const { pptx, look } = ctx;
-    const { c } = look;
-    const y = header(s, ctx, d);
+  chart(sheet, d) {
+    const { slide: s } = sheet;
+    const { pptx } = sheet.out;
+    const { c } = sheet;
+    const y = header(sheet, d);
     // The web's `Annotation`, under the card or the drawing.
     const annotate = (x: number, top: number, w: number, h: number) =>
       d.annotation &&
@@ -3616,7 +3587,7 @@ const RENDER: {
           ? []
           : [
               {
-                name: `${name} (${look.words.planned})`,
+                name: `${name} (${sheet.words.planned})`,
                 labels,
                 values: data.map((p, i) => (i >= now ? pick(p) : null)),
               },
@@ -3670,7 +3641,7 @@ const RENDER: {
       const [yw, nw] = basis.map((b) => b - (over * b) / sum);
       const lineH = (n: number) => Math.max(1, n) * CHART.line;
       const lines = (t: string | undefined, w: number) =>
-        t ? Math.round(look.need(t, w, labelO) / ((PT.sm * LEADING.body) / 72)) : 0;
+        t ? Math.round(sheet.need(t, w, labelO) / ((PT.sm * LEADING.body) / 72)) : 0;
       const headH = lineH(Math.max(lines(d.yLabel, yw), lines(note, nw)));
       const head = d.yLabel || note ? headH + CHART.underHead : 0;
       label(d.yLabel, inner.x, inner.y, yw, "left", headH);
@@ -3764,7 +3735,10 @@ const RENDER: {
       const unnamed = [d.seriesLabel, ...(two ? [d.series2Label] : [])].flatMap((name, i) =>
         name ? [] : [i * perSeries],
       );
-      ctx.charts.set(ctx.charts.size + 1, trend ? { now, unnamed } : { level: step !== undefined });
+      sheet.out.charts.set(
+        sheet.out.charts.size + 1,
+        trend ? { now, unnamed } : { level: step !== undefined },
+      );
       s.addChart(trend ? pptx.ChartType.line : pptx.ChartType.bar, series, {
         ...r,
         chartColors: now < 0 ? hues : hues.flatMap((hue) => [hue, hue]),
@@ -3808,7 +3782,7 @@ const RENDER: {
       const segs = d.segments ?? [];
       const g = { x: a.x + 1, y: a.y + 0.3, w: a.w - 2, h: a.h - 1.1 };
       const bell = (t: number) => Math.exp(-0.5 * ((t - 0.5) / 0.18) ** 2);
-      curve(s, ctx, g, bell, true);
+      curve(sheet, g, bell, true);
       let acc = 0;
       segs.forEach((seg, i) => {
         const from = acc;
@@ -3842,7 +3816,7 @@ const RENDER: {
       // The graph variant as the web draws it: a curve rising to the right, a marked point at 60 of
       // its 100 steps, the axis labels beside it.
       const g = { x: a.x + 1.5, y: a.y + 0.2, w: a.w - 3, h: a.h - 0.8 };
-      curve(s, ctx, g, (t) => Math.exp(t * 3) / Math.exp(3), true);
+      curve(sheet, g, (t) => Math.exp(t * 3) / Math.exp(3), true);
       s.addShape("line", {
         x: g.x,
         y: g.y + g.h,
@@ -3890,10 +3864,11 @@ const RENDER: {
     annotate(EDGE, BOTTOM - 0.35, CW, 0.35);
   },
 
-  question(s, ctx, d) {
+  question(sheet, d) {
+    const { slide: s } = sheet;
     // As QuestionSlide in print: the headline as a display heading, under it the options as white
     // cards in a 56 rem column, each its letter, its text and its count, centred above the footer band.
-    const { c } = ctx.look;
+    const { c } = sheet;
     const head: BoxOpts = {
       size: PT.s6,
       mono: true,
@@ -3904,7 +3879,7 @@ const RENDER: {
       align: "center",
     };
     const hp: Para = { ...literal(d.headline), balance: true };
-    const hh = ctx.look.need(hp, CW, head);
+    const hh = sheet.need(hp, CW, head);
     const w = Math.min(CW, 56 * REM);
     const oh = 2.5 * REM + (PT.h4 * 1.4) / 72;
     const total = hh + 3.5 * REM + d.options.length * (oh + REM) - REM;
@@ -3939,8 +3914,9 @@ const RENDER: {
     });
   },
 
-  transition(s, ctx, d) {
-    const { c } = ctx.look;
+  transition(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
     const paras: Para[] = [];
     if (d.preText)
       paras.push({
@@ -3961,7 +3937,7 @@ const RENDER: {
       line: 1.1,
       floor: 0.5,
     };
-    const th = Math.min(BOTTOM - TOP - speakerH, ctx.look.need(paras, CW - 1, o) + 0.2);
+    const th = Math.min(BOTTOM - TOP - speakerH, sheet.need(paras, CW - 1, o) + 0.2);
     const ty = TOP + (BOTTOM - TOP - th - speakerH) / 2;
     box(s, c, paras, EDGE + 0.5, ty, CW - 1, th, o);
     if (d.speakerName) {
@@ -3988,17 +3964,18 @@ const RENDER: {
     }
   },
 
-  closing(s, ctx, d) {
-    const { c } = ctx.look;
+  closing(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
     if (d.variant === "discussion") {
-      const y = header(s, ctx, { headline: d.headline ?? d.line1 ?? ctx.look.words.discussion });
+      const y = header(sheet, { headline: d.headline ?? d.line1 ?? sheet.words.discussion });
       // Each seed question on its own card, as the web's: 1.25 rem over and under it, 2 rem
       // beside, 1.5 rem between the cards, the question muted.
       const a = BODY(y);
       const [padY, padX, gap] = [1.25 * REM, 2 * REM, 1.5 * REM];
       const o: BoxOpts = { size: PT.h4, color: c.muted, line: 1.35 };
       const qs = d.seedQuestions ?? [];
-      const hs = qs.map((q) => ctx.look.need(literal(q), a.w - 2 * padX, o));
+      const hs = qs.map((q) => sheet.need(literal(q), a.w - 2 * padX, o));
       const total = hs.reduce((sum, h) => sum + h + 2 * padY, 0) + Math.max(0, qs.length - 1) * gap;
       let qy = a.y + Math.max(0, a.h - total) / 2.25;
       qs.forEach((q, i) => {
@@ -4011,7 +3988,8 @@ const RENDER: {
     // As ContactVariant: the line, the mark row, the speakers and the closing lines 3.5 rem apart,
     // the column centred in the slide; drawn once on DRY to measure it.
     const gap = 3.5 * REM;
-    const column = (s: PSlide, y: number) => {
+    const column = (sheet: Sheet, y: number) => {
+      const { slide: s } = sheet;
       const head = d.line1;
       if (head) {
         const o: BoxOpts = {
@@ -4023,7 +4001,7 @@ const RENDER: {
           line: LEADING.display,
           align: "center",
         };
-        const hh = ctx.look.need(literal(head), CW, o);
+        const hh = sheet.need(literal(head), CW, o);
         box(s, c, { ...literal(head), balance: true }, EDGE, y, CW, hh, o);
         y += hh + gap;
       }
@@ -4032,7 +4010,7 @@ const RENDER: {
         // The web's contact slide without portraits: the lockup in the centre column, each speaker's
         // name and contact lines under it.
         const lockH = 91.7 / 144;
-        const [path, ratio] = brandCut(`lockup${ctx.look.dark ? "-night" : ""}`);
+        const [path, ratio] = brandCut(`lockup${sheet.dark ? "-night" : ""}`);
         const lockW = lockH * ratio;
         // As on the web: each partner's logo at the lockup's height, a × after it.
         const partners = d.partners ?? [];
@@ -4041,7 +4019,7 @@ const RENDER: {
         const partnerW = partners.map((p) => (lockH * p.width) / p.height);
         let x = (W - lockW - partnerW.reduce((sum, w) => sum + w + 2 * pad + times, 0)) / 2;
         partners.forEach((p, i) => {
-          picture(s, ctx, p.src, x, y, partnerW[i], lockH, { alt: p.alt ?? p.company });
+          picture(sheet, p.src, x, y, partnerW[i], lockH, { alt: p.alt ?? p.company });
           box(s, c, "×", x + partnerW[i] + pad, y, times, lockH, {
             size: PT.s6,
             color: c.muted,
@@ -4103,7 +4081,7 @@ const RENDER: {
               : []),
           ];
           const po: BoxOpts = { size: 17.5, color: c.ink, line: 1.4, align: "center" };
-          const ph = ctx.look.need(paras, CW, po);
+          const ph = sheet.need(paras, CW, po);
           box(s, c, paras, EDGE, y, CW, ph, po);
           y += ph + 2 * REM;
         }
@@ -4116,7 +4094,7 @@ const RENDER: {
         speakers.forEach((sp, i) => {
           const x = sx + i * sw;
           const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
-          portrait(s, ctx, sp.imageSrc, sp.name, x + sw / 2 - 0.55, y, 1.1, tone);
+          portrait(sheet, sp.imageSrc, sp.name, x + sw / 2 - 0.55, y, 1.1, tone);
           box(
             s,
             c,
@@ -4159,7 +4137,7 @@ const RENDER: {
         y += 2.35 + linked + gap;
       }
       const tail: Para[] = [];
-      const claim = closingClaim(d, ctx.look.lang);
+      const claim = closingClaim(d, sheet.lang);
       if (claim) {
         // The claim in muted ink, the word brand names for it in teal, one step below a quote's
         // lead, as ClosingSlide draws it.
@@ -4196,29 +4174,28 @@ const RENDER: {
         const o: BoxOpts = { size: PT.lead, color: c.muted, line: 1.25, tracking: -0.025 };
         // max-w-7xl less the web line's 5vw sides (--slide-closing-side), EDGE at the 1920 stage.
         const tw = Math.min(CW, 80 * REM) - 2 * EDGE;
-        const th = ctx.look.need(tail, tw, o);
+        const th = sheet.need(tail, tw, o);
         box(s, c, tail, (W - tw) / 2, y, tw, th, o);
         return y + th;
       }
       return y - gap;
     };
     // The measuring pass warns as the drawing pass will: its warnings are dropped.
-    const warned = ctx.warnings.length;
-    const height = column(DRY, 0);
-    ctx.warnings.length = warned;
-    column(s, (H - height) / 2);
+    const height = column(drySheet(sheet), 0);
+    column(sheet, (H - height) / 2);
   },
 
   // As the web's RoadmapSlide: each column a card holding its items, or its phases as groups of
   // rows under a caps label.
-  roadmap(s, ctx, d) {
-    const { c } = ctx.look;
+  roadmap(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
     // A row's own marker colour: `tone`, or the class its deprecated `dotColor` names.
     const marker = (it: Pick<RoadmapItem, "tone" | "dotColor">) => {
       const t = it.tone ?? it.dotColor?.slice(3);
       return t ? (c[THEME[t as MarkerTone]] as string) : undefined;
     };
-    const y = header(s, ctx, d);
+    const y = header(sheet, d);
     row(d.columns, BODY(y), 0.35, (col, r) => {
       const tone = col.accent === "deepdive" ? c.purple : c.teal;
       const groups: {
@@ -4290,10 +4267,11 @@ const RENDER: {
     });
   },
 
-  gantt(s, ctx, d) {
-    const { c } = ctx.look;
-    const y = header(s, ctx, d);
-    const footH = footerHeight(ctx.look, d.footer);
+  gantt(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
+    const y = header(sheet, d);
+    const footH = footerHeight(sheet, d.footer);
     // GanttSlide's grid, in the spacing scale: a 20 rem label column, 0.25 rem between columns, and
     // per row a label line over a bar that fills the row, the row at most 7 rem tall.
     const sp = (v: number) => v * 0.25 * REM;
@@ -4321,7 +4299,13 @@ const RENDER: {
       ...[...Map.groupBy(d.milestones ?? [], (m) => m.column).values()].map((ms) => ms.length),
     );
     const msH = stack ? sp(3) + 2 / 144 + sp(1.5) + stack * lh : 0;
-    const pitch = rowShare(ctx, "gantt", BOTTOM - top - footH - msH + sp(2), d.rows.length, sp(30));
+    const pitch = rowShare(
+      sheet,
+      "gantt",
+      BOTTOM - top - footH - msH + sp(2),
+      d.rows.length,
+      sp(30),
+    );
     // Rows squeezed below their gap and label line keep a share of each.
     const rh = pitch - Math.min(sp(2), pitch / 4);
     d.rows.forEach((r, i) => {
@@ -4377,7 +4361,7 @@ const RENDER: {
       box(
         s,
         c,
-        { runs: [caps(d.milestonesLabel ?? ctx.look.words.milestones)] },
+        { runs: [caps(d.milestonesLabel ?? sheet.words.milestones)] },
         EDGE,
         my,
         sp(80),
@@ -4407,22 +4391,23 @@ const RENDER: {
         );
       }
     }
-    footer(s, ctx, d.footer, footH);
+    footer(sheet, d.footer, footH);
   },
 
-  "team-topology"(s, ctx, d) {
-    const y = header(s, ctx, d);
+  "team-topology"(sheet, d) {
+    const y = header(sheet, d);
     const a = BODY(y);
     // The web's fit guard: the whole body shrinks until it fits.
     let k = 1;
-    while (k > 0.6 && topology(undefined, ctx, d, a, k) > a.h) k -= 0.02;
-    const h = topology(undefined, ctx, d, a, k);
-    topology(s, ctx, d, { ...a, y: a.y + Math.max(0, a.h - h) / 2.25 }, k);
+    while (k > 0.6 && topology(drySheet(sheet), d, a, k) > a.h) k -= 0.02;
+    const h = topology(drySheet(sheet), d, a, k);
+    topology(sheet, d, { ...a, y: a.y + Math.max(0, a.h - h) / 2.25 }, k);
   },
 
-  agenda(s, ctx, d) {
-    const { c } = ctx.look;
-    const y = header(s, ctx, d);
+  agenda(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
+    const y = header(sheet, d);
     const items = d.items.map((it) => (typeof it === "string" ? { title: it } : it));
     const timed = items.some((it) => it.when);
     // A title stands after the widest time, its line under it after the tab too: the stop is the
@@ -4454,24 +4439,25 @@ const RENDER: {
           ]
         : []),
     ]);
-    const footH = footerHeight(ctx.look, d.footer);
+    const footH = footerHeight(sheet, d.footer);
     box(s, c, paras, EDGE, y + 0.2, CW * 0.8, BOTTOM - y - 0.2 - footH, {
       size: PT.h3,
       color: c.ink,
     });
-    footer(s, ctx, d.footer, footH);
+    footer(sheet, d.footer, footH);
   },
 
-  activity(s, ctx, d) {
-    const { c } = ctx.look;
+  activity(sheet, d) {
+    const { slide: s } = sheet;
+    const { c } = sheet;
     const label =
       d.label ?? { exercise: "Hands-on", demo: "Live demo", debrief: "Debrief" }[d.kind];
-    const y = header(s, ctx, { sectionLabel: label, headline: d.headline, subtitle: d.task });
+    const y = header(sheet, { sectionLabel: label, headline: d.headline, subtitle: d.task });
     const frame = [d.duration, d.mode, d.outcome].filter((t): t is string => !!t);
     const fw = frame.length ? CW * 0.34 : 0;
     let top = y + 0.3;
     if (d.prompt) {
-      const ph = ctx.look.need(d.prompt, CW - 0.6, { size: PT.lead, color: c.ink }) + 0.3;
+      const ph = sheet.need(d.prompt, CW - 0.6, { size: PT.lead, color: c.ink }) + 0.3;
       card(s, EDGE, top, CW, ph, c.tealTint, c.teal);
       box(s, c, d.prompt, EDGE + 0.3, top + 0.15, CW - 0.6, ph - 0.3, {
         size: PT.lead,
@@ -4515,12 +4501,13 @@ const RENDER: {
     );
   },
 
-  wheel(s, ctx, d) {
+  wheel(sheet, d) {
+    const { slide: s } = sheet;
     // As `WheelSlide`: a ring of segments at 40 % teal, a 1.5 degree gap each side, numbered from
     // the top clockwise, the centre on a soft disc; each segment's tile, title and text on the side
     // its centre lies on, both columns against the ring.
-    const { c } = ctx.look;
-    const y = header(s, ctx, d);
+    const { c } = sheet;
+    const y = header(sheet, d);
     const a = BODY(y);
     const n = d.segments.length;
     const dia = 24 * REM;
@@ -4542,14 +4529,14 @@ const RENDER: {
     const itemH = (k: number) =>
       Math.max(
         tile,
-        ctx.look.need(d.segments[k].title, textW, titleO) +
+        sheet.need(d.segments[k].title, textW, titleO) +
           0.25 * REM +
-          ctx.look.need(d.segments[k].text, textW, textO),
+          sheet.need(d.segments[k].text, textW, textO),
       );
     const colH = (list: number[]) =>
       list.reduce((sum, k, i) => sum + itemH(k) + (i ? 1.75 * REM : 0), 0);
     const capO: BoxOpts = { size: PT.sm, color: c.muted, line: 1.45 };
-    const capH = d.caption ? REM + ctx.look.need(d.caption, a.w, capO) : 0;
+    const capH = d.caption ? REM + sheet.need(d.caption, a.w, capO) : 0;
     const h = Math.max(dia, colH(left), colH(right));
     const top = a.y + Math.max(0, a.h - h - capH) / 2.25;
     const cx = a.x + colW + 2 * REM + dia / 2;
@@ -4626,7 +4613,7 @@ const RENDER: {
           valign: "middle",
           line: 1,
         });
-        const th = ctx.look.need(sg.title, w, titleO);
+        const th = sheet.need(sg.title, w, titleO);
         box(s, c, sg.title, x + tile + 0.75 * REM, ly, w, th, titleO);
         box(
           s,
@@ -4635,7 +4622,7 @@ const RENDER: {
           x + tile + 0.75 * REM,
           ly + th + 0.25 * REM,
           w,
-          ctx.look.need(sg.text, w, textO),
+          sheet.need(sg.text, w, textO),
           textO,
         );
         ly += itemH(k) + 1.75 * REM;
@@ -4660,13 +4647,14 @@ const RENDER: {
     if (d.caption) box(s, c, d.caption, a.x, top + h + REM, a.w, capH - REM, capO);
   },
 
-  decision(s, ctx, d) {
+  decision(sheet, d) {
+    const { slide: s } = sheet;
     // As the web's decision grid: the need, a stub arrow, the question, a fork to the yes branch
     // above and the no branch below, both labelled in caps, a join and an arrow into the outcome;
     // the columns `--slide-decision-columns` sets, the branches as tall as the taller, 4 px teal
     // lines with 0.9 rem arrowheads.
-    const { c } = ctx.look;
-    const y = header(s, ctx, d);
+    const { c } = sheet;
+    const y = header(sheet, d);
     const a = BODY(y);
     const fixed = [15, 4, 14, 7.5, 0, 3.5, 17].map((r) => r * REM);
     fixed[4] = Math.max(0, a.w - fixed.reduce((sum, v) => sum + v, 0));
@@ -4679,25 +4667,24 @@ const RENDER: {
     const titleO: BoxOpts = { size: PT.h4, ...TITLE, color: c.ink, line: 1.25, tracking: -0.015 };
     const textO: BoxOpts = { size: PT.h4, color: c.ink, line: 1.375 };
     const needIn = fixed[0] - 2 * 1.25 * REM;
-    const needH = ctx.look.need(d.need, needIn, bold) + 2 * REM;
+    const needH = sheet.need(d.need, needIn, bold) + 2 * REM;
     const qIn = fixed[2] - 2 * 1.25 * REM;
-    const qH =
-      ctx.look.need({ runs: md(d.question, c), align: "center" }, qIn, bold) + 2 * 1.25 * REM;
+    const qH = sheet.need({ runs: md(d.question, c), align: "center" }, qIn, bold) + 2 * 1.25 * REM;
     const oIn = fixed[6] - 2 * 1.25 * REM;
-    const oH = ctx.look.need(d.outcome, oIn, bold) + 2 * REM;
+    const oH = sheet.need(d.outcome, oIn, bold) + 2 * REM;
     const bIn = fixed[4] - 2 * 1.5 * REM;
     const branch = (br: typeof d.yes): [Para, BoxOpts, number][] => [
       [{ runs: md(br.title, c, { color: teamTone(br.team) }) }, titleO, 0],
       [{ runs: md(br.text, c) }, textO, 0.5 * REM],
     ];
     const bh = (br: typeof d.yes) =>
-      branch(br).reduce((sum, [p, o, gap]) => sum + gap + ctx.look.need(p, bIn, o), 0) +
+      branch(br).reduce((sum, [p, o, gap]) => sum + gap + sheet.need(p, bIn, o), 0) +
       2 * 1.25 * REM;
     const rowH = Math.max(bh(d.yes), bh(d.no));
     const gapY = 3.5 * REM;
     const gridH = 2 * rowH + gapY;
     const capO: BoxOpts = { size: PT.h4, color: c.muted, line: 1.4, align: "center" };
-    const capH = d.caption ? 1.5 * REM + ctx.look.need(d.caption, a.w, capO) : 0;
+    const capH = d.caption ? 1.5 * REM + sheet.need(d.caption, a.w, capO) : 0;
     const top = a.y + Math.max(0, a.h - gridH - capH) / 2.25;
     const mid = top + gridH / 2;
     const thick = 0.25 * REM;
@@ -4775,10 +4762,10 @@ const RENDER: {
         teamLine(br.team),
       );
       const parts = branch(br);
-      const inner = parts.reduce((sum, [p, o, gap]) => sum + gap + ctx.look.need(p, bIn, o), 0);
+      const inner = parts.reduce((sum, [p, o, gap]) => sum + gap + sheet.need(p, bIn, o), 0);
       let ty = cy - inner / 2;
       for (const [p, o, gap] of parts) {
-        const ph = ctx.look.need(p, bIn, o);
+        const ph = sheet.need(p, bIn, o);
         ty += gap;
         box(s, c, p, col(4) + 1.5 * REM, ty, bIn, ph, o);
         ty += ph;
@@ -4796,7 +4783,8 @@ const RENDER: {
 
 /** A function over [0, 1] drawn as a polyline in the area, its values in [0, 1] from the bottom,
  *  with the area under it tinted. */
-function curve(s: PSlide, ctx: Ctx, g: Area, f: (t: number) => number, fill: boolean) {
+function curve(sheet: Sheet, g: Area, f: (t: number) => number, fill: boolean) {
+  const { slide: s } = sheet;
   const n = 100;
   const pts = Array.from({ length: n }, (_, i) => ({
     x: (i / (n - 1)) * g.w,
@@ -4808,7 +4796,7 @@ function curve(s: PSlide, ctx: Ctx, g: Area, f: (t: number) => number, fill: boo
       y: g.y,
       w: g.w,
       h: g.h,
-      fill: { color: mixColor(ctx.look.c.teal, ctx.look.c.bg, 0.18) },
+      fill: { color: mixColor(sheet.c.teal, sheet.c.bg, 0.18) },
       line: { type: "none" },
       points: [{ x: 0, y: g.h, moveTo: true }, ...pts, { x: g.w, y: g.h }, { close: true }],
     });
@@ -4818,15 +4806,14 @@ function curve(s: PSlide, ctx: Ctx, g: Area, f: (t: number) => number, fill: boo
     y: g.y,
     w: g.w,
     h: g.h,
-    line: { color: ctx.look.c.teal, width: 2.25 },
+    line: { color: sheet.c.teal, width: 2.25 },
     points: [{ ...pts[0], moveTo: true }, ...pts.slice(1)],
   });
 }
 
 /** Phases of pills, numbered where an item carries one, as phased-pills and dual-pill-overview set them. */
 function pillPhases(
-  s: PSlide,
-  ctx: Ctx,
+  sheet: Sheet,
   phases: {
     label: string;
     theme?: SectionTheme;
@@ -4834,7 +4821,8 @@ function pillPhases(
   }[],
   a: Area,
 ) {
-  const { c } = ctx.look;
+  const { slide: s } = sheet;
+  const { c } = sheet;
   const ph = Math.min(1, a.h / phases.length);
   phases.forEach((p, i) => {
     const py = a.y + i * ph;
@@ -4848,7 +4836,7 @@ function pillPhases(
     let x = a.x;
     const title = (it: (typeof p.items)[number]) =>
       it.number === undefined ? it.title : `#${it.number} ${it.title}`;
-    const size = rowSize(ctx, p.items.map(title), PT.sm * 0.9, 0.12, a.w);
+    const size = rowSize(sheet, p.items.map(title), PT.sm * 0.9, 0.12, a.w);
     for (const it of p.items) {
       const on = it.state === "active" || it.state === "new";
       const w = chip(
@@ -4921,43 +4909,43 @@ export async function renderPptx(
   if (deck.speakers?.length) pptx.author = deck.speakers.join(", ");
   pptx.theme = { headFontFace: MONO, bodyFontFace: SANS };
   const dark = deck.theme === "brand-dark";
-  const deckCtx: Ctx = {
+  const deckLook = new Look(palette(dark), deckLanguage, dark);
+  const out: Output = {
     pptx,
-    look: new Look(palette(dark), deckLanguage, dark),
     assets,
     warnings: [],
     charts: new Map(),
   };
   // A deep-dive slide stands on night, as on the web (`isDeepDive`).
-  const nightCtx: Ctx = { ...deckCtx, look: new Look(palette(true), deckLanguage, true) };
+  const nightLook = new Look(palette(true), deckLanguage, true);
   // A slide's ground as the web's `--slide-ground`: its hue at 7 % on the background, which every
   // fill in the ground's colour takes too.
-  const grounded = new Map<string, Ctx>();
-  const ctxOf = (slide: Slide | undefined) => {
-    const base = dark || !slide || !isDeepDive(slide) ? deckCtx : nightCtx;
+  const grounded = new Map<string, Look>();
+  const lookOf = (slide: Slide | undefined) => {
+    const base = dark || !slide || !isDeepDive(slide) ? deckLook : nightLook;
     const ground = slide ? groundOf(slide as Grounded) : "intro";
     if (ground === "intro") return base;
-    const key = `${base.look.dark}-${ground}`;
+    const key = `${base.dark}-${ground}`;
     if (!grounded.has(key)) {
-      const { c } = base.look;
+      const { c } = base;
       const hue = { primary: c.teal, secondary: c.purple, accent: c.amber, success: c.green }[
         ground
       ];
-      grounded.set(key, { ...base, look: base.look.grounded(hue) });
+      grounded.set(key, base.grounded(hue));
     }
     return grounded.get(key)!;
   };
   deck.slides.forEach((slide, i) => {
     const s = pptx.addSlide();
-    const ctx = ctxOf(slide);
-    frame(s, ctx, deck, i);
+    const sheet = new Sheet(lookOf(slide), s, out);
+    frame(sheet, deck, i);
     const drawn = slideDrawn(slide);
     const render = RENDER[drawn.type as RenderedSlide["type"]] as Render | undefined;
     if (!render)
       throw new Error(
         `slide ${i + 1} is a ${JSON.stringify(slide.type)}, which slides-pptx cannot draw`,
       );
-    render(s, ctx, drawn as never);
+    render(sheet, drawn as never);
   });
   const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
   // pptxgenjs numbers charts across every deck of the process: within one, they run in drawing order.
@@ -4966,10 +4954,10 @@ export async function renderPptx(
     .sort((a, b) => parseInt(a.match(/\d+/)![0]) - parseInt(b.match(/\d+/)![0]));
   for (const name of Object.keys(zip.files).filter((f) => /^ppt\/.+\.xml$/.test(f))) {
     const raw = await zip.file(name)!.async("string");
-    const fix = deckCtx.charts.get(chartFiles.indexOf(name) + 1);
+    const fix = out.charts.get(chartFiles.indexOf(name) + 1);
     const xml = fix ? finishChart(raw, fix) : raw;
     const n = /^ppt\/slides\/slide(\d+)\.xml$/.exec(name);
-    const slideC = ctxOf(n ? deck.slides[Number(n[1]) - 1] : undefined).look.c;
+    const slideC = lookOf(n ? deck.slides[Number(n[1]) - 1] : undefined).c;
     zip.file(
       name,
       xml
@@ -5004,7 +4992,7 @@ export async function renderPptx(
     );
     if (n)
       for (const found of checkSlide(await zip.file(name)!.async("string"), W, H))
-        deckCtx.warnings.push(`slide ${n[1]}: ${found}`);
+        out.warnings.push(`slide ${n[1]}: ${found}`);
   }
-  return { zip, warnings: deckCtx.warnings };
+  return { zip, warnings: out.warnings };
 }
