@@ -47,14 +47,16 @@ describe("catalog usage counts", () => {
 });
 
 describe("slides-usage", () => {
+  // Every entry a deck can use; a "-2" anchor is a specimen's second tile.
+  const catalogueEntries = Object.keys(GUIDANCE).filter((id) => !/-\d+$/.test(id));
+
   it("finds a catalogue entry for every slide of the specimen deck", () => {
     expect(slideCatalog.slides.filter((s) => !entriesOf(s).length)).toEqual([]);
   });
 
-  // Every entry a deck can use is reached by a specimen slide; a "-2" is a specimen's second tile.
   it("reaches every catalogue entry from the specimen deck", () => {
     const reached = new Set(slideCatalog.slides.flatMap(entriesOf));
-    expect(Object.keys(GUIDANCE).filter((id) => !reached.has(id) && !/-\d+$/.test(id))).toEqual([]);
+    expect(catalogueEntries.filter((id) => !reached.has(id))).toEqual([]);
   });
 
   it("counts the quotation and trend variants under their own entry names", () => {
@@ -109,12 +111,12 @@ describe("slides-usage", () => {
     const deck = { lang: "en", slides: [{ type: "agenda", headline: "h", items: [] }] };
     const { code, json } = run(deck, deck);
     expect(code).toBe(0);
-    expect(json).toMatchObject({ decks: 2, slides: 2, entries: { agenda: 2 } });
-    if (!json || typeof json !== "object" || !("unused" in json) || !Array.isArray(json.unused))
-      throw new Error("Expected slides-usage output with an unused list");
-    expect(json.unused).toContain("wheel");
-    expect(json.unused).not.toContain("agenda");
-    expect(json.unused.filter((id: unknown) => /-\d+$/.test(String(id)))).toEqual([]);
+    expect(json).toEqual({
+      decks: 2,
+      slides: 2,
+      entries: { agenda: 2 },
+      unused: catalogueEntries.filter((id) => id !== "agenda"),
+    });
   });
 
   it("fails on a slide no entry draws, naming it, and on a file that is no deck", () => {
@@ -145,57 +147,118 @@ describe("slides-usage", () => {
     expect(empty.stderr).toContain("no deck");
   });
 
-  it("names a broken deck in an array by its slug, else its name, with its place", () => {
+  it.each([
+    [
+      "its slug",
+      { lang: "en", slug: "kickoff", slides: [{ type: "nope" }] },
+      /kickoff \(\S+\[1\]\) slide 1: type nope/,
+    ],
+    [
+      "its name when slug is empty",
+      { lang: "en", slug: "", name: "Retro", slides: [{ type: "nope" }] },
+      /Retro \(\S+\[1\]\) slide 1: type nope/,
+    ],
+    [
+      "its file and index when unnamed",
+      { lang: "en", slides: [{ type: "nope" }] },
+      /\.json\[1\] slide 1: type nope/,
+    ],
+    ["its name when the item is no deck", { name: "Draft" }, /Draft \(\S+\[1\]\) is no deck/],
+  ])("names a broken deck in an array by %s", (_label, broken, expected) => {
     const deck = { lang: "en", slides: [{ type: "agenda", headline: "h", items: [] }] };
-    const broken = { lang: "en", slides: [{ type: "nope" }] };
-    const named = [{ ...broken, slug: "kickoff" }, { ...broken, slug: "", name: "Retro" }, broken];
-    const { code, err } = run([deck, ...named]);
+    const { code, err } = run([deck, broken]);
     expect(code).toBe(1);
-    expect(err).toMatch(/kickoff \(\S+\[1\]\) slide 1: type nope/);
-    expect(err).toMatch(/Retro \(\S+\[2\]\) slide 1: type nope/);
-    expect(err).toMatch(/\.json\[3\] slide 1: type nope/);
-    const noDeck = run([deck, { name: "Draft" }]);
-    expect(noDeck.code).toBe(1);
-    expect(noDeck.err).toMatch(/Draft \(\S+\[1\]\) is no deck/);
+    expect(err).toMatch(expected);
   });
 
   // A deck-data lint for what the type checker cannot see: each rule hit by a planted field, and
   // its control, the same slide where the field draws, passing.
-  it("names a field that changes nothing the slide draws", () => {
-    const ignored = (slide: object) => ignoredFields(slide as Slide);
-    const card = (icon?: string) => ({ title: "t", icon });
-    expect(ignored({ type: "grid", headline: "h", numberFrom: 3, cards: [card("x")] })).toEqual([
-      expect.stringContaining("numberFrom"),
-    ]);
-    expect(ignored({ type: "grid", headline: "h", numberFrom: 3, cards: [card()] })).toEqual([]);
-    const cards = (numbered: boolean) => ({
-      type: "content",
-      headline: "h",
-      content: [{ type: "cards", items: [], numberFrom: 4, numbered }],
-    });
-    expect(ignored(cards(false))).toHaveLength(1);
-    expect(ignored(cards(true))).toEqual([]);
-    const content = (extra: object) => ({
-      type: "content",
-      headline: "h",
-      sectionTheme: "accent",
-      content: [{ type: "bullets", items: ["a", "b", "c"] }],
-      ...extra,
-    });
-    expect(ignored(content({}))).toEqual([expect.stringContaining("sectionTheme")]);
-    expect(ignored(content({ footer: "f" }))).toEqual([]);
+  it.each([
+    [
+      "a grid whose cards name an icon",
+      { type: "grid", headline: "h", numberFrom: 3, cards: [{ title: "t", icon: "x" }] },
+      ["numberFrom: a grid numbers its pillars only where no card names an icon"],
+    ],
+    [
+      "a grid without icons",
+      { type: "grid", headline: "h", numberFrom: 3, cards: [{ title: "t" }] },
+      [],
+    ],
+    [
+      "an unnumbered cards block",
+      {
+        type: "content",
+        headline: "h",
+        content: [{ type: "cards", items: [], numberFrom: 4, numbered: false }],
+      },
+      ["numberFrom: the cards block is not numbered"],
+    ],
+    [
+      "a numbered cards block",
+      {
+        type: "content",
+        headline: "h",
+        content: [{ type: "cards", items: [], numberFrom: 4, numbered: true }],
+      },
+      [],
+    ],
+  ])("checks numberFrom on %s", (_label, slide, expected) => {
+    expect(ignoredFields(slide as Slide)).toEqual(expected);
+  });
+
+  const themedContent = (extra: object) => ({
+    type: "content",
+    headline: "h",
+    sectionTheme: "accent",
+    content: [{ type: "bullets", items: ["a", "b", "c"] }],
+    ...extra,
+  });
+
+  it.each([
+    [
+      "a plain content slide with no rule or pill",
+      themedContent({}),
+      ["sectionTheme: accent changes no rule, pill or slide type here"],
+    ],
+    [
+      "a content slide with a footer whose border colour changes",
+      themedContent({ footer: "f" }),
+      [],
+    ],
     // A footer's rule takes the section's colour; the default section's colour is no change.
-    expect(ignored(content({ footer: "f", sectionTheme: "secondary" }))).toHaveLength(1);
+    [
+      "a content slide whose footer matches the default border colour",
+      themedContent({ footer: "f", sectionTheme: "secondary" }),
+      ["sectionTheme: secondary changes no rule, pill or slide type here"],
+    ],
     // A principle's pill takes only the success colour.
-    expect(ignored(content({ principle: "p" }))).toHaveLength(1);
-    expect(ignored(content({ principle: "p", sectionTheme: "success" }))).toEqual([]);
-    expect(ignored(content({ sectionTheme: "deepdive" }))).toEqual([]);
-    expect(
-      ignored({ type: "lanes", headline: "h", lanes: [], sectionTheme: "accent" }),
-    ).toHaveLength(1);
+    [
+      "a content slide whose principle matches the default pill colour",
+      themedContent({ principle: "p" }),
+      ["sectionTheme: accent changes no rule, pill or slide type here"],
+    ],
+    [
+      "a content slide whose principle takes the success pill colour",
+      themedContent({ principle: "p", sectionTheme: "success" }),
+      [],
+    ],
+    ["a deep-dive content slide", themedContent({ sectionTheme: "deepdive" }), []],
+    [
+      "a lanes slide, which draws no section rule or pill",
+      { type: "lanes", headline: "h", lanes: [], sectionTheme: "accent" },
+      ["sectionTheme: accent changes no rule, pill or slide type here"],
+    ],
     // A centred slide draws neither its footer's rule nor a principle in the section's colour.
-    expect(ignored(content({ layout: "centered", footer: "f" }))).toHaveLength(1);
-    // The section keeps a lone neutral two-column block a content slide, so it changes the drawing.
+    [
+      "a centred content slide, even with a footer",
+      themedContent({ layout: "centered", footer: "f" }),
+      ["sectionTheme: accent changes no rule, pill or slide type here"],
+    ],
+  ])("checks sectionTheme on %s", (_label, slide, expected) => {
+    expect(ignoredFields(slide as Slide)).toEqual(expected);
+  });
+
+  it("keeps sectionTheme when it prevents a lone neutral two-column block from becoming a split", () => {
     const split = {
       type: "content",
       headline: "h",
@@ -209,7 +272,7 @@ describe("slides-usage", () => {
       ],
     };
     expect(twoColumnAsSplit({ ...split, sectionTheme: undefined } as ContentSlide)).toBeDefined();
-    expect(ignored(split)).toEqual([]);
+    expect(ignoredFields(split as Slide)).toEqual([]);
   });
 
   it("fails on such a field and on a deck that names no language, title slides counted", () => {
@@ -224,24 +287,35 @@ describe("slides-usage", () => {
     expect(run({ slides: [{ type: "title", title: "t", lang: "de" }, agenda] }).code).toBe(0);
   });
 
-  it("writes its counts to a file and with --check fails where the file differs", () => {
+  const usageOut = (deck: string, ...args: string[]) =>
+    spawnSync("bun", [script, ...args, deck], {
+      encoding: "utf8",
+      env: { ...process.env, npm_lifecycle_event: "", npm_lifecycle_script: "" },
+    });
+
+  it("writes counts to --out and passes --check when the file matches", () => {
+    const deck = join(dir, "write.json");
+    writeFileSync(
+      deck,
+      JSON.stringify({ lang: "en", slides: [{ type: "agenda", headline: "h", items: [] }] }),
+    );
+    const file = join(dir, "written-usage.json");
+    expect(usageOut(deck, "--out", file).status).toBe(0);
+    expect(JSON.parse(readFileSync(file, "utf8"))).toMatchObject({ entries: { agenda: 1 } });
+    expect(usageOut(deck, "--out", file, "--check").status).toBe(0);
+  });
+
+  it("fails --check when the output file is missing or differs, naming the re-run command", () => {
     const deck = join(dir, "check.json");
     writeFileSync(
       deck,
       JSON.stringify({ lang: "en", slides: [{ type: "agenda", headline: "h", items: [] }] }),
     );
-    const file = join(dir, "usage.json");
-    const usage = (...args: string[]) =>
-      spawnSync("bun", [script, ...args, deck], {
-        encoding: "utf8",
-        env: { ...process.env, npm_lifecycle_event: "", npm_lifecycle_script: "" },
-      });
-    expect(usage("--out", file, "--check").status).toBe(1);
-    expect(usage("--out", file).status).toBe(0);
-    expect(JSON.parse(readFileSync(file, "utf8"))).toMatchObject({ entries: { agenda: 1 } });
-    expect(usage("--out", file, "--check").status).toBe(0);
+    const missing = join(dir, "missing-usage.json");
+    expect(usageOut(deck, "--out", missing, "--check").status).toBe(1);
+    const file = join(dir, "stale-usage.json");
     writeFileSync(file, "{}");
-    const stale = usage("--out", file, "--check");
+    const stale = usageOut(deck, "--out", file, "--check");
     expect(stale.status).toBe(1);
     expect(stale.stderr).toContain(`is stale: run "slides-usage --out ${file} ${deck}" and commit`);
   });
