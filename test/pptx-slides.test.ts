@@ -482,19 +482,34 @@ describe("slides-pptx slide variants", () => {
     );
   });
 
+  const { type, lines, qr } = pptxSlideVariants.qr;
+  const qrStatement = { type, lines, qr };
+
   it.each([
-    ["kicker", "Live demo"],
-    ["first point", "Open the sample"],
-    ["second point", "Run the demo"],
-    ["closing", "Bring questions"],
-  ])("draws the QR statement's %s to the left of the card", async (_part, label) => {
-    const xml = await onlySlide(pptxSlideVariants.qr);
+    { part: "kicker", slide: { ...qrStatement, kicker: "Live demo" }, text: "Live demo" },
+    {
+      part: "first point",
+      slide: { ...qrStatement, points: ["Open the sample"] },
+      text: "Open the sample",
+    },
+    {
+      part: "second point",
+      slide: { ...qrStatement, points: ["Check the settings", "Run the demo"] },
+      text: "Run the demo",
+    },
+    {
+      part: "closing",
+      slide: { ...qrStatement, closing: "Bring questions" },
+      text: "Bring questions",
+    },
+  ])("draws the QR statement's $part to the left of the card", async ({ slide, text }) => {
+    const xml = await onlySlide(slide);
     const shapes = shapesOf(xml);
     const card = shapes.find((shape) => shape.prst === "roundRect");
-    const text = shapes.find((shape) => shape.texts.includes(label));
+    const part = shapes.find((shape) => shape.texts.includes(text));
     assert(card, "QR card");
-    assert(text, label);
-    expect(text.x + text.w).toBeLessThan(card.x);
+    assert(part, text);
+    expect(part.x + part.w).toBeLessThan(card.x);
   });
 
   it("draws a picture-side statement's struck claim before its lines", async () => {

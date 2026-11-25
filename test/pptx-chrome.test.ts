@@ -220,4 +220,27 @@ describe("slides-pptx contact links", () => {
     assert(rels, "slide relationships");
     expect(await rels.async("string")).toContain(`Target="${target}"`);
   });
+
+  const phone = "+1 202-555-0142";
+
+  it.each([
+    { layout: "centred", slide: pptxSlideVariants.centredEmail },
+    { layout: "portrait", slide: pptxSlideVariants.portraitContact },
+  ])("draws a plain $layout contact without a mailto link", async ({ slide }) => {
+    const {
+      zip,
+      slideXml: [xml],
+    } = await rendered({
+      name: "Contact",
+      slides: [
+        { ...slide, speakers: slide.speakers.map((speaker) => ({ ...speaker, contact: phone })) },
+      ],
+    });
+    const speaker = shapesOf(xml).find((shape) => shape.texts.includes("Ari Example"));
+    assert(speaker, "speaker contact box");
+    expect(speaker.texts).toContain(phone);
+    const rels = zip.file("ppt/slides/_rels/slide1.xml.rels");
+    assert(rels, "slide relationships");
+    expect(await rels.async("string")).not.toContain("mailto:");
+  });
 });
