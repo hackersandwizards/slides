@@ -17,7 +17,6 @@ import type {
 import { trendTicks } from "../../components/slides/ChartPlots";
 import { groundOf } from "../../components/slides/SlideShell";
 import { BRAND_MARK, HW_LOGO, cornerMark, logoPlaces, resolveSlideLogo } from "../../lib/logo";
-import { INLINE_MARKDOWN } from "../../lib/markdown";
 import {
   isDeepDive,
   isHighlightPhase,
@@ -46,7 +45,18 @@ import {
 } from "../../lib/slide-utils";
 import { centredMark } from "./chrome";
 import { MONO, PITCH, SANS } from "./faces";
-import { balance, longest, pretty, wrap, type Span } from "./lines";
+import {
+  breakAt,
+  BULLET_INDENT,
+  fitScale,
+  lineOf,
+  marginOf,
+  parasHeight,
+  paraType,
+  spansOf,
+  textWidth,
+} from "./fit";
+import { balance, longest, pretty, wrap } from "./lines";
 import { checkSlide } from "./overflow";
 import { hex, mixColor, palette, THEME, type Palette } from "./palette";
 import { slideDrawn } from "./slides";
@@ -66,208 +76,26 @@ import {
   spacing,
   type Area,
 } from "./stage";
+import {
+  MARKER_CODES,
+  HUE_OF_MARKER,
+  MARKER_SQUARE,
+  CAPS,
+  caps,
+  md,
+  plain,
+  literal,
+  breaks,
+  asParas,
+  bulletParas,
+  type MarkerHue,
+  type Para,
+  type BoxOpts,
+  type Run,
+} from "./text";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
 type PSlide = ReturnType<Pptx["addSlide"]>;
-type TextProps = PptxGenJS.TextPropsOptions;
-type Run = { text: string; options?: TextProps };
-
-/** A list marker in its own hue, written as a private character, which the post-processing turns
- *  into the brand marker in that hue: pptxgenjs writes no bullet colour. */
-const MARKER_CODES = { green: "E001", red: "E002" } as const;
-type MarkerHue = keyof typeof MARKER_CODES;
-const HUE_OF_MARKER = Object.fromEntries(
-  Object.entries(MARKER_CODES).map(([hue, code]) => [code, hue as MarkerHue]),
-);
-const MARKER_SQUARE = "25AA";
-
-/** Runs with each `\n` as a line break inside the paragraph (`<a:br/>`). pptxgenjs, given the
- *  `\n`, splits the run into paragraphs that all end a line, so a run after it, such as a bold word,
- *  started a paragraph of its own. */
-function breaks(runs: Run[]): Run[] {
-  return runs.flatMap((r) =>
-    r.text
-      .split(/\r?\n/)
-      .map((text, i) =>
-        i ? { text, options: { ...r.options, softBreakBefore: true } } : { ...r, text },
-      ),
-  );
-}
-
-function md(text: string, c: Palette, base: TextProps = {}): Run[] {
-  const parts = String(text).split(INLINE_MARKDOWN);
-  return parts.flatMap((part, i): Run[] => {
-    if (!part) return [];
-    if (i % 2 === 0) return [{ text: part, options: { ...base } }];
-    const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);
-    if (link) {
-      const url = /^(https?:|mailto:)/i.test(link[2]) ? link[2] : undefined;
-      return [
-        {
-          text: link[1],
-          options: { ...base, color: c.teal, ...(url ? { hyperlink: { url } } : {}) },
-        },
-      ];
-    }
-    if (part.startsWith("**"))
-      return [{ text: part.slice(2, -2), options: { ...base, bold: true } }];
-    if (part.startsWith("*")) {
-      return [{ text: part.slice(1, -1), options: { ...base, bold: true, color: c.amber } }];
-    }
-    // brand's inline code: teal's text colour, regular, on the ink's tint.
-    return [
-      {
-        text: part.slice(1, -1),
-        options: { ...base, fontFace: MONO, color: c.tealDark, bold: false, highlight: c.chip },
-      },
-    ];
-  });
-}
-
-const plain = (t: string) => String(t).replace(/\*\*|`|\[([^\]]+)\]\([^)]*\)/g, "$1");
-
-/** One paragraph of a text box: its runs and what sets it apart from the box's defaults. */
-interface Para {
-  runs: Run[];
-  /** Size relative to the box's size. */
-  rel?: number;
-  mono?: boolean;
-  bold?: boolean;
-  bullet?: boolean | "number";
-  marker?: MarkerHue;
-  indent?: number;
-  after?: number;
-  align?: "left" | "center" | "right";
-  /** Left tab stops, in inches from the box's edge, where a tab in the runs aligns. */
-  tabs?: number[];
-  /** Line height as a share of the size, where it differs from the box's. */
-  line?: number;
-  /** Lines broken as `text-wrap: balance` breaks them. */
-  balance?: boolean;
-}
-
-interface BoxOpts {
-  size: number;
-  mono?: boolean;
-  bold?: boolean;
-  italic?: boolean;
-  color: string;
-  align?: "left" | "center" | "right";
-  valign?: "top" | "middle" | "bottom";
-  line?: number;
-  /** The smallest share of `size` the fit may shrink to. */
-  floor?: number;
-  fill?: string;
-  /** Letter spacing in em, as the web's headline tracking. */
-  tracking?: number;
-  /** Lines broken as `text-wrap: balance` breaks them, as the web's headings. */
-  balance?: boolean;
-  /** A share of every line height, which the fit sets. */
-  lineScale?: number;
-}
-
-/** A run drawn in capitals whatever its case, as the web's caps labels: pptxgenjs writes no `cap`,
- *  so the run carries this language, which the post-processing turns into the deck's own and
- *  `cap="all"`. The text keeps the deck's case, which an edit in PowerPoint keeps too. */
-const CAPS = "x-caps";
-const caps = (text: string, options: TextProps = {}): Run => ({
-  text,
-  options: { ...options, lang: CAPS },
-});
-
-/** Width in inches of `text` set in one face, with 1 % to spare: LibreOffice sets a line up to
- *  0.7 % wider than the faces' advances add up to, so a box sized to its text keeps it on a line. */
-const textWidth = (text: string, size: number, mono = false, bold = false, tracking = 0) =>
-  (wrap([{ text: plain(text), size, mono, bold, tracking: tracking * size }], Infinity)[0].width /
-    72) *
-  1.01;
-
-/** The size a paragraph is drawn at, at scale k: pptxgenjs writes half points. */
-const drawnSize = (p: Para, o: BoxOpts, k: number) => Math.round(o.size * (p.rel ?? 1) * k * 2) / 2;
-
-/** A paragraph as the measure reads it: each run in the face and weight it is drawn in. */
-function spansOf(p: Para, o: BoxOpts, k: number): Span[] {
-  const size = drawnSize(p, o, k);
-  return p.runs.map((r) => ({
-    text: r.text,
-    size: r.options?.fontSize ?? size,
-    mono: (r.options?.fontFace ?? ((p.mono ?? o.mono) ? MONO : SANS)) === MONO,
-    bold: !!(r.options?.bold ?? p.bold ?? o.bold),
-    tracking: (o.tracking ?? 0) * size,
-    caps: r.options?.lang === CAPS,
-  }));
-}
-
-/** A paragraph's left margin in inches: a bullet's, as `box` writes it. */
-const marginOf = (p: Para) => (p.bullet ? (BULLET_INDENT * (1 + (p.indent ?? 0))) / 72 : 0);
-const BULLET_INDENT = 16;
-
-/** A paragraph's line height in points at scale k: the web's leading for its size, exact. */
-const lineOf = (p: Para, o: BoxOpts, k: number) =>
-  drawnSize(p, o, k) * (p.line ?? o.line ?? LEADING.body) * (o.lineScale ?? 1);
-
-function parasHeight(paras: Para[], o: BoxOpts, w: number, k: number) {
-  return paras.reduce((sum, p, i) => {
-    const n = wrap(spansOf(p, o, k), (w - marginOf(p)) * 72).length;
-    const after = i < paras.length - 1 ? (p.after ?? 0) * k : 0;
-    return sum + (n * lineOf(p, o, k) + after) / 72;
-  }, 0);
-}
-
-/** The scale in [floor, 1] at which `paras` fit `h` inches and their longest word `w`. */
-function fitScale(paras: Para[], o: BoxOpts, w: number, h: number) {
-  let k = 1;
-  const floor = o.floor ?? 0.6;
-  const widest = (kk: number) =>
-    Math.max(...paras.map((p) => longest(spansOf(p, o, kk)) / 72 + marginOf(p)));
-  while (k > floor && (parasHeight(paras, o, w, k) > h + 0.005 || widest(k) > w)) k -= 0.02;
-  return Math.max(k, floor);
-}
-
-/** A paragraph's runs with a forced line break (`\n`) where the web breaks it, `text-wrap:
- *  balance` or `pretty`, at the drawn size, so PowerPoint sets the slide's lines. */
-function broken(p: Para, o: BoxOpts, k: number, w: number, set: typeof pretty): Run[] {
-  const lines = set(spansOf(p, o, k), (w - marginOf(p)) * 72);
-  if (!lines || lines.length < 2) return p.runs;
-  // Each line's end in the paragraph's text, past the spaces it broke at.
-  const text = p.runs.map((r) => r.text).join("");
-  const cuts: [number, number][] = [];
-  let at = 0;
-  for (const line of lines.slice(0, -1)) {
-    at = text.indexOf(line.text, at) + line.text.length;
-    // A line the text breaks itself keeps its own break.
-    if (text[at] === "\n") {
-      at++;
-      continue;
-    }
-    const gap = /^[ \t]*/.exec(text.slice(at))![0].length;
-    cuts.push([at, at + gap]);
-    at += gap;
-  }
-  const out: Run[] = [];
-  let pos = 0;
-  for (const r of p.runs) {
-    let t = "";
-    for (let i = 0; i < r.text.length; i++, pos++) {
-      const cut = cuts.find(([from, to]) => pos >= from && pos < to);
-      if (cut) {
-        if (pos === cut[0]) t += "\n";
-      } else {
-        if (cuts.some(([from, to]) => from === to && pos === from)) t += "\n";
-        t += r.text[i];
-      }
-    }
-    out.push({ ...r, text: t });
-  }
-  return out;
-}
-
-/** Text the web slide prints as typed, so a `*` or a backtick in it stays a character. */
-const literal = (text: string): Para => ({ runs: [{ text }] });
-
-const asParas = (p: Para[] | Para | string, c: Palette): Para[] =>
-  typeof p === "string" ? [{ runs: md(p, c) }] : Array.isArray(p) ? p : [p];
-
 /** A text box at x, y, w, h whose paragraphs shrink together until their measure fits. */
 function box(
   s: PSlide,
@@ -283,11 +111,12 @@ function box(
   if (!paras.length) return;
   // A box too short for its lines keeps their size and closes their leading first, down to the
   // size itself: a box cut to a label's height on the web holds the label at its size.
-  let k = fitScale(paras, o, w, h);
+  const area = { w, h };
+  let k = fitScale(paras, o, area);
   if (k < 1) {
     const base = Math.min(...paras.map((p) => p.line ?? o.line ?? LEADING.body));
     for (let sc = 0.98; sc * base >= 1; sc -= 0.02)
-      if (fitScale(paras, { ...o, lineScale: sc }, w, h) === 1) {
+      if (fitScale(paras, { ...o, lineScale: sc }, area) === 1) {
         o = { ...o, lineScale: sc };
         k = 1;
         break;
@@ -296,15 +125,19 @@ function box(
   const runs: Run[] = [];
   paras.forEach((p, i) => {
     const last = i === paras.length - 1;
-    const size = drawnSize(p, o, k);
-    breaks(broken(p, o, k, w, o.balance || p.balance ? balance : pretty)).forEach((r, j, all) => {
+    const { size, face: fontFace, bold } = paraType(p, o, k);
+    const lines = (o.balance || p.balance ? balance : pretty)(
+      spansOf(p, o, k),
+      (w - marginOf(p)) * 72,
+    );
+    breaks(breakAt(p.runs, lines)).forEach((r, j, all) => {
       runs.push({
         text: r.text,
         options: {
-          fontFace: (p.mono ?? o.mono) ? MONO : SANS,
+          fontFace,
           fontSize: size,
           color: o.color,
-          bold: p.bold ?? o.bold,
+          bold,
           italic: o.italic,
           ...(o.tracking ? { charSpacing: Math.round(o.tracking * size * 10) / 10 } : {}),
           align: p.align ?? o.align ?? "left",
@@ -353,7 +186,7 @@ function box(
 
 /** The height a box of `content` needs at full size, capped at `max`. */
 function need(content: Para[] | Para | string, c: Palette, w: number, o: BoxOpts, max = H) {
-  return Math.min(max, parasHeight(asParas(content, c), o, w, 1));
+  return Math.min(max, parasHeight(asParas(content, c), o, { w, k: 1 }));
 }
 
 /** A card: the brand's corners, or every corner `r` round where given, as a pill or a label box. */
@@ -382,7 +215,7 @@ function card(
  *  text, centred, at `y`; returns its height. */
 function caption(s: PSlide | undefined, c: Palette, text: string, y: number) {
   const o: BoxOpts = { size: PT.base, color: c.ink, align: "center", valign: "middle" };
-  const fw = Math.min(CW, 1365 / 144, textWidth(text, PT.base) + 2 * CALLOUT_PAD + 0.02);
+  const fw = Math.min(CW, 1365 / 144, textWidth(text, o) + 2 * CALLOUT_PAD + 0.02);
   const th = need(text, c, fw - 2 * CALLOUT_PAD, o);
   const h = th + 2 * CALLOUT_PAD;
   if (!s) return h;
@@ -423,7 +256,7 @@ function arrow(
 }
 
 /** A chip's text width in inches per point of size, in the face a chip sets it in. */
-const chipAdvance = (text: string, mono: boolean) => textWidth(text, 1, mono, mono);
+const chipAdvance = (text: string, mono: boolean) => textWidth(text, { size: 1, mono, bold: mono });
 const chipWidth = (text: string, size: number, mono: boolean) =>
   chipAdvance(text, mono) * size + 0.3;
 
@@ -795,7 +628,8 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
     // Teal in every section, the website's mono caps.
     if (kicker) {
       // The web's label line, 1.4 of its size, as wide as its capitals.
-      const kw = textWidth(kicker.toUpperCase(), PT.base, true, false, 0.06) + 0.02;
+      const kw =
+        textWidth(kicker.toUpperCase(), { size: PT.base, mono: true, tracking: 0.06 }) + 0.02;
       box(s, c, { runs: [caps(kicker)] }, x, 0.38, Math.min(kw, CW), 0.35, {
         size: PT.base,
         mono: true,
@@ -847,26 +681,6 @@ const bodyO = (c: Palette, k: number, extra: Partial<BoxOpts> = {}): BoxOpts => 
   color: c.ink,
   ...extra,
 });
-
-function bulletParas(
-  items: (string | { text: string; children: string[] })[],
-  c: Palette,
-  ordered?: boolean,
-): Para[] {
-  return items.flatMap((item) =>
-    typeof item === "string"
-      ? [{ runs: md(item, c), bullet: ordered ? ("number" as const) : true, after: 6 }]
-      : [
-          { runs: md(item.text, c), bullet: ordered ? ("number" as const) : true, after: 4 },
-          ...item.children.map((ch) => ({
-            runs: md(ch, c),
-            bullet: true as const,
-            indent: 1,
-            after: 4,
-          })),
-        ],
-  );
-}
 
 /** A card with a title and items or text, as two-column, four-column and comparison sides draw. */
 function itemCard(
@@ -1063,7 +877,7 @@ function comparisonFoot(
   const nw = Math.min(
     CW,
     56 * REM,
-    Math.max(0, ...(d.footnotes ?? []).map((f) => textWidth(f, 13.33) + 0.02)),
+    Math.max(0, ...(d.footnotes ?? []).map((f) => textWidth(f, { size: 13.33 }) + 0.02)),
   );
   const punch: Para = { runs: md(d.punchline ?? "", c), balance: true };
   const notes = (d.footnotes ?? []).map((f) => ({ runs: md(f, c) }));
@@ -1338,7 +1152,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const ink = tone ? mixColor(tone, c.ink, 0.6) : c.ink;
       // As wide as its text, at the body size, brand's callout padding round it.
       const pad = CALLOUT_PAD * k;
-      const w = b.fullWidth ? a.w : Math.min(a.w, textWidth(b.text, o.size) + 2 * pad + 0.02);
+      const w = b.fullWidth ? a.w : Math.min(a.w, textWidth(b.text, o) + 2 * pad + 0.02);
       const fill = tone ? mixColor(tone, c.bg, 0.07) : c.callout(c.purple);
       card(s, a.x, a.y, w, a.h, fill, tone && mixColor(tone, c.bg, 0.25));
       return box(s, c, b.text, a.x + pad, a.y + pad, w - 2 * pad, a.h - 2 * pad, {
@@ -1697,7 +1511,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         });
         // A segment's label breaks the middle of the line that leads to its event, as on the web.
         if (e.segment && i > 0) {
-          const tw = textWidth(e.segment, PT.label * k, true) + 0.16;
+          const tw = textWidth(e.segment, { size: PT.label * k, mono: true }) + 0.16;
           box(s, c, { runs: [{ text: e.segment }] }, cx - ew / 2 - tw / 2, ly - 0.11, tw, 0.22, {
             size: PT.label * k,
             mono: true,
@@ -2136,8 +1950,8 @@ function topology(
   // The enabling columns: 14 rem wide, wider where a word needs it, as `md:w-56 md:min-w-min`.
   const enW = d.enabling.map((t) => {
     const words = [
-      ...t.name.split(/\s+/).map((w) => textWidth(w, titleO.size, TITLE.mono, TITLE.bold, -0.015)),
-      ...t.experts.flatMap((e) => e.split(/\s+/).map((w) => textWidth(w, textO.size))),
+      ...t.name.split(/\s+/).map((w) => textWidth(w, titleO)),
+      ...t.experts.flatMap((e) => e.split(/\s+/).map((w) => textWidth(w, textO))),
     ];
     return Math.max(sp(56), Math.max(...words) + 0.02 + 2 * sp(4) + 2 * bd);
   });
@@ -2158,9 +1972,9 @@ function topology(
   // The stream teams, a row each: the roles after the name where both fit one line.
   const sIn = mw - 2 * sp(5) - 2 * bd;
   const streams = d.streamAligned.map((t) => {
-    const nw = textWidth(t.name, titleO.size, TITLE.mono, TITLE.bold, -0.015) + 0.02;
+    const nw = textWidth(t.name, titleO) + 0.02;
     const r = roles(t.roles);
-    const rw = textWidth(r.runs.map((x) => x.text).join(""), textO.size, false, true);
+    const rw = textWidth(r.runs.map((x) => x.text).join(""), { size: textO.size, bold: true });
     const beside = t.roles.length > 0 && nw + sp(6) + rw <= sIn;
     const nh = need(name(t.name, c.ink), c, sIn, titleO);
     const rh = t.roles.length ? need(r, c, beside ? rw + 0.02 : sIn, textO) : 0;
@@ -2222,7 +2036,7 @@ function topology(
   }[] = [];
   if (d.legend !== false)
     for (const type of teamTypesDrawn(d)) {
-      const tw = textWidth(words[type], legO.size) + 0.02;
+      const tw = textWidth(words[type], legO) + 0.02;
       const last = legend.at(-1);
       let lx = last ? last.x + sp(17) + last.tw + sp(10) : 0;
       let row = last?.row ?? 0;
@@ -2508,7 +2322,7 @@ function flowSteps(
       line: { type: "none" },
     });
     if (o.loop) {
-      const lw = textWidth(o.loop, PT.h4 * k, false, true) + sp(12);
+      const lw = textWidth(o.loop, { size: PT.h4 * k, bold: true }) + sp(12);
       // At least a line high, so the fit keeps the label at its size.
       const lh = Math.max(sp(7), (PT.h4 * k * 1.4) / 72);
       box(
@@ -2559,7 +2373,7 @@ function flowBlock(
   const notesW = notes.length
     ? Math.min(
         a.w / 3,
-        Math.max(...notes.map((t) => textWidth(t, 16 * k))) + BULLET_INDENT / 72 + 0.05,
+        Math.max(...notes.map((t) => textWidth(t, noteO))) + BULLET_INDENT / 72 + 0.05,
       )
     : 0;
   const stepsW = a.w - 2 * pad - (notes.length ? notesW + 2 * sp(6) : 0);
@@ -2957,7 +2771,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   });
   const mid = rowY + rowH / 2;
   const label = d.qr && `↗ ${linkLabel(d.qr.href)}`;
-  const colW = label ? Math.max(qr, textWidth(label, PT.base, true) + 0.1) : 0;
+  const colW = label ? Math.max(qr, textWidth(label, { size: PT.base, mono: true }) + 0.1) : 0;
   const textW = CW - (colW && colW + 0.5);
   const speakers = d.speakers?.length ? literal(speakerLine(d, lang)) : undefined;
   const left = (speakers ? 53 / 144 : 0) + (d.event ? (speakers ? 17 / 144 : 0) + 49 / 144 : 0);
@@ -3287,7 +3101,7 @@ const RENDER: {
       const footH = footerHeight(ctx, d.footer);
       const q = (0.45 * 1.15 * 1080) / 144;
       const label = `↗ ${linkLabel(qr.href)}`;
-      const colW = Math.max(q, textWidth(label, PT.base, true) + 0.1);
+      const colW = Math.max(q, textWidth(label, { size: PT.base, mono: true }) + 0.1);
       const w = CW - colW - 5 * REM;
       const parts: [Para[], BoxOpts, number][] = [];
       const support: BoxOpts = { size: PT.h3, color: c.ink, line: 1.375 };
@@ -3847,7 +3661,7 @@ const RENDER: {
       // The y label and the note in one row 2 rem apart, each shrinking by its share of the
       // overflow and wrapping, as the web's flex row sets them.
       const gapX = 2 * REM;
-      const basis = [d.yLabel, note].map((t) => (t ? textWidth(t, PT.sm) + 0.02 : 0));
+      const basis = [d.yLabel, note].map((t) => (t ? textWidth(t, labelO) + 0.02 : 0));
       const over = Math.max(0, basis[0] + basis[1] + gapX - inner.w);
       const sum = basis[0] + basis[1] || 1;
       const [yw, nw] = basis.map((b) => b - (over * b) / sum);
@@ -3875,7 +3689,7 @@ const RENDER: {
         const hi = ticks[ticks.length - 1];
         // A point's name centres on it, so the axis pads each end by what the first and last
         // names overhang the margin beside them, as `TrendPlot` does.
-        const edge = (i: number) => textWidth(labels[i], PT.sm, false, i === now) / 2;
+        const edge = (i: number) => textWidth(labels[i], { size: PT.sm, bold: i === now }) / 2;
         const padL = Math.max(24 / 144, edge(0) - CHART.left);
         const padR = Math.max(8 / 144, edge(labels.length - 1) - CHART.right);
         const g = {
@@ -3939,7 +3753,8 @@ const RENDER: {
       const band = (plot.w / data.length) * 0.9;
       const step = TICK_STEPS.find(
         (pt) =>
-          Math.max(...labels.flatMap((l) => l.split(" ").map((w) => textWidth(w, pt)))) <= band,
+          Math.max(...labels.flatMap((l) => l.split(" ").map((w) => textWidth(w, { size: pt })))) <=
+          band,
       );
       // The web's legend has an entry for a named series only.
       const perSeries = now < 0 ? 1 : 2;
@@ -4822,8 +4637,8 @@ const RENDER: {
           tile +
           0.75 * REM +
           Math.max(
-            textWidth(d.segments[k].title, PT.h4, TITLE.mono, TITLE.bold),
-            textWidth(d.segments[k].text, PT.sm),
+            textWidth(d.segments[k].title, { size: PT.h4, ...TITLE }),
+            textWidth(d.segments[k].text, textO),
           ) +
           0.02,
       ),
