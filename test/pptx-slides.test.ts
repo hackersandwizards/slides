@@ -4,10 +4,8 @@ import { tokens } from "@hackersandwizards/brand/tokens";
 import { rejection } from "@hackersandwizards/scaffolding/rejection";
 import { assert, beforeAll, describe, expect, it } from "vitest";
 import { slideCatalog } from "../specimen/slide-catalog";
-import type { ContentSlide, Slide } from "../types/slide";
-import { contentRedrawnAs, twoColumnAsSplit } from "../lib/content-redraw";
-import { dualPillAsRoadmap, evolutionAsProcess, gridAsContent } from "../lib/slide-aliases";
-import { regularAsContent } from "../lib/regular-sections";
+import type { Slide } from "../types/slide";
+import { dualPillAsRoadmap, evolutionAsProcess } from "../lib/slide-aliases";
 import { WORDS } from "../lib/slide-words";
 import {
   norm,
@@ -16,48 +14,78 @@ import {
   shapesOf,
   specimen,
   specimenAt,
+  specimenSlide,
   TEAL,
   unescapeNamedEntities,
 } from "./fixtures/rendered-deck";
 import { pptxSlideVariants } from "./fixtures/pptx-slide-variants";
 
 let slideXml: string[];
-let slideText: string[];
 
 beforeAll(async () => {
-  ({ slideXml, slideText } = await specimen());
+  ({ slideXml } = await specimen());
 }, 60_000);
 
-describe("slides-pptx on the specimen deck", () => {
-  it("sets brand's claim on a contact closing unless it turns the claim off", () => {
-    const at = (claim: boolean) =>
-      slideCatalog.slides.findIndex(
-        (sl) => sl.type === "closing" && sl.variant === "contact" && (sl.claim !== false) === claim,
-      );
-    expect(norm(unescapeNamedEntities(slideText[at(true)]))).toContain(norm(verbal.claim.en));
-    expect(norm(unescapeNamedEntities(slideText[at(false)]))).not.toContain(norm(verbal.claim.en));
-  });
+const neutralColumns = specimenSlide("Two lists, one block", "content");
 
-  it.each(["en", "de"] as const)(
-    "sets the %s claim in the deck's language, on one row",
-    async (lang) => {
-      const { zip: deck } = await rendered({
-        name: "D",
-        slides: [
-          { type: "title", title: "T", lang },
-          { type: "closing", line1: "Danke." },
-        ],
-      });
-      const xml = await deck.file("ppt/slides/slide2.xml")!.async("string");
-      expect(norm(unescapeNamedEntities(xml.replace(/<[^>]+>/g, "")))).toContain(
-        norm(verbal.claim[lang]),
+describe("slides-pptx on the specimen deck", () => {
+  describe("brand claim on a contact closing", () => {
+    const decks = [
+      {
+        name: "English default",
+        lang: "en",
+        closing: { type: "closing", variant: "contact", line1: "Danke." },
+      },
+      {
+        name: "German default",
+        lang: "de",
+        closing: { type: "closing", variant: "contact", line1: "Danke." },
+      },
+      {
+        name: "English with the claim off",
+        lang: "en",
+        closing: { type: "closing", variant: "contact", line1: "Danke.", claim: false },
+      },
+    ] as const;
+    let closings: string[];
+
+    beforeAll(async () => {
+      closings = await Promise.all(
+        decks.map(async ({ name, lang, closing }) => {
+          const { slideXml } = await rendered({
+            name,
+            slides: [{ type: "title", title: "T", lang }, closing],
+          });
+          return slideXml[1];
+        }),
       );
-      // One row: the claim's box no higher than its size times the line's 1.25, with some slack.
-      const box = shapesOf(xml).find((sp) => sp.texts.includes(verbal.claim.word[lang]))!;
-      const size = +/sz="(\d+)"/.exec(box.xml)![1] / 100;
-      expect(box.h * 72).toBeLessThan(size * 1.25 * 1.5);
-    },
-  );
+    });
+
+    it.each([
+      { name: "English default", at: 0, expected: [verbal.claim.en] },
+      { name: "German default", at: 1, expected: [verbal.claim.de] },
+      { name: "English with the claim off", at: 2, expected: [] },
+    ])("sets the claim for $name", ({ at, expected }) => {
+      const text = norm(unescapeNamedEntities(closings[at].replace(/<[^>]+>/g, "")));
+      const visible = [verbal.claim.en, verbal.claim.de].filter((claim) =>
+        text.includes(norm(claim)),
+      );
+      expect(visible).toEqual(expected);
+    });
+
+    // One row: the claim's box no higher than its size times the line's 1.25, with some slack.
+    it.each([
+      { lang: "English", at: 0, word: verbal.claim.word.en },
+      { lang: "German", at: 1, word: verbal.claim.word.de },
+    ])("sets the $lang claim on one row", ({ at, word }) => {
+      const boxes = shapesOf(closings[at]).filter((shape) => shape.texts.includes(word));
+      expect(boxes).toHaveLength(1);
+      const [box] = boxes;
+      const size = /sz="(\d+)"/.exec(box.xml);
+      assert(size, "The claim has a font size");
+      expect(box.h * 72).toBeLessThan((+size[1] / 100) * 1.25 * 1.5);
+    });
+  });
 
   it("labels a centred closing's LinkedIn link as the web does", async () => {
     const { zip } = await rendered(
@@ -142,36 +170,135 @@ describe("slides-pptx on the specimen deck", () => {
     expect(await label(4)).toContain(teal);
   });
 
-  it("draws a regular and a pillars grid slide as the content slides the web redraws them as", async () => {
-    const regular = slideCatalog.slides.find(
-      (x) => x.type === "regular" && !x.profile && x.layout !== "cards",
-    ) as Extract<Slide, { type: "regular" }>;
-    const grid = slideCatalog.slides.find(
-      (x) => x.type === "grid" && (x.variant ?? "pillars") === "pillars",
-    ) as Extract<Slide, { type: "grid"; variant?: "pillars" }>;
-    const { zip: zipped } = await rendered({
-      name: "R",
-      slides: [regular, regularAsContent(regular)!, grid, gridAsContent(grid)] as Slide[],
-    });
-    const xmlOf = (n: number) => zipped.file(`ppt/slides/slide${n}.xml`)!.async("string");
-    // Each pair is one drawing, but for the shapes' ids and names and the page counter.
-    const shapes = (xml: string) =>
-      xml.replace(/ id="\d+"| name="[^"]*"|<a:t>\d+ \/ \d+<\/a:t>/g, "");
-    expect(shapes(await xmlOf(1))).toBe(shapes(await xmlOf(2)));
-    expect(shapes(await xmlOf(3))).toBe(shapes(await xmlOf(4)));
-  });
+  it.each([
+    {
+      name: "regular without a profile",
+      replaced: {
+        type: "regular",
+        headline: "Regular slide, one section, no profile",
+        sections: [{ title: "One section", items: ["Drawn as a content slide", "No sidebar"] }],
+      },
+      replacement: {
+        type: "content",
+        headline: "Regular slide, one section, no profile",
+        content: [
+          { type: "paragraph", text: "**One section**" },
+          { type: "bullets", items: ["Drawn as a content slide", "No sidebar"] },
+        ],
+      },
+    },
+    {
+      name: "pillars grid",
+      replaced: {
+        type: "grid",
+        variant: "pillars",
+        sectionLabel: "Grid",
+        headline: "Four pillars",
+        columns: 4,
+        cards: [
+          { title: "Tools", description: "What the agent uses.", icon: "wrench" },
+          { title: "Knowledge", description: "What it reads.", icon: "book" },
+          { title: "Checks", description: "What is enforced.", icon: "shield" },
+          { title: "Metrics", description: "What we learn.", icon: "bar-chart" },
+        ],
+      },
+      replacement: {
+        type: "content",
+        sectionLabel: "Grid",
+        headline: "Four pillars",
+        content: [
+          {
+            type: "cards",
+            columns: 4,
+            numbered: false,
+            reveal: true,
+            dense: true,
+            items: [
+              { title: "Tools", text: "What the agent uses.", icon: "wrench" },
+              { title: "Knowledge", text: "What it reads.", icon: "book" },
+              { title: "Checks", text: "What is enforced.", icon: "shield" },
+              { title: "Metrics", text: "What we learn.", icon: "bar-chart" },
+            ],
+          },
+        ],
+      },
+    },
+  ] satisfies { name: string; replaced: Slide; replacement: Slide }[])(
+    "draws a $name as its content slide",
+    async ({ replaced, replacement }) => {
+      const { slideXml } = await rendered({
+        name: "Replaced forms",
+        slides: [replaced, replacement],
+      });
+      // Each pair is one drawing, but for the shapes' ids and names and the page counter.
+      const [actual, expected] = slideXml.map((xml) =>
+        xml.replace(/ id="\d+"| name="[^"]*"|<a:t>\d+ \/ \d+<\/a:t>/g, ""),
+      );
+      expect(actual).toBe(expected);
+    },
+  );
 
-  it("sets a quote grid as the web's brand quote: upright, no quotation marks, the author in teal", () => {
-    const at = slideCatalog.slides.findIndex((x) => x.type === "grid" && x.variant === "quotes");
-    const xml = slideXml[at];
-    const slide = slideCatalog.slides[at] as Extract<Slide, { type: "grid" }>;
+  // A lone neutral two-column exports as the split it reads as on the web.
+  it.each([
+    {
+      name: "centered content",
+      replaced: {
+        type: "content",
+        layout: "centered",
+        headline: "One claim",
+        content: [{ type: "paragraph", text: "Under it." }],
+      },
+      replacement: { type: "statement", lines: ["One claim"], subtitle: "Under it." },
+    },
+    {
+      name: "neutral columns",
+      replaced: neutralColumns,
+      replacement: {
+        type: "comparison",
+        variant: "split",
+        headline: "Two lists, one block",
+        left: { label: "Chat", items: ["Answers a question", "Forgets the session"] },
+        right: { label: "Agent", items: ["Edits the files", "Runs the checks"] },
+        punchline: "Pick by what the work needs.",
+        notes: neutralColumns.notes,
+      },
+    },
+  ] satisfies { name: string; replaced: Slide; replacement: Slide }[])(
+    "draws $name as its replacement",
+    async ({ replaced, replacement }) => {
+      expect(await onlySlide(replaced)).toBe(await onlySlide(replacement));
+    },
+  );
+
+  it("sets a quote grid as the web's brand quote: upright, no quotation marks, the author in teal", async () => {
+    const authors = ["Engineer, fictional", "Team lead, fictional", "Product lead, fictional"];
+    const xml = await onlySlide({
+      type: "grid",
+      variant: "quotes",
+      sectionLabel: "Voices",
+      headline: "What participants said",
+      columns: 3,
+      cards: [
+        { title: "I review plans now, not just diffs.", author: authors[0] },
+        { title: "The checks caught what I missed.", author: authors[1] },
+        { title: "Monday metrics changed our backlog.", author: authors[2] },
+      ],
+    });
     expect(xml).not.toContain("“");
     expect(xml).not.toContain(' i="1"');
-    const teal = tokens["--color-teal"].slice(1).toUpperCase();
-    for (const { author } of slide.cards) {
-      const run = xml.slice(0, xml.indexOf(`<a:t>${author}</a:t>`));
-      expect(run.slice(run.lastIndexOf("<a:rPr"))).toMatch(new RegExp(`b="1".*val="${teal}"`, "s"));
-    }
+    const runs = [...xml.matchAll(/<a:r>.*?<\/a:r>/gs)].map(([run]) => run);
+    const authorRuns = runs.filter((run) =>
+      authors.some((author) => run.includes(`<a:t>${author}</a:t>`)),
+    );
+    expect(authorRuns).toHaveLength(3);
+    expect(
+      authorRuns.flatMap((run) =>
+        [...run.matchAll(/<a:t>([^<]+)<\/a:t>/g)].map(([, text]) => text),
+      ),
+    ).toEqual(authors);
+    expect(authorRuns.filter((run) => !new RegExp(`b="1".*val="${TEAL}"`, "s").test(run))).toEqual(
+      [],
+    );
   });
 
   it("names a team picture's types under it unless the slide turns its legend off", () => {
@@ -256,90 +383,112 @@ describe("slides-pptx on the specimen deck", () => {
     expect(await onlySlide(slide)).toContain(`<a:srgbClr val="${factory}"/>`);
   });
 
-  it("draws a centered content slide the statement type takes as that statement", async () => {
-    const slide: ContentSlide = {
-      type: "content",
-      layout: "centered",
-      headline: "One claim",
-      content: [{ type: "paragraph", text: "Under it." }],
-    };
-    expect(await onlySlide(slide)).toBe(await onlySlide(contentRedrawnAs(slide)!));
-  });
+  const plainSplits = slideCatalog.slides.filter(
+    (slide) => slide.notes === "comparison: split, no headline, long items, highlights.",
+  );
+  assert(
+    plainSplits.length === 1,
+    "The specimen has one split comparison with long items and no headline",
+  );
 
-  it("marks only a vs comparison's items, bullets a split's and strikes only a struck before side", () => {
-    const sided = slideCatalog.slides.flatMap((slide: Slide, i) => {
-      const sides = slide.type === "content" ? twoColumnAsSplit(slide) : slide;
-      return sides?.type === "comparison" &&
-        sides.variant !== "positions" &&
-        sides.variant !== "guidance"
-        ? [{ sides, xml: slideXml[i], at: `slide ${i + 1}`, converted: slide !== sides }]
-        : [];
-    });
-    expect(sided.map((s) => s.sides.variant ?? "vs")).toEqual(
-      expect.arrayContaining(["vs", "before-after", "split"]),
-    );
-    // A lone neutral two-column exports as the split it reads as on the web.
-    expect(sided.some((s) => s.converted)).toBe(true);
-    for (const { sides, xml, at } of sided) {
-      const variant = sides.variant ?? "vs";
-      expect(xml.includes("<a:t>+  </a:t>"), at).toBe(variant === "vs");
-      expect(xml.includes("<a:t>−  </a:t>"), at).toBe(variant === "vs");
-      expect(xml.includes("<a:buChar"), at).toBe(variant === "split");
-      expect(xml.includes('strike="sngStrike"'), at).toBe(
-        variant === "before-after" && sides.strike !== false,
-      );
-    }
+  it.each([
+    {
+      name: "vs",
+      slide: specimenSlide("Prompting against a harness", "comparison"),
+      expected: { plus: true, minus: true, bullets: false, struck: false },
+    },
+    {
+      name: "struck before-after",
+      slide: specimenSlide("Before and after", "comparison"),
+      expected: { plus: false, minus: false, bullets: false, struck: true },
+    },
+    {
+      name: "split without a heading",
+      slide: plainSplits[0],
+      expected: { plus: false, minus: false, bullets: true, struck: false },
+    },
+    {
+      name: "before-after without strike",
+      slide: specimenSlide("How a change reaches production", "comparison"),
+      expected: { plus: false, minus: false, bullets: false, struck: false },
+    },
+    {
+      name: "before-after that adds",
+      slide: specimenSlide("What stays, what needs building", "comparison"),
+      expected: { plus: false, minus: false, bullets: false, struck: false },
+    },
+    {
+      name: "neutral columns drawn as a split",
+      slide: neutralColumns,
+      expected: { plus: false, minus: false, bullets: true, struck: false },
+    },
+  ])("draws the $name comparison's list treatment", async ({ slide, expected }) => {
+    const xml = await onlySlide(slide);
+    expect({
+      plus: xml.includes("<a:t>+  </a:t>"),
+      minus: xml.includes("<a:t>−  </a:t>"),
+      bullets: xml.includes("<a:buChar"),
+      struck: xml.includes('strike="sngStrike"'),
+    }).toEqual(expected);
   });
 });
 
 // The web lights the phase whose title matches `highlightPhase` in any case, and no phase without one.
-it.each([true, false])(
-  "lights a process slide's phase by the web's rule, loop %s",
-  async (loop) => {
-    const slide = (highlightPhase?: string) => ({
-      type: "process",
-      headline: "H",
-      loop,
-      nodes: ["One", "Two", "Three"].map((title) => ({ title, description: "d" })),
-      ...(highlightPhase === undefined ? {} : { highlightPhase }),
-    });
-    const phases = ["Two", "two", undefined, "Nope", "Three"];
-    const { zip: pptx } = await rendered(
-      { ...slideCatalog, slides: phases.map(slide) as Slide[] },
-      join(import.meta.dirname, "..", "specimen"),
-    );
-    // Each slide's colours in drawing order: the slides differ in nothing else but name and page.
-    const [exact, lower, none, unknown, last] = await Promise.all(
-      phases.map(async (_, i) =>
-        [
-          ...(await pptx.file(`ppt/slides/slide${i + 1}.xml`)!.async("string")).matchAll(
-            /srgbClr val="(\w+)"/g,
-          ),
-        ]
-          .map((m) => m[1])
-          .join(),
-      ),
-    );
-    expect(lower).toBe(exact);
-    expect(none).toBe(unknown);
-    expect(none).not.toBe(last);
-  },
-);
+it.each([
+  { name: "with a loop", loop: true },
+  { name: "without a loop", loop: false },
+])("lights a process slide's phase by the web's rule, $name", async ({ loop }) => {
+  const base = {
+    type: "process",
+    headline: "H",
+    loop,
+    nodes: [
+      { title: "One", description: "d" },
+      { title: "Two", description: "d" },
+      { title: "Three", description: "d" },
+    ],
+  } satisfies Slide;
+  const { slideXml } = await rendered({
+    ...slideCatalog,
+    slides: [
+      { ...base, highlightPhase: "Two" },
+      { ...base, highlightPhase: "two" },
+      base,
+      { ...base, highlightPhase: "Nope" },
+      { ...base, highlightPhase: "Three" },
+    ],
+  });
+  // Each slide's colours in drawing order: the slides differ in nothing else but name and page.
+  const [exact, lower, none, unknown, last] = slideXml.map((xml) =>
+    [...xml.matchAll(/srgbClr val="(\w+)"/g)].map(([, color]) => color).join(),
+  );
+  expect(lower).toBe(exact);
+  expect(none).toBe(unknown);
+  expect(none).not.toBe(last);
+});
 
 describe("slides-pptx draws what the slide shows", () => {
-  it("numbers a process's tiles as FlowSteps does, a numbered: false step's tile empty", () => {
-    const i = specimenAt(
-      (x) => x.type === "process" && x.headline === "A request through three teams",
-    );
-    const tiles = shapesOf(slideXml[i]).filter(
-      (sh) => sh.prst === "roundRect" && Math.abs(sh.w! - sh.h!) < 0.01,
-    );
+  it("numbers a process's tiles as FlowSteps does, a numbered: false step's tile empty", async () => {
+    const xml = await onlySlide({
+      type: "process",
+      headline: "A request through three teams",
+      loop: false,
+      nodes: [
+        { title: "Customer", description: "Raises the request.", numbered: false },
+        { title: "Intake", description: "Sizes and plans it." },
+        { title: "Build", description: "Ships it behind a flag." },
+        { title: "Operate", description: "Turns the flag on." },
+        { title: "Customer", description: "Uses the result.", numbered: false },
+      ],
+    });
+    const shapes = shapesOf(xml);
+    const tiles = shapes.filter((shape) => shape.prst === "roundRect");
     expect(tiles).toHaveLength(5);
-    const numbers = shapesOf(slideXml[i]).filter((sh) => /^\d$/.test(sh.texts.join("")));
-    expect(numbers.map((sh) => sh.texts.join(""))).toEqual(["1", "2", "3"]);
+    expect(tiles.filter(({ w, h }) => Math.abs(w - h) >= 0.01)).toEqual([]);
+    const numbers = shapes.filter((shape) => /^\d$/.test(shape.texts.join("")));
+    expect(numbers.map((shape) => shape.texts.join(""))).toEqual(["1", "2", "3"]);
     // Each number in a tile, the first and last tiles empty.
-    for (const [n, t] of numbers.map((sh, k) => [sh, tiles[k + 1]] as const))
-      expect(Math.abs(n.x! - t.x!)).toBeLessThan(0.01);
+    expect(numbers.filter((number, i) => Math.abs(number.x - tiles[i + 1].x) >= 0.01)).toEqual([]);
   });
 
   it("draws a team picture as the web lays it out: enabling columns side by side, subsystem octagons in one row, the platform teams in one dotted frame, roles beside a stream team's name", () => {
