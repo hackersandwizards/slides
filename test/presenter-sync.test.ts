@@ -46,76 +46,85 @@ let clock = 0;
 
 let ids = 0;
 
-// A window wired to the sync the way SlideNavigation wires it.
-function makeWindow(
-  role: Role,
-  channel: ReturnType<typeof bus>,
-  steps: number[],
-  start = 0,
-  now = () => ++clock,
+interface TestDeck {
+  steps: number[];
   /** Slides that open at their first step even when arrived at backwards, as a carousel does. */
-  carousels: number[] = [],
-) {
-  const target = new EventTarget();
-  const view = { slide: start, revealed: 0 };
-  const sync = createDeckSync({
-    role: () => role,
-    channel,
-    target: () => target,
-    now,
-    tick,
-    pending: () => view.revealed < steps[view.slide],
-    id: String(++ids),
-  });
+  carousels?: number[];
+}
 
-  const go = (slide: number, direction: "back" | "forward") => {
-    view.slide = slide;
-    view.revealed = direction === "back" && !carousels.includes(slide) ? steps[slide] : 0;
-    setTimeout(() => sync.arrive(slide, direction === "back"));
-  };
-  // The slide's reveal handler, then the navigation, then the observer, as on the page.
-  target.addEventListener("keydown", (event) => {
-    const key = (event as KeyboardEvent).key;
-    if (key === "ArrowRight" && view.revealed < steps[view.slide]) {
-      view.revealed++;
-      event.preventDefault();
-    }
-  });
-  target.addEventListener("keydown", (event) => {
-    if (event.defaultPrevented || sync.isReplayed(event)) return;
-    const key = (event as KeyboardEvent).key;
-    const next = key === "ArrowRight" ? view.slide + 1 : view.slide - 1;
-    if (next < 0 || next >= steps.length) return;
-    const direction = key === "ArrowRight" ? "forward" : "back";
-    go(next, direction);
-    sync.navigated(next, direction);
-  });
-  target.addEventListener("keydown", (event) => {
-    const slide = sync.getState().slide;
-    setTimeout(() => sync.pressed(event as KeyboardEvent, slide, event.defaultPrevented));
-  });
+// One talk on one shared BroadcastChannel bus, opening windows wired like SlideNavigation.
+function createTalk(defaultDeck: TestDeck, now = () => ++clock) {
+  const channel = bus();
 
-  const leave = sync.connect("deck", steps.length, go);
-  sync.arrive(start, false);
-  const press = (key: "ArrowRight" | "ArrowLeft") =>
-    target.dispatchEvent(new KeyboardEvent("keydown", { key, cancelable: true }));
-  /** The browser's back button: the host mounts another slide without a press. */
-  const browserBack = () => go(view.slide - 1, "forward");
-  /** Arrives backwards, as an ArrowLeft from the next slide would. */
-  const arriveBackwards = () => {
-    view.revealed = steps[view.slide];
-    sync.arrive(view.slide, true);
-  };
-  return { view, sync, press, browserBack, leave, arriveBackwards };
+  function openWindow(role: Role, start = 0, deck: TestDeck = defaultDeck) {
+    const { steps, carousels = [] } = deck;
+    const target = new EventTarget();
+    const view = { slide: start, revealed: 0 };
+    const sync = createDeckSync({
+      role: () => role,
+      channel,
+      target: () => target,
+      now,
+      tick,
+      pending: () => view.revealed < steps[view.slide],
+      id: String(++ids),
+    });
+
+    const go = (slide: number, direction: "back" | "forward") => {
+      view.slide = slide;
+      view.revealed = direction === "back" && !carousels.includes(slide) ? steps[slide] : 0;
+      setTimeout(() => sync.arrive(slide, direction === "back"));
+    };
+    // The slide's reveal handler, then the navigation, then the observer, as on the page.
+    target.addEventListener("keydown", (event) => {
+      const key = (event as KeyboardEvent).key;
+      if (key === "ArrowRight" && view.revealed < steps[view.slide]) {
+        view.revealed++;
+        event.preventDefault();
+      }
+    });
+    target.addEventListener("keydown", (event) => {
+      if (event.defaultPrevented || sync.isReplayed(event)) return;
+      const key = (event as KeyboardEvent).key;
+      const next = key === "ArrowRight" ? view.slide + 1 : view.slide - 1;
+      if (next < 0 || next >= steps.length) return;
+      const direction = key === "ArrowRight" ? "forward" : "back";
+      go(next, direction);
+      sync.navigated(next, direction);
+    });
+    target.addEventListener("keydown", (event) => {
+      const slide = sync.getState().slide;
+      setTimeout(() => sync.pressed(event as KeyboardEvent, slide, event.defaultPrevented));
+    });
+
+    const leave = sync.connect("deck", steps.length, go);
+    sync.arrive(start, false);
+    const press = (key: "ArrowRight" | "ArrowLeft") =>
+      target.dispatchEvent(new KeyboardEvent("keydown", { key, cancelable: true }));
+    /** The browser's back button: the host mounts another slide without a press. */
+    const browserBack = () => go(view.slide - 1, "forward");
+    return { view, sync, press, browserBack, leave };
+  }
+
+  return { open: openWindow };
 }
 
 describe("createDeckSync", () => {
-  const steps = [0, 3, 0, 2, 0];
+  const defaultDeck: TestDeck = { steps: [0, 3, 0, 2, 0] };
+
+  it("does not read the clock when the expected slide arrives", () => {
+    let clockReads = 0;
+    const talk = createTalk(defaultDeck, () => ++clockReads);
+    const { sync } = talk.open("audience");
+    sync.navigated(1, "forward");
+    sync.arrive(1, false);
+    expect(clockReads).toBe(2);
+  });
 
   it("moves the speaker window with the audience window, steps included", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps);
-    const presenter = makeWindow("presenter", channel, steps);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience");
+    const presenter = talk.open("presenter");
     audience.press("ArrowRight");
     audience.press("ArrowRight");
     audience.press("ArrowRight");
@@ -125,9 +134,9 @@ describe("createDeckSync", () => {
   });
 
   it("moves the audience window with the speaker window", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps);
-    const presenter = makeWindow("presenter", channel, steps);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience");
+    const presenter = talk.open("presenter");
     for (let i = 0; i < 6; i++) presenter.press("ArrowRight");
     await settle();
     expect(audience.view).toEqual({ slide: 3, revealed: 0 });
@@ -142,9 +151,9 @@ describe("createDeckSync", () => {
   });
 
   it("keeps up with fast presses without sending the leader back", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps);
-    const presenter = makeWindow("presenter", channel, steps);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience");
+    const presenter = talk.open("presenter");
     for (let i = 0; i < 7; i++) audience.press("ArrowRight");
     await settle();
     expect(audience.view).toEqual({ slide: 3, revealed: 1 });
@@ -152,30 +161,30 @@ describe("createDeckSync", () => {
   });
 
   it("brings a window that joins late to where the others are", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience");
     audience.press("ArrowRight");
     audience.press("ArrowRight");
     await settle();
-    const follow = makeWindow("follow", channel, steps);
+    const follow = talk.open("follow");
     await settle();
     expect(follow.view).toEqual({ slide: 1, revealed: 1 });
   });
 
   it("joins a deck nobody has touched yet at the leader's slide", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps, 2);
-    const presenter = makeWindow("presenter", channel, steps);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience", 2);
+    const presenter = talk.open("presenter");
     await settle();
     expect(audience.view.slide).toBe(2);
     expect(presenter.view.slide).toBe(2);
   });
 
   it("never lets a follower or the preview lead", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps);
-    const follow = makeWindow("follow", channel, steps);
-    const preview = makeWindow("preview", channel, steps);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience");
+    const follow = talk.open("follow");
+    const preview = talk.open("preview");
     audience.press("ArrowRight");
     await settle();
     expect(follow.view).toEqual({ slide: 1, revealed: 0 });
@@ -189,10 +198,10 @@ describe("createDeckSync", () => {
   });
 
   it("stops replaying when the slide does not take the press", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, [0, 3, 0]);
+    const talk = createTalk({ steps: [0, 3, 0] });
+    const audience = talk.open("audience");
     // A copy of the deck whose slide 1 reveals nothing: the replayed press must not navigate.
-    const presenter = makeWindow("presenter", channel, [0, 0, 0]);
+    const presenter = talk.open("presenter", 0, { steps: [0, 0, 0] });
     audience.press("ArrowRight");
     audience.press("ArrowRight");
     await settle();
@@ -200,9 +209,9 @@ describe("createDeckSync", () => {
   });
 
   it("carries a move made with the browser's back button to the other windows", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps, 2);
-    const presenter = makeWindow("presenter", channel, steps, 2);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience", 2);
+    const presenter = talk.open("presenter", 2);
     await settle();
     audience.browserBack();
     await settle();
@@ -210,18 +219,17 @@ describe("createDeckSync", () => {
   });
 
   it("ignores a slide that fast presses already left", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience");
     audience.sync.navigated(2, "forward");
     audience.sync.arrive(1, false);
     expect(audience.sync.getState().slide).toBe(2);
   });
 
   it("orders two states stamped in the same millisecond", async () => {
-    const channel = bus();
-    const frozen = () => 5;
-    const audience = makeWindow("audience", channel, steps, 0, frozen);
-    const presenter = makeWindow("presenter", channel, steps, 0, frozen);
+    const talk = createTalk(defaultDeck, () => 5);
+    const audience = talk.open("audience");
+    const presenter = talk.open("presenter");
     audience.press("ArrowRight");
     audience.press("ArrowRight");
     audience.press("ArrowRight");
@@ -230,9 +238,9 @@ describe("createDeckSync", () => {
   });
 
   it("meets at the more revealed state when both windows step at once", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps, 1);
-    const presenter = makeWindow("presenter", channel, steps, 1);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience", 1);
+    const presenter = talk.open("presenter", 1);
     audience.press("ArrowRight");
     audience.press("ArrowRight");
     presenter.press("ArrowRight");
@@ -242,20 +250,20 @@ describe("createDeckSync", () => {
   });
 
   it("opens a slide fully revealed in a window that joins where another arrived backwards", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps, 2);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience", 2);
     audience.press("ArrowLeft");
     await settle();
     expect(audience.view).toEqual({ slide: 1, revealed: 3 });
-    const presenter = makeWindow("presenter", channel, steps, 1);
+    const presenter = talk.open("presenter", 1);
     await settle();
     expect(presenter.view).toEqual({ slide: 1, revealed: 3 });
   });
 
   it("leaves two audience windows of one deck apart, as two tabs were before", async () => {
-    const channel = bus();
-    const first = makeWindow("audience", channel, steps);
-    const second = makeWindow("audience", channel, steps, 2);
+    const talk = createTalk(defaultDeck);
+    const first = talk.open("audience");
+    const second = talk.open("audience", 2);
     await settle();
     first.press("ArrowRight");
     second.press("ArrowRight");
@@ -267,10 +275,10 @@ describe("createDeckSync", () => {
   // The projector and a laptop tab with a speaker window open: the speaker window passes a press
   // in one on to the other (F25).
   it("moves a second audience window through the speaker window", async () => {
-    const channel = bus();
-    const projector = makeWindow("audience", channel, steps);
-    const laptop = makeWindow("audience", channel, steps);
-    const presenter = makeWindow("presenter", channel, steps);
+    const talk = createTalk(defaultDeck);
+    const projector = talk.open("audience");
+    const laptop = talk.open("audience");
+    const presenter = talk.open("presenter");
     await settle();
     laptop.press("ArrowRight");
     laptop.press("ArrowRight");
@@ -281,9 +289,9 @@ describe("createDeckSync", () => {
   });
 
   it("stops following once its last slide has unmounted", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps);
-    const left = makeWindow("presenter", channel, steps);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience");
+    const left = talk.open("presenter");
     left.leave();
     await settle();
     audience.press("ArrowRight");
@@ -292,10 +300,10 @@ describe("createDeckSync", () => {
   });
 
   it("knows while a speaker window is open, so the audience window can drop its hints", async () => {
-    const channel = bus();
-    const audience = makeWindow("audience", channel, steps);
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience");
     expect(audience.sync.speakerOpen()).toBe(false);
-    const presenter = makeWindow("presenter", channel, steps);
+    const presenter = talk.open("presenter");
     await settle();
     expect(audience.sync.speakerOpen()).toBe(true);
     presenter.leave();
@@ -304,10 +312,10 @@ describe("createDeckSync", () => {
   });
 
   it("keeps the preview on the newest slide when the deck moves on mid-replay", async () => {
-    const channel = bus();
-    const deck = [0, 0, 3, 0, 0];
-    const audience = makeWindow("audience", channel, deck);
-    const preview = makeWindow("preview", channel, deck, 1, undefined, [2]);
+    const steps = [0, 0, 3, 0, 0];
+    const talk = createTalk({ steps });
+    const audience = talk.open("audience");
+    const preview = talk.open("preview", 1, { steps, carousels: [2] });
     await settle();
     audience.press("ArrowRight");
     // The preview is now stepping slide 2's carousel to its end, one press per tick.
@@ -320,11 +328,33 @@ describe("createDeckSync", () => {
   });
 
   it("shows a carousel in the preview at its last step", async () => {
-    const channel = bus();
-    const deck = [0, 3, 0];
-    makeWindow("audience", channel, deck);
-    const preview = makeWindow("preview", channel, deck, 1, undefined, [1]);
+    const steps = [0, 3, 0];
+    const talk = createTalk({ steps });
+    talk.open("audience");
+    const preview = talk.open("preview", 1, { steps, carousels: [1] });
     await settle();
     expect(preview.view).toEqual({ slide: 1, revealed: 3 });
+  });
+
+  it("brings the other leader forward when this leader already opened the slide fully revealed", async () => {
+    const talk = createTalk(defaultDeck);
+    const audience = talk.open("audience", 1);
+    const presenter = talk.open("presenter", 2);
+    presenter.press("ArrowLeft");
+    audience.press("ArrowRight");
+    await settle();
+    expect(presenter.view).toEqual({ slide: 1, revealed: 3 });
+    expect(audience.view).toEqual({ slide: 1, revealed: 3 });
+  });
+
+  it("keeps the preview in place when the leader reaches the last slide", async () => {
+    const talk = createTalk({ steps: [0, 0] });
+    const audience = talk.open("audience", 0);
+    const preview = talk.open("preview", 1);
+    await settle();
+    audience.press("ArrowRight");
+    await settle();
+    expect(audience.view.slide).toBe(1);
+    expect(preview.view.slide).toBe(1);
   });
 });

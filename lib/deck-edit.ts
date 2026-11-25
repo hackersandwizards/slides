@@ -28,6 +28,26 @@ function afterComment(source: string, i: number): number {
   return i;
 }
 
+/** One escape sequence starting at backslash `i`: where it ends and its cooked text, or `null`
+ *  when a tagged template contains an out-of-range Unicode escape without a cooked value. */
+function readEscape(source: string, i: number): { end: number; value: string | null } {
+  const unicode = /^u\{([0-9a-fA-F]+)\}|^u([0-9a-fA-F]{4})|^x([0-9a-fA-F]{2})/.exec(
+    source.slice(i + 1),
+  );
+  if (unicode) {
+    const code = parseInt(unicode[1] ?? unicode[2] ?? unicode[3], 16);
+    return {
+      end: i + 1 + unicode[0].length,
+      value: code > 0x10ffff ? null : String.fromCodePoint(code),
+    };
+  }
+  const next = source[i + 1];
+  if (next === "\r" || next === "\n") {
+    return { end: i + (source.startsWith("\r\n", i + 1) ? 3 : 2), value: "" };
+  }
+  return { end: i + 2, value: ESCAPES[next] ?? next };
+}
+
 /** The span and cooked value of the literal at `start`, when a cooked value is available. */
 function readLiteral(source: string, start: number) {
   const quote = source[start] as Literal["quote"];
@@ -36,22 +56,10 @@ function readLiteral(source: string, start: number) {
   let plain = true;
   while (i < source.length && source[i] !== quote) {
     if (source[i] === "\\") {
-      const next = source[i + 1];
-      const unicode = /^u\{([0-9a-fA-F]+)\}|^u([0-9a-fA-F]{4})|^x([0-9a-fA-F]{2})/.exec(
-        source.slice(i + 1),
-      );
-      if (unicode) {
-        const code = parseInt(unicode[1] ?? unicode[2] ?? unicode[3], 16);
-        // A tagged template may contain an out-of-range escape without a cooked value.
-        if (code > 0x10ffff) plain = false;
-        else value += String.fromCodePoint(code);
-        i += 1 + unicode[0].length;
-      } else if (next === "\r" || next === "\n") {
-        i += source.startsWith("\r\n", i + 1) ? 3 : 2;
-      } else {
-        value += ESCAPES[next] ?? next;
-        i += 2;
-      }
+      const escape = readEscape(source, i);
+      if (escape.value === null) plain = false;
+      else value += escape.value;
+      i = escape.end;
     } else if (quote === "`" && source.startsWith("${", i)) {
       plain = false;
       i = afterSubstitution(source, i + 2);

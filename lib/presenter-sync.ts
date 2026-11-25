@@ -53,20 +53,22 @@ export function roleOf(name: string): Role {
   return "audience";
 }
 
-export type Plan =
-  | { navigate: number; direction: Direction }
+type SlideState = Omit<DeckState, keyof Stamp>;
+
+type Plans = {
+  navigate: { navigate: number; direction: Direction };
   /** The target opened the slide fully revealed and this window did not: reveal everything. */
-  | { fill: true }
-  | { key: ArrowKey }
+  fill: { fill: true };
+  key: { key: ArrowKey };
   /** This window opened the slide fully revealed and the target did not: it cannot go back. */
-  | { ahead: true }
-  | null;
+  ahead: { ahead: true };
+  settled: null;
+};
+
+export type Plan = Plans[keyof Plans];
 
 /** The next move that brings `local` to `target`. */
-export function planSync(
-  local: Omit<DeckState, keyof Stamp>,
-  target: Omit<DeckState, keyof Stamp>,
-): Plan {
+export function planSync(local: SlideState, target: SlideState): Plan {
   if (local.slide !== target.slide)
     return { navigate: target.slide, direction: target.back ? "back" : "forward" };
   if (target.back && !local.back) return { fill: true };
@@ -87,9 +89,8 @@ export function targetFor(role: Role, remote: DeckState, total: number): DeckSta
 /** `reply` marks an answer to a window's hello, which that window takes even when nobody has
  *  pressed anything yet, so it opens where the others are. Every message names its sender's role,
  *  so a window knows whether a speaker window is open; `bye` is a window leaving the deck. */
-type Message = { role: Role } & (
-  { type: "state"; state: DeckState; reply?: boolean } | { type: "hello" } | { type: "bye" }
-);
+type StateMessage = { role: Role; type: "state"; state: DeckState; reply?: boolean };
+type Message = StateMessage | { role: Role; type: "hello" | "bye" };
 
 interface Deps {
   role: () => Role;
@@ -107,221 +108,279 @@ interface Deps {
   id: string;
 }
 
-export function createDeckSync(deps: Deps) {
-  const initial = (): DeckState => ({ slide: -1, back: false, step: 0, ...ZERO });
-  // `local` is what this window shows, stamped with the state it shows; `seen` is the newest
-  // state accepted from anywhere, which may still be on its way in.
-  let local = initial();
-  let seen: Stamp = ZERO;
-  let goal: DeckState | null = null;
-  let total = 0;
-  let channel: ReturnType<Deps["channel"]> | null = null;
-  let channelName = "";
-  let users = 0;
-  let go: (slide: number, direction: Direction) => void = () => {};
-  let reconciling = false;
+const initialState = (): DeckState => ({ slide: -1, back: false, step: 0, ...ZERO });
+const leads = (role: Role) => ["audience", "presenter"].includes(role);
+
+type ReplaySnapshot = { moved: () => boolean };
+
+type Outcome = "replan" | "await-arrival" | "converged";
+type PlanHandler<P> = (plan: P, at: ReplaySnapshot, goal: DeckState) => Outcome | Promise<Outcome>;
+
+interface ReplayWindow {
+  deps: Pick<Deps, "role" | "target" | "now" | "tick" | "pending">;
+  read: () => DeckState;
+  write: (state: DeckState) => void;
+  lead: (state: SlideState) => void;
+}
+
+class DeckReplay {
+  private goal: DeckState | null = null;
+  navigate: (slide: number, direction: Direction) => void = () => {};
+  private reconciling = false;
   // Counts every change of goal or slide, so a replay that awaited a press can tell it is stale.
-  let generation = 0;
+  private generation = 0;
   // The slide a navigation from here is on its way to, and when it set off. A slide that mounts
   // meanwhile is one that fast presses already left, and counts for nothing; after two seconds
   // the navigation is taken as lost, so a failed one cannot freeze the window.
-  let heading: { slide: number; since: number } | undefined;
-  const replayed = new WeakSet<Event>();
-  const listeners = new Set<() => void>();
+  private heading: { slide: number; since: number } | undefined;
+  private readonly view: ReplayWindow;
+  private readonly replayed = new WeakSet<Event>();
 
-  const set = (next: DeckState) => {
-    local = next;
-    notify();
-  };
-  const leads = () => ["audience", "presenter"].includes(deps.role());
-  const stamp = (): Stamp => {
-    seen = { at: Math.max(deps.now(), seen.at + 1, local.at + 1), from: deps.id };
-    return seen;
-  };
-  const send = (message: Message) => channel?.postMessage(message);
-  const broadcast = (reply?: boolean) =>
-    send({ type: "state", state: local, reply, role: deps.role() });
-  const notify = () => listeners.forEach((listener) => listener());
-  let speaker = false;
-  const bye = () => send({ type: "bye", role: deps.role() });
-  const head = (slide: number) => (heading = { slide, since: deps.now() });
-  /** A press here, or a state only this window can reach: it becomes the deck's newest. */
-  const lead = (next: Omit<DeckState, keyof Stamp>) => {
-    generation++;
-    goal = null;
-    set({ ...next, ...stamp() });
-    broadcast();
-  };
-
-  function receive(message: Message) {
-    if (message.role === "presenter" && speaker !== (message.type !== "bye")) {
-      speaker = message.type !== "bye";
-      notify();
-    }
-    // Two audience windows of one deck, such as two tabs, stay apart: an audience window follows
-    // only the speaker window, which passes a press made in one on to the other.
-    if (message.type === "bye" || (deps.role() === "audience" && message.role === "audience"))
-      return;
-    if (message.type === "hello") {
-      if (leads() && local.slide >= 0) broadcast(true);
-      return;
-    }
-    const target = targetFor(deps.role(), message.state, total);
-    if (!target) return;
-    const fresh = seen.at === 0 && local.at === 0;
-    if (!newer(target, seen) && !(message.reply && fresh)) return;
-    seen = { at: target.at, from: target.from };
-    if (deps.role() === "presenter" && message.role === "audience")
-      send({ type: "state", state: target, role: "presenter" });
-    goal = target;
-    generation++;
-    void reconcile();
+  constructor(view: ReplayWindow) {
+    this.view = view;
   }
 
-  const press = async (key: ArrowKey) => {
-    const event = arrowEvent(key);
-    replayed.add(event);
-    deps.target().dispatchEvent(event);
-    await deps.tick();
-    return event.defaultPrevented;
-  };
+  isReplayed = (event: Event) => this.replayed.has(event);
+  head = (slide: number) => (this.heading = { slide, since: this.view.deps.now() });
+  private inFlight = () => this.heading && this.view.deps.now() - this.heading.since < 2000;
+  private snapshot(): ReplaySnapshot {
+    const generation = this.generation;
+    const slide = this.view.read().slide;
+    return { moved: () => generation !== this.generation || slide !== this.view.read().slide };
+  }
 
-  async function reconcile() {
-    if (reconciling) return;
-    reconciling = true;
+  replaceGoal(goal: DeckState | null) {
+    this.generation++;
+    this.goal = goal;
+    if (goal) void this.reconcile();
+  }
+
+  reset() {
+    this.goal = null;
+    this.heading = undefined;
+  }
+
+  /** A slide mounted. Called after the slide's own key handlers are registered. A slide nobody
+   *  here navigated to, after the first, came from the browser's back or forward button: a move
+   *  in this window like any press. */
+  arrive(slide: number, back: boolean) {
+    if (this.heading && this.heading.slide !== slide && this.inFlight()) return;
+    const local = this.view.read();
+    const own = !this.heading && local.slide >= 0 && local.slide !== slide;
+    this.heading = undefined;
+    if (own && leads(this.view.deps.role())) this.view.lead({ slide, back, step: 0 });
+    else if (local.slide !== slide) {
+      this.generation++;
+      this.view.write({ ...local, slide, back, step: 0 });
+    }
+    void this.reconcile();
+  }
+
+  private async press(key: ArrowKey) {
+    const event = arrowEvent(key);
+    this.replayed.add(event);
+    this.view.deps.target().dispatchEvent(event);
+    await this.view.deps.tick();
+    return event.defaultPrevented;
+  }
+
+  private async drainReveals(before: ReplaySnapshot) {
+    for (let j = 0; j < 50 && this.view.deps.pending() && !before.moved(); j++)
+      if (!(await this.press("ArrowRight"))) break;
+  }
+
+  private readonly plans = {
+    navigate: ({ navigate, direction }) => {
+      this.head(navigate);
+      this.navigate(navigate, direction);
+      return "await-arrival";
+    },
+    fill: async (_, before): Promise<Outcome> => {
+      await this.drainReveals(before);
+      if (!before.moved()) this.view.write({ ...this.view.read(), back: true, step: 0 });
+      return "replan";
+    },
+    ahead: () => {
+      // This window cannot reach the target: a leader makes its own state the newest, and
+      // the others come forward to it; a frame stays where it is.
+      if (leads(this.view.deps.role())) this.view.lead(this.view.read());
+      else this.goal = null;
+      return "converged";
+    },
+    key: async ({ key }, before): Promise<Outcome> => {
+      const { step } = this.view.read();
+      await this.press(key);
+      if (before.moved() || this.view.read().step !== step) return "replan";
+      return this.plans.ahead();
+    },
+    settled: async (_, before, goal): Promise<Outcome> => {
+      // The preview shows a slide's last state: what arriving backwards leaves unrevealed,
+      // such as a carousel, it steps through.
+      if (this.view.deps.role() === "preview") await this.drainReveals(before);
+      if (before.moved()) return "replan";
+      this.view.write({ ...this.view.read(), step: goal.step, at: goal.at, from: goal.from });
+      this.goal = null;
+      return "converged";
+    },
+  } satisfies { [Kind in keyof Plans]: PlanHandler<Plans[Kind]> };
+
+  private async reconcile() {
+    if (this.reconciling) return;
+    this.reconciling = true;
     try {
       // Bounded: each pass presses at most one key or navigates once.
-      for (let i = 0; i < 100 && goal && local.slide >= 0; i++) {
+      for (let i = 0; i < 100 && this.goal && this.view.read().slide >= 0; i++) {
         // A navigation on its way: plan again once its slide has mounted.
-        if (heading && deps.now() - heading.since < 2000) break;
-        const plan = planSync(local, goal);
-        // A new goal or another slide while a press was on its way: plan again from there.
-        const gen = generation;
-        const slide = local.slide;
-        const moved = () => gen !== generation || slide !== local.slide;
-        const drain = async () => {
-          for (let j = 0; j < 50 && deps.pending() && !moved(); j++)
-            if (!(await press("ArrowRight"))) break;
-        };
-        if (!plan) {
-          // The preview shows a slide's last state: what arriving backwards leaves unrevealed,
-          // such as a carousel, it steps through.
-          if (deps.role() === "preview") await drain();
-          if (moved()) continue;
-          set({ ...local, step: goal.step, at: goal.at, from: goal.from });
-          goal = null;
-          break;
-        }
-        if ("navigate" in plan) {
-          head(plan.navigate);
-          go(plan.navigate, plan.direction);
-          break;
-        }
-        if ("fill" in plan) {
-          await drain();
-          if (!moved()) set({ ...local, back: true, step: 0 });
-          continue;
-        }
-        const before = local.step;
-        if ("key" in plan) await press(plan.key);
-        if (moved()) continue;
-        if ("ahead" in plan || local.step === before) {
-          // This window cannot reach the target: a leader makes its own state the newest, and
-          // the others come forward to it; a frame stays where it is.
-          if (leads()) lead(local);
-          else goal = null;
-          break;
-        }
+        if (this.inFlight()) break;
+        const plan = planSync(this.view.read(), this.goal);
+        const kind = (plan ? Object.keys(plan)[0] : "settled") as keyof Plans;
+        const handle = this.plans[kind] as PlanHandler<Plan>;
+        if ((await handle(plan, this.snapshot(), this.goal)) !== "replan") break;
       }
     } finally {
-      reconciling = false;
+      this.reconciling = false;
     }
   }
+}
 
-  function reset() {
-    speaker = false;
-    local = initial();
-    seen = ZERO;
-    goal = null;
-    heading = undefined;
+type SyncWindow = { local: DeckState; seen: Stamp; total: number };
+
+function acceptRemoteState(current: SyncWindow, message: StateMessage, role: Role) {
+  const target = targetFor(role, message.state, current.total);
+  if (target && newer(target, current.seen)) return target;
+  return message.reply && current.seen.at === 0 && current.local.at === 0 ? target : null;
+}
+
+class DeckSync {
+  // `local` is what this window shows, stamped with the state it shows; `seen` is the newest
+  // state accepted from anywhere, which may still be on its way in.
+  private readonly window: SyncWindow = { local: initialState(), seen: ZERO, total: 0 };
+  private channel: ReturnType<Deps["channel"]> | null = null;
+  private channelName = "";
+  private users = 0;
+  private speaker = false;
+  private readonly deps: Deps;
+  private readonly replay: DeckReplay;
+  private readonly listeners = new Set<() => void>();
+
+  constructor(deps: Deps) {
+    this.deps = deps;
+    this.replay = new DeckReplay({ deps, read: this.getState, write: this.set, lead: this.lead });
   }
 
-  return {
-    /** Joins the deck's channel and asks the leaders where they are. Returns the leave function;
-     *  the channel closes once no slide of the deck is mounted, so a window that left the deck is
-     *  never pulled back into it. */
-    connect(name: string, slides: number, navigate: typeof go) {
-      total = slides;
-      go = navigate;
-      users++;
-      if (channelName !== name) {
-        channel?.close();
-        reset();
-        channelName = name;
-        channel = deps.channel(name);
-        channel.onmessage = (event) => receive(event.data);
-        send({ type: "hello", role: deps.role() });
-        if (deps.role() === "presenter") addEventListener("pagehide", bye);
-      }
-      return () => {
-        users--;
-        // A slide change unmounts one slide and mounts the next in the same commit.
-        setTimeout(() => {
-          if (users > 0) return;
-          bye();
-          removeEventListener("pagehide", bye);
-          channel?.close();
-          channel = null;
-          channelName = "";
-          reset();
-        });
-      };
-    },
+  private set = (next: DeckState) => {
+    this.window.local = next;
+    this.notify();
+  };
 
-    /** A slide mounted. Called after the slide's own key handlers are registered. A slide nobody
-     *  here navigated to, after the first, came from the browser's back or forward button: a move
-     *  in this window like any press. */
-    arrive(slide: number, back: boolean) {
-      if (heading && heading.slide !== slide && deps.now() - heading.since < 2000) return;
-      const own = heading === undefined && local.slide >= 0 && local.slide !== slide;
-      heading = undefined;
-      if (own && leads()) lead({ slide, back, step: 0 });
-      else if (local.slide !== slide) {
-        generation++;
-        set({ ...local, slide, back, step: 0 });
-      }
-      void reconcile();
-    },
+  private send = (message: Message) => this.channel?.postMessage(message);
+  private broadcast = (reply?: boolean) =>
+    this.send({ type: "state", state: this.window.local, reply, role: this.deps.role() });
+  private notify = () => this.listeners.forEach((listener) => listener());
+  private bye = () => this.send({ type: "bye", role: this.deps.role() });
+  /** A press here, or a state only this window can reach: it becomes the deck's newest. */
+  private lead = (next: SlideState) => {
+    this.replay.replaceGoal(null);
+    const at = Math.max(this.deps.now(), this.window.seen.at + 1, this.window.local.at + 1);
+    this.window.seen = { at, from: this.deps.id };
+    this.set({ ...next, ...this.window.seen });
+    this.broadcast();
+  };
 
-    /** A press in this window left the slide. */
-    navigated(slide: number, direction: Direction) {
-      head(slide);
-      lead({ slide, back: direction === "back", step: 0 });
-    },
+  private updateSpeakerPresence(message: Message) {
+    const open = message.type !== "bye";
+    if (message.role !== "presenter" || this.speaker === open) return;
+    this.speaker = open;
+    this.notify();
+  }
 
-    /** An arrow press on `slide` finished dispatching. `consumed` is whether the slide used it as
-     *  a step; a press whose slide this window has since left counts for nothing. */
-    pressed(event: KeyboardEvent, slide: number, consumed: boolean) {
-      if (!consumed || slide !== local.slide) return;
-      const step = local.step + (event.key === "ArrowRight" ? 1 : -1);
-      if (replayed.has(event)) set({ ...local, step });
-      else lead({ ...local, step });
-    },
+  private receive(message: Message) {
+    this.updateSpeakerPresence(message);
+    // Two audience windows of one deck, such as two tabs, stay apart: an audience window follows
+    // only the speaker window, which passes a press made in one on to the other.
+    if (message.type === "bye" || (this.deps.role() === "audience" && message.role === "audience"))
+      return;
+    if (message.type !== "state") {
+      if (leads(this.deps.role()) && this.window.local.slide >= 0) this.broadcast(true);
+      return;
+    }
+    const target = acceptRemoteState(this.window, message, this.role());
+    if (!target) return;
+    this.window.seen = { at: target.at, from: target.from };
+    if (this.role() === "presenter" && message.role === "audience")
+      this.send({ type: "state", state: target, role: "presenter" });
+    this.replay.replaceGoal(target);
+  }
 
-    /** True for a press this module replayed from another window, which must not navigate. */
-    isReplayed: (event: Event) => replayed.has(event),
-    role: () => deps.role(),
-    /** True in the frames inside the speaker window, which only follow. */
-    follows: () => !leads(),
-    getState: () => local,
-    /** True while a speaker window is open on this deck. */
-    speakerOpen: () => speaker,
-    subscribe(listener: () => void) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
+  private reset() {
+    this.channel?.close();
+    this.speaker = false;
+    this.window.local = initialState();
+    this.window.seen = ZERO;
+    this.replay.reset();
+  }
+
+  /** Joins the deck's channel and asks the leaders where they are. Returns the leave function;
+   *  the channel closes once no slide of the deck is mounted, so a window that left the deck is
+   *  never pulled back into it. */
+  connect(name: string, slides: number, navigate: DeckReplay["navigate"]) {
+    this.window.total = slides;
+    this.replay.navigate = navigate;
+    this.users++;
+    if (this.channelName !== name) {
+      this.reset();
+      this.channelName = name;
+      this.channel = this.deps.channel(name);
+      this.channel.onmessage = (event) => this.receive(event.data);
+      this.send({ type: "hello", role: this.deps.role() });
+      if (this.deps.role() === "presenter") addEventListener("pagehide", this.bye);
+    }
+    return () => {
+      this.users--;
+      // A slide change unmounts one slide and mounts the next in the same commit.
+      setTimeout(() => {
+        if (this.users > 0) return;
+        this.bye();
+        removeEventListener("pagehide", this.bye);
+        this.reset();
+        this.channel = null;
+        this.channelName = "";
+      });
+    };
+  }
+
+  arrive = (slide: number, back: boolean) => this.replay.arrive(slide, back);
+
+  /** A press in this window left the slide. */
+  navigated(slide: number, direction: Direction) {
+    this.replay.head(slide);
+    this.lead({ slide, back: direction === "back", step: 0 });
+  }
+
+  /** An arrow press on `slide` finished dispatching. `consumed` is whether the slide used it as
+   *  a step; a press whose slide this window has since left counts for nothing. */
+  pressed(event: KeyboardEvent, slide: number, consumed: boolean) {
+    if (!consumed || slide !== this.window.local.slide) return;
+    const { local } = this.window;
+    const step = local.step + (event.key === "ArrowRight" ? 1 : -1);
+    (this.replay.isReplayed(event) ? this.set : this.lead)({ ...local, step });
+  }
+
+  /** True for a press this module replayed from another window, which must not navigate. */
+  isReplayed = (event: Event) => this.replay.isReplayed(event);
+  role = () => this.deps.role();
+  /** True in the frames inside the speaker window, which only follow. */
+  follows = () => !leads(this.deps.role());
+  getState = () => this.window.local;
+  /** True while a speaker window is open on this deck. */
+  speakerOpen = () => this.speaker;
+  subscribe = (listener: () => void) => {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
   };
 }
+
+export const createDeckSync = (deps: Deps) => new DeckSync(deps);
 
 /** A direct link to the speaker window: `?presenter` names the window once and leaves the URL. */
 function windowRole(): Role {
