@@ -31,12 +31,10 @@ it.each([
   const metrics = angledLabelMetrics(layout, font, (reach) =>
     spacing.overhang(reach, 80, layout.lines.length),
   );
-  expect(metrics).toEqual({
-    ...layout,
-    height: expect.closeTo(103.99, 2),
-    overhang: expect.closeTo(overhang, 2),
-    edges: [0, 0],
-  });
+  const { height, overhang: measuredOverhang, ...labelLayout } = metrics;
+  expect(labelLayout).toEqual({ ...layout, edges: [0, 0] });
+  expect(height).toBeCloseTo(103.99, 2);
+  expect(measuredOverhang).toBeCloseTo(overhang, 2);
 });
 
 it("pads both ends of a trend axis for labels wider than its margins", () => {
