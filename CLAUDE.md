@@ -69,6 +69,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `catalog/guidance.ts` and the consumer publishes it: the public engine reads no client deck; its lint of fields that change nothing drawn is
   `ignoredFields`, proven by `test/ignored-fields.test.tsx`.
   `slides-pptx` writes with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
+  `scripts/render-pptx.ts` runs the command, and `scripts/pptx/` holds the exporter modules.
   `scripts/pptx-text.ts` measures its text with the brand faces' metrics and finds text past its
   box, which `--strict` fails on; `scripts/pptx-fonts.ts` embeds the faces under `--embed-fonts`.
   Its lengths and sizes are measured off the print route at 1920x1080.

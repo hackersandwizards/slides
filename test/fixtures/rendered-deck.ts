@@ -1,19 +1,16 @@
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { tokens } from "@hackersandwizards/brand/tokens";
-import JSZip from "jszip";
 import { assert } from "vitest";
-import { renderPptx } from "../../scripts/render-pptx";
+import { renderPptx } from "../../scripts/pptx/deck";
 import { slideCatalog } from "../../specimen/slide-catalog";
 import type { Presentation, Slide } from "../../types/slide";
 
 export async function rendered(deck: Presentation, assets?: string) {
   const dir = mkdtempSync(join(tmpdir(), "slides-pptx-"));
   try {
-    const out = join(dir, "deck.pptx");
-    const warnings = await renderPptx(deck, out, assets ?? dir);
-    const zip = await JSZip.loadAsync(readFileSync(out));
+    const { zip, warnings } = await renderPptx(deck, assets ?? dir);
     const slideXml: string[] = [];
     const slideText: string[] = [];
     const slideCharts: string[][] = [];

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { createRequire } from "node:module";
 import verbal from "@hackersandwizards/brand/verbal.json";
 import { assert, beforeAll, describe, expect, it } from "vitest";
-import { centredMark } from "../scripts/render-pptx";
+import { centredMark } from "../scripts/pptx/chrome";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
 import { rendered, shapesOf, specimen, specimenAt, unescape } from "./fixtures/rendered-deck";

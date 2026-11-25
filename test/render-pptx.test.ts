@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import type JSZip from "jszip";
 import { beforeAll, describe, expect, it } from "vitest";
-import { centredMark } from "../scripts/render-pptx";
+import { centredMark } from "../scripts/pptx/chrome";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import { overviewAsPhases, companiesWithLogo } from "../lib/slide-utils";
