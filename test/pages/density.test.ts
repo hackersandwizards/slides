@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, expect, it } from "vitest";
+import { planSplit } from "../../scripts/density";
 import { limit } from "./limit";
 
 const dir = mkdtempSync(join(tmpdir(), "slides-density-"));
@@ -71,3 +72,16 @@ it(
   },
   limit(120_000),
 );
+
+it("groups block ranges into slides that fit within the available height", () => {
+  expect(
+    planSplit(
+      [
+        { top: 0, bottom: 80 },
+        { top: 80, bottom: 160 },
+        { top: 160, bottom: 260 },
+      ],
+      180,
+    ),
+  ).toEqual({ groups: 2, split: "1-2 | 3" });
+});

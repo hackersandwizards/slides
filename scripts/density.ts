@@ -38,26 +38,11 @@ const USAGE = [
   "  --serve \"<command>\"  start the consumer's server through scaffolding's serve, which sets HOST and PORT",
   "With either, a path such as /<deck>/print is read against that server.",
 ].join("\n");
-const args = process.argv.slice(2);
-if (args.includes("--help")) {
-  console.log(USAGE);
-  process.exit(0);
-}
-const option = (name: string) => {
-  const at = args.indexOf(name);
-  return at < 0 ? undefined : args.splice(at, 2)[1];
-};
-const site = option("--site");
-const serve = option("--serve");
-// A server this run starts takes a port of its own, so an address naming another port would
-// measure whatever answers there.
-const absolute = (arg: string) => URL.canParse(arg);
-if (!args.length || (site && serve) || ((site || serve) && args.some(absolute))) {
-  console.error(USAGE);
-  process.exit(2);
-}
+let failed = 0;
+let noticed = 0;
+let broken = 0;
 
-async function startServer() {
+async function startServer(site?: string, serve?: string) {
   if (site) return serveDir(site);
   if (!serve) return;
   // Imported only here, so a consumer serving its site itself needs no scaffolding.
@@ -65,44 +50,62 @@ async function startServer() {
   const { url, stop } = await start(["/bin/sh", "-c", serve]);
   return { origin: url, close: stop };
 }
-const server = await startServer();
-const urls = args.map((arg) => (server ? new URL(arg, server.origin).href : arg));
-let browser: Browser | undefined;
-let failed = 0;
-let noticed = 0;
-let broken = 0;
-try {
-  // Background pages keep their timers and frames: settle waits on both.
-  browser = await puppeteer.launch({
-    headless: true,
-    protocolTimeout: 900_000,
-    args: [
-      "--use-mock-keychain",
-      "--password-store=basic",
-      "--disable-background-timer-throttling",
-      "--disable-renderer-backgrounding",
-      "--disable-backgrounding-occluded-windows",
-    ],
-  });
-  const reports: string[][] = [];
-  let next = 0;
-  await Promise.all(
-    Array.from({ length: Math.min(PAGES, urls.length) }, async () => {
-      while (next < urls.length) {
-        const i = next++;
-        reports[i] = await check(browser!, urls[i]);
-      }
-    }),
+
+if (import.meta.main) {
+  const args = process.argv.slice(2);
+  if (args.includes("--help")) {
+    console.log(USAGE);
+    process.exit(0);
+  }
+  const option = (name: string) => {
+    const at = args.indexOf(name);
+    return at < 0 ? undefined : args.splice(at, 2)[1];
+  };
+  const site = option("--site");
+  const serve = option("--serve");
+  // A server this run starts takes a port of its own, so an address naming another port would
+  // measure whatever answers there.
+  const absolute = (arg: string) => URL.canParse(arg);
+  if (!args.length || (site && serve) || ((site || serve) && args.some(absolute))) {
+    console.error(USAGE);
+    process.exit(2);
+  }
+  const server = await startServer(site, serve);
+  const urls = args.map((arg) => (server ? new URL(arg, server.origin).href : arg));
+  let browser: Browser | undefined;
+  try {
+    // Background pages keep their timers and frames: settle waits on both.
+    browser = await puppeteer.launch({
+      headless: true,
+      protocolTimeout: 900_000,
+      args: [
+        "--use-mock-keychain",
+        "--password-store=basic",
+        "--disable-background-timer-throttling",
+        "--disable-renderer-backgrounding",
+        "--disable-backgrounding-occluded-windows",
+      ],
+    });
+    const reports: string[][] = [];
+    let next = 0;
+    await Promise.all(
+      Array.from({ length: Math.min(PAGES, urls.length) }, async () => {
+        while (next < urls.length) {
+          const i = next++;
+          reports[i] = await check(browser!, urls[i]);
+        }
+      }),
+    );
+    for (const line of reports.flat()) console.log(line);
+  } finally {
+    await browser?.close();
+    server?.close();
+  }
+  console.log(
+    `[slides-density] ${urls.length} decks: ${failed} findings below ${FAIL}, of the wrong type or unfitted (fail), ${noticed} below ${NOTICE} (notice)${broken ? `, ${broken} decks did not render` : ""}`,
   );
-  for (const line of reports.flat()) console.log(line);
-} finally {
-  await browser?.close();
-  server?.close();
+  process.exit(failed || broken ? 1 : 0);
 }
-console.log(
-  `[slides-density] ${urls.length} decks: ${failed} findings below ${FAIL}, of the wrong type or unfitted (fail), ${noticed} below ${NOTICE} (notice)${broken ? `, ${broken} decks did not render` : ""}`,
-);
-process.exit(failed || broken ? 1 : 0);
 
 async function check(browser: Browser, url: string): Promise<string[]> {
   const deck = new URL(url).pathname.replace(/\/print$/, "").replace(/^\//, "");
@@ -110,7 +113,12 @@ async function check(browser: Browser, url: string): Promise<string[]> {
   try {
     await page.setViewport({ width: 1920, height: 1080 });
     await settlePrintPage(page, url);
-    const rows = await page.$$eval(".print-slide", measure, NOTICE, [...FIT_STYLE], UNFITTED_SLIDE);
+    const metrics = await page.$$eval(".print-slide", readSlideMetrics, UNFITTED_SLIDE);
+    const shrunk = metrics.filter((m) => !m.unfitted && !m.use && m.scale < NOTICE).map((m) => m.i);
+    const layouts = shrunk.length
+      ? await page.$$eval(".print-slide", readBlockLayout, shrunk, [...FIT_STYLE])
+      : {};
+    const rows = metrics.flatMap((m) => classifySlide(m, layouts[m.i]));
     return rows.map((r) => {
       if ("unfitted" in r) {
         failed++;
@@ -146,18 +154,33 @@ async function check(browser: Browser, url: string): Promise<string[]> {
 
 /** A slide the fit guard never fitted, one of the wrong type, one with a heading shrunk to fit a
  *  word, or one the fit guard shrank. */
-type Row =
+export type Row =
   | { i: number; title: string; unfitted: true }
   | { i: number; title: string; use: true }
   | { i: number; title: string; word: number }
   | { i: number; title: string; scale: number; label: string; groups: number; split: string };
 
-function measure(nodes: Element[], notice: number, fitStyle: string[], unfitted: string) {
-  return nodes.flatMap((slide, i): Row[] => {
+export interface SlideMetrics {
+  i: number;
+  title: string;
+  unfitted: boolean;
+  use: boolean;
+  word: number;
+  scale: number;
+}
+
+export interface BlockLayout {
+  label: "list item" | "block";
+  avail: number;
+  blocks: { top: number; bottom: number }[];
+}
+
+/** Reads each printed slide's fit state, misuse mark, heading word scale and box zoom in-page. */
+function readSlideMetrics(nodes: Element[], unfittedSelector: string): SlideMetrics[] {
+  return nodes.map((slide, i) => {
     const title = slide.querySelector("h1, h2")?.textContent?.trim().slice(0, 60) ?? "";
-    // The page did not hydrate, so no scale below can be read.
-    if (slide.querySelector(unfitted)) return [{ i, title, unfitted: true as const }];
-    const misused = (slide as HTMLElement).dataset.use ? [{ i, title, use: true as const }] : [];
+    const unfitted = !!slide.querySelector(unfittedSelector);
+    const use = !!(slide as HTMLElement).dataset.use;
     // A heading the fit guard shrank so that its widest word fits (SlideShell's fitWords).
     const word = Math.min(
       1,
@@ -165,36 +188,80 @@ function measure(nodes: Element[], notice: number, fitStyle: string[], unfitted:
         (h) => parseFloat(h.dataset.wordScale!) || 1,
       ),
     );
-    const words = word < notice ? [{ i, title, word }] : [];
     const box = slide.querySelector<HTMLElement>(
       ".slide-body[style*='zoom'], .slide-content[style*='zoom']",
     );
     const scale = box ? parseFloat(box.style.zoom) || 1 : 1;
-    if (misused.length || !box || scale >= notice) return [...misused, ...words];
-    // Lay the box out at full size and natural width, as the fit guard measures it, to see where
-    // its blocks fall.
+    return { i, title, unfitted, use, word, scale };
+  });
+}
+
+/** Lays each shrunk slide out at full size in-page to measure where its blocks fall. */
+function readBlockLayout(
+  slides: Element[],
+  indices: number[],
+  fitStyle: string[],
+): Record<number, BlockLayout> {
+  const layouts: Record<number, BlockLayout> = {};
+  for (const i of indices) {
+    const box = slides[i]?.querySelector<HTMLElement>(
+      ".slide-body[style*='zoom'], .slide-content[style*='zoom']",
+    );
+    if (!box) continue;
     const kept = fitStyle.map((p) => box.style.getPropertyValue(p));
     fitStyle.forEach((p) => box.style.removeProperty(p));
     let parent: Element = box;
     while (parent.children.length === 1) parent = parent.children[0];
-    const blocks = [...parent.children].filter((c) => getComputedStyle(c).position !== "absolute");
+    const blocks = [...parent.children]
+      .filter((c) => getComputedStyle(c).position !== "absolute")
+      .map((b) => {
+        const { top, bottom } = b.getBoundingClientRect();
+        return { top, bottom };
+      });
     const avail = box.clientHeight * 0.9;
-    const groups: number[][] = [];
-    let start = blocks[0]?.getBoundingClientRect().top ?? 0;
-    let group: number[] = [];
-    blocks.forEach((b, k) => {
-      const r = b.getBoundingClientRect();
-      if (group.length && r.bottom - start > avail) {
-        groups.push(group);
-        group = [];
-        start = r.top;
-      }
-      group.push(k + 1);
-    });
-    if (group.length) groups.push(group);
     fitStyle.forEach((p, k) => box.style.setProperty(p, kept[k]));
-    const label = parent.tagName === "UL" ? "list item" : "block";
-    const split = groups.map((g) => (g.length > 1 ? `${g[0]}-${g.at(-1)}` : `${g[0]}`)).join(" | ");
-    return [...words, { i, scale, title, label, groups: groups.length, split }];
+    layouts[i] = { label: parent.tagName === "UL" ? "list item" : "block", avail, blocks };
+  }
+  return layouts;
+}
+
+/** Groups measured block boxes (1-based) into slides whose height stays within `avail`. */
+export function planSplit(
+  blocks: readonly { top: number; bottom: number }[],
+  avail: number,
+): { groups: number; split: string } {
+  const groups: number[][] = [];
+  let start = blocks[0]?.top ?? 0;
+  let group: number[] = [];
+  blocks.forEach((r, k) => {
+    if (group.length && r.bottom - start > avail) {
+      groups.push(group);
+      group = [];
+      start = r.top;
+    }
+    group.push(k + 1);
   });
+  if (group.length) groups.push(group);
+  const split = groups.map((g) => (g.length > 1 ? `${g[0]}-${g.at(-1)}` : `${g[0]}`)).join(" | ");
+  return { groups: groups.length, split };
+}
+
+/** Turns one slide's measured metrics and optional full-size block layout into density rows. */
+export function classifySlide(slide: SlideMetrics, layout?: BlockLayout): Row[] {
+  const { i, title } = slide;
+  // The page did not hydrate, so no scale below can be read.
+  if (slide.unfitted) return [{ i, title, unfitted: true }];
+  const rows: Row[] = [];
+  if (slide.use) rows.push({ i, title, use: true });
+  if (slide.word < NOTICE) rows.push({ i, title, word: slide.word });
+  if (!slide.use && slide.scale < NOTICE && layout) {
+    rows.push({
+      i,
+      title,
+      scale: slide.scale,
+      label: layout.label,
+      ...planSplit(layout.blocks, layout.avail),
+    });
+  }
+  return rows;
 }
