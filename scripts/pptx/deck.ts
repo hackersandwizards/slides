@@ -25,28 +25,20 @@ import {
   isOpening,
   isVideo,
   linkLabel,
-  mediaAsContent,
-  overviewAsPhases,
   pageLabel,
   claimParts,
   closingClaim,
   continuation,
   deckLang,
-  deepDiveAsTransition,
   personAccent,
   pipelineAsFlow,
-  evolutionAsProcess,
   leadingWords,
   minus,
   numbersGrid,
   profileLabel,
   qrAlt,
   speakerLine,
-  contentRedrawnAs,
-  gridAsContent,
   labeledGridAsCards,
-  dualPillAsRoadmap,
-  regularAsContent,
   teamTypesDrawn,
   companiesWithLogo,
   TWO_COLUMN_TONES,
@@ -58,6 +50,7 @@ import { centredMark } from "./chrome";
 import { family, MONO, PITCH, SANS } from "./faces";
 import { balance, longest, pretty, wrap, type Span } from "./lines";
 import { checkSlide } from "./overflow";
+import { slideDrawn } from "./slides";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
 type PSlide = ReturnType<Pptx["addSlide"]>;
@@ -646,6 +639,7 @@ interface Ctx {
   charts: Map<number, ChartFix>;
   /** The words the engine prints itself, in the deck's language. */
   words: (typeof WORDS)["en" | "de"];
+  lang: ReturnType<typeof deckLang>;
 }
 
 /** A deck file's path: a root path under the consumer's public directory, else a file path as it
@@ -3025,13 +3019,13 @@ function portrait(
   }
 }
 
-type Render = (s: PSlide, ctx: Ctx, slide: never, deck: Presentation) => void;
+type Render = (s: PSlide, ctx: Ctx, slide: never) => void;
 
 /** A talk's opening as TitleSlide draws it, measured off the print route: kicker, name and title on
  *  the left, centred above the bottom row and kept 2rem clear of it, where speakers and event stand
  *  beside the QR code and its link. */
-function opening(s: PSlide, ctx: Ctx, d: TitleSlide, deck: Presentation) {
-  const lang = d.lang ?? deckLang(deck);
+function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
+  const lang = d.lang ?? ctx.lang;
   const { c } = ctx;
   const qr = 256 / 144;
   const rowH = d.qr ? 324 / 144 : 119 / 144;
@@ -3124,16 +3118,22 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide, deck: Presentation) {
 /** A slide that draws nothing, to measure a layout drawn top-down before placing it. */
 const DRY = new Proxy({}, { get: () => () => undefined }) as PSlide;
 
+type RenderedSlide = Exclude<
+  Slide,
+  | { type: "evolution" | "media" | "overview" | "deep-dive-divider" | "dual-pill-overview" }
+  | { type: "grid"; variant?: "pillars" | "stats" }
+  | { type: "comparison"; variant: "guidance" | "positions" }
+>;
+
 const RENDER: {
-  [K in Slide["type"]]: (
+  [K in RenderedSlide["type"]]: (
     s: PSlide,
     ctx: Ctx,
-    slide: Extract<Slide, { type: K }>,
-    deck: Presentation,
+    slide: Extract<RenderedSlide, { type: K }>,
   ) => void;
 } = {
-  title(s, ctx, d, deck) {
-    if (isOpening(d)) return opening(s, ctx, d, deck);
+  title(s, ctx, d) {
+    if (isOpening(d)) return opening(s, ctx, d);
     const { c } = ctx;
     const o: BoxOpts = {
       size: PT.display,
@@ -3160,10 +3160,7 @@ const RENDER: {
       });
   },
 
-  content(s, ctx, d, deck) {
-    const redrawn = contentRedrawnAs(d);
-    if (redrawn?.type === "comparison") return RENDER.comparison(s, ctx, redrawn, deck);
-    if (redrawn) return RENDER.statement(s, ctx, redrawn, deck);
+  content(s, ctx, d) {
     const centered = d.layout === "centered";
     let y = header(s, ctx, d, centered);
     if (d.badge)
@@ -3198,12 +3195,7 @@ const RENDER: {
     footer(s, ctx, d.footer, footH, centered, end + 0.1);
   },
 
-  regular(s, ctx, d, deck) {
-    // As on the web, a regular slide is the content or agenda slide that replaces it
-    // (`regularAsContent`); one with a profile keeps its sidebar.
-    const replaced = regularAsContent(d);
-    if (replaced?.type === "agenda") return RENDER.agenda(s, ctx, replaced, deck);
-    if (replaced) return RENDER.content(s, ctx, replaced, deck);
+  regular(s, ctx, d) {
     const { c } = ctx;
     const y = header(s, ctx, d);
     let a = BODY(y);
@@ -3271,13 +3263,13 @@ const RENDER: {
     );
   },
 
-  statement(s, ctx, d, deck) {
+  statement(s, ctx, d) {
     const { c } = ctx;
     // The picture beside the statement, as the slide picks it: a quotation keeps its portrait and
     // drops a QR code, and a screenshot's or QR code's link is on the picture.
     const qr = !d.attribution && d.qr;
     const side = qr
-      ? { src: qr.src, alt: qrAlt(qr.href, deckLang(deck)), href: qr.href }
+      ? { src: qr.src, alt: qrAlt(qr.href, ctx.lang), href: qr.href }
       : d.imageSrc
         ? { src: d.imageSrc, alt: d.imageAlt, href: undefined, round: !!d.attribution }
         : d.linkedImage;
@@ -3480,7 +3472,7 @@ const RENDER: {
       const pad = 2.5 * REM;
       card(s, x, top, q, q, "FFFFFF", c.border, CORNER);
       picture(s, ctx, qr.src, x + pad, top + pad, q - 2 * pad, q - 2 * pad, {
-        alt: qrAlt(qr.href, deckLang(deck)),
+        alt: qrAlt(qr.href, ctx.lang),
         href: qr.href,
       });
       box(
@@ -3596,13 +3588,7 @@ const RENDER: {
     }
   },
 
-  evolution(s, ctx, d, deck) {
-    return RENDER.process(s, ctx, evolutionAsProcess(d), deck);
-  },
-
-  grid(s, ctx, d, deck) {
-    // Pillars and stats are a content slide's cards or numbers, as on the web (`gridAsContent`).
-    if (d.variant !== "quotes") return RENDER.content(s, ctx, gridAsContent(d), deck);
+  grid(s, ctx, d) {
     // Quotes as the web's QuoteCard: the brand quote, upright ink behind a purple rule with no
     // card, and under it the author in teal, a round portrait beside, in the web's columns.
     const { c } = ctx;
@@ -3643,23 +3629,7 @@ const RENDER: {
     });
   },
 
-  comparison(s, ctx, d, deck) {
-    if (d.variant === "guidance") return RENDER.guidance(s, ctx, { ...d, type: "guidance" }, deck);
-    if (d.variant === "positions") {
-      const { left, right, middle, resolution } = d;
-      return RENDER.content(
-        s,
-        ctx,
-        {
-          type: "content",
-          sectionLabel: d.sectionLabel,
-          headline: d.headline ?? "",
-          subtitle: d.subtitle,
-          content: [{ type: "positions", left, right, middle, resolution }],
-        },
-        deck,
-      );
-    }
+  comparison(s, ctx, d) {
     const { c } = ctx;
     const y = header(s, ctx, d);
     const footH = comparisonFoot(undefined, c, d, 0);
@@ -3802,10 +3772,6 @@ const RENDER: {
     });
   },
 
-  media(s, ctx, d, deck) {
-    return RENDER.content(s, ctx, mediaAsContent(d), deck);
-  },
-
   profiles(s, ctx, d) {
     const { c } = ctx;
     const y = header(s, ctx, d);
@@ -3856,10 +3822,6 @@ const RENDER: {
   "phased-pills"(s, ctx, d) {
     const y = d.title ? header(s, ctx, { headline: d.title }) : TOP;
     pillPhases(s, ctx, d.phases, { x: SIDE + CW * 0.2, y, w: CW * 0.6, h: BOTTOM - y });
-  },
-
-  overview(s, ctx, d, deck) {
-    return RENDER["phased-pills"](s, ctx, overviewAsPhases(d), deck);
   },
 
   process(s, ctx, d) {
@@ -4331,7 +4293,7 @@ const RENDER: {
     }
   },
 
-  closing(s, ctx, d, deck) {
+  closing(s, ctx, d) {
     const { c } = ctx;
     if (d.variant === "discussion") {
       const y = header(s, ctx, { headline: d.headline ?? d.line1 ?? ctx.words.discussion });
@@ -4502,7 +4464,7 @@ const RENDER: {
         y += 2.35 + linked + gap;
       }
       const tail: Para[] = [];
-      const claim = closingClaim(d, deckLang(deck));
+      const claim = closingClaim(d, ctx.lang);
       if (claim) {
         // The claim in muted ink, the word brand names for it in teal, one step below a quote's
         // lead, as ClosingSlide draws it.
@@ -4622,15 +4584,6 @@ const RENDER: {
         { size: PT.base, color: c.ink },
       );
     });
-  },
-
-  // Drawn as the night transition that replaces it, as on the web; `isDeepDive` gives it night.
-  "deep-dive-divider"(s, ctx, d, deck) {
-    RENDER.transition(s, ctx, deepDiveAsTransition(d), deck);
-  },
-
-  "dual-pill-overview"(s, ctx, d, deck) {
-    RENDER.roadmap(s, ctx, dualPillAsRoadmap(d), deck);
   },
 
   gantt(s, ctx, d) {
@@ -5239,7 +5192,8 @@ export async function renderPptx(
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE";
   pptx.title = deck.name;
-  const lang = { de: "de-DE", en: "en-US" }[deckLang(deck)] ?? "en-US";
+  const deckLanguage = deckLang(deck);
+  const lang = { de: "de-DE", en: "en-US" }[deckLanguage] ?? "en-US";
   if (deck.speakers?.length) pptx.author = deck.speakers.join(", ");
   pptx.theme = { headFontFace: MONO, bodyFontFace: SANS };
   const dark = deck.theme === "brand-dark";
@@ -5250,7 +5204,8 @@ export async function renderPptx(
     dark,
     warnings: [],
     charts: new Map(),
-    words: WORDS[deckLang(deck)],
+    words: WORDS[deckLanguage],
+    lang: deckLanguage,
   };
   // A deep-dive slide stands on night, as on the web (`isDeepDive`).
   const nightCtx: Ctx = { ...deckCtx, c: palette(true), dark: true };
@@ -5275,12 +5230,13 @@ export async function renderPptx(
     const s = pptx.addSlide();
     const ctx = ctxOf(slide);
     frame(s, ctx, deck, i);
-    const render = RENDER[slide.type] as Render | undefined;
+    const drawn = slideDrawn(slide);
+    const render = RENDER[drawn.type as RenderedSlide["type"]] as Render | undefined;
     if (!render)
       throw new Error(
         `slide ${i + 1} is a ${JSON.stringify(slide.type)}, which slides-pptx cannot draw`,
       );
-    render(s, ctx, slide as never, deck);
+    render(s, ctx, drawn as never);
   });
   const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
   // pptxgenjs numbers charts across every deck of the process: within one, they run in drawing order.
