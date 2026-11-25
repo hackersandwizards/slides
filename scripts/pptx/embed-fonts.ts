@@ -6,7 +6,8 @@
 // fsType is 0, installable.
 import { readFileSync } from "node:fs";
 import type JSZip from "jszip";
-import { MONO, PITCH, SANS, faceFiles, unescape } from "./pptx-text";
+import { MONO, PITCH, SANS, faceFiles } from "./faces";
+import { unescape } from "./xml";
 
 /** Basic Latin and Latin-1, kept in every subset whatever the deck uses, so text typed into the
  *  file later still finds its letters. */

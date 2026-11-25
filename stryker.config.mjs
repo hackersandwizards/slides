@@ -17,7 +17,7 @@ export default {
     "lib/section-styles.ts",
     "lib/slide-utils.ts",
     "lib/vite.ts",
-    "scripts/pptx-text.ts",
+    "scripts/pptx/{faces,lines,overflow,xml}.ts",
     "scripts/usage.ts",
   ],
   plugins: ["@stryker-mutator/vitest-runner"],

@@ -1,6 +1,6 @@
 import { fc, test, unicodeString } from "@hackersandwizards/scaffolding/property";
 import { expect } from "vitest";
-import { balance, wrap } from "../scripts/pptx-text";
+import { balance, wrap } from "../scripts/pptx/lines";
 
 const sizes = fc.integer({ min: 40, max: 500 });
 

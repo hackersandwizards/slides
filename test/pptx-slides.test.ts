@@ -22,7 +22,7 @@ import {
   specimen,
   specimenAt,
   TEAL,
-  unescape,
+  unescapeNamedEntities,
 } from "./fixtures/rendered-deck";
 import { pptxSlideVariants } from "./fixtures/pptx-slide-variants";
 
@@ -39,8 +39,8 @@ describe("slides-pptx on the specimen deck", () => {
       slideCatalog.slides.findIndex(
         (sl) => sl.type === "closing" && sl.variant === "contact" && (sl.claim !== false) === claim,
       );
-    expect(norm(unescape(slideText[at(true)]))).toContain(norm(verbal.claim.en));
-    expect(norm(unescape(slideText[at(false)]))).not.toContain(norm(verbal.claim.en));
+    expect(norm(unescapeNamedEntities(slideText[at(true)]))).toContain(norm(verbal.claim.en));
+    expect(norm(unescapeNamedEntities(slideText[at(false)]))).not.toContain(norm(verbal.claim.en));
   });
 
   it.each(["en", "de"] as const)(
@@ -54,7 +54,9 @@ describe("slides-pptx on the specimen deck", () => {
         ],
       });
       const xml = await deck.file("ppt/slides/slide2.xml")!.async("string");
-      expect(norm(unescape(xml.replace(/<[^>]+>/g, "")))).toContain(norm(verbal.claim[lang]));
+      expect(norm(unescapeNamedEntities(xml.replace(/<[^>]+>/g, "")))).toContain(
+        norm(verbal.claim[lang]),
+      );
       // One row: the claim's box no higher than its size times the line's 1.25, with some slack.
       const box = shapesOf(xml).find((sp) => sp.texts.includes(verbal.claim.word[lang]))!;
       const size = +/sz="(\d+)"/.exec(box.xml)![1] / 100;
@@ -101,8 +103,8 @@ describe("slides-pptx on the specimen deck", () => {
       join(import.meta.dirname, ".."),
     );
     const xml = await de.file("ppt/slides/slide1.xml")!.async("string");
-    expect(norm(unescape(xml.replace(/<[^>]+>/g, "")))).toContain(norm("A und B"));
-    expect(unescape(xml)).toContain('descr="QR-Code: example.com"');
+    expect(norm(unescapeNamedEntities(xml.replace(/<[^>]+>/g, "")))).toContain(norm("A und B"));
+    expect(unescapeNamedEntities(xml)).toContain('descr="QR-Code: example.com"');
   });
 
   it("prints its own words in the deck's language and marks no unnamed cycle segment", async () => {
@@ -126,7 +128,7 @@ describe("slides-pptx on the specimen deck", () => {
       ],
     });
     const text = async (n: number) =>
-      unescape(
+      unescapeNamedEntities(
         (await de.file(`ppt/slides/slide${n}.xml`)!.async("string")).replace(/<[^>]+>/g, " "),
       );
     // The labels keep the deck's case and are drawn in capitals, so an edit keeps them capitals.
@@ -480,19 +482,34 @@ describe("slides-pptx slide variants", () => {
     );
   });
 
+  const { type, lines, qr } = pptxSlideVariants.qr;
+  const qrStatement = { type, lines, qr };
+
   it.each([
-    ["kicker", "Live demo"],
-    ["first point", "Open the sample"],
-    ["second point", "Run the demo"],
-    ["closing", "Bring questions"],
-  ])("draws the QR statement's %s to the left of the card", async (_part, label) => {
-    const xml = await onlySlide(pptxSlideVariants.qr);
+    { part: "kicker", slide: { ...qrStatement, kicker: "Live demo" }, text: "Live demo" },
+    {
+      part: "first point",
+      slide: { ...qrStatement, points: ["Open the sample"] },
+      text: "Open the sample",
+    },
+    {
+      part: "second point",
+      slide: { ...qrStatement, points: ["Check the settings", "Run the demo"] },
+      text: "Run the demo",
+    },
+    {
+      part: "closing",
+      slide: { ...qrStatement, closing: "Bring questions" },
+      text: "Bring questions",
+    },
+  ])("draws the QR statement's $part to the left of the card", async ({ slide, text }) => {
+    const xml = await onlySlide(slide);
     const shapes = shapesOf(xml);
     const card = shapes.find((shape) => shape.prst === "roundRect");
-    const text = shapes.find((shape) => shape.texts.includes(label));
+    const part = shapes.find((shape) => shape.texts.includes(text));
     assert(card, "QR card");
-    assert(text, label);
-    expect(text.x + text.w).toBeLessThan(card.x);
+    assert(part, text);
+    expect(part.x + part.w).toBeLessThan(card.x);
   });
 
   it("draws a picture-side statement's struck claim before its lines", async () => {
