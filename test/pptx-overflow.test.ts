@@ -70,3 +70,49 @@ describe("slides-pptx draws what the slide shows", () => {
     ).toMatch(/crosses the edge/);
   });
 });
+
+describe("slides-pptx measures written text", () => {
+  const line = '<a:r><a:rPr sz="1800"/><a:t>One line</a:t></a:r>';
+
+  it.each([
+    {
+      label: "an empty paragraph is skipped",
+      width: 1828800,
+      height: 365760,
+      paragraphs:
+        '<a:p><a:pPr><a:lnSpc><a:spcPts val="7200"/></a:lnSpc></a:pPr></a:p>' +
+        `<a:p><a:pPr><a:lnSpc><a:spcPts val="1800"/></a:lnSpc></a:pPr>${line}</a:p>`,
+      findings: [],
+    },
+    {
+      label: "200% line spacing makes text too tall",
+      width: 1828800,
+      height: 365760,
+      paragraphs: `<a:p><a:pPr><a:lnSpc><a:spcPct val="200000"/></a:lnSpc></a:pPr>${line}</a:p>`,
+      findings: ['Sample "One line": text 0.60 in tall in a box 0.40 in'],
+    },
+    {
+      label: "one word is wider than its text box",
+      width: 457200,
+      height: 2743200,
+      paragraphs:
+        '<a:p><a:r><a:rPr sz="1800"><a:latin typeface="JetBrains Mono"/></a:rPr>' +
+        "<a:t>MMMMMMMM</a:t></a:r></a:p>",
+      findings: ['Sample "MMMMMMMM": a word 1.20 in wide in a box 0.50 in'],
+    },
+  ])("checks written text when $label", ({ width, height, paragraphs, findings }) => {
+    const xml = `
+      <p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+        xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+        <p:cSld><p:spTree><p:sp>
+          <p:nvSpPr><p:cNvPr id="1" name="Sample"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+          <p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${width}" cy="${height}"/></a:xfrm></p:spPr>
+          <p:txBody>
+            <a:bodyPr lIns="0" tIns="0" rIns="0" bIns="0"/><a:lstStyle/>
+            ${paragraphs}
+          </p:txBody>
+        </p:sp></p:spTree></p:cSld>
+      </p:sld>`;
+    expect(checkSlide(xml, 13.333, 7.5)).toEqual(findings);
+  });
+});

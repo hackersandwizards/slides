@@ -1,11 +1,14 @@
 import { join } from "node:path";
 import verbal from "@hackersandwizards/brand/verbal.json";
 import { tokens } from "@hackersandwizards/brand/tokens";
-import { beforeAll, describe, expect, it } from "vitest";
+import { rejection } from "@hackersandwizards/scaffolding/rejection";
+import { assert, beforeAll, describe, expect, it } from "vitest";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import {
   contentRedrawnAs,
+  dualPillAsRoadmap,
+  evolutionAsProcess,
   gridAsContent,
   regularAsContent,
   WORDS,
@@ -21,6 +24,7 @@ import {
   TEAL,
   unescape,
 } from "./fixtures/rendered-deck";
+import { pptxSlideVariants } from "./fixtures/pptx-slide-variants";
 
 let slideXml: string[];
 let slideText: string[];
@@ -423,5 +427,140 @@ describe("slides-pptx draws what the slide shows", () => {
     const top = Math.min(...texts.map((sh) => sh.y!));
     const bottom = Math.max(...texts.map((sh) => sh.y! + sh.h!));
     expect(Math.abs((top + bottom) / 2 - 3.75)).toBeLessThan(0.1);
+  });
+});
+
+describe("slides-pptx slide variants", () => {
+  it.each([
+    {
+      name: "evolution",
+      replaced: pptxSlideVariants.evolution,
+      replacement: evolutionAsProcess(pptxSlideVariants.evolution),
+    },
+    {
+      name: "dual-pill-overview",
+      replaced: pptxSlideVariants.dualPill,
+      replacement: dualPillAsRoadmap(pptxSlideVariants.dualPill),
+    },
+  ])("draws $name as its replacement", async ({ replaced, replacement }) => {
+    const xml = await onlySlide(replaced);
+    expect(xml).toBe(await onlySlide(replacement));
+  });
+
+  it("rejects a slide with an unknown type", async () => {
+    const unsupported = { type: "nope" } as unknown as Slide;
+    expect(await rejection(onlySlide(unsupported))).toBe(
+      'Error: slide 1 is a "nope", which slides-pptx cannot draw',
+    );
+  });
+
+  it("draws a section beside a regular slide's profile", async () => {
+    const xml = await onlySlide(pptxSlideVariants.regular);
+    const shapes = shapesOf(xml);
+    const profile = shapes.find((shape) => shape.texts.includes("Ari Example"));
+    const section = shapes.find((shape) => shape.texts.includes("A short summary"));
+    assert(profile, "profile text");
+    assert(section, "section text");
+    expect(section.x).toBeGreaterThan(profile.x + profile.w);
+    expect(section.texts).toEqual([
+      "Findings",
+      "A short summary",
+      "Interview notes",
+      "Read the report",
+    ]);
+  });
+
+  it("sets a centred statement's closing in italic between quotation marks", async () => {
+    const xml = await onlySlide(pptxSlideVariants.quote);
+    const closing = shapesOf(xml).find((shape) => shape.texts.includes("Start small"));
+    assert(closing, "closing text");
+    expect(closing.texts).toEqual(["“", "Start small", "”"]);
+    expect(closing.xml).toMatch(
+      /<a:r><a:rPr[^>]*\bi="1"[^>]*>.*?<\/a:rPr><a:t>Start small<\/a:t><\/a:r>/s,
+    );
+  });
+
+  it.each([
+    ["kicker", "Live demo"],
+    ["first point", "Open the sample"],
+    ["second point", "Run the demo"],
+    ["closing", "Bring questions"],
+  ])("draws the QR statement's %s to the left of the card", async (_part, label) => {
+    const xml = await onlySlide(pptxSlideVariants.qr);
+    const shapes = shapesOf(xml);
+    const card = shapes.find((shape) => shape.prst === "roundRect");
+    const text = shapes.find((shape) => shape.texts.includes(label));
+    assert(card, "QR card");
+    assert(text, label);
+    expect(text.x + text.w).toBeLessThan(card.x);
+  });
+
+  it("draws a picture-side statement's struck claim before its lines", async () => {
+    const xml = await onlySlide(pptxSlideVariants.side);
+    const statement = shapesOf(xml).find((shape) => shape.texts.includes("Share the results"));
+    assert(statement, "statement text");
+    expect(statement.texts.slice(0, 2)).toEqual(["Keep them private", "Share the results"]);
+    expect(statement.xml).toMatch(
+      /<a:r><a:rPr[^>]*strike="sngStrike"[^>]*>.*?<\/a:rPr><a:t>Keep them private<\/a:t><\/a:r>/s,
+    );
+  });
+
+  it("numbers the points of a picture-side statement", async () => {
+    const xml = await onlySlide(pptxSlideVariants.side);
+    const statement = shapesOf(xml).find((shape) => shape.texts.includes("Share the results"));
+    assert(statement, "statement text");
+    expect(statement.texts.slice(-4).map((text) => text.trim())).toEqual([
+      "01",
+      "Write a summary",
+      "02",
+      "Send it",
+    ]);
+  });
+
+  it("draws the comparison logo inside its side's card", async () => {
+    const xml = await onlySlide(pptxSlideVariants.comparison);
+    const picture =
+      /<p:pic>(?:(?!<\/p:pic>).)*descr="First supplier"(?:(?!<\/p:pic>).)*?<a:off x="(\d+)" y="(\d+)".*?<a:ext cx="(\d+)" cy="(\d+)"/s.exec(
+        xml,
+      );
+    assert(picture, "first supplier's picture");
+    const [x, y, w, h] = picture.slice(1).map((value) => Number(value) / 914400);
+    const label = shapesOf(xml).find((shape) => shape.texts.includes("First supplier"));
+    assert(label, "first supplier's label");
+    const card = shapesOf(xml).find((shape) => shape.prst === "round2DiagRect");
+    assert(card, "first supplier's card");
+    expect(x).toBeGreaterThan(card.x);
+    expect(x + w).toBeLessThan(card.x + card.w);
+    expect(y).toBeGreaterThan(card.y);
+    expect(y + h).toBeLessThan(label.y);
+  });
+
+  it("draws the named subsystem without a description", async () => {
+    const xml = await onlySlide(pptxSlideVariants.subsystem);
+    const shapes = shapesOf(xml);
+    expect(shapes.filter((shape) => shape.prst === "octagon")).toHaveLength(1);
+    expect(shapes.flatMap((shape) => shape.texts)).toEqual([
+      "01 / 01",
+      "Delivery teams",
+      "Storefront",
+      "• ",
+      "Engineer",
+      "Payments",
+      "Hosting",
+    ]);
+  });
+
+  it("draws the stream team alone when no platform is supplied", async () => {
+    const xml = await onlySlide(pptxSlideVariants.noPlatform);
+    const shapes = shapesOf(xml);
+    expect(shapes.filter((shape) => shape.prst === "round2DiagRect")).toHaveLength(1);
+    expect(shapes.filter((shape) => shape.dash === "sysDot")).toEqual([]);
+    expect(shapes.flatMap((shape) => shape.texts)).toEqual([
+      "01 / 01",
+      "Delivery teams",
+      "Storefront",
+      "• ",
+      "Engineer",
+    ]);
   });
 });

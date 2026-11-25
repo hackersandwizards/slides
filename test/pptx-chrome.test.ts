@@ -2,11 +2,13 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
 import verbal from "@hackersandwizards/brand/verbal.json";
-import { beforeAll, describe, expect, it } from "vitest";
+import { assert, beforeAll, describe, expect, it } from "vitest";
 import { centredMark } from "../scripts/render-pptx";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
 import { rendered, shapesOf, specimen, specimenAt, unescape } from "./fixtures/rendered-deck";
+
+import { pptxSlideVariants } from "./fixtures/pptx-slide-variants";
 
 const require = createRequire(import.meta.url);
 
@@ -171,5 +173,39 @@ describe("slides-pptx draws what the slide shows", () => {
     const i = specimenAt((x) => x.type === "closing" && centredMark(x));
     expect(unescape(slideText[i])).not.toMatch(/\d\d \/ \d\d/);
     expect(unescape(slideText[specimenAt((x) => x.type === "content")])).toMatch(/\d\d \/ \d\d/);
+  });
+});
+
+describe("slides-pptx contact links", () => {
+  it.each([
+    {
+      label: "centred email",
+      slide: pptxSlideVariants.centredEmail,
+      text: "ari@example.com",
+      target: "mailto:ari@example.com",
+    },
+    {
+      label: "portrait email",
+      slide: pptxSlideVariants.portraitContact,
+      text: "ari@example.com",
+      target: "mailto:ari@example.com",
+    },
+    {
+      label: "portrait LinkedIn",
+      slide: pptxSlideVariants.portraitLinkedIn,
+      text: "in/ari-example",
+      target: "https://www.linkedin.com/in/ari-example",
+    },
+  ])("links the $label contact line", async ({ slide, text, target }) => {
+    const {
+      zip,
+      slideXml: [xml],
+    } = await rendered({ name: "Contact", slides: [slide] });
+    const speaker = shapesOf(xml).find((shape) => shape.texts.includes("Ari Example"));
+    assert(speaker, "speaker contact box");
+    expect(speaker.texts).toContain(text);
+    const rels = zip.file("ppt/slides/_rels/slide1.xml.rels");
+    assert(rels, "slide relationships");
+    expect(await rels.async("string")).toContain(`Target="${target}"`);
   });
 });
