@@ -7,6 +7,8 @@ import { renderPptx } from "../../scripts/pptx/deck";
 import { slideCatalog } from "../../specimen/slide-catalog";
 import type { Presentation, Slide } from "../../types/slide";
 
+export const PRINT_REM = 21.333 / 144;
+
 export async function rendered(deck: Presentation, assets?: string) {
   const dir = mkdtempSync(join(tmpdir(), "slides-pptx-"));
   try {

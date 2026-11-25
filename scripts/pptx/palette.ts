@@ -72,8 +72,14 @@ const NIGHT_TOKENS = {
   calloutShare: share("--tint-callout-night"),
 } satisfies typeof DAY_TOKENS;
 
+export interface Surface {
+  fill: string;
+  line?: string;
+}
+
 export function palette(dark: boolean) {
   const t = dark ? NIGHT_TOKENS : DAY_TOKENS;
+  const tealTint = mixColor(t.teal, t.bg, 0.12);
   return {
     bg: t.bg,
     card: t.card,
@@ -94,13 +100,15 @@ export function palette(dark: boolean) {
     codeGreen: hex("--color-green"),
     chip: mixColor(t.ink, t.bg, t.chipShare),
     tealDark: t.tealDark,
-    tealTint: mixColor(t.teal, t.bg, 0.12),
+    tealTint,
     purpleTint: mixColor(t.purple, t.bg, 0.12),
     greenTint: mixColor(t.green, t.bg, 0.1),
     redTint: mixColor(t.red, t.bg, 0.08),
     amberTint: mixColor(hex("--color-amber"), t.bg, 0.12),
     // brand's hw-callout, teal or data-hue="purple", without a line.
     callout: (hue: string) => mixColor(hue, t.calloutOn, t.calloutShare),
+    plainCard: { fill: t.card, line: t.border },
+    litCard: { fill: tealTint, line: t.teal },
   };
 }
 

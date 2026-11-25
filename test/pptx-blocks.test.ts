@@ -7,9 +7,9 @@ import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import { labeledGridAsCards } from "../lib/content-block-aliases";
-import { REM } from "../scripts/pptx/stage";
 import {
   onlySlide,
+  PRINT_REM,
   rendered,
   shapesOf,
   specimen,
@@ -247,7 +247,7 @@ describe("slides-pptx draws what the slide shows", () => {
         ),
     );
     const rules = shapesOf(slideXml[i]).filter(
-      (sh) => sh.fill === TEAL && Math.abs(sh.w! - 4 * REM) < 0.01,
+      (sh) => sh.fill === TEAL && Math.abs(sh.w! - 4 * PRINT_REM) < 0.01,
     );
     expect(rules.length).toBeGreaterThan(0);
     for (const r of rules) expect(r.h).toBeLessThan(r.w! / 4);
@@ -428,7 +428,7 @@ describe("slides-pptx block variants", () => {
     const centers = shapes
       .filter((shape) => shape.prst === "roundRect")
       .map((shape) => shape.x + shape.w / 2);
-    const pad = 1.5 * REM;
+    const pad = 1.5 * PRINT_REM;
     expect(centers).toEqual([
       expect.closeTo(frame.x + pad + (frame.w - 2 * pad) / 4, 5),
       expect.closeTo(frame.x + pad + (3 * (frame.w - 2 * pad)) / 4, 5),
@@ -442,7 +442,7 @@ describe("slides-pptx block variants", () => {
     const title = shapes.find((shape) => shape.texts.includes("Plan"));
     assert(card, "dense card");
     assert(title, "card title");
-    expect(card.h).toBeCloseTo(title.h + 3 * REM, 5);
+    expect(card.h).toBeCloseTo(title.h + 3 * PRINT_REM, 5);
   });
 
   it("exports a slide with an unknown block without warnings", async () => {
