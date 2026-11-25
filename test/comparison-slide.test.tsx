@@ -97,8 +97,7 @@ describe("comparison variants (merge-comparison)", () => {
       stage: "on arrival",
       advance: () => undefined,
       inertContents: ["→", "Newb", punchline],
-      strike: null,
-      tint: null,
+      matchesDecoration: (node: Element | null) => node === null,
     },
     {
       stage: "after ArrowRight",
@@ -106,19 +105,18 @@ describe("comparison variants (merge-comparison)", () => {
         window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", cancelable: true }));
       },
       inertContents: [],
-      strike: expect.any(HTMLElement),
-      tint: expect.any(HTMLElement),
+      matchesDecoration: (node: Element | null) => node instanceof HTMLElement,
     },
   ])(
     "draws the right reveal state for a struck before-after $stage",
-    ({ advance, inertContents, strike, tint }) => {
+    ({ advance, inertContents, matchesDecoration }) => {
       const { container } = live({ variant: "before-after", punchline, ...sides });
       act(advance);
       expect([...container.querySelectorAll("[inert]")].map((node) => node.textContent)).toEqual(
         inertContents,
       );
-      expect(container.querySelector(".line-through")).toEqual(strike);
-      expect(container.querySelector(".bg-text-subtle\\/7")).toEqual(tint);
+      expect(container.querySelector(".line-through")).toSatisfy(matchesDecoration);
+      expect(container.querySelector(".bg-text-subtle\\/7")).toSatisfy(matchesDecoration);
     },
   );
 
