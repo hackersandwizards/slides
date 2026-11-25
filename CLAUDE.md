@@ -19,7 +19,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
 - `components/slides/`: one component per slide type, composed only from the parts in
   `primitives.tsx` and `SlideChrome.tsx` (`SlideCard`, `DisplayHeading`, `NumberTile`,
   `DashedFrame`, `VideoPlayer` and the rest). A part used by a second slide type moves there; a real
-  difference is a variant of the part, never a class string of the type's own. `PrintSlide.tsx` is
+  difference is a variant of the part, never a class string of the type's own. What one slide type
+  alone draws from those parts sits beside it in a module named for what it draws
+  (`ProcessCircle.tsx`, `TimelineVisual.tsx`). `PrintSlide.tsx` is
   the printed page, strip, corner and optional confidentiality line included, and `PrintDeck` the whole deck a consumer's print
   route renders, which the print page renders too. A CSS rule one component owns lives in a `.css`
   beside it, which `slides.css` imports where the rule stands in the cascade, never the component
@@ -34,6 +36,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   The engine draws a plain `<img>` and moves with `history` inside one island, as every consumer,
   all on Astro, needs.
   `lib/deck-edit-mode.tsx` is the edit mode, which a tab opened with `?edit` starts with E,
+  `lib/deck-edit-field.ts` its text field over the slide, `lib/deck-edit-client.ts` its requests,
   `lib/deck-edit.ts` its file logic, `lib/deck-edit-server.ts` its write endpoint
   as one Node request handler, which each consumer mounts on its dev server with its own map from
   deck path to file. `lib/vite.ts` is a consumer's Vite `optimizeDeps`, read from the engine's
@@ -92,7 +95,7 @@ term, personal data or secret. Decks live in the consumers, except the fictional
     one per part, drawing its sheet of variants from `parts.ts`; `stories/Deck/` one per
     component of `components/deck/`. `test/catalog-stories.test.ts` fails on a type, part or
     deck component without its story, and on a specimen slide of a type other than an alias without its state. `Home.astro` renders the shell's home with the foundations.
-  - The print pages, `pages/catalog/print/` over `print.ts`: `index.html`, a Parts section (every
+  - The print pages, `pages/catalog/print/` over `print.ts`, `print-parts.ts`, `print-elements.ts`, `print-inline.ts` and `print-stylesheet.ts`: `index.html`, a Parts section (every
     part of `primitives.tsx` and `SlideChrome.tsx`, and the chart's `AxisTick`, in each variant, with the slide types using it),
     the Shared elements section (each brand element the slides use as a tile, each exception with
     its reason), then the catalogue in print mode: one slide per slide type (anchored by its name,

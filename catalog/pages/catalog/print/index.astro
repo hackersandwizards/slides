@@ -4,16 +4,9 @@ import catalogs from "@hackersandwizards/brand/catalogs.json";
 import { name } from "@hackersandwizards/brand/verbal.json";
 import { logoSizes } from "../../../../lib/brand-logos";
 import type { Usage } from "../../../usage";
-import {
-  entries,
-  exceptionSections,
-  JOBS,
-  partRows,
-  partTiles,
-  replacedRows,
-  usesTiles,
-  type Job,
-} from "../../../print";
+import { entries, JOBS, replacedRows, type Job } from "../../../print";
+import { exceptionSections, usesTiles } from "../../../print-elements";
+import { partRows, partTiles } from "../../../print-parts";
 
 declare const __SLIDES_USAGE__: Usage | null;
 const usage = __SLIDES_USAGE__;

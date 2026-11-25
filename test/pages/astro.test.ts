@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
 import { join } from "node:path";
-import { expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { limit } from "./limit";
 
 // Every test starting Astro on this root, one after another in this file: Astro processes started
@@ -80,23 +80,33 @@ it(
   limit(90_000),
 );
 
-it(
-  "shows the counts of every file SLIDES_USAGE names, summed, on the dev server",
-  async () => {
+describe("usage counts on the dev server", () => {
+  let page: string;
+  beforeAll(async () => {
     const { html, output } = await served("dev", "/catalog/print/", usageEnv);
     expect(html, output).toBeDefined();
-    const page = html!;
-    expect(countOf(page, "content")).toBe("15 slides");
-    expect(countOf(page, "title")).toBe("3 slides");
-    expect(countOf(page, "block-cards")).toBe("4 slides");
-    expect(countOf(page, "wheel")).toBe("0 slides");
+    page = html!;
+  }, limit(120_000));
+
+  it.each([
+    ["content", "15 slides"],
+    ["title", "3 slides"],
+    ["block-cards", "4 slides"],
+    ["wheel", "0 slides"],
     // A second tile of one entry, which slides-usage never counts.
-    expect(countOf(page, "block-gallery-2")).toBeUndefined();
+    ["block-gallery-2", undefined],
+  ])("shows the summed usage count for %s", (id, count) => {
+    expect(countOf(page, id)).toBe(count);
+  });
+
+  it("summarizes the deck and slide totals across usage files", () => {
     expect(page).toMatch(/in 3 decks of 39 slides, from/);
+  });
+
+  it("reports usage for an ID with no print entry", () => {
     expect(page).toMatch(/<code>block-old-form<\/code> \(2 slides\)/);
-  },
-  limit(120_000),
-);
+  });
+});
 
 it(
   "builds no count while SLIDES_USAGE is set",
