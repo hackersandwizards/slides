@@ -6,7 +6,7 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 import { classesIn, compileSlides, unescapeHtml } from "../../catalog/print-css";
 import { limit, newPage } from "./limit";
 
-// The print stylesheet is compiled from the markup print.ts hands it, not from a scan of the pages,
+// The print stylesheet is compiled from the markup print-stylesheet.ts assembles, not from a scan of the pages,
 // so a class the built pages write can miss its rule; a class name alone in the CSS proves nothing.
 const NIGHT = "rgb(11, 17, 24)";
 const root = join(import.meta.dirname, "..", "..");
@@ -64,9 +64,9 @@ it("fits the static specimen slides above their confidentiality line", async () 
   );
   await page.close();
   expect(slides.length).toBeGreaterThan(0);
-  expect(
-    slides.filter(({ note, fitted }) => note !== "Specimen deck, fictional content" || !fitted),
-  ).toEqual([]);
+  expect(slides).toEqual(
+    slides.map(() => ({ note: "Specimen deck, fictional content", fitted: true })),
+  );
 });
 
 it(

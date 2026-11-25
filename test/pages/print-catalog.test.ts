@@ -53,9 +53,9 @@ it("finds a schedule by what it is for, not by its type's name", () => {
 
 it("finds every slide type and content block by its name", () => {
   const words = new Set(entries.flatMap(([, , search]) => search.split(" ")));
-  const blocks = slideCatalog.slides.flatMap((s) =>
-    s.type === "content" ? s.content.map((b) => b.type) : [],
-  );
+  const blocks = slideCatalog.slides
+    .filter((slide) => slide.type === "content")
+    .flatMap((slide) => slide.content.map((block) => block.type));
   const missing = [...Object.keys(slideComponents), ...blocks].filter((n) => !words.has(n));
   expect(missing).toEqual([]);
 });
