@@ -1,10 +1,9 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type JSZip from "jszip";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
-import { slideCatalog } from "../specimen/slide-catalog";
+import { slideCatalog, specimenImages } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import { labeledGridAsCards } from "../lib/content-block-aliases";
 import {
@@ -14,19 +13,18 @@ import {
   shapesOf,
   specimen,
   specimenAt,
+  specimenSlide,
   TEAL,
 } from "./fixtures/rendered-deck";
 import { pptxBlockVariants } from "./fixtures/pptx-block-variants";
 
-let zip: JSZip;
 let slideXml: string[];
-let slideText: string[];
 
 beforeAll(async () => {
-  ({ zip, slideXml, slideText } = await specimen());
+  ({ slideXml } = await specimen());
 }, 60_000);
 
-describe("slides-pptx on the specimen deck", () => {
+describe("slides-pptx block rendering", () => {
   // The annotated image's band, 8 % to 52 % of the picture (F06).
   it("crops an annotated image to its band", () => {
     const i = slideCatalog.slides.findIndex((x) =>
@@ -35,59 +33,122 @@ describe("slides-pptx on the specimen deck", () => {
     expect(slideXml[i]).toContain('<a:srcRect l="0" r="0" t="8000" b="48000"/>');
   });
 
-  it("tints a table's head and every second body row, as the web's table", () => {
-    const at = slideCatalog.slides.findIndex(
-      (slide: Slide) =>
-        slide.type === "content" && slide.content.some((b) => b.type === "table" && b.headers),
-    );
-    const table = slideXml[at].match(/<a:tbl>.*?<\/a:tbl>/s)![0];
+  it("tints a table's head and every second body row, as the web's table", async () => {
+    const xml = await onlySlide({
+      type: "content",
+      headline: "Delivery measures",
+      content: [
+        {
+          type: "table",
+          headers: ["Team", "Lead time", "Change failure rate"],
+          rows: [
+            ["Checkout", "2 days", "4%"],
+            ["Search", "5 days", "9%"],
+            ["Billing", "11 days", "15%"],
+          ],
+        },
+      ],
+    });
+    const table = /<a:tbl>.*?<\/a:tbl>/s.exec(xml);
+    assert(table, "The table has native table markup");
     // Each row's first cell fill, after its borders: the head, then the three body rows.
     const fills = [
-      ...table.matchAll(/<a:tr\b.*?<\/a:lnB><a:solidFill><a:srgbClr val="(\w+)"/gs),
+      ...table[0].matchAll(/<a:tr\b.*?<\/a:lnB><a:solidFill><a:srgbClr val="(\w+)"/gs),
     ].map((m) => m[1]);
-    expect(fills).toHaveLength(4);
+    const tint = tokens["--color-tint"].slice(1).toUpperCase();
+    const white = tokens["--color-white"].slice(1).toUpperCase();
     expect(fills[0]).not.toBe(fills[1]);
-    expect(fills).toEqual([fills[0], fills[1], fills[0], fills[1]]);
+    expect(fills).toEqual([tint, white, tint, white]);
   });
 
-  it("sets a content slide's quote behind a purple rule, its source in grey", () => {
-    const at = slideCatalog.slides.findIndex(
-      (x) => x.type === "content" && x.content.some((b) => b.type === "quote"),
-    );
-    const xml = slideXml[at];
+  it("sets a content slide's quote behind a purple rule, its source in grey", async () => {
+    const xml = await onlySlide({
+      type: "content",
+      headline: "Releases stopped being events",
+      content: [
+        {
+          type: "quote",
+          text: "We stopped asking for a release date. The question became which customer saw the change first.",
+          source: "Mara Lindqvist, platform lead, [field notes](https://example.com/field-notes)",
+        },
+      ],
+    });
     const purple = tokens["--color-purple"].slice(1).toUpperCase();
     const muted = tokens["--color-muted"].slice(1).toUpperCase();
-    expect(xml).toContain(`<a:srgbClr val="${purple}"`);
-    expect(xml).toContain("We stopped asking for a release date.");
-    const run = xml.slice(0, xml.indexOf("<a:t>Mara Lindqvist"));
-    expect(run.slice(run.lastIndexOf("<a:rPr"))).toContain(`val="${muted}"`);
+    const shapes = shapesOf(xml).filter(({ y }) => y > 0);
+    const rules = shapes.filter((shape) => shape.fill === purple);
+    expect(rules).toHaveLength(1);
+    const [rule] = rules;
+    expect(rule.w).toBeLessThan(0.02);
+    const quotes = shapes.filter((shape) =>
+      shape.texts.join("").startsWith("We stopped asking for a release date."),
+    );
+    expect(quotes).toHaveLength(1);
+    const [words] = quotes;
+    const sources = [...words.xml.matchAll(/<a:r>.*?<\/a:r>/gs)]
+      .map(([run]) => run)
+      .filter((run) => run.includes("<a:t>Mara Lindqvist"));
+    expect(sources).toEqual([expect.stringContaining(`val="${muted}"`)]);
     // The words stand brand's 2 px rule and 1.25 rem gap off the rule, at the print route's 21.333
     // px rem; the export stood them 20 px off.
-    const shapes = shapesOf(xml);
-    const rule = shapes.find((sp) => sp.fill === purple && sp.w! < 0.02)!;
-    const words = shapes.find((sp) => sp.texts.some((t) => t.includes("We stopped asking")))!;
-    expect(words.x! - rule.x!).toBeCloseTo((2 + 1.25 * 21.333) / 144, 3);
+    expect(words.x - rule.x).toBeCloseTo((2 + 1.25 * 21.333) / 144, 3);
   });
 
   it.each([
-    [
-      "an info callout",
-      "--color-purple",
-      (x: Slide) => JSON.stringify(x).includes("Two stages are active"),
-    ],
-    ["a process footer", "--color-teal", (x: Slide) => x.type === "process" && !!x.footer],
-  ] as const)(
-    "draws %s as brand's callout, %s at 10 percent on white with no line",
-    (_, hue, pick) => {
-      const xml = slideXml[slideCatalog.slides.findIndex(pick)];
+    {
+      name: "an info callout",
+      hue: "--color-purple",
+      slide: {
+        type: "content",
+        sectionLabel: "Stage strip",
+        stageMarker: ["Implement", "Review"],
+        headline: "Stage strip marks where in the pipeline we are",
+        content: [
+          { type: "callout", text: "Two stages are active on this slide.", variant: "info" },
+        ],
+      },
+    },
+    {
+      name: "a process footer",
+      hue: "--color-teal",
+      slide: {
+        type: "process",
+        headline: "From autocomplete to delivery harness",
+        loop: false,
+        highlightPhase: "Harness",
+        nodes: [
+          {
+            label: "1x",
+            title: "Autocomplete",
+            subtitle: "Line by line",
+            description: "Faster typing.",
+            dimmed: true,
+          },
+          { label: "3x", title: "Chat", subtitle: "Task by task", description: "Copy and paste." },
+          {
+            label: "10x",
+            title: "Harness",
+            subtitle: "Ticket by ticket",
+            description: "Plans, checks, review.",
+            badge: "You are here",
+          },
+        ],
+        footer: "Each stage changes what a person reviews.",
+      },
+    },
+  ] as const satisfies readonly { name: string; hue: keyof typeof tokens; slide: Slide }[])(
+    "draws $name as brand's callout, $hue at 10 percent on white with no line",
+    async ({ hue, slide }) => {
+      const xml = await onlySlide(slide);
       const tint = [1, 3, 5]
         .map((i) => Math.round(parseInt(tokens[hue].slice(i, i + 2), 16) * 0.1 + 255 * 0.9))
         .map((n) => n.toString(16).padStart(2, "0"))
         .join("")
         .toUpperCase();
-      expect(xml).toContain(`val="${tint}"`);
-      const shape = xml.slice(xml.lastIndexOf("<p:sp>", xml.indexOf(`val="${tint}"`)));
-      expect(shape.slice(0, shape.indexOf("</p:spPr>"))).toContain("<a:ln></a:ln>");
+      const callouts = shapesOf(xml).filter((shape) => shape.fill === tint);
+      expect(callouts.map((shape) => shape.xml.split("</p:spPr>")[0])).toEqual([
+        expect.stringContaining("<a:ln></a:ln>"),
+      ]);
     },
   );
 
@@ -160,30 +221,75 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("puts a plus between the sides of a before-after that adds", async () => {
-    const at = slideCatalog.slides.findIndex((s) => s.type === "comparison" && "adds" in s);
-    expect(at).toBeGreaterThanOrEqual(0);
-    expect(slideXml[at]).toContain("<a:t>+</a:t>");
-    expect(slideXml[at]).not.toContain("tailEnd");
+    const slide = specimenSlide("What stays, what needs building", "comparison");
+    const xml = await onlySlide(slide);
+    expect(xml).toContain("<a:t>+</a:t>");
+    expect(xml).not.toContain("tailEnd");
   });
 
-  it("spells out a linked image's link and covers a video with its poster", async () => {
-    const at = (type: string) =>
-      slideCatalog.slides.findIndex(
-        (s) => s.type === "content" && s.content.some((b) => b.type === type),
-      );
-    expect(slideText[at("linked-image")]).toContain("forge.example.com/acme/payments/pull/128");
-    const rels = await zip
-      .file(`ppt/slides/_rels/slide${at("video") + 1}.xml.rels`)!
-      .async("string");
+  it("spells out a linked image's link", async () => {
+    const {
+      slideText: [text],
+    } = await rendered(
+      {
+        name: "Linked image",
+        slides: [
+          {
+            type: "content",
+            headline: "A screenshot with its link spelled out",
+            content: [
+              {
+                type: "linked-image",
+                src: specimenImages["screen-pull-request.png"],
+                alt: "Fictional pull request",
+                href: "https://forge.example.com/acme/payments/pull/128",
+              },
+            ],
+          },
+        ],
+      },
+      join(import.meta.dirname, ".."),
+    );
+    expect(text).toContain("forge.example.com/acme/payments/pull/128");
+  });
+
+  it("covers a video with its poster", async () => {
+    const { zip } = await rendered(
+      {
+        name: "Video poster",
+        slides: [
+          {
+            type: "content",
+            headline: "A screen recording, ready to play",
+            content: [
+              {
+                type: "video",
+                src: specimenImages["agent-session.mp4"],
+                poster: specimenImages["agent-session-poster.png"],
+                alt: "Fictional agent session",
+                caption: "The agent session on a fictional repository, 10 seconds",
+              },
+            ],
+          },
+        ],
+      },
+      join(import.meta.dirname, ".."),
+    );
+    const rels = zip.file("ppt/slides/_rels/slide1.xml.rels");
+    assert(rels, "The video slide has relationships");
     const poster = readFileSync(
       join(import.meta.dirname, "..", "specimen", "slide-catalog", "agent-session-poster.png"),
     );
     const pictures = await Promise.all(
-      [...rels.matchAll(/Target="\.\.\/media\/([^"]+\.png)"/g)].map(async (m) =>
-        Buffer.from(await zip.file(`ppt/media/${m[1]}`)!.async("uint8array")),
+      [...(await rels.async("string")).matchAll(/Target="\.\.\/media\/([^"]+\.png)"/g)].map(
+        async ([, name]) => {
+          const picture = zip.file(`ppt/media/${name}`);
+          assert(picture, `The picture part ${name} exists`);
+          return Buffer.from(await picture.async("uint8array"));
+        },
       ),
     );
-    expect(pictures.some((p) => p.equals(poster))).toBe(true);
+    expect(pictures).toContainEqual(poster);
   });
 });
 
@@ -238,36 +344,55 @@ it("warns on a video poster that is no PNG and sets no cover", async () => {
 });
 
 describe("slides-pptx draws what the slide shows", () => {
-  it("marks a plain card with the web's short teal rule, never a square", () => {
-    const i = specimenAt(
-      (x) =>
-        x.type === "content" &&
-        x.content.some(
-          (b) => b.type === "cards" && !b.numbered && !b.dense && b.items.every((it) => !it.icon),
-        ),
-    );
-    const rules = shapesOf(slideXml[i]).filter(
-      (sh) => sh.fill === TEAL && Math.abs(sh.w! - 4 * PRINT_REM) < 0.01,
-    );
-    expect(rules.length).toBeGreaterThan(0);
-    for (const r of rules) expect(r.h).toBeLessThan(r.w! / 4);
+  it("marks a plain card with the web's short teal rule, never a square", async () => {
+    const xml = await onlySlide({
+      type: "content",
+      headline: "Four cards, one highlighted, each with a list",
+      content: [
+        {
+          type: "cards",
+          columns: 4,
+          highlight: 1,
+          reveal: true,
+          items: [
+            { title: "Intake", text: "Tickets", items: ["Template", "Owner"] },
+            { title: "Plan", text: "Before code", items: ["Steps", "Checks", "Risks"] },
+            { title: "Build", text: "In the loop", items: ["Tests first", "Small commits"] },
+            { title: "Ship", text: "Behind a flag", items: ["Review", "Rollout"] },
+          ],
+        },
+      ],
+    });
+    const body = shapesOf(xml).filter(({ y }) => y > 0);
+    const rules = body
+      .filter((shape) => shape.texts.length === 0)
+      .filter((shape) => shape.fill === TEAL);
+    expect(rules).toHaveLength(4);
+    expect(Math.max(...rules.map(({ w }) => Math.abs(w - 4 * PRINT_REM)))).toBeLessThan(0.01);
+    expect(rules.filter(({ h, w }) => h >= w / 4)).toEqual([]);
   });
 
-  it("draws a numbers block's figures in teal mono over a rule, as the web's Numbers", () => {
-    const i = specimenAt(
-      (x) =>
-        x.type === "content" && x.content.some((b) => b.type === "numbers" && b.items.length > 1),
-    );
-    const block = (slideCatalog.slides[i] as ContentSlide).content.find(
-      (b) => b.type === "numbers",
-    )! as Extract<ContentSlide["content"][number], { type: "numbers" }>;
-    const shapes = shapesOf(slideXml[i]);
-    expect(shapes.filter((sh) => sh.prst === "line").length).toBeGreaterThanOrEqual(
-      block.items.length,
-    );
-    const figure = shapes.find((sh) =>
-      sh.texts.join("").endsWith(block.items[0].value.replace(/^-/, "−")),
-    )!;
+  it("draws a numbers block's figures in teal mono over a rule, as the web's Numbers", async () => {
+    const xml = await onlySlide({
+      type: "content",
+      headline: "Numbers with a source",
+      content: [
+        {
+          type: "numbers",
+          items: [
+            { value: "3x", label: "faster review" },
+            { value: "-40%", label: "rework" },
+            { value: "up to +70%", label: "fewer handoffs" },
+          ],
+          source: "Fictional figures",
+        },
+      ],
+    });
+    const shapes = shapesOf(xml);
+    expect(shapes.filter((shape) => shape.prst === "line")).toHaveLength(3);
+    const figures = shapes.filter((shape) => shape.texts.join("") === "3x");
+    expect(figures).toHaveLength(1);
+    const [figure] = figures;
     expect(figure.xml).toContain(`<a:srgbClr val="${TEAL}"/>`);
     expect(figure.xml).toContain('typeface="JetBrains Mono"');
   });
