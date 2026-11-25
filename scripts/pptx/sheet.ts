@@ -1,6 +1,13 @@
 import { existsSync } from "node:fs";
 import PptxGenJS from "pptxgenjs";
-import { altText, imageFile, pictureLink, type PictureMetadata, type PictureOpts } from "./images";
+import {
+  altText,
+  imageFile,
+  pictureLink,
+  picturePlace,
+  type PictureMetadata,
+  type PictureOpts,
+} from "./images";
 import { boxFit, boxPlace, boxRuns } from "./fit";
 import type { ProfileInfo } from "../../types/slide";
 import { hex, type Surface } from "./palette";
@@ -106,26 +113,17 @@ export class Sheet extends Look {
    *  logo paths take the brand package's PNG cut, since PowerPoint shows an SVG without a raster
    *  fallback as a broken picture in older viewers. */
   picture(src: string, area: Area, o: PictureOpts): Area {
-    const { x, y, w, h } = area;
     const image = imageFile(this.out.assets, src);
     const { path, size } = image;
     if (!size) return this.missingPicture(image, area, o.alt);
-    const [iw, ih] = size;
-    const k = Math.min(w / iw, h / ih, o.native ? 1 / 144 : Infinity);
-    const pw = iw * k;
-    const ph = ih * k;
-    const px = o.align === "left" ? x : o.align === "right" ? x + w - pw : x + (w - pw) / 2;
-    const py = y + (h - ph) / 2;
+    const placed = picturePlace(size, area, o);
     this.slide.addImage({
       path,
-      x: px,
-      y: py,
-      w: pw,
-      h: ph,
+      ...placed,
       altText: altText(o.alt),
       ...pictureLink(o.href),
     });
-    return { x: px, y: py, w: pw, h: ph };
+    return placed;
   }
 
   portrait(
