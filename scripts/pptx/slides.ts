@@ -9,6 +9,17 @@ import {
 import { mediaAsContent } from "../../lib/gallery-media";
 import { regularAsContent } from "../../lib/regular-sections";
 import type { ComparisonSlide, GridSlide, Slide } from "../../types/slide";
+import { drawTitle } from "./slides/title";
+import { drawContent } from "./slides/content";
+import { drawRegular } from "./slides/regular";
+import { drawStatement } from "./slides/statement";
+import { drawGrid } from "./slides/grid";
+import { drawComparison } from "./slides/comparison";
+import { drawGuidance } from "./slides/guidance";
+import { drawProfiles } from "./slides/profiles";
+import { drawPhasedPills } from "./slides/phased-pills";
+import { drawProcess } from "./slides/process";
+import { drawLanes } from "./slides/lanes";
 
 // Pillars and stats are a content slide's cards or numbers, as on the web (`gridAsContent`).
 function gridRedrawnAs(d: GridSlide): Slide | undefined {
@@ -54,3 +65,17 @@ export function slideDrawn(slide: Slide): Slide {
   }
   return drawn;
 }
+
+export const SLIDES = {
+  title: drawTitle,
+  content: drawContent,
+  regular: drawRegular,
+  statement: drawStatement,
+  grid: drawGrid,
+  comparison: drawComparison,
+  guidance: drawGuidance,
+  profiles: drawProfiles,
+  "phased-pills": drawPhasedPills,
+  process: drawProcess,
+  lanes: drawLanes,
+};
