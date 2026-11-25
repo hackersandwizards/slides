@@ -10,17 +10,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import JSZip from "jszip";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 import type { Presentation } from "../types/slide";
-import { rendered, specimen } from "./fixtures/rendered-deck";
+import { rendered } from "./fixtures/rendered-deck";
 
 let dir: string;
-let zip: JSZip;
 
-beforeAll(async () => {
+beforeAll(() => {
   dir = realpathSync(mkdtempSync(join(tmpdir(), "slides-pptx-")));
-  ({ zip } = await specimen());
-}, 60_000);
+});
 
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
@@ -155,49 +153,98 @@ describe("slides-pptx as a command", () => {
     expect(warnings.filter((w) => w.includes("/missing.png"))).toHaveLength(1);
   });
 
-  it("embeds the brand faces only under --embed-fonts: regular and bold as EOT parts PowerPoint lists", async () => {
-    expect(Object.keys(zip.files).some((f) => f.startsWith("ppt/fonts/"))).toBe(false);
-    expect(await zip.file("ppt/presentation.xml")!.async("string")).not.toContain("embeddedFont");
+  describe("--embed-fonts", () => {
     const text = JSON.stringify({
       name: "T",
       slides: [{ type: "statement", lines: ["Größe → `code`"] }],
     });
-    const out = join(dir, "fonts.pptx");
-    const res = spawnSync("bun", [script, "-", out, "--embed-fonts"], {
-      encoding: "utf8",
-      input: text,
+    let status: number | null;
+    let zip: JSZip;
+    let presentation: string;
+    let relationships: string;
+    let styles: string[];
+    let relationshipIds: Map<string, string>;
+
+    beforeAll(async () => {
+      const out = join(dir, "fonts.pptx");
+      ({ status } = spawnSync("bun", [script, "-", out, "--embed-fonts"], {
+        encoding: "utf8",
+        input: text,
+      }));
+      zip = await JSZip.loadAsync(readFileSync(out));
+      const pres = await zip.file("ppt/presentation.xml")?.async("string");
+      const rels = await zip.file("ppt/_rels/presentation.xml.rels")?.async("string");
+      assert(pres && rels, "Missing presentation or its relationships");
+      presentation = pres;
+      relationships = rels;
+      const list = /<p:embeddedFontLst>(.*?)<\/p:embeddedFontLst>/.exec(presentation)?.[1] ?? "";
+      const slots = Array.from(
+        list.matchAll(/<p:font typeface="([^"]+)"[^>]*\/>(.*?)<\/p:embeddedFont>/g),
+      ).flatMap(([, family, styles]) =>
+        Array.from(styles.matchAll(/<p:(regular|bold) r:id="(\w+)"\/>/g), ([, slot, id]) => ({
+          style: `${family} ${slot}`,
+          id,
+        })),
+      );
+      styles = slots.map(({ style }) => style);
+      relationshipIds = new Map(slots.map(({ style, id }) => [style, id]));
+    }, 60_000);
+
+    it("writes the deck and exits successfully with --embed-fonts", () => {
+      expect(status).toEqual(0);
     });
-    expect(res.status).toBe(0);
-    const z = await JSZip.loadAsync(readFileSync(out));
-    const pres = await z.file("ppt/presentation.xml")!.async("string");
-    const list = /<p:notesSz[^>]*\/><p:embeddedFontLst>(.*?)<\/p:embeddedFontLst>/.exec(pres)?.[1];
-    expect(list).toBeDefined();
-    expect([...pres.matchAll(/ saveSubsetFonts=/g)]).toHaveLength(1);
-    expect(await z.file("[Content_Types].xml")!.async("string")).toContain(
-      '<Default Extension="fntdata" ContentType="application/x-fontdata"/>',
-    );
-    const rels = await z.file("ppt/_rels/presentation.xml.rels")!.async("string");
-    const families: string[] = [];
-    for (const [, face, slots] of list!.matchAll(
-      /<p:font typeface="([^"]+)"[^>]*\/>(.*?)<\/p:embeddedFont>/g,
-    )) {
-      for (const [, slot, id] of slots.matchAll(/<p:(regular|bold) r:id="(\w+)"\/>/g)) {
-        const target = new RegExp(`Id="${id}"[^>]*Target="([^"]+)"`).exec(rels)![1];
-        const eot = Buffer.from(await z.file(`ppt/${target}`)!.async("uint8array"));
-        expect(eot.readUInt32LE(0)).toBe(eot.length);
-        expect(eot.readUInt32LE(8)).toBe(0x00020001);
-        expect(eot.readUInt16LE(34)).toBe(0x504c);
-        expect(eot.readUInt32LE(28)).toBe(slot === "bold" ? 700 : 400);
-        const size = eot.readUInt16LE(82);
-        expect(Buffer.from(eot.subarray(84, 84 + size)).toString("utf16le")).toBe(face);
-        families.push(`${face} ${slot}`);
-      }
-    }
-    expect(families).toEqual([
-      "Inter regular",
-      "Inter bold",
-      "JetBrains Mono regular",
-      "JetBrains Mono bold",
-    ]);
-  }, 60_000);
+
+    it("writes no font parts or font list without --embed-fonts", async () => {
+      const out = join(dir, "without-fonts.pptx");
+      spawnSync("bun", [script, "-", out], { encoding: "utf8", input: text });
+      const plain = await JSZip.loadAsync(readFileSync(out));
+      const xml = await plain.file("ppt/presentation.xml")?.async("string");
+      expect({
+        parts: Object.keys(plain.files).filter((name) => name.startsWith("ppt/fonts/")),
+        fontList: xml?.includes("embeddedFont"),
+      }).toEqual({ parts: [], fontList: false });
+    });
+
+    it("declares the font part content type", async () => {
+      expect(await zip.file("[Content_Types].xml")?.async("string")).toContain(
+        '<Default Extension="fntdata" ContentType="application/x-fontdata"/>',
+      );
+    });
+
+    it("lists both faces and styles after notes size and declares subsetting once", () => {
+      expect({
+        afterNotes: /<p:notesSz[^>]*\/><p:embeddedFontLst>/.test(presentation),
+        subsetDeclarations: [...presentation.matchAll(/ saveSubsetFonts=/g)].length,
+        styles,
+      }).toEqual({
+        afterNotes: true,
+        subsetDeclarations: 1,
+        styles: ["Inter regular", "Inter bold", "JetBrains Mono regular", "JetBrains Mono bold"],
+      });
+    });
+
+    it.each([
+      { family: "Inter", slot: "regular", weight: 400 },
+      { family: "Inter", slot: "bold", weight: 700 },
+      { family: "JetBrains Mono", slot: "regular", weight: 400 },
+      { family: "JetBrains Mono", slot: "bold", weight: 700 },
+    ])("links $family $slot to its EOT part", async ({ family, slot, weight }) => {
+      const id = relationshipIds.get(`${family} ${slot}`);
+      assert(id, `No font slot for ${family} ${slot}`);
+      const relationship = new RegExp(`Id="${id}"[^>]*Target="([^"]+)"`).exec(relationships);
+      assert(relationship, `No relationship target for ${id}`);
+      const [, target] = relationship;
+      const file = zip.file(`ppt/${target}`);
+      assert(file, `Missing font part ${target}`);
+      const eot = Buffer.from(await file.async("uint8array"));
+      const size = eot.readUInt16LE(82);
+      expect({
+        length: eot.readUInt32LE(0),
+        version: eot.readUInt32LE(8),
+        magic: eot.readUInt16LE(34),
+        weight: eot.readUInt32LE(28),
+        family: eot.subarray(84, 84 + size).toString("utf16le"),
+      }).toEqual({ length: eot.length, version: 0x00020001, magic: 0x504c, weight, family });
+    });
+  });
 });
