@@ -15,12 +15,18 @@ interface Props {
   slide: DecisionSlideType;
 }
 
+type DecisionFlow = Pick<DecisionSlideType, "need" | "question" | "yes" | "no" | "outcome">;
+
 // The team-topology slide's colours, so a branch reads as the team type it hands the need to.
 const TEAM: Record<DecisionTeam, string> = {
   platform: "border-primary bg-primary/15 text-teal-dark",
   enabling: "border-secondary bg-secondary/15 text-secondary",
   "complicated-subsystem": "border-factory bg-factory/15 text-factory",
 };
+
+function decisionTeamClasses(team: DecisionTeam) {
+  return Object.hasOwn(TEAM, team) ? TEAM[team] : undefined;
+}
 
 function Head() {
   return (
@@ -67,10 +73,92 @@ function Elbow({
 function GridBranch({ branch, row }: { branch: DecisionBranch; row: 1 | 2 }) {
   return (
     <div
-      className={`col-start-5 ${row === 1 ? "row-start-1" : "row-start-2"} flex flex-col justify-center rounded-brand border px-6 py-5 ${TEAM[branch.team]}`}
+      className={`col-start-5 ${row === 1 ? "row-start-1" : "row-start-2"} flex flex-col justify-center rounded-brand border px-6 py-5 ${decisionTeamClasses(branch.team)}`}
     >
       <p className="card-title text-2xl leading-tight">{keepCompounds(branch.title)}</p>
       <p className="mt-2 text-xl leading-snug text-text">{keepCompounds(branch.text)}</p>
+    </div>
+  );
+}
+
+// Below md the grid's columns are too narrow for their text, so the same flow runs top to bottom.
+function StackedDecisionFlow({
+  flow: { need, question, yes, no, outcome },
+}: {
+  flow: DecisionFlow;
+}) {
+  return (
+    <div className="flex flex-col gap-3 md:hidden">
+      <SlideCard
+        tone="primary"
+        className="text-base leading-tight font-bold text-text card-pad-3/4"
+      >
+        {keepCompounds(need)}
+      </SlideCard>
+      <SlideCard
+        tone="primary"
+        look="outline"
+        className="text-center text-sm leading-tight font-bold text-text card-pad-3/4"
+      >
+        {keepCompounds(question)}
+      </SlideCard>
+      {[yes, no].map((branch) => (
+        <div
+          key={branch.label}
+          className={`rounded-brand border px-4 py-3 ${decisionTeamClasses(branch.team)}`}
+        >
+          <p className="hw-label [--hw-label-size:var(--text-sm)]" data-tone="muted">
+            {branch.label}
+          </p>
+          <p className="card-title text-lg leading-tight">{keepCompounds(branch.title)}</p>
+          <p className="text-sm leading-snug text-text">{keepCompounds(branch.text)}</p>
+        </div>
+      ))}
+      <SlideCard tone="quiet" className="text-base leading-tight font-bold text-text card-pad-3/4">
+        {keepCompounds(outcome)}
+      </SlideCard>
+    </div>
+  );
+}
+
+// Desktop: the same flow left to right in a grid, so every box grows with its text. The branches
+// are the grid's two rows; the need, the question and the outcome span both, so the elbows meet
+// them at the grid's middle.
+function GridDecisionFlow({ flow: { need, question, yes, no, outcome } }: { flow: DecisionFlow }) {
+  return (
+    <div className="decision-grid hidden w-full grid-cols-(--slide-decision-columns) grid-rows-2 items-stretch gap-y-14 md:grid">
+      <SlideCard
+        tone="primary"
+        className="col-start-1 row-span-2 row-start-1 self-center text-2xl leading-tight font-bold text-text card-pad-4/5"
+      >
+        {keepCompounds(need)}
+      </SlideCard>
+      <div className="relative col-start-2 row-span-2 row-start-1 h-1 self-center bg-primary">
+        <Head />
+      </div>
+      <SlideCard
+        tone="primary"
+        look="outline"
+        className="relative col-start-3 row-span-2 row-start-1 self-center text-center text-2xl leading-tight font-bold text-text card-pad-5"
+      >
+        <span className="absolute top-1/2 -right-8 h-1 w-8 -translate-y-1/2 bg-primary" />
+        {keepCompounds(question)}
+      </SlideCard>
+      <Elbow side="in" half="top" label={yes.label} />
+      <GridBranch branch={yes} row={1} />
+      <Elbow side="out" half="top" />
+      <SlideCard
+        tone="quiet"
+        className="relative col-start-7 row-span-2 row-start-1 self-center text-2xl leading-tight font-bold text-text card-pad-4/5"
+      >
+        <span className="absolute top-1/2 -left-8 h-1 w-8 -translate-y-1/2 bg-primary">
+          <Head />
+        </span>
+        {keepCompounds(outcome)}
+      </SlideCard>
+      <Elbow side="in" half="bottom" label={no.label} />
+      <GridBranch branch={no} row={2} />
+      <Elbow side="out" half="bottom" />
     </div>
   );
 }
@@ -85,78 +173,8 @@ export function DecisionSlide({ slide }: Props) {
         {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
         <div className="slide-body items-center">
           <BlurFade delay={0.2} duration={0.5} className="w-full">
-            {/* Below md the grid's columns are too narrow for their text, so the same flow runs
-                top to bottom. */}
-            <div className="flex flex-col gap-3 md:hidden">
-              <SlideCard
-                tone="primary"
-                className="text-base leading-tight font-bold text-text card-pad-3/4"
-              >
-                {keepCompounds(slide.need)}
-              </SlideCard>
-              <SlideCard
-                tone="primary"
-                look="outline"
-                className="text-center text-sm leading-tight font-bold text-text card-pad-3/4"
-              >
-                {keepCompounds(slide.question)}
-              </SlideCard>
-              {[slide.yes, slide.no].map((branch) => (
-                <div
-                  key={branch.label}
-                  className={`rounded-brand border px-4 py-3 ${TEAM[branch.team]}`}
-                >
-                  <p className="hw-label [--hw-label-size:var(--text-sm)]" data-tone="muted">
-                    {branch.label}
-                  </p>
-                  <p className="card-title text-lg leading-tight">{keepCompounds(branch.title)}</p>
-                  <p className="text-sm leading-snug text-text">{keepCompounds(branch.text)}</p>
-                </div>
-              ))}
-              <SlideCard
-                tone="quiet"
-                className="text-base leading-tight font-bold text-text card-pad-3/4"
-              >
-                {keepCompounds(slide.outcome)}
-              </SlideCard>
-            </div>
-            {/* Desktop: the same flow left to right in a grid, so every box grows with its text.
-                The branches are the grid's two rows; the need, the question and the outcome span
-                both, so the elbows meet them at the grid's middle. */}
-            <div className="decision-grid hidden w-full grid-cols-(--slide-decision-columns) grid-rows-2 items-stretch gap-y-14 md:grid">
-              <SlideCard
-                tone="primary"
-                className="col-start-1 row-span-2 row-start-1 self-center text-2xl leading-tight font-bold text-text card-pad-4/5"
-              >
-                {keepCompounds(slide.need)}
-              </SlideCard>
-              <div className="relative col-start-2 row-span-2 row-start-1 h-1 self-center bg-primary">
-                <Head />
-              </div>
-              <SlideCard
-                tone="primary"
-                look="outline"
-                className="relative col-start-3 row-span-2 row-start-1 self-center text-center text-2xl leading-tight font-bold text-text card-pad-5"
-              >
-                <span className="absolute top-1/2 -right-8 h-1 w-8 -translate-y-1/2 bg-primary" />
-                {keepCompounds(slide.question)}
-              </SlideCard>
-              <Elbow side="in" half="top" label={slide.yes.label} />
-              <GridBranch branch={slide.yes} row={1} />
-              <Elbow side="out" half="top" />
-              <SlideCard
-                tone="quiet"
-                className="relative col-start-7 row-span-2 row-start-1 self-center text-2xl leading-tight font-bold text-text card-pad-4/5"
-              >
-                <span className="absolute top-1/2 -left-8 h-1 w-8 -translate-y-1/2 bg-primary">
-                  <Head />
-                </span>
-                {keepCompounds(slide.outcome)}
-              </SlideCard>
-              <Elbow side="in" half="bottom" label={slide.no.label} />
-              <GridBranch branch={slide.no} row={2} />
-              <Elbow side="out" half="bottom" />
-            </div>
+            <StackedDecisionFlow flow={slide} />
+            <GridDecisionFlow flow={slide} />
           </BlurFade>
 
           {slide.caption && (

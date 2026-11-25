@@ -92,13 +92,55 @@ describe("the activity timer", () => {
     expect(time(render(<Activity slide={slide} />).container)).toBe("3:00");
   });
 
-  it("counts down on a click, pauses on the next, and changes by a minute either way", () => {
+  it.each([
+    [
+      "stale saved timer",
+      () =>
+        JSON.stringify({
+          minutes: 5,
+          endsAt: null,
+          left: 60_000,
+          at: Date.now() - 3 * 60 * 60_000,
+        }),
+    ],
+    ["non-object JSON", () => JSON.stringify("bad")],
+    ["missing keys", () => JSON.stringify({ minutes: 5, left: 60_000 })],
+    [
+      "non-numeric endsAt",
+      () => JSON.stringify({ minutes: 5, endsAt: "soon", left: 60_000, at: Date.now() }),
+    ],
+  ])("ignores a %s in storage and opens at the slide's duration", (_, payload) => {
+    localStorage.setItem("hw-activity-timer:Think first", payload());
+    expect(time(render(<Activity slide={slide} />).container)).toBe("3:00");
+  });
+
+  it("restores a fresh running timer from storage", () => {
     vi.useFakeTimers();
+    const now = Date.now();
+    localStorage.setItem(
+      "hw-activity-timer:Think first",
+      JSON.stringify({ minutes: 5, endsAt: now + 95_000, left: 95_000, at: now }),
+    );
+    const { container, getByLabelText } = render(<Activity slide={slide} />);
+    expect(time(container)).toBe("1:35");
+    expect(getByLabelText(/^Pause timer/)).toBeTruthy();
+  });
+
+  it("changes the timer by a minute with minus and plus", () => {
     const { container, getByLabelText } = render(<Activity slide={slide} />);
     fireEvent.click(getByLabelText("One minute more"));
     fireEvent.click(getByLabelText("One minute more"));
     fireEvent.click(getByLabelText("One minute less"));
     expect(time(container)).toBe("4:00");
+  });
+
+  it("counts down once started, holds its time when paused, and resumes on the next click", () => {
+    vi.useFakeTimers();
+    localStorage.setItem(
+      "hw-activity-timer:Think first",
+      JSON.stringify({ minutes: 4, endsAt: null, left: 240_000, at: Date.now() }),
+    );
+    const { container, getByLabelText } = render(<Activity slide={slide} />);
     fireEvent.click(getByLabelText(/^Start timer/));
     act(() => {
       vi.advanceTimersByTime(61_000);
@@ -109,6 +151,23 @@ describe("the activity timer", () => {
       vi.advanceTimersByTime(10_000);
     });
     expect(time(container)).toBe("2:59");
+    fireEvent.click(getByLabelText(/^Start timer/));
+    act(() => {
+      vi.advanceTimersByTime(5_000);
+    });
+    expect(time(container)).toBe("2:54");
+  });
+
+  it("switches to a primary restart button at zero and restarts at the adjusted duration", () => {
+    vi.useFakeTimers();
+    localStorage.setItem(
+      "hw-activity-timer:Think first",
+      JSON.stringify({ minutes: 3, endsAt: null, left: 119_000, at: Date.now() }),
+    );
+    const { container, getByLabelText } = render(<Activity slide={slide} />);
+    fireEvent.click(getByLabelText("One minute more"));
+    fireEvent.click(getByLabelText("One minute more"));
+    fireEvent.click(getByLabelText("One minute less"));
     fireEvent.click(getByLabelText(/^Start timer/));
     act(() => {
       vi.advanceTimersByTime(180_000);

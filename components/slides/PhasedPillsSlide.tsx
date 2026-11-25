@@ -1,6 +1,12 @@
 "use client";
 
-import type { PhasedPillsSlide as PhasedPillsSlideType, StageState } from "../../types/slide";
+import type { CSSProperties } from "react";
+import type {
+  PhasedPillsSlide as PhasedPillsSlideType,
+  PillPhase,
+  SectionTheme,
+  StageState,
+} from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import {
   getStageClasses,
@@ -16,6 +22,46 @@ import { isDeepDive } from "../../lib/slide-utils";
 
 interface Props {
   slide: PhasedPillsSlideType;
+}
+
+type PhaseLayout = "subgrid" | "row" | "wrap";
+
+const PHASE_LAYOUTS: Record<
+  PhaseLayout,
+  { container: string; heading: string; track?: (itemCount: number) => CSSProperties }
+> = {
+  subgrid: { container: "col-span-full grid grid-cols-subgrid", heading: "col-span-full" },
+  row: {
+    container: "grid",
+    heading: "col-span-full",
+    track: (itemCount) => ({
+      gridTemplateColumns: `repeat(${itemCount}, minmax(min-content, max-content))`,
+    }),
+  },
+  wrap: { container: "flex flex-wrap", heading: "basis-full" },
+};
+
+function phaseLayout(wrap: boolean, itemCount: number): PhaseLayout {
+  if (!wrap) return "subgrid";
+  return itemCount <= 6 ? "row" : "wrap";
+}
+
+function phaseThemeStyle(theme: SectionTheme) {
+  const key = Object.hasOwn(themeToCategory, theme) ? theme : "secondary";
+  return {
+    category: themeToCategory[key],
+    hue: themeHue[key],
+    dot: themeDotColor[key],
+  };
+}
+
+function phasesWithItemOffsets(phases: PillPhase[]) {
+  let nextItem = 0;
+  return phases.map((phase) => {
+    const firstItem = nextItem;
+    nextItem += phase.items.length;
+    return { phase, firstItem };
+  });
 }
 
 function PillBox({
@@ -37,6 +83,44 @@ function PillBox({
       {number !== undefined && <span className="font-mono text-base opacity-70">#{number}</span>}
       {/* A stage not yet reached keeps its full muted ink: faded further it read as disabled. */}
       <span>{title}</span>
+    </div>
+  );
+}
+
+function PhaseGroup({
+  phase,
+  layout,
+  phaseIndex,
+  firstItem,
+}: {
+  phase: PillPhase;
+  layout: PhaseLayout;
+  phaseIndex: number;
+  firstItem: number;
+}) {
+  const { category, hue, dot } = phaseThemeStyle(phase.theme ?? "secondary");
+  const styles = PHASE_LAYOUTS[layout];
+
+  return (
+    <div
+      className={`gap-x-4 gap-y-2.5 ${styles.container}`}
+      style={styles.track?.(phase.items.length)}
+    >
+      <BlurFade delay={0.1 + phaseIndex * 0.12} duration={0.3} className={styles.heading}>
+        <div
+          className="hw-label flex items-baseline gap-2.5 [--hw-label-size:var(--text-base)]"
+          data-hue={hue}
+        >
+          <div className={`hw-marker ${dot}`} />
+          <span>{phase.label}</span>
+        </div>
+      </BlurFade>
+
+      {phase.items.map((item, i) => (
+        <BlurFade key={i} delay={0.15 + (firstItem + i) * 0.04} duration={0.3}>
+          <PillBox number={item.number} title={item.title} state={item.state} category={category} />
+        </BlurFade>
+      ))}
     </div>
   );
 }
@@ -79,57 +163,15 @@ export function PhasedPillsSlide({ slide }: Props) {
                 : { gridTemplateColumns: `repeat(${columns}, minmax(max-content, 1fr))` }
             }
           >
-            {phases.map((phase, phaseIndex) => {
-              const firstItem = phases
-                .slice(0, phaseIndex)
-                .reduce((items, prior) => items + prior.items.length, 0);
-              const theme = phase.theme ?? "secondary";
-              const category = themeToCategory[theme] ?? "secondary";
-              const phaseDelay = 0.1 + phaseIndex * 0.12;
-              const row = wrap && phase.items.length <= 6;
-
-              return (
-                <div
-                  key={phaseIndex}
-                  className={`gap-x-4 gap-y-2.5 ${row ? "grid" : wrap ? "flex flex-wrap" : "col-span-full grid grid-cols-subgrid"}`}
-                  style={
-                    row
-                      ? {
-                          gridTemplateColumns: `repeat(${phase.items.length}, minmax(min-content, max-content))`,
-                        }
-                      : undefined
-                  }
-                >
-                  <BlurFade
-                    delay={phaseDelay}
-                    duration={0.3}
-                    className={wrap && !row ? "basis-full" : "col-span-full"}
-                  >
-                    <div
-                      className="hw-label flex items-baseline gap-2.5 [--hw-label-size:var(--text-base)]"
-                      data-hue={Object.hasOwn(themeHue, theme) ? themeHue[theme] : "purple"}
-                    >
-                      <div className={`hw-marker ${themeDotColor[theme] ?? "bg-secondary"}`} />
-                      <span>{phase.label}</span>
-                    </div>
-                  </BlurFade>
-
-                  {phase.items.map((item, i) => {
-                    const delay = 0.15 + (firstItem + i) * 0.04;
-                    return (
-                      <BlurFade key={i} delay={delay} duration={0.3}>
-                        <PillBox
-                          number={item.number}
-                          title={item.title}
-                          state={item.state}
-                          category={category}
-                        />
-                      </BlurFade>
-                    );
-                  })}
-                </div>
-              );
-            })}
+            {phasesWithItemOffsets(phases).map(({ phase, firstItem }, phaseIndex) => (
+              <PhaseGroup
+                key={phaseIndex}
+                phase={phase}
+                layout={phaseLayout(wrap, phase.items.length)}
+                phaseIndex={phaseIndex}
+                firstItem={firstItem}
+              />
+            ))}
           </div>
         </DashedFrame>
       </div>

@@ -28,6 +28,8 @@ interface Props {
   slide: ClosingSlideType;
 }
 
+type ClosingSpeaker = NonNullable<ClosingSlideType["speakers"]>[number];
+
 function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
   const lang = useContext(DeckLang);
   return (
@@ -69,6 +71,164 @@ function ClosingLine({ children, claim }: { children: ReactNode; claim?: boolean
   );
 }
 
+function PortraitSpeakerLinks({
+  contact,
+  linkedIn,
+  hue,
+}: {
+  contact?: string;
+  linkedIn?: string;
+  hue: (typeof HUE)[keyof typeof HUE];
+}) {
+  return (
+    <div className="mt-7 flex flex-col items-center gap-4">
+      {contact && (
+        <a
+          href={`mailto:${contact}`}
+          className="hw-button gap-2"
+          data-variant="secondary"
+          data-hue={hue}
+        >
+          <Mail className="size-6" />
+          <span>{contact}</span>
+        </a>
+      )}
+      {linkedIn && <LinkCaption href={linkedIn} variant="linkedin" />}
+    </div>
+  );
+}
+
+function PortraitSpeaker({
+  speaker,
+  index,
+  isLast,
+}: {
+  speaker: ClosingSpeaker;
+  index: number;
+  isLast: boolean;
+}) {
+  const hue = HUE[personAccent(index)];
+  return (
+    <div className="flex flex-col items-stretch gap-10 md:flex-row md:gap-14">
+      <div className="flex flex-col items-center text-center">
+        {speaker.imageSrc && (
+          <Portrait
+            src={speaker.imageSrc}
+            alt={speaker.name}
+            tone={personAccent(index)}
+            size="lg"
+            className="mb-8"
+          />
+        )}
+        <p className="font-heading text-3xl font-bold tracking-tight text-text md:text-4xl">
+          {speaker.name}
+        </p>
+        {speaker.company && (
+          <p
+            className="hw-label mt-3 [--hw-label-size:var(--text-xs)] md:[--hw-label-size:var(--text-sm)]"
+            data-hue={hue}
+          >
+            {speaker.company}
+          </p>
+        )}
+        <PortraitSpeakerLinks contact={speaker.contact} linkedIn={speaker.linkedIn} hue={hue} />
+      </div>
+      {!isLast && (
+        <div aria-hidden="true" className="hidden w-px self-stretch bg-text-subtle/25 md:block" />
+      )}
+    </div>
+  );
+}
+
+function ClosingLockup({ partners }: { partners?: ClosingSlideType["partners"] }) {
+  return (
+    <BlurFade delay={0.2} duration={0.5}>
+      <div className="slide-closing-mark flex items-center justify-center gap-8 md:gap-12">
+        {partners?.map((p) => (
+          <span key={p.company} className="flex items-center gap-8 md:gap-12">
+            <Image
+              src={p.src}
+              alt={p.alt ?? p.company}
+              width={p.width}
+              height={p.height}
+              className="h-(--slide-closing-lockup)"
+              style={{ width: "auto" }}
+            />
+            <span className="text-4xl font-normal text-text-subtle md:text-5xl">&times;</span>
+          </span>
+        ))}
+        <Image
+          src="/hw-lockup.svg"
+          alt={HW_LOGO.alt}
+          className="hw-wordmark h-(--slide-closing-lockup)"
+          style={{ width: "auto" }}
+        />
+        <Image
+          src="/hw-lockup-night.svg"
+          alt={HW_LOGO.alt}
+          className="hw-wordmark-night h-(--slide-closing-lockup-night)"
+          style={{ width: "auto" }}
+        />
+      </div>
+    </BlurFade>
+  );
+}
+
+function SpeakerList({
+  speakers,
+  hiddenCompanies,
+}: {
+  speakers: ClosingSpeaker[];
+  hiddenCompanies: Set<string>;
+}) {
+  return (
+    <BlurFade delay={0.3} duration={0.4}>
+      <div className="flex flex-col items-center gap-8">
+        {speakers.map((speaker, index) => (
+          <div key={index} className="text-center">
+            <p className="font-heading text-xl font-bold text-text md:text-2xl">{speaker.name}</p>
+            {!hiddenCompanies.has(speaker.company.toLowerCase()) && (
+              <p className="hw-label mt-1 md:[--hw-label-size:var(--text-sm)]" data-tone="muted">
+                {speaker.company}
+              </p>
+            )}
+            {speaker.contact && (
+              <p className="text-base font-medium text-teal sm:text-lg">{speaker.contact}</p>
+            )}
+            {speaker.linkedIn && (
+              <a
+                href={speaker.linkedIn}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-base font-medium text-teal sm:text-lg"
+              >
+                {profileLabel(speaker.linkedIn)}
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </BlurFade>
+  );
+}
+
+function ClosingClaim({ lang }: { lang: NonNullable<ReturnType<typeof closingClaim>> }) {
+  return (
+    <ClosingLine claim>
+      {/* The word brand names for its claim in the brand colour. */}
+      {claimParts(lang).map((part, i) =>
+        i === 1 ? (
+          <span key={i} className="text-primary">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </ClosingLine>
+  );
+}
+
 /** The closing line centred on the ground, the speakers and the lockup under it, no gradient field and
  *  no decoration, as on the title slide. */
 function ContactVariant({ slide }: { slide: ClosingSlideType }) {
@@ -87,150 +247,26 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
         {hasSpeakerImages ? (
           <BlurFade delay={0.2} duration={0.5}>
             <div className="mx-auto flex max-w-5xl flex-col items-stretch gap-10 md:flex-row md:gap-14">
-              {slide.speakers!.map((speaker, index) => {
-                const isLast = index === slide.speakers!.length - 1;
-                const hue = HUE[personAccent(index)];
-                return (
-                  <div
-                    key={index}
-                    className="flex flex-col items-stretch gap-10 md:flex-row md:gap-14"
-                  >
-                    <div className="flex flex-col items-center text-center">
-                      {speaker.imageSrc && (
-                        <Portrait
-                          src={speaker.imageSrc}
-                          alt={speaker.name}
-                          tone={personAccent(index)}
-                          size="lg"
-                          className="mb-8"
-                        />
-                      )}
-                      <p className="font-heading text-3xl font-bold tracking-tight text-text md:text-4xl">
-                        {speaker.name}
-                      </p>
-                      {speaker.company && (
-                        <p
-                          className="hw-label mt-3 [--hw-label-size:var(--text-xs)] md:[--hw-label-size:var(--text-sm)]"
-                          data-hue={hue}
-                        >
-                          {speaker.company}
-                        </p>
-                      )}
-                      <div className="mt-7 flex flex-col items-center gap-4">
-                        {speaker.contact && (
-                          <a
-                            href={`mailto:${speaker.contact}`}
-                            className="hw-button gap-2"
-                            data-variant="secondary"
-                            data-hue={hue}
-                          >
-                            <Mail className="size-6" />
-                            <span>{speaker.contact}</span>
-                          </a>
-                        )}
-                        {speaker.linkedIn && (
-                          <LinkCaption href={speaker.linkedIn} variant="linkedin" />
-                        )}
-                      </div>
-                    </div>
-                    {!isLast && (
-                      <div
-                        aria-hidden="true"
-                        className="hidden w-px self-stretch bg-text-subtle/25 md:block"
-                      />
-                    )}
-                  </div>
-                );
-              })}
+              {slide.speakers!.map((speaker, index) => (
+                <PortraitSpeaker
+                  key={index}
+                  speaker={speaker}
+                  index={index}
+                  isLast={index === slide.speakers!.length - 1}
+                />
+              ))}
             </div>
           </BlurFade>
         ) : (
           <>
-            <BlurFade delay={0.2} duration={0.5}>
-              <div className="slide-closing-mark flex items-center justify-center gap-8 md:gap-12">
-                {slide.partners?.map((p) => (
-                  <span key={p.company} className="flex items-center gap-8 md:gap-12">
-                    <Image
-                      src={p.src}
-                      alt={p.alt ?? p.company}
-                      width={p.width}
-                      height={p.height}
-                      className="h-(--slide-closing-lockup)"
-                      style={{ width: "auto" }}
-                    />
-                    <span className="text-4xl font-normal text-text-subtle md:text-5xl">
-                      &times;
-                    </span>
-                  </span>
-                ))}
-                <Image
-                  src="/hw-lockup.svg"
-                  alt={HW_LOGO.alt}
-                  className="hw-wordmark h-(--slide-closing-lockup)"
-                  style={{ width: "auto" }}
-                />
-                <Image
-                  src="/hw-lockup-night.svg"
-                  alt={HW_LOGO.alt}
-                  className="hw-wordmark-night h-(--slide-closing-lockup-night)"
-                  style={{ width: "auto" }}
-                />
-              </div>
-            </BlurFade>
-
+            <ClosingLockup partners={slide.partners} />
             {slide.speakers && slide.speakers.length > 0 && (
-              <BlurFade delay={0.3} duration={0.4}>
-                <div className="flex flex-col items-center gap-8">
-                  {slide.speakers.map((speaker, index) => (
-                    <div key={index} className="text-center">
-                      <p className="font-heading text-xl font-bold text-text md:text-2xl">
-                        {speaker.name}
-                      </p>
-                      {!companiesWithLogo(slide).has(speaker.company.toLowerCase()) && (
-                        <p
-                          className="hw-label mt-1 md:[--hw-label-size:var(--text-sm)]"
-                          data-tone="muted"
-                        >
-                          {speaker.company}
-                        </p>
-                      )}
-                      {speaker.contact && (
-                        <p className="text-base font-medium text-teal sm:text-lg">
-                          {speaker.contact}
-                        </p>
-                      )}
-                      {speaker.linkedIn && (
-                        <a
-                          href={speaker.linkedIn}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block text-base font-medium text-teal sm:text-lg"
-                        >
-                          {profileLabel(speaker.linkedIn)}
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </BlurFade>
+              <SpeakerList speakers={slide.speakers} hiddenCompanies={companiesWithLogo(slide)} />
             )}
           </>
         )}
 
-        {claim && (
-          <ClosingLine claim>
-            {/* The word brand names for its claim in the brand colour. */}
-            {claimParts(claim).map((part, i) =>
-              i === 1 ? (
-                <span key={i} className="text-primary">
-                  {part}
-                </span>
-              ) : (
-                part
-              ),
-            )}
-          </ClosingLine>
-        )}
+        {claim && <ClosingClaim lang={claim} />}
 
         {slide.closingQuote && (
           <ClosingLine>

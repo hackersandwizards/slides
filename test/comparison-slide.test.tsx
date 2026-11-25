@@ -2,8 +2,14 @@ import { act, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { phoneWidth } from "./phone-width";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
+import { ComparisonGuidance } from "../components/slides/ComparisonGuidance";
 import { PrintProvider } from "../lib/print-context";
-import type { ComparisonSlide, Slide } from "../types/slide";
+import type {
+  ComparisonGuidanceSlide,
+  ComparisonSlide,
+  GuidanceExample,
+  Slide,
+} from "../types/slide";
 
 const slide = (left: string[], right: string[]): ComparisonSlide => ({
   type: "comparison",
@@ -86,21 +92,39 @@ describe("comparison variants (merge-comparison)", () => {
     render(<slideComponents.comparison slide={{ type: "comparison", ...s } as Slide} />);
   const punchline = "Same team";
 
-  it("brings in a struck before-after's after side and punchline on the next press", () => {
-    const { container, getByText } = live({
-      variant: "before-after",
-      punchline,
-      ...sides,
-    });
-    expect(getByText("New").closest("[inert]")).not.toBeNull();
-    expect(getByText(punchline).closest("[inert]")).not.toBeNull();
-    expect(container.querySelector(".line-through")).toBeNull();
-    act(() => {
-      window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", cancelable: true }));
-    });
-    expect(container.querySelector("[inert]")).toBeNull();
-    expect(container.querySelector(".line-through")).not.toBeNull();
-    expect(container.querySelector(".bg-text-subtle\\/7")).not.toBeNull();
+  it.each([
+    {
+      stage: "on arrival",
+      advance: () => undefined,
+      inertContents: ["→", "Newb", punchline],
+      strike: null,
+      tint: null,
+    },
+    {
+      stage: "after ArrowRight",
+      advance: () => {
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", cancelable: true }));
+      },
+      inertContents: [],
+      strike: expect.any(HTMLElement),
+      tint: expect.any(HTMLElement),
+    },
+  ])(
+    "draws the right reveal state for a struck before-after $stage",
+    ({ advance, inertContents, strike, tint }) => {
+      const { container } = live({ variant: "before-after", punchline, ...sides });
+      act(advance);
+      expect([...container.querySelectorAll("[inert]")].map((node) => node.textContent)).toEqual(
+        inertContents,
+      );
+      expect(container.querySelector(".line-through")).toEqual(strike);
+      expect(container.querySelector(".bg-text-subtle\\/7")).toEqual(tint);
+    },
+  );
+
+  it("leaves the comparison body empty for an unknown variant", () => {
+    const { container } = live({ variant: "constructor", ...sides });
+    expect(container.querySelector(".slide-body")).toBeEmptyDOMElement();
   });
 
   it("shows a before-after without strike whole, its kept side on a white card", () => {
@@ -189,26 +213,46 @@ describe("comparison variants (merge-comparison)", () => {
 
 describe("guidance comparison on screen", () => {
   afterEach(() => vi.restoreAllMocks());
-  const guidance = (examples: object[]) =>
+  const guidance = (
+    examples: GuidanceExample[],
+    content?: Pick<ComparisonGuidanceSlide, "intro" | "points">,
+  ) =>
     render(
-      <slideComponents.comparison
-        slide={{ type: "comparison", variant: "guidance", headline: "H", examples } as Slide}
+      <ComparisonGuidance
+        slide={{ type: "comparison", variant: "guidance", headline: "H", examples, ...content }}
       />,
-    ).container;
+    );
   const two = [
     { title: "One", bad: "b", good: "g" },
     { title: "Two", bad: "b", good: "g" },
   ];
 
   it("draws a slide without examples, as print does", () => {
-    expect(guidance([]).textContent).toContain("H");
+    const { container } = render(
+      <slideComponents.comparison
+        slide={{ type: "comparison", variant: "guidance", headline: "H", examples: [] }}
+      />,
+    );
+    expect(container.textContent).toContain("H");
   });
 
   it("steps through the examples on a screen and shows them all on a phone", () => {
     const titles = (c: HTMLElement) =>
       [...c.querySelectorAll("h2:not(.slide-title)")].map((h) => h.textContent);
-    expect(titles(guidance(two))).toEqual(["One"]);
+    expect(titles(guidance(two).container)).toEqual(["One"]);
     phoneWidth();
-    expect(titles(guidance(two))).toEqual(["One", "Two"]);
+    expect(titles(guidance(two).container)).toEqual(["One", "Two"]);
+  });
+
+  it("draws intro, points, example counter, and dot indicators for multiple examples on screen", () => {
+    const { container, getByText } = guidance(two, {
+      intro: "Start here",
+      points: ["Keep it short"],
+    });
+    expect(getByText("Start here")).toBeTruthy();
+    expect(getByText("Keep it short")).toBeTruthy();
+    expect(getByText("1 / 2")).toBeTruthy();
+    expect(container.querySelectorAll(".bg-primary.h-2\\.5, .h-2\\.5.bg-primary")).toHaveLength(1);
+    expect(container.querySelectorAll(".h-2\\.5.bg-primary-border")).toHaveLength(1);
   });
 });
