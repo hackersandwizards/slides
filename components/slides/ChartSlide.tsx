@@ -1,23 +1,17 @@
 "use client";
 
-import { lazy, Suspense, useContext, useId, useMemo, useState, type ReactNode } from "react";
-import { domAnimation, LazyMotion, m, useReducedMotion } from "motion/react";
-import { usePrintMode } from "../../lib/print-context";
+import { lazy, Suspense } from "react";
+import { useChartPlotMotion } from "../../lib/use-chart-plot-motion";
 import type { ChartSlide as ChartSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
-import { DeckLang, SlideShell } from "./SlideShell";
+import { SlideShell } from "./SlideShell";
 import { SectionHeader } from "./SectionHeader";
-import { useMounted } from "../../lib/use-mounted";
-import { opensRevealed, WORDS } from "../../lib/slide-utils";
 import { ChartFrame, SlideTitle } from "./primitives";
+import { CycleVariant, GraphVariant } from "./ChartDrawing";
 // recharts is most of a deck page's script and only the trend and bar charts use it, after mount:
 // it loads with the first of them.
 const TrendPlot = lazy(() => import("./ChartPlots").then((m) => ({ default: m.TrendPlot })));
 const BarPlot = lazy(() => import("./ChartPlots").then((m) => ({ default: m.BarPlot })));
-
-// Server and browser Math.exp differ in the last digits, and a hydrated attribute keeps the
-// server's value, so unrounded curve points were a hydration mismatch on every chart slide.
-const round = (n: number) => Math.round(n * 1e6) / 1e6;
 
 interface Props {
   slide: ChartSlideType;
@@ -32,282 +26,9 @@ function Annotation({ text }: { text: string }) {
   );
 }
 
-/** Draws its plot from left to right, as recharts grows the trend and bar plots (1.5 s, ease):
- *  a clip over the whole drawing widens from nothing, except where `usePlot` holds it still and
- *  under reduced motion; motion reads `initial` on mount only, as in BlurFade. The clip reaches
- *  half the drawing's size past every edge, so a label the overflowing svg shows outside its box
- *  stays whole. */
-function DrawIn({
-  width,
-  height,
-  children,
-}: {
-  width: number;
-  height: number;
-  children: ReactNode;
-}) {
-  const id = useId();
-  const { still } = usePlot();
-  const reduced = useReducedMotion();
-  const print = usePrintMode();
-  if (print) return <>{children}</>;
-  return (
-    <>
-      <clipPath id={id}>
-        <LazyMotion features={domAnimation}>
-          <m.rect
-            x={-width / 2}
-            y={-height}
-            height={height * 3}
-            initial={still || reduced ? false : { width: width / 2 }}
-            animate={{ width: width * 2 }}
-            transition={{ delay: 0.2, duration: 1.5, ease: "easeInOut" }}
-          />
-        </LazyMotion>
-      </clipPath>
-      <g clipPath={`url(#${id})`}>{children}</g>
-    </>
-  );
-}
-
-function CycleVariant({ slide }: { slide: ChartSlideType }) {
-  const lang = useContext(DeckLang);
-  const segments = slide.segments ?? [];
-  // No segment is marked where the slide names none.
-  const currentSegmentIndex = slide.currentSegmentIndex ?? -1;
-
-  const width = 900;
-  const height = 320;
-  const padding = 60;
-  const graphWidth = width - padding * 2;
-  const graphHeight = height - 80;
-
-  const { pathD, bellCurve } = useMemo(() => {
-    const bell = (x: number): number => {
-      const mean = 0.5;
-      const sigma = 0.18;
-      return round(Math.exp(-0.5 * ((x - mean) / sigma) ** 2));
-    };
-    const pts = Array.from({ length: 200 }, (_, i) => {
-      const t = i / 199;
-      const x = padding + t * graphWidth;
-      const y = height - 40 - bell(t) * graphHeight;
-      return `${x},${y}`;
-    });
-    return { pathD: `M ${pts.join(" L ")}`, bellCurve: bell };
-  }, [padding, graphWidth, height, graphHeight]);
-
-  const dividers = segments.slice(0, -1).reduce<number[]>((acc, seg) => {
-    const prev = acc.length > 0 ? acc[acc.length - 1] : 0;
-    acc.push(prev + seg.percentage / 100);
-    return acc;
-  }, []);
-
-  return (
-    <BlurFade delay={0.2} duration={0.8} className="w-full max-w-(--slide-measure-chart)">
-      {/* The segment labels sit on the top edge of the box; overflow keeps their tops. The box is
-          12 units taller than the curve, so the percentages under it stay inside. */}
-      <svg viewBox={`0 0 ${width} ${height + 12}`} className="w-full overflow-visible">
-        <DrawIn width={width} height={height + 12}>
-          <path
-            d={`${pathD} L ${padding + graphWidth},${height - 40} L ${padding},${height - 40} Z`}
-            fill="var(--color-teal)"
-            fillOpacity={0.07}
-          />
-
-          <path d={pathD} fill="none" stroke="var(--color-teal)" strokeWidth="2.5" />
-
-          {dividers.map((pos, i) => {
-            const x = padding + pos * graphWidth;
-            return (
-              <line
-                key={i}
-                x1={x}
-                y1={height - 40}
-                x2={x}
-                y2={height - 40 - bellCurve(pos) * graphHeight}
-                stroke="var(--color-text-muted)"
-                strokeWidth="1"
-                strokeDasharray="4 3"
-              />
-            );
-          })}
-
-          {segments.map((seg, i) => {
-            const start = i === 0 ? 0 : dividers[i - 1];
-            const end = i === segments.length - 1 ? 1 : dividers[i];
-            const mid = (start + end) / 2;
-            const x = padding + mid * graphWidth;
-            const isActive = i === currentSegmentIndex;
-
-            return (
-              <g key={i}>
-                <text
-                  x={x}
-                  y={height - 18}
-                  textAnchor="middle"
-                  className="font-sans"
-                  fontSize="21"
-                  fill={isActive ? "var(--color-teal)" : "var(--color-text-muted)"}
-                  fontWeight={isActive ? 600 : 400}
-                >
-                  {seg.label}
-                </text>
-                <text
-                  x={x}
-                  y={height + 8}
-                  textAnchor="middle"
-                  className="font-sans"
-                  fontSize="19"
-                  fill="var(--color-text-muted)"
-                >
-                  {seg.percentage}%
-                </text>
-                {isActive && (
-                  <>
-                    <circle
-                      cx={x}
-                      cy={height - 40 - bellCurve(mid) * graphHeight}
-                      r="6"
-                      fill="var(--color-teal)"
-                    />
-                    {/* On the side the curve falls away from, so the label never crosses it. */}
-                    <text
-                      x={mid < 0.5 ? x - 14 : x + 14}
-                      y={height - 40 - bellCurve(mid) * graphHeight - 14}
-                      textAnchor={mid < 0.5 ? "end" : "start"}
-                      className="font-heading"
-                      fontSize="22"
-                      fill="var(--color-teal)"
-                      fontWeight={600}
-                    >
-                      {WORDS[lang].here}
-                    </text>
-                  </>
-                )}
-              </g>
-            );
-          })}
-        </DrawIn>
-      </svg>
-    </BlurFade>
-  );
-}
-
-function GraphVariant({ slide }: { slide: ChartSlideType }) {
-  const { xLabel, yLabel, currentMarker, futureNote } = slide;
-  const width = 800;
-  const height = 400;
-  const padding = 70;
-  const graphWidth = width - padding * 2;
-  const graphHeight = height - padding * 2;
-
-  const { pathD, areaD, markerPoint } = useMemo(() => {
-    const pts = Array.from({ length: 100 }, (_, i) => {
-      const t = i / 99;
-      const x = padding + t * graphWidth;
-      const y = padding + graphHeight - round(Math.exp(t * 3) / Math.exp(3)) * graphHeight;
-      return { x, y };
-    });
-    const path = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x},${p.y}`).join(" ");
-    const area = `${path} L ${padding + graphWidth},${padding + graphHeight} L ${padding},${padding + graphHeight} Z`;
-    return { pathD: path, areaD: area, markerPoint: pts[60] };
-  }, [padding, graphWidth, graphHeight]);
-
-  return (
-    <BlurFade delay={0.2} duration={0.8} className="w-full max-w-(--slide-measure-chart-narrow)">
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
-        {[0.2, 0.4, 0.6, 0.8].map((t) => (
-          <line
-            key={t}
-            x1={padding}
-            y1={padding + graphHeight * (1 - t)}
-            x2={padding + graphWidth}
-            y2={padding + graphHeight * (1 - t)}
-            stroke="var(--color-text-subtle)"
-            strokeWidth="0.5"
-            opacity="0.3"
-          />
-        ))}
-
-        <DrawIn width={width} height={height}>
-          <path d={areaD} fill="var(--color-teal)" fillOpacity={0.07} />
-          <path d={pathD} fill="none" stroke="var(--color-teal)" strokeWidth="2.5" />
-
-          {currentMarker && markerPoint && (
-            <g>
-              <circle cx={markerPoint.x} cy={markerPoint.y} r="5" fill="var(--color-teal)" />
-              <text
-                x={markerPoint.x}
-                y={markerPoint.y - 18}
-                textAnchor="middle"
-                className="font-heading"
-                fontSize="22"
-                fill="var(--color-teal)"
-                fontWeight={600}
-              >
-                {currentMarker}
-              </text>
-            </g>
-          )}
-        </DrawIn>
-        {futureNote && (
-          <text
-            x={padding + 10}
-            y={padding + 10}
-            textAnchor="start"
-            className="font-sans"
-            fontSize="20"
-            fill="var(--color-text-muted)"
-          >
-            {futureNote}
-          </text>
-        )}
-
-        {xLabel && (
-          <text
-            x={width / 2}
-            y={height - 10}
-            textAnchor="middle"
-            className="font-sans"
-            fontSize="21"
-            fill="var(--color-text-muted)"
-          >
-            {xLabel}
-          </text>
-        )}
-
-        {yLabel && (
-          <text
-            x={20}
-            y={height / 2}
-            textAnchor="middle"
-            className="font-sans"
-            fontSize="21"
-            fill="var(--color-text-muted)"
-            transform={`rotate(-90, 20, ${height / 2})`}
-          >
-            {yLabel}
-          </text>
-        )}
-      </svg>
-    </BlurFade>
-  );
-}
-
-/** Whether a plot shows at once rather than growing: on a printed slide, on the slide a page load
- *  opens on (a recharts plot mounts after hydration, so it keeps whether its slide hydrated), and
- *  on one opening revealed, such as a catalogue tile, where the growth drew no bar for seconds, and
- *  none in a background tab. */
-function usePlot() {
-  const mounted = useMounted();
-  const [opened] = useState(() => !mounted || opensRevealed());
-  return { mounted, still: usePrintMode() || opened };
-}
-
 function TrendVariant({ slide }: { slide: ChartSlideType }) {
   const { data, seriesLabel, series2Label } = slide;
-  const { mounted, still } = usePlot();
+  const { mounted, still } = useChartPlotMotion();
 
   return (
     <div className="w-full max-w-5xl">
@@ -353,7 +74,7 @@ function TrendVariant({ slide }: { slide: ChartSlideType }) {
 
 function BarVariant({ slide }: { slide: ChartSlideType }) {
   const { data } = slide;
-  const { mounted, still } = usePlot();
+  const { mounted, still } = useChartPlotMotion();
 
   return (
     <div className="w-full max-w-5xl">

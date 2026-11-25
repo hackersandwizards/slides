@@ -1,7 +1,7 @@
 import { act, render } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { AxisTick, tickLayout, trendTicks } from "../components/slides/ChartPlots";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
@@ -67,7 +67,10 @@ describe("chart draw-in", () => {
     const { container } = render(<SlideComponent slide={slide} />);
     const clip = container.querySelector("clipPath rect");
     expect(clip).toBeTruthy();
-    expect(parseFloat(clip?.getAttribute("width") ?? "0")).toBe(start);
+    assert(clip, "Expected the incoming plot's clip rectangle");
+    const width = clip.getAttribute("width");
+    assert(width, "Expected the incoming plot's starting clip width");
+    expect(parseFloat(width)).toBe(start);
     expect(container.querySelector("g[clip-path] path")).toBeTruthy();
   });
 
@@ -79,9 +82,11 @@ describe("chart draw-in", () => {
       hydrateRoot(host, <SlideComponent slide={cycle} />);
     });
     // The cycle's drawing is 900 wide, so its clip ends 1800 wide.
-    expect(parseFloat(host.querySelector("clipPath rect")?.getAttribute("width") ?? "0")).toBe(
-      1800,
-    );
+    const clip = host.querySelector("clipPath rect");
+    assert(clip, "Expected the hydrated plot's clip rectangle");
+    const width = clip.getAttribute("width");
+    assert(width, "Expected the hydrated plot's clip width");
+    expect(parseFloat(width)).toBe(1800);
   });
 
   it("prints the plot whole", () => {
@@ -146,4 +151,67 @@ describe("trendTicks", () => {
       ]),
     ).toEqual([-12, -6, 0, 6, 12]);
   });
+});
+
+describe("drawn chart geometry", () => {
+  it("places cycle labels at segment midpoints and closes the last segment at the curve end", () => {
+    const Chart = slideComponents.chart;
+    const { getByText } = render(
+      <Chart
+        slide={{
+          type: "chart",
+          variant: "cycle",
+          segments: [
+            { label: "First", percentage: 25 },
+            { label: "Last", percentage: 50 },
+          ],
+        }}
+      />,
+    );
+    expect(getByText("First")).toHaveAttribute("x", "157.5");
+    expect(getByText("Last")).toHaveAttribute("x", "547.5");
+    expect(getByText("50%")).toHaveAttribute("x", "547.5");
+  });
+
+  it("draws the graph's projection, marker and axis labels in their original places", () => {
+    const Chart = slideComponents.chart;
+    const { container, getByText } = render(
+      <Chart
+        slide={{
+          type: "chart",
+          variant: "graph",
+          xLabel: "Time",
+          yLabel: "Value",
+          currentMarker: "Today",
+          futureNote: "Projection",
+        }}
+      />,
+    );
+    expect(container.querySelectorAll("svg > line")).toHaveLength(4);
+    expect(getByText("Today")).toHaveAttribute("x", "470");
+    expect(getByText("Projection")).toHaveAttribute("y", "80");
+    expect(getByText("Time")).toHaveAttribute("y", "390");
+    expect(getByText("Value")).toHaveAttribute("transform", "rotate(-90, 20, 200)");
+  });
+});
+
+it("uses the fallback text and rotates an angled tick around its own marked point", () => {
+  const { getByText } = render(
+    <svg>
+      <AxisTick
+        x={12}
+        y={24}
+        index={4}
+        marked={4}
+        payload={{ value: "Fallback" }}
+        layout={{ step: 2, lines: [], angled: true }}
+      />
+    </svg>,
+  );
+  const label = getByText("Fallback").parentElement;
+  expect(label).toHaveAttribute("transform", "rotate(-40 12 24)");
+  expect(label).toHaveAttribute("text-anchor", "end");
+  expect(label).toHaveAttribute("font-size", "var(--text-xs)");
+  expect(label).toHaveAttribute("font-weight", "700");
+  expect(label).toHaveAttribute("fill", "var(--color-teal)");
 });
