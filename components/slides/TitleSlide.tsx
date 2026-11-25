@@ -18,8 +18,6 @@ interface Props {
  *  of the slide's height, and the title block stands 2rem above the bottom row: a 16rem code would
  *  crowd a three-line title and shrink the whole slide. */
 function Opening({ slide }: Props) {
-  const deckLang = useContext(DeckLang);
-  const lang = slide.lang ?? deckLang;
   return (
     <SlideShell direction="col" overflowHidden>
       <div className="slide-content relative z-10 flex flex-col items-stretch justify-between px-(--slide-side) pt-(--slide-top)">
@@ -44,36 +42,42 @@ function Opening({ slide }: Props) {
             </p>
           )}
         </BlurFade>
-        <BlurFade
-          delay={0.25}
-          duration={0.4}
-          className="flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between md:gap-12"
-        >
-          <div>
-            {slide.speakers && slide.speakers.length > 0 && (
-              <p className="font-heading text-4xl font-bold text-text">
-                {speakerLine(slide, lang)}
-              </p>
-            )}
-            {slide.event && <p className="mt-3 text-2xl text-text-muted">{slide.event}</p>}
-          </div>
-          {slide.qr && (
-            <div className="flex shrink-0 flex-col items-center gap-3">
-              <PictureLink href={slide.qr.href}>
-                <Image
-                  src={slide.qr.src}
-                  alt={qrAlt(slide.qr.href, lang)}
-                  width={360}
-                  height={360}
-                  className="size-48 rounded-brand"
-                />
-              </PictureLink>
-              <LinkCaption href={slide.qr.href} />
-            </div>
-          )}
-        </BlurFade>
+        <OpeningCredits slide={slide} />
       </div>
     </SlideShell>
+  );
+}
+
+function OpeningCredits({ slide }: Props) {
+  const deckLang = useContext(DeckLang);
+  const lang = slide.lang ?? deckLang;
+  return (
+    <BlurFade
+      delay={0.25}
+      duration={0.4}
+      className="flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between md:gap-12"
+    >
+      <div>
+        {slide.speakers && slide.speakers.length > 0 && (
+          <p className="font-heading text-4xl font-bold text-text">{speakerLine(slide, lang)}</p>
+        )}
+        {slide.event && <p className="mt-3 text-2xl text-text-muted">{slide.event}</p>}
+      </div>
+      {slide.qr && (
+        <div className="flex shrink-0 flex-col items-center gap-3">
+          <PictureLink href={slide.qr.href}>
+            <Image
+              src={slide.qr.src}
+              alt={qrAlt(slide.qr.href, lang)}
+              width={360}
+              height={360}
+              className="size-48 rounded-brand"
+            />
+          </PictureLink>
+          <LinkCaption href={slide.qr.href} />
+        </div>
+      )}
+    </BlurFade>
   );
 }
 

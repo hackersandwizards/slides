@@ -52,11 +52,7 @@ describe("QuestionSlide", () => {
   it("keeps working where storage refuses writes", () => {
     // jsdom's Storage turns a property set on the instance into a stored item, so the spy goes on
     // the prototype there.
-    const storage =
-      typeof Storage !== "undefined" && localStorage instanceof Storage
-        ? Storage.prototype
-        : localStorage;
-    vi.spyOn(storage, "setItem").mockImplementation(() => {
+    const write = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new DOMException("Storage is full", "QuotaExceededError");
     });
     render(<QuestionSlide slide={slide} />);
@@ -66,6 +62,7 @@ describe("QuestionSlide", () => {
       );
     });
     expect(screen.getByRole("button", { name: /^A: here, 1 votes$/ })).toBeInTheDocument();
+    expect(write).toHaveBeenCalledWith("test-poll", "[1,0]");
   });
 
   // The speaker window takes the keys on its own copy of the slide; its votes reach the audience
@@ -90,16 +87,13 @@ describe("a cursor moved by pointer or focus", () => {
   };
   it("moves as consumed arrow presses", () => {
     render(<QuestionSlide slide={three} />);
-    const presses: string[] = [];
-    const log = (event: KeyboardEvent) =>
-      setTimeout(() => event.defaultPrevented && presses.push(event.key));
+    const events: KeyboardEvent[] = [];
+    const log = (event: KeyboardEvent) => events.push(event);
     window.addEventListener("keydown", log, true);
-    vi.useFakeTimers();
     act(() => screen.getByRole("button", { name: /^C:/ }).focus());
     act(() => screen.getByRole("button", { name: /^A:/ }).click());
-    vi.runAllTimers();
-    vi.useRealTimers();
     window.removeEventListener("keydown", log, true);
+    const presses = events.filter((event) => event.defaultPrevented).map((event) => event.key);
     expect(presses).toEqual(["ArrowRight", "ArrowRight", "ArrowLeft", "ArrowLeft"]);
     expect(screen.getByRole("button", { name: /^A: here, 1 vote/ })).toHaveAttribute(
       "aria-current",

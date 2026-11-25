@@ -1,5 +1,5 @@
 import { act, render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
@@ -72,7 +72,8 @@ describe("statement slide", () => {
       subtitle: "Our note",
       attribution: "Mara",
     });
-    const text = c.textContent ?? "";
+    const text = c.textContent;
+    assert(text, "quotation has rendered text");
     expect(text.indexOf("Also said")).toBeGreaterThanOrEqual(0);
     expect(text.indexOf("Also said")).toBeLessThan(text.indexOf("Mara"));
     expect(text.indexOf("Mara")).toBeLessThan(text.indexOf("Our note"));
@@ -80,7 +81,8 @@ describe("statement slide", () => {
   });
 
   it("sets a plain closing after the attribution, as the slide's own words", () => {
-    const text = statement({ closing: "Our point", attribution: "Mara" }).textContent ?? "";
+    const text = statement({ closing: "Our point", attribution: "Mara" }).textContent;
+    assert(text, "quotation has rendered text");
     expect(text.indexOf("Mara")).toBeGreaterThanOrEqual(0);
     expect(text.indexOf("Mara")).toBeLessThan(text.indexOf("Our point"));
   });
@@ -122,21 +124,28 @@ describe("statement slide", () => {
     expect(c.querySelector(".slide-qr")?.textContent).toContain("example.com/board");
   });
 
-  it.each(["quotation", "qr"] as const)("keeps every field in the %s layout", (kind) => {
-    const text =
-      statement({
-        kicker: "Kicker",
-        crossedOut: "Crossed",
-        subtitle: "Subtitle",
-        points: ["Point"],
-        closing: "Closing",
-        footer: "Footer",
-        ...(kind === "qr"
-          ? { qr: { src: "/qr.png", href: "https://example.com" } }
-          : { attribution: "Mara" }),
-      }).textContent ?? "";
-    for (const word of ["Kicker", "Crossed", "Subtitle", "Point", "Closing", "Footer"])
-      expect(text).toContain(word);
+  it.each<[string, Partial<Extract<Slide, { type: "statement" }>>]>([
+    ["quotation", { attribution: "Mara" }],
+    ["qr", { qr: { src: "/qr.png", href: "https://example.com" } }],
+  ])("keeps every field in the %s layout", (_, layout) => {
+    const text = statement({
+      kicker: "Kicker",
+      crossedOut: "Crossed",
+      subtitle: "Subtitle",
+      points: ["Point"],
+      closing: "Closing",
+      footer: "Footer",
+      ...layout,
+    }).textContent;
+    assert(text, "statement has rendered text");
+    expect(text.match(/Kicker|Crossed|Subtitle|Point|Closing|Footer/g)).toEqual([
+      "Kicker",
+      "Crossed",
+      "Subtitle",
+      "Point",
+      "Closing",
+      "Footer",
+    ]);
   });
 });
 
@@ -151,3 +160,37 @@ it.each(slideCatalog.slides.map((slide, i) => [i, slide.type, slide] as const))(
     expect(content?.parentElement?.hasAttribute("data-hw-scale")).toBe(true);
   },
 );
+
+it("prefers attribution over a QR layout when a statement contains both", () => {
+  const { container, getByText } = render(
+    <slideComponents.statement
+      slide={{
+        type: "statement",
+        lines: ["The words"],
+        attribution: "Speaker",
+        qr: { src: "/qr.png", href: "https://example.com" },
+      }}
+    />,
+  );
+  expect(container.querySelector(".hw-quote")).toContainElement(getByText("Speaker"));
+  expect(container.querySelector(".slide-qr")).toBeNull();
+});
+
+it("places a quoted closing beneath the supporting points of a centred statement", () => {
+  const { getByText } = render(
+    <slideComponents.statement
+      slide={{
+        type: "statement",
+        lines: ["The headline"],
+        points: ["A supporting point"],
+        closing: "The final words",
+        closingStyle: "quote",
+      }}
+    />,
+  );
+  const closing = getByText("The final words");
+  const point = getByText("A supporting point");
+  expect(point.compareDocumentPosition(closing)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  expect(closing).toHaveClass("italic", "mt-10");
+  expect(closing.textContent).toBe("“The final words”");
+});

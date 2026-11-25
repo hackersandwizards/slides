@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { assert, describe, expect, it, vi } from "vitest";
 import { phoneWidth } from "./phone-width";
 import { ProcessSlide } from "../components/slides/ProcessSlide";
 import type { ProcessSlide as ProcessSlideType } from "../types/slide";
@@ -14,12 +14,19 @@ function makeSlide(titles: string[]): ProcessSlideType {
 
 describe("ProcessSlide", () => {
   // The diamond layout once hardcoded four positions and dropped any further node.
-  it.each([3, 4, 5, 6, 8])("renders all %i node titles", (count) => {
+  it.each([
+    [3, 2],
+    [4, 2],
+    [5, 1],
+    [6, 1],
+    [8, 1],
+  ])("renders all %i node titles with %i copies each", (count, copies) => {
     const titles = Array.from({ length: count }, (_, i) => `Step ${i + 1}`);
     const { getAllByText } = render(<ProcessSlide slide={makeSlide(titles)} />);
+    expect(getAllByText(/^Step \d+$/)).toHaveLength(count * copies);
     for (const title of titles) {
       // Once in the desktop row, and up to four nodes once more on the circle that phones show.
-      expect(getAllByText(title)).toHaveLength(count <= 4 ? 2 : 1);
+      expect(getAllByText(title)).toHaveLength(copies);
     }
   });
 
@@ -56,4 +63,17 @@ it("leaves a step with `numbered: false` empty and numbers the others on", () =>
   expect(tiles(slide)).toEqual(["", "1", "2", ""]);
   // The control: without the field every step counts.
   expect(tiles({ ...makeSlide(["A", "B"]), loop: false })).toEqual(["1", "2"]);
+});
+
+it("draws the first connector between the top and right nodes of a four-node loop", () => {
+  const { container } = render(<ProcessSlide slide={makeSlide(["A", "B", "C", "D"])} />);
+  const path = container.querySelector(".process-canvas > svg > path");
+  assert(path, "the process canvas has a connector");
+  const shape = path.getAttribute("d");
+  assert(shape, "the connector has a path");
+  const coordinates = shape.match(/[\d.]+/g);
+  assert(coordinates, "the connector path has coordinates");
+  expect(coordinates.map((value) => Math.round(Number(value)))).toEqual([
+    600, 159, 628, 187, 667, 195,
+  ]);
 });

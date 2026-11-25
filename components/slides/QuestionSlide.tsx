@@ -67,13 +67,60 @@ function usePersistedCounts(storageKey: string, length: number, printMode: boole
   return [counts, setCounts] as const;
 }
 
-export function QuestionSlide({ slide }: Props) {
-  const { headline, storageKey, options } = slide;
-  const printMode = usePrintMode();
+function PollChoice({
+  option,
+  count,
+  delay,
+  active,
+  disabled,
+  onVote,
+  onSelect,
+}: {
+  option: QuestionSlideType["options"][number];
+  count: number;
+  delay: number;
+  active: boolean;
+  disabled: boolean;
+  onVote: () => void;
+  onSelect: () => void;
+}) {
+  return (
+    <BlurFade delay={delay} duration={0.5}>
+      <button
+        type="button"
+        onClick={onVote}
+        onFocus={onSelect}
+        disabled={disabled}
+        aria-current={active ? "true" : undefined}
+        aria-label={`${option.label}: ${option.text}, ${count} votes`}
+        className={`hw-focus-ring flex w-full items-center justify-between rounded-brand border px-6 py-5 text-left transition-all duration-200 ${
+          active ? "scale-[1.01] border-primary bg-primary/7" : "border-border bg-white"
+        }`}
+      >
+        <div className="flex items-center gap-4">
+          <span
+            className={`w-8 font-mono text-sm font-bold ${active ? "text-primary" : "text-text-subtle"}`}
+          >
+            {option.label}
+          </span>
+          <span className="text-lg text-text">{option.text}</span>
+        </div>
+        <div
+          className="min-w-(--slide-measure-vote) text-right font-mono text-xl font-bold text-primary"
+          aria-live="polite"
+        >
+          <NumberTicker value={count} />
+        </div>
+      </button>
+    </BlurFade>
+  );
+}
+
+function usePollVoting(storageKey: string, optionCount: number, printMode: boolean) {
   // On a phone the cursor follows the tap alone, and Next changes slides.
   const phone = usePhone();
   const keys = !printMode && !phone;
-  const [cursor, setCursor] = useCarousel({ count: options.length, enabled: keys });
+  const [cursor, setCursor] = useCarousel({ count: optionCount, enabled: keys });
   // The windows of a talk replay each other's arrow presses only, so the cursor moves by presses
   // wherever the arrows step it.
   const moveTo = (i: number) => {
@@ -81,7 +128,7 @@ export function QuestionSlide({ slide }: Props) {
     const key = i > cursor ? "ArrowRight" : "ArrowLeft";
     for (let n = Math.abs(i - cursor); n > 0; n--) document.body.dispatchEvent(arrowEvent(key));
   };
-  const [counts, setCounts] = usePersistedCounts(storageKey, options.length, printMode);
+  const [counts, setCounts] = usePersistedCounts(storageKey, optionCount, printMode);
 
   useSlideKeyboard({
     onSpace: () => {
@@ -92,11 +139,28 @@ export function QuestionSlide({ slide }: Props) {
     },
     onKey: (key) => {
       if (key === "q" || key === "Q") {
-        setCounts(Array(options.length).fill(0));
+        setCounts(Array(optionCount).fill(0));
       }
     },
     enabled: !printMode,
   });
+
+  const voteFor = (index: number) => {
+    moveTo(index);
+    setCounts((prev) => prev.map((count, i) => (i === index ? count + 1 : count)));
+  };
+
+  return { counts, cursor, moveTo, voteFor };
+}
+
+export function QuestionSlide({ slide }: Props) {
+  const { headline, options } = slide;
+  const printMode = usePrintMode();
+  const { counts, cursor, moveTo, voteFor } = usePollVoting(
+    slide.storageKey,
+    options.length,
+    printMode,
+  );
 
   return (
     <SlideShell direction="col">
@@ -108,43 +172,18 @@ export function QuestionSlide({ slide }: Props) {
         </BlurFade>
 
         <div className="w-full max-w-4xl space-y-4" role="group" aria-label={headline}>
-          {options.map((option, i) => {
-            const isActive = i === cursor && !printMode;
-            const vote = () => {
-              moveTo(i);
-              setCounts((prev) => prev.map((c, idx) => (idx === i ? c + 1 : c)));
-            };
-            return (
-              <BlurFade key={i} delay={0.2 + i * 0.05} duration={0.5}>
-                <button
-                  type="button"
-                  onClick={vote}
-                  onFocus={() => moveTo(i)}
-                  disabled={printMode}
-                  aria-current={isActive ? "true" : undefined}
-                  aria-label={`${option.label}: ${option.text}, ${counts[i]} votes`}
-                  className={`hw-focus-ring flex w-full items-center justify-between rounded-brand border px-6 py-5 text-left transition-all duration-200 ${
-                    isActive ? "scale-[1.01] border-primary bg-primary/7" : "border-border bg-white"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <span
-                      className={`w-8 font-mono text-sm font-bold ${isActive ? "text-primary" : "text-text-subtle"}`}
-                    >
-                      {option.label}
-                    </span>
-                    <span className="text-lg text-text">{option.text}</span>
-                  </div>
-                  <div
-                    className="min-w-(--slide-measure-vote) text-right font-mono text-xl font-bold text-primary"
-                    aria-live="polite"
-                  >
-                    <NumberTicker value={counts[i]} />
-                  </div>
-                </button>
-              </BlurFade>
-            );
-          })}
+          {options.map((option, i) => (
+            <PollChoice
+              key={i}
+              option={option}
+              count={counts[i]}
+              delay={0.2 + i * 0.05}
+              active={i === cursor && !printMode}
+              disabled={printMode}
+              onVote={() => voteFor(i)}
+              onSelect={() => moveTo(i)}
+            />
+          ))}
         </div>
 
         {!printMode && (
