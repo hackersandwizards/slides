@@ -1,5 +1,5 @@
 import { fireEvent, render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { PrintProvider } from "../lib/print-context";
 import { renderMarkdown } from "../lib/markdown";
@@ -104,20 +104,22 @@ describe("content blocks", () => {
     expect(grid?.style.gridTemplateColumns.startsWith("auto")).toBe(false);
   });
 
-  it("sets a timeline's segment labels and an event's figure", () => {
-    for (const extra of [0, 4]) {
-      const events = [
-        { title: "Plan" },
-        { title: "Build", segment: "2 weeks" },
-        { title: "Measure", segment: "3 weeks", text: "Time per text", figure: "-90%" },
-        ...Array.from({ length: extra }, (_, i) => ({ title: `Later ${i}` })),
-      ];
-      const c = content([{ type: "timeline", events }]);
-      expect(c.textContent).toContain("2 weeks");
-      expect(c.textContent).toContain("3 weeks");
-      const text = c.textContent ?? "";
-      expect(text.indexOf("Time per text")).toBeLessThan(text.indexOf("−90%"));
-    }
+  it.each([
+    { layout: "inline", extra: 0 },
+    { layout: "staggered", extra: 4 },
+  ])("sets the $layout timeline's segment labels and an event's figure", ({ extra }) => {
+    const events = [
+      { title: "Plan" },
+      { title: "Build", segment: "2 weeks" },
+      { title: "Measure", segment: "3 weeks", text: "Time per text", figure: "-90%" },
+      ...Array.from({ length: extra }, (_, i) => ({ title: `Later ${i}` })),
+    ];
+    const c = content([{ type: "timeline", events }]);
+    const text = c.textContent;
+    assert(text, "timeline rendered text content");
+    expect(text).toContain("2 weeks");
+    expect(text).toContain("3 weeks");
+    expect(text.indexOf("Time per text")).toBeLessThan(text.indexOf("−90%"));
   });
 
   // Annotated code takes the code panel's faint frame, as every code block does; its own ink
@@ -361,20 +363,37 @@ describe("merged card and number shapes", () => {
   // The replacements keep the density of the blocks they replace: drawn at the plain
   // cards' sizes, a four-column slide of lists fell from 0.84 to 0.75 and a seven-item
   // labeled grid from 0.81 to 0.74 in talks' density guard.
-  it("draws labeled grid and four-column blocks as dense cards", () => {
-    const c = content([
-      { type: "labeled-grid", items: [{ title: "Low", subtitle: "a" }] },
-      { type: "four-column", columns: [1, 2, 3, 4].map((n) => ({ title: `T${n}`, items: ["x"] })) },
-    ]);
-    const [grid, four] = c.querySelectorAll(".hw-card");
-    expect(c.querySelector(".hw-card .h-1\\.5")).toBeNull();
-    expect(grid.className).toContain("card-pad-6");
-    expect(grid.querySelector("h2")?.className).toContain("text-xl");
-    expect(grid.querySelector("p")?.className).toContain("card-text-lg");
-    expect(four.className).toContain("card-pad-5");
-    expect(four.querySelector("h2")?.className).toContain("text-lg");
-    expect(four.querySelector("li")?.className).toContain("card-text-base");
-  });
+  it.each([
+    {
+      name: "labeled-grid",
+      block: { type: "labeled-grid", items: [{ title: "Low", subtitle: "a" }] },
+      cardPad: "card-pad-6",
+      headingSize: "text-xl",
+      bodySelector: "p",
+      bodySize: "card-text-lg",
+    },
+    {
+      name: "four-column",
+      block: {
+        type: "four-column",
+        columns: [1, 2, 3, 4].map((n) => ({ title: `T${n}`, items: ["x"] })),
+      },
+      cardPad: "card-pad-5",
+      headingSize: "text-lg",
+      bodySelector: "li",
+      bodySize: "card-text-base",
+    },
+  ])(
+    "draws $name blocks as dense cards",
+    ({ block, cardPad, headingSize, bodySelector, bodySize }) => {
+      const c = content([block]);
+      const card = c.querySelector(".hw-card");
+      expect(c.querySelector(".hw-card .h-1\\.5")).toBeNull();
+      expect(card?.className).toContain(cardPad);
+      expect(card?.querySelector("h2")?.className).toContain(headingSize);
+      expect(card?.querySelector(bodySelector)?.className).toContain(bodySize);
+    },
+  );
 
   it("keeps plain cards at their own sizes", () => {
     const c = content([{ type: "cards", items: [{ title: "A", text: "a" }] }]);
@@ -485,44 +504,60 @@ describe("statement and content merges (merge-statement, merge-content)", () => 
     expect(c.textContent).toContain("terminal");
   });
 
-  it("renders regular slides through content blocks", () => {
-    const two = one({
-      type: "regular",
-      headline: "H",
-      sections: [{ title: "A", items: ["a"] }, { title: "B", items: ["b"] }, { text: "Closing" }],
+  describe("regular slides through content blocks", () => {
+    it("renders two titled sections as two columns and an untitled last section as a callout", () => {
+      const two = one({
+        type: "regular",
+        headline: "H",
+        sections: [{ title: "A", items: ["a"] }, { title: "B", items: ["b"] }, { text: "Closing" }],
+      });
+      expect(two.querySelectorAll(".grid-cols-2 > *")).toHaveLength(2);
+      expect(two.querySelector(".hw-callout")?.textContent).toBe("Closing");
     });
-    expect(two.querySelectorAll(".grid-cols-2 > *")).toHaveLength(2);
-    expect(two.querySelector(".hw-callout")?.textContent).toBe("Closing");
-    const three = one({
-      type: "regular",
-      headline: "H",
-      sections: ["A", "B", "C"].map((title) => ({ title, items: ["x"] })),
+
+    it("renders three titled sections as cards", () => {
+      const three = one({
+        type: "regular",
+        headline: "H",
+        sections: ["A", "B", "C"].map((title) => ({ title, items: ["x"] })),
+      });
+      expect(three.querySelectorAll(".hw-card")).toHaveLength(3);
     });
-    expect(three.querySelectorAll(".hw-card")).toHaveLength(3);
-    const agenda = one({
-      type: "regular",
-      headline: "H",
-      layout: "cards",
-      sections: [{ title: "One", text: "**t**", link: { url: "https://example.com", label: "L" } }],
+
+    it("renders the cards layout as an agenda with markdown and links", () => {
+      const agenda = one({
+        type: "regular",
+        headline: "H",
+        layout: "cards",
+        sections: [
+          { title: "One", text: "**t**", link: { url: "https://example.com", label: "L" } },
+        ],
+      });
+      expect(agenda.textContent).toContain("One");
+      expect(agenda.querySelector("ol, ul")).not.toBeNull();
+      expect(agenda.textContent).not.toContain("**");
+      expect(agenda.querySelector('a[href="https://example.com"]')?.textContent).toBe("L");
     });
-    expect(agenda.textContent).toContain("One");
-    expect(agenda.querySelector("ol, ul")).not.toBeNull();
-    expect(agenda.textContent).not.toContain("**");
-    expect(agenda.querySelector('a[href="https://example.com"]')?.textContent).toBe("L");
-    const linkOnly = one({
-      type: "regular",
-      headline: "H",
-      sections: [{ title: "Repo", link: { url: "https://example.com", label: "L" } }],
+
+    it("renders a link-only regular section with its link", () => {
+      const linkOnly = one({
+        type: "regular",
+        headline: "H",
+        sections: [{ title: "Repo", link: { url: "https://example.com", label: "L" } }],
+      });
+      expect(linkOnly.querySelector('a[href="https://example.com"]')?.textContent).toBe("L");
     });
-    expect(linkOnly.querySelector('a[href="https://example.com"]')?.textContent).toBe("L");
-    const profile = one({
-      type: "regular",
-      headline: "H",
-      profile: { name: "N", title: "T" },
-      sections: [{ title: "A", items: ["a"] }],
+
+    it("keeps the profile layout when a regular slide carries a profile", () => {
+      const profile = one({
+        type: "regular",
+        headline: "H",
+        profile: { name: "N", title: "T" },
+        sections: [{ title: "A", items: ["a"] }],
+      });
+      expect(profile.textContent).toContain("N");
+      expect(profile.querySelector(".text-teal")).not.toBeNull();
     });
-    expect(profile.textContent).toContain("N");
-    expect(profile.querySelector(".text-teal")).not.toBeNull();
   });
 });
 

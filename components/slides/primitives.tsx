@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type HTMLAttributes,
   type ReactNode,
+  type SyntheticEvent,
 } from "react";
 import ArrowUpRight from "lucide-react/icons/arrow-up-right";
 import CheckCircle from "lucide-react/icons/circle-check-big";
@@ -166,44 +167,69 @@ export function SlideCaption({
 export type CardTone = "neutral" | "primary" | "secondary" | "accent" | "success" | "error";
 type CardLook = "tint" | "soft" | "outline" | "line";
 
+interface CardSurface {
+  className: string;
+  "data-variant"?: "tint";
+  "data-tone"?: "info" | "warning" | "success" | "error";
+  "data-hw-exception"?: "card-tone";
+}
+
 /** The tones the brand card has no rule for, the slide's own (exception `card-tone` in
- *  brand-elements.json). Tailwind sees each class whole: one line per tone and look. */
-const CARD_TONES: Record<Exclude<CardTone, "neutral">, Partial<Record<CardLook, string>>> = {
-  primary: {
-    outline: "border border-primary bg-white",
-    line: "border border-primary/25 bg-white",
-  },
-  secondary: {
-    tint: "border border-secondary bg-secondary/7",
-    soft: "border border-secondary/25 bg-secondary/7",
-    outline: "border border-secondary bg-white",
-    line: "border border-secondary/25 bg-white",
-  },
-  accent: {
-    tint: "border border-slide-accent bg-slide-accent/7",
-    outline: "border border-slide-accent bg-white",
-    line: "border border-slide-accent/25 bg-white",
-  },
-  success: {
-    tint: "border border-green-dark bg-green-dark/7",
-    outline: "border border-green-dark bg-white",
-    line: "border border-green-dark/25 bg-white",
-  },
-  error: {
-    tint: "border border-red bg-red/7",
-    outline: "border border-red bg-white",
-    line: "border border-red/25 bg-white",
-  },
-};
+ *  brand-elements.json). */
+const cardTone = (colour: string): CardSurface => ({
+  className: `rounded-brand p-(--hw-card-pad) ${colour}`,
+  "data-hw-exception": "card-tone",
+});
 
 /** A soft card in a tone with a meaning is brand's status box (`hw-status`): its tone at 40 % as
  *  the line and 7 % as the ground. Purple means no state and stays a slide card; a tinted card
  *  keeps its full line (exception `card-tone`). */
-const STATUS_TONES: Partial<Record<CardTone, "info" | "warning" | "success" | "error">> = {
-  primary: "info",
-  accent: "warning",
-  success: "success",
-  error: "error",
+const statusTone = (tone: "info" | "warning" | "success" | "error"): CardSurface => ({
+  className: "hw-status",
+  "data-tone": tone,
+});
+
+const allLooks = (surface: CardSurface): Record<CardLook, CardSurface> => ({
+  tint: surface,
+  soft: surface,
+  outline: surface,
+  line: surface,
+});
+
+/** Maps each tone and look to its card surface. Tailwind sees each class whole. */
+const CARD_SURFACES: Record<CardTone | "quiet", Record<CardLook, CardSurface>> = {
+  neutral: allLooks({ className: "hw-card" }),
+  quiet: allLooks(cardTone("bg-ink/7")),
+  primary: {
+    tint: { className: "hw-card", "data-variant": "tint" },
+    soft: statusTone("info"),
+    outline: cardTone("border border-primary bg-white"),
+    line: cardTone("border border-primary/25 bg-white"),
+  },
+  secondary: {
+    tint: cardTone("border border-secondary bg-secondary/7"),
+    soft: cardTone("border border-secondary/25 bg-secondary/7"),
+    outline: cardTone("border border-secondary bg-white"),
+    line: cardTone("border border-secondary/25 bg-white"),
+  },
+  accent: {
+    tint: cardTone("border border-slide-accent bg-slide-accent/7"),
+    soft: statusTone("warning"),
+    outline: cardTone("border border-slide-accent bg-white"),
+    line: cardTone("border border-slide-accent/25 bg-white"),
+  },
+  success: {
+    tint: cardTone("border border-green-dark bg-green-dark/7"),
+    soft: statusTone("success"),
+    outline: cardTone("border border-green-dark bg-white"),
+    line: cardTone("border border-green-dark/25 bg-white"),
+  },
+  error: {
+    tint: cardTone("border border-red bg-red/7"),
+    soft: statusTone("error"),
+    outline: cardTone("border border-red bg-white"),
+    line: cardTone("border border-red/25 bg-white"),
+  },
 };
 
 /** The brand card (`hw-card`): a neutral card whatever its look, and the primary `tint`, the one
@@ -221,25 +247,8 @@ export function SlideCard({
   tone?: CardTone | "quiet";
   look?: CardLook;
 } & ComponentPropsWithoutRef<"div">) {
-  if (tone === "neutral" || (tone === "primary" && look === "tint"))
-    return (
-      <div
-        className={`hw-card ${className}`.trim()}
-        data-variant={tone === "primary" ? "tint" : undefined}
-        {...props}
-      />
-    );
-  const status = tone !== "quiet" && look === "soft" && STATUS_TONES[tone];
-  if (status)
-    return <div className={`hw-status ${className}`.trim()} data-tone={status} {...props} />;
-  const colour = tone === "quiet" ? "bg-ink/7" : CARD_TONES[tone][look];
-  return (
-    <div
-      className={`rounded-brand p-(--hw-card-pad) ${colour} ${className}`.trim()}
-      data-hw-exception="card-tone"
-      {...props}
-    />
-  );
+  const { className: surfaceClass, ...surfaceAttrs } = CARD_SURFACES[tone][look];
+  return <div className={`${surfaceClass} ${className}`.trim()} {...surfaceAttrs} {...props} />;
 }
 
 const DISPLAY_SIZES = {
@@ -437,6 +446,27 @@ export function ChartFrame({ children }: { children: ReactNode }) {
   );
 }
 
+function useVideoPlayback() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const toggle = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) void video.play();
+    else video.pause();
+  };
+  const mediaEvents = {
+    onClick: toggle,
+    onPlay: () => setPlaying(true),
+    onPause: () => setPlaying(false),
+    onEnded: () => setPlaying(false),
+    onTimeUpdate: (e: SyntheticEvent<HTMLVideoElement>) =>
+      setProgress(e.currentTarget.currentTime / (e.currentTarget.duration || 1)),
+  };
+  return { videoRef, playing, progress, toggle, mediaEvents };
+}
+
 /** The one video player: the recording on night in the brand corner, a round teal play button
  *  straddling its bottom edge, centred (the caller leaves 2.5rem below for its lower half), and a
  *  progress line. Click the picture or the button to play or pause; playing, the button stays as
@@ -457,33 +487,19 @@ export function VideoPlayer({
   className?: string;
 }) {
   const printMode = usePrintMode();
-  const ref = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const toggle = () => {
-    const v = ref.current;
-    if (!v) return;
-    if (v.paused) void v.play();
-    else v.pause();
-  };
+  const { videoRef, playing, progress, toggle, mediaEvents } = useVideoPlayback();
   return (
     <div className={`relative ${className}`.trim()}>
       <div className="relative isolate overflow-hidden rounded-brand bg-night ring ring-border">
         <video
-          ref={ref}
+          ref={videoRef}
           src={src}
           poster={poster}
           aria-label={alt}
           muted
           playsInline
           preload={printMode ? "auto" : "metadata"}
-          onClick={toggle}
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onEnded={() => setPlaying(false)}
-          onTimeUpdate={(e) =>
-            setProgress(e.currentTarget.currentTime / (e.currentTarget.duration || 1))
-          }
+          {...mediaEvents}
           className={`block cursor-pointer ${className}`.trim()}
         />
         {progress > 0 && (
@@ -524,6 +540,82 @@ export function SideHighlight({ text, muted = false }: { text?: string; muted?: 
   );
 }
 
+type SideContent = Pick<ComparisonSide, "label" | "items" | "highlight">;
+
+function BeforeSideCard({
+  side,
+  strike,
+  revealed,
+}: {
+  side: SideContent;
+  strike: boolean;
+  revealed: boolean;
+}) {
+  const struck = revealed && strike;
+
+  return (
+    <div
+      className={`rounded-brand border p-8 transition-all duration-500 ${
+        struck ? "border-border bg-text-subtle/7" : "border-border bg-white"
+      }`}
+    >
+      <div className="mb-6 flex items-center gap-3">
+        {strike && <XCircle className="h-6 w-6 text-text-subtle" />}
+        <h2 className="card-title text-2xl text-text-muted">{side.label}</h2>
+      </div>
+      <SideHighlight text={side.highlight} muted />
+      <ul className="space-y-3">
+        {side.items.map((item, i) => (
+          <li
+            key={i}
+            className={`text-xl transition-all duration-300 ${
+              struck
+                ? "text-text-muted line-through decoration-text-subtle/70 decoration-2"
+                : "text-text"
+            }`}
+          >
+            {renderMarkdown(item)}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function AfterSideCard({
+  side,
+  revealed,
+  adds,
+}: {
+  side: SideContent;
+  revealed: boolean;
+  adds: boolean;
+}) {
+  return (
+    <SlideCard
+      inert={!revealed}
+      tone="primary"
+      look="soft"
+      className={`transition-all duration-500 card-pad-8 ${
+        revealed ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      }`}
+    >
+      <div className="mb-6 flex items-center gap-3">
+        {!adds && <CheckCircle className="h-6 w-6 text-primary" />}
+        <h2 className="card-title text-2xl text-primary">{side.label}</h2>
+      </div>
+      <SideHighlight text={side.highlight} />
+      <ul className="space-y-3">
+        {side.items.map((item, i) => (
+          <li key={i} className="text-xl text-text">
+            {renderMarkdown(item)}
+          </li>
+        ))}
+      </ul>
+    </SlideCard>
+  );
+}
+
 /** The before and the after side by side, the after shown once `after` is set. With `strike`
  *  (the default) the before side is crossed out, then struck through and greyed once the after
  *  shows; without it, it stays as plain text on a white card, for a before that stays. The
@@ -535,40 +627,15 @@ export function BeforeAfterSides({
   strike = true,
   adds = false,
 }: {
-  left: Pick<ComparisonSide, "label" | "items" | "highlight">;
-  right: Pick<ComparisonSide, "label" | "items" | "highlight">;
+  left: SideContent;
+  right: SideContent;
   after: boolean;
   strike?: boolean;
   adds?: boolean;
 }) {
-  const struck = after && strike;
   return (
     <div className="grid w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-stretch gap-6">
-      <div
-        className={`rounded-brand border p-8 transition-all duration-500 ${
-          struck ? "border-border bg-text-subtle/7" : "border-border bg-white"
-        }`}
-      >
-        <div className="mb-6 flex items-center gap-3">
-          {strike && <XCircle className="h-6 w-6 text-text-subtle" />}
-          <h2 className="card-title text-2xl text-text-muted">{left.label}</h2>
-        </div>
-        <SideHighlight text={left.highlight} muted />
-        <ul className="space-y-3">
-          {left.items.map((item, i) => (
-            <li
-              key={i}
-              className={`text-xl transition-all duration-300 ${
-                struck
-                  ? "text-text-muted line-through decoration-text-subtle/70 decoration-2"
-                  : "text-text"
-              }`}
-            >
-              {renderMarkdown(item)}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <BeforeSideCard side={left} strike={strike} revealed={after} />
 
       <div
         inert={!after}
@@ -581,27 +648,7 @@ export function BeforeAfterSides({
         )}
       </div>
 
-      <SlideCard
-        inert={!after}
-        tone="primary"
-        look="soft"
-        className={`transition-all duration-500 card-pad-8 ${
-          after ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-        }`}
-      >
-        <div className="mb-6 flex items-center gap-3">
-          {!adds && <CheckCircle className="h-6 w-6 text-primary" />}
-          <h2 className="card-title text-2xl text-primary">{right.label}</h2>
-        </div>
-        <SideHighlight text={right.highlight} />
-        <ul className="space-y-3">
-          {right.items.map((item, i) => (
-            <li key={i} className="text-xl text-text">
-              {renderMarkdown(item)}
-            </li>
-          ))}
-        </ul>
-      </SlideCard>
+      <AfterSideCard side={right} revealed={after} adds={adds} />
     </div>
   );
 }
