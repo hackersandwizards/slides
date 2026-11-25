@@ -21,6 +21,12 @@ const KEPT = [
 export async function embedFonts(zip: JSZip): Promise<void> {
   const { Font, woff2 } = await import("fonteditor-core");
   await woff2.init();
+  const used = await usedCodePoints(zip);
+  await registerFonts(zip, (mono, bold) => eotFace(Font, faceFiles(mono, bold), used));
+}
+
+/** The Latin ranges and code points in a deck's slide text and chart values. */
+export async function usedCodePoints(zip: JSZip): Promise<Set<number>> {
   const used = new Set(KEPT);
   for (const name of Object.keys(zip.files).filter((f) =>
     /^ppt\/(slides|charts)\/.+\.xml$/.test(f),
@@ -31,27 +37,39 @@ export async function embedFonts(zip: JSZip): Promise<void> {
     ))
       for (const ch of unescape(t))
         for (const cp of [ch, ch.toUpperCase()]) used.add(cp.codePointAt(0)!);
+  return used;
+}
 
+/** Subsets and merges the files of one face and weight into an EOT part. */
+export function eotFace(
+  Font: typeof import("fonteditor-core").Font,
+  files: string[],
+  used: ReadonlySet<number>,
+): Buffer {
   // One EOT per face and weight: brand's unicode-range subsets of the weight merged, each code
   // point from the first subset holding it, as the browser picks it.
-  const eot = (mono: boolean, bold: boolean) => {
-    const files = faceFiles(mono, bold).map((f) => readFileSync(f));
-    const left = new Set(used);
-    let font: InstanceType<typeof Font> | undefined;
-    for (const buf of files) {
-      const cmap = Font.create(buf, { type: "woff2" }).get().cmap as Record<string, number>;
-      const mine = [...left].filter((cp) => cp in cmap);
-      if (!mine.length) continue;
-      mine.forEach((cp) => left.delete(cp));
-      // Without hinting the subset drops GPOS too, whose glyph ids the subset would break; the
-      // brand's static faces carry no hinting programs beyond prep.
-      const part = Font.create(buf, { type: "woff2", subset: mine });
-      if (font) font.merge(part, { scale: 1 });
-      else font = part;
-    }
-    return eotOf(font!.write({ type: "ttf", toBuffer: true }) as Buffer);
-  };
+  const buffers = files.map((f) => readFileSync(f));
+  const left = new Set(used);
+  let font: InstanceType<typeof Font> | undefined;
+  for (const buf of buffers) {
+    const cmap = Font.create(buf, { type: "woff2" }).get().cmap as Record<string, number>;
+    const mine = [...left].filter((cp) => cp in cmap);
+    if (!mine.length) continue;
+    mine.forEach((cp) => left.delete(cp));
+    // Without hinting the subset drops GPOS too, whose glyph ids the subset would break; the
+    // brand's static faces carry no hinting programs beyond prep.
+    const part = Font.create(buf, { type: "woff2", subset: mine });
+    if (font) font.merge(part, { scale: 1 });
+    else font = part;
+  }
+  return eotOf(font!.write({ type: "ttf", toBuffer: true }) as Buffer);
+}
 
+/** Writes the face parts and registers their relationships in the presentation package. */
+export async function registerFonts(
+  zip: JSZip,
+  fontFor: (mono: boolean, bold: boolean) => Buffer,
+): Promise<void> {
   const rels = await zip.file("ppt/_rels/presentation.xml.rels")!.async("string");
   let rid = Math.max(...[...rels.matchAll(/Id="rId(\d+)"/g)].map((m) => Number(m[1]))) + 1;
   const entries: string[] = [];
@@ -63,7 +81,7 @@ export async function embedFonts(zip: JSZip): Promise<void> {
     const slots: string[] = [];
     for (const bold of [false, true]) {
       const part = `font${rid}.fntdata`;
-      zip.file(`ppt/fonts/${part}`, eot(mono, bold));
+      zip.file(`ppt/fonts/${part}`, fontFor(mono, bold));
       links.push(
         `<Relationship Id="rId${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/font" Target="fonts/${part}"/>`,
       );
