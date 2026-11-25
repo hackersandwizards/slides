@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import { NARROW, directionKey, ignoredKey, writeStored } from "./slide-utils";
+import { NARROW } from "./stage-fit";
+import { directionKey } from "./slide-arrival";
+import { ignoredKey } from "./slide-input";
+import { writeStored } from "./browser-storage";
 import { usePrintMode } from "./print-context";
 import { useHydratedRevealArrival } from "./use-hydrated-reveal-arrival";
 import { deckSync } from "./presenter-sync";

@@ -5,7 +5,7 @@ import type { Slide } from "../types/slide";
 import { wholeText } from "./fixtures/whole-text";
 import { teamTopologySlide } from "./fixtures/team-topology";
 import { DeckLang } from "../components/slides/SlideShell";
-import { WORDS } from "../lib/slide-utils";
+import { WORDS } from "../lib/slide-words";
 
 describe("TeamTopologySlide", () => {
   it("renders every team of all four types with its chips from the registry", () => {

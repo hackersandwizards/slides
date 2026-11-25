@@ -4,7 +4,7 @@ import type { RegularSlide as RegularSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import User from "lucide-react/icons/user";
-import { regularAsContent } from "../../lib/slide-utils";
+import { regularAsContent } from "../../lib/regular-sections";
 import { AgendaSlide } from "./AgendaSlide";
 import { LinkCaption, Portrait, SlideTitle, TitledContent } from "./primitives";
 import { ContentSlide } from "./ContentSlide";

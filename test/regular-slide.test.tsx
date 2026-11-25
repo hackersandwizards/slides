@@ -1,7 +1,8 @@
 import { act, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
-import { profileLabel, regularAsContent } from "../lib/slide-utils";
+import { regularAsContent } from "../lib/regular-sections";
+import { profileLabel } from "../lib/link-labels";
 import type { RegularSlide, Slide } from "../types/slide";
 
 describe("regular slide", () => {

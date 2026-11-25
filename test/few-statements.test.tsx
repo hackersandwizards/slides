@@ -1,7 +1,8 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { PrintDeck } from "../components/slides/PrintSlide";
-import { bulletsAsStatement, replacedBy } from "../lib/slide-utils";
+import { bulletsAsStatement } from "../lib/content-redraw";
+import { replacedBy } from "../lib/slide-utils";
 import type { ContentSlide } from "../types/slide";
 
 const few = (items: (string | { text: string; children: string[] })[]): ContentSlide => ({

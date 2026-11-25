@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { FlowFrame, VisualBlock } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { renderMarkdown } from "../../lib/markdown";
-import { LONG_FLOW } from "../../lib/slide-utils";
+import { LONG_FLOW } from "../../lib/process-layout";
 import { DashedFrame, NumberTile } from "./primitives";
 import { Annotated, AnnotatedCode } from "./AnnotatedVisual";
 import { Bars } from "./BarsVisual";

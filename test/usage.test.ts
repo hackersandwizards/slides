@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GUIDANCE } from "../catalog/guidance";
 import { readUsage } from "../catalog/usage";
-import { twoColumnAsSplit } from "../lib/slide-utils";
+import { twoColumnAsSplit } from "../lib/content-redraw";
 import { entriesOf, ignoredFields } from "../scripts/usage";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";

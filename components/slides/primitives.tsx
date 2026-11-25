@@ -16,7 +16,7 @@ import Pause from "lucide-react/icons/pause";
 import Play from "lucide-react/icons/play";
 import { usePrintMode } from "../../lib/print-context";
 import { DEFAULT_SECTION_STYLE } from "../../lib/section-styles";
-import { linkLabel, profileLabel } from "../../lib/slide-utils";
+import { linkLabel, profileLabel } from "../../lib/link-labels";
 import { BlurFade } from "../ui/blur-fade";
 import Image from "../ui/image";
 import { Linkedin } from "../../lib/icons";

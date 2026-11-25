@@ -302,7 +302,7 @@ export interface ContentSlide extends Grounded {
   headline: string;
   subtitle?: string;
   /** `centered` renders as a statement slide where its blocks fit one (`centeredAsStatement` in
-   *  `lib/slide-utils.ts`): the section label as its kicker, up to two paragraphs or a paragraph
+   *  `lib/content-redraw.ts`): the section label as its kicker, up to two paragraphs or a paragraph
    *  and a callout as subtitle and closing, one linked image. */
   layout?: "default" | "centered";
   content: ContentBlock[];
@@ -327,7 +327,7 @@ export interface ProfileInfo {
   linkedIn?: string;
 }
 
-/** Renders through the content blocks (`regularAsContent` in `lib/slide-utils.ts`): two titled
+/** Renders through the content blocks (`regularAsContent` in `lib/regular-sections.ts`): two titled
  *  sections as a two-column block, three and more as cards, an untitled last section as the
  *  callout, the cards layout as an agenda. With a `profile` it keeps its own drawing. */
 export interface RegularSlide {
@@ -381,7 +381,7 @@ export interface EvolutionStage {
 
 /** @deprecated A `process` slide with `loop: false`, which draws it the same way: `multiplier`
  *  is a node's `label`, `isDimmed` its `dimmed`, `isHighlighted` names `highlightPhase`. The
- *  engine still renders it, through `evolutionAsProcess` in `lib/slide-utils.ts`. */
+ *  engine still renders it, through `evolutionAsProcess` in `lib/slide-aliases.ts`. */
 export interface EvolutionSlide extends Grounded {
   type: "evolution";
   sectionLabel?: string;
@@ -412,7 +412,7 @@ interface GridBase extends Grounded {
 }
 
 /** `pillars` (the default) and `stats` are deprecated: the engine draws them as a content slide
- *  with a `cards` or `numbers` block, through `gridAsContent` in `lib/slide-utils.ts`; `quotes`
+ *  with a `cards` or `numbers` block, through `gridAsContent` in `lib/slide-aliases.ts`; `quotes`
  *  stays. Figures (`stats`) stand in a row of up to four and wrap, so they take no `columns`. */
 export type GridSlide =
   | (GridBase & {
@@ -495,7 +495,7 @@ export interface GuidanceExample {
 }
 
 /** @deprecated A `comparison` slide with `variant: "guidance"`, which draws it. The engine still
- *  renders it, through `guidanceAsComparison` in `lib/slide-utils.ts`. */
+ *  renders it, through `guidanceAsComparison` in `lib/slide-aliases.ts`. */
 export interface GuidanceSlide {
   type: "guidance";
   headline?: string;
@@ -516,7 +516,7 @@ export interface GalleryItem {
 }
 
 /** @deprecated A `content` slide with an `image`, `video` or `gallery` block, which draws it
- *  (`mediaAsContent` in `lib/slide-utils.ts`). */
+ *  (`mediaAsContent` in `lib/gallery-media.ts`). */
 export interface MediaSlide {
   type: "media";
   sectionLabel?: string;
@@ -566,7 +566,7 @@ export interface PhasedPillsSlide {
 }
 
 /** @deprecated A `phased-pills` slide, which draws it (`overviewAsPhases` in
- *  `lib/slide-utils.ts`): foundations and pipeline as two phases, a `new` stage as the active
+ *  `lib/slide-aliases.ts`): foundations and pipeline as two phases, a `new` stage as the active
  *  pill, and `active` stages and the frames' `foundationsActive` and `pipelineActive` draw plain.
  *  The stage descriptions, the lanes and the external ideate stage go. */
 export interface OverviewSlide {
@@ -743,7 +743,7 @@ export interface RoadmapSlide {
 }
 
 /** @deprecated A `transition` slide with `night: true`, which draws it (`deepDiveAsTransition` in
- *  `lib/slide-utils.ts`): `partLabel` and `kicker`, joined by " · ", are its `preText`. */
+ *  `lib/slide-aliases.ts`): `partLabel` and `kicker`, joined by " · ", are its `preText`. */
 export interface DeepDiveDividerSlide {
   type: "deep-dive-divider";
   partLabel?: string;
@@ -754,7 +754,7 @@ export interface DeepDiveDividerSlide {
 
 /** @deprecated A `roadmap` slide whose columns carry `phases`, which draws it the same way:
  *  `left` and `right` are its two `columns`. The engine still renders it, through
- *  `dualPillAsRoadmap` in `lib/slide-utils.ts`. */
+ *  `dualPillAsRoadmap` in `lib/slide-aliases.ts`. */
 export interface DualPillOverviewSlide {
   type: "dual-pill-overview";
   preText?: string;

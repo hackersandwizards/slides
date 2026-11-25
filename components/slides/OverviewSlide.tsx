@@ -1,7 +1,7 @@
 "use client";
 
 import type { OverviewSlide as OverviewSlideType } from "../../types/slide";
-import { overviewAsPhases } from "../../lib/slide-utils";
+import { overviewAsPhases } from "../../lib/slide-aliases";
 import { PhasedPillsSlide } from "./PhasedPillsSlide";
 
 /** @deprecated Renders as the phased-pills slide that replaces it (`overviewAsPhases`). */

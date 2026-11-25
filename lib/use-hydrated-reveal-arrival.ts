@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { opensRevealed } from "./slide-utils";
+import { opensRevealed } from "./slide-arrival";
 import { useMounted } from "./use-mounted";
 
 export function useHydratedRevealArrival(enabled: boolean) {

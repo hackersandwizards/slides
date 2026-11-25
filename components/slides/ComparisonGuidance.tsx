@@ -5,7 +5,7 @@ import type { ComparisonGuidanceSlide, GuidanceExample } from "../../types/slide
 import { usePrintMode } from "../../lib/print-context";
 import { useCarousel } from "../../lib/use-carousel";
 import { usePhone } from "../../lib/use-progressive-reveal";
-import { WORDS } from "../../lib/slide-utils";
+import { WORDS } from "../../lib/slide-words";
 import { BlurFade } from "../ui/blur-fade";
 import { DeckLang } from "./SlideShell";
 import { SlideCard } from "./primitives";

@@ -1,13 +1,13 @@
+import { contentRedrawnAs } from "../../lib/content-redraw";
 import {
-  contentRedrawnAs,
   deepDiveAsTransition,
   dualPillAsRoadmap,
   evolutionAsProcess,
   gridAsContent,
-  mediaAsContent,
   overviewAsPhases,
-  regularAsContent,
-} from "../../lib/slide-utils";
+} from "../../lib/slide-aliases";
+import { mediaAsContent } from "../../lib/gallery-media";
+import { regularAsContent } from "../../lib/regular-sections";
 import type { ComparisonSlide, GridSlide, Slide } from "../../types/slide";
 
 // Pillars and stats are a content slide's cards or numbers, as on the web (`gridAsContent`).

@@ -5,15 +5,10 @@ import { rejection } from "@hackersandwizards/scaffolding/rejection";
 import { assert, beforeAll, describe, expect, it } from "vitest";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
-import {
-  contentRedrawnAs,
-  dualPillAsRoadmap,
-  evolutionAsProcess,
-  gridAsContent,
-  regularAsContent,
-  WORDS,
-  twoColumnAsSplit,
-} from "../lib/slide-utils";
+import { contentRedrawnAs, twoColumnAsSplit } from "../lib/content-redraw";
+import { dualPillAsRoadmap, evolutionAsProcess, gridAsContent } from "../lib/slide-aliases";
+import { regularAsContent } from "../lib/regular-sections";
+import { WORDS } from "../lib/slide-words";
 import {
   norm,
   onlySlide,

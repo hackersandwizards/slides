@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePrintMode } from "./print-context";
-import { opensRevealed } from "./slide-utils";
+import { opensRevealed } from "./slide-arrival";
 import { useMounted } from "./use-mounted";
 
 /** Whether a plot shows at once rather than growing: on a printed slide, on the slide a page load

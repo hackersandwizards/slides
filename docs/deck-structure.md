@@ -36,7 +36,7 @@ for what the pictures share. `deprecated` beside it lists every prop and value a
 should no longer write, so a consumer's story coverage can skip them.
 A chapter divider is a `transition`; one with `night: true` opens a deep-dive part only. Every slide
 of a deep-dive part, its night `transition`, a slide whose `sectionTheme` is `deepdive` and a pill map
-whose phases are, stands on night (`isDeepDive` in `lib/slide-utils`); nothing else marks the part.
+whose phases are, stands on night (`isDeepDive` in `lib/slide-framing`); nothing else marks the part.
 
 A concept slide whose words claim a mechanism or a relationship in up to four short cards, and
 which has no diagram of the engine, may carry a generated marker sketch beside them: the

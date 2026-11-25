@@ -1,4 +1,4 @@
-import { slideFrame } from "../lib/slide-utils";
+import { slideFrame } from "../lib/slide-framing";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
 import slidesCss from "../styles/slides.css?url";

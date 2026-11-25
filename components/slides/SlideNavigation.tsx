@@ -18,12 +18,11 @@ import { usePendingReveal } from "../../lib/use-progressive-reveal";
 import { arrowEvent, deckSync, ROLE_NAMES, type ArrowKey } from "../../lib/presenter-sync";
 import {
   arrivedBackwards as readArrivedBackwards,
-  dialogOpen,
   directionKey,
-  ignoredKey,
   revealedUrl,
-  writeStored,
-} from "../../lib/slide-utils";
+} from "../../lib/slide-arrival";
+import { dialogOpen, ignoredKey } from "../../lib/slide-input";
+import { writeStored } from "../../lib/browser-storage";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 
 // The preview of the next slide in the speaker window shows where the slide ends up, not how it

@@ -18,7 +18,7 @@ import {
 import { FrameTitle, PulseDot } from "./SlideChrome";
 import { SlideShell } from "./SlideShell";
 import { DashedFrame } from "./primitives";
-import { isDeepDive } from "../../lib/slide-utils";
+import { isDeepDive } from "../../lib/slide-framing";
 
 interface Props {
   slide: PhasedPillsSlideType;

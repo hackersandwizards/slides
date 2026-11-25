@@ -85,7 +85,7 @@ print page is not yet explained. In a background tab the tile's frame drew no pl
 even the bar groups; why is not measured.
 
 Fix: a plot on a slide opening revealed draws at once, as on a printed slide and on the slide a
-page load opens on (`usePlot` in `components/slides/ChartSlide.tsx`, which `DrawIn` reads too).
+page load opens on (`useChartPlotMotion` in `lib/use-chart-plot-motion.ts`, which `DrawIn` reads too).
 Revealed is `?revealed`, which every catalogue tile and story page carries, or a slide reached
 backwards, as for every other build step. Measured on the v2.21.3 build: the bar tile in a background tab draws its bars within 1 s. In
 the deck view story the bar slide grows when reached forward, twice, and shows at once when reached

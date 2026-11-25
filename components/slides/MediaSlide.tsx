@@ -1,7 +1,7 @@
 "use client";
 
 import type { MediaSlide as MediaSlideType } from "../../types/slide";
-import { mediaAsContent } from "../../lib/slide-utils";
+import { mediaAsContent } from "../../lib/gallery-media";
 import { ContentSlide } from "./ContentSlide";
 
 /** @deprecated Renders as the content slide that replaces it (`mediaAsContent`): an image, video

@@ -2,7 +2,8 @@
 
 import { useSyncExternalStore } from "react";
 import { deckSync } from "./presenter-sync";
-import { directionKey, writeStored } from "./slide-utils";
+import { directionKey } from "./slide-arrival";
+import { writeStored } from "./browser-storage";
 
 // Moving within the one island loads no document, so a fast run of presses lands where the presses
 // say; the direction written before navigating lets `opensRevealed` open a backward arrival revealed.

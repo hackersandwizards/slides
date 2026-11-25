@@ -1,195 +1,14 @@
-// Named, never the default: the whole file would bundle verbal.json's retired lines, which brand-retired fails on.
-import { claim, name } from "@hackersandwizards/brand/verbal.json";
-import { cornerMark, resolveSlideLogo } from "./logo";
-import { hasMarkdown } from "./markdown";
+import { bulletsAsStatement, centeredAsStatement, twoColumnAsSplit } from "./content-redraw";
+import { mediaAsContent } from "./gallery-media";
+import { regularAsContent } from "./regular-sections";
 import type {
-  AgendaSlide,
   ClosingSlide,
-  ContentSection,
-  ComparisonGuidanceSlide,
-  ComparisonSidesSlide,
   ContentBlock,
   ContentSlide,
-  DeepDiveDividerSlide,
-  DualPillOverviewSlide,
-  EvolutionSlide,
-  GridSlide,
-  GalleryItem,
-  GuidanceSlide,
-  MediaSlide,
-  OverviewSlide,
-  TeamTopologySlide,
-  PhasedPillsSlide,
   Presentation,
-  ProcessSlide,
-  RegularSlide,
-  RoadmapSlide,
-  StatementSlide,
-  SectionTheme,
   Slide,
   TitleSlide,
-  TransitionSlide,
 } from "../types/slide";
-
-/** The sessionStorage key carrying the direction a navigation arrives from. Every frame of a tab
- *  shares that tab's sessionStorage, so a frame keeps a key of its own under its `window.name`: the
- *  speaker window's frames their role, any other frame, such as a catalog tile, a name given on
- *  first use, which holds across its reloads. An unnamed top window keeps the plain key. */
-export function directionKey(name = frameName()): string {
-  return name ? `slide-direction:${name}` : "slide-direction";
-}
-
-function frameName(): string {
-  if (typeof window === "undefined") return "";
-  if (window !== window.parent) window.name ||= `tile-${Math.random().toString(36).slice(2)}`;
-  return window.name;
-}
-
-/** Whether this slide was reached backwards, which `presenter-sync` tells the deck's other windows.
- *  Safe in a render-phase state initializer, since it writes nothing but a frame's stable name:
- *  `SlideNavigation` consumes the key after mount, once every hook on the slide has read it. */
-export function arrivedBackwards(): boolean {
-  return typeof window !== "undefined" && readStored("session", directionKey()) === "back";
-}
-
-/** Whether the URL carries `?revealed`, which docs/setup.md documents for catalogs and checks: the
- *  slide opens full and shows no presenter hints. The deck's other windows are not told. */
-export function revealedUrl(): boolean {
-  return typeof window !== "undefined" && new URLSearchParams(location.search).has("revealed");
-}
-
-/** Below `md` a slide is one column the reader scrolls (slides.css): nothing shrinks to fit, and
- *  nothing waits for a presenter's step. */
-export const NARROW = "screen and (width < 48rem)";
-
-/** The inline properties SlideShell's fit guard sets on the box it shrinks and clears on a refit;
- *  `slides-density` clears them to lay the box out at full size. No slide type sets them inline. */
-export const FIT_STYLE = [
-  "zoom",
-  "--hw-zoom",
-  "width",
-  "height",
-  "padding-top",
-  "margin-inline",
-] as const;
-
-/** Whether this slide opens with every build step shown: reached backwards, or on `?revealed`. */
-export function opensRevealed(): boolean {
-  return arrivedBackwards() || revealedUrl();
-}
-
-/** Whether a dialog holds the input; a modal one makes the deck behind it inert to all but keys
- *  and touches, which reach the window's listeners. */
-export const dialogOpen = () => document.querySelector("dialog[open]") !== null;
-
-/** A key the deck leaves alone. One held with Cmd, Ctrl or Alt belongs to the browser or the
- *  system: Cmd+Left goes back in history, so the deck stepping on it too would move two places.
- *  One pressed on the page while the dev-only edit mode (`deck-edit-mode.tsx`) is on is ignored,
- *  so typing after a click that opened no field changes nothing; one pressed under an open dialog
- *  is too. A press the engine dispatches itself, from a touch button or replayed from another
- *  window, still counts there. */
-export function ignoredKey(event: KeyboardEvent): boolean {
-  return (
-    event.metaKey ||
-    event.ctrlKey ||
-    event.altKey ||
-    (event.isTrusted && ("deckEdit" in document.documentElement.dataset || dialogOpen()))
-  );
-}
-
-/** Storage can be blocked, and then even naming it throws, so callers look it up inside a try.
- *  Without a window or with blocked storage, reads return null and writes do nothing.
- *  A full store also leaves writes as no-ops. */
-function store(kind: "local" | "session"): Storage | null {
-  if (typeof window === "undefined") return null;
-  return kind === "local" ? localStorage : sessionStorage;
-}
-
-const isStorageError = (error: unknown, name: string) =>
-  error instanceof DOMException && error.name === name;
-
-export function readStored(kind: "local" | "session", key: string): string | null {
-  try {
-    const storage = store(kind);
-    return storage === null ? null : storage.getItem(key);
-  } catch (error) {
-    if (isStorageError(error, "SecurityError")) return null;
-    throw error;
-  }
-}
-
-/** A stored value that does not parse as JSON counts as absent. */
-export function parseStoredJson(value: string | null): unknown {
-  if (value === null) return null;
-  try {
-    return JSON.parse(value);
-  } catch (error) {
-    if (error instanceof SyntaxError) return null;
-    throw error;
-  }
-}
-
-export function writeStored(kind: "local" | "session", key: string, value: string | null) {
-  try {
-    const storage = store(kind);
-    if (storage === null) return;
-    if (value === null) storage.removeItem(key);
-    else storage.setItem(key, value);
-  } catch (error) {
-    if (isStorageError(error, "SecurityError") || isStorageError(error, "QuotaExceededError"))
-      return;
-    throw error;
-  }
-}
-
-/** The corner counter, "05 / 24", on every slide but a title slide, which carries none. */
-export function pageLabel(slides: ReadonlyArray<{ type: string }>, index: number) {
-  if (slides[index]?.type === "title") return undefined;
-  const width = Math.max(2, String(slides.length).length);
-  const pad = (n: number) => String(n).padStart(width, "0");
-  return `${pad(index + 1)} / ${pad(slides.length)}`;
-}
-
-/** The accent of the nth person on a slide, by position and never by who it is: teal first, then
- *  purple, alternating, in the order of the logo ("hackers" teal, "wizards" purple). */
-export function personAccent(index: number): "primary" | "secondary" {
-  return index % 2 === 0 ? "primary" : "secondary";
-}
-
-/** A slide of a deep-dive part stands on night, the brand's ground for a whole section (os design
- *  guide), so the part reads as one from the back row, where its label alone would not mark it: the
- *  deep-dive divider, a night transition, a slide whose `sectionTheme` is `deepdive` and a pill map
- *  whose phases are. */
-export function isDeepDive(slide: {
-  type: string;
-  night?: boolean;
-  sectionTheme?: SectionTheme;
-  phases?: { theme?: SectionTheme }[];
-}): boolean {
-  return (
-    slide.type === "deep-dive-divider" ||
-    (slide.type === "transition" && !!slide.night) ||
-    slide.sectionTheme === "deepdive" ||
-    (slide.phases?.some((p) => p.theme === "deepdive") ?? false)
-  );
-}
-
-/** Whether a title slide carries a talk's opening, which TitleSlide draws left-aligned. */
-export function isOpening(slide: TitleSlide): boolean {
-  return !!(slide.kicker || slide.name || slide.speakers?.length || slide.event || slide.qr);
-}
-
-/** A deck page and a catalog story frame a slide alike. */
-export function slideFrame(deck: Presentation, index: number) {
-  return {
-    logo: resolveSlideLogo(deck, index),
-    theme: deck.theme,
-    confidential: deck.confidential,
-    page: pageLabel(deck.slides, index),
-    mark: cornerMark(deck, index),
-    lang: deckLang(deck),
-  };
-}
 
 const unnamedLang = new WeakSet<Presentation>();
 
@@ -217,506 +36,78 @@ export function deckLang(deck: Presentation): "en" | "de" {
 /** A deck page's document title, the deck's name and the slide's number. */
 export const slideTitle = (deck: Presentation, index: number) => `${deck.name} - ${index + 1}`;
 
-/** A title slide's speakers in one line, in the slide's `lang`, else the deck's ("A and B",
- *  "A und B"). */
-export function speakerLine(slide: TitleSlide, deckLang: "en" | "de"): string {
-  return new Intl.ListFormat(slide.lang ?? deckLang, { type: "conjunction" }).format(
-    slide.speakers ?? [],
-  );
-}
-
-/** A figure the engine prints from a number: exact to two decimals, ungrouped. */
-const FIGURE = { maximumFractionDigits: 2, useGrouping: false } as const;
-
-/** The words the engine prints itself, in the deck's language. */
-export const WORDS = {
-  en: {
-    here: "We are here",
-    bad: "Bad",
-    good: "Good",
-    planned: "planned",
-    discussion: "Discussion",
-    printView: "Print view",
-    milestones: "Milestones",
-    slides: (n: number) => (n === 1 ? "1 slide" : `${n} slides`),
-    figure: (n: number) => n.toLocaleString("en", FIGURE),
-    // Team Topologies' own terms, which German decks keep but for the platform team.
-    teams: {
-      enabling: "Enabling team",
-      stream: "Stream-aligned team",
-      subsystem: "Complicated-subsystem team",
-      platform: "Platform team",
-    },
-  },
-  de: {
-    here: "Wir sind hier",
-    bad: "Schlecht",
-    good: "Gut",
-    planned: "geplant",
-    discussion: "Diskussion",
-    printView: "Druckansicht",
-    milestones: "Meilensteine",
-    slides: (n: number) => (n === 1 ? "1 Folie" : `${n} Folien`),
-    figure: (n: number) => n.toLocaleString("de", FIGURE),
-    teams: {
-      enabling: "Enabling Team",
-      stream: "Stream-aligned Team",
-      subsystem: "Complicated-Subsystem-Team",
-      platform: "Plattform-Team",
-    },
-  },
-} as const;
-
-/** The types of team a team-topology slide draws, in the order drawn: its legend's rows. */
-export const teamTypesDrawn = (slide: TeamTopologySlide) =>
-  (
-    [
-      ["enabling", slide.enabling],
-      ["stream", slide.streamAligned],
-      ["subsystem", slide.complicatedSubsystem ?? []],
-      ["platform", slide.platform],
-    ] as const
-  )
-    .filter(([, teams]) => teams.length > 0)
-    .map(([type]) => type);
-
-/** Companies a contact closing shows as a logo, so their name is not printed a second time under
- *  the speaker. */
-export const companiesWithLogo = (slide: ClosingSlide) =>
-  new Set([
-    name.company.toLowerCase(),
-    ...(slide.partners ?? []).map((p) => p.company.toLowerCase()),
-  ]);
-
-/** The alt text of a slide's QR code, in the deck's language. */
-export function qrAlt(href: string, lang?: TitleSlide["lang"]): string {
-  return `${lang === "de" ? "QR-Code" : "QR code"}: ${linkLabel(href)}`;
-}
-
-/** A link as a slide spells it out under a linked image, where a projected or printed slide hides
- *  the link itself: without its scheme, `www.` and a closing slash. */
-export function linkLabel(href: string): string {
-  return href.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
-}
-
-/** A LinkedIn profile as a slide spells it out, short enough for one line: `in/name`. */
-export function profileLabel(href: string): string {
-  return linkLabel(href.replace(/[?#].*$/, "")).replace(/^([a-z]{2,3}\.)?linkedin\.com\//, "");
-}
-
-/** An `evolution` slide as the `process` slide with `loop: false` that replaces it. */
-export function evolutionAsProcess({ stages, ...slide }: EvolutionSlide): ProcessSlide {
-  return {
-    type: "process",
-    sectionLabel: slide.sectionLabel,
-    ground: slide.ground,
-    background: slide.background,
-    headline: slide.headline,
-    footer: slide.footer,
-    static: slide.static,
-    loop: false,
-    highlightPhase: stages.find((s) => s.isHighlighted)?.title,
-    nodes: stages.map((s) => ({
-      title: s.title,
-      description: s.description,
-      label: s.multiplier,
-      subtitle: s.subtitle || undefined,
-      badge: s.badge,
-      dimmed: s.isDimmed,
-    })),
-  };
-}
-
-/** A `dual-pill-overview` slide as the `roadmap` slide with phased columns that replaces it. */
-export function dualPillAsRoadmap({ left, right, ...slide }: DualPillOverviewSlide): RoadmapSlide {
-  return {
-    type: "roadmap",
-    preText: slide.preText,
-    headline: slide.headline,
-    subtitle: slide.subtitle,
-    columns: [left, right],
-  };
-}
-
-type Block<T extends ContentBlock["type"]> = Extract<ContentBlock, { type: T }>;
-
-const indexOf = (i: number) => (i < 0 ? undefined : i);
-
-/** A `labeled-grid` block as the `cards` block that replaces it. */
-export function labeledGridAsCards(block: Block<"labeled-grid">): Block<"cards"> {
-  return {
-    type: "cards",
-    items: block.items.map((item) => ({ title: item.title, text: item.subtitle })),
-    highlight: indexOf(block.items.findIndex((item) => item.highlighted)),
-    columns: (block.columns ?? (block.items.length % 3 === 0 ? 3 : 2)) as 1 | 2 | 3 | 4,
-    reveal: block.reveal,
-    dense: true,
-  };
-}
-
-/** A `four-column` block as the `cards` block that replaces it, a list per card. */
-export function fourColumnAsCards(block: Block<"four-column">): Block<"cards"> {
-  return {
-    type: "cards",
-    items: block.columns.map((c) => ({ title: c.title, text: c.subtitle, items: c.items })),
-    columns: Math.min(Math.max(block.columns.length, 1), 4) as 1 | 2 | 3 | 4,
-    dense: true,
-  };
-}
-
-/** A `grid` slide with pillars or stats as the content slide that replaces it: pillars as a
- *  `cards` block, numbered where no card names an icon, stats as a `numbers` block. A card's
- *  colour (`tone`) goes: colour comes from the role. Quotes keep the grid. */
-export function gridAsContent({
-  cards,
-  ...slide
-}: Exclude<GridSlide, { variant: "quotes" }>): ContentSlide {
-  const block: ContentBlock =
-    slide.variant === "stats"
-      ? {
-          type: "numbers",
-          items: cards.map((c) => ({
-            value: c.value ?? "",
-            label: c.label ?? c.title,
-            text: c.description,
-          })),
-        }
-      : {
-          type: "cards",
-          items: cards.map((c) => ({ title: c.title, text: c.description, icon: c.icon })),
-          numbered: !cards.some((c) => c.icon),
-          numberFrom: slide.numberFrom,
-          highlight: indexOf(cards.findIndex((c) => c.highlight)),
-          columns: slide.columns ?? (cards.length === 4 ? 4 : undefined),
-          reveal: !slide.allActive,
-          dense: true,
-        };
-  return {
-    type: "content",
-    ground: slide.ground,
-    background: slide.background,
-    sectionLabel: slide.sectionLabel,
-    sectionTheme: slide.sectionTheme,
-    headline: slide.headline,
-    content: [block],
-  };
-}
-
-/** A content slide whose one block is a neutral `two-column` of two lists as the comparison's
- *  `split` that replaces it, its footer the punchline; undefined for any other content slide. */
-export function twoColumnAsSplit(slide: ContentSlide): ComparisonSidesSlide | undefined {
-  const [block, ...rest] = slide.content;
-  if (rest.length || block?.type !== "two-column" || (block.variant ?? "neutral") !== "neutral")
-    return;
-  if (slide.sectionLabel || slide.sectionTheme || slide.subtitle || slide.principle || slide.badge)
-    return;
-  if (slide.stageMarker || slide.stagePrefix) return;
-  if (slide.ground || slide.background || slide.layout === "centered") return;
-  // The comparison prints its headline and punchline as typed, as centeredAsStatement knows.
-  if ([slide.headline, slide.footer ?? ""].some(hasMarkdown)) return;
-  const side = ({ title, items, text }: typeof block.left) =>
-    title && items?.length && !text ? { label: title, items } : undefined;
-  const left = side(block.left);
-  const right = side(block.right);
-  if (!left || !right) return;
-  return {
-    type: "comparison",
-    variant: "split",
-    headline: slide.headline,
-    left,
-    right,
-    ...(slide.footer ? { punchline: slide.footer } : {}),
-  };
-}
-
-/** A `deep-dive-divider` as the night transition that replaces it. */
-export function deepDiveAsTransition({
-  partLabel,
-  kicker,
-  headline,
-  subtitle,
-  notes,
-}: DeepDiveDividerSlide & { notes?: string }): TransitionSlide & { notes?: string } {
-  const preText = [partLabel, kicker].filter(Boolean).join(" · ");
-  return {
-    type: "transition",
-    night: true,
-    headline,
-    ...(preText ? { preText } : {}),
-    ...(subtitle ? { subtitle } : {}),
-    ...(notes ? { notes } : {}),
-  };
-}
-
-/** A `guidance` slide as the comparison slide's `guidance` variant that replaces it. */
-export function guidanceAsComparison({
-  type: _,
-  ...slide
-}: GuidanceSlide): ComparisonGuidanceSlide {
-  return { ...slide, type: "comparison", variant: "guidance" };
-}
-
-/** A `pipeline` block as the `flow` block that replaces it, lit at its first `new` stage (the one
- *  in focus; `active` marked those covered before it), else its first `active` one. Its inner
- *  loops (`showLoops`) and stage logos are not drawn. */
-export function pipelineAsFlow(block: Block<"pipeline">): Block<"flow"> {
-  const fresh = block.stages.findIndex((s) => s.state === "new");
-  const lit = fresh < 0 ? block.stages.findIndex((s) => s.state === "active") : fresh;
-  const framed =
-    block.containerLabel ||
-    block.containerLogos?.length ||
-    block.containerSideNotes?.length ||
-    block.containerFooter;
-  return {
-    type: "flow",
-    steps: block.stages.map((s) => ({ title: s.title })),
-    highlight: indexOf(lit),
-    frame: framed
-      ? {
-          label: block.containerLabel,
-          logos: block.containerLogos,
-          notes: block.containerSideNotes,
-          footer: block.containerFooter,
-        }
-      : undefined,
-    dense: true,
-  };
-}
-
-/** A centered content slide as the statement slide that replaces it, or undefined where it is not
- *  centered or its blocks do not fit one: more than a subtitle and a closing of text, a block other than a
- *  paragraph, callout or linked image, a footer, markdown in the headline, or a deep-dive part. */
-export function centeredAsStatement(slide: ContentSlide): StatementSlide | undefined {
-  if (
-    slide.layout !== "centered" ||
-    slide.footer ||
-    slide.sectionTheme === "deepdive" ||
-    hasMarkdown(slide.headline)
-  )
-    return;
-  const texts: string[] = [];
-  let closing: string | undefined;
-  let linkedImage: StatementSlide["linkedImage"];
-  for (const block of slide.content) {
-    if (block.type === "paragraph") texts.push(block.text);
-    else if (block.type === "callout" && closing === undefined) closing = block.text;
-    else if (block.type === "linked-image" && !linkedImage)
-      linkedImage = { src: block.src, alt: block.alt, href: block.href };
-    else return;
-  }
-  const subtitle = slide.subtitle ?? texts.shift();
-  if (closing === undefined) closing = texts.pop();
-  if (texts.length) return;
-  return {
-    type: "statement",
-    ground: slide.ground,
-    background: slide.background,
-    kicker: slide.sectionLabel,
-    lines: [slide.headline],
-    subtitle,
-    closing,
-    linkedImage,
-  };
-}
-
-/** The other slide type a content slide draws as, on the web and in the export, or undefined
- *  where it draws as content. */
-export function contentRedrawnAs(slide: ContentSlide) {
-  return twoColumnAsSplit(slide) ?? centeredAsStatement(slide);
-}
-
-/** A content slide holding nothing but one or two short bullets as the statement that carries
- *  them, or undefined: as bullets they leave the slide empty around them. Short is one line at
- *  body size. */
-export function bulletsAsStatement(slide: ContentSlide): StatementSlide | undefined {
-  const [block, ...rest] = slide.content;
-  if (rest.length || block?.type !== "bullets" || block.ordered) return;
-  const { subtitle: sub, footer, badge, principle, stageMarker, sectionTheme, headline } = slide;
-  if (sub || footer || badge || principle || stageMarker || sectionTheme === "deepdive") return;
-  // A statement's lines print as typed, as centeredAsStatement knows.
-  if (hasMarkdown(headline)) return;
-  const items = block.items;
-  if (!items.length || items.length > 2) return;
-  if (!items.every((i) => typeof i === "string" && i.length <= 90)) return;
-  const [subtitle, closing] = items as string[];
-  return {
-    type: "statement",
-    ground: slide.ground,
-    background: slide.background,
-    kicker: slide.sectionLabel,
-    lines: [slide.headline],
-    subtitle,
-    closing,
-  };
-}
-
-/** A section's text with its link set as a markdown link after it. */
-const sectionText = (s: ContentSection) =>
-  [s.text, s.link && `[${s.link.label}](${s.link.url})`].filter(Boolean).join(" ") || undefined;
-
-/** A `regular` slide as the slide that replaces it, or undefined for one with a profile, which
- *  keeps its own drawing. The cards layout is an agenda; otherwise two titled sections become a
- *  two-column block, one a lead line over its list, three and more a cards block with a list per
- *  card; an untitled section is a list, a paragraph, or the closing
- *  callout where it comes last. */
-export function regularAsContent(slide: RegularSlide): ContentSlide | AgendaSlide | undefined {
-  if (slide.profile) return;
-  if (slide.layout === "cards")
-    return {
-      type: "agenda",
-      headline: slide.headline,
-      items: slide.sections.map((s) => ({
-        title: s.title ?? sectionText(s) ?? "",
-        text: s.title ? (sectionText(s) ?? s.items?.join(", ")) : undefined,
-      })),
-    };
-  const titled = slide.sections.filter((s) => s.title);
-  const grouped: ContentBlock[] =
-    titled.length >= 3
-      ? [
-          {
-            type: "cards",
-            items: titled.map((s) => ({
-              title: s.title,
-              text: sectionText(s),
-              icon: s.icon,
-              items: s.items,
-            })),
-            // Five and six sections stand in three columns, so their columns never narrow to a
-            // quarter.
-            columns: titled.length === 4 || titled.length > 6 ? 4 : 3,
-            dense: true,
-          },
-        ]
-      : titled.length === 2
-        ? [
-            {
-              type: "two-column",
-              left: {
-                title: titled[0].title,
-                items: titled[0].items,
-                text: sectionText(titled[0]),
-              },
-              right: {
-                title: titled[1].title,
-                items: titled[1].items,
-                text: sectionText(titled[1]),
-              },
-            },
-          ]
-        : titled.flatMap((s): ContentBlock[] => [
-            {
-              type: "paragraph",
-              text: [`**${s.title}**`, sectionText(s)].filter(Boolean).join(" "),
-            },
-            ...(s.items ? [{ type: "bullets" as const, items: s.items }] : []),
-          ]);
-  const content: ContentBlock[] = [];
-  slide.sections.forEach((s, i) => {
-    if (s.title) {
-      if (s === titled[0]) content.push(...grouped);
-      return;
-    }
-    const text = sectionText(s);
-    if (text)
-      content.push(
-        i === slide.sections.length - 1 && i > 0
-          ? { type: "callout", text }
-          : { type: "paragraph", text },
-      );
-    if (s.items) content.push({ type: "bullets", items: s.items });
-  });
-  return { type: "content", headline: slide.headline, content };
-}
-
-/** Brand's claim in a language, split around the word brand names for it: [before, word, after],
- *  the word empty where the claim does not hold it. */
-export function claimParts(lang: "en" | "de"): [string, string, string] {
-  const text = claim[lang];
-  const word = claim.word[lang];
-  const at = text.indexOf(word);
-  return at < 0 ? [text, "", ""] : [text.slice(0, at), word, text.slice(at + word.length)];
-}
-
-/** Whether a gallery item is a video: so marked, or a video file. */
-export const isVideo = (item: GalleryItem) =>
-  item.kind === "video" || /\.(mp4|webm|mov)$/i.test(item.src);
-
-/** A `media` slide as the content slide that replaces it: one picture or video as its own block,
- *  several, or one with a caption or tags, as a `gallery`. */
-export function mediaAsContent({
-  sources,
-  layout,
-  tags,
-  sectionLabel,
-  sectionTheme,
-  principle,
-  headline,
-}: MediaSlide): ContentSlide {
-  const [one] = sources;
-  const block: ContentBlock =
-    sources.length === 1 && layout !== "row" && !one.caption && !tags?.length
-      ? isVideo(one)
-        ? { type: "video", src: one.src, alt: one.alt, poster: one.poster }
-        : { type: "image", src: one.src, alt: one.alt }
-      : { type: "gallery", items: sources, layout, tags };
-  return {
-    type: "content",
-    sectionLabel,
-    sectionTheme,
-    principle,
-    headline: headline ?? "",
-    content: [block],
-  };
-}
-
-/** An `overview` slide as the phased-pills slide that replaces it: foundations and pipeline as two
- *  phases, unnumbered, since the foundations are no sequence. Its one marked stage, `new`, is the
- *  active pill; `active` stages, which the overview tinted all alike, draw plain, so one pill holds
- *  the focus. */
-export function overviewAsPhases(slide: OverviewSlide): PhasedPillsSlide {
-  const items = (stages: OverviewSlide["foundations"]) =>
-    stages.map((s) => ({
-      title: s.title,
-      state: s.state === "new" ? ("active" as const) : undefined,
-    }));
-  return {
-    type: "phased-pills",
-    title: "The Factory",
-    phases: [
-      { label: "Foundations", theme: "primary", items: items(slide.foundations) },
-      { label: "Pipeline", theme: "secondary", items: items(slide.pipeline) },
-    ],
-  };
-}
-
 /** The language of the claim a contact closing shows, or undefined for none: `claim: false` or a
  *  discussion leaves it out, and a deprecated `claim` language wins over the deck's. */
 export const closingClaim = (slide: ClosingSlide, lang: "en" | "de") =>
   slide.variant === "discussion" || slide.claim === false ? undefined : (slide.claim ?? lang);
 
-/** Whether a process node is the phase a slide names, in any case. */
-export const isHighlightPhase = (title: string, phase?: string) =>
-  !!phase && title.toLowerCase() === phase.toLowerCase();
+type SlideOf<T extends Slide["type"]> = Extract<Slide, { type: T }>;
+type Replacement = { to: string; form?: string };
 
-/** A step count from which a flow stands upright on a phone, and a process loop leaves its circle. */
-export const LONG_FLOW = 5;
+const REPLACED_BLOCK_TO: Partial<Record<ContentBlock["type"], string>> = {
+  "four-column": "cards",
+  "labeled-grid": "cards",
+  positions: "comparison positions",
+  transform: "comparison before-after",
+};
 
-/** A catalogue entry's anchor from its name. */
-export const anchorSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+function contentReplacedBy(slide: ContentSlide): Replacement | undefined {
+  if (centeredAsStatement(slide)) return { to: "statement", form: "content, centered" };
+  if (bulletsAsStatement(slide)) return { to: "statement", form: "one or two short bullets" };
+  if (twoColumnAsSplit(slide))
+    return { to: "comparison split", form: "two-column, neutral, alone on a slide" };
+  for (const { type } of slide.content) {
+    if (typeof type !== "string" || !Object.hasOwn(REPLACED_BLOCK_TO, type)) continue;
+    const to = REPLACED_BLOCK_TO[type];
+    if (to) return { to, form: type };
+  }
+  return slide.content.some((b) => b.type === "pipeline")
+    ? { to: "flow", form: "pipeline" }
+    : undefined;
+}
 
-/** The variant a slide is catalogued under; empty for a type's plain form. */
-export const variantOf = (s: Slide) =>
-  (s.type === "grid" &&
-    s.variant === "quotes" &&
-    s.cards.every((c) => c.imageSrc) &&
-    "quotes with portraits") ||
-  ("variant" in s && s.variant) ||
-  ("layout" in s && s.layout) ||
-  ("kind" in s && s.kind) ||
-  ("strike" in s && s.strike === false ? "without strike" : "") ||
-  (s.type === "statement" && (s.attribution ? "quotation" : s.qr ? "qr" : "")) ||
-  (s.type === "title" && isOpening(s) ? "opening" : "");
+const SLIDE_REPLACEMENTS: {
+  [T in Slide["type"]]: string | ((slide: SlideOf<T>) => Replacement | undefined) | undefined;
+} = {
+  evolution: "process",
+  "dual-pill-overview": "roadmap",
+  guidance: "comparison guidance",
+  "deep-dive-divider": "transition night",
+  overview: "phased-pills",
+  media: (slide) => {
+    const to = mediaAsContent(slide).content[0].type;
+    return to === "gallery" ? { to } : { to, form: `media, one ${to}` };
+  },
+  regular: (slide) => {
+    const to = regularAsContent(slide);
+    if (!to) return undefined;
+    if (to.type === "agenda") return { to: "agenda" };
+    return { to: twoColumnAsSplit(to) ? "comparison split" : "content" };
+  },
+  grid: (slide) =>
+    slide.variant === "quotes"
+      ? undefined
+      : { to: slide.variant === "stats" ? "numbers" : "cards" },
+  content: contentReplacedBy,
+  activity: undefined,
+  agenda: undefined,
+  chart: undefined,
+  closing: undefined,
+  comparison: undefined,
+  decision: undefined,
+  gantt: undefined,
+  lanes: undefined,
+  "phased-pills": undefined,
+  process: undefined,
+  profiles: undefined,
+  question: undefined,
+  roadmap: undefined,
+  statement: undefined,
+  "team-topology": undefined,
+  title: undefined,
+  transition: undefined,
+  wheel: undefined,
+};
 
 /** The entry that draws a deprecated form, or undefined for a form the catalogue offers: an alias
  *  type, `regular` without a profile, a `grid` other than quotes, a centered content slide a
@@ -724,128 +115,9 @@ export const variantOf = (s: Slide) =>
  *  replaced block, and one whose one block is a neutral two-column. `form` names a content
  *  slide's replaced form. */
 export function replacedBy(slide: Slide): { to: string; form?: string } | undefined {
-  switch (slide.type) {
-    case "evolution":
-      return { to: "process" };
-    case "dual-pill-overview":
-      return { to: "roadmap" };
-    case "guidance":
-      return { to: "comparison guidance" };
-    case "deep-dive-divider":
-      return { to: "transition night" };
-    case "overview":
-      return { to: "phased-pills" };
-    case "media": {
-      const to = mediaAsContent(slide).content[0].type;
-      return to === "gallery" ? { to } : { to, form: `media, one ${to}` };
-    }
-    case "regular": {
-      const to = regularAsContent(slide);
-      if (!to) return undefined;
-      if (to.type === "agenda") return { to: "agenda" };
-      return { to: twoColumnAsSplit(to) ? "comparison split" : "content" };
-    }
-    case "grid":
-      return slide.variant === "quotes"
-        ? undefined
-        : { to: slide.variant === "stats" ? "numbers" : "cards" };
-    case "content": {
-      if (centeredAsStatement(slide)) return { to: "statement", form: "content, centered" };
-      if (bulletsAsStatement(slide)) return { to: "statement", form: "one or two short bullets" };
-      if (twoColumnAsSplit(slide))
-        return { to: "comparison split", form: "two-column, neutral, alone on a slide" };
-      for (const { type } of slide.content) {
-        if (type === "four-column" || type === "labeled-grid") return { to: "cards", form: type };
-        if (type === "positions") return { to: "comparison positions", form: type };
-        if (type === "transform") return { to: "comparison before-after", form: type };
-      }
-      return slide.content.some((b) => b.type === "pipeline")
-        ? { to: "flow", form: "pipeline" }
-        : undefined;
-    }
-    case "activity":
-    case "agenda":
-    case "chart":
-    case "closing":
-    case "comparison":
-    case "decision":
-    case "gantt":
-    case "lanes":
-    case "phased-pills":
-    case "process":
-    case "profiles":
-    case "question":
-    case "roadmap":
-    case "statement":
-    case "team-topology":
-    case "title":
-    case "transition":
-    case "wheel":
-      return undefined;
-  }
-}
-
-/** Whether a timeline split over slides runs in from the slide's edge and out to it. */
-export const continuation = ({ continues }: { continues?: "in" | "out" | "both" }) => ({
-  into: continues === "in" || continues === "both",
-  onward: continues === "out" || continues === "both",
-});
-
-type TwoColumn = Extract<ContentBlock, { type: "two-column" }>;
-export type SideTone = "success" | "error" | "neutral";
-
-/** The tone of a two-column block's left and right side by its variant, which the slide and the
- *  .pptx both draw. */
-export const TWO_COLUMN_TONES: Record<NonNullable<TwoColumn["variant"]>, [SideTone, SideTone]> = {
-  "success-error": ["success", "error"],
-  "error-success": ["error", "success"],
-  error: ["error", "error"],
-  "error-neutral": ["error", "neutral"],
-  success: ["success", "success"],
-  neutral: ["neutral", "neutral"],
-};
-
-/** 0:07, 12:34, 1:02:03. */
-export function formatDuration(ms: number): string {
-  const seconds = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = String(seconds % 60).padStart(2, "0");
-  return h ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
-}
-
-/** A leading hyphen in a figure is a minus: the typographic one, which sits on the digits' axis. */
-export const minus = (v: string) => v.replace(/^-(?=\d)/, "−");
-
-// A figure's leading words ("about $2M", "up to +70%", "über 50", "ca. 5"): every lowercase word,
-// an abbreviation's dot included, before the first token that is not one. They are set small, so
-// only the figure itself carries weight; a quiet figure sets them in the label's face, where six
-// figures on a slide would otherwise compete with them.
-export const leadingWords = (value: string) =>
-  /^((?:\p{Ll}+\.?\s+)+)(?=[^\p{Ll}\s])/u.exec(value)?.[1] ?? "";
-
-/** The print route's 1920x1080 stage, which figures are sized for and slides-pptx measures off: a
- *  slide row about 1650 px wide, a rem of 21.333 px, and a mono character 0.6em wide. */
-export const STAGE = { row: 1650, rem: 21.333, char: 0.6 };
-
-/** The size in rem at which a figure `chars` mono characters wide fills `px` of the stage. */
-export const figureRem = (px: number, chars: number) => px / (chars * STAGE.char) / STAGE.rem;
-
-// A figure's width in mono characters, leading words set at about half size counting half.
-export const figureChars = (value: string) => {
-  const lead = leadingWords(value);
-  return value.length - lead.length + 0.5 * lead.trim().length;
-};
-
-/** A numbers block's grid: up to four figures stand in one row; more wrap (`wrapped`), five and six
- *  into three columns, so a column never narrows below a quarter of the slide. One size in rem for
- *  every figure, set by the longest, so the row shares a baseline and none wraps: a column is a
- *  `cols`th of the stage row. */
-export function numbersGrid(values: string[]) {
-  const n = values.length;
-  const cols = n <= 4 ? n : n <= 6 ? 3 : 4;
-  const wrapped = n > 4;
-  const cap = wrapped ? 5 : cols === 2 ? 9 : 7;
-  const longest = Math.max(...values.map(figureChars));
-  return { cols, wrapped, size: Math.min(cap, figureRem(STAGE.row / cols - 60, longest)) };
+  const type = slide.type;
+  if (typeof type !== "string" || !Object.hasOwn(SLIDE_REPLACEMENTS, type)) return;
+  const entry = SLIDE_REPLACEMENTS[type];
+  if (typeof entry === "string") return { to: entry };
+  return (entry as ((input: Slide) => Replacement | undefined) | undefined)?.(slide);
 }

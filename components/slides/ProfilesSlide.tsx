@@ -14,7 +14,7 @@ import {
   LinkCaption,
   Portrait,
 } from "./primitives";
-import { personAccent } from "../../lib/slide-utils";
+import { personAccent } from "../../lib/people-slides";
 import { renderMarkdown } from "../../lib/markdown";
 
 interface Props {

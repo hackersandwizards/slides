@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { deckSync } from "../../lib/presenter-sync";
-import { dialogOpen } from "../../lib/slide-utils";
+import { dialogOpen } from "../../lib/slide-input";
 
 /** What a presenter can press, for the "?" overlay. A clicker sends PageDown and PageUp. */
 const KEYS: Array<[string[], string]> = [

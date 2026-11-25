@@ -12,7 +12,7 @@ import { BlurFade } from "../ui/blur-fade";
 import { NumberTicker } from "../ui/number-ticker";
 import { SlideShell } from "./SlideShell";
 import { DisplayHeading } from "./primitives";
-import { parseStoredJson, readStored, writeStored } from "../../lib/slide-utils";
+import { parseStoredJson, readStored, writeStored } from "../../lib/browser-storage";
 
 interface Props {
   slide: QuestionSlideType;

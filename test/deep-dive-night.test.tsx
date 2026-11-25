@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { isDeepDive } from "../lib/slide-utils";
+import { isDeepDive } from "../lib/slide-framing";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import type { Slide } from "../types/slide";
 

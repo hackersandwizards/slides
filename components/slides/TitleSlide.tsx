@@ -3,7 +3,8 @@
 import { useContext } from "react";
 import Image from "../ui/image";
 import type { TitleSlide as TitleSlideType } from "../../types/slide";
-import { isOpening, qrAlt, speakerLine } from "../../lib/slide-utils";
+import { isOpening, speakerLine } from "../../lib/title-slide";
+import { qrAlt } from "../../lib/link-labels";
 import { BlurFade } from "../ui/blur-fade";
 import { DeckLang, SlideShell } from "./SlideShell";
 import { BALANCED, DisplayHeading, LinkCaption, PictureLink } from "./primitives";

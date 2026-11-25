@@ -5,23 +5,12 @@ import type { ContentSlide, Presentation } from "../types/slide";
 import { cornerMark } from "../lib/logo";
 import { getSectionStyle, DEFAULT_SECTION_STYLE } from "../lib/section-styles";
 import { deprecated } from "@hackersandwizards/slides/lib/slide-components";
-import {
-  arrivedBackwards,
-  bulletsAsStatement,
-  centeredAsStatement,
-  closingClaim,
-  deckLang,
-  opensRevealed,
-  deepDiveAsTransition,
-  gridAsContent,
-  ignoredKey,
-  parseStoredJson,
-  readStored,
-  replacedBy,
-  slideTitle,
-  twoColumnAsSplit,
-  writeStored,
-} from "../lib/slide-utils";
+import { bulletsAsStatement, centeredAsStatement, twoColumnAsSplit } from "../lib/content-redraw";
+import { deepDiveAsTransition, gridAsContent } from "../lib/slide-aliases";
+import { arrivedBackwards, opensRevealed } from "../lib/slide-arrival";
+import { ignoredKey } from "../lib/slide-input";
+import { parseStoredJson, readStored, writeStored } from "../lib/browser-storage";
+import { closingClaim, deckLang, replacedBy, slideTitle } from "../lib/slide-utils";
 
 describe("slide storage", () => {
   afterEach(() => vi.restoreAllMocks());
@@ -342,24 +331,33 @@ describe("markdown in a headline", () => {
 });
 
 describe("deprecated", () => {
+  const source = readFileSync(join(import.meta.dirname, "..", "types", "slide.ts"), "utf8");
+  const taggedCount = [...source.matchAll(/@deprecated/g)].length;
+
   it("names exactly the props and types types/slide.ts marks @deprecated", () => {
-    const source = readFileSync(join(import.meta.dirname, "..", "types", "slide.ts"), "utf8");
-    // The declaration after each @deprecated comment: a prop, a block's `type` or a slide interface.
-    const tagged = [...source.matchAll(/@deprecated[\s\S]*?\*\/\s*(.+)/g)].map(([, line]) => line);
-    const typeOf = (line: string) =>
-      line.startsWith("export interface")
-        ? source.slice(source.indexOf(line)).match(/type: "([\w-]+)"/)![1]
-        : line.match(/^type: "([\w-]+)"/)?.[1];
-    const types = tagged.flatMap((line) => typeOf(line) ?? []);
-    const props = tagged.filter((line) => !typeOf(line)).map((line) => line.match(/^(\w+)\?:/)![1]);
-    // Controls: a match that returns nothing proves nothing.
+    const types = [
+      ...source.matchAll(
+        /@deprecated(?:(?!\*\/)[\s\S])*\*\/\s*(?:export interface [^{]+\{\s*)?type: "([\w-]+)"/g,
+      ),
+    ].map(([, name]) => name);
+    const props = [...source.matchAll(/@deprecated(?:(?!\*\/)[\s\S])*\*\/\s*(\w+)\?:/g)].map(
+      ([, name]) => name,
+    );
+    expect(types.length + props.length).toBe(taggedCount);
     expect(types).toContain("transform");
     expect(props).toContain("dotColor");
     expect([...deprecated.props].sort()).toEqual(props.sort());
     expect([...deprecated.values.type].sort()).toEqual(types.sort());
-    // The values deprecated in prose: each a literal its prop takes.
-    for (const prop of ["variant", "claim"] as const)
-      for (const value of deprecated.values[prop])
-        expect(source).toMatch(new RegExp(`${prop}\\??: [^;]*"${value}"`));
   });
+
+  // The values deprecated in prose: each a literal its prop takes.
+  it.each(["variant", "claim"] as const)(
+    "names only literal values that types/slide.ts accepts for %s",
+    (prop) => {
+      const values = deprecated.values[prop];
+      expect(values.length).toBeGreaterThan(0);
+      for (const value of values)
+        expect(source).toMatch(new RegExp(`${prop}\\??: [^;]*"${value}"`));
+    },
+  );
 });

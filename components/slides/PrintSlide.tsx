@@ -3,7 +3,10 @@ import type { Presentation } from "../../types/slide";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import { cornerMark, logoPlaces, resolveSlideLogo } from "../../lib/logo";
 import { PrintProvider } from "../../lib/print-context";
-import { bulletsAsStatement, deckLang, pageLabel, regularAsContent } from "../../lib/slide-utils";
+import { bulletsAsStatement } from "../../lib/content-redraw";
+import { regularAsContent } from "../../lib/regular-sections";
+import { deckLang } from "../../lib/slide-utils";
+import { pageLabel } from "../../lib/slide-framing";
 import { BrandStrip, CornerStart, DeckLogo, PageCounter } from "./SlideContainer";
 import { DeckLang, DeckNight } from "./SlideShell";
 

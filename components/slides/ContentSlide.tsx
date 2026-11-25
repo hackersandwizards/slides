@@ -15,13 +15,13 @@ import { StatementSlide } from "./StatementSlide";
 import { SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
 import { getSectionStyle } from "../../lib/section-styles";
+import { contentRedrawnAs } from "../../lib/content-redraw";
 import {
-  contentRedrawnAs,
   fourColumnAsCards,
-  isDeepDive,
   labeledGridAsCards,
   pipelineAsFlow,
-} from "../../lib/slide-utils";
+} from "../../lib/content-block-aliases";
+import { isDeepDive } from "../../lib/slide-framing";
 import {
   TitledContent,
   SlideTitle,

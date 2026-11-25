@@ -2,7 +2,8 @@
 
 import type { GridSlide as GridSlideType, GridCard } from "../../types/slide";
 import { SlideShell, groundOf } from "./SlideShell";
-import { gridAsContent, isDeepDive } from "../../lib/slide-utils";
+import { gridAsContent } from "../../lib/slide-aliases";
+import { isDeepDive } from "../../lib/slide-framing";
 import { ContentSlide } from "./ContentSlide";
 import { SectionHeader } from "./SectionHeader";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";

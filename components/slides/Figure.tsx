@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { STAGE, figureChars, figureRem, leadingWords, minus } from "../../lib/slide-utils";
+import { STAGE, figureChars, figureRem, leadingWords, minus } from "../../lib/figure-layout";
 
 // A figure's width in characters for its cap: one character more where leading words stand, for
 // their gap and their true size (0.55em), which a half undercounts.

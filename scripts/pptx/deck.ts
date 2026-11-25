@@ -19,33 +19,18 @@ import { trendTicks } from "../../components/slides/ChartPlots";
 import { groundOf } from "../../components/slides/SlideShell";
 import { BRAND_MARK, HW_LOGO, cornerMark, logoPlaces, resolveSlideLogo } from "../../lib/logo";
 import { INLINE_MARKDOWN } from "../../lib/markdown";
-import {
-  isDeepDive,
-  isHighlightPhase,
-  isOpening,
-  isVideo,
-  linkLabel,
-  pageLabel,
-  claimParts,
-  closingClaim,
-  continuation,
-  deckLang,
-  personAccent,
-  pipelineAsFlow,
-  leadingWords,
-  minus,
-  numbersGrid,
-  profileLabel,
-  qrAlt,
-  speakerLine,
-  labeledGridAsCards,
-  teamTypesDrawn,
-  companiesWithLogo,
-  TWO_COLUMN_TONES,
-  STAGE,
-  WORDS,
-  type SideTone,
-} from "../../lib/slide-utils";
+import { isDeepDive, pageLabel } from "../../lib/slide-framing";
+import { isHighlightPhase, continuation } from "../../lib/process-layout";
+import { isOpening, speakerLine } from "../../lib/title-slide";
+import { isVideo } from "../../lib/gallery-media";
+import { linkLabel, profileLabel, qrAlt } from "../../lib/link-labels";
+import { claimParts, companiesWithLogo } from "../../lib/closing-copy";
+import { closingClaim, deckLang } from "../../lib/slide-utils";
+import { personAccent, teamTypesDrawn } from "../../lib/people-slides";
+import { pipelineAsFlow, labeledGridAsCards } from "../../lib/content-block-aliases";
+import { leadingWords, minus, numbersGrid, STAGE } from "../../lib/figure-layout";
+import { TWO_COLUMN_TONES, type SideTone } from "../../lib/two-column-tones";
+import { WORDS } from "../../lib/slide-words";
 import { centredMark } from "./chrome";
 import { family, MONO, PITCH, SANS } from "./faces";
 import { balance, longest, pretty, wrap, type Span } from "./lines";
@@ -2967,7 +2952,7 @@ const CHART = {
   tick: 12 / 144,
   bottom: (8 + 56) / 144,
 };
-/** A bar's name sizes, `TICK_STEPS` in `ChartPlots`: the web's text-base, text-sm and text-xs. */
+/** A bar's name sizes, `CHART_TICK_STEPS` in `ChartCategoryLayout.tsx`: the web's text-base, text-sm and text-xs. */
 const TICK_STEPS = [PT.sm, 13.33, 12];
 
 function row<T>(items: T[], a: Area, gap: number, draw: (it: T, r: Area, i: number) => void) {

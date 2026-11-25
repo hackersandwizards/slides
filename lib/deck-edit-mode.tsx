@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { deckSync } from "./presenter-sync";
-import { dialogOpen, directionKey, readStored, writeStored } from "./slide-utils";
+import { dialogOpen } from "./slide-input";
+import { directionKey } from "./slide-arrival";
+import { readStored, writeStored } from "./browser-storage";
 import { useMounted } from "./use-mounted";
 
 /** Edit mode, local development only, in a tab opened once with `?edit`, so a stray E while

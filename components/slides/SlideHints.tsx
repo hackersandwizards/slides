@@ -4,7 +4,9 @@ import { useState, useEffect, useSyncExternalStore } from "react";
 import { useMounted } from "../../lib/use-mounted";
 import { usePendingReveal } from "../../lib/use-progressive-reveal";
 import { deckSync } from "../../lib/presenter-sync";
-import { readStored, ignoredKey, revealedUrl, writeStored } from "../../lib/slide-utils";
+import { readStored, writeStored } from "../../lib/browser-storage";
+import { ignoredKey } from "../../lib/slide-input";
+import { revealedUrl } from "../../lib/slide-arrival";
 
 interface Props {
   slideIndex: number;

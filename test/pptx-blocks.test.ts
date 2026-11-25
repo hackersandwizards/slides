@@ -6,7 +6,7 @@ import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
-import { labeledGridAsCards } from "../lib/slide-utils";
+import { labeledGridAsCards } from "../lib/content-block-aliases";
 import {
   onlySlide,
   rendered,

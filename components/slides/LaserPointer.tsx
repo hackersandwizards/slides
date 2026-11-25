@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 import { deckSync } from "../../lib/presenter-sync";
-import { dialogOpen } from "../../lib/slide-utils";
+import { dialogOpen } from "../../lib/slide-input";
 
 interface Point {
   x: number;

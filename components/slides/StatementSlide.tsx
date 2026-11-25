@@ -6,7 +6,7 @@ import type { StatementSlide as StatementSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { DeckLang, SlideShell, groundOf } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
-import { qrAlt } from "../../lib/slide-utils";
+import { qrAlt } from "../../lib/link-labels";
 import {
   DisplayHeading,
   LinkCaption,

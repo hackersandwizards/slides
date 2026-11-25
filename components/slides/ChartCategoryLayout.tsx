@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { NARROW } from "../../lib/slide-utils";
+import { NARROW } from "../../lib/stage-fit";
 import type { TickLayout } from "./ChartPlots";
 
 export const CHART_TICK_ANGLE = 40;

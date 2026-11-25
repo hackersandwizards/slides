@@ -5,7 +5,8 @@ import type { GanttBar, GanttRow, GanttSlide as GanttSlideType } from "../../typ
 import { BlurFade } from "../ui/blur-fade";
 import { DeckLang, SlideShell } from "./SlideShell";
 import { renderMarkdown } from "../../lib/markdown";
-import { isDeepDive, WORDS } from "../../lib/slide-utils";
+import { isDeepDive } from "../../lib/slide-framing";
+import { WORDS } from "../../lib/slide-words";
 import { SectionHeader } from "./SectionHeader";
 import { TitledContent, SlideTitle, SlideFooter } from "./primitives";
 

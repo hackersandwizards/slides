@@ -1,5 +1,5 @@
 import { renderMarkdown } from "../../lib/markdown";
-import { continuation } from "../../lib/slide-utils";
+import { continuation } from "../../lib/process-layout";
 import { VISUAL_LABEL, VISUAL_MUTED } from "./DiagramVocabulary";
 import {
   BLEED,

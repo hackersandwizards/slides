@@ -4,7 +4,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { centredMark } from "../scripts/pptx/chrome";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
-import { overviewAsPhases, companiesWithLogo } from "../lib/slide-utils";
+import { overviewAsPhases } from "../lib/slide-aliases";
+import { companiesWithLogo } from "../lib/closing-copy";
 import { norm, rendered, specimen, texts, unescapeNamedEntities } from "./fixtures/rendered-deck";
 
 // The slide is 13.33 by 7.5 in, in EMU.

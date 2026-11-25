@@ -135,7 +135,7 @@ describe("CodeLines", () => {
     (_, ground, teal) => {
       const fg = mix("#ffffff", night, 0.92);
       // A marked annotated-code line lies under 25 % of the theme's teal, its comment lifted
-      // halfway to night-muted (components/slides/Visuals.tsx).
+      // halfway to night-muted (components/slides/AnnotatedVisual.tsx).
       const marked = mix(teal, ground, 0.25);
       expect(contrast(fg, ground)).toBeGreaterThanOrEqual(4.5);
       expect(contrast(subtle, ground)).toBeGreaterThanOrEqual(4.5);

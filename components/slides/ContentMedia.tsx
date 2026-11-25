@@ -5,7 +5,7 @@ import Image from "../ui/image";
 import type { ContentBlock, GalleryItem } from "../../types/slide";
 import { renderMarkdown } from "../../lib/markdown";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { isVideo } from "../../lib/slide-utils";
+import { isVideo } from "../../lib/gallery-media";
 import { LinkCaption, PictureLink, SlideCard, VideoPlayer } from "./primitives";
 
 /** An image, video or linked image: centred, and on a titled slide as large as the body's free

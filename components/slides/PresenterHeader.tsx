@@ -7,7 +7,8 @@ import Pause from "lucide-react/icons/pause";
 import Play from "lucide-react/icons/play";
 import RotateCcw from "lucide-react/icons/rotate-ccw";
 import { arrowEvent, type ArrowKey } from "../../lib/presenter-sync";
-import { formatDuration, parseStoredJson, readStored, writeStored } from "../../lib/slide-utils";
+import { formatDuration } from "../../lib/slide-timing";
+import { parseStoredJson, readStored, writeStored } from "../../lib/browser-storage";
 import { PresenterIconButton } from "./PresenterIconButton";
 
 const TIMER_KEY = "slide-speaker-timer";
