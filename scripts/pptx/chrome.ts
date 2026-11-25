@@ -1,7 +1,7 @@
 import type { Presentation, SectionTheme, Slide } from "../../types/slide";
 import { HW_LOGO, cornerMark, logoPlaces, resolveSlideLogo } from "../../lib/logo";
 import { pageLabel } from "../../lib/slide-framing";
-import { chip, chipWidth } from "./chips";
+import { chipArea, chipWidth, drawChip, type Chip } from "./chips";
 import { textWidth } from "./fit";
 import { brandCut } from "./images";
 import type { Look } from "./look";
@@ -145,16 +145,20 @@ export function header(sheet: Sheet, h: Head, centered = false): number {
     }
     if (h.principle) {
       // On the print route a wrapped pill stands 65 px below the label's row, the title 76 px.
-      const row = x + chipWidth(h.principle, PT.sm, false) > W - EDGE ? 65 / 144 : 0;
+      const principle: Chip = {
+        text: h.principle,
+        size: PT.sm,
+        fill: c.tint,
+        color: c.ink,
+        mono: false,
+      };
+      const width = chipWidth(principle);
+      const row = x + width > W - EDGE ? 65 / 144 : 0;
       if (row) {
         wrapped = 76 / 144;
         x = EDGE;
       }
-      chip(
-        sheet,
-        { text: h.principle, size: PT.sm, fill: c.tint, color: c.ink, mono: false },
-        { x, y: y + row + 0.02 },
-      );
+      drawChip(sheet, principle, chipArea(principle, { x, y: y + row + 0.02 }, width));
     }
   }
   y = TOP + wrapped;

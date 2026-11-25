@@ -3,7 +3,8 @@ import PptxGenJS from "pptxgenjs";
 import { altText, imageFile, pictureLink, type PictureMetadata, type PictureOpts } from "./images";
 import { breakAt, BULLET_INDENT, fitScale, lineOf, marginOf, paraType, spansOf } from "./fit";
 import { balance, pretty } from "./lines";
-import type { Surface } from "./palette";
+import type { ProfileInfo } from "../../types/slide";
+import { hex, type Surface } from "./palette";
 import { CORNER, LEADING, PT, type Area, type Disc, type Place } from "./stage";
 import {
   asParas,
@@ -27,7 +28,7 @@ export interface Output {
   pptx: Pptx;
   assets: string;
   warnings: string[];
-  /** Per chart number, what the chart finishing pass sets on it. */
+  /** Per chart number, what `finishChart` sets on it. */
   charts: Map<number, ChartFix>;
 }
 
@@ -191,6 +192,48 @@ export class Sheet extends Look {
       ...pictureLink(o.href),
     });
     return { x: px, y: py, w: pw, h: ph };
+  }
+
+  portrait(
+    { name, imageSrc }: Pick<ProfileInfo, "name" | "imageSrc">,
+    disc: Disc,
+    tone: string,
+  ): void {
+    const { x, y, d } = disc;
+    // Round, as the web's hw-avatar.
+    if (imageSrc) this.avatar(imageSrc, disc, { alt: name });
+    else {
+      this.slide.addShape("ellipse", {
+        x,
+        y,
+        w: d,
+        h: d,
+        fill: { color: tone },
+        line: { type: "none" },
+      });
+      this.box(
+        {
+          runs: [
+            {
+              text: name
+                .split(/\s+/)
+                .map((p) => p[0])
+                .join("")
+                .slice(0, 2),
+            },
+          ],
+        },
+        { x, y, w: d, h: d },
+        {
+          size: d * 24,
+          mono: true,
+          bold: true,
+          color: hex("--color-white"),
+          align: "center",
+          valign: "middle",
+        },
+      );
+    }
   }
 
   /** Cropped to a circle that it fills, as a portrait. */

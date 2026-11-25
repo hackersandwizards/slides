@@ -27,10 +27,19 @@ import { labeledGridAsCards, pipelineAsFlow } from "../../lib/content-block-alia
 import { leadingWords, minus, numbersGrid } from "../../lib/figure-layout";
 import { TWO_COLUMN_TONES, type SideTone } from "../../lib/two-column-tones";
 import { centredMark, footer, footerAt, footerOf, frame, header } from "./chrome";
-import { chip, chipAdvance, chipWidth, rowSize } from "./chips";
+import {
+  chipAdvance,
+  chipArea,
+  chipWidth,
+  drawChip,
+  drawChipRow,
+  layoutChipRow,
+  type Chip,
+  type ChipRow,
+} from "./chips";
 import { assetFile, altText, brandCut } from "./images";
-import { portrait, profileLink } from "./people";
-import { cellAreas, rowShare } from "./cells";
+import { profileLink } from "./people";
+import { cellAreas, rowShare, type RowHeight } from "./cells";
 import { MONO, PITCH, SANS } from "./faces";
 import { BULLET_INDENT, spansOf, textWidth } from "./fit";
 import { longest, wrap } from "./lines";
@@ -530,9 +539,7 @@ function gallery(sheet: Sheet, b: Extract<ContentBlock, { type: "gallery" }>, ar
       drawBlock(
         sheet,
         { type: "video", src: src.src, alt: src.alt, caption: src.caption, poster: src.poster },
-        { x, y: yy, w: cw, h: rh },
-        1,
-        false,
+        { area: { x, y: yy, w: cw, h: rh }, k: 1, centered: false },
       );
       return;
     }
@@ -549,20 +556,29 @@ function gallery(sheet: Sheet, b: Extract<ContentBlock, { type: "gallery" }>, ar
       );
   });
   if (!b.tags?.length) return;
-  const row = b.tags.reduce((sum, t) => sum + chipWidth(t, PT.label, false) + 0.1, -0.1);
+  const tags = b.tags.map((text) => {
+    const chip: Chip = { text, size: PT.label, fill: c.card, color: c.ink, mono: false };
+    return { chip, w: chipWidth(chip) };
+  });
+  const gap = 0.1;
+  const row = tags.reduce((sum, tag) => sum + tag.w + gap, -gap);
   let x = a.x + (a.w - row) / 2;
-  for (const t of b.tags)
-    x +=
-      chip(
-        sheet,
-        { text: t, size: PT.label, fill: c.card, color: c.ink, mono: false },
-        { x, y: a.y + a.h + 0.1 },
-      ) + 0.1;
+  for (const { chip, w } of tags) {
+    drawChip(sheet, chip, chipArea(chip, { x, y: a.y + a.h + 0.1 }, w));
+    x += w + gap;
+  }
 }
 
-function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: boolean) {
+interface Slot {
+  area: Area;
+  k: number;
+  centered: boolean;
+}
+
+function drawBlock(sheet: Sheet, b: ContentBlock, slot: Slot) {
   const { slide: s } = sheet;
-  if (b.type === "labeled-grid") return drawBlock(sheet, labeledGridAsCards(b), a, k, centered);
+  if (b.type === "labeled-grid") return drawBlock(sheet, labeledGridAsCards(b), slot);
+  const { area: a, k, centered } = slot;
   const { c } = sheet;
   const o = bodyO(c, k, centered ? { align: "center" } : {});
   switch (b.type) {
@@ -722,9 +738,7 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       drawBlock(
         sheet,
         { type: "code", language: b.language ?? "", code: b.code },
-        { ...a, w: half },
-        k,
-        false,
+        { ...slot, area: { ...a, w: half }, centered: false },
       );
       sheet.box(
         b.sections.flatMap((sc) => [
@@ -776,11 +790,10 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       b.items.forEach((it, i) => {
         const y = a.y + i * (rh + 0.12);
         sheet.rounded({ x: a.x, y, w: a.w, h: rh }, sheet.c.plainCard, rh / 2);
-        const w = chip(
-          sheet,
-          { text: it.name, size: PT.sm * k, fill: c.tint, color: c.ink },
-          { x: a.x + 0.1, y: y + rh / 2 - (PT.sm * k * 1.9) / 144 },
-        );
+        const name: Chip = { text: it.name, size: PT.sm * k, fill: c.tint, color: c.ink };
+        const chipBox = chipArea(name, { x: a.x + 0.1, y: y + rh / 2 - (PT.sm * k * 1.9) / 144 });
+        drawChip(sheet, name, chipBox);
+        const w = chipBox.w;
         sheet.box(
           { runs: md(it.description, c) },
           { x: a.x + w + 0.25, y, w: a.w - w - 0.4, h: rh },
@@ -840,7 +853,7 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
       return;
     }
     case "pipeline":
-      return drawBlock(sheet, pipelineAsFlow(b), a, k, centered);
+      return drawBlock(sheet, pipelineAsFlow(b), slot);
     case "flow":
       flowBlock(sheet, b, a, k);
       return;
@@ -892,9 +905,7 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
         return drawBlock(
           sheet,
           { ...b, labels: undefined },
-          { ...a, x: a.x + lw, w: a.w - lw },
-          k,
-          centered,
+          { ...slot, area: { ...a, x: a.x + lw, w: a.w - lw } },
         );
       }
       const n = b.events.length;
@@ -1231,13 +1242,15 @@ function drawBlock(sheet: Sheet, b: ContentBlock, a: Area, k: number, centered: 
         sheet,
         { type: "labeled-grid", columns: 1, items: b.items },
         {
-          x: a.x + iw + 0.3,
-          y,
-          w: a.w - iw - 0.3,
-          h: Math.max(0, Math.min(a.y + a.h - y, b.items.length * 1.2)),
+          ...slot,
+          centered: false,
+          area: {
+            x: a.x + iw + 0.3,
+            y,
+            w: a.w - iw - 0.3,
+            h: Math.max(0, Math.min(a.y + a.h - y, b.items.length * 1.2)),
+          },
         },
-        k,
-        false,
       );
       return;
     }
@@ -2076,7 +2089,8 @@ function blocks(sheet: Sheet, list: ContentBlock[], a: Area, centered = false, t
     const h = GROWS.has(b.type)
       ? Math.max(1, extra)
       : Math.max(0, Math.min(blockHeight(sheet, b, { w: a.w, k }), a.y + a.h - tail - y));
-    drawBlock(sheet, b, { x: a.x, y, w: a.w, h }, k, centered);
+    const slot: Slot = { area: { x: a.x, y, w: a.w, h }, k, centered };
+    drawBlock(sheet, b, slot);
     y += h + gap;
   }
   return y - gap;
@@ -2104,6 +2118,9 @@ const CHART = {
 };
 /** A bar's name sizes, `CHART_TICK_STEPS` in `ChartCategoryLayout.tsx`: the web's text-base, text-sm and text-xs. */
 const TICK_STEPS = [PT.sm, 13.33, 12];
+
+const LANE_ROWS: RowHeight = { what: "lanes", cap: 0.87, floor: 0.27 };
+const GANTT_ROWS: RowHeight = { what: "gantt", cap: 30 * 0.25 * REM, floor: 0.15 };
 
 type Render = (sheet: Sheet, slide: never) => void;
 
@@ -2255,12 +2272,15 @@ const RENDER: {
   content(sheet, d) {
     const centered = d.layout === "centered";
     let y = header(sheet, d, centered);
-    if (d.badge)
-      chip(
-        sheet,
-        { text: d.badge, size: PT.label, fill: sheet.c.tealTint, color: sheet.c.teal },
-        { x: W - EDGE - (d.badge.length * PT.label * 0.62) / 72 - 0.24, y: TOP - 0.32 },
-      );
+    const markerStyle = { size: PT.label, fill: sheet.c.tealTint, color: sheet.c.teal };
+    if (d.badge) {
+      const badge: Chip = { ...markerStyle, text: d.badge };
+      const area = chipArea(badge, {
+        x: W - EDGE - (d.badge.length * PT.label * 0.62) / 72 - 0.24,
+        y: TOP - 0.32,
+      });
+      drawChip(sheet, badge, area);
+    }
     if (d.stageMarker?.length) {
       let x = EDGE;
       if (d.stagePrefix) {
@@ -2277,13 +2297,12 @@ const RENDER: {
         );
         x += (d.stagePrefix.length * PT.label * 0.62) / 72 + 0.15;
       }
-      for (const m of d.stageMarker)
-        x +=
-          chip(
-            sheet,
-            { text: m, size: PT.label, fill: sheet.c.tealTint, color: sheet.c.teal },
-            { x, y: y - 0.15 },
-          ) + 0.1;
+      for (const text of d.stageMarker) {
+        const marker: Chip = { ...markerStyle, text };
+        const area = chipArea(marker, { x, y: y - 0.15 });
+        drawChip(sheet, marker, area);
+        x += area.w + 0.1;
+      }
       y += 0.25;
     }
     const foot = footerOf(sheet, d.footer);
@@ -2297,11 +2316,7 @@ const RENDER: {
     let a = BODY(y);
     if (d.profile) {
       const pw = 2.6;
-      portrait(
-        sheet,
-        { image: d.profile.imageSrc, name: d.profile.name, tone: c.teal },
-        { x: a.x + (pw - 1.4) / 2, y: a.y + 0.2, d: 1.4 },
-      );
+      sheet.portrait(d.profile, { x: a.x + (pw - 1.4) / 2, y: a.y + 0.2, d: 1.4 }, c.teal);
       const who: Para[] = [
         { runs: [{ text: d.profile.name }], ...TITLE, after: 4 },
         { runs: [{ text: d.profile.title, options: { color: c.teal } }], rel: 0.9 },
@@ -2697,11 +2712,7 @@ const RENDER: {
       sheet.box(quote(cd), { x: x + indent, y: yy, w: cw - indent, h }, o);
       let ax = x;
       if (cd.imageSrc) {
-        portrait(
-          sheet,
-          { image: cd.imageSrc, name: cd.author ?? "", tone: c.teal },
-          { x, y: yy + ch - who, d: who },
-        );
+        sheet.avatar(cd.imageSrc, { x, y: yy + ch - who, d: who }, { alt: cd.author ?? "" });
         ax += who + 0.11;
       }
       if (cd.author)
@@ -2891,11 +2902,7 @@ const RENDER: {
       const p = d.profiles[i];
       const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
       sheet.card(r, sheet.c.plainCard);
-      portrait(
-        sheet,
-        { image: p.imageSrc, name: p.name, tone },
-        { x: r.x + 0.25, y: r.y + 0.25, d: 0.9 },
-      );
+      sheet.portrait(p, { x: r.x + 0.25, y: r.y + 0.25, d: 0.9 }, tone);
       sheet.box(
         [
           { runs: [{ text: p.name }], ...TITLE, rel: PT.h4 / PT.base, after: 2 },
@@ -2956,20 +2963,15 @@ const RENDER: {
       ? (d.codeSnippet.code.split("\n").length * PT.sm * 1.3) / 72 + 0.45
       : 0;
     const foot = footerOf(sheet, d.footer);
-    const lh =
-      rowShare(
-        sheet,
-        { what: "lanes", n: d.lanes.length, cap: 0.87, floor: 0.27 },
-        BOTTOM - y - codeH - foot.h - 0.3,
-      ) - 0.12;
+    const rows = rowShare(LANE_ROWS, BOTTOM - y - codeH - foot.h - 0.3, d.lanes.length);
+    if (rows.warning) sheet.warn(rows.warning);
+    const lh = rows.height - 0.12;
     let yy = y;
     if (d.codeSnippet) {
       drawBlock(
         sheet,
         { type: "code", ...d.codeSnippet },
-        { x: EDGE, y: yy, w: CW, h: codeH - 0.1 },
-        1,
-        false,
+        { area: { x: EDGE, y: yy, w: CW, h: codeH - 0.1 }, k: 1, centered: false },
       );
       yy += codeH + 0.1;
     }
@@ -2992,24 +2994,16 @@ const RENDER: {
           valign: "middle",
         },
       );
-      let x = EDGE + 2;
-      const size = rowSize(
-        sheet,
-        { texts: lane.stages, size: PT.sm, gap: 0.3 },
-        EDGE + CW - 0.25 - x,
-      );
-      lane.stages.forEach((st, j) => {
-        const w = chip(
-          sheet,
-          { text: st, size, fill: c.card, color: c.ink, mono: false },
-          { x, y: ly + lh / 2 - (size * 1.9) / 144 },
-        );
-        x += w;
-        if (j < lane.stages.length - 1) {
-          sheet.arrow({ x: x + 0.05, y: ly + lh / 2 }, { x: x + 0.25, y: ly + lh / 2 }, c.purple);
-          x += 0.3;
-        }
-      });
+      const stages: ChipRow = {
+        labels: lane.stages.map((text) => ({ text, fill: c.card })),
+        size: PT.sm,
+        color: c.ink,
+        gap: 0.3,
+        arrowColor: c.purple,
+      };
+      const x = EDGE + 2;
+      const layout = layoutChipRow(stages, { x, y: ly + lh / 2 }, EDGE + CW - 0.25 - x);
+      drawChipRow(sheet, layout);
     });
     footer(sheet, foot);
   },
@@ -3574,11 +3568,7 @@ const RENDER: {
         speakers.forEach((sp, i) => {
           const x = sx + i * sw;
           const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
-          portrait(
-            sheet,
-            { image: sp.imageSrc, name: sp.name, tone },
-            { x: x + sw / 2 - 0.55, y, d: 1.1 },
-          );
+          sheet.portrait(sp, { x: x + sw / 2 - 0.55, y, d: 1.1 }, tone);
           sheet.box(
             [
               { runs: [{ text: sp.name }], mono: true, bold: true, after: 2 },
@@ -3690,11 +3680,13 @@ const RENDER: {
         : [{ hue: tone, items: col.items ?? [] }];
       sheet.card(r, { fill: mixColor(tone, c.bg, 0.05), line: c.border });
       sheet.rect({ x: r.x + 0.15, y: r.y, w: r.w - 0.3, h: 0.05 }, tone);
-      chip(
-        sheet,
-        { text: col.label, size: PT.label * 0.85, fill: mixColor(tone, c.bg, 0.15), color: tone },
-        { x: r.x + 0.25, y: r.y + 0.25 },
-      );
+      const label: Chip = {
+        text: col.label,
+        size: PT.label * 0.85,
+        fill: mixColor(tone, c.bg, 0.15),
+        color: tone,
+      };
+      drawChip(sheet, label, chipArea(label, { x: r.x + 0.25, y: r.y + 0.25 }));
       sheet.box(
         [
           { runs: md(col.title, c), mono: true, bold: true, rel: PT.h3 / PT.base, after: 4 },
@@ -3771,11 +3763,9 @@ const RENDER: {
       ...[...Map.groupBy(d.milestones ?? [], (m) => m.column).values()].map((ms) => ms.length),
     );
     const msH = stack ? sp(3) + 2 / 144 + sp(1.5) + stack * lh : 0;
-    const pitch = rowShare(
-      sheet,
-      { what: "gantt", n: d.rows.length, cap: sp(30), floor: 0.15 },
-      BOTTOM - top - foot.h - msH + sp(2),
-    );
+    const rows = rowShare(GANTT_ROWS, BOTTOM - top - foot.h - msH + sp(2), d.rows.length);
+    if (rows.warning) sheet.warn(rows.warning);
+    const pitch = rows.height;
     // Rows squeezed below their gap and label line keep a share of each.
     const rh = pitch - Math.min(sp(2), pitch / 4);
     d.rows.forEach((r, i) => {
@@ -4297,25 +4287,17 @@ function pillPhases(
         color: tone,
       },
     );
-    let x = a.x;
-    const title = (it: (typeof p.items)[number]) =>
-      it.number === undefined ? it.title : `#${it.number} ${it.title}`;
-    const size = rowSize(sheet, { texts: p.items.map(title), size: PT.sm * 0.9, gap: 0.12 }, a.w);
-    for (const it of p.items) {
-      const on = it.state === "active" || it.state === "new";
-      const w = chip(
-        sheet,
-        {
-          text: title(it),
-          size,
-          fill: on ? mixColor(tone, c.bg, 0.15) : c.card,
-          color: c.ink,
-          mono: false,
-        },
-        { x, y: py + 0.32 },
-      );
-      x += w + 0.12;
-    }
+    const pills: ChipRow = {
+      labels: p.items.map((it) => ({
+        text: it.number === undefined ? it.title : `#${it.number} ${it.title}`,
+        fill: it.state === "active" || it.state === "new" ? mixColor(tone, c.bg, 0.15) : c.card,
+      })),
+      size: PT.sm * 0.9,
+      color: c.ink,
+      gap: 0.12,
+    };
+    const layout = layoutChipRow(pills, { x: a.x, y: py + 0.32 }, a.w);
+    drawChipRow(sheet, layout);
   });
 }
 

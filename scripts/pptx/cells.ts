@@ -1,9 +1,7 @@
-import type { Sheet } from "./sheet";
 import type { Area } from "./stage";
 
-export interface RowBand {
+export interface RowHeight {
   what: string;
-  n: number;
   cap: number;
   floor: number;
 }
@@ -15,8 +13,8 @@ export function cellAreas(n: number, a: Area, gap: number): Area[] {
 
 /** Each of `n` rows' share of `room`, at most `cap`; below `floor` the rows run past the slide,
  *  which warns. */
-export function rowShare(sheet: Sheet, { what, n, cap, floor }: RowBand, room: number): number {
+export function rowShare({ what, cap, floor }: RowHeight, room: number, n: number) {
   const share = Math.min(cap, room / n);
-  if (share < floor) sheet.warn(`${what}: ${n} rows taller than the slide holds`);
-  return Math.max(floor, share);
+  const warning = share < floor ? `${what}: ${n} rows taller than the slide holds` : undefined;
+  return { height: Math.max(floor, share), warning };
 }
