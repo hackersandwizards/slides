@@ -1,32 +1,51 @@
 import { describe, expect, it } from "vitest";
-import { pretty, wrap } from "../scripts/pptx/lines";
+import { fitPieces, pretty, wrap } from "../scripts/pptx/lines";
 
 describe("slides-pptx draws what the slide shows", () => {
-  it("never leaves one word alone on a paragraph's last line, as brand's text-wrap: pretty", () => {
-    const spans = [
-      {
-        text: "A team owns its code, its tests and its deployment, end to end",
-        size: 18,
-        mono: false,
-        bold: false,
-        tracking: 0,
-      },
-    ];
-    // The measure at which the greedy lines leave "end" alone on the last of three.
-    const width = [...Array(400).keys()]
-      .map((w) => 100 + w)
-      .find((w) => {
-        const lines = wrap(spans, w);
-        return lines.length === 3 && lines[2].text.trim() === "end";
-      })!;
-    expect(width).toBeDefined();
-    const lines = pretty(spans, width)!;
-    expect(lines).toHaveLength(3);
-    expect(lines[2].text.trim()).toBe("to end");
-    // A last word that can only join the line above by breaking a word stays alone.
-    const label = [{ text: "Autonomous team", size: 18, mono: false, bold: true, tracking: 0 }];
-    const w = wrap([{ ...label[0], text: "Autonomous" }], Infinity)[0].width + 2;
-    expect(pretty(label, w)).toBeUndefined();
+  const style = { size: 18, mono: false, bold: false, tracking: 0 };
+
+  it.each([
+    {
+      name: "moves the lone last word onto a line with another word",
+      spans: [{ ...style, text: "A team owns its code, its tests and its deployment, end to end" }],
+      width: 260,
+      expected: [
+        { text: "A team owns its code, its", width: 212.923828125 },
+        { text: "tests and its deployment, end", width: 250.962890625 },
+        { text: "to end", width: 53.89453125 },
+      ],
+    },
+    {
+      name: "keeps a word alone when joining it would break a word",
+      spans: [{ ...style, text: "Autonomous team", bold: true }],
+      width: 115.2734375,
+      expected: undefined,
+    },
+  ])("pretty $name", ({ spans, width, expected }) => {
+    expect(pretty(spans, width)).toEqual(expected);
+  });
+
+  it("measures code points, space and forced breaks in order", () => {
+    const spans = [{ ...style, size: 0, tracking: 1, text: "\nxy z\n" }];
+    expect([...fitPieces(spans, 1)]).toEqual([
+      { text: "", width: 0, forced: true },
+      { text: "", width: 0, breakMeasure: { width: 3, space: 1 } },
+      { text: "x", width: 1, breakMeasure: { width: 1, space: 0 } },
+      { text: "y", width: 1, breakMeasure: { width: 1, space: 0 } },
+      { text: " ", width: 1 },
+      { text: "", width: 0, trailing: 1, forced: false },
+      { text: "z", width: 1, breakMeasure: { width: 1, space: 0 }, trailing: 0, forced: true },
+    ]);
+  });
+
+  it("breaks an overlong word onto a new line before splitting its characters", () => {
+    const spans = [{ ...style, size: 0, tracking: 1, text: "x ABC\nz" }];
+    expect(wrap(spans, 2)).toEqual([
+      { text: "x", width: 1 },
+      { text: "AB", width: 2 },
+      { text: "C", width: 1 },
+      { text: "z", width: 1 },
+    ]);
   });
 
   it("breaks a line after a space before a forced break, and after a slash", () => {
