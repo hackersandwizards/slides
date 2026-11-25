@@ -3,7 +3,6 @@ import { join } from "node:path";
 import { createRequire } from "node:module";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
-import { tokens } from "@hackersandwizards/brand/tokens";
 import type {
   ComparisonSide,
   ContentBlock,
@@ -42,29 +41,36 @@ import {
   teamTypesDrawn,
   companiesWithLogo,
   TWO_COLUMN_TONES,
-  STAGE,
   WORDS,
   type SideTone,
 } from "../../lib/slide-utils";
 import { centredMark } from "./chrome";
-import { family, MONO, PITCH, SANS } from "./faces";
+import { MONO, PITCH, SANS } from "./faces";
 import { balance, longest, pretty, wrap, type Span } from "./lines";
 import { checkSlide } from "./overflow";
+import { hex, mixColor, palette, THEME, type Palette } from "./palette";
 import { slideDrawn } from "./slides";
+import {
+  W,
+  H,
+  EDGE,
+  TOP,
+  BOTTOM,
+  CW,
+  PT,
+  LEADING,
+  TITLE,
+  CORNER,
+  REM,
+  BODY,
+  spacing,
+  type Area,
+} from "./stage";
 
 type Pptx = InstanceType<typeof PptxGenJS>;
 type PSlide = ReturnType<Pptx["addSlide"]>;
 type TextProps = PptxGenJS.TextPropsOptions;
 type Run = { text: string; options?: TextProps };
-
-// The print route's 1920 px stage on a 13.333 in slide: 144 px to the inch, so a CSS px is half a
-// point; the route's root font size is 21.333 px.
-const W = 13.333;
-const H = 7.5;
-const SIDE = 96 / 144;
-const TOP = 117 / 144;
-const BOTTOM = H - 123 / 144;
-const CW = W - 2 * SIDE;
 
 /** A list marker in its own hue, written as a private character, which the post-processing turns
  *  into the brand marker in that hue: pptxgenjs writes no bullet colour. */
@@ -74,118 +80,6 @@ const HUE_OF_MARKER = Object.fromEntries(
   Object.entries(MARKER_CODES).map(([hue, code]) => [code, hue as MarkerHue]),
 );
 const MARKER_SQUARE = "25AA";
-
-const PT = {
-  label: 13.5,
-  sm: 16,
-  base: 18,
-  h4: 18,
-  lead: 20,
-  h3: 24,
-  title: 36,
-  s6: 40,
-  s8: 48,
-  display: 64,
-};
-
-function hex(name: keyof typeof tokens): string {
-  const value = tokens[name];
-  if (!/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`brand token ${name} is not a hex colour`);
-  return value.slice(1).toUpperCase();
-}
-
-/** A brand percentage token as a fraction, `10%` as 0.1. */
-function share(name: keyof typeof tokens): number {
-  const value = tokens[name];
-  if (!/^\d+(\.\d+)?%$/.test(value)) throw new Error(`brand token ${name} is not a percentage`);
-  return parseFloat(value) / 100;
-}
-
-/** `color-mix(in srgb, a p%, b)`, which the tokens use for their tints. */
-function mix(a: string, b: string, p: number): string {
-  const ch = (c: string, i: number) => parseInt(c.slice(i, i + 2), 16);
-  return [0, 2, 4]
-    .map((i) =>
-      Math.round(ch(a, i) * p + ch(b, i) * (1 - p))
-        .toString(16)
-        .padStart(2, "0"),
-    )
-    .join("")
-    .toUpperCase();
-}
-
-function palette(dark: boolean) {
-  const night = hex("--color-night");
-  const bg = dark ? night : hex("--color-bg");
-  const teal = dark ? hex("--color-teal-night") : hex("--color-teal");
-  const purple = dark ? hex("--color-purple-night") : hex("--color-purple");
-  return {
-    bg,
-    card: dark ? hex("--color-night-2") : hex("--color-white"),
-    ink: dark ? mix("FFFFFF", night, 0.92) : hex("--color-ink"),
-    muted: dark ? mix("FFFFFF", night, 0.8) : hex("--color-muted"),
-    border: dark ? mix("FFFFFF", night, 0.15) : hex("--color-border"),
-    tint: dark ? mix("FFFFFF", night, 0.06) : hex("--color-tint"),
-    teal,
-    purple,
-    amber: dark ? hex("--color-amber") : hex("--color-amber-dark"),
-    green: dark ? hex("--color-green") : hex("--color-green-dark"),
-    red: dark ? hex("--color-red-night") : hex("--color-red"),
-    // The complicated-subsystem team's colour, as DecisionSlide's branch; night lightens it.
-    factory: dark ? hex("--color-factory-light") : hex("--color-factory"),
-    neutral: dark ? mix(hex("--color-ampersand"), "FFFFFF", 0.6) : hex("--color-ampersand"),
-    // The brand's code palette: night (night-2 on a night deck), its text and its command green.
-    code: dark ? hex("--color-night-2") : night,
-    codeInk: mix("FFFFFF", night, 0.92),
-    codeGreen: hex("--color-green"),
-    chip: mix(dark ? mix("FFFFFF", night, 0.92) : hex("--color-ink"), bg, dark ? 0.08 : 0.07),
-    tealDark: dark ? mix(hex("--color-teal-night"), "FFFFFF", 0.7) : hex("--color-teal-dark"),
-    tealTint: mix(teal, bg, 0.12),
-    purpleTint: mix(purple, bg, 0.12),
-    greenTint: mix(dark ? hex("--color-green") : hex("--color-green-dark"), bg, 0.1),
-    redTint: mix(dark ? hex("--color-red-night") : hex("--color-red"), bg, 0.08),
-    amberTint: mix(hex("--color-amber"), bg, 0.12),
-    // brand's hw-callout, teal or data-hue="purple", without a line.
-    callout: (hue: string) =>
-      dark
-        ? mix(hue, bg, share("--tint-callout-night"))
-        : mix(hue, hex("--color-white"), share("--tint-callout")),
-  };
-}
-type Palette = ReturnType<typeof palette>;
-
-/** brand's stage scale, the slide's type table: a value it sets, as a number. */
-const stageCss = readFileSync(
-  createRequire(import.meta.url).resolve("@hackersandwizards/brand/stage.css"),
-  "utf8",
-);
-function stage(name: string): number {
-  const m = new RegExp(`${name}:\\s*([\\d.]+);`).exec(stageCss);
-  if (!m) throw new Error(`brand's stage.css sets no ${name}`);
-  return Number(m[1]);
-}
-/** The web's line heights: body text, a slide title, a display heading. */
-const LEADING = {
-  body: stage("--text-base--line-height"),
-  title: stage("--slide-title-leading"),
-  display: stage("--slide-display-leading"),
-};
-
-/** A card's title and a diagram's label in the brand's h3 face, as the web's card-title utility. */
-const TITLE = (() => {
-  const face = family(
-    tokens["--type-h3-family"].replace(
-      /^var\((--[\w-]+)\)$/,
-      (_, v: string) => (tokens as Record<string, string>)[v],
-    ),
-  );
-  const weight = Number(tokens["--type-h3-weight"]);
-  if (![MONO, SANS].includes(face) || !weight)
-    throw new Error(
-      `brand h3 ${face} ${tokens["--type-h3-weight"]}: neither the mono nor the sans`,
-    );
-  return { mono: face === MONO, bold: weight >= 600 };
-})();
 
 /** Runs with each `\n` as a line break inside the paragraph (`<a:br/>`). pptxgenjs, given the
  *  `\n`, splits the run into paragraphs that all end a line, so a run after it, such as a bold word,
@@ -462,10 +356,6 @@ function need(content: Para[] | Para | string, c: Palette, w: number, o: BoxOpts
   return Math.min(max, parasHeight(asParas(content, c), o, w, 1));
 }
 
-/** The brand card's corner, `--slide-radius` at 1920: 40 px at the top left and bottom right, a
- *  quarter of it at the other two, which the post-processing sets. */
-const CORNER = 40 / 144;
-
 /** A card: the brand's corners, or every corner `r` round where given, as a pill or a label box. */
 function card(
   s: PSlide,
@@ -739,15 +629,6 @@ const pictureLink = (href?: string) =>
       }
     : {};
 
-const THEME: Record<SectionTheme, keyof Palette> = {
-  primary: "teal",
-  secondary: "purple",
-  accent: "amber",
-  warning: "amber",
-  success: "green",
-  deepdive: "purple",
-};
-
 /** The brand strip and footer, where the web stands them. */
 function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
   const { c } = ctx;
@@ -764,7 +645,7 @@ function frame(s: PSlide, ctx: Ctx, deck: Presentation, index: number) {
       0,
       Math.min(W / steps + 0.01, W - x),
       16 / 144,
-      mix(c.purple, c.teal, i / (steps - 1)),
+      mixColor(c.purple, c.teal, i / (steps - 1)),
     );
   }
   const slide = deck.slides[index];
@@ -889,13 +770,13 @@ function footer(
 ) {
   if (!text) return;
   s.addShape("line", {
-    x: SIDE,
+    x: EDGE,
     y: top + 0.05,
     w: CW,
     h: 0.001,
     line: { color: ctx.c.border, width: 0.75 },
   });
-  box(s, ctx.c, text, SIDE, top + 0.15, CW, h - 0.15, {
+  box(s, ctx.c, text, EDGE, top + 0.15, CW, h - 0.15, {
     size: PT.base,
     color: ctx.c.ink,
     align: centered ? "center" : "left",
@@ -910,7 +791,7 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
   let wrapped = 0;
   const kicker = h.sectionLabel ?? h.preText;
   if (kicker || h.principle) {
-    let x = SIDE;
+    let x = EDGE;
     // Teal in every section, the website's mono caps.
     if (kicker) {
       // The web's label line, 1.4 of its size, as wide as its capitals.
@@ -927,10 +808,10 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
     }
     if (h.principle) {
       // On the print route a wrapped pill stands 65 px below the label's row, the title 76 px.
-      const row = x + chipWidth(h.principle, PT.sm, false) > W - SIDE ? 65 / 144 : 0;
+      const row = x + chipWidth(h.principle, PT.sm, false) > W - EDGE ? 65 / 144 : 0;
       if (row) {
         wrapped = 76 / 144;
-        x = SIDE;
+        x = EDGE;
       }
       chip(s, c, h.principle, x, y + row + 0.02, PT.sm, c.tint, c.ink, false);
     }
@@ -949,23 +830,16 @@ function header(s: PSlide, ctx: Ctx, h: Head, centered = false): number {
       align: centered ? "center" : "left",
     };
     const hh = need(h.headline, c, CW, o, 1.1);
-    box(s, c, h.headline, SIDE, y, CW, Math.max(hh, 0.45), o);
+    box(s, c, h.headline, EDGE, y, CW, Math.max(hh, 0.45), o);
     y += Math.max(hh, 0.45) + 0.08;
   }
   if (h.subtitle) {
     const o: BoxOpts = { size: PT.base, color: c.muted, align: centered ? "center" : "left" };
     const sh = need(h.subtitle, c, CW, o, 0.7);
-    box(s, c, h.subtitle, SIDE, y, CW, sh, o);
+    box(s, c, h.subtitle, EDGE, y, CW, sh, o);
     y += sh;
   }
   return y + 0.3;
-}
-
-interface Area {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
 }
 
 const bodyO = (c: Palette, k: number, extra: Partial<BoxOpts> = {}): BoxOpts => ({
@@ -1144,7 +1018,7 @@ function beforeAfter(
     const x = a.x + i * (half + gap);
     const l = beforeAfterSide(c, sd, i, strike, half, o, k, adds);
     if (i) card(s, x, a.y, half, a.h, c.tealTint, c.teal);
-    else card(s, x, a.y, half, a.h, strike ? mix(c.muted, c.bg, 0.07) : c.card, c.border);
+    else card(s, x, a.y, half, a.h, strike ? mixColor(c.muted, c.bg, 0.07) : c.card, c.border);
     const top = a.y + pad;
     if (l.icon) circleMark(s, x + pad, top + (l.labelH - l.icon) / 2, l.icon, l.tone, i === 1);
     box(s, c, l.label, x + pad + l.indent, top, half - 2 * pad - l.indent, l.labelH, {
@@ -1461,12 +1335,12 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       // the ground with its border at 25 %, the text the tone mixed 60 % with ink.
       const tone =
         b.variant === "warning" ? c.amber : b.variant === "success" ? c.green : undefined;
-      const ink = tone ? mix(tone, c.ink, 0.6) : c.ink;
+      const ink = tone ? mixColor(tone, c.ink, 0.6) : c.ink;
       // As wide as its text, at the body size, brand's callout padding round it.
       const pad = CALLOUT_PAD * k;
       const w = b.fullWidth ? a.w : Math.min(a.w, textWidth(b.text, o.size) + 2 * pad + 0.02);
-      const fill = tone ? mix(tone, c.bg, 0.07) : c.callout(c.purple);
-      card(s, a.x, a.y, w, a.h, fill, tone && mix(tone, c.bg, 0.25));
+      const fill = tone ? mixColor(tone, c.bg, 0.07) : c.callout(c.purple);
+      card(s, a.x, a.y, w, a.h, fill, tone && mixColor(tone, c.bg, 0.25));
       return box(s, c, b.text, a.x + pad, a.y + pad, w - 2 * pad, a.h - 2 * pad, {
         ...o,
         color: ink,
@@ -1529,7 +1403,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
       const codeW = notes.length ? a.w * 0.62 : a.w;
       const lh = (PT.sm * k * 1.3) / 72;
       for (const n of notes)
-        rect(s, a.x, a.y + 0.2 + (n.line - 1) * lh, codeW, lh, mix(c.teal, c.code, 0.35));
+        rect(s, a.x, a.y + 0.2 + (n.line - 1) * lh, codeW, lh, mixColor(c.teal, c.code, 0.35));
       box(
         s,
         c,
@@ -1689,7 +1563,7 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
             y,
             cell.mark,
             cell.mark,
-            solid ? c.teal : mix(c.teal, c.card, 0.07),
+            solid ? c.teal : mixColor(c.teal, c.card, 0.07),
             undefined,
             10 / 144,
           );
@@ -1857,8 +1731,15 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
         const ty = y + r.barY;
         if (b.max != null) {
           // The track ends on a rule and marks its quarters in the ground, under the bar.
-          rect(s, a.x + L.trackX, ty, L.trackW, L.barH, mix(c.ink, c.bg, 0.07));
-          rect(s, a.x + L.trackX + L.trackW - 4 / 144, ty, 4 / 144, L.barH, mix(c.ink, c.bg, 0.25));
+          rect(s, a.x + L.trackX, ty, L.trackW, L.barH, mixColor(c.ink, c.bg, 0.07));
+          rect(
+            s,
+            a.x + L.trackX + L.trackW - 4 / 144,
+            ty,
+            4 / 144,
+            L.barH,
+            mixColor(c.ink, c.bg, 0.25),
+          );
           for (const q of [0.25, 0.5, 0.75])
             rect(s, a.x + L.trackX + q * L.trackW - 1 / 144, ty, 2 / 144, L.barH, c.bg);
         }
@@ -2096,9 +1977,6 @@ function drawBlock(s: PSlide, ctx: Ctx, b: ContentBlock, a: Area, k: number, cen
   }
 }
 
-/** A rem of the print route's stage, in inches. */
-const REM = STAGE.rem / 144;
-
 /** The rule and its gap before a quote's words: brand's 2 px and 1.25 rem on the 1920 stage. */
 const QUOTE_INDENT = 2 / 144 + 1.25 * REM;
 
@@ -2148,7 +2026,7 @@ function barsLayout(b: Extract<ContentBlock, { type: "bars" }>, ctx: Ctx, w: num
       barY: inline ? (rowH - barH) / 2 : lh + 0.75 * REM * k,
       from,
       barW,
-      fill: bar.highlight || !anyHighlight ? c.teal : mix(c.ink, c.bg, 0.4),
+      fill: bar.highlight || !anyHighlight ? c.teal : mixColor(c.ink, c.bg, 0.4),
       value: { runs: [{ text }], bold: !context } as Para,
       valueO: {
         size: (inline ? PT.h3 : PT.title) * k,
@@ -2202,7 +2080,7 @@ function topology(
   k: number,
 ): number {
   const { c } = ctx;
-  const sp = (v: number) => v * 0.25 * REM * k;
+  const sp = (v: number) => spacing(v, k);
   const bd = (3 / 144) * k;
   // Sizes as drawn, in the half points pptxgenjs writes, so a box sized to its text holds it.
   const pt = (v: number) => Math.round(v * k * 2) / 2;
@@ -2226,7 +2104,7 @@ function topology(
         h,
         rectRadius:
           type === "subsystem" ? Math.min(0.9 * REM * k, h / 2) : Math.min(r, w / 2, h / 2),
-        fill: type === "platform" ? { type: "none" } : { color: mix(hue[type], c.bg, 0.07) },
+        fill: type === "platform" ? { type: "none" } : { color: mixColor(hue[type], c.bg, 0.07) },
         line: {
           color: hue[type],
           width: 1.5 * k,
@@ -2505,7 +2383,7 @@ function flowSteps(
 ): number {
   const { k } = o;
   const n = steps.length;
-  const sp = (v: number) => v * 0.25 * REM * k;
+  const sp = (v: number) => spacing(v, k);
   const narrow = n >= 6;
   const colW = a.w / n;
   const inner = colW - 2 * sp(narrow ? 2 : 5);
@@ -2667,7 +2545,7 @@ function flowBlock(
 ): number {
   const opts = { highlight: b.highlight, loop: b.loop, dense: b.dense, k };
   if (!b.frame) return flowSteps(s, c, b.steps, a, opts);
-  const sp = (v: number) => v * 0.25 * REM * k;
+  const sp = (v: number) => spacing(v, k);
   const { label, notes = [], footer } = b.frame;
   const pad = sp(6);
   const labelH = label ? (13.33 * 1.4 * k) / 72 : 0;
@@ -2692,14 +2570,14 @@ function flowBlock(
   const footH = footer ? need(footer, c, a.w - 2 * pad, footO) : 0;
   const h = pad + (label ? labelH + sp(4) : 0) + rowH + (footer ? sp(4) + sp(3) + footH : 0) + pad;
   if (!s) return h;
-  const tint = mix(c.teal, c.bg, 0.25);
+  const tint = mixColor(c.teal, c.bg, 0.25);
   s.addShape("round2DiagRect", {
     x: a.x,
     y: a.y,
     w: a.w,
     h,
     rectRadius: Math.min(CORNER, h / 2),
-    fill: { color: label ? mix(c.teal, c.bg, 0.07) : c.card },
+    fill: { color: label ? mixColor(c.teal, c.bg, 0.07) : c.card },
     line: { color: label ? c.teal : tint, width: 1, dashType: "dash" },
   });
   let y = a.y + pad;
@@ -2759,7 +2637,7 @@ function cardsLayout(
   const cols = b.columns ?? (n === 4 ? 2 : Math.min(n, 3));
   const wide = cols >= 4;
   const dense = !!b.dense;
-  const sp = (v: number) => v * 0.25 * REM * k;
+  const sp = (v: number) => spacing(v, k);
   const gap = sp(dense ? 5 : 6);
   const [padY, padX] = dense ? (wide ? [5, 5] : [6, 6]) : wide ? [6, 6] : [8, 9];
   const cw = (w - gap * (cols - 1)) / cols;
@@ -2946,7 +2824,6 @@ function blocks(
   return y - gap;
 }
 
-const BODY = (y: number): Area => ({ x: SIDE, y, w: CW, h: BOTTOM - y });
 /** A trend or bar chart as the print route draws it (`ChartFrame`, `Axes` and recharts' margins in
  *  `ChartPlots`): the card, its padding, a 16 pt label's line and the gaps round it, the legend's
  *  row over the card, the annotation under it, and the plot's edges inside its container. */
@@ -3075,7 +2952,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   let y = TOP + (headEnd - TOP - total * k) / 2;
   lines.forEach(([text, o, gap], i) => {
     if (i) y += gap * k;
-    box(s, c, text, SIDE, y, CW, heights[i], o);
+    box(s, c, text, EDGE, y, CW, heights[i], o);
     y += heights[i];
   });
   const mid = rowY + rowH / 2;
@@ -3086,7 +2963,7 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
   const left = (speakers ? 53 / 144 : 0) + (d.event ? (speakers ? 17 / 144 : 0) + 49 / 144 : 0);
   let ly = mid - left / 2;
   if (speakers) {
-    box(s, c, speakers, SIDE, ly, textW, 53 / 144, {
+    box(s, c, speakers, EDGE, ly, textW, 53 / 144, {
       size: PT.h3,
       mono: true,
       bold: true,
@@ -3095,9 +2972,9 @@ function opening(s: PSlide, ctx: Ctx, d: TitleSlide) {
     ly += 70 / 144;
   }
   if (d.event)
-    box(s, c, literal(d.event), SIDE, ly, textW, 49 / 144, { size: PT.base, color: c.muted });
+    box(s, c, literal(d.event), EDGE, ly, textW, 49 / 144, { size: PT.base, color: c.muted });
   if (d.qr && label) {
-    const colX = W - SIDE - colW;
+    const colX = W - EDGE - colW;
     picture(s, ctx, d.qr.src, colX + (colW - qr) / 2, rowY, qr, qr, {
       alt: qrAlt(d.qr.href, lang),
       href: d.qr.href,
@@ -3151,9 +3028,9 @@ const RENDER: {
     const th = need(title, c, CW - 1, o, 3);
     const sh = subtitle ? need(subtitle, c, CW - 2, { size: PT.lead, color: c.ink }, 1.2) : 0;
     const y = (H - th - sh - 0.5) / 2;
-    box(s, c, title, SIDE + 0.5, y, CW - 1, th, o);
+    box(s, c, title, EDGE + 0.5, y, CW - 1, th, o);
     if (subtitle)
-      box(s, c, subtitle, SIDE + 1, y + th + 0.5, CW - 2, sh, {
+      box(s, c, subtitle, EDGE + 1, y + th + 0.5, CW - 2, sh, {
         size: PT.lead,
         color: c.ink,
         align: "center",
@@ -3168,14 +3045,14 @@ const RENDER: {
         s,
         ctx.c,
         d.badge,
-        W - SIDE - (d.badge.length * PT.label * 0.62) / 72 - 0.24,
+        W - EDGE - (d.badge.length * PT.label * 0.62) / 72 - 0.24,
         TOP - 0.32,
         PT.label,
         ctx.c.tealTint,
         ctx.c.teal,
       );
     if (d.stageMarker?.length) {
-      let x = SIDE;
+      let x = EDGE;
       if (d.stagePrefix) {
         box(s, ctx.c, d.stagePrefix, x, y - 0.15, 1.5, 0.25, {
           size: PT.label,
@@ -3372,7 +3249,7 @@ const RENDER: {
       }
       if (d.closing) {
         const quoted = d.closingStyle === "quote";
-        const mark = { color: mix(c.teal, c.bg, 0.7) };
+        const mark = { color: mixColor(c.teal, c.bg, 0.7) };
         parts.push([
           [
             {
@@ -3465,10 +3342,10 @@ const RENDER: {
       let y = top;
       parts.forEach(([p, o, gap], i) => {
         y += gap;
-        box(s, c, p, SIDE, y, w, heights[i], o);
+        box(s, c, p, EDGE, y, w, heights[i], o);
         y += heights[i];
       });
-      const x = W - SIDE - colW + (colW - q) / 2;
+      const x = W - EDGE - colW + (colW - q) / 2;
       const pad = 2.5 * REM;
       card(s, x, top, q, q, "FFFFFF", c.border, CORNER);
       picture(s, ctx, qr.src, x + pad, top + pad, q - 2 * pad, q - 2 * pad, {
@@ -3479,7 +3356,7 @@ const RENDER: {
         s,
         c,
         { runs: [{ text: label, options: { hyperlink: { url: qr.href } } }] },
-        W - SIDE - colW,
+        W - EDGE - colW,
         top + q + REM,
         colW,
         labelH,
@@ -3569,11 +3446,11 @@ const RENDER: {
       floor: 0.5,
     };
     const footH = footerHeight(ctx, d.footer);
-    box(s, c, paras, SIDE, TOP, w, BOTTOM - TOP - footH, o);
+    box(s, c, paras, EDGE, TOP, w, BOTTOM - TOP - footH, o);
     footer(s, ctx, d.footer, footH);
     if (side) {
       // A quotation's portrait is round at the web's size, 384 px at 1920, centred in the side.
-      const [x, h] = [SIDE + w + 0.4, BOTTOM - TOP - footH];
+      const [x, h] = [EDGE + w + 0.4, BOTTOM - TOP - footH];
       const r = "round" in side && side.round ? 384 / 144 : 0;
       picture(
         s,
@@ -3721,7 +3598,7 @@ const RENDER: {
     ];
     if (intro.length) {
       const ih = need(intro, c, CW, { size: PT.base, color: c.muted }, 1.6);
-      box(s, c, intro, SIDE, y, CW, ih, { size: PT.base, color: c.muted });
+      box(s, c, intro, EDGE, y, CW, ih, { size: PT.base, color: c.muted });
       y += ih + 0.2;
     }
     const a = BODY(y);
@@ -3734,7 +3611,7 @@ const RENDER: {
     );
     d.examples.forEach((ex, i) => {
       const ey = a.y + i * (eh + 0.2);
-      box(s, c, { runs: md(ex.title, c) }, SIDE, ey, CW, 0.3, {
+      box(s, c, { runs: md(ex.title, c) }, EDGE, ey, CW, 0.3, {
         size: PT.base,
         mono: true,
         bold: true,
@@ -3745,7 +3622,7 @@ const RENDER: {
           [ctx.words.bad, ex.bad, c.red, c.redTint],
           [ctx.words.good, ex.good, c.green, c.greenTint],
         ] as const,
-        { x: SIDE, y: ey + 0.35, w: CW, h: eh - 0.35 },
+        { x: EDGE, y: ey + 0.35, w: CW, h: eh - 0.35 },
         0.25,
         ([label, text, tone, tint], r) => {
           card(s, r.x, r.y, r.w, r.h, tint, tone);
@@ -3821,7 +3698,7 @@ const RENDER: {
 
   "phased-pills"(s, ctx, d) {
     const y = d.title ? header(s, ctx, { headline: d.title }) : TOP;
-    pillPhases(s, ctx, d.phases, { x: SIDE + CW * 0.2, y, w: CW * 0.6, h: BOTTOM - y });
+    pillPhases(s, ctx, d.phases, { x: EDGE + CW * 0.2, y, w: CW * 0.6, h: BOTTOM - y });
   },
 
   process(s, ctx, d) {
@@ -3867,7 +3744,7 @@ const RENDER: {
         s,
         ctx,
         { type: "code", ...d.codeSnippet },
-        { x: SIDE, y: yy, w: CW, h: codeH - 0.1 },
+        { x: EDGE, y: yy, w: CW, h: codeH - 0.1 },
         1,
         false,
       );
@@ -3876,16 +3753,16 @@ const RENDER: {
     d.lanes.forEach((lane, i) => {
       const ly = yy + i * (lh + 0.12);
       const first = i === 0;
-      card(s, SIDE, ly, CW, lh, first ? c.purpleTint : c.card, first ? c.purple : c.border, 0.08);
-      box(s, c, { runs: [{ text: lane.label }] }, SIDE + 0.25, ly, 1.6, lh, {
+      card(s, EDGE, ly, CW, lh, first ? c.purpleTint : c.card, first ? c.purple : c.border, 0.08);
+      box(s, c, { runs: [{ text: lane.label }] }, EDGE + 0.25, ly, 1.6, lh, {
         size: PT.sm,
         mono: true,
         bold: true,
         color: first ? c.purple : c.muted,
         valign: "middle",
       });
-      let x = SIDE + 2;
-      const size = rowSize(ctx, lane.stages, PT.sm, 0.3, SIDE + CW - 0.25 - x);
+      let x = EDGE + 2;
+      const size = rowSize(ctx, lane.stages, PT.sm, 0.3, EDGE + CW - 0.25 - x);
       lane.stages.forEach((st, j) => {
         const w = chip(s, c, st, x, ly + lh / 2 - (size * 1.9) / 144, size, c.card, c.ink, false);
         x += w;
@@ -4046,7 +3923,7 @@ const RENDER: {
         if (!two && filled > 1) {
           s.addShape("custGeom" as PptxGenJS.SHAPE_NAME, {
             ...g,
-            fill: { color: mix(c.teal, c.card, 0.07) },
+            fill: { color: mixColor(c.teal, c.card, 0.07) },
             line: { type: "none" },
             points: [
               { x: 0, y: yAt(0), moveTo: true },
@@ -4192,7 +4069,7 @@ const RENDER: {
         });
       }
     }
-    annotate(SIDE, BOTTOM - 0.35, CW, 0.35);
+    annotate(EDGE, BOTTOM - 0.35, CW, 0.35);
   },
 
   question(s, ctx, d) {
@@ -4214,7 +4091,7 @@ const RENDER: {
     const oh = 2.5 * REM + (PT.h4 * 1.4) / 72;
     const total = hh + 3.5 * REM + d.options.length * (oh + REM) - REM;
     const top = Math.max(TOP, (BOTTOM - total) / 2);
-    box(s, c, hp, SIDE, top, CW, hh, head);
+    box(s, c, hp, EDGE, top, CW, hh, head);
     const x = (W - w) / 2;
     d.options.forEach((op, i) => {
       const oy = top + hh + 3.5 * REM + i * (oh + REM);
@@ -4268,7 +4145,7 @@ const RENDER: {
     };
     const th = Math.min(BOTTOM - TOP - speakerH, need(paras, c, CW - 1, o) + 0.2);
     const ty = TOP + (BOTTOM - TOP - th - speakerH) / 2;
-    box(s, c, paras, SIDE + 0.5, ty, CW - 1, th, o);
+    box(s, c, paras, EDGE + 0.5, ty, CW - 1, th, o);
     if (d.speakerName) {
       const sw = Math.max(2.6, (d.speakerName.length * PT.h3 * 0.62) / 72 + 0.8);
       card(s, (W - sw) / 2, ty + th + 0.2, sw, 0.85, c.card, c.border);
@@ -4329,7 +4206,7 @@ const RENDER: {
           align: "center",
         };
         const hh = need(literal(head), c, CW, o);
-        box(s, c, { ...literal(head), balance: true }, SIDE, y, CW, hh, o);
+        box(s, c, { ...literal(head), balance: true }, EDGE, y, CW, hh, o);
         y += hh + gap;
       }
       const speakers = d.speakers ?? [];
@@ -4409,7 +4286,7 @@ const RENDER: {
           ];
           const po: BoxOpts = { size: 17.5, color: c.ink, line: 1.4, align: "center" };
           const ph = need(paras, c, CW, po);
-          box(s, c, paras, SIDE, y, CW, ph, po);
+          box(s, c, paras, EDGE, y, CW, ph, po);
           y += ph + 2 * REM;
         }
         y += gap - 2 * REM;
@@ -4484,7 +4361,7 @@ const RENDER: {
         });
       }
       if (d.closingQuote) {
-        const mark = { color: mix(c.teal, c.bg, 0.7) };
+        const mark = { color: mixColor(c.teal, c.bg, 0.7) };
         tail.push({
           runs: [
             { text: "“", options: mark },
@@ -4499,8 +4376,8 @@ const RENDER: {
       }
       if (tail.length) {
         const o: BoxOpts = { size: PT.lead, color: c.muted, line: 1.25, tracking: -0.025 };
-        // max-w-7xl less the web line's 5vw sides (--slide-closing-side), SIDE at the 1920 stage.
-        const tw = Math.min(CW, 80 * REM) - 2 * SIDE;
+        // max-w-7xl less the web line's 5vw sides (--slide-closing-side), EDGE at the 1920 stage.
+        const tw = Math.min(CW, 80 * REM) - 2 * EDGE;
         const th = need(tail, c, tw, o);
         box(s, c, tail, (W - tw) / 2, y, tw, th, o);
         return y + th;
@@ -4537,9 +4414,18 @@ const RENDER: {
             items: p.items,
           }))
         : [{ hue: tone, items: col.items ?? [] }];
-      card(s, r.x, r.y, r.w, r.h, mix(tone, c.bg, 0.05), c.border);
+      card(s, r.x, r.y, r.w, r.h, mixColor(tone, c.bg, 0.05), c.border);
       rect(s, r.x + 0.15, r.y, r.w - 0.3, 0.05, tone);
-      chip(s, c, col.label, r.x + 0.25, r.y + 0.25, PT.label * 0.85, mix(tone, c.bg, 0.15), tone);
+      chip(
+        s,
+        c,
+        col.label,
+        r.x + 0.25,
+        r.y + 0.25,
+        PT.label * 0.85,
+        mixColor(tone, c.bg, 0.15),
+        tone,
+      );
       box(
         s,
         c,
@@ -4593,9 +4479,9 @@ const RENDER: {
     // GanttSlide's grid, in the spacing scale: a 20 rem label column, 0.25 rem between columns, and
     // per row a label line over a bar that fills the row, the row at most 7 rem tall.
     const sp = (v: number) => v * 0.25 * REM;
-    const gx = SIDE + sp(84);
+    const gx = EDGE + sp(84);
     const gap = sp(1);
-    const colW = (W - SIDE - gx - gap * (d.columns.length - 1)) / d.columns.length;
+    const colW = (W - EDGE - gx - gap * (d.columns.length - 1)) / d.columns.length;
     const cx = (col: number) => gx + (col - 1) * (colW + gap);
     const span = (n: number) => n * colW + (n - 1) * gap;
     const radius = (0.46875 * W) / 90;
@@ -4636,7 +4522,7 @@ const RENDER: {
               ]
             : []),
         ],
-        SIDE,
+        EDGE,
         ry,
         sp(80),
         rh,
@@ -4655,8 +4541,8 @@ const RENDER: {
           by,
           span(bar.span),
           ry + rh - by,
-          bar.continuous ? mix(tone, c.card, 0.4) : tone,
-          bar.continuous ? mix(tone, c.card, 0.7) : undefined,
+          bar.continuous ? mixColor(tone, c.card, 0.4) : tone,
+          bar.continuous ? mixColor(tone, c.card, 0.7) : undefined,
           radius,
         );
         box(s, c, bar.label, cx(bar.start), ry, span(bar.span), lh, {
@@ -4670,7 +4556,7 @@ const RENDER: {
     });
     if (stack) {
       const my = top + d.rows.length * pitch - (pitch - rh) + sp(3);
-      box(s, c, { runs: [caps(d.milestonesLabel ?? ctx.words.milestones)] }, SIDE, my, sp(80), lh, {
+      box(s, c, { runs: [caps(d.milestonesLabel ?? ctx.words.milestones)] }, EDGE, my, sp(80), lh, {
         size: PT.label,
         mono: true,
         color: c.muted,
@@ -4687,7 +4573,7 @@ const RENDER: {
             m.label,
             cx(column),
             my + 2 / 144 + sp(1.5) + k * lh,
-            Math.min(colW * 1.5, W - SIDE - cx(column)),
+            Math.min(colW * 1.5, W - EDGE - cx(column)),
             lh,
             { size: PT.label, bold: true, color: c.purple, line: 1.25 },
           ),
@@ -4742,7 +4628,7 @@ const RENDER: {
         : []),
     ]);
     const footH = footerHeight(ctx, d.footer);
-    box(s, c, paras, SIDE, y + 0.2, CW * 0.8, BOTTOM - y - 0.2 - footH, {
+    box(s, c, paras, EDGE, y + 0.2, CW * 0.8, BOTTOM - y - 0.2 - footH, {
       size: PT.h3,
       color: c.ink,
     });
@@ -4759,8 +4645,8 @@ const RENDER: {
     let top = y + 0.3;
     if (d.prompt) {
       const ph = need(d.prompt, c, CW - 0.6, { size: PT.lead, color: c.ink }) + 0.3;
-      card(s, SIDE, top, CW, ph, c.tealTint, c.teal);
-      box(s, c, d.prompt, SIDE + 0.3, top + 0.15, CW - 0.6, ph - 0.3, {
+      card(s, EDGE, top, CW, ph, c.tealTint, c.teal);
+      box(s, c, d.prompt, EDGE + 0.3, top + 0.15, CW - 0.6, ph - 0.3, {
         size: PT.lead,
         color: c.ink,
       });
@@ -4776,12 +4662,12 @@ const RENDER: {
       bullet: d.kind === "demo",
       after: 10,
     }));
-    box(s, c, paras, SIDE, top, CW - fw - (fw ? 0.5 : 0), BOTTOM - top, {
+    box(s, c, paras, EDGE, top, CW - fw - (fw ? 0.5 : 0), BOTTOM - top, {
       size: PT.lead,
       color: c.ink,
     });
     if (!frame.length) return;
-    const fx = SIDE + CW - fw;
+    const fx = EDGE + CW - fw;
     const fh = 0.5 + frame.length * 0.55;
     card(s, fx, top, fw, fh, c.card, c.border);
     box(
@@ -4851,7 +4737,7 @@ const RENDER: {
         h: dia,
         angleRange: [(from + 360) % 360, (to + 360) % 360],
         arcThicknessRatio: 36 / 96,
-        fill: { color: mix(c.teal, c.bg, 0.4) },
+        fill: { color: mixColor(c.teal, c.bg, 0.4) },
         line: { type: "none" },
       });
       const r = 78 * unit;
@@ -4880,7 +4766,7 @@ const RENDER: {
       y: cy - hub / 2,
       w: hub,
       h: hub,
-      fill: { color: mix(c.ink, c.bg, 0.07) },
+      fill: { color: mixColor(c.ink, c.bg, 0.07) },
       line: { type: "none" },
     });
     box(
@@ -5006,8 +4892,8 @@ const RENDER: {
       mid - needH / 2,
       fixed[0],
       needH,
-      mix(c.teal, c.card, 0.07),
-      mix(c.teal, c.card, 0.4),
+      mixColor(c.teal, c.card, 0.07),
+      mixColor(c.teal, c.card, 0.4),
     );
     box(s, c, d.need, col(0) + 1.25 * REM, mid - needH / 2 + REM, needIn, needH - 2 * REM, bold);
     bar(col(1), fixed[1], mid);
@@ -5050,7 +4936,15 @@ const RENDER: {
           line: 1.4,
         },
       );
-      card(s, col(4), by, fixed[4], rowH, mix(teamLine(br.team), c.card, 0.15), teamLine(br.team));
+      card(
+        s,
+        col(4),
+        by,
+        fixed[4],
+        rowH,
+        mixColor(teamLine(br.team), c.card, 0.15),
+        teamLine(br.team),
+      );
       const parts = branch(br);
       const inner = parts.reduce((sum, [p, o, gap]) => sum + gap + need(p, c, bIn, o), 0);
       let ty = cy - inner / 2;
@@ -5065,7 +4959,7 @@ const RENDER: {
     });
     bar(joinX, col(6) - joinX, mid);
     head(col(6), mid);
-    card(s, col(6), mid - oH / 2, fixed[6], oH, mix(c.ink, c.bg, 0.07));
+    card(s, col(6), mid - oH / 2, fixed[6], oH, mixColor(c.ink, c.bg, 0.07));
     box(s, c, d.outcome, col(6) + 1.25 * REM, mid - oH / 2 + REM, oIn, oH - 2 * REM, bold);
     if (d.caption) box(s, c, d.caption, a.x, top + gridH + 1.5 * REM, a.w, capH - 1.5 * REM, capO);
   },
@@ -5085,7 +4979,7 @@ function curve(s: PSlide, ctx: Ctx, g: Area, f: (t: number) => number, fill: boo
       y: g.y,
       w: g.w,
       h: g.h,
-      fill: { color: mix(ctx.c.teal, ctx.c.bg, 0.18) },
+      fill: { color: mixColor(ctx.c.teal, ctx.c.bg, 0.18) },
       line: { type: "none" },
       points: [{ x: 0, y: g.h, moveTo: true }, ...pts, { x: g.w, y: g.h }, { close: true }],
     });
@@ -5135,7 +5029,7 @@ function pillPhases(
         x,
         py + 0.32,
         size,
-        on ? mix(tone, c.bg, 0.15) : c.card,
+        on ? mixColor(tone, c.bg, 0.15) : c.card,
         c.ink,
         false,
       );
@@ -5184,7 +5078,8 @@ function finishChart(xml: string, fix: ChartFix) {
     );
 }
 
-/** Builds the deck and checks the finished slides for overflow. */
+/** Builds the deck and checks the finished slides for overflow. Returns warnings for images or
+ *  videos it could not place. */
 export async function renderPptx(
   deck: Presentation,
   assets: string,
@@ -5222,7 +5117,7 @@ export async function renderPptx(
       const hue = { primary: c.teal, secondary: c.purple, accent: c.amber, success: c.green }[
         ground
       ];
-      grounded.set(key, { ...base, c: { ...c, bg: mix(hue, c.bg, 0.07) } });
+      grounded.set(key, { ...base, c: { ...c, bg: mixColor(hue, c.bg, 0.07) } });
     }
     return grounded.get(key)!;
   };

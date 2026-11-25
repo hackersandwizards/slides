@@ -133,7 +133,6 @@ export const shapesOf = (xml: string) =>
     };
   });
 export const TEAL = tokens["--color-teal"].slice(1).toUpperCase();
-export const REM = 21.333 / 144;
 
 export const specimenAt = (test: (s: Slide) => boolean) => slideCatalog.slides.findIndex(test);
 

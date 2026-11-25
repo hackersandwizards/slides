@@ -7,10 +7,10 @@ import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 import { slideCatalog } from "../specimen/slide-catalog";
 import type { ContentSlide, Slide } from "../types/slide";
 import { labeledGridAsCards } from "../lib/slide-utils";
+import { REM } from "../scripts/pptx/stage";
 import {
   onlySlide,
   rendered,
-  REM,
   shapesOf,
   specimen,
   specimenAt,
