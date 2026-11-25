@@ -23,7 +23,7 @@ import {
   trendCategoryPadding,
   useChartCategoryLabels,
   type MeasuredChartLabels,
-} from "./ChartCategoryLabels";
+} from "./ChartCategoryLayout";
 import { LabeledPlot } from "./LabeledPlot";
 import { TrendReference, TrendSeries, trendTimeline } from "./TrendSeries";
 

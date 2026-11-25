@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { barTone } from "../components/slides/BarsVisual";
-import { cardLook } from "../components/slides/CardsVisual";
+import { cardLook } from "../components/slides/TileGridVisual";
 import { flowRowLook, stepInk, stepNumbers } from "../components/slides/FlowRowLook";
 import { staggeredGeometry } from "../components/slides/StaggeredTimeline";
 import { stageAxes } from "../components/slides/TimelineVisual";

@@ -7,7 +7,7 @@ import { deckSync, ROLE_NAMES, type DeckState } from "../../lib/presenter-sync";
 import { directionKey, writeStored } from "../../lib/slide-utils";
 import { MAX_SPLIT, MIN_SPLIT, usePresenterSplit } from "../../lib/use-presenter-split";
 import { PresenterHeader } from "./PresenterHeader";
-import { SpeakerNotes } from "./SpeakerNotes";
+import { SpeakerNotes } from "./SpeakerTextPanel";
 
 interface Props {
   /** Every slide's speaker notes, in deck order. */

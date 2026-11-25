@@ -4,7 +4,7 @@ import {
   CHART_CATEGORY_SPACING,
   trendCategoryPadding,
   wrappedLabelMetrics,
-} from "../components/slides/ChartCategoryLabels";
+} from "../components/slides/ChartCategoryLayout";
 import { trendTimeline } from "../components/slides/TrendSeries";
 
 const font = {

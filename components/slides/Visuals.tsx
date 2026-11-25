@@ -7,7 +7,7 @@ import { LONG_FLOW } from "../../lib/slide-utils";
 import { DashedFrame, NumberTile } from "./primitives";
 import { Annotated, AnnotatedCode } from "./AnnotatedVisual";
 import { Bars } from "./BarsVisual";
-import { Cards } from "./CardsVisual";
+import { Cards } from "./TileGridVisual";
 import { Layers } from "./LayersVisual";
 import { Numbers } from "./NumbersVisual";
 import { VISUAL_CAPTION, VisualIcon } from "./DiagramVocabulary";
