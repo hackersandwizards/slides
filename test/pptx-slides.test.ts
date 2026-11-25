@@ -3,10 +3,9 @@ import verbal from "@hackersandwizards/brand/verbal.json";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { rejection } from "@hackersandwizards/scaffolding/rejection";
 import { assert, beforeAll, describe, expect, it } from "vitest";
-import { slideCatalog } from "../specimen/slide-catalog";
+import { slideCatalog, specimenImages } from "../specimen/slide-catalog";
 import type { Slide } from "../types/slide";
 import { dualPillAsRoadmap, evolutionAsProcess } from "../lib/slide-aliases";
-import { WORDS } from "../lib/slide-words";
 import {
   norm,
   onlySlide,
@@ -19,6 +18,7 @@ import {
   unescapeNamedEntities,
 } from "./fixtures/rendered-deck";
 import { pptxSlideVariants } from "./fixtures/pptx-slide-variants";
+import { teamTopologySlide } from "./fixtures/team-topology";
 
 let slideXml: string[];
 
@@ -301,17 +301,15 @@ describe("slides-pptx on the specimen deck", () => {
     );
   });
 
-  it("names a team picture's types under it unless the slide turns its legend off", () => {
-    const at = slideCatalog.slides.flatMap((x, i) => (x.type === "team-topology" ? [i] : []));
-    const named = at.map((i) => slideXml[i].includes(`<a:t>${WORDS.en.teams.enabling}</a:t>`));
-    expect(named).toEqual(
-      at.map(
-        (i) =>
-          (slideCatalog.slides[i] as Extract<Slide, { type: "team-topology" }>).legend !== false,
-      ),
-    );
-    expect(named).toContain(true);
-    expect(named).toContain(false);
+  it.each([
+    { headline: "Four team types", legend: ["Enabling team"] },
+    { headline: "Without a subsystem team", legend: [] },
+    { headline: "A proposal to discuss", legend: ["Enabling team"] },
+    { headline: "The teams around one stream", legend: ["Enabling team"] },
+  ])("sets the legend text for $headline", async ({ headline, legend }) => {
+    const xml = await onlySlide(specimenSlide(headline, "team-topology"));
+    const labels = shapesOf(xml).map((shape) => shape.texts.join(""));
+    expect(labels.filter((label) => label === "Enabling team")).toEqual(legend);
   });
 
   it("gives a Gantt bar's label its own line, under the months and the row above", () => {
@@ -376,9 +374,7 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("draws a complicated-subsystem branch in the team's colour", async () => {
-    const slide = slideCatalog.slides.find(
-      (x) => x.type === "decision" && x.yes.team === "complicated-subsystem",
-    )!;
+    const slide = specimenSlide("Subsystem or enablement", "decision");
     const factory = tokens["--color-factory"].slice(1).toUpperCase();
     expect(await onlySlide(slide)).toContain(`<a:srgbClr val="${factory}"/>`);
   });
@@ -491,51 +487,93 @@ describe("slides-pptx draws what the slide shows", () => {
     expect(numbers.filter((number, i) => Math.abs(number.x - tiles[i + 1].x) >= 0.01)).toEqual([]);
   });
 
-  it("draws a team picture as the web lays it out: enabling columns side by side, subsystem octagons in one row, the platform teams in one dotted frame, roles beside a stream team's name", () => {
-    const i = specimenAt(
-      (x) =>
-        x.type === "team-topology" &&
-        (x.complicatedSubsystem?.length ?? 0) > 1 &&
-        x.platform.length > 1 &&
-        x.enabling.length > 0,
-    );
-    const slide = slideCatalog.slides[i] as Extract<Slide, { type: "team-topology" }>;
-    const shapes = shapesOf(slideXml[i]);
-    const top = (sh: { y?: number }) => +sh.y!.toFixed(2);
-    const frames = shapes.filter((sh) => sh.dash === "sysDot" && sh.w! > 2);
-    expect(frames).toHaveLength(1);
-    // The legend's swatch, under the platform frame, is an octagon too.
-    const octagons = shapes.filter((sh) => sh.prst === "octagon" && sh.y! < frames[0].y!);
-    expect(octagons).toHaveLength(slide.complicatedSubsystem!.length);
-    expect(new Set(octagons.map(top)).size).toBe(1);
-    for (const t of slide.platform) {
-      const name = shapes.find((sh) => sh.texts.join("") === t.name)!;
-      expect(name.x!).toBeGreaterThanOrEqual(frames[0].x!);
-      expect(name.y!).toBeGreaterThanOrEqual(frames[0].y!);
-      expect(name.y! + name.h!).toBeLessThanOrEqual(frames[0].y! + frames[0].h!);
-    }
-    const purple = tokens["--color-purple"].slice(1).toUpperCase();
-    const enabling = shapes.filter(
-      (sh) =>
-        sh.xml.includes(`<a:ln w="`) &&
-        sh.xml.includes(`val="${purple}"/></a:solidFill><a:prstDash`) &&
-        sh.h! > 1,
-    );
-    expect(enabling.length).toBe(slide.enabling.length);
-    expect(new Set(enabling.map(top)).size).toBe(1);
+  describe("team picture layout", () => {
+    const proposal = specimenSlide("A proposal to discuss", "team-topology");
+    const shortTeams = specimenSlide("Four team types", "team-topology");
+    let diagrams: ReturnType<typeof shapesOf>[];
+
+    beforeAll(async () => {
+      const { slideXml } = await rendered({
+        name: "Team pictures",
+        slides: [proposal, teamTopologySlide, shortTeams],
+      });
+      diagrams = slideXml.map(shapesOf);
+    });
+
+    it.each([
+      { layout: "proposal", index: 0, count: 1 },
+      { layout: "dense picture", index: 1, count: 3 },
+    ])("lays out the $layout's enabling columns side by side", ({ index, count }) => {
+      const purple = tokens["--color-purple"].slice(1).toUpperCase();
+      const border = new RegExp(
+        `<a:ln w="\\d+"><a:solidFill><a:srgbClr val="${purple}"/><\\/a:solidFill><a:prstDash`,
+      );
+      const enabling = diagrams[index]
+        .filter((shape) => border.test(shape.xml))
+        .filter((shape) => shape.h > 1);
+      expect(enabling).toHaveLength(count);
+      expect(new Set(enabling.map((shape) => shape.y.toFixed(2))).size).toBe(1);
+      expect(
+        enabling.slice(1).filter((shape, i) => shape.x <= enabling[i].x + enabling[i].w),
+      ).toEqual([]);
+    });
+
+    it("places the subsystem octagons in one row above the platform frame", () => {
+      const shapes = diagrams[0];
+      const frames = shapes
+        .filter((shape) => shape.dash === "sysDot")
+        .filter((shape) => shape.w > 2);
+      assert(frames.length === 1, "The proposal has one dotted platform frame");
+      const [frame] = frames;
+      // The legend's swatch, under the platform frame, is an octagon too.
+      const octagons = shapes
+        .filter((shape) => shape.prst === "octagon")
+        .filter((shape) => shape.w > 1);
+      expect(octagons).toHaveLength(2);
+      expect(new Set(octagons.map((shape) => shape.y.toFixed(2))).size).toBe(1);
+      expect(octagons.filter((shape) => shape.y >= frame.y)).toEqual([]);
+    });
+
+    it("places all three platform names inside a single dotted frame", () => {
+      const shapes = diagrams[0];
+      const frames = shapes
+        .filter((shape) => shape.dash === "sysDot")
+        .filter((shape) => shape.w > 2);
+      expect(frames).toHaveLength(1);
+      const [frame] = frames;
+      const titles = ["Platform: Environments", "Platform: Storefront", "Platform: Identity"];
+      const names = shapes.filter((shape) => titles.includes(shape.texts.join("")));
+      expect(names.map((shape) => shape.texts.join(""))).toEqual(titles);
+      expect(
+        names.map((shape) => ({
+          insideLeft: shape.x >= frame.x,
+          insideTop: shape.y >= frame.y,
+          insideBottom: shape.y + shape.h <= frame.y + frame.h,
+        })),
+      ).toEqual([
+        { insideLeft: true, insideTop: true, insideBottom: true },
+        { insideLeft: true, insideTop: true, insideBottom: true },
+        { insideLeft: true, insideTop: true, insideBottom: true },
+      ]);
+    });
+
     // A short team's roles follow its name on its line, on the first team picture.
-    const j = specimenAt((x) => x.type === "team-topology");
-    const team = (slideCatalog.slides[j] as typeof slide).streamAligned[0];
-    const first = shapesOf(slideXml[j]);
-    const name = first.find((sh) => sh.texts.join("") === team.name)!;
-    const roles = first.find((sh) =>
-      sh.texts
-        .join("")
-        .replace(/\u00a0/g, " ")
-        .includes(team.roles[0]),
-    )!;
-    expect(Math.abs(name.y! + name.h! / 2 - (roles.y! + roles.h! / 2))).toBeLessThan(0.05);
-    expect(roles.x!).toBeGreaterThan(name.x! + name.w!);
+    it("places a short stream team's roles on the same line after its name", () => {
+      const shapes = diagrams[2];
+      const names = shapes.filter((shape) => shape.texts.join("") === "Stream team: Checkout");
+      const roles = shapes.filter((shape) =>
+        shape.texts
+          .join("")
+          .replace(/\u00a0/g, " ")
+          .includes("Product lead"),
+      );
+      expect(names).toHaveLength(1);
+      expect(roles).toHaveLength(2);
+      const [name] = names;
+      const [firstRoles] = roles;
+      expect(Math.abs(name.y + name.h / 2 - (firstRoles.y + firstRoles.h / 2))).toBeLessThan(0.05);
+      expect(firstRoles.x).toBeGreaterThan(name.x + name.w);
+    });
   });
 
   it("draws a wheel's segments as arcs with a gap between them", () => {
@@ -546,32 +584,71 @@ describe("slides-pptx draws what the slide shows", () => {
     );
   });
 
-  it("sets a statement's QR code in a white card with its address under it, as QrStatement", () => {
-    const i = specimenAt((x) => x.type === "statement" && !!x.qr && !x.attribution);
-    const shapes = shapesOf(slideXml[i]);
-    const card = shapes.find((sh) => sh.fill === "FFFFFF" && Math.abs(sh.w! - sh.h!) < 0.01)!;
+  it("sets a statement's QR code in a white card with its address under it, as QrStatement", async () => {
+    const {
+      slideXml: [xml],
+    } = await rendered(
+      {
+        name: "QR statement",
+        slides: [
+          {
+            type: "statement",
+            lines: ["Does the diagnosis hold for you?"],
+            subtitle:
+              "What works for you? What does not?\nWhere did you fall flat?\n\nOn to the speakers' corner,\nlater on the discussion board",
+            qr: { src: specimenImages["qr-tight.png"], href: "https://example.com/harness" },
+            footer: "The discussion goes on in the hallway and on the board",
+          },
+        ],
+      },
+      join(import.meta.dirname, ".."),
+    );
+    const shapes = shapesOf(xml);
+    const cards = shapes.filter((shape) => shape.prst === "roundRect");
+    expect(cards).toHaveLength(1);
+    const [card] = cards;
+    expect(card.fill).toBe("FFFFFF");
+    expect(Math.abs(card.w - card.h)).toBeLessThan(0.01);
     expect(card.w).toBeGreaterThan(3);
-    const address = shapes.find((sh) => sh.texts.join("").startsWith("↗"))!;
-    expect(address.y!).toBeGreaterThan(card.y! + card.h!);
+    const addresses = shapes.filter((shape) => shape.texts.join("").startsWith("↗"));
+    assert(addresses.length === 1, "The statement has one address");
+    const [address] = addresses;
+    expect(address.y).toBeGreaterThan(card.y + card.h);
   });
 
-  it("gives each of a question's options its count, as the printed QuestionSlide", () => {
-    const i = specimenAt((x) => x.type === "question");
-    const slide = slideCatalog.slides[i] as Extract<Slide, { type: "question" }>;
-    const counts = shapesOf(slideXml[i]).filter(
-      (sh) => sh.texts.join("") === "0" && sh.xml.includes(`val="${TEAL}"`),
-    );
-    expect(counts).toHaveLength(slide.options.length);
+  it("gives each of a question's options its count, as the printed QuestionSlide", async () => {
+    const xml = await onlySlide({
+      type: "question",
+      headline: "Where does your team review today?",
+      storageKey: "slide-catalog-question",
+      options: [
+        { label: "A", text: "Only the diff" },
+        { label: "B", text: "The plan and the diff" },
+        { label: "C", text: "Nobody reviews agent work" },
+        { label: "D", text: "We do not use agents yet" },
+      ],
+    });
+    const zeroes = shapesOf(xml).filter((shape) => shape.texts.join("") === "0");
+    const teal = zeroes.filter((shape) => shape.xml.includes(`val="${TEAL}"`));
+    expect(teal).toHaveLength(4);
   });
 
-  it("centres a contact closing's column in the slide, as ContactVariant", () => {
-    const i = specimenAt(
-      (x) =>
-        x.type === "closing" && x.variant !== "discussion" && !x.speakers?.some((p) => p.imageSrc),
-    );
-    const texts = shapesOf(slideXml[i]).filter((sh) => sh.texts.join("").trim() && sh.y! < 6.8);
-    const top = Math.min(...texts.map((sh) => sh.y!));
-    const bottom = Math.max(...texts.map((sh) => sh.y! + sh.h!));
+  it("centres a contact closing's column in the slide, as ContactVariant", async () => {
+    const xml = await onlySlide({
+      type: "closing",
+      variant: "contact",
+      line1: "Questions?",
+      speakers: [
+        { name: "Mara Lindqvist", contact: "mara@example.com", company: "hackers&wizards" },
+      ],
+      claim: false,
+      closingQuote: "Small changes, shipped every day.",
+    });
+    const texts = shapesOf(xml)
+      .filter((shape) => shape.y < 6.8)
+      .filter((shape) => shape.texts.join("").trim().length > 0);
+    const top = Math.min(...texts.map((shape) => shape.y));
+    const bottom = Math.max(...texts.map((shape) => shape.y + shape.h));
     expect(Math.abs((top + bottom) / 2 - 3.75)).toBeLessThan(0.1);
   });
 });
