@@ -1,10 +1,9 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, render, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useCarousel } from "../lib/use-carousel";
 import { usePendingReveal } from "../lib/use-progressive-reveal";
 import { PrintProvider } from "../lib/print-context";
 import { phoneWidth } from "./phone-width";
-import { render } from "@testing-library/react";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import type { Slide } from "../types/slide";
 

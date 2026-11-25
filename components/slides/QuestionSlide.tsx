@@ -12,7 +12,7 @@ import { BlurFade } from "../ui/blur-fade";
 import { NumberTicker } from "../ui/number-ticker";
 import { SlideShell } from "./SlideShell";
 import { DisplayHeading } from "./primitives";
-import { readStored, writeStored } from "../../lib/slide-utils";
+import { parseStoredJson, readStored, writeStored } from "../../lib/slide-utils";
 
 interface Props {
   slide: QuestionSlideType;
@@ -20,18 +20,14 @@ interface Props {
 
 /** Saved votes, or null where they are missing, unreadable or for another number of options. */
 function parseCounts(raw: string | null, length: number): number[] | null {
-  try {
-    const saved: unknown = JSON.parse(raw ?? "null");
-    if (!Array.isArray(saved) || saved.length !== length) return null;
-    const counts: unknown[] = saved;
-    return counts.every(
-      (count): count is number => typeof count === "number" && Number.isFinite(count),
-    )
-      ? counts
-      : null;
-  } catch {
-    return null;
-  }
+  const saved = parseStoredJson(raw);
+  if (!Array.isArray(saved) || saved.length !== length) return null;
+  const counts: unknown[] = saved;
+  return counts.every(
+    (count): count is number => typeof count === "number" && Number.isFinite(count),
+  )
+    ? counts
+    : null;
 }
 
 /** The votes, kept across reloads. Saved votes load after mount: the server renders none, and a

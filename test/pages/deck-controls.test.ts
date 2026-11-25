@@ -94,12 +94,22 @@ it("fits the confidentiality line above the lockup and controls at 320 px", asyn
   expect(footer).toBe(true);
 });
 
+it.each(WIDTHS.filter((width) => width < 768))(
+  "%i px shows the buttons with no pointer move",
+  async (width) => {
+    const page = await deck(width);
+    const { opacity } = await bar(page);
+    await page.close();
+    expect(opacity).toBe(1);
+  },
+  limit(30_000),
+);
+
 it.each(WIDTHS)(
   "%i px: a position and working buttons",
   async (width) => {
     const page = await deck(width);
-    if (width < 768) expect((await bar(page)).opacity).toBe(1);
-    else await page.mouse.move(width / 2, 300);
+    if (width >= 768) await page.mouse.move(width / 2, 300);
     await shown(page);
     const before = await bar(page);
     expect(before).toMatchObject({ hit: true, inside: true });

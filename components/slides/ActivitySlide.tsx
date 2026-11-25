@@ -10,7 +10,7 @@ import type { ActivitySlide as ActivitySlideType } from "../../types/slide";
 import { iconMap } from "../../lib/icons";
 import { usePrintMode } from "../../lib/print-context";
 import { useMounted } from "../../lib/use-mounted";
-import { formatDuration, readStored, writeStored } from "../../lib/slide-utils";
+import { formatDuration, parseStoredJson, readStored, writeStored } from "../../lib/slide-utils";
 import { renderMarkdown } from "../../lib/markdown";
 import { BlurFade } from "../ui/blur-fade";
 import { SectionHeader } from "./SectionHeader";
@@ -136,30 +136,28 @@ const fresh = (minutes: number): TimerState => ({
 });
 
 function parseTimer(value: string | null, now: number): TimerState | null {
-  try {
-    const state: unknown = JSON.parse(value ?? "null");
+  const state = parseStoredJson(value);
+  if (
+    typeof state === "object" &&
+    state !== null &&
+    "minutes" in state &&
+    "endsAt" in state &&
+    "left" in state &&
+    "at" in state
+  ) {
+    const { minutes, endsAt, left, at } = state;
     if (
-      typeof state === "object" &&
-      state !== null &&
-      "minutes" in state &&
-      "endsAt" in state &&
-      "left" in state &&
-      "at" in state
-    ) {
-      const { minutes, endsAt, left, at } = state;
-      if (
-        typeof minutes === "number" &&
-        Number.isFinite(minutes) &&
-        (endsAt === null || (typeof endsAt === "number" && Number.isFinite(endsAt))) &&
-        typeof left === "number" &&
-        Number.isFinite(left) &&
-        typeof at === "number" &&
-        Number.isFinite(at) &&
-        now - at < STALE_MS
-      )
-        return { minutes, endsAt, left, at };
-    }
-  } catch {}
+      typeof minutes === "number" &&
+      Number.isFinite(minutes) &&
+      (endsAt === null || (typeof endsAt === "number" && Number.isFinite(endsAt))) &&
+      typeof left === "number" &&
+      Number.isFinite(left) &&
+      typeof at === "number" &&
+      Number.isFinite(at) &&
+      now - at < STALE_MS
+    )
+      return { minutes, endsAt, left, at };
+  }
   return null;
 }
 

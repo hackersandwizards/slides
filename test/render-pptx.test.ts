@@ -559,14 +559,21 @@ describe("slides-pptx on the specimen deck", () => {
   });
 
   it("draws tables as tables and trend and bar charts as charts", () => {
-    slideCatalog.slides.forEach((slide: Slide, i) => {
-      if (slide.type === "content" && slide.content.some((b) => b.type === "table")) {
-        expect(slideXml[i], `slide ${i + 1}`).toContain("<a:tbl>");
-      }
-      if (slide.type === "chart" && (slide.variant === "trend" || slide.variant === "bar")) {
-        expect(slideXml[i], `slide ${i + 1}`).toContain("drawingml/2006/chart");
-      }
-    });
+    const slides = slideCatalog.slides.map((slide, i) => ({ slide, i }));
+    const tables = slides.filter(
+      ({ slide }) => slide.type === "content" && slide.content.some((b) => b.type === "table"),
+    );
+    expect(tables.length, "table slides").toBeGreaterThan(0);
+    for (const { i } of tables) expect(slideXml[i], `table slide ${i + 1}`).toContain("<a:tbl>");
+
+    for (const variant of ["trend", "bar"]) {
+      const charts = slides.filter(
+        ({ slide }) => slide.type === "chart" && slide.variant === variant,
+      );
+      expect(charts.length, `${variant} slides`).toBeGreaterThan(0);
+      for (const { i } of charts)
+        expect(slideXml[i], `${variant} slide ${i + 1}`).toContain("drawingml/2006/chart");
+    }
   });
 
   it("tints a table's head and every second body row, as the web's table", () => {
@@ -917,12 +924,18 @@ describe("slides-pptx on the specimen deck", () => {
       return { top: +y, bottom: +y + +cy };
     };
     const months = Math.max(...d.columns.map((c) => box(c).bottom));
-    d.rows.forEach((r, i) => {
-      for (const bar of r.bars) {
-        expect(box(bar.label).top).toBeGreaterThanOrEqual(months);
-        if (i) expect(box(bar.label).top).toBeGreaterThanOrEqual(box(d.rows[i - 1].label).bottom);
-      }
-    });
+    for (const bar of d.rows.flatMap((row) => row.bars))
+      expect(
+        box(bar.label).top,
+        `slide ${at + 1} (${d.type}), bar "${bar.label}" under the months`,
+      ).toBeGreaterThanOrEqual(months);
+    for (const [i, row] of d.rows.slice(1).entries()) {
+      for (const bar of row.bars)
+        expect(
+          box(bar.label).top,
+          `slide ${at + 1} (${d.type}), bar "${bar.label}"`,
+        ).toBeGreaterThanOrEqual(box(d.rows[i].label).bottom);
+    }
   });
 
   it("stacks milestones that share a column, as the web does", async () => {

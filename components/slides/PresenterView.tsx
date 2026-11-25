@@ -20,7 +20,13 @@ import {
   type ArrowKey,
   type DeckState,
 } from "../../lib/presenter-sync";
-import { directionKey, formatDuration, readStored, writeStored } from "../../lib/slide-utils";
+import {
+  directionKey,
+  formatDuration,
+  parseStoredJson,
+  readStored,
+  writeStored,
+} from "../../lib/slide-utils";
 
 interface Props {
   /** Every slide's speaker notes, in deck order. */
@@ -513,10 +519,8 @@ function useSplit(region: React.RefObject<HTMLDivElement | null>) {
 type TimerState = { start: number; pausedAt: number | null };
 
 function readTimer(): TimerState {
-  try {
-    const stored = JSON.parse(readStored("session", TIMER_KEY) ?? "null") as TimerState | null;
-    if (stored && typeof stored.start === "number") return stored;
-  } catch {}
+  const stored = parseStoredJson(readStored("session", TIMER_KEY)) as TimerState | null;
+  if (stored && typeof stored.start === "number") return stored;
   const fresh = { start: Date.now(), pausedAt: null };
   writeStored("session", TIMER_KEY, JSON.stringify(fresh));
   return fresh;

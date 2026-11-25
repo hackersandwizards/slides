@@ -19,24 +19,26 @@ describe("deep-dive slides stand on night", () => {
     expect(isDeepDive({ type: "content", sectionTheme: "secondary" })).toBe(false);
   });
 
-  it("renders slide-night on the slide's shell only for deep-dive slides", () => {
-    const night = (slide: Slide) => {
-      const Component = slideComponents[slide.type];
-      const { container } = render(<Component slide={slide} />);
-      const shell = container.querySelector(".slide-night");
-      // The class alone left the brand elements on day: they turn on these two.
-      if (shell) {
-        expect(shell.getAttribute("data-theme")).toBe("dark");
-        expect(shell.hasAttribute("data-hw-night")).toBe(true);
-      }
-      return shell !== null;
+  // The night class alone leaves the brand elements on day. These two attributes turn on night.
+  const dark = { theme: "dark", night: true };
+  it.each<[string, Slide, typeof dark | null]>([
+    ["deep-dive-divider", { type: "deep-dive-divider", headline: "Part two" }, dark],
+    ["deepdive phased-pills", pills("deepdive"), dark],
+    ["secondary phased-pills", pills("secondary"), null],
+    [
+      "deepdive content",
+      { type: "content", headline: "H", sectionTheme: "deepdive", content: [] },
+      dark,
+    ],
+    ["day content", { type: "content", headline: "H", content: [] }, null],
+  ])("%s has the expected night shell", (_case, slide, expected) => {
+    const Component = slideComponents[slide.type];
+    const { container } = render(<Component slide={slide} />);
+    const shell = container.querySelector(".slide-night");
+    const night = shell && {
+      theme: shell.getAttribute("data-theme"),
+      night: shell.hasAttribute("data-hw-night"),
     };
-    expect(night({ type: "deep-dive-divider", headline: "Part two" } as Slide)).toBe(true);
-    expect(night(pills("deepdive"))).toBe(true);
-    expect(night(pills("secondary"))).toBe(false);
-    expect(
-      night({ type: "content", headline: "H", sectionTheme: "deepdive", content: [] } as Slide),
-    ).toBe(true);
-    expect(night({ type: "content", headline: "H", content: [] } as Slide)).toBe(false);
+    expect(night).toEqual(expected);
   });
 });

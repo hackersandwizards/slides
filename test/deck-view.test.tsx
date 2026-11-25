@@ -1,5 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { renderToString } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
 import { DeckTile } from "../components/deck/DeckTile";
 import { DeckView } from "../components/deck/DeckView";
 import { slideTitle } from "../lib/slide-utils";
@@ -46,6 +47,19 @@ describe("DeckView", () => {
     render(<DeckView presentation={slideCatalog} index={0} basePath="/specimen" documentTitle />);
     advance();
     expect(document.title).toBe(slideTitle(slideCatalog, 1));
+  });
+
+  it("renders the requested slide on a server without storage", () => {
+    vi.stubGlobal("window", undefined);
+    vi.stubGlobal("localStorage", undefined);
+    vi.stubGlobal("sessionStorage", undefined);
+    try {
+      expect(
+        renderToString(<DeckView presentation={slideCatalog} index={0} basePath="/specimen" />),
+      ).toContain("Slide Catalog");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

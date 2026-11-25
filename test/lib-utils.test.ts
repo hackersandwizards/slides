@@ -15,10 +15,63 @@ import {
   deepDiveAsTransition,
   gridAsContent,
   ignoredKey,
+  parseStoredJson,
+  readStored,
   replacedBy,
   slideTitle,
   twoColumnAsSplit,
+  writeStored,
 } from "../lib/slide-utils";
+
+describe("slide storage", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it.each([
+    ["read", () => readStored("local", "key"), null],
+    ["write", () => writeStored("session", "key", "value"), undefined],
+  ] as const)("falls back on a server %s without a window", (_operation, access, fallback) => {
+    vi.stubGlobal("window", undefined);
+    vi.stubGlobal("localStorage", undefined);
+    vi.stubGlobal("sessionStorage", undefined);
+    try {
+      expect(access()).toBe(fallback);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it.each([
+    ["read", () => readStored("session", "key"), null],
+    ["write", () => writeStored("session", "key", "value"), undefined],
+  ] as const)("falls back when storage access blocks a %s", (_operation, access, fallback) => {
+    vi.spyOn(window, "sessionStorage", "get").mockImplementation(() => {
+      throw new DOMException("Storage is blocked", "SecurityError");
+    });
+    expect(access()).toBe(fallback);
+  });
+
+  it("returns when a write exceeds the quota", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Storage is full", "QuotaExceededError");
+    });
+    expect(writeStored("session", "key", "value")).toBeUndefined();
+  });
+
+  it.each([
+    ["read", "getItem", () => readStored("session", "key")],
+    ["write", "setItem", () => writeStored("session", "key", "value")],
+  ] as const)("propagates an unexpected %s error", (_operation, method, access) => {
+    const error = new Error("Storage failed");
+    vi.spyOn(Storage.prototype, method).mockImplementation(() => {
+      throw error;
+    });
+    expect(access).toThrow(error);
+  });
+
+  it("treats malformed saved JSON as absent", () => {
+    expect(parseStoredJson("{")).toBeNull();
+  });
+});
 
 describe("getSectionStyle", () => {
   it("uses the default style when a deck read from JSON names constructor", () => {

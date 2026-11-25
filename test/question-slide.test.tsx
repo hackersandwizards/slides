@@ -57,7 +57,7 @@ describe("QuestionSlide", () => {
         ? Storage.prototype
         : localStorage;
     vi.spyOn(storage, "setItem").mockImplementation(() => {
-      throw new Error("QuotaExceededError");
+      throw new DOMException("Storage is full", "QuotaExceededError");
     });
     render(<QuestionSlide slide={slide} />);
     act(() => {

@@ -6,11 +6,10 @@ import { SlideShell } from "./SlideShell";
 import User from "lucide-react/icons/user";
 import { regularAsContent } from "../../lib/slide-utils";
 import { AgendaSlide } from "./AgendaSlide";
-import { LinkCaption, Portrait } from "./primitives";
+import { LinkCaption, Portrait, SlideTitle, TitledContent } from "./primitives";
 import { ContentSlide } from "./ContentSlide";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { usePrintMode } from "../../lib/print-context";
-import { SlideTitle, TitledContent } from "./primitives";
 
 interface Props {
   slide: RegularSlideType;

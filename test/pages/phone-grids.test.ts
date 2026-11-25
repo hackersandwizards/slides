@@ -52,19 +52,40 @@ function measure() {
   };
 }
 
+async function measurePhone(story: string) {
+  const page = await open(story, 390);
+  try {
+    return await page.evaluate(measure);
+  } finally {
+    await page.close();
+  }
+}
+
 it.each(STORIES)(
   "stacks %s into one column with every figure inside it",
   async (story) => {
-    const page = await newPage(browser);
-    await page.setViewport({ width: 390, height: 844 });
-    await page.goto(`${dist.origin}/slides/stories/Types/${story}/`, { waitUntil: "networkidle0" });
-    const { columns, figures } = await page.evaluate(measure);
-    await page.close();
+    const { columns, figures } = await measurePhone(story);
     expect(figures.filter(({ over }) => over > 1)).toEqual([]);
-    // A lone figure stands in no grid; every other story has one, and a numbers story its figures.
-    if (!story.endsWith("-one")) expect(columns.length).toBeGreaterThan(0);
-    if (story.includes("numbers")) expect(figures.length).toBeGreaterThan(0);
     expect(columns.filter((n) => n !== 1)).toEqual([]);
+  },
+  limit(60_000),
+);
+
+// A lone figure stands in no grid; every other story has one, and a numbers story its figures.
+it.each(STORIES.filter((story) => !story.endsWith("-one")))(
+  "renders a counted grid for %s on a phone",
+  async (story) => {
+    const { columns } = await measurePhone(story);
+    expect(columns.length).toBeGreaterThan(0);
+  },
+  limit(60_000),
+);
+
+it.each(STORIES.filter((story) => story.includes("numbers")))(
+  "renders figures for %s on a phone",
+  async (story) => {
+    const { figures } = await measurePhone(story);
+    expect(figures.length).toBeGreaterThan(0);
   },
   limit(60_000),
 );

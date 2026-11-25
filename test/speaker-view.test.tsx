@@ -2,11 +2,10 @@ import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LaserPointer } from "../components/slides/LaserPointer";
 import { PresenterView } from "../components/slides/PresenterView";
-import { formatDuration } from "../lib/slide-utils";
+import { directionKey, formatDuration } from "../lib/slide-utils";
 import { SlideNavigation } from "../components/slides/SlideNavigation";
 import { DeckEdit } from "../lib/deck-edit-mode";
 import { deckSync, ROLE_NAMES } from "../lib/presenter-sync";
-import { directionKey } from "../lib/slide-utils";
 import { useProgressiveReveal } from "../lib/use-progressive-reveal";
 
 // The sync is one instance per window and outlives a test. Moving the clock on lets a test's

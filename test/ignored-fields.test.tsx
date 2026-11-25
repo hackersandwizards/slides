@@ -42,8 +42,7 @@ describe("a section colour slides-usage names as drawing nothing", () => {
   it.each(bases)("$type [%#] changes the drawing only where the colour is live", (base) => {
     const plain = markup(base);
     for (const slide of themedSlides(base)) {
-      if (named(slide)) expect(markup(slide), slide.type).toBe(plain);
-      else expect(markup(slide), slide.type).not.toBe(plain);
+      expect(markup(slide) !== plain, slide.type).toBe(!named(slide));
     }
   });
 

@@ -187,11 +187,12 @@ function figureHeights(selector: string) {
     return { text: f.textContent, set, one, over };
   });
 }
-const PLACE: Record<string, string> = {
-  "visual-numbers-one": "beside",
-  "numbers-long-figure": "beside",
-  "numbers-label-below": "below",
-};
+const STAGE_WIDTHS = [1920, 1440];
+const PLACE = {
+  "content-slide/visual-numbers-one": "beside",
+  "content-slide/numbers-long-figure": "beside",
+  "content-slide/numbers-label-below": "below",
+} as const;
 const wrapped = (figures: ReturnType<typeof figureHeights>) =>
   figures.filter(({ set, one, over }) => set > one + 1 || over > 1);
 
@@ -223,7 +224,7 @@ it.each(
     // "−90 %" overflows its column on a phone without the timeline's cap.
     "content-slide/visual-timeline-segments",
     "content-slide/visual-timeline-staggered",
-  ].flatMap((story) => [1920, 1440, 390].map((width) => [story, width] as const)),
+  ].flatMap((story) => [...STAGE_WIDTHS, 390].map((width) => [story, width] as const)),
 )(
   "keeps every figure of %s on one line and inside its row at %i px",
   async (story, width) => {
@@ -235,18 +236,33 @@ it.each(
     await page.waitForSelector(FIGURES);
     await page.evaluate(() => document.fonts.ready);
     const figures = await page.evaluate(figureHeights, FIGURES);
-    // A lone figure's label stands beside it on the stage while its longest word finds room there.
-    const place = width > 800 && PLACE[story.split("/")[1]];
-    const below =
-      place &&
-      (await page.$eval(".slide-figure-row", (row) => {
-        const [figure, label] = [...row.children].map((c) => c.getBoundingClientRect());
-        return label.top >= figure.bottom;
-      }));
     await page.close();
     expect(figures.length).toBeGreaterThan(0);
     expect(wrapped(figures)).toEqual([]);
-    if (place) expect(below ? "below" : "beside").toBe(place);
+  },
+  limit(60_000),
+);
+
+// A lone figure's label stands beside it on the stage while its longest word finds room there.
+it.each(
+  Object.entries(PLACE).flatMap(([story, place]) =>
+    STAGE_WIDTHS.map((width) => [story, width, place] as const),
+  ),
+)(
+  "places the label of %s at %i px %s the figure",
+  async (story, width, place) => {
+    const page = await newPage(browser);
+    await page.setViewport({ width, height: (width * 9) / 16 });
+    await page.goto(`${served.origin}/slides/stories/Types/${story}/`, {
+      waitUntil: "networkidle0",
+    });
+    await page.evaluate(() => document.fonts.ready);
+    const below = await page.$eval(".slide-figure-row", (row) => {
+      const [figure, label] = [...row.children].map((c) => c.getBoundingClientRect());
+      return label.top >= figure.bottom;
+    });
+    await page.close();
+    expect(below ? "below" : "beside").toBe(place);
   },
   limit(60_000),
 );
