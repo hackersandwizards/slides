@@ -9,6 +9,7 @@ import {
 import { mediaAsContent } from "../../lib/gallery-media";
 import { regularAsContent } from "../../lib/regular-sections";
 import type { ComparisonSlide, GridSlide, Slide } from "../../types/slide";
+import type { Sheet } from "./sheet";
 import { drawTitle } from "./slides/title";
 import { drawContent } from "./slides/content";
 import { drawRegular } from "./slides/regular";
@@ -20,6 +21,17 @@ import { drawProfiles } from "./slides/profiles";
 import { drawPhasedPills } from "./slides/phased-pills";
 import { drawProcess } from "./slides/process";
 import { drawLanes } from "./slides/lanes";
+import { drawChart } from "./slides/chart";
+import { drawQuestion } from "./slides/question";
+import { drawTransition } from "./slides/transition";
+import { drawClosing } from "./slides/closing";
+import { drawRoadmap } from "./slides/roadmap";
+import { drawGantt } from "./slides/gantt";
+import { drawTeamTopology } from "./slides/team-topology";
+import { drawAgenda } from "./slides/agenda";
+import { drawActivity } from "./slides/activity";
+import { drawWheel } from "./slides/wheel";
+import { drawDecision } from "./slides/decision";
 
 // Pillars and stats are a content slide's cards or numbers, as on the web (`gridAsContent`).
 function gridRedrawnAs(d: GridSlide): Slide | undefined {
@@ -66,6 +78,13 @@ export function slideDrawn(slide: Slide): Slide {
   return drawn;
 }
 
+type RenderedSlide = Exclude<
+  Slide,
+  | { type: "evolution" | "media" | "overview" | "deep-dive-divider" | "dual-pill-overview" }
+  | { type: "grid"; variant?: "pillars" | "stats" }
+  | { type: "comparison"; variant: "guidance" | "positions" }
+>;
+
 export const SLIDES = {
   title: drawTitle,
   content: drawContent,
@@ -78,4 +97,17 @@ export const SLIDES = {
   "phased-pills": drawPhasedPills,
   process: drawProcess,
   lanes: drawLanes,
+  chart: drawChart,
+  question: drawQuestion,
+  transition: drawTransition,
+  closing: drawClosing,
+  roadmap: drawRoadmap,
+  gantt: drawGantt,
+  "team-topology": drawTeamTopology,
+  agenda: drawAgenda,
+  activity: drawActivity,
+  wheel: drawWheel,
+  decision: drawDecision,
+} satisfies {
+  [K in RenderedSlide["type"]]: (sheet: Sheet, slide: Extract<RenderedSlide, { type: K }>) => void;
 };
