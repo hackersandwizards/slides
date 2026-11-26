@@ -42,6 +42,9 @@
     grid-column: 2;
     margin-top: 0;
   }
+  .slide-content .slide-timeline-segment > * {
+    padding-inline: 0;
+  }
   .slide-content .slide-timeline-stage > :first-child:empty {
     display: none;
   }
@@ -87,8 +90,5 @@
     left: calc(var(--spacing) * 16);
     margin-left: 0;
     translate: 0 50%;
-  }
-  .slide-content .slide-timeline-segment > * {
-    padding-inline: 0;
   }
 }
