@@ -6,26 +6,29 @@ import type { Sheet, RowHeight } from "../sheet";
 import { W, EDGE, BOTTOM, PT, REM } from "../stage";
 import { caps } from "../text";
 
-const GANTT_ROWS: RowHeight = { what: "gantt", cap: 30 * 0.25 * REM, floor: 0.15 };
+/** Converts the Gantt grid's spacing steps to slide inches. */
+export const ganttSpace = (steps: number): number => steps * 0.25 * REM;
+
+const GANTT_ROWS: RowHeight = { what: "gantt", cap: ganttSpace(30), floor: 0.15 };
 
 /** The header, columns and room available for rows after reserving the footer and milestones. */
 export function ganttGrid(look: Look, d: GanttSlide, y: number) {
   const foot = footerOf(look, d.footer);
   // GanttSlide's grid, in the spacing scale: a 20 rem label column, 0.25 rem between columns, and
   // per row a label line over a bar that fills the row, the row at most 7 rem tall.
-  const gx = EDGE + 84 * 0.25 * REM;
-  const gap = 1 * 0.25 * REM;
+  const gx = EDGE + ganttSpace(84);
+  const gap = ganttSpace(1);
   const colW = (W - EDGE - gx - gap * (d.columns.length - 1)) / d.columns.length;
   const radius = (0.46875 * W) / 90;
   const lh = (PT.label * 1.25) / 72;
   const head = (PT.label * 1.4) / 72;
-  const ruleY = y + head + 1.5 * 0.25 * REM;
-  const top = ruleY + 2 / 144 + 2 * 0.25 * REM;
+  const ruleY = y + head + ganttSpace(1.5);
+  const top = ruleY + 2 / 144 + ganttSpace(2);
   // Milestones of one column stack under one rule, as on the web.
   const groups = Map.groupBy(d.milestones ?? [], (m) => m.column);
   const stack = Math.max(0, ...[...groups.values()].map((ms) => ms.length));
-  const msH = stack ? 3 * 0.25 * REM + 2 / 144 + 1.5 * 0.25 * REM + stack * lh : 0;
-  const room = BOTTOM - top - foot.h - msH + 2 * 0.25 * REM;
+  const msH = stack ? ganttSpace(3) + 2 / 144 + ganttSpace(1.5) + stack * lh : 0;
+  const room = BOTTOM - top - foot.h - msH + ganttSpace(2);
   return {
     y,
     head,
@@ -56,13 +59,13 @@ export function ganttSpan({ gx, colW, gap }: GanttGrid, start: number, count: nu
 export function ganttSchedule(grid: GanttGrid, pitch: number) {
   const { top, rows, lh } = grid;
   // Rows squeezed below their gap and label line keep a share of each.
-  const rh = pitch - Math.min(2 * 0.25 * REM, pitch / 4);
+  const rh = pitch - Math.min(ganttSpace(2), pitch / 4);
   const bands = rows.map((row, i) => {
     const y = top + i * pitch;
-    const barY = y + Math.min(lh + 1.5 * 0.25 * REM, rh / 2);
+    const barY = y + Math.min(lh + ganttSpace(1.5), rh / 2);
     return { row, y, h: rh, barY, barH: y + rh - barY };
   });
-  const milestoneY = top + rows.length * pitch - (pitch - rh) + 3 * 0.25 * REM;
+  const milestoneY = top + rows.length * pitch - (pitch - rh) + ganttSpace(3);
   return { bands, milestoneY };
 }
 
@@ -95,7 +98,7 @@ export function ganttRow(sheet: Sheet, grid: GanttGrid, band: GanttBand): void {
         ? [{ runs: [{ text: row.sublabel, options: { color: c.muted } }], rel: PT.label / PT.base }]
         : []),
     ],
-    { x: EDGE, y, w: 80 * 0.25 * REM, h },
+    { x: EDGE, y, w: ganttSpace(80), h },
     { size: PT.base, color: c.ink, align: "right", valign: "middle", line: 1.25 },
   );
   grid.columns.forEach((_, k) => {
@@ -129,7 +132,7 @@ export function milestones(sheet: Sheet, grid: GanttGrid, y: number): void {
   if (!groups.size) return;
   sheet.box(
     { runs: [caps(milestoneHeading)] },
-    { x: EDGE, y, w: 80 * 0.25 * REM, h: lh },
+    { x: EDGE, y, w: ganttSpace(80), h: lh },
     { size: PT.label, mono: true, color: c.muted, tracking: 0.06, align: "right" },
   );
   for (const [column, entries] of groups) {
@@ -140,7 +143,7 @@ export function milestones(sheet: Sheet, grid: GanttGrid, y: number): void {
         m.label,
         {
           x,
-          y: y + 2 / 144 + 1.5 * 0.25 * REM + k * lh,
+          y: y + 2 / 144 + ganttSpace(1.5) + k * lh,
           w: Math.min(colW * 1.5, W - EDGE - x),
           h: lh,
         },

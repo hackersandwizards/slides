@@ -14,7 +14,8 @@ import {
   portraitRow,
   speakerParas,
 } from "../scripts/pptx/slides/closing-contact";
-import { drawDiscussion } from "../scripts/pptx/slides/closing";
+import type { Area } from "../scripts/pptx/stage";
+import { drawClosing, drawDiscussion } from "../scripts/pptx/slides/closing";
 
 const day = new Look(palette(false), "en", false);
 
@@ -26,12 +27,19 @@ function closingSheet() {
 
 it("draws each discussion question after its card in input order", () => {
   const sheet = closingSheet();
+  vi.spyOn(sheet, "need").mockReturnValue(0.5);
   const events: unknown[] = [];
-  vi.spyOn(sheet, "card").mockImplementation(() => {
-    events.push("card");
+  const round = ({ x, y, w, h }: Area) => ({
+    x: +x.toFixed(4),
+    y: +y.toFixed(4),
+    w: +w.toFixed(4),
+    h: +h.toFixed(4),
   });
-  vi.spyOn(sheet, "box").mockImplementation((text) => {
-    events.push(text);
+  vi.spyOn(sheet, "card").mockImplementation((area) => {
+    events.push({ card: round(area) });
+  });
+  vi.spyOn(sheet, "box").mockImplementation((text, area) => {
+    events.push({ text, area: round(area) });
   });
   drawDiscussion(sheet, {
     type: "closing",
@@ -39,11 +47,12 @@ it("draws each discussion question after its card in input order", () => {
     headline: "Topics",
     seedQuestions: ["Why?", "How?"],
   });
-  expect(events.slice(-4)).toEqual([
-    "card",
-    { runs: [{ text: "Why?" }] },
-    "card",
-    { runs: [{ text: "How?" }] },
+  expect(events).toEqual([
+    { text: "Topics", area: { x: 0.6667, y: 0.8125, w: 11.9997, h: 0.5 } },
+    { card: { x: 0.6667, y: 3.0216, w: 11.9997, h: 0.8704 } },
+    { text: { runs: [{ text: "Why?" }] }, area: { x: 0.963, y: 3.2067, w: 11.4071, h: 0.5 } },
+    { card: { x: 0.6667, y: 4.1141, w: 11.9997, h: 0.8704 } },
+    { text: { runs: [{ text: "How?" }] }, area: { x: 0.963, y: 4.2993, w: 11.4071, h: 0.5 } },
   ]);
 });
 
@@ -149,7 +158,7 @@ it("gives a portrait caption without a LinkedIn line its shorter height", () => 
     height,
     captions: captions.map(({ paras, portraitX }) => ({
       x: +portraitX.toFixed(4),
-      lines: paras.map(({ runs }) => runs.map(({ text, options }) => [text, options?.hyperlink])),
+      lines: paras.map(({ runs }) => runs.map(({ text, options }) => [text, options])),
     })),
   }).toEqual({
     width: 3.2,
@@ -158,7 +167,11 @@ it("gives a portrait caption without a LinkedIn line its shorter height", () => 
     captions: [
       {
         x: 6.1165,
-        lines: [[["Pat", undefined]], [["Example", undefined]], [["555 0100", undefined]]],
+        lines: [
+          [["Pat", undefined]],
+          [["Example", { color: day.c.teal, lang: "x-caps" }]],
+          [["555 0100", { color: day.c.teal }]],
+        ],
       },
     ],
   });
@@ -231,4 +244,11 @@ it("draws a literal separator after each partner and puts the brand mark last", 
     1,
   );
   expect(events).toEqual(["/first.png", "×", "/second.png", "×", "brand"]);
+});
+
+it("uses the contact layout for an unrecognised closing variant", () => {
+  const sheet = closingSheet();
+  const images = vi.spyOn(sheet.slide, "addImage").mockReturnValue(sheet.slide);
+  drawClosing(sheet, { type: "closing", variant: "constructor" as "contact", claim: false });
+  expect(images.mock.calls.map(([image]) => image.altText)).toEqual(["hackers&wizards"]);
 });

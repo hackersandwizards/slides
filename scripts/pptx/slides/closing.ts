@@ -25,8 +25,12 @@ export function drawDiscussion(sheet: Sheet, d: ClosingSlide): void {
   });
 }
 
-const CLOSINGS = { discussion: drawDiscussion, contact: drawContact };
+const CLOSINGS = new Map<ClosingSlide["variant"], typeof drawContact>([
+  ["discussion", drawDiscussion],
+  ["contact", drawContact],
+]);
 
 export function drawClosing(sheet: Sheet, d: Extract<Slide, { type: "closing" }>): void {
-  CLOSINGS[d.variant === "discussion" ? "discussion" : "contact"](sheet, d);
+  const draw = CLOSINGS.get(d.variant) ?? drawContact;
+  draw(sheet, d);
 }
