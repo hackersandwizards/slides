@@ -203,7 +203,12 @@ export function comparisonCardsLayout(
     if (logo) ty += logoH;
     const labelArea: Area = { x: x + pad, y: ty, w: cw - 2 * pad, h: th };
     ty += th + 1.5 * REM;
-    const itemsArea: Area = { x: x + pad, y: ty, w: cw - 2 * pad, h: top + ch - pad - ty };
+    const itemsArea: Area = {
+      x: x + pad,
+      y: ty,
+      w: cw - 2 * pad,
+      h: Math.max(0, top + ch - pad - ty),
+    };
     return { x, y: top, w: cw, h: ch, logo, label, labelArea, items, itemsArea };
   });
   return { surface: spec.card(c), titleO, itemO, cards, footY: top + ch, foot };
@@ -216,7 +221,7 @@ export function drawComparisonCards(sheet: Sheet, layout: ComparisonCardsLayout)
     if (card.logo)
       sheet.picture(card.logo.src, card.logo.area, { align: "left", alt: card.logo.alt });
     sheet.box(card.label, card.labelArea, layout.titleO);
-    sheet.box(card.items, card.itemsArea, layout.itemO);
+    if (card.itemsArea.h > 0) sheet.box(card.items, card.itemsArea, layout.itemO);
   }
   drawComparisonFoot(sheet, layout.foot, layout.footY);
 }

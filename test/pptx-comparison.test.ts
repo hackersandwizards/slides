@@ -530,7 +530,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
       },
     },
     {
-      label: "split cards clamped to area.h - foot.h when vertical space is tight",
+      label: "split cards with zero height for items cut by the footer",
       slide: {
         type: "comparison",
         headline: "H",
@@ -574,7 +574,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
               x: 1.2962916666666666,
               y: 2.8374895833333333,
               w: 4.259270833333334,
-              h: -0.14164583333333347,
+              h: 0,
             },
           },
           {
@@ -835,6 +835,24 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
     },
   ])("beforeAfterComparisonLayout measures $label", ({ slide, expected }) => {
     expect(beforeAfterComparisonLayout(look, slide, area)).toEqual(expected);
+  });
+
+  it("omits the comparison item box with no remaining height", async () => {
+    const slide: ComparisonSidesSlide = {
+      type: "comparison",
+      headline: "H",
+      variant: "split",
+      left: { label: "Left", logo: "logo.png", items: ["Alpha"] },
+      right: { label: "Right", items: ["Beta"] },
+      punchline: "Summary",
+    };
+    const box = { ...area, h: 2.2 };
+    const layout = comparisonCardsLayout(look, slide, box);
+    layout.cards[0].itemsArea.h = 0;
+    const { shapes } = await drawOnSheet(assetsDir, (sheet) => {
+      drawComparisonCards(sheet, layout);
+    });
+    expect(shapes.flatMap((shape) => shape.texts)).toEqual(["Left", "Right", "Beta", "Summary"]);
   });
 
   it("drawComparisonCards draws cards, logo picture, label/item boxes, and footer at exact layout coordinates", async () => {
