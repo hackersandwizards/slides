@@ -387,9 +387,12 @@ describe("slides-pptx package and shape bounds", () => {
     overFull = await rendered(overFullDeck, assetsRoot);
   });
 
-  it("warns when the table, lanes and gantt exceed the available height", () => {
+  it("warns about the overfull blocks and the paragraph cut below the table", () => {
+    expect(overFull.slideText[1]).toContain("Team 0");
+    expect(overFull.slideText[1]).not.toContain("Under it.");
     expect(overFull.warnings.filter((warning) => !warning.startsWith("slide "))).toEqual([
-      expect.stringMatching(/^blocks table, paragraph: .* taller/),
+      "blocks table, paragraph: 0.97 in taller than the slide holds",
+      'text "Under it.": no height left in its box',
       "lanes: 30 rows taller than the slide holds",
       "gantt: 40 rows taller than the slide holds",
     ]);
