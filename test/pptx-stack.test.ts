@@ -5,7 +5,13 @@ import { drawPositions, positionsLayout } from "../scripts/pptx/blocks/positions
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
-import { drawStack, stackHeight, type StackItem } from "../scripts/pptx/stack";
+import {
+  drawStack,
+  fitStack,
+  stackHeight,
+  type FittedStack,
+  type StackItem,
+} from "../scripts/pptx/stack";
 import { shapesOf } from "./fixtures/rendered-deck";
 
 async function drawOnSheet(draw: (sheet: Sheet) => void) {
@@ -56,6 +62,90 @@ describe("drawStack", () => {
         { x: 1, y: 2.625, w: 4.04, h: 0.25, texts: ["Second"] },
       ],
     });
+  });
+});
+
+describe("fitStack", () => {
+  const look = new Look(palette(false), "en", false);
+  const gappedItems: StackItem[] = [
+    { text: { runs: [{ text: "First" }] }, o: { size: 18, color: "111827", line: 1.5 }, gap: 0.5 },
+    {
+      text: { runs: [{ text: "Second" }] },
+      o: { size: 12, color: "111827", line: 1.5 },
+      gap: 0.25,
+    },
+  ];
+
+  it.each<{
+    label: string;
+    items: StackItem[];
+    area: { x: number; y: number; w: number; h: number };
+    expected: FittedStack;
+  }>([
+    {
+      label: "a roomy box that centres items at k=1 and ignores the first gap",
+      items: gappedItems,
+      area: { x: 1, y: 2, w: 4, h: 2 },
+      expected: {
+        k: 1,
+        boxes: [
+          {
+            text: { runs: [{ text: "First" }] },
+            o: { size: 18, color: "111827", line: 1.5 },
+            area: { x: 1, y: 2.5625, w: 4, h: 0.375 },
+          },
+          {
+            text: { runs: [{ text: "Second" }] },
+            o: { size: 12, color: "111827", line: 1.5 },
+            area: { x: 1, y: 3.1875, w: 4, h: 0.25 },
+          },
+        ],
+      },
+    },
+    {
+      label: "a tight box that shrinks heights and gaps together by k=0.5",
+      items: gappedItems,
+      area: { x: 1, y: 2, w: 4, h: 0.4375 },
+      expected: {
+        k: 0.5,
+        boxes: [
+          {
+            text: { runs: [{ text: "First" }] },
+            o: { size: 18, color: "111827", line: 1.5 },
+            area: { x: 1, y: 2, w: 4, h: 0.1875 },
+          },
+          {
+            text: { runs: [{ text: "Second" }] },
+            o: { size: 12, color: "111827", line: 1.5 },
+            area: { x: 1, y: 2.3125, w: 4, h: 0.125 },
+          },
+        ],
+      },
+    },
+    {
+      label: "an item capped by maxH before fitting",
+      items: [
+        {
+          text: { runs: [{ text: "First" }] },
+          o: { size: 18, color: "111827", line: 1.5 },
+          gap: 0,
+          maxH: 0.2,
+        },
+      ],
+      area: { x: 1, y: 2, w: 4, h: 1 },
+      expected: {
+        k: 1,
+        boxes: [
+          {
+            text: { runs: [{ text: "First" }] },
+            o: { size: 18, color: "111827", line: 1.5 },
+            area: { x: 1, y: 2.4, w: 4, h: 0.2 },
+          },
+        ],
+      },
+    },
+  ])("fits $label", ({ items, area, expected }) => {
+    expect(fitStack(look, items, area)).toEqual(expected);
   });
 });
 
