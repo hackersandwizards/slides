@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
@@ -24,7 +25,7 @@ describe("roadmap and dual-pill-overview", () => {
         }}
       />,
     );
-    const row = dual.getByText("Pill").closest("li")!;
+    const row = defined(dual.getByText("Pill").closest("li"), "pill list item");
     expect(row.firstElementChild?.textContent).toBe("1");
     expect(dual.getByText("Mindset").dataset.hue).toBe("amber");
 
@@ -40,7 +41,10 @@ describe("roadmap and dual-pill-overview", () => {
         }}
       />,
     );
-    const marker = roadmap.getByText("Item").closest("li")!.firstElementChild!;
+    const marker = defined(
+      defined(roadmap.getByText("Item").closest("li"), "roadmap list item").firstElementChild,
+      "roadmap item marker",
+    );
     expect(marker.className).toContain("hw-marker");
     const label = (r: typeof dual) => r.container.querySelector(".hw-label-box")?.outerHTML;
     expect(label(dual)).toContain("hw-label-box");

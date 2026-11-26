@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SlideContainer } from "../components/slides/SlideContainer";
@@ -29,17 +30,22 @@ describe("SlideContainer with a list of logos", () => {
   });
 
   it("sizes the h&w lockup in a list by brand's logos.json, not the default box", () => {
-    const img = render(
-      <SlideContainer logo={[HW_LOGO, logo("client")]}>slide</SlideContainer>,
-    ).container.querySelector(`img[alt="${HW_LOGO.alt}"]`)!;
+    const img = defined(
+      render(
+        <SlideContainer logo={[HW_LOGO, logo("client")]}>slide</SlideContainer>,
+      ).container.querySelector(`img[alt="${HW_LOGO.alt}"]`),
+      "brand logo image",
+    );
     expect(img.getAttribute("width")).toBe(String(logoSizes["lockup.svg"].width));
   });
 });
 
 describe("SlideContainer on a night deck", () => {
   it("puts the night theme on the viewport, which the brand elements read", () => {
-    const viewport = render(<SlideContainer theme="brand-dark">slide</SlideContainer>).container
-      .firstElementChild!;
+    const viewport = defined(
+      render(<SlideContainer theme="brand-dark">slide</SlideContainer>).container.firstElementChild,
+      "dark slide container",
+    );
     expect(viewport.getAttribute("data-theme")).toBe("dark");
     expect(viewport.hasAttribute("data-hw-night")).toBe(true);
   });

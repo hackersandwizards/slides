@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import puppeteer, { type Browser } from "puppeteer";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Served, serveDist } from "./serve-dist";
@@ -31,9 +32,12 @@ it.each([
     try {
       await page.setViewport({ width: 1600, height: 1000 });
       await page.goto(`${dist.origin}/slides/catalog/print/`, { waitUntil: "load" });
-      const handle = await page.waitForSelector(`[id="${id}"] iframe`);
-      await handle!.scrollIntoView();
-      const frame = await handle!.contentFrame();
+      const handle = defined(
+        await page.waitForSelector(`[id="${id}"] iframe`),
+        "chart tile iframe",
+      );
+      await handle.scrollIntoView();
+      const frame = await handle.contentFrame();
       // A tile opens its slide revealed, the plot drawn at once: grown, its bars stayed out for
       // seconds.
       await frame.waitForSelector("svg :is(.recharts-bar-rectangle, .recharts-area-curve)", {

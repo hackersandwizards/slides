@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LaserPointer } from "../components/slides/LaserPointer";
@@ -254,7 +255,9 @@ describe("directionKey", () => {
   it("gives each unnamed frame a key of its own, kept across calls", () => {
     const keyIn = () => {
       const frame = document.body.appendChild(document.createElement("iframe"));
-      const parent = vi.spyOn(window, "parent", "get").mockReturnValue(frame.contentWindow!);
+      const parent = vi
+        .spyOn(window, "parent", "get")
+        .mockReturnValue(defined(frame.contentWindow, "speaker preview iframe window"));
       const key = directionKey();
       expect(directionKey()).toBe(key);
       parent.mockRestore();

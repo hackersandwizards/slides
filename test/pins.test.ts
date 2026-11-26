@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -20,9 +21,10 @@ function consumer(pin?: unknown) {
 const tag = (v: string) => `git+https://github.com/hackersandwizards/brand.git#v${v}`;
 
 describe("slides-pins", () => {
-  const [, minimum] = /brand` v(\d+\.\d+\.\d+) or later/.exec(
-    readFileSync(join(__dirname, "../README.md"), "utf8"),
-  )!;
+  const [, minimum] = defined(
+    /brand` v(\d+\.\d+\.\d+) or later/.exec(readFileSync(join(__dirname, "../README.md"), "utf8")),
+    "minimum brand version in the README",
+  );
   const [major, minor, patch] = minimum.split(".").map(Number);
   const below = patch
     ? `${major}.${minor}.${patch - 1}`
@@ -40,7 +42,7 @@ describe("slides-pins", () => {
   it("passes the README's minimum, a later tag and a range starting there", () => {
     for (const pin of [
       tag(minimum),
-      tag(later!),
+      tag(defined(later, "later tag sorting before the minimum")),
       tag("3.0.0"),
       `^${minimum}`,
       `~${minimum}`,

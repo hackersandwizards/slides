@@ -26,20 +26,26 @@ function collect(): Probe[] {
     if (el instanceof Text) return el.data.trim() ? el : null;
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
       acceptNode: (n) =>
-        n.textContent!.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP,
+        window.requireProbeValue(n.textContent, "text node content").trim()
+          ? NodeFilter.FILTER_ACCEPT
+          : NodeFilter.FILTER_SKIP,
     });
     return walker.nextNode() as Text | null;
   };
   const after = (el: Element) => {
     let next = el.nextSibling;
-    while (next && !next.textContent!.trim()) next = next.nextSibling;
+    while (next && !window.requireProbeValue(next.textContent, "sibling node text content").trim())
+      next = next.nextSibling;
     return next && firstText(next);
   };
   const rectOf = (node: Node, end?: number, start = 0) => {
     const range = document.createRange();
     range.setStart(node, start);
-    range.setEnd(node, end ?? node.textContent!.length);
-    return range.getClientRects()[0]!;
+    range.setEnd(
+      node,
+      end ?? window.requireProbeValue(node.textContent, "range node text content").length,
+    );
+    return window.requireProbeValue(range.getClientRects()[0], "text range rectangle");
   };
   // A step number is a bare numeral left of its line; one in a badge, or above its text, is not.
   const bare = (el: Element) => getComputedStyle(el).backgroundColor === "rgba(0, 0, 0, 0)";
@@ -50,9 +56,15 @@ function collect(): Probe[] {
     height: r.bottom - r.top,
   });
   const lineHeadedByNumeral = (mark: Element): [Element, Text][] => {
-    if (mark.children.length || !/^\d{1,2}\.?$/.test(mark.textContent!.trim())) return [];
+    if (
+      mark.children.length ||
+      !/^\d{1,2}\.?$/.test(window.requireProbeValue(mark.textContent, "numeral text").trim())
+    )
+      return [];
     const text = after(mark);
-    if (!text || !bare(mark) || !bare(mark.parentElement!)) return [];
+    if (!text || !bare(mark)) return [];
+    const parent = window.requireProbeValue(mark.parentElement, "numeral parent");
+    if (!bare(parent)) return [];
     const [m, t] = [mark.getBoundingClientRect(), rectOf(text)];
     if (t.left >= m.right && t.top < m.bottom && t.bottom > m.top) return [[mark, text]];
     return [];
@@ -60,19 +72,23 @@ function collect(): Probe[] {
   const found = [...document.querySelectorAll("li *, .flex > *")].flatMap(lineHeadedByNumeral);
   // The line's first words become "xxxx", so its ink's bottom is the baseline.
   for (const [, text] of found) text.data = "xxxx " + text.data.trimStart();
-  return found.map(([mark, text]) => ({
-    label: `"${mark.parentElement!.textContent!.trim().slice(0, 30)}"`,
+  return found.map(([mark, text]) => {
+    const parent = window.requireProbeValue(mark.parentElement, "numeral parent");
+    const label = window.requireProbeValue(parent.textContent, "numeral parent text");
+    const child = window.requireProbeValue(mark.firstChild, "numeral first child");
+    const numeral = window.requireProbeValue(mark.textContent, "numeral text");
     // Read off the full stop where the number has one: the half-ink rule puts the bottom of a 4 at
     // its crossbar, about 5 px above the line (the content block's ordered "4." read -4.75).
-    number: box(
-      rectOf(
-        mark.firstChild!,
-        undefined,
-        /\.\s*$/.test(mark.textContent!) ? mark.firstChild!.textContent!.trimEnd().length - 1 : 0,
-      ),
-    ),
-    text: box(rectOf(text, 4)),
-  }));
+    const start = /\.\s*$/.test(numeral)
+      ? window.requireProbeValue(child.textContent, "numeral first child's text").trimEnd().length -
+        1
+      : 0;
+    return {
+      label: `"${label.trim().slice(0, 30)}"`,
+      number: box(rectOf(child, undefined, start)),
+      text: box(rectOf(text, 4)),
+    };
+  });
 }
 
 /** Runs in the page: the y in CSS px, from the top of the shot, of its ink's bottom edge (the
@@ -81,7 +97,10 @@ async function inkBottom(png: string, scale: number): Promise<number> {
   const img = new Image();
   img.src = `data:image/png;base64,${png}`;
   await img.decode();
-  const ctx = new OffscreenCanvas(img.width, img.height).getContext("2d")!;
+  const ctx = window.requireProbeValue(
+    new OffscreenCanvas(img.width, img.height).getContext("2d"),
+    "2D canvas context",
+  );
   ctx.drawImage(img, 0, 0);
   const { data, width, height } = ctx.getImageData(0, 0, img.width, img.height);
   // The background is the commonest colour on the shot's edge; a pixel's ink is its distance
@@ -90,23 +109,26 @@ async function inkBottom(png: string, scale: number): Promise<number> {
   const counts = new Map<number, number>();
   const count = (x: number, y: number) => {
     const i = at(x, y);
-    const key = (data[i]! << 16) | (data[i + 1]! << 8) | data[i + 2]!;
+    const key = (data[i] << 16) | (data[i + 1] << 8) | data[i + 2];
     counts.set(key, (counts.get(key) ?? 0) + 1);
   };
   for (let x = 0; x < width; x++) for (const y of [0, height - 1]) count(x, y);
   for (let y = 0; y < height; y++) for (const x of [0, width - 1]) count(x, y);
-  const bg = [...counts].sort((a, b) => b[1] - a[1])[0]![0];
+  const bg = window.requireProbeValue(
+    [...counts].sort((a, b) => b[1] - a[1])[0],
+    "most common edge colour",
+  )[0];
   const dist = new Float64Array(width * height);
   for (let p = 0; p < dist.length; p++)
     dist[p] = Math.hypot(
-      data[p * 4]! - (bg >> 16),
-      data[p * 4 + 1]! - ((bg >> 8) & 255),
-      data[p * 4 + 2]! - (bg & 255),
+      data[p * 4] - (bg >> 16),
+      data[p * 4 + 1] - ((bg >> 8) & 255),
+      data[p * 4 + 2] - (bg & 255),
     );
   const full = Math.max(...dist) / 2;
   const rows = Array.from({ length: height }, (_, y) => {
     let ink = 0;
-    for (let x = 0; x < width; x++) ink += Math.min(1, dist[y * width + x]! / full);
+    for (let x = 0; x < width; x++) ink += Math.min(1, dist[y * width + x] / full);
     return ink;
   });
   if (!rows.some(Boolean)) throw new Error("no ink in the probed box");

@@ -19,7 +19,7 @@ function measure() {
   return [...document.querySelectorAll<HTMLImageElement>('img[src*="portrait-"]')]
     .filter((img) => img.getBoundingClientRect().width > 0)
     .map((img) => {
-      const avatar = img.parentElement!;
+      const avatar = window.requireProbeValue(img.parentElement, "portrait wrapper");
       const [r, a] = [img.getBoundingClientRect(), avatar.getBoundingClientRect()];
       const s = getComputedStyle(avatar);
       return {

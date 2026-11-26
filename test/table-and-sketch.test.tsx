@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
@@ -23,7 +24,9 @@ describe("table", () => {
         })}
       />,
     );
-    expect(container.querySelector("table")!.className).not.toContain("table-fixed");
+    expect(defined(container.querySelector("table"), "rendered table").className).not.toContain(
+      "table-fixed",
+    );
     // Each compound whole, as an inline block, its hyphen the one typed (F24: U+2011 rewrote it).
     expect(getByText("Self-serve").className).toBe("inline-block [baseline-source:first]");
     expect(getByText("Schlüssel-Übergabe").className).toBe("inline-block [baseline-source:first]");

@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -169,7 +170,9 @@ describe("slides-pptx block rendering", () => {
         },
       ],
     });
-    const xml = await zip.file("ppt/slides/slide1.xml")!.async("string");
+    const xml = await defined(zip.file("ppt/slides/slide1.xml"), "ppt/slides/slide1.xml").async(
+      "string",
+    );
     expect(xml).toContain(">2,5<");
   });
 
@@ -318,8 +321,13 @@ it.each([
     { ...slideCatalog, slides: [slide as Slide] },
     join(import.meta.dirname, "..", "specimen"),
   );
-  const xml = await zip.file("ppt/slides/slide1.xml")!.async("string");
-  const para = [...xml.matchAll(/<a:p>(.*?)<\/a:p>/g)].find((m) => m[1].includes(">one<"))!;
+  const xml = await defined(zip.file("ppt/slides/slide1.xml"), "ppt/slides/slide1.xml").async(
+    "string",
+  );
+  const para = defined(
+    [...xml.matchAll(/<a:p>(.*?)<\/a:p>/g)].find((m) => m[1].includes(">one<")),
+    "paragraph containing one",
+  );
   expect(para[1].match(/<a:br\/>/g)).toHaveLength(1);
   expect(para[1]).toMatch(/>two .*three.* four<\/a:t>/);
 });

@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { render } from "@testing-library/react";
 import { assert, describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
@@ -42,9 +43,12 @@ const NBSP = String.fromCharCode(0xa0);
 it("sets a team's roles as one balanced line, each role whole", () => {
   const SlideComponent = slideComponents["team-topology"];
   const { container } = render(<SlideComponent slide={teamTopologySlide as Slide} />);
-  const line = [...container.querySelectorAll("p")].find((p) =>
-    p.textContent?.includes(teamTopologySlide.streamAligned[0].roles[0]),
-  )!;
+  const line = defined(
+    [...container.querySelectorAll("p")].find((p) =>
+      p.textContent?.includes(teamTopologySlide.streamAligned[0].roles[0]),
+    ),
+    "paragraph with the first stream-aligned role",
+  );
   expect(line.className).toContain("text-balance");
   expect(line.className).toContain("text-xl");
   expect(container.querySelector(".rounded-full")).toBeNull();
@@ -72,16 +76,22 @@ describe("TeamTopologySlide legend", () => {
         <SlideComponent slide={slide as Slide} />
       </DeckLang.Provider>,
     );
-    const items = [...legendOf(container)!.querySelectorAll("li")];
+    const items = [...defined(legendOf(container), "team topology legend").querySelectorAll("li")];
     expect(items.map((li) => li.textContent)).toEqual([
       WORDS.de.teams.enabling,
       WORDS.de.teams.stream,
       WORDS.de.teams.platform,
     ]);
-    const box = [...container.querySelectorAll(".card-title")].find(
-      (e) => e.textContent === teamTopologySlide.streamAligned[0].name,
-    )!.parentElement!;
-    const swatch = items[1].querySelector("span")!;
+    const box = defined(
+      defined(
+        [...container.querySelectorAll(".card-title")].find(
+          (e) => e.textContent === teamTopologySlide.streamAligned[0].name,
+        ),
+        "stream-aligned card title",
+      ).parentElement,
+      "stream-aligned card containing the title",
+    );
+    const swatch = defined(items[1].querySelector("span"), "second legend item's swatch");
     const shape = (e: Element) => [...e.classList].filter((k) => /^(border|bg)-/.test(k));
     expect(shape(swatch)).toEqual(shape(box));
   });

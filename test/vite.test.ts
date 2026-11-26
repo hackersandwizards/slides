@@ -20,7 +20,7 @@ function browserSources(): string[] {
 function bareImports(): string[] {
   return browserSources().flatMap((source) =>
     [...source.matchAll(/^(?:import|export) (?!type )[^;]*?from "([^./][^"]*)"/gm)].map(
-      ([, spec]) => spec!,
+      ([, spec]) => spec,
     ),
   );
 }

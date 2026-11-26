@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
@@ -39,7 +40,13 @@ describe("person accents", () => {
     };
     const { getAllByRole } = render(<SlideComponent slide={slide} />);
     const [first, second] = getAllByRole("img", { name: /Mara|Jonas/ });
-    expect(first!.parentElement!.className).toContain("--color-primary");
-    expect(second!.parentElement!.className).toContain("--color-secondary");
+    const firstPortrait = defined(first, "first speaker portrait");
+    const secondPortrait = defined(second, "second speaker portrait");
+    expect(defined(firstPortrait.parentElement, "first portrait wrapper").className).toContain(
+      "--color-primary",
+    );
+    expect(defined(secondPortrait.parentElement, "second portrait wrapper").className).toContain(
+      "--color-secondary",
+    );
   });
 });

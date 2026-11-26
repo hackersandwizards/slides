@@ -123,6 +123,12 @@
           }
         ]
       }
+    },
+    // Value files (copy, tables, sample data): literals, constant interpolation and pure formatting
+    // calls, no branch, loop or function declaration. The shared max-lines guide declares data per path.
+    {
+      "files": ["catalog/guidance.ts"],
+      "rules": { "max-lines": "off" }
     }
   ]
 }

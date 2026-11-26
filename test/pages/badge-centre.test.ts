@@ -47,7 +47,10 @@ function readBadgeTiles(): BadgeTile[] {
 /** Runs in the page: each numeral on a fill or border of its own, with its ink's offset from the
  *  badge's centre, positive below. */
 function measureBadgeCentres(tiles: BadgeTile[]): Reading[] {
-  const ctx = document.createElement("canvas").getContext("2d")!;
+  const ctx = window.requireProbeValue(
+    document.createElement("canvas").getContext("2d"),
+    "2D canvas context",
+  );
   return tiles.map(({ tile, numeral, text }) => {
     const box = tile.getBoundingClientRect();
     const probe = document.createElement("span");
@@ -78,10 +81,11 @@ function measureCodeLineBadges(tiles: BadgeTile[]): Reading[] {
     strut.remove();
     const code = getComputedStyle(line);
     ctx.font = `${code.fontWeight} ${code.fontSize} ${code.fontFamily}`;
-    const [cap, x] = ["H", "x"].map((c) => base - ctx.measureText(c).actualBoundingBoxAscent / 2);
+    const cap = base - ctx.measureText("H").actualBoundingBoxAscent / 2;
+    const x = base - ctx.measureText("x").actualBoundingBoxAscent / 2;
     const box = tile.getBoundingClientRect();
     const middle = box.top + box.height / 2;
-    const offset = middle < cap! ? middle - cap! : middle > x! ? middle - x! : 0;
+    const offset = middle < cap ? middle - cap : middle > x ? middle - x : 0;
     return [{ label: `${tile.className.toString().slice(0, 50)} "${text}" on its line`, offset }];
   });
 }

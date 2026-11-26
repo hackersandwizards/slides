@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, it } from "vitest";
@@ -23,7 +24,7 @@ it.each([
   const preloads = [...html.matchAll(/<link rel="preload"[^>]*>/g)]
     .map(([tag]) => tag)
     .filter((tag) => tag.includes('as="font"'))
-    .map((tag) => /href="([^"]+)"/.exec(tag)![1]);
+    .map((tag) => defined(/href="([^"]+)"/.exec(tag), "font preload href")[1]);
   expect(FACES.filter((face) => !preloads.some((href) => href.includes(`/${face}.`)))).toEqual([]);
   const css = [...html.matchAll(/<link rel="stylesheet" href="\/slides\/([^"]+)"/g)]
     .map(([, href]) => readFileSync(join(dist, href), "utf8"))

@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { spawn } from "node:child_process";
 import { readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
@@ -11,8 +12,8 @@ import { limit } from "./limit";
 const root = join(import.meta.dirname, "..", "..");
 // Run from a shell's PATH: under `bun --bun vitest` PATH starts with Bun's `node` shim, and Astro's
 // preview under Bun fails on Astrobook's routes.
-const PATH = process.env
-  .PATH!.split(":")
+const PATH = defined(process.env.PATH, "process PATH")
+  .split(":")
   .filter((dir) => !dir.includes("/bun-node-"))
   .join(":");
 // The counts name client decks, so only the dev server reads SLIDES_USAGE: these two files are
@@ -54,7 +55,7 @@ async function served(script: string, path: string, env: NodeJS.ProcessEnv) {
       );
     return { html, output };
   } finally {
-    if (running()) process.kill(-server.pid!);
+    if (running()) process.kill(-defined(server.pid, "Astro server process ID"));
   }
 }
 
@@ -84,8 +85,7 @@ describe("usage counts on the dev server", () => {
   let page: string;
   beforeAll(async () => {
     const { html, output } = await served("dev", "/catalog/print/", usageEnv);
-    expect(html, output).toBeDefined();
-    page = html!;
+    page = defined(html, `catalog print page HTML (Astro output:\n${output})`);
   }, limit(120_000));
 
   it.each([

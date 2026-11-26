@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { join } from "node:path";
 import verbal from "@hackersandwizards/brand/verbal.json";
 import { tokens } from "@hackersandwizards/brand/tokens";
@@ -103,7 +104,9 @@ describe("slides-pptx on the specimen deck", () => {
       },
       join(import.meta.dirname, ".."),
     );
-    const xml = await zip.file("ppt/slides/slide1.xml")!.async("string");
+    const xml = await defined(zip.file("ppt/slides/slide1.xml"), "ppt/slides/slide1.xml").async(
+      "string",
+    );
     const text = [...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((m) => m[1]);
     expect(text).toContain("in/example-name");
     expect(text.join(" ")).not.toContain("linkedin.com");
@@ -125,7 +128,9 @@ describe("slides-pptx on the specimen deck", () => {
       },
       join(import.meta.dirname, ".."),
     );
-    const xml = await de.file("ppt/slides/slide1.xml")!.async("string");
+    const xml = await defined(de.file("ppt/slides/slide1.xml"), "ppt/slides/slide1.xml").async(
+      "string",
+    );
     expect(norm(unescapeNamedEntities(xml.replace(/<[^>]+>/g, "")))).toContain(norm("A und B"));
     expect(unescapeNamedEntities(xml)).toContain('descr="QR-Code: example.com"');
   });
@@ -152,16 +157,23 @@ describe("slides-pptx on the specimen deck", () => {
     });
     const text = async (n: number) =>
       unescapeNamedEntities(
-        (await de.file(`ppt/slides/slide${n}.xml`)!.async("string")).replace(/<[^>]+>/g, " "),
+        (
+          await defined(de.file(`ppt/slides/slide${n}.xml`), `ppt/slides/slide${n}.xml`).async(
+            "string",
+          )
+        ).replace(/<[^>]+>/g, " "),
       );
     // The labels keep the deck's case and are drawn in capitals, so an edit keeps them capitals.
-    expect(await de.file("ppt/slides/slide1.xml")!.async("string")).toMatch(
-      /cap="all"[^>]*>.*?<a:t>Schlecht<\/a:t>.*cap="all"[^>]*>.*?<a:t>Gut<\/a:t>/s,
-    );
+    expect(
+      await defined(de.file("ppt/slides/slide1.xml"), "ppt/slides/slide1.xml").async("string"),
+    ).toMatch(/cap="all"[^>]*>.*?<a:t>Schlecht<\/a:t>.*cap="all"[^>]*>.*?<a:t>Gut<\/a:t>/s);
     expect(await text(2)).toContain("Diskussion");
     // The shape that holds the first segment's label, teal where it is marked.
     const label = async (n: number) => {
-      const xml = await de.file(`ppt/slides/slide${n}.xml`)!.async("string");
+      const xml = await defined(
+        de.file(`ppt/slides/slide${n}.xml`),
+        `ppt/slides/slide${n}.xml`,
+      ).async("string");
       const before = xml.slice(0, xml.indexOf("<a:t>A</a:t>"));
       return before.slice(before.lastIndexOf("<p:sp>"));
     };
@@ -326,8 +338,14 @@ describe("slides-pptx on the specimen deck", () => {
     const at = slideCatalog.slides.findIndex((s) => s.type === "gantt");
     const d = slideCatalog.slides[at] as Extract<Slide, { type: "gantt" }>;
     const box = (text: string) => {
-      const sp = slideXml[at].split("<p:sp>").find((x) => x.includes(`>${text}<`))!;
-      const [, y, cy] = /<a:off x="\d+" y="(\d+)"\/><a:ext cx="\d+" cy="(\d+)"/.exec(sp)!;
+      const sp = defined(
+        slideXml[at].split("<p:sp>").find((x) => x.includes(`>${text}<`)),
+        "shape containing the slide text",
+      );
+      const [, y, cy] = defined(
+        /<a:off x="\d+" y="(\d+)"\/><a:ext cx="\d+" cy="(\d+)"/.exec(sp),
+        "shape y position and height",
+      );
       return { top: +y, bottom: +y + +cy };
     };
     const months = Math.max(...d.columns.map((c) => box(c).bottom));

@@ -17,41 +17,84 @@ function checkWithCloseError(error: Error, closed: boolean, connected: boolean) 
 }
 
 it.each([
-  ["closed target", new TargetCloseError("Target closed"), false, true],
-  ["closed connection", new ConnectionClosedError("Connection closed."), false, false],
-  [
-    "rejected close command",
-    new ProtocolError("Protocol error (Target.closeTarget): No target with given id found"),
-    true,
-    true,
-  ],
-  [
-    "timed-out close command",
-    new ProtocolError("Target.closeTarget timed out. Increase the protocol timeout."),
-    false,
-    true,
-  ],
-  ["missing connection after tab close", new Error(missingConnection), true, true],
-  ["missing connection after disconnect", new Error(missingConnection), false, false],
-])("keeps the render report after a %s", async (_, error, closed, connected) => {
+  {
+    name: "closed target",
+    error: new TargetCloseError("Target closed"),
+    closed: false,
+    connected: true,
+  },
+  {
+    name: "closed connection",
+    error: new ConnectionClosedError("Connection closed."),
+    closed: false,
+    connected: false,
+  },
+  {
+    name: "rejected close command",
+    error: new ProtocolError("Protocol error (Target.closeTarget): No target with given id found"),
+    closed: true,
+    connected: true,
+  },
+  {
+    name: "timed-out close command",
+    error: new ProtocolError("Target.closeTarget timed out. Increase the protocol timeout."),
+    closed: false,
+    connected: true,
+  },
+  {
+    name: "missing connection after tab close",
+    error: new Error(missingConnection),
+    closed: true,
+    connected: true,
+  },
+  {
+    name: "missing connection after disconnect",
+    error: new Error(missingConnection),
+    closed: false,
+    connected: false,
+  },
+])("keeps the render report after a $name", async ({ error, closed, connected }) => {
   const report = await checkWithCloseError(error, closed, connected);
   expect(report).toEqual(["FAIL deck did not render: render crashed"]);
 });
 
 it.each([
-  ["an open tab", new TypeError("unexpected cleanup error"), false, true],
-  ["a closed tab", new TypeError("unexpected cleanup error"), true, true],
-  ["a disconnected browser", new TypeError("unexpected cleanup error"), false, false],
-  [
-    "an unrelated protocol failure",
-    new ProtocolError("Protocol error (Page.navigate): Invalid URL"),
-    false,
-    true,
-  ],
-  ["a connection assertion with a live tab", new Error(missingConnection), false, true],
-])("propagates the original unexpected close error for %s", async (_, error, closed, connected) => {
-  const observed = await checkWithCloseError(error, closed, connected).catch(
-    (caught: unknown) => caught,
-  );
-  expect(observed).toBe(error);
-});
+  {
+    name: "an open tab",
+    error: new TypeError("unexpected cleanup error"),
+    closed: false,
+    connected: true,
+  },
+  {
+    name: "a closed tab",
+    error: new TypeError("unexpected cleanup error"),
+    closed: true,
+    connected: true,
+  },
+  {
+    name: "a disconnected browser",
+    error: new TypeError("unexpected cleanup error"),
+    closed: false,
+    connected: false,
+  },
+  {
+    name: "an unrelated protocol failure",
+    error: new ProtocolError("Protocol error (Page.navigate): Invalid URL"),
+    closed: false,
+    connected: true,
+  },
+  {
+    name: "a connection assertion with a live tab",
+    error: new Error(missingConnection),
+    closed: false,
+    connected: true,
+  },
+])(
+  "propagates the original unexpected close error for $name",
+  async ({ error, closed, connected }) => {
+    const observed = await checkWithCloseError(error, closed, connected).catch(
+      (caught: unknown) => caught,
+    );
+    expect(observed).toBe(error);
+  },
+);

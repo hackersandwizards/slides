@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { join } from "node:path";
 import type JSZip from "jszip";
 import { assert, beforeAll, describe, expect, it } from "vitest";
@@ -526,9 +527,11 @@ it("colours a deep-dive slide's bullets in the night teal, every other slide's i
   );
   const colour = async (n: number) =>
     [
-      ...(await pptx.file(`ppt/slides/slide${n}.xml`)!.async("string")).matchAll(
-        /<a:buClr><a:srgbClr val="(\w+)"/g,
-      ),
+      ...(
+        await defined(pptx.file(`ppt/slides/slide${n}.xml`), `ppt/slides/slide${n}.xml`).async(
+          "string",
+        )
+      ).matchAll(/<a:buClr><a:srgbClr val="(\w+)"/g),
     ].map((m) => m[1]);
   const [day, night] = [await colour(1), await colour(2)];
   expect(day.length).toBeGreaterThan(0);
@@ -554,9 +557,9 @@ it("marks the text of a German deck German, its notes included", async () => {
     join(import.meta.dirname, "..", "specimen"),
   );
   for (const part of ["ppt/slides/slide2.xml", "ppt/notesSlides/notesSlide2.xml"])
-    expect(await pptx.file(part)!.async("string")).toContain('lang="de-DE"');
+    expect(await defined(pptx.file(part), part).async("string")).toContain('lang="de-DE"');
   for (const part of Object.keys(pptx.files).filter((f) => f.endsWith(".xml")))
-    expect(await pptx.file(part)!.async("string")).not.toContain('lang="en-US"');
+    expect(await defined(pptx.file(part), part).async("string")).not.toContain('lang="en-US"');
 });
 
 describe("slides-pptx draws what the slide shows", () => {

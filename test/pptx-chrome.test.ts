@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
@@ -32,12 +33,14 @@ beforeAll(async () => {
 describe("slides-pptx on the specimen deck", () => {
   it("writes the confidentiality line on every slide at the footer centre line", () => {
     for (const xml of slideXml) {
-      const note = shapesOf(xml).find(
+      const shape = shapesOf(xml).find(
         (shape) => shape.texts.join("") === slideCatalog.confidential,
       );
-      expect(note).toBeDefined();
-      expect(note!.x).toBeCloseTo(96 / 144);
-      expect(note!.y! + note!.h! / 2).toBeCloseTo(1024 / 144);
+      const note = defined(shape, "confidentiality shape");
+      const y = defined(note.y, "confidentiality shape y position");
+      const height = defined(note.h, "confidentiality shape height");
+      expect(note.x).toBeCloseTo(96 / 144);
+      expect(y + height / 2).toBeCloseTo(1024 / 144);
     }
   });
 
@@ -55,10 +58,17 @@ describe("slides-pptx on the specimen deck", () => {
       slides: [{ type: "statement", lines: ["Hello"] }],
     });
     expect(warnings).toEqual([]);
-    const xml = await deck.file("ppt/slides/slide1.xml")!.async("string");
-    const [, x, width] =
-      /descr="Start"[^>]*>[\s\S]*?<a:off x="(\d+)" y="\d+"\/>\s*<a:ext cx="(\d+)"/.exec(xml)!;
-    const note = shapesOf(xml).find((shape) => shape.texts.join("") === confidential)!;
+    const xml = await defined(deck.file("ppt/slides/slide1.xml"), "ppt/slides/slide1.xml").async(
+      "string",
+    );
+    const [, x, width] = defined(
+      /descr="Start"[^>]*>[\s\S]*?<a:off x="(\d+)" y="\d+"\/>\s*<a:ext cx="(\d+)"/.exec(xml),
+      "start logo dimensions",
+    );
+    const note = defined(
+      shapesOf(xml).find((shape) => shape.texts.join("") === confidential),
+      "confidentiality shape",
+    );
     expect(note.x).toBeGreaterThan((+x + +width) / 914400);
   });
 

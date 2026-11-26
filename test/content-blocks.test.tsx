@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { fireEvent, render } from "@testing-library/react";
 import { assert, describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
@@ -21,7 +22,10 @@ describe("content blocks", () => {
     const c = content([
       { type: "bars", order: "given", bars: values.map((v) => ({ label: `l${v}`, value: v })) },
     ]);
-    const figure = [...c.querySelectorAll("span")].find((e) => e.textContent === "10")!;
+    const figure = defined(
+      [...c.querySelectorAll("span")].find((e) => e.textContent === "10"),
+      'number figure with text "10"',
+    );
     const bar = figure.previousElementSibling as HTMLElement;
     expect(bar.className).toContain("min-w-1");
     expect(bar.style.width).toContain("var(--bar-room)");
@@ -147,7 +151,7 @@ describe("content blocks", () => {
   // can stop it again, and focus stays where it was.
   it("keeps the button as a pause control while the video plays", () => {
     const c = content([{ type: "video", src: "/a.mp4", alt: "Demo" }]);
-    fireEvent.play(c.querySelector("video")!);
+    fireEvent.play(defined(c.querySelector("video"), "video player"));
     expect(c.querySelector('button[aria-label="Pause Demo"]')).not.toBeNull();
   });
 
@@ -214,9 +218,12 @@ describe("inline code", () => {
 
   // In a narrow flow step `my-skill` split at its hyphen and `settings.json` mid-word.
   it("breaks a path only after a slash or before a dot", () => {
-    const code = render(
-      <p>{renderMarkdown("`.claude/skills/my-skill/settings.json`")}</p>,
-    ).container.querySelector("code")!;
+    const code = defined(
+      render(
+        <p>{renderMarkdown("`.claude/skills/my-skill/settings.json`")}</p>,
+      ).container.querySelector("code"),
+      "rendered inline code",
+    );
     expect(code.textContent).toBe(".claude/skills/my-skill/settings.json");
     expect([...code.querySelectorAll("span.inline-block")].map((s) => s.textContent)).toEqual([
       ".claude/",
@@ -243,7 +250,10 @@ describe("numbers block", () => {
         ],
       },
     ]);
-    const figure = c.querySelector<HTMLElement>("span[style*='--slide-figure-grid-size']")!;
+    const figure = defined(
+      c.querySelector<HTMLElement>("span[style*='--slide-figure-grid-size']"),
+      "number figure",
+    );
     // The lead keeps its space in the text, so a PDF or a screen reader reads "up to +70%".
     expect(figure.querySelector("span")?.textContent).toBe("up to ");
     expect(figure.textContent).toBe("up to +70%");
@@ -257,7 +267,7 @@ describe("numbers block", () => {
     expect(width).toBeLessThanOrEqual(1650 / 3 - 60 + 0.001);
     // On a phone the widest figure caps them all at its column's width: 4 digits, 5 leading
     // characters counting half, one more for their gap, 0.6em each.
-    const grid = figure.closest<HTMLElement>(".grid")!;
+    const grid = defined(figure.closest<HTMLElement>(".grid"), "number figure grid");
     expect(grid.style.getPropertyValue("--slide-figure-fit")).toBe(
       `${+(100 / (7.5 * 0.6)).toFixed(2)}cqi`,
     );
@@ -273,7 +283,10 @@ describe("numbers block", () => {
       { value: "3x", label: "b" },
     ];
     const c = content([{ type: "numbers", items }]);
-    const figure = c.querySelector<HTMLElement>("span[style*='--slide-figure-grid-size']")!;
+    const figure = defined(
+      c.querySelector<HTMLElement>("span[style*='--slide-figure-grid-size']"),
+      "number figure",
+    );
     expect(figure.querySelector("span")?.textContent).toBe(lead);
   });
 });

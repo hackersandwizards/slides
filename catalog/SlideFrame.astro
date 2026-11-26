@@ -89,16 +89,14 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
          * @param {HTMLElement} embed
          * @param {HTMLElement} pane
          * @param {HTMLElement} stage
-         * @param {HTMLIFrameElement} frame
          */
-        function fitInPane(embed, pane, stage, frame) {
+        function sizeStageInPane(embed, pane, stage) {
           const box = stage.getBoundingClientRect();
           const top = box.top - pane.getBoundingClientRect().top;
           const below = embed.getBoundingClientRect().bottom - box.bottom;
           const height = pane.clientHeight - top - pane.scrollTop - below;
           // With no height left the card takes the page's width and the pane scrolls.
           stage.style.width = height > 0 ? `${(height * 16) / 9}px` : "";
-          frame.style.transform = `scale(${stage.clientWidth / frame.offsetWidth})`;
         }
 
         /**
@@ -131,7 +129,8 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
               fitPopover(stage, frame);
               return;
             }
-            fitInPane(embed, pane, stage, frame);
+            sizeStageInPane(embed, pane, stage);
+            frame.style.transform = `scale(${stage.clientWidth / frame.offsetWidth})`;
           };
           new ResizeObserver(fit).observe(pane);
           stage.addEventListener("toggle", fit);

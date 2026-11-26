@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { rejection } from "@hackersandwizards/scaffolding/rejection";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, assert, describe, expect, it, vi } from "vitest";
@@ -27,8 +28,8 @@ describe("edit mode", () => {
   // jsdom loads no `srcdoc`: the field's document is written here and its load fired.
   const opened = async () => {
     await waitFor(() => expect(document.querySelector("iframe")).not.toBeNull());
-    const frame = document.querySelector("iframe")!;
-    frame.contentDocument!.body.innerHTML = "<textarea></textarea>";
+    const frame = defined(document.querySelector("iframe"), "edit iframe");
+    defined(frame.contentDocument, "edit iframe document").body.innerHTML = "<textarea></textarea>";
     await act(async () => frame.dispatchEvent(new Event("load")));
   };
 

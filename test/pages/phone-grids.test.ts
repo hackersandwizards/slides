@@ -45,7 +45,7 @@ function measure() {
     figures: figures.map((f) => ({
       text: f.textContent,
       over: Math.max(
-        f.scrollWidth - f.parentElement!.clientWidth,
+        f.scrollWidth - window.requireProbeValue(f.parentElement, "figure wrapper").clientWidth,
         f.getBoundingClientRect().right - width,
       ),
     })),
@@ -174,7 +174,10 @@ it.each([1440, 390])(
     const page = await open("chart-slide/trend-marked", width);
     await page.waitForSelector(".recharts-xAxis-tick-labels text");
     const { labels, teal } = await page.evaluate(() => {
-      const svg = document.querySelector("[data-chart-plot] svg.recharts-surface")!;
+      const svg = window.requireProbeValue(
+        document.querySelector("[data-chart-plot] svg.recharts-surface"),
+        "chart SVG",
+      );
       const box = svg.getBoundingClientRect();
       const labels = [...svg.querySelectorAll<SVGTextElement>("text")].map((t) => {
         const r = t.getBoundingClientRect();
@@ -270,8 +273,8 @@ function runaways() {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   while (walker.nextNode()) {
     const node = walker.currentNode;
-    const element = node.parentElement!;
-    const text = node.textContent!.trim();
+    const element = window.requireProbeValue(node.parentElement, "text node parent");
+    const text = window.requireProbeValue(node.textContent, "text node content").trim();
     if (!text || element.closest("script, style, noscript, svg")) continue;
     const range = document.createRange();
     range.selectNodeContents(node);
@@ -343,8 +346,9 @@ it(
     await page.waitForSelector("[data-chart-plot] li");
     const rows = await page.$$eval("[data-chart-plot] li", (all) =>
       all.map((li) => ({
-        name: li.querySelector("span")!.textContent,
-        bar: li.lastElementChild!.getBoundingClientRect().width,
+        name: window.requireProbeValue(li.querySelector("span"), "activity name").textContent,
+        bar: window.requireProbeValue(li.lastElementChild, "activity bar").getBoundingClientRect()
+          .width,
       })),
     );
     const axis = await page.$(".recharts-xAxis");
@@ -467,22 +471,37 @@ it(
     const page = await open("chart-slide/trend-marked", 390);
     await page.waitForSelector(".recharts-xAxis-tick-labels text");
     const { plot, note, labels, dot } = await page.evaluate(() => {
-      const box = (e: Element | null | undefined) => e?.getBoundingClientRect().toJSON() as DOMRect;
-      const frame = document.querySelector("[data-chart-plot]")!;
+      const box = (element: Element) => {
+        const { bottom, height, left, right, top } = element.getBoundingClientRect();
+        return { bottom, height, left, right, top };
+      };
+      const frame = window.requireProbeValue(
+        document.querySelector("[data-chart-plot]"),
+        "chart plot container",
+      );
+      const plot = window.requireProbeValue(
+        frame.querySelector("svg.recharts-surface"),
+        "plot SVG",
+      );
+      const note = window.requireProbeValue(
+        [...frame.querySelectorAll("p")].find((p) => p.textContent?.startsWith("Baseline")),
+        "baseline note",
+      );
+      const dot = window.requireProbeValue(
+        frame.querySelector(".recharts-reference-dot circle"),
+        "marked trend reference dot",
+      );
       return {
-        plot: box(frame.querySelector("svg.recharts-surface")),
-        note: box(
-          [...frame.querySelectorAll("p")].find((p) => p.textContent?.startsWith("Baseline")),
-        ),
-        labels: [...frame.querySelectorAll(".recharts-xAxis-tick-labels text")].map((t) => box(t)!),
-        dot: box(frame.querySelector(".recharts-reference-dot circle")),
+        plot: box(plot),
+        note: box(note),
+        labels: [...frame.querySelectorAll(".recharts-xAxis-tick-labels text")].map(box),
+        dot: box(dot),
       };
     });
     await page.close();
-    expect(plot!.height).toBeGreaterThanOrEqual(296);
+    expect(plot.height).toBeGreaterThanOrEqual(296);
     expect(labels.length).toBeGreaterThan(0);
-    expect(note!.top).toBeGreaterThan(Math.max(...labels.map((l) => l.bottom)));
-    assert(dot, "The marked trend must draw a reference dot");
+    expect(note.top).toBeGreaterThan(Math.max(...labels.map((l) => l.bottom)));
     expect(labels.filter((label) => boxClearance(label, dot) < 0)).toEqual([]);
   },
   limit(60_000),
@@ -495,7 +514,10 @@ it(
   async () => {
     const page = await open("content-slide/visual-cards", 390);
     const { pads, phone } = await page.evaluate(() => {
-      const content = document.querySelector(".slide-content")!;
+      const content = window.requireProbeValue(
+        document.querySelector(".slide-content"),
+        "slide content",
+      );
       const probe = content.appendChild(document.createElement("div"));
       probe.style.padding = "var(--slide-phone-card-padding)";
       return {

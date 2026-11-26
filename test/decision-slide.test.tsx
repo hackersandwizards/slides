@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
@@ -25,9 +26,12 @@ describe("DecisionSlide", () => {
     const SlideComponent = slideComponents.decision;
     const { container } = render(<SlideComponent slide={decisionSlide as Slide} />);
     const { need, question, outcome } = decisionSlide;
-    const grid = container.querySelector(".decision-grid")!;
+    const grid = defined(container.querySelector(".decision-grid"), "decision grid");
     for (const text of [need, question, outcome]) {
-      const box = [...grid.children].find((el) => el.textContent === text)!;
+      const box = defined(
+        [...grid.children].find((el) => el.textContent === text),
+        "decision box for the given text",
+      );
       expect(box.matches('.hw-card, [data-hw-exception="card-tone"]')).toBe(true);
     }
   });

@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { expect, it } from "vitest";
@@ -96,6 +97,6 @@ it("links only anchors the page holds, and finds every form a media slide moved 
   expect(dead).toEqual([]);
   expect(ids.size).toBeGreaterThan(50);
   const media = entries.filter(([, , search]) => search.split(" ").includes("media"));
-  const named = media.map(([figure]) => /id="([^"]+)"/.exec(figure)![1]);
+  const named = media.map(([figure]) => defined(/id="([^"]+)"/.exec(figure), "media figure ID")[1]);
   for (const id of ["block-gallery", "block-image", "block-video"]) expect(named).toContain(id);
 });

@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { act, render } from "@testing-library/react";
 import { assert, describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
@@ -107,7 +108,7 @@ describe("statement slide", () => {
 
   it("sizes a linked image's frame by the picture's own ratio", () => {
     const c = statement({ linkedImage: { src: "/shot.png", href: "https://example.com" } });
-    const img = c.querySelector<HTMLImageElement>("figure img")!;
+    const img = defined(c.querySelector<HTMLImageElement>("figure img"), "figure image");
     Object.defineProperties(img, { naturalWidth: { value: 1600 }, naturalHeight: { value: 1000 } });
     act(() => {
       img.dispatchEvent(new Event("load"));

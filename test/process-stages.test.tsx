@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ProcessSlide } from "../components/slides/ProcessSlide";
@@ -28,7 +29,10 @@ describe("evolution, through the process slide", () => {
     const { getByText } = printed([stage("1x", "Chat"), stage("10x", "Harness")]);
     expect(getByText("10x").tagName).toBe("SPAN");
     // The tile draws its text in a span of its own, trimmed to the cap height.
-    expect(getByText("10x").parentElement!.nextElementSibling?.tagName).toBe("H2");
+    expect(
+      defined(getByText("10x").parentElement, "process stage number wrapper").nextElementSibling
+        ?.tagName,
+    ).toBe("H2");
   });
 
   it("moves every label above the title when one is too long for a tile", () => {
@@ -81,9 +85,12 @@ describe("ProcessSlide, loop false", () => {
 describe("FlowSteps on a phone", () => {
   it("stacks the steps where a title's word is wider than its column", () => {
     const row = (titles: string[]) =>
-      printed(titles.map((title, i) => stage(`${i}x`, title))).container.querySelector(
-        ".slide-flow",
-      )!.className;
+      defined(
+        printed(titles.map((title, i) => stage(`${i}x`, title))).container.querySelector(
+          ".slide-flow",
+        ),
+        "process flow",
+      ).className;
     expect(row(["Autocomplete", "Chat", "Harness"])).toContain("slide-flow-long");
     expect(row(["Manual", "Chat", "Harness"])).not.toContain("slide-flow-long");
     expect(row(["**Auto**complete", "Chat", "Harness"])).toContain("slide-flow-long");

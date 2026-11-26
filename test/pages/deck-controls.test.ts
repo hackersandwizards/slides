@@ -65,7 +65,11 @@ async function goTo(page: Page, position: number) {
 
 const shown = (page: Page, opacity = "1") =>
   page.waitForFunction(
-    (next, want) => getComputedStyle(document.querySelector(next)!.parentElement!).opacity === want,
+    (next, want) => {
+      const button = window.requireProbeValue(document.querySelector(next), "next slide button");
+      const bar = window.requireProbeValue(button.parentElement, "slide control bar");
+      return getComputedStyle(bar).opacity === want;
+    },
     { timeout: limit(6000) },
     NEXT,
     opacity,
@@ -73,8 +77,12 @@ const shown = (page: Page, opacity = "1") =>
 
 const reached = (page: Page, position: number) =>
   page.waitForFunction(
-    (next, want) =>
-      document.querySelector(next)!.previousElementSibling!.textContent!.startsWith(`${want} /`),
+    (next, want) => {
+      const button = window.requireProbeValue(document.querySelector(next), "next slide button");
+      const counter = window.requireProbeValue(button.previousElementSibling, "page counter");
+      const text = window.requireProbeValue(counter.textContent, "page counter text");
+      return text.startsWith(`${want} /`);
+    },
     { timeout: limit(5000) },
     NEXT,
     position,
@@ -84,9 +92,18 @@ it("fits the confidentiality line above the lockup and controls at 320 px", asyn
   const page = await deck(320, true, 720);
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   const footer = await page.$eval(".slide-footer", (row) => {
-    const note = row.querySelector(".slide-confidential")!;
-    const mark = row.querySelector<HTMLImageElement>(".slide-corner img.hw-wordmark")!;
-    const controls = document.querySelector(".slide-controls")!;
+    const note = window.requireProbeValue(
+      row.querySelector(".slide-confidential"),
+      "confidentiality line",
+    );
+    const mark = window.requireProbeValue(
+      row.querySelector<HTMLImageElement>(".slide-corner img.hw-wordmark"),
+      "corner wordmark",
+    );
+    const controls = window.requireProbeValue(
+      document.querySelector(".slide-controls"),
+      "slide controls",
+    );
     const range = document.createRange();
     range.selectNodeContents(note);
     const text = range.getBoundingClientRect();
@@ -198,15 +215,24 @@ it(
     const offCentre = await page.$eval(NEXT, (next) => {
       const logo = document.createElement("div");
       logo.className = "slide-corner-start";
-      document.querySelector(".slide-viewport")!.append(logo);
-      const box = next.parentElement!.getBoundingClientRect();
+      window
+        .requireProbeValue(document.querySelector(".slide-viewport"), "slide viewport")
+        .append(logo);
+      const box = window
+        .requireProbeValue(next.parentElement, "slide control bar")
+        .getBoundingClientRect();
       return box.x + box.width / 2 - innerWidth / 2;
     });
     expect(Math.abs(offCentre)).toBeLessThan(1);
     await page.emulateMediaType("print");
-    expect(await page.$eval(NEXT, (next) => getComputedStyle(next.parentElement!).display)).toBe(
-      "none",
-    );
+    expect(
+      await page.$eval(
+        NEXT,
+        (next) =>
+          getComputedStyle(window.requireProbeValue(next.parentElement, "slide control bar"))
+            .display,
+      ),
+    ).toBe("none");
     await page.close();
   },
   limit(30_000),
@@ -294,8 +320,12 @@ it(
     const pill = await page.$eval(NEXT, (next) => {
       const mark = document.createElement("span");
       mark.className = "slide-closing-mark";
-      document.querySelector(".slide-viewport")!.append(mark);
-      return next.previousElementSibling!.getBoundingClientRect().width;
+      window
+        .requireProbeValue(document.querySelector(".slide-viewport"), "slide viewport")
+        .append(mark);
+      return window
+        .requireProbeValue(next.previousElementSibling, "page counter")
+        .getBoundingClientRect().width;
     });
     expect(pill).toBeGreaterThan(1);
     await page.close();

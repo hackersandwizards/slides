@@ -97,7 +97,10 @@ it(
     await tab.evaluateOnNewDocument(() => localStorage.setItem("theme-toggle", "dark"));
     await tab.goto(page("stories/Types/closing-slide/contact"), { waitUntil: "load" });
     const fill = await tab.evaluate(
-      () => getComputedStyle(document.querySelector(".slide-story")!).backgroundColor,
+      () =>
+        getComputedStyle(
+          window.requireProbeValue(document.querySelector(".slide-story"), "story slide"),
+        ).backgroundColor,
     );
     expect(fill).toBe(DAY);
     await tab.close();
@@ -170,12 +173,16 @@ const fits = (tab: Page) =>
   tab.evaluate(async () => {
     // Two frames give the stage's ResizeObserver its turn after a viewport change.
     await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
-    const card = document.querySelector(".story-stage")!;
+    const card = window.requireProbeValue(document.querySelector(".story-stage"), "story stage");
     const stage = card.getBoundingClientRect();
-    const frame = card.querySelector("iframe")!.getBoundingClientRect();
-    const embed = card.parentElement!;
+    const frame = window
+      .requireProbeValue(card.querySelector("iframe"), "story stage iframe")
+      .getBoundingClientRect();
+    const embed = window.requireProbeValue(card.parentElement, "story embed");
     const bar = embed.previousElementSibling?.getBoundingClientRect().bottom ?? 0;
-    const pane = embed.parentElement!.getBoundingClientRect();
+    const pane = window
+      .requireProbeValue(embed.parentElement, "story pane")
+      .getBoundingClientRect();
     return {
       inside:
         stage.top >= bar &&
@@ -240,8 +247,15 @@ it.each(["bar", "bar-long-names", "trend", "trend-marked"])(
       for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
       const box = (e: Element) => e.getBoundingClientRect().toJSON() as DOMRect;
       return {
-        axis: box(document.querySelector(".recharts-xAxis .recharts-cartesian-axis-line")!),
-        plot: box(document.querySelector(".recharts-surface")!),
+        axis: box(
+          window.requireProbeValue(
+            document.querySelector(".recharts-xAxis .recharts-cartesian-axis-line"),
+            "chart x-axis line",
+          ),
+        ),
+        plot: box(
+          window.requireProbeValue(document.querySelector(".recharts-surface"), "chart surface"),
+        ),
         labels: [...document.querySelectorAll(".recharts-xAxis-tick-labels text")].map(box),
       };
     });
@@ -278,8 +292,11 @@ const measureZoomedBox = (tab: Page, selector: string) =>
   tab.evaluate(async (selector) => {
     await document.fonts.ready;
     for (let i = 0; i < 2; i++) await new Promise(requestAnimationFrame);
-    const box = document.querySelector<HTMLElement>(selector)!;
-    const outer = box.parentElement!;
+    const box = window.requireProbeValue(
+      document.querySelector<HTMLElement>(selector),
+      "zoomed chart",
+    );
+    const outer = window.requireProbeValue(box.parentElement, "zoomed chart wrapper");
     const cs = getComputedStyle(outer);
     const r = box.getBoundingClientRect();
     const o = outer.getBoundingClientRect();
@@ -323,7 +340,7 @@ it(
     // Narrowed once the fit the font's arrival sets off has run.
     await new Promise((r) => setTimeout(r, 300));
     await tab.$eval(DENSITY.selector, (box) => {
-      box.parentElement!.style.maxWidth = "1600px";
+      window.requireProbeValue(box.parentElement, "zoomed chart wrapper").style.maxWidth = "1600px";
     });
     const resized = await measureZoomedBox(tab, DENSITY.selector);
     await tab.close();

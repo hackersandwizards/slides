@@ -78,9 +78,9 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   `scripts/pptx/overflow.ts` finds text past its box, which `--strict` fails on.
   `scripts/pptx/embed-fonts.ts` embeds the faces under `--embed-fonts`.
   Its lengths and sizes are measured off the print route at 1920x1080.
-- `specimen/`: `slide-catalog.ts`, the specimen deck, every slide type and variant with fictional
-  content, and its images (`specimen/slide-catalog/`), which it imports as `?url` like brand's
-  logos, so a consumer's bundler serves them and `specimenImages` names them.
+- `specimen/`: `slide-catalog.ts` assembles the specimen deck from `slides/`, every slide type and
+  variant with fictional content. `images.ts` imports the images in `specimen/slide-catalog/` as
+  `?url` like brand's logos, so a consumer's bundler serves them and `specimenImages` names them.
   `test/specimen-coverage.test.ts` fails on a slide type, content block or variant it does not show.
 - `catalog/`: the catalog (decision repo-uniformity-plan, hub-max), one Astro app in scaffolding's
   catalog shell (`catalog({...})` in `catalog/astro.config.ts`), never shipped but for

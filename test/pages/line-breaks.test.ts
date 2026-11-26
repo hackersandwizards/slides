@@ -190,7 +190,7 @@ function figureHeights(selector: string) {
     f.style.setProperty("white-space", "nowrap", "important");
     const one = f.getBoundingClientRect().height;
     f.style.removeProperty("white-space");
-    const row = f.parentElement!;
+    const row = window.requireProbeValue(f.parentElement, "figure row");
     const right = Math.max(...[...row.children].map((c) => c.getBoundingClientRect().right));
     // A block figure's box spans its column, so its text past the box is read off its scroll width.
     const over = Math.max(right - row.getBoundingClientRect().right, f.scrollWidth - f.clientWidth);

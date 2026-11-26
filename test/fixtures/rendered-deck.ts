@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -17,11 +18,14 @@ export async function rendered(deck: Presentation, assets?: string) {
     const slideText: string[] = [];
     const slideCharts: string[][] = [];
     for (let i = 1; zip.file(`ppt/slides/slide${i}.xml`); i++) {
-      const xml = await zip.file(`ppt/slides/slide${i}.xml`)!.async("string");
+      const xml = await defined(
+        zip.file(`ppt/slides/slide${i}.xml`),
+        `ppt/slides/slide${i}.xml`,
+      ).async("string");
       const rels = (await zip.file(`ppt/slides/_rels/slide${i}.xml.rels`)?.async("string")) ?? "";
       const charts = await Promise.all(
         [...rels.matchAll(/Target="[^"]*\/charts\/(chart\d+\.xml)"/g)].map((m) =>
-          zip.file(`ppt/charts/${m[1]}`)!.async("string"),
+          defined(zip.file(`ppt/charts/${m[1]}`), `ppt/charts/${m[1]}`).async("string"),
         ),
       );
       slideXml.push(xml);

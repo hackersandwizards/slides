@@ -27,7 +27,10 @@ const open = async (width: number, height: number) => {
   return page;
 };
 const scaleOf = () => {
-  const frame = document.querySelector<HTMLIFrameElement>(".story-stage iframe")!;
+  const frame = window.requireProbeValue(
+    document.querySelector<HTMLIFrameElement>(".story-stage iframe"),
+    "story slide iframe",
+  );
   const { a, b } = new DOMMatrix(getComputedStyle(frame).transform);
   return Math.hypot(a, b);
 };

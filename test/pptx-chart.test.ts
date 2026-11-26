@@ -1,3 +1,4 @@
+import { defined } from "@hackersandwizards/scaffolding/defined";
 import type JSZip from "jszip";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { assert, beforeAll, describe, expect, it } from "vitest";
@@ -186,8 +187,11 @@ describe("slides-pptx on the specimen deck", () => {
       name: "G",
       slides: [{ type: "chart", variant: "trend", headline: "H", data }],
     });
-    const chart = Object.keys(zipped.files).find((f) => /charts\/chart\d+\.xml$/.test(f))!;
-    const second = (await zipped.file(chart)!.async("string")).split("<c:ser>")[2];
+    const chart = defined(
+      Object.keys(zipped.files).find((f) => /charts\/chart\d+\.xml$/.test(f)),
+      "chart XML path",
+    );
+    const second = (await defined(zipped.file(chart), chart).async("string")).split("<c:ser>")[2];
     const values = second.slice(second.indexOf("<c:val>"));
     expect([...values.matchAll(/<c:v>([^<]*)<\/c:v>/g)].map((m) => m[1])).toEqual(["", "", "5"]);
   });
@@ -205,7 +209,9 @@ describe("slides-pptx on the specimen deck", () => {
         },
       ],
     });
-    expect(await zipped.file("ppt/slides/slide1.xml")!.async("string")).toContain("<a:custGeom>");
+    expect(
+      await defined(zipped.file("ppt/slides/slide1.xml"), "ppt/slides/slide1.xml").async("string"),
+    ).toContain("<a:custGeom>");
   });
 
   it("keeps a bar's names level where every word fits its band, else lets them tilt", async () => {
@@ -224,8 +230,11 @@ describe("slides-pptx on the specimen deck", () => {
         },
       ],
     });
-    const chart = Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))!;
-    expect(await zipped.file(chart)!.async("string")).not.toContain('rot="0"');
+    const chart = defined(
+      Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f)),
+      "chart XML path",
+    );
+    expect(await defined(zipped.file(chart), chart).async("string")).not.toContain('rot="0"');
   });
 
   it("keeps a marked two-series trend's planned halves out of the legend", async () => {
@@ -247,15 +256,21 @@ describe("slides-pptx on the specimen deck", () => {
         },
       ],
     });
-    const chart = Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))!;
-    const xml = await zipped.file(chart)!.async("string");
+    const chart = defined(
+      Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f)),
+      "chart XML path",
+    );
+    const xml = await defined(zipped.file(chart), chart).async("string");
     expect(xml.match(/<c:legendEntry>/g)).toHaveLength(2);
     expect(xml.match(/<a:prstDash val="dash"\/>/g)).toHaveLength(2);
   });
 
   const chartXml = (zipped: JSZip) => {
-    const chart = Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))!;
-    return zipped.file(chart)!.async("string");
+    const chart = defined(
+      Object.keys(zipped.files).find((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f)),
+      "chart XML path",
+    );
+    return defined(zipped.file(chart), chart).async("string");
   };
 
   it("leaves an unnamed series out of the legend, as the web does", async () => {
