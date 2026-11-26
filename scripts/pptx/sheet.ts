@@ -48,9 +48,9 @@ export class Sheet extends Look {
 
   /** A text box at x, y, w, h whose paragraphs shrink together until their measure fits. */
   box(content: Para[] | Para | string, area: Area, o: BoxOpts): void {
-    if (area.h <= 0) return;
     const paras = asParas(content, this.c).filter((p) => p.runs.some((r) => r.text));
     if (!paras.length) return;
+    if (area.h <= 0) return this.warnCutText(paras);
     const fitted = boxFit(paras, o, area);
     const runs = boxRuns(paras, fitted.o, { w: area.w, k: fitted.k });
     const place = boxPlace(area, fitted.o, paras);
@@ -236,5 +236,14 @@ export class Sheet extends Look {
 
   warn(message: string): void {
     this.out.warnings.push(message);
+  }
+
+  warnCutText(paras: Para[]): void {
+    const text = paras
+      .map((p) => p.runs.map((r) => r.text).join(""))
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (text) this.warn(`text ${JSON.stringify(text.slice(0, 80))}: no height left in its box`);
   }
 }

@@ -851,12 +851,16 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
       heights: [...cards.cards.map((card) => card.h), pair.bodyArea.h],
       footPositions: [cards.footY, pair.footY],
     }).toEqual({ heights: [0, 0, 0], footPositions: [box.y, box.y] });
-    for (const draw of [
-      (sheet: Sheet) => drawComparisonCards(sheet, cards),
-      (sheet: Sheet) => drawBeforeAfterComparison(sheet, pair),
-    ]) {
-      const { shapes } = await drawOnSheet(assetsDir, draw);
+    for (const [draw, marker] of [
+      [(sheet: Sheet) => drawComparisonCards(sheet, cards), " +"],
+      [(sheet: Sheet) => drawBeforeAfterComparison(sheet, pair), ""],
+    ] as const) {
+      const { shapes, warnings } = await drawOnSheet(assetsDir, draw);
       expect(shapes.map((shape) => shape.texts)).toEqual([["Summary"]]);
+      expect(warnings).toEqual([
+        `text "Left${marker} Alpha": no height left in its box`,
+        `text "Right${marker} Beta": no height left in its box`,
+      ]);
     }
   });
 
@@ -870,12 +874,11 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
       punchline: "Summary",
     };
     const box = { ...area, h: 2.2 };
-    const layout = comparisonCardsLayout(look, slide, box);
-    layout.cards[0].itemsArea.h = 0;
-    const { shapes } = await drawOnSheet(assetsDir, (sheet) => {
-      drawComparisonCards(sheet, layout);
+    const { shapes, warnings } = await drawOnSheet(assetsDir, (sheet) => {
+      drawComparisonCards(sheet, comparisonCardsLayout(look, slide, box));
     });
     expect(shapes.flatMap((shape) => shape.texts)).toEqual(["Left", "Right", "Beta", "Summary"]);
+    expect(warnings).toEqual(['text "Alpha": no height left in its box']);
   });
 
   it("drawComparisonCards draws cards, logo picture, label/item boxes, and footer at exact layout coordinates", async () => {

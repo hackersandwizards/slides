@@ -217,12 +217,16 @@ export function comparisonCardsLayout(
 /** Draws a measured `vs` or `split` comparison's cards and footer band. */
 export function drawComparisonCards(sheet: Sheet, layout: ComparisonCardsLayout): void {
   for (const card of layout.cards) {
-    if (card.h <= 0) continue;
+    if (card.h <= 0) {
+      sheet.warnCutText([card.label, ...card.items]);
+      if (card.logo) sheet.warn(`image ${card.logo.src}: no height left in its card`);
+      continue;
+    }
     sheet.card({ x: card.x, y: card.y, w: card.w, h: card.h }, layout.surface);
     if (card.logo)
       sheet.picture(card.logo.src, card.logo.area, { align: "left", alt: card.logo.alt });
     sheet.box(card.label, card.labelArea, layout.titleO);
-    if (card.itemsArea.h > 0) sheet.box(card.items, card.itemsArea, layout.itemO);
+    sheet.box(card.items, card.itemsArea, layout.itemO);
   }
   drawComparisonFoot(sheet, layout.foot, layout.footY);
 }
@@ -248,6 +252,7 @@ export function beforeAfterComparisonLayout(
 /** Draws a measured `before-after` comparison slide's body and footer band. */
 export function drawBeforeAfterComparison(sheet: Sheet, layout: BeforeAfterComparisonLayout): void {
   if (layout.bodyArea.h > 0) drawBeforeAfter(sheet, layout.body, layout.bodyArea);
+  else for (const side of layout.body.sides) sheet.warnCutText([side.label, ...side.rest]);
   drawComparisonFoot(sheet, layout.foot, layout.footY);
 }
 

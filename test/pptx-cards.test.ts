@@ -19,13 +19,13 @@ import { Sheet } from "../scripts/pptx/sheet";
 import type { BoxOpts, Para } from "../scripts/pptx/text";
 import { shapesOf } from "./fixtures/rendered-deck";
 
-async function drawOnSheet(draw: (sheet: Sheet) => void) {
+async function drawOnSheet(draw: (sheet: Sheet) => void, warnings: string[] = []) {
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE";
   const sheet = new Sheet(new Look(palette(false), "en", false), pptx.addSlide(), {
     pptx,
     assets: "",
-    warnings: [],
+    warnings,
     charts: new Map(),
   });
   draw(sheet);
@@ -35,15 +35,21 @@ async function drawOnSheet(draw: (sheet: Sheet) => void) {
   return shapesOf(await file.async("string"));
 }
 
-it("draws text only in boxes with positive height", async () => {
+it("draws text only in boxes with positive height and warns for cut text", async () => {
+  const warnings: string[] = [];
   const shapes = await drawOnSheet((sheet) => {
     const area = { x: 1, y: 1, w: 2 };
     const style = { size: 12, color: sheet.c.ink };
     sheet.box("Negative", { ...area, h: -0.2 }, style);
     sheet.box("Zero", { ...area, h: 0 }, style);
+    sheet.box("", { ...area, h: 0 }, style);
     sheet.box("Visible", { ...area, h: 0.5 }, style);
-  });
+  }, warnings);
   expect(shapes.flatMap((shape) => shape.texts)).toEqual(["Visible"]);
+  expect(warnings).toEqual([
+    'text "Negative": no height left in its box',
+    'text "Zero": no height left in its box',
+  ]);
 });
 
 describe("rowGrid", () => {
