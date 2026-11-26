@@ -18,9 +18,9 @@ export class Look {
 
   constructor(c: Palette, lang: Lang, dark: boolean) {
     this.c = c;
-    this.lang = lang;
+    this.lang = Object.hasOwn(WORDS, lang) ? lang : "en";
     this.dark = dark;
-    this.words = WORDS[lang];
+    this.words = WORDS[this.lang];
   }
 
   /** The height a box of `content` needs at full size, capped at the slide height. */

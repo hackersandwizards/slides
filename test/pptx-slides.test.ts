@@ -312,6 +312,16 @@ describe("slides-pptx on the specimen deck", () => {
     expect(labels.filter((label) => label === "Enabling team")).toEqual(legend);
   });
 
+  it.each(["constructor", "unlisted"])(
+    "draws the English topology legend for deck lang %s",
+    async (lang) => {
+      const slide = specimenSlide("Four team types", "team-topology");
+      const render = (language: "en" | "de") =>
+        onlySlide(slide, { name: "Topology", slides: [], lang: language });
+      expect(await render(lang as "en")).toBe(await render("en"));
+    },
+  );
+
   it("gives a Gantt bar's label its own line, under the months and the row above", () => {
     const at = slideCatalog.slides.findIndex((s) => s.type === "gantt");
     const d = slideCatalog.slides[at] as Extract<Slide, { type: "gantt" }>;
