@@ -1,7 +1,8 @@
-import type { Slide } from "../../../types/slide";
+import type { LanesSlide, Slide } from "../../../types/slide";
 import { code } from "../blocks/code";
 import { footer, footerOf, header } from "../chrome";
 import { chipArea, drawChip, drawChipRow, layoutChipRow, type ChipRow } from "../chips";
+import type { Look } from "../look";
 import type { Sheet, RowHeight } from "../sheet";
 import { EDGE, BOTTOM, CW, PT, type Area } from "../stage";
 
@@ -31,44 +32,60 @@ function drawLaneStages(sheet: Sheet, labels: string[], lane: Area) {
   });
 }
 
-export function drawLanes(sheet: Sheet, d: Extract<Slide, { type: "lanes" }>): void {
-  const { c } = sheet;
-  const y = header(sheet, d);
+/** Reserves space for the code snippet and footer and measures the room shared by the lanes. */
+export function lanesBody(look: Look, d: LanesSlide, y: number) {
   const codeH = d.codeSnippet
     ? (d.codeSnippet.code.split("\n").length * PT.sm * 1.3) / 72 + 0.45
     : 0;
-  const foot = footerOf(sheet, d.footer);
-  const lh = sheet.rowShare(LANE_ROWS, BOTTOM - y - codeH - foot.h - 0.3, d.lanes.length) - 0.12;
-  let yy = y;
-  if (d.codeSnippet) {
-    code.draw(
-      sheet,
-      { type: "code", ...d.codeSnippet },
-      { area: { x: EDGE, y: yy, w: CW, h: codeH - 0.1 }, k: 1, centered: false },
-    );
-    yy += codeH + 0.1;
-  }
-  d.lanes.forEach((lane, i) => {
-    const ly = yy + i * (lh + 0.12);
-    const first = i === 0;
-    const area = { x: EDGE, y: ly, w: CW, h: lh };
-    sheet.rounded(
-      area,
-      { fill: first ? c.purpleTint : c.card, line: first ? c.purple : c.border },
-      0.08,
-    );
-    sheet.box(
-      { runs: [{ text: lane.label }] },
-      { x: EDGE + 0.25, y: ly, w: 1.6, h: lh },
-      {
-        size: PT.sm,
-        mono: true,
-        bold: true,
-        color: first ? c.purple : c.muted,
-        valign: "middle",
-      },
-    );
-    drawLaneStages(sheet, lane.stages, area);
+  const foot = footerOf(look, d.footer);
+  const room = BOTTOM - y - codeH - foot.h - 0.3;
+  const snippet = d.codeSnippet
+    ? {
+        block: { type: "code" as const, ...d.codeSnippet },
+        slot: { area: { x: EDGE, y, w: CW, h: codeH - 0.1 }, k: 1, centered: false },
+      }
+    : undefined;
+  const top = d.codeSnippet ? y + (codeH + 0.1) : y;
+  return { foot, room, snippet, top, lanes: d.lanes };
+}
+
+/** Positions lane and label boxes at the allotted pitch. */
+export function laneBands(body: ReturnType<typeof lanesBody>, lh: number) {
+  return body.lanes.map((lane, i) => {
+    const y = body.top + i * (lh + 0.12);
+    return {
+      lane,
+      first: i === 0,
+      area: { x: EDGE, y, w: CW, h: lh },
+      label: { x: EDGE + 0.25, y, w: 1.6, h: lh },
+    };
   });
-  footer(sheet, foot);
+}
+
+type LaneBand = ReturnType<typeof laneBands>[number];
+
+/** Draws a lane's frame, label and connected stage chips. */
+export function drawLane(sheet: Sheet, { lane, first, area, label }: LaneBand): void {
+  const { c } = sheet;
+  sheet.rounded(
+    area,
+    { fill: first ? c.purpleTint : c.card, line: first ? c.purple : c.border },
+    0.08,
+  );
+  sheet.box({ runs: [{ text: lane.label }] }, label, {
+    size: PT.sm,
+    mono: true,
+    bold: true,
+    color: first ? c.purple : c.muted,
+    valign: "middle",
+  });
+  drawLaneStages(sheet, lane.stages, area);
+}
+
+export function drawLanes(sheet: Sheet, d: Extract<Slide, { type: "lanes" }>): void {
+  const body = lanesBody(sheet, d, header(sheet, d));
+  const lh = sheet.rowShare(LANE_ROWS, body.room, body.lanes.length) - 0.12;
+  if (body.snippet) code.draw(sheet, body.snippet.block, body.snippet.slot);
+  for (const band of laneBands(body, lh)) drawLane(sheet, band);
+  footer(sheet, body.foot);
 }
