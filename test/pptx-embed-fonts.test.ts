@@ -30,7 +30,7 @@ it("merges the requested glyphs from the Latin and Latin Extended files", async 
   expect(Object.keys(Font.create(ttf, { type: "ttf" }).get().cmap).map(Number)).toEqual([65, 321]);
 });
 
-it("allocates font relationship IDs after the highest occupied ID", async () => {
+it("assigns distinct face parts to relationship IDs after the highest occupied ID", async () => {
   const zip = new JSZip();
   const rels = "ppt/_rels/presentation.xml.rels";
   zip.file(
@@ -39,20 +39,23 @@ it("allocates font relationship IDs after the highest occupied ID", async () => 
   );
   zip.file("[Content_Types].xml", "<Types></Types>");
   zip.file("ppt/presentation.xml", "<p:presentation><p:notesSz/></p:presentation>");
-  const fontFor = vi.fn(() => Buffer.from("placeholder"));
-  await registerFonts(zip, fontFor);
+  await registerFonts(zip, [
+    { typeface: "Inter", regular: Buffer.from("inter"), bold: Buffer.from("inter bold") },
+    { typeface: "JetBrains Mono", regular: Buffer.from("mono"), bold: Buffer.from("mono bold") },
+  ]);
   const xml = await zip.file(rels)?.async("string");
   assert(xml, "Missing presentation relationships");
   expect({
     ids: Array.from(xml.matchAll(/Id="(rId\d+)"/g), (match) => match[1]),
-    faces: fontFor.mock.calls,
+    parts: await Promise.all(
+      [9, 10, 11, 12].map(async (id) => {
+        const part = zip.file(`ppt/fonts/font${id}.fntdata`);
+        assert(part, `Missing font part ${id}`);
+        return part.async("string");
+      }),
+    ),
   }).toEqual({
     ids: ["rId2", "rId8", "rId9", "rId10", "rId11", "rId12"],
-    faces: [
-      [false, false],
-      [false, true],
-      [true, false],
-      [true, true],
-    ],
+    parts: ["inter", "inter bold", "mono", "mono bold"],
   });
 });

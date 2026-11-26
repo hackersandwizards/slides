@@ -177,15 +177,18 @@ describe("slides-pptx as a command", () => {
       assert(pres && rels, "Missing presentation or its relationships");
       presentation = pres;
       relationships = rels;
-      const list = /<p:embeddedFontLst>(.*?)<\/p:embeddedFontLst>/.exec(presentation)?.[1] ?? "";
       const slots = Array.from(
-        list.matchAll(/<p:font typeface="([^"]+)"[^>]*\/>(.*?)<\/p:embeddedFont>/g),
-      ).flatMap(([, family, styles]) =>
-        Array.from(styles.matchAll(/<p:(regular|bold) r:id="(\w+)"\/>/g), ([, slot, id]) => ({
-          style: `${family} ${slot}`,
-          id,
-        })),
-      );
+        presentation.matchAll(/<p:embeddedFontLst>(.*?)<\/p:embeddedFontLst>/g),
+      )
+        .flatMap(([, list]) =>
+          Array.from(list.matchAll(/<p:font typeface="([^"]+)"[^>]*\/>(.*?)<\/p:embeddedFont>/g)),
+        )
+        .flatMap(([, family, bindings]) =>
+          Array.from(bindings.matchAll(/<p:(regular|bold) r:id="(\w+)"\/>/g), ([, slot, id]) => ({
+            style: `${family} ${slot}`,
+            id,
+          })),
+        );
       styles = slots.map(({ style }) => style);
       relationshipIds = new Map(slots.map(({ style, id }) => [style, id]));
     }, 60_000);
@@ -199,9 +202,10 @@ describe("slides-pptx as a command", () => {
       spawnSync("bun", [script, "-", out], { encoding: "utf8", input: text });
       const plain = await JSZip.loadAsync(readFileSync(out));
       const xml = await plain.file("ppt/presentation.xml")?.async("string");
+      assert(xml, "Missing presentation");
       expect({
         parts: Object.keys(plain.files).filter((name) => name.startsWith("ppt/fonts/")),
-        fontList: xml?.includes("embeddedFont"),
+        fontList: xml.includes("embeddedFont"),
       }).toEqual({ parts: [], fontList: false });
     });
 

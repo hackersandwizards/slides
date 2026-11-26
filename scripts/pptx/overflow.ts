@@ -153,7 +153,7 @@ export function widerThanBox({ inner, metrics: m }: TextLayout): string | undefi
   return undefined;
 }
 
-/** The first smallest eligible rectangle holding the centre of a text box. */
+/** The smallest filled shape holding the box's centre, first in draw order on a tie. */
 export function holderFor(r: Rect, candidates: Pick<Shape, "rect" | "geom">[], limit: number) {
   const [cx, cy] = [r.x + r.w / 2, r.y + r.h / 2];
   let holder: Rect | undefined;
@@ -184,7 +184,7 @@ export function holderFor(r: Rect, candidates: Pick<Shape, "rect" | "geom">[], l
   return holder;
 }
 
-// Where the text stands, by its anchor, and the smallest filled shape holding the box's centre.
+// Where the text stands, by its anchor.
 const TOP_BY_ANCHOR = new Map<string | undefined, (layout: TextLayout) => number>([
   [
     "ctr",

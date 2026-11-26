@@ -11,6 +11,8 @@ import {
   widerThanBox,
 } from "../scripts/pptx/overflow";
 
+import { onlySlide } from "./fixtures/rendered-deck";
+
 const body = {
   paragraphs: [],
   left: 0.1,
@@ -209,4 +211,25 @@ describe("slides-pptx measures written text", () => {
       </p:sld>`;
     expect(checkSlide(xml, 13.333, 7.5)).toEqual(findings);
   });
+});
+
+it("keeps centred text within its holder on both axes", () => {
+  expect(
+    crossesHolder(
+      {
+        rect: { x: 1, y: 1, w: 2, h: 2 },
+        body: { ...body, anchor: "ctr", alignment: "ctr" },
+        inner: 1.65,
+        metrics: { h: 0.5, widest: 0.5, line: 0.5 },
+      },
+      { x: 1.65, y: 1.65, w: 0.6, h: 0.6 },
+    ),
+  ).toEqual(undefined);
+});
+
+it("reports text on a rendered slide when it extends past the right edge", async () => {
+  const xml = await onlySlide({ type: "statement", lines: ["Rendered line"] });
+  expect(checkSlide(xml, 1, 7.5).filter((message) => message.includes('"Rendered line"'))).toEqual([
+    expect.stringMatching(/^Text \d+ "Rendered line" stands outside the slide$/),
+  ]);
 });

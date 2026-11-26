@@ -22,7 +22,17 @@ export async function embedFonts(zip: JSZip): Promise<void> {
   const { Font, woff2 } = await import("fonteditor-core");
   await woff2.init();
   const used = await usedCodePoints(zip);
-  await registerFonts(zip, (mono, bold) => eotFace(Font, faceFiles(mono, bold), used));
+  const parts = (
+    [
+      [false, SANS],
+      [true, MONO],
+    ] as const
+  ).map(([mono, typeface]) => ({
+    typeface,
+    regular: eotFace(Font, faceFiles(mono, false), used),
+    bold: eotFace(Font, faceFiles(mono, true), used),
+  }));
+  await registerFonts(zip, parts);
 }
 
 /** The Latin ranges and code points in a deck's slide text and chart values. */
@@ -65,27 +75,30 @@ export function eotFace(
   return eotOf(font!.write({ type: "ttf", toBuffer: true }) as Buffer);
 }
 
+interface EmbeddedFace {
+  typeface: typeof SANS | typeof MONO;
+  regular: Buffer;
+  bold: Buffer;
+}
+
 /** Writes the face parts and registers their relationships in the presentation package. */
-export async function registerFonts(
-  zip: JSZip,
-  fontFor: (mono: boolean, bold: boolean) => Buffer,
-): Promise<void> {
+export async function registerFonts(zip: JSZip, parts: readonly EmbeddedFace[]): Promise<void> {
   const rels = await zip.file("ppt/_rels/presentation.xml.rels")!.async("string");
   let rid = Math.max(...[...rels.matchAll(/Id="rId(\d+)"/g)].map((m) => Number(m[1]))) + 1;
   const entries: string[] = [];
   const links: string[] = [];
-  for (const [mono, typeface] of [
-    [false, SANS],
-    [true, MONO],
-  ] as const) {
+  for (const { typeface, regular, bold } of parts) {
     const slots: string[] = [];
-    for (const bold of [false, true]) {
+    for (const [style, bytes] of [
+      ["regular", regular],
+      ["bold", bold],
+    ] as const) {
       const part = `font${rid}.fntdata`;
-      zip.file(`ppt/fonts/${part}`, fontFor(mono, bold));
+      zip.file(`ppt/fonts/${part}`, bytes);
       links.push(
         `<Relationship Id="rId${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/font" Target="fonts/${part}"/>`,
       );
-      slots.push(`<p:${bold ? "bold" : "regular"} r:id="rId${rid++}"/>`);
+      slots.push(`<p:${style} r:id="rId${rid++}"/>`);
     }
     entries.push(
       `<p:embeddedFont><p:font typeface="${typeface}" pitchFamily="${PITCH[typeface]}" charset="0"/>${slots.join("")}</p:embeddedFont>`,
