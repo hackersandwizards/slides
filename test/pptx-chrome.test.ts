@@ -1,29 +1,21 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
-import verbal from "@hackersandwizards/brand/verbal.json";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { assert, beforeAll, describe, expect, it } from "vitest";
-import {
-  brandStrip,
-  centredMark,
-  kickerBand,
-  slideCorner,
-  startLogos,
-  type Head,
-} from "../scripts/pptx/chrome";
+import { brandStrip, kickerBand, slideCorner, startLogos, type Head } from "../scripts/pptx/chrome";
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
 import { W } from "../scripts/pptx/stage";
 import { slideCatalog } from "../specimen/slide-catalog";
-import type { Presentation, Slide } from "../types/slide";
+import type { Presentation } from "../types/slide";
 import {
+  onlySlide,
   rendered,
   shapesOf,
   specimen,
-  specimenAt,
   unescapeNamedEntities,
 } from "./fixtures/rendered-deck";
 
@@ -32,10 +24,9 @@ import { pptxSlideVariants } from "./fixtures/pptx-slide-variants";
 const require = createRequire(import.meta.url);
 
 let slideXml: string[];
-let slideText: string[];
 
 beforeAll(async () => {
-  ({ slideXml, slideText } = await specimen());
+  ({ slideXml } = await specimen());
 }, 60_000);
 
 describe("slides-pptx on the specimen deck", () => {
@@ -73,52 +64,104 @@ describe("slides-pptx on the specimen deck", () => {
 
   // Each cut of the brand marks has its own proportions; the night lockup is wider (F20).
   it("draws each brand mark of a night deck at its own file's proportions", async () => {
-    const slides = slideCatalog.slides.filter((x) => x.type === "title" || x.type === "closing");
-    const { zip: probe } = await rendered(
-      { name: "T", theme: "brand-dark", slides },
-      join(import.meta.dirname, ".."),
-    );
-    const ratio = (png: Buffer) => png.readUInt32BE(16) / png.readUInt32BE(20);
-    const cuts = ["lockup-night", "wordmark-night"].map((name) =>
-      ratio(readFileSync(require.resolve(`@hackersandwizards/brand/logos/${name}.png`))),
-    );
-    const drawn: number[] = [];
-    for (let i = 1; probe.file(`ppt/slides/slide${i}.xml`); i++) {
-      const xml = await probe.file(`ppt/slides/slide${i}.xml`)!.async("string");
-      for (const [, alt, cx, cy] of xml.matchAll(
-        /descr="([^"]*)"[\s\S]*?<a:ext cx="(\d+)" cy="(\d+)"/g,
-      ))
-        if (unescapeNamedEntities(alt) === verbal.name.company) drawn.push(+cx / +cy);
-    }
-    expect(drawn.length).toBeGreaterThan(0);
-    for (const r of drawn) expect(Math.min(...cuts.map((c) => Math.abs(c - r)))).toBeLessThan(0.01);
-  });
-
-  // A list's first logo was the only one drawn, and only when it was no brand mark: the corner logo
-  // the web draws went missing.
-  it("stands a logo list as the web does: the last in the corner, the others at the bottom left", async () => {
-    const partner = { src: "/specimen/slide-catalog/partner-mark.png", alt: "Partner" };
-    const qr = { src: "/specimen/slide-catalog/qr-example.png", alt: "Other" };
-    const { zip: probe } = await rendered(
+    const titles = slideCatalog.slides.filter((slide) => slide.type === "title");
+    const closings = slideCatalog.slides.filter((slide) => slide.type === "closing");
+    const { slideXml } = await rendered(
       {
-        name: "D",
-        logo: { src: "/hw-lockup.svg", alt: "hackers&wizards" },
-        slideLogos: {
-          0: [{ src: "/hw-lockup.svg", alt: "hackers&wizards" }, partner],
-          1: [qr, partner],
-          2: [],
-        },
+        name: "T",
+        theme: "brand-dark",
         slides: [
-          { type: "statement", lines: ["A"] },
-          { type: "statement", lines: ["B"] },
-          { type: "statement", lines: ["C"] },
+          ...titles,
+          ...closings,
+          { type: "content", headline: "Night wordmark", content: [] },
         ],
       },
       join(import.meta.dirname, ".."),
     );
-    const pics = async (i: number) =>
-      [
-        ...(await probe.file(`ppt/slides/slide${i}.xml`)!.async("string")).matchAll(
+    const [lockup, wordmark] = ["lockup-night", "wordmark-night"].map((name) => {
+      const png = readFileSync(require.resolve(`@hackersandwizards/brand/logos/${name}.png`));
+      return png.readUInt32BE(16) / png.readUInt32BE(20);
+    });
+    const drawn = slideXml.map((xml) =>
+      [...xml.matchAll(/<p:pic>(.*?)<\/p:pic>/gs)]
+        .map(([, pic]) => pic)
+        .filter((pic) => pic.includes('descr="hackers&amp;wizards"'))
+        .map((pic) => {
+          const extent = /<a:ext cx="(\d+)" cy="(\d+)"/.exec(pic);
+          assert(extent, "The brand mark has dimensions");
+          return +extent[1] / +extent[2];
+        }),
+    );
+    const lockupRatio: unknown = expect.toSatisfy((r: number) => Math.abs(r - lockup) < 0.01);
+    expect(drawn).toEqual([
+      ...Array.from({ length: 8 }, () => [lockupRatio]),
+      [expect.toSatisfy((r: number) => Math.abs(r - wordmark) < 0.01)],
+    ]);
+  });
+
+  // A list's first logo was the only one drawn, and only when it was no brand mark: the corner logo
+  // the web draws went missing.
+  describe("logo lists", () => {
+    const brand = { src: "/hw-lockup.svg", alt: "hackers&wizards" };
+    const partner = { src: "/specimen/slide-catalog/partner-mark.png", alt: "Partner" };
+    const qr = { src: "/specimen/slide-catalog/qr-example.png", alt: "Other" };
+    let slides: string[];
+
+    beforeAll(async () => {
+      ({ slideXml: slides } = await rendered(
+        {
+          name: "D",
+          logo: brand,
+          slideLogos: { 0: [brand, partner], 1: [qr, partner], 2: [] },
+          slides: [
+            { type: "statement", lines: ["A"] },
+            { type: "statement", lines: ["B"] },
+            { type: "statement", lines: ["C"] },
+          ],
+        },
+        join(import.meta.dirname, ".."),
+      ));
+    });
+
+    const corner: unknown = expect.toSatisfy((x: number) => x > 10);
+    const start: unknown = expect.toSatisfy((x: number) => x < 1);
+    // `h-9` at `bottom-6 left-6` on the print route, whose rem is 21.333 px.
+    const left: unknown = expect.closeTo((1.5 * 21.333) / 144, 3);
+    const height: unknown = expect.closeTo((2.25 * 21.333) / 144, 3);
+    const cases: { name: string; index: number; pictures: unknown[] }[] = [
+      {
+        name: "brand and a partner",
+        index: 0,
+        pictures: [
+          expect.objectContaining({ alt: "Partner", x: corner }),
+          expect.objectContaining({
+            alt: "hackers&wizards",
+            x: start,
+          }),
+        ],
+      },
+      {
+        name: "two custom logos",
+        index: 1,
+        pictures: [
+          expect.objectContaining({ alt: "Partner", x: corner }),
+          {
+            alt: "Other",
+            x: left,
+            h: height,
+          },
+        ],
+      },
+      {
+        name: "an empty list",
+        index: 2,
+        pictures: [expect.objectContaining({ alt: "hackers&wizards" })],
+      },
+    ];
+
+    it.each(cases)("stands $name in the corner and at the bottom left", ({ index, pictures }) => {
+      const drawn = [
+        ...slides[index].matchAll(
           /descr="([^"]*)"[\s\S]*?<a:off x="(\d+)" y="\d+"\/>\s*<a:ext cx="\d+" cy="(\d+)"/g,
         ),
       ].map(([, alt, x, h]) => ({
@@ -126,60 +169,54 @@ describe("slides-pptx on the specimen deck", () => {
         x: +x / 914400,
         h: +h / 914400,
       }));
-    const [one, two, three] = [await pics(1), await pics(2), await pics(3)];
-    expect(one.find((p) => p.alt === "Partner")!.x).toBeGreaterThan(10);
-    expect(one.find((p) => p.alt === verbal.name.company)!.x).toBeLessThan(1);
-    // `h-9` at `bottom-6 left-6` on the print route, whose rem is 21.333 px.
-    const other = two.find((p) => p.alt === "Other")!;
-    expect(other.x).toBeCloseTo((1.5 * 21.333) / 144, 3);
-    expect(other.h).toBeCloseTo((2.25 * 21.333) / 144, 3);
-    expect(two.find((p) => p.alt === "Partner")!.x).toBeGreaterThan(10);
-    expect(two.some((p) => p.alt === verbal.name.company)).toBe(false);
-    expect(three.map((p) => p.alt)).toEqual([verbal.name.company]);
+      expect(drawn).toEqual(pictures);
+    });
   });
 
-  it("sets the headline a row below a principle that wraps to the kicker's second row", () => {
-    const at = slideCatalog.slides.findLastIndex((s) => s.type === "gantt" && s.principle);
-    const s = slideCatalog.slides[at] as Slide & { principle: string; headline: string };
-    const shape = (text: string) => {
-      const sp = slideXml[at].split("<p:sp>").find((x) => x.includes(`>${text}<`))!;
-      const [, y, cy] = /<a:off x="\d+" y="(\d+)"\/><a:ext cx="\d+" cy="(\d+)"/.exec(sp)!;
-      return { top: +y, bottom: +y + +cy };
-    };
+  it("sets the headline a row below a principle that wraps to the kicker's second row", async () => {
+    const principle = "Every team ships through the same harness, every day";
+    const headline = "Gantt with the longest kicker";
+    const xml = await onlySlide({
+      type: "gantt",
+      sectionLabel: "Platform engineering and developer experience",
+      principle,
+      headline,
+      columns: ["M1", "M2", "M3", "M4"],
+      rows: [{ label: "Training", bars: [{ label: "Cohorts", start: 1, span: 3 }] }],
+    });
+    const shapes = shapesOf(xml);
+    const pills = shapes.filter(({ texts }) => texts.join("") === principle);
+    const titles = shapes.filter(({ texts }) => texts.join("") === headline);
+    expect(pills).toHaveLength(1);
+    expect(titles).toHaveLength(1);
+    const [pill] = pills;
+    const [title] = titles;
     // The pill keeps the print route's place; the title's box starts below it.
-    expect(shape(s.headline).top).toBeGreaterThan(shape(s.principle).bottom);
+    expect(title.y).toBeGreaterThan(pill.y + pill.h);
   });
 });
 
 describe("slides-pptx draws what the slide shows", () => {
-  it("keeps a section label in the deck's case and sets it in capitals with cap", () => {
-    const i = specimenAt(
-      (x) =>
-        "sectionLabel" in x &&
-        !!x.sectionLabel &&
-        /[a-z]/.test(x.sectionLabel) &&
-        !/[&<>]/.test(x.sectionLabel),
+  it("keeps a section label in the deck's case and sets it in capitals with cap", async () => {
+    const xml = await onlySlide({
+      type: "content",
+      headline: "Case on the slide",
+      sectionLabel: "Mixed Case Label",
+      content: [],
+    });
+    expect(xml).toMatch(
+      /<a:rPr [^>]*cap="all"[^>]*>(?:(?!<\/a:r>).)*<a:t>Mixed Case Label<\/a:t>/s,
     );
-    const label = (slideCatalog.slides[i] as { sectionLabel: string }).sectionLabel;
-    const run = new RegExp(
-      `<a:rPr [^>]*cap="all"[^>]*>(?:(?!<\\/a:r>).)*<a:t>${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}<\\/a:t>`,
-      "s",
-    );
-    expect(slideXml[i]).toMatch(run);
   });
 
   it("breaks a headline into balanced lines, as the web's text-wrap: balance", async () => {
     const headline = "Each team ships on its own schedule, every single week";
-    const { zip } = await rendered({
-      name: "T",
-      slides: [{ type: "content", headline, content: [] } as Slide],
-    });
-    const xml = await zip.file("ppt/slides/slide1.xml")!.async("string");
-    const title = shapesOf(xml).find(
-      (sh) =>
-        sh.texts.join(" ").replace(/\s+/g, " ").trim() === headline ||
-        sh.texts.join("") === headline,
-    )!;
+    const xml = await onlySlide({ type: "content", headline, content: [] });
+    const titles = shapesOf(xml).filter(
+      ({ texts }) => texts.join(" ").replace(/\s+/g, " ").trim() === headline,
+    );
+    expect(titles).toHaveLength(1);
+    const [title] = titles;
     expect(title.xml).toContain("<a:br/>");
     const lines = title.xml.split("<a:br/>").map(
       (part) =>
@@ -192,12 +229,18 @@ describe("slides-pptx draws what the slide shows", () => {
     expect(Math.abs(lines[0] - lines[1])).toBeLessThan(12);
   });
 
-  it("hides the page counter on a contact closing, as the web hides its corner", () => {
-    const i = specimenAt((x) => x.type === "closing" && centredMark(x));
-    expect(unescapeNamedEntities(slideText[i])).not.toMatch(/\d\d \/ \d\d/);
-    expect(unescapeNamedEntities(slideText[specimenAt((x) => x.type === "content")])).toMatch(
-      /\d\d \/ \d\d/,
-    );
+  it("hides the page counter on a contact closing, as the web hides its corner", async () => {
+    const {
+      slideText: [content, closing],
+    } = await rendered({
+      name: "Counter",
+      slides: [
+        { type: "content", headline: "Counter on content", content: [] },
+        pptxSlideVariants.centredEmail,
+      ],
+    });
+    expect(content).toMatch(/01 \/ 02/);
+    expect(closing).not.toMatch(/\d\d \/ \d\d/);
   });
 });
 

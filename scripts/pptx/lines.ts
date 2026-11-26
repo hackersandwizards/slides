@@ -62,6 +62,43 @@ function pieces(spans: Span[]): Piece[] {
 const pieceWidth = (p: Piece) => p.parts.reduce((w, [sp, t]) => w + spanWidth(sp, t), 0);
 const pieceText = (p: Piece) => p.parts.map(([, t]) => t).join("");
 
+type MeasuredPiece = {
+  text: string;
+  width: number;
+  breakMeasure?: { width: number; space: number };
+  trailing?: number;
+  forced?: boolean;
+};
+
+/** The measured pieces of spans at a line width, with oversized pieces split by code point. */
+export function* fitPieces(spans: Span[], width: number): Iterable<MeasuredPiece> {
+  for (const p of pieces(spans)) {
+    if (p.forced && !p.parts.length) {
+      yield { text: "", width: 0, forced: true };
+      continue;
+    }
+    const pw = pieceWidth(p);
+    const breakMeasure = { width: pw, space: p.space };
+    if (pw - p.space > width) {
+      // The whole piece still gets a break before its characters, which wrap only at non-space
+      // characters. Its trailing space and forced break apply after the last character.
+      yield { text: "", width: 0, breakMeasure };
+      for (const [sp, t] of p.parts)
+        for (const ch of t) {
+          const cw = spanWidth(sp, ch);
+          yield {
+            text: ch,
+            width: cw,
+            breakMeasure: /\s/.test(ch) ? undefined : { width: cw, space: 0 },
+          };
+        }
+      yield { text: "", width: 0, trailing: p.space, forced: p.forced };
+      continue;
+    }
+    yield { text: pieceText(p), width: pw, breakMeasure, trailing: p.space, forced: p.forced };
+  }
+}
+
 /** The lines a renderer breaks `spans` into at `width` points: greedy, at spaces and after
  *  hyphens, a piece wider than the line broken by character, as PowerPoint and LibreOffice do. */
 export function wrap(spans: Span[], width: number): Line[] {
@@ -73,27 +110,12 @@ export function wrap(spans: Span[], width: number): Line[] {
     lines.push({ text: text.trimEnd(), width: w - trail });
     [text, w, trail] = ["", 0, 0];
   };
-  for (const p of pieces(spans)) {
-    if (p.forced && !p.parts.length) {
-      end();
-      continue;
-    }
-    const pw = pieceWidth(p);
-    if (text && w + pw - p.space > width) end();
-    if (pw - p.space > width) {
-      for (const [sp, t] of p.parts)
-        for (const ch of t) {
-          const cw = spanWidth(sp, ch);
-          if (text && w + cw > width && !/\s/.test(ch)) end();
-          text += ch;
-          w += cw;
-        }
-      trail = p.space;
-    } else {
-      text += pieceText(p);
-      w += pw;
-      trail = p.space;
-    }
+  for (const p of fitPieces(spans, width)) {
+    const measure = p.breakMeasure;
+    if (text && measure && w + measure.width - measure.space > width) end();
+    text += p.text;
+    w += p.width;
+    if (p.trailing !== undefined) trail = p.trailing;
     if (p.forced) end();
   }
   if (text || !lines.length) end();
