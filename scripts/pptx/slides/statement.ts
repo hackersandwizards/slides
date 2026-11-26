@@ -1,239 +1,120 @@
-import type { Slide } from "../../../types/slide";
 import { linkLabel, qrAlt } from "../../../lib/link-labels";
 import { footer, footerOf } from "../chrome";
 import { MONO } from "../faces";
-import { spansOf, textWidth } from "../fit";
-import { wrap } from "../lines";
-import { mixColor } from "../palette";
+import { textWidth } from "../fit";
 import type { Sheet } from "../sheet";
 import { W, EDGE, TOP, BOTTOM, CW, PT, LEADING, CORNER, REM } from "../stage";
-import { caps, md, type Para, type BoxOpts, type Run } from "../text";
+import { caps, md, type Para, type BoxOpts } from "../text";
+import { drawCentredStatement, lineRuns, type StatementSlide } from "./statement-centred";
 
-export function drawStatement(sheet: Sheet, d: Extract<Slide, { type: "statement" }>): void {
-  const { c } = sheet;
+export { lineRuns, type StatementSlide } from "./statement-centred";
+
+export type StatementKind = "centred" | "qr" | "side";
+
+/** Picks the statement layout variant from its attribution and side-media fields. */
+export function statementKind(d: StatementSlide): StatementKind {
   // The picture beside the statement, as the slide picks it: a quotation keeps its portrait and
   // drops a QR code, and a screenshot's or QR code's link is on the picture.
-  const qr = !d.attribution && d.qr;
-  const side = qr
-    ? { src: qr.src, alt: qrAlt(qr.href, sheet.lang), href: qr.href }
-    : d.imageSrc
-      ? { src: d.imageSrc, alt: d.imageAlt, href: undefined, round: !!d.attribution }
-      : d.linkedImage;
-  const imgW = side ? CW * 0.38 : 0;
-  const w = CW - imgW - (imgW ? 0.4 : 0);
-  const lineRuns = (line: string): Run[] => {
-    const out: Run[] = [];
-    const marks = [d.highlighted, d.crossedOut].filter(Boolean) as string[];
-    let rest = line;
-    while (rest) {
-      const hits = marks
-        .map((m) => [rest.indexOf(m), m] as const)
-        .filter(([i]) => i >= 0)
-        .sort((p, q) => p[0] - q[0]);
-      if (!hits.length) {
-        out.push(...md(rest, c));
-        break;
-      }
-      const [i, m] = hits[0];
-      if (i) out.push(...md(rest.slice(0, i), c));
-      out.push({
-        text: m,
-        options: m === d.highlighted ? { color: c.teal } : { strike: "sngStrike", color: c.muted },
-      });
-      rest = rest.slice(i + m.length);
-    }
-    return out;
-  };
-  if (!side && !d.attribution) {
-    // As the web's centred statement: the kicker, each line a display heading balanced on its
-    // own, 64 pt where nothing else stands, 48 pt otherwise, the subtitle in its narrower column,
-    // the points and closing under it, all centred in the slide or above its footer.
-    const foot = footerOf(sheet, d.footer);
-    const simple =
-      !d.points?.length && !d.closing && !d.subtitle && !d.highlighted && !d.crossedOut;
-    const w = d.footer ? CW : W - 2 * 4 * REM;
-    const parts: [Para[], BoxOpts, number, number][] = [];
-    if (d.kicker)
-      parts.push([
-        [{ runs: [caps(d.kicker, { color: c.tealDark })] }],
-        {
-          size: PT.sm,
-          mono: true,
-          color: c.tealDark,
-          tracking: 0.06,
-          line: 1.4,
-          align: "center",
-        },
-        w,
-        0,
-      ]);
-    if (d.crossedOut && !d.lines.some((l) => l.includes(d.crossedOut!)))
-      parts.push([
-        [{ runs: [{ text: d.crossedOut, options: { strike: "sngStrike", color: c.muted } }] }],
-        { size: PT.h3, mono: true, bold: true, color: c.muted, align: "center", line: 1.25 },
-        w,
-        parts.length ? 2 * REM : 0,
-      ]);
+  if (d.attribution) return "side";
+  if (d.qr) return "qr";
+  return d.imageSrc || d.linkedImage ? "side" : "centred";
+}
+
+function drawQrStatement(sheet: Sheet, d: StatementSlide): void {
+  const { c } = sheet;
+  const qr = d.qr;
+  if (!qr) return;
+  // As QrStatement: the words at the left, the code on the right in a white card whose padding
+  // is its quiet zone, its address under it, the row top-aligned and centred above the footer.
+  const foot = footerOf(sheet, d.footer);
+  const q = (0.45 * 1.15 * 1080) / 144;
+  const label = `↗ ${linkLabel(qr.href)}`;
+  const colW = Math.max(q, textWidth(label, { size: PT.base, mono: true }) + 0.1);
+  const w = CW - colW - 5 * REM;
+  const parts: [Para[], BoxOpts, number][] = [];
+  const support: BoxOpts = { size: PT.h3, color: c.ink, line: 1.375 };
+  if (d.kicker)
     parts.push([
-      d.lines.map((l) => ({ runs: lineRuns(l), balance: true })),
-      {
-        size: simple ? 64 : PT.s8,
-        mono: true,
-        bold: true,
-        color: c.ink,
-        tracking: -0.04,
-        line: LEADING.display,
-        align: "center",
-      },
-      w,
-      parts.length ? 2 * REM : 0,
+      [{ runs: [caps(d.kicker, { color: c.tealDark })] }],
+      { size: PT.sm, mono: true, color: c.tealDark, tracking: 0.06, line: 1.4 },
+      0,
     ]);
-    if (d.subtitle)
-      parts.push([
-        [{ runs: md(d.subtitle, c, { color: c.muted }), balance: true }],
-        { size: PT.h3, color: c.muted, line: 1.375, align: "center" },
-        Math.min(w, 64 * REM),
-        2 * REM,
-      ]);
-    // The points as one list as wide as its longest point, centred, each its number in teal
-    // mono a step larger; the closing centred under it, as the web's `w-fit` list.
-    if (d.points?.length) {
-      const pointO: BoxOpts = { size: PT.h4, color: c.muted, line: 1.375 };
-      const number = (i: number) => `${String(i + 1).padStart(2, "0")}\u00a0`;
-      const paras = d.points.map((pt, i) => ({
+  parts.push([
+    d.lines.map((l) => ({ runs: lineRuns(l, d, sheet), balance: true })),
+    {
+      size: PT.s8,
+      mono: true,
+      bold: true,
+      color: c.ink,
+      tracking: -0.04,
+      line: LEADING.display,
+    },
+    parts.length ? 1.5 * REM : 0,
+  ]);
+  if (d.subtitle) parts.push([[{ runs: md(d.subtitle, c) }], support, 1.5 * REM]);
+  if (d.points?.length)
+    parts.push([
+      d.points.map((pt, i) => ({
         runs: [
           {
-            text: number(i),
-            options: { color: c.teal, bold: true, fontFace: MONO, fontSize: PT.lead },
+            text: `${String(i + 1).padStart(2, "0")}  `,
+            options: { color: c.teal, bold: true, fontFace: MONO },
           },
           ...md(pt, c, { color: c.muted }),
         ],
         after: 1.25 * REM * 72,
-      }));
-      const longestPoint = Math.max(
-        ...paras.map((p) => (wrap(spansOf(p, pointO, 1), Infinity)[0].width / 72) * 1.01 + 0.05),
-      );
-      parts.push([paras, pointO, Math.min(w, 56 * REM, longestPoint), 3.5 * REM]);
-    }
-    if (d.closing) {
-      const quoted = d.closingStyle === "quote";
-      const mark = { color: mixColor(c.teal, c.bg, 0.7) };
-      parts.push([
-        [
-          {
-            runs: quoted
-              ? [
-                  { text: "“", options: mark },
-                  ...md(d.closing, c, { color: c.muted, italic: true }),
-                  { text: "”", options: mark },
-                ]
-              : md(d.closing, c),
-            bold: true,
-            balance: true,
-          },
-        ],
-        { size: quoted ? PT.lead : PT.h3, color: c.ink, line: 1.375, align: "center" },
-        Math.min(w, 56 * REM),
-        2.5 * REM,
-      ]);
-    }
-    const heights = parts.map(([p, o, pw]) => sheet.need(p, pw, o));
-    const total = heights.reduce((sum, h, i) => sum + h + parts[i][3], 0);
-    const [top, bottom] = d.footer ? [TOP, BOTTOM - foot.h - 0.1] : [0, BOTTOM];
-    let y = top + Math.max(0, (bottom - top - total) / 2);
-    parts.forEach(([p, o, pw, gap], i) => {
-      y += gap;
-      sheet.box(p, { x: (W - pw) / 2, y, w: pw, h: heights[i] }, o);
-      y += heights[i];
-    });
-    footer(sheet, foot);
-    return;
-  }
-  if (qr) {
-    // As QrStatement: the words at the left, the code on the right in a white card whose padding
-    // is its quiet zone, its address under it, the row top-aligned and centred above the footer.
-    const foot = footerOf(sheet, d.footer);
-    const q = (0.45 * 1.15 * 1080) / 144;
-    const label = `↗ ${linkLabel(qr.href)}`;
-    const colW = Math.max(q, textWidth(label, { size: PT.base, mono: true }) + 0.1);
-    const w = CW - colW - 5 * REM;
-    const parts: [Para[], BoxOpts, number][] = [];
-    const support: BoxOpts = { size: PT.h3, color: c.ink, line: 1.375 };
-    if (d.kicker)
-      parts.push([
-        [{ runs: [caps(d.kicker, { color: c.tealDark })] }],
-        { size: PT.sm, mono: true, color: c.tealDark, tracking: 0.06, line: 1.4 },
-        0,
-      ]);
-    parts.push([
-      d.lines.map((l) => ({ runs: lineRuns(l), balance: true })),
-      {
-        size: PT.s8,
-        mono: true,
-        bold: true,
-        color: c.ink,
-        tracking: -0.04,
-        line: LEADING.display,
-      },
-      parts.length ? 1.5 * REM : 0,
+      })),
+      { size: PT.base, color: c.muted, line: 1.375 },
+      2 * REM,
     ]);
-    if (d.subtitle) parts.push([[{ runs: md(d.subtitle, c) }], support, 1.5 * REM]);
-    if (d.points?.length)
-      parts.push([
-        d.points.map((pt, i) => ({
-          runs: [
-            {
-              text: `${String(i + 1).padStart(2, "0")}  `,
-              options: { color: c.teal, bold: true, fontFace: MONO },
-            },
-            ...md(pt, c, { color: c.muted }),
-          ],
-          after: 1.25 * REM * 72,
-        })),
-        { size: PT.base, color: c.muted, line: 1.375 },
-        2 * REM,
-      ]);
-    if (d.closing) {
-      const quoted = d.closingStyle === "quote";
-      parts.push([
-        [{ runs: md(quoted ? `“${d.closing}”` : d.closing, c), bold: true }],
-        support,
-        1.5 * REM,
-      ]);
-    }
-    const heights = parts.map(([p, o]) => sheet.need(p, w, o));
-    const textH = heights.reduce((sum, h, i) => sum + h + parts[i][2], 0);
-    const labelH = sheet.need(label, colW, { size: PT.base, mono: true, color: c.teal });
-    const figH = q + REM + labelH;
-    const bottom = BOTTOM - foot.h - (d.footer ? 0.1 : 0);
-    const top = TOP + Math.max(0, (bottom - TOP - Math.max(textH, figH)) / 2);
-    let y = top;
-    parts.forEach(([p, o, gap], i) => {
-      y += gap;
-      sheet.box(p, { x: EDGE, y, w, h: heights[i] }, o);
-      y += heights[i];
-    });
-    const x = W - EDGE - colW + (colW - q) / 2;
-    const pad = 2.5 * REM;
-    sheet.rounded({ x, y: top, w: q, h: q }, { fill: "FFFFFF", line: c.border }, CORNER);
-    sheet.picture(
-      qr.src,
-      { x: x + pad, y: top + pad, w: q - 2 * pad, h: q - 2 * pad },
-      {
-        alt: qrAlt(qr.href, sheet.lang),
-        href: qr.href,
-      },
-    );
-    sheet.box(
-      { runs: [{ text: label, options: { hyperlink: { url: qr.href } } }] },
-      { x: W - EDGE - colW, y: top + q + REM, w: colW, h: labelH },
-      { size: PT.base, mono: true, color: c.teal, align: "center" },
-    );
-    footer(sheet, foot);
-    return;
+  if (d.closing) {
+    const quoted = d.closingStyle === "quote";
+    parts.push([
+      [{ runs: md(quoted ? `“${d.closing}”` : d.closing, c), bold: true }],
+      support,
+      1.5 * REM,
+    ]);
   }
+  const heights = parts.map(([p, o]) => sheet.need(p, w, o));
+  const textH = heights.reduce((sum, h, i) => sum + h + parts[i][2], 0);
+  const labelH = sheet.need(label, colW, { size: PT.base, mono: true, color: c.teal });
+  const figH = q + REM + labelH;
+  const bottom = BOTTOM - foot.h - (d.footer ? 0.1 : 0);
+  const top = TOP + Math.max(0, (bottom - TOP - Math.max(textH, figH)) / 2);
+  let y = top;
+  parts.forEach(([p, o, gap], i) => {
+    y += gap;
+    sheet.box(p, { x: EDGE, y, w, h: heights[i] }, o);
+    y += heights[i];
+  });
+  const x = W - EDGE - colW + (colW - q) / 2;
+  const pad = 2.5 * REM;
+  sheet.rounded({ x, y: top, w: q, h: q }, { fill: "FFFFFF", line: c.border }, CORNER);
+  sheet.picture(
+    qr.src,
+    { x: x + pad, y: top + pad, w: q - 2 * pad, h: q - 2 * pad },
+    {
+      alt: qrAlt(qr.href, sheet.lang),
+      href: qr.href,
+    },
+  );
+  sheet.box(
+    { runs: [{ text: label, options: { hyperlink: { url: qr.href } } }] },
+    { x: W - EDGE - colW, y: top + q + REM, w: colW, h: labelH },
+    { size: PT.base, mono: true, color: c.teal, align: "center" },
+  );
+  footer(sheet, foot);
+}
+
+function drawSideStatement(sheet: Sheet, d: StatementSlide): void {
+  const { c } = sheet;
+  const side = d.imageSrc
+    ? { src: d.imageSrc, alt: d.imageAlt, href: undefined, round: !!d.attribution }
+    : d.linkedImage;
+  const imgW = side ? CW * 0.38 : 0;
+  const w = CW - imgW - (imgW ? 0.4 : 0);
   const paras: Para[] = d.lines.map((l) => ({
-    runs: lineRuns(l),
+    runs: lineRuns(l, d, sheet),
     mono: true,
     bold: true,
     rel: PT.s8 / PT.base,
@@ -307,7 +188,7 @@ export function drawStatement(sheet: Sheet, d: Extract<Slide, { type: "statement
     size: PT.base,
     color: c.ink,
     // A quotation and a closing with a QR code stand at the left edge, as on the slide.
-    align: d.attribution || qr ? "left" : "center",
+    align: d.attribution ? "left" : "center",
     valign: "middle",
     line: 1.2,
     floor: 0.5,
@@ -326,4 +207,14 @@ export function drawStatement(sheet: Sheet, d: Extract<Slide, { type: "statement
       sheet.picture(side.src, { x, y: TOP, w: imgW, h }, metadata);
     }
   }
+}
+
+const STATEMENTS: Record<StatementKind, (sheet: Sheet, d: StatementSlide) => void> = {
+  centred: drawCentredStatement,
+  qr: drawQrStatement,
+  side: drawSideStatement,
+};
+
+export function drawStatement(sheet: Sheet, d: StatementSlide): void {
+  STATEMENTS[statementKind(d)](sheet, d);
 }
