@@ -15,8 +15,10 @@ import { attr, createPrintAnchors } from "./print-markup";
 
 const deck = slideCatalog.slides;
 const blockLabel = /^(Block|Visual): /;
-const isBlockSlide = (s: Slide) =>
-  s.type === "content" && !!s.sectionLabel && blockLabel.test(s.sectionLabel);
+const isBlockSlide = (
+  s: Slide,
+): s is Extract<Slide, { type: "content" }> & { sectionLabel: string } =>
+  s.type === "content" && typeof s.sectionLabel === "string" && blockLabel.test(s.sectionLabel);
 // A code block's Shiki colours are inline hex, which the brand colour scan allows in
 // styles/slides.css only, so the page leaves the slides that carry code to the types above.
 const codeBlocks = new Set(["code", "code-and-text", "annotated-code"]);
@@ -97,9 +99,7 @@ export const blockFrames = blockPicks.map((index) => {
   const slide = deck[index];
   return renderFrame(
     index,
-    slide.type === "content" && isBlockSlide(slide)
-      ? slide.sectionLabel!.replace(blockLabel, "")
-      : blocksOf(slide).join(", "),
+    isBlockSlide(slide) ? slide.sectionLabel.replace(blockLabel, "") : blocksOf(slide).join(", "),
   );
 });
 

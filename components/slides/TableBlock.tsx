@@ -76,11 +76,8 @@ export function TableBlock({ block }: { block: Extract<ContentBlock, { type: "ta
       <table className={`w-full border-collapse ${block.compact ? "text-lg" : "text-xl"}`}>
         {block.widths && (
           <colgroup>
-            {block.widths.map((w, i) => (
-              <col
-                key={i}
-                style={{ width: `${(w / block.widths!.reduce((a, b) => a + b, 0)) * 100}%` }}
-              />
+            {block.widths.map((w, i, widths) => (
+              <col key={i} style={{ width: `${(w / widths.reduce((a, b) => a + b, 0)) * 100}%` }} />
             ))}
           </colgroup>
         )}

@@ -16,8 +16,11 @@ export interface Span {
 function spanWidth(sp: Span, text: string): number {
   const f = face(sp.mono, sp.bold);
   let em = 0;
-  for (const ch of sp.caps ? text.toUpperCase() : text)
-    em += f.advance(ch.codePointAt(0)!) ?? f.advance(0x4d) ?? 0.6;
+  for (const ch of sp.caps ? text.toUpperCase() : text) {
+    const cp = ch.codePointAt(0);
+    if (cp === undefined) throw new Error("empty character in span text");
+    em += f.advance(cp) ?? f.advance(0x4d) ?? 0.6;
+  }
   return em * sp.size + [...text].length * (sp.tracking ?? 0);
 }
 

@@ -233,28 +233,23 @@ const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]"]);
  *  dev server's `port`, and an Origin, where sent, the same host. A `*.localhost` name without a
  *  port is the local Caddy proxy: browsers resolve every `.localhost` name to loopback. Headers
  *  alone prove nothing about the sender: the server also checks where the request came from. */
+function parseUrl(raw: string): URL | null {
+  return URL.canParse(raw) ? new URL(raw) : null;
+}
+
 export function fromLocalPage(host: string | null, origin: string | null, port: string): boolean {
-  const local = (url: string) => {
-    try {
-      const { hostname, port: at, pathname, username } = new URL(url);
-      if (pathname !== "/" || username) return false;
-      return (LOOPBACK.has(hostname) && at === port) || (hostname.endsWith(".localhost") && !at);
-    } catch {
-      return false;
-    }
-  };
-  const sameHost = (url: string) => {
-    try {
-      return new URL(url).host === new URL(`http://${host}`).host;
-    } catch {
-      return false;
-    }
-  };
-  return (
-    host !== null &&
-    local(`http://${host}`) &&
-    (origin === null || (local(origin) && sameHost(origin)))
-  );
+  if (host === null) return false;
+  const hostUrl = parseUrl(`http://${host}`);
+  const isLocal = (url: URL | null): url is URL =>
+    url !== null &&
+    url.pathname === "/" &&
+    !url.username &&
+    ((LOOPBACK.has(url.hostname) && url.port === port) ||
+      (url.hostname.endsWith(".localhost") && !url.port));
+  if (!isLocal(hostUrl)) return false;
+  if (origin === null) return true;
+  const originUrl = parseUrl(origin);
+  return isLocal(originUrl) && originUrl.host === hostUrl.host;
 }
 
 /** Whether a request reached the dev server from this machine: a loopback socket, and every

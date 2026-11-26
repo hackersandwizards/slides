@@ -54,8 +54,12 @@ export function finishChart(xml: string, fix: ChartFix): string {
 export function chartPartFix(zip: JSZip, charts: Map<number, ChartFix>): PartFix {
   // pptxgenjs numbers charts across every deck of the process: within one, they run in drawing order.
   const chartFiles = Object.keys(zip.files)
-    .filter((f) => /^ppt\/charts\/chart\d+\.xml$/.test(f))
-    .sort((a, b) => parseInt(a.match(/\d+/)![0]) - parseInt(b.match(/\d+/)![0]));
+    .flatMap((file) => {
+      const match = /^ppt\/charts\/chart(\d+)\.xml$/.exec(file);
+      return match ? [[file, Number(match[1])] as const] : [];
+    })
+    .sort(([, a], [, b]) => a - b)
+    .map(([file]) => file);
   return (xml, part) => {
     const fix = charts.get(chartFiles.indexOf(part) + 1);
     return fix ? finishChart(xml, fix) : xml;
@@ -108,8 +112,9 @@ export function setBulletMarkers(xml: string, c: Palette): string {
 }
 
 export async function finishParts(zip: JSZip, fixes: readonly PartFix[]): Promise<void> {
-  for (const name of Object.keys(zip.files).filter((f) => /^ppt\/.+\.xml$/.test(f))) {
-    let xml = await zip.file(name)!.async("string");
+  for (const [name, entry] of Object.entries(zip.files)) {
+    if (entry.dir || !/^ppt\/.+\.xml$/.test(name)) continue;
+    let xml = await entry.async("string");
     for (const fix of fixes) xml = fix(xml, name);
     zip.file(name, xml);
   }

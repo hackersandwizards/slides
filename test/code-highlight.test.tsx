@@ -1,11 +1,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tokens } from "@hackersandwizards/brand/tokens";
+import { rejection } from "@hackersandwizards/scaffolding/rejection";
 import { act, render } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { highlightLines } from "../lib/code-highlight";
-import { CodeLines } from "../lib/use-code-highlight";
+import { CodeLines, loadHighlighter } from "../lib/use-code-highlight";
 
 const css = readFileSync(join(__dirname, "../styles/tokens.css"), "utf8");
 const brand = (name: keyof typeof tokens) => tokens[name];
@@ -142,4 +143,21 @@ describe("CodeLines", () => {
       expect(contrast(mix(subtle, muted, 0.5), marked)).toBeGreaterThanOrEqual(4.5);
     },
   );
+
+  it("falls back to unmarked plain lines when loading the highlighter fails with TypeError", async () => {
+    const highlighter = await loadHighlighter(() =>
+      Promise.reject(new TypeError("Failed to fetch dynamically imported module")),
+    );
+    const { container } = render(<>{highlighter.highlightLines("const a = 1;")}</>);
+    expect(container.textContent).toBe("const a = 1;");
+    expect(container.querySelector("[data-code-plain]")).toBeNull();
+  });
+
+  it("propagates unexpected errors when loading the highlighter", async () => {
+    expect(
+      await rejection(
+        loadHighlighter(() => Promise.reject(new Error("unexpected highlighter failure"))),
+      ),
+    ).toMatch(/unexpected highlighter failure/);
+  });
 });

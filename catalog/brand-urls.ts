@@ -1,5 +1,7 @@
-import brand from "@hackersandwizards/brand/package.json";
+import { statSync } from "node:fs";
 import { createRequire } from "node:module";
+import { dirname, resolve, sep } from "node:path";
+import brand from "@hackersandwizards/brand/package.json";
 
 // Relative to the print pages in dist/catalog/print/.
 export const brandHref = "../../brand";
@@ -18,6 +20,34 @@ const exportName = (path: string) => {
 const fromPackage = createRequire(import.meta.url);
 /** The file brand exports under `name`; throws where brand exports none. */
 export const brandFile = (name: string) => fromPackage.resolve(`@hackersandwizards/brand/${name}`);
+
+const brandDir = dirname(fromPackage.resolve("@hackersandwizards/brand/package.json"));
+
+const exportTarget = (name: string) => {
+  for (const [exported, target] of Object.entries(brand.exports as Record<string, string>)) {
+    const [from, to] = [exported.slice(2), target.slice(2)];
+    if (from === name) return to;
+    if (from.endsWith("*") && name.startsWith(from.slice(0, -1)))
+      return to.slice(0, -1) + name.slice(from.length - 1);
+  }
+};
+
+/** The file brand exports under `name`, or undefined where brand exports no existing file for it. */
+export const findBrandFile = (
+  name: string,
+  lookup: (id: string) => string = brandFile,
+): string | undefined => {
+  if (!name || name.includes("..")) return undefined;
+  const target = exportTarget(name);
+  if (!target) return undefined;
+  const candidate = resolve(brandDir, target);
+  if (
+    !candidate.startsWith(`${brandDir}${sep}`) ||
+    !statSync(candidate, { throwIfNoEntry: false })?.isFile()
+  )
+    return undefined;
+  return lookup(name);
+};
 
 const bareName = /^@hackersandwizards\/brand\/(.+)$/;
 const resolved = (token: string, url: string) => {

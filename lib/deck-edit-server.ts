@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { check, format, resolveConfig } from "prettier";
@@ -25,6 +26,19 @@ function requestRejection(req: IncomingMessage): HttpAnswer | null {
   return null;
 }
 
+const isMissingFile = (error: unknown): boolean =>
+  error instanceof Error && "code" in error && error.code === "ENOENT";
+
+async function readExistingFile(file: string): Promise<string | null> {
+  if (!existsSync(file)) return null;
+  try {
+    return await readFile(file, "utf8");
+  } catch (error) {
+    if (isMissingFile(error)) return null;
+    throw error;
+  }
+}
+
 async function writeFormattedEdit(
   file: string,
   source: string,
@@ -35,7 +49,7 @@ async function writeFormattedEdit(
   const formatted = await check(source, options);
   const out = formatted ? await format(nextSource, options) : nextSource;
   // An editor's save between the read and this write would be lost under it.
-  if ((await readFile(file, "utf8").catch(() => null)) !== source)
+  if ((await readExistingFile(file)) !== source)
     return [409, { error: "The deck file changed meanwhile. Click the text again." }];
   await writeFile(file, out);
   return [200, { ok: true }];
@@ -47,7 +61,7 @@ async function applyDeckEdit(
 ): Promise<HttpAnswer> {
   const file = deckFile(body.deck);
   if (!file) return [400, { error: "Unknown deck." }];
-  const source = await readFile(file, "utf8").catch(() => null);
+  const source = await readExistingFile(file);
   if (source === null) return [404, { error: "Deck file not found." }];
   if (Array.isArray(body.texts)) {
     const result = resolve(

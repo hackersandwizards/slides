@@ -1,6 +1,8 @@
+import { rejection } from "@hackersandwizards/scaffolding/rejection";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, assert, describe, expect, it, vi } from "vitest";
-import { DeckEdit } from "../lib/deck-edit-mode";
+import { resolveDeckClick, submitDeckEdit } from "../lib/deck-edit-client";
+import { applyDeckClick, DeckEdit } from "../lib/deck-edit-mode";
 
 // F30: a refused write closed the field, losing the typed text, and the click that committed a
 // field also picked the text under it, which then reported a refusal over "Saved".
@@ -79,5 +81,54 @@ describe("edit mode", () => {
     history.replaceState(null, "", "/d/2");
     await press();
     expect(document.documentElement.hasAttribute("data-deck-edit")).toBe(true);
+  });
+
+  it("reports network and malformed JSON failures from the dev server", async () => {
+    const page = document.createElement("p");
+    page.textContent = "Old text";
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    fetchSpy.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    expect(await resolveDeckClick("/d", [page])).toEqual({
+      error: "The dev server did not answer.",
+    });
+    fetchSpy.mockResolvedValueOnce(new Response("<html>502</html>"));
+    expect(await resolveDeckClick("/d", [page])).toEqual({
+      error: "The dev server did not answer.",
+    });
+  });
+
+  it("propagates unexpected fetch errors from resolveDeckClick and submitDeckEdit", async () => {
+    const page = document.createElement("p");
+    page.textContent = "Old text";
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    fetchSpy.mockRejectedValueOnce(new Error("unexpected resolve failure"));
+    expect(await rejection(resolveDeckClick("/d", [page]))).toMatch(/unexpected resolve failure/);
+    fetchSpy.mockRejectedValueOnce(new Error("unexpected save failure"));
+    expect(await rejection(submitDeckEdit("/d", "Old text", "New text"))).toMatch(
+      /unexpected save failure/,
+    );
+    expect(sessionStorage.getItem("slide-direction")).toBeNull();
+  });
+
+  it("propagates unexpected overlay errors from applyDeckClick instead of flashing refusal", async () => {
+    const page = document.createElement("p");
+    page.textContent = "Old text";
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ value: "Old text", index: 0 })),
+    );
+    const flash = vi.fn();
+    const mark = vi.fn();
+    expect(
+      await rejection(
+        applyDeckClick("/d", [page], {
+          open: () => {
+            throw new Error("unexpected overlay error");
+          },
+          flash,
+          mark,
+        }),
+      ),
+    ).toMatch(/unexpected overlay error/);
+    expect(flash).not.toHaveBeenCalled();
   });
 });

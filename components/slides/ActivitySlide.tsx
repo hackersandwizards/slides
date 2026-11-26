@@ -60,7 +60,7 @@ function ActivityFrame({
     { icon: iconMap.timer, text: duration, lead: true },
     { icon: iconMap.users, text: mode },
     { icon: iconMap.target, text: outcome },
-  ].filter((line) => line.text);
+  ].flatMap((line) => (line.text ? [{ ...line, text: line.text }] : []));
 
   if (frame.length === 0) return null;
 
@@ -75,7 +75,7 @@ function ActivityFrame({
                 lead ? "font-mono text-4xl font-bold text-text" : "text-2xl text-text-muted"
               }
             >
-              {renderMarkdown(text!)}
+              {renderMarkdown(text)}
             </span>
           </div>
         ))}

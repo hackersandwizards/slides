@@ -40,14 +40,13 @@ export function deckGrounds(deck: Presentation): (slide?: Slide) => Look {
     const ground = slide ? groundOf(slide as Grounded) : "intro";
     if (ground === "intro") return base;
     const key = `${base.dark}-${ground}`;
-    if (!grounded.has(key)) {
-      const { c } = base;
-      const hue = { primary: c.teal, secondary: c.purple, accent: c.amber, success: c.green }[
-        ground
-      ];
-      grounded.set(key, base.grounded(hue));
-    }
-    return grounded.get(key)!;
+    const existing = grounded.get(key);
+    if (existing) return existing;
+    const { c } = base;
+    const hue = { primary: c.teal, secondary: c.purple, accent: c.amber, success: c.green }[ground];
+    const look = base.grounded(hue);
+    grounded.set(key, look);
+    return look;
   };
 }
 
@@ -72,10 +71,10 @@ export function buildSlides(
 
 export async function overflowWarnings(zip: JSZip): Promise<string[]> {
   const warnings: string[] = [];
-  for (const name of Object.keys(zip.files)) {
+  for (const [name, entry] of Object.entries(zip.files)) {
     const n = slidePartNumber(name);
-    if (n === undefined) continue;
-    for (const found of checkSlide(await zip.file(name)!.async("string"), W, H))
+    if (n === undefined || entry.dir) continue;
+    for (const found of checkSlide(await entry.async("string"), W, H))
       warnings.push(`slide ${n}: ${found}`);
   }
   return warnings;

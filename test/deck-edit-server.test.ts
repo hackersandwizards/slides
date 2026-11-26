@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,7 +8,11 @@ import { deckEditHandler } from "../lib/deck-edit-server";
 
 const dir = mkdtempSync(join(tmpdir(), "deck-edit-server-"));
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
-const files: Record<string, string> = { "/deck": "deck.ts", "/missing": "missing.ts" };
+const files: Record<string, string> = {
+  "/deck": "deck.ts",
+  "/missing": "missing.ts",
+  "/dir": "subdir",
+};
 const deckFile = (deck: unknown) =>
   typeof deck === "string" && deck in files ? join(dir, files[deck]) : null;
 const handle = deckEditHandler(deckFile);
@@ -134,5 +138,12 @@ describe("deckEditHandler", () => {
       payload: { ok: true },
     });
     expect(readFileSync(join(dir, "deck.ts"), "utf8")).toBe('export const deck={title:"Plan"};\n');
+  });
+
+  it("answers 500 when reading the deck path fails with an unexpected fs error", async () => {
+    mkdirSync(join(dir, "subdir"), { recursive: true });
+    const { status, payload } = await post(JSON.stringify({ deck: "/dir", texts: ["Agenda"] }));
+    expect(status).toBe(500);
+    expect(String(payload.error)).toMatch(/EISDIR/);
   });
 });

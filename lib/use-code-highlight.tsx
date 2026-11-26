@@ -23,13 +23,26 @@ const markedLines = (code: string, waiting: boolean): ReactNode[] =>
     </span>
   ));
 const plainLines = (code: string) => markedLines(code, true);
+const fallbackHighlighter: Highlighter = {
+  highlightLines: (code) => markedLines(code, false),
+};
+
+export async function loadHighlighter(
+  loadModule: () => Promise<Highlighter> = () => import("./code-highlight"),
+): Promise<Highlighter> {
+  try {
+    return await loadModule();
+  } catch (error) {
+    if (error instanceof TypeError) return fallbackHighlighter;
+    throw error;
+  }
+}
+
 const load = () => {
-  loading ??= import("./code-highlight")
-    .catch((): Highlighter => ({ highlightLines: (code) => markedLines(code, false) }))
-    .then((m) => {
-      loaded = m;
-      listeners.forEach((l) => l());
-    });
+  loading ??= loadHighlighter().then((m) => {
+    loaded = m;
+    listeners.forEach((l) => l());
+  });
 };
 
 /** `highlightLines` from `code-highlight` once it has loaded, plain lines until then. */

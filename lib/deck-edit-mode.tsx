@@ -114,6 +114,24 @@ function useEditModeToggle(): boolean {
   return on && active;
 }
 
+export async function applyDeckClick(
+  deck: string,
+  chain: Element[],
+  ui: {
+    open: (target: { deck: string; element: Element; value: string }) => void;
+    flash: (note: EditNote) => void;
+    mark: (element: Element) => void;
+  },
+): Promise<void> {
+  const result = await resolveDeckClick(deck, chain);
+  if ("value" in result) {
+    ui.open({ deck, ...result });
+    return;
+  }
+  ui.flash({ text: result.error, error: true });
+  ui.mark(chain[0]);
+}
+
 function useDeckEditSession(
   deck: string,
   enabled: boolean,
@@ -146,13 +164,11 @@ function useDeckEditSession(
       const chain = collectElementChain(event.target);
       // A click on the page itself, outside every element, has no text to edit.
       if (!chain.length) return;
-      void resolveDeckClick(deck, chain)
-        .then((result) => {
-          if ("value" in result) return overlay.open({ deck, ...result });
-          flash({ text: result.error, error: true });
-          marks.mark(chain[0]);
-        })
-        .catch(() => flash({ text: "This text cannot be edited here.", error: true }));
+      void applyDeckClick(deck, chain, {
+        open: (target) => overlay.open(target),
+        flash,
+        mark: (element) => marks.mark(element),
+      });
     };
 
     // Capture on the window runs before the slide's own pointer handlers, the laser among them.

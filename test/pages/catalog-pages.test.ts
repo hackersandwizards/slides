@@ -62,7 +62,7 @@ it(
       [...document.querySelectorAll<HTMLIFrameElement>(selector)].every((frame) =>
         frame.contentDocument?.querySelector("[data-hw-scale]"),
       );
-    await tab.waitForFunction(allDrawn, { timeout: limit(60_000) }, tiles).catch(() => undefined);
+    await tab.waitForFunction(allDrawn, { timeout: limit(60_000) }, tiles);
     expect(count).toBeGreaterThan(20);
     expect(await tab.evaluate(allDrawn, tiles)).toBe(true);
     expect(failed).toEqual([]);

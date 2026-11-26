@@ -35,18 +35,25 @@ export async function embedFonts(zip: JSZip): Promise<void> {
   await registerFonts(zip, parts);
 }
 
+function addCharAndUpper(used: Set<number>, ch: string): void {
+  for (const form of [ch, ch.toUpperCase()]) {
+    const cp = form.codePointAt(0);
+    if (cp === undefined) throw new Error("empty character in slide text");
+    used.add(cp);
+  }
+}
+
 /** The Latin ranges and code points in a deck's slide text and chart values. */
 export async function usedCodePoints(zip: JSZip): Promise<Set<number>> {
   const used = new Set(KEPT);
-  for (const name of Object.keys(zip.files).filter((f) =>
-    /^ppt\/(slides|charts)\/.+\.xml$/.test(f),
-  ))
+  for (const [name, entry] of Object.entries(zip.files)) {
+    if (entry.dir || !/^ppt\/(slides|charts)\/.+\.xml$/.test(name)) continue;
     // Text runs and a chart's names and values; a caps run's capitals too.
-    for (const [, t] of (await zip.file(name)!.async("string")).matchAll(
+    for (const [, t] of (await entry.async("string")).matchAll(
       /<(?:a:t|c:v)>([^<]*)<\/(?:a:t|c:v)>/g,
     ))
-      for (const ch of unescape(t))
-        for (const cp of [ch, ch.toUpperCase()]) used.add(cp.codePointAt(0)!);
+      for (const ch of unescape(t)) addCharAndUpper(used, ch);
+  }
   return used;
 }
 
@@ -72,7 +79,8 @@ export function eotFace(
     if (font) font.merge(part, { scale: 1 });
     else font = part;
   }
-  return eotOf(font!.write({ type: "ttf", toBuffer: true }) as Buffer);
+  if (!font) throw new Error("no font subset matched any used code point");
+  return eotOf(font.write({ type: "ttf", toBuffer: true }) as Buffer);
 }
 
 interface EmbeddedFace {
@@ -81,9 +89,15 @@ interface EmbeddedFace {
   bold: Buffer;
 }
 
+function readZipPart(zip: JSZip, part: string): Promise<string> {
+  const file = zip.file(part);
+  if (!file) throw new Error(`presentation archive is missing ${part}`);
+  return file.async("string");
+}
+
 /** Writes the face parts and registers their relationships in the presentation package. */
 export async function registerFonts(zip: JSZip, parts: readonly EmbeddedFace[]): Promise<void> {
-  const rels = await zip.file("ppt/_rels/presentation.xml.rels")!.async("string");
+  const rels = await readZipPart(zip, "ppt/_rels/presentation.xml.rels");
   let rid = Math.max(...[...rels.matchAll(/Id="rId(\d+)"/g)].map((m) => Number(m[1]))) + 1;
   const entries: string[] = [];
   const links: string[] = [];
@@ -108,7 +122,7 @@ export async function registerFonts(zip: JSZip, parts: readonly EmbeddedFace[]):
     "ppt/_rels/presentation.xml.rels",
     rels.replace("</Relationships>", `${links.join("")}</Relationships>`),
   );
-  const types = await zip.file("[Content_Types].xml")!.async("string");
+  const types = await readZipPart(zip, "[Content_Types].xml");
   zip.file(
     "[Content_Types].xml",
     types.replace(
@@ -117,7 +131,7 @@ export async function registerFonts(zip: JSZip, parts: readonly EmbeddedFace[]):
     ),
   );
   // The list stands after the notes size and before the default text style (CT_Presentation).
-  const pres = await zip.file("ppt/presentation.xml")!.async("string");
+  const pres = await readZipPart(zip, "ppt/presentation.xml");
   const list = `<p:embeddedFontLst>${entries.join("")}</p:embeddedFontLst>`;
   // pptxgenjs already sets saveSubsetFonts, which says the parts hold only the characters used.
   const placed = pres

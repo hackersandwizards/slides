@@ -96,7 +96,8 @@ export function breakAt(runs: Run[], lines: ReturnType<typeof pretty>): Run[] {
       at++;
       continue;
     }
-    const gap = /^[ \t]*/.exec(text.slice(at))![0].length;
+    const rest = text.slice(at);
+    const gap = rest.length - rest.replace(/^[ \t]*/, "").length;
     cuts.push([at, at + gap]);
     at += gap;
   }

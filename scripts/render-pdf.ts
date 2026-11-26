@@ -30,7 +30,7 @@ export function rasterTargetSize(img: ImageMetrics): { width: number; height: nu
 }
 
 // Runs inside ElementHandle.evaluate, so it may reference only browser globals.
-async function redrawImage(
+export async function redrawImage(
   img: HTMLImageElement,
   size: { width: number; height: number },
 ): Promise<void> {
@@ -45,8 +45,9 @@ async function redrawImage(
   let alpha: Uint8ClampedArray;
   try {
     alpha = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-  } catch {
-    return;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "SecurityError") return;
+    throw error;
   }
   let opaque = true;
   for (let i = 3; i < alpha.length; i += 4) {

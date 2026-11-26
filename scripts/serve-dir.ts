@@ -22,6 +22,17 @@ const TYPES: Record<string, string> = {
   ".txt": "text/plain",
 };
 
+export function decodeRequestPath(rawUrl: string): string | null {
+  if (!URL.canParse(rawUrl, "http://x")) return null;
+  const { pathname } = new URL(rawUrl, "http://x");
+  try {
+    return decodeURIComponent(pathname);
+  } catch (error) {
+    if (error instanceof URIError) return null;
+    throw error;
+  }
+}
+
 /** Serves a built site's folder on a free port of 127.0.0.1 under `base` (such as `/slides`): a
  *  path is its file, or its folder's `index.html`. For `slides-density --site` and the page tests. */
 export async function serveDir(dir: string, base = "") {
@@ -32,12 +43,8 @@ export async function serveDir(dir: string, base = "") {
       response.statusCode = 404;
       response.end();
     };
-    let path: string;
-    try {
-      path = decodeURIComponent(new URL(request.url ?? "/", "http://x").pathname);
-    } catch {
-      return missing();
-    }
+    const path = decodeRequestPath(request.url ?? "/");
+    if (path === null) return missing();
     const file = join(root, normalize(path.slice(base.length)));
     const found =
       path.startsWith(`${base}/`) &&

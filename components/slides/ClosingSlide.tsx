@@ -229,7 +229,7 @@ function ClosingClaim({ lang }: { lang: NonNullable<ReturnType<typeof closingCla
 /** The closing line centred on the ground, the speakers and the lockup under it, no gradient field and
  *  no decoration, as on the title slide. */
 function ContactVariant({ slide }: { slide: ClosingSlideType }) {
-  const hasSpeakerImages = slide.speakers?.some((s) => s.imageSrc);
+  const portraitSpeakers = slide.speakers?.some((s) => s.imageSrc) ? slide.speakers : null;
   const claim = closingClaim(slide, useContext(DeckLang));
 
   return (
@@ -241,15 +241,15 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
           </BlurFade>
         )}
 
-        {hasSpeakerImages ? (
+        {portraitSpeakers ? (
           <BlurFade delay={0.2} duration={0.5}>
             <div className="mx-auto flex max-w-5xl flex-col items-stretch gap-10 md:flex-row md:gap-14">
-              {slide.speakers!.map((speaker, index) => (
+              {portraitSpeakers.map((speaker, index) => (
                 <PortraitSpeaker
                   key={index}
                   speaker={speaker}
                   index={index}
-                  isLast={index === slide.speakers!.length - 1}
+                  isLast={index === portraitSpeakers.length - 1}
                 />
               ))}
             </div>

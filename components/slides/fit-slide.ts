@@ -30,11 +30,15 @@ function fitWords(root: HTMLElement) {
         need.set(sizes[i], Math.min(fit, need.get(sizes[i]) ?? 1));
     });
     if (!need.size) return;
-    for (const [size, fit] of need)
-      scales.set(size, Math.max(WORD_FLOOR, (scales.get(size) ?? 1) * fit * 0.995));
+    const updated = new Map<string, string>();
+    for (const [size, fit] of need) {
+      const next = Math.max(WORD_FLOOR, (scales.get(size) ?? 1) * fit * 0.995);
+      scales.set(size, next);
+      updated.set(size, next.toFixed(3));
+    }
     headings.forEach((h, i) => {
-      if (!need.has(sizes[i])) return;
-      const scale = scales.get(sizes[i])!.toFixed(3);
+      const scale = updated.get(sizes[i]);
+      if (scale === undefined) return;
       h.style.fontSize = `calc(${sizes[i]} * ${scale})`;
       h.dataset.wordScale = scale;
     });
@@ -209,7 +213,8 @@ function snapshotBoxSizes(parent: HTMLElement, box: HTMLElement): string {
  *  pixel grid but draws the marker where the transform puts it, up to half a device pixel off its
  *  line. */
 export function fitSlide(shell: HTMLElement | null) {
-  const content = shell?.querySelector<HTMLElement>(":scope > .slide-content");
+  if (!shell) return;
+  const content = shell.querySelector<HTMLElement>(":scope > .slide-content");
   if (!content) return;
   // Only a title bounds the body's height (slides.css): an untitled body grows with what it
   // holds, so it never reads as overflowing, and the whole content is measured instead.
@@ -221,7 +226,7 @@ export function fitSlide(shell: HTMLElement | null) {
   // observation starts with, lays nothing out again: the children's and the parent's, since the
   // zoomed box's px width and height no longer follow a window that changes size.
   let sizes = "";
-  const parent = box.parentElement!;
+  const parent = body ? content : shell;
   const refit = () => {
     runFitPass(content, box);
     sizes = snapshotBoxSizes(parent, box);

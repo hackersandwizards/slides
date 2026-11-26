@@ -1,4 +1,4 @@
-import { assert, describe, expect, it } from "vitest";
+import { assert, describe, expect, it, vi } from "vitest";
 import { fromLocalPage, literals, replace, resolve } from "../lib/deck-edit";
 
 const DECK = `// A comment with an apostrophe: don't
@@ -164,6 +164,24 @@ describe("fromLocalPage", () => {
     ["a missing host", null, null],
   ])("refuses %s", (_label, host, origin) => {
     expect(fromLocalPage(host, origin, "4324")).toBe(false);
+  });
+
+  it("propagates unexpected errors thrown while parsing a valid URL", () => {
+    const RealURL = globalThis.URL;
+    const BrokenURL = Object.assign(
+      function BrokenURL() {
+        throw new RangeError("unexpected URL failure");
+      } as unknown as typeof URL,
+      { canParse: RealURL.canParse.bind(RealURL) },
+    );
+    vi.stubGlobal("URL", BrokenURL);
+    try {
+      expect(() => fromLocalPage("127.0.0.1:4324", "http://127.0.0.1:4324", "4324")).toThrow(
+        "unexpected URL failure",
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

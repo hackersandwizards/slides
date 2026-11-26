@@ -81,7 +81,7 @@ if (import.meta.main) {
   let browser: Browser | undefined;
   try {
     // Background pages keep their timers and frames: settle waits on both.
-    browser = await puppeteer.launch({
+    const launched = await puppeteer.launch({
       headless: true,
       protocolTimeout: 900_000,
       args: [
@@ -92,13 +92,14 @@ if (import.meta.main) {
         "--disable-backgrounding-occluded-windows",
       ],
     });
+    browser = launched;
     const reports: string[][] = [];
     let next = 0;
     await Promise.all(
       Array.from({ length: Math.min(PAGES, urls.length) }, async () => {
         while (next < urls.length) {
           const i = next++;
-          reports[i] = await checkDeckDensity(browser!, urls[i]);
+          reports[i] = await checkDeckDensity(launched, urls[i]);
         }
       }),
     );
@@ -224,8 +225,8 @@ function snapshotSlides(
     // A heading the fit guard shrank so that its widest word fits (SlideShell's fitWords).
     const word = Math.min(
       1,
-      ...[...slide.querySelectorAll<HTMLElement>("[data-word-scale]")].map(
-        (h) => parseFloat(h.dataset.wordScale!) || 1,
+      ...[...slide.querySelectorAll<HTMLElement>("[data-word-scale]")].map((h) =>
+        h.dataset.wordScale ? parseFloat(h.dataset.wordScale) || 1 : 1,
       ),
     );
     const box = slide.querySelector<HTMLElement>(

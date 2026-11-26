@@ -6,7 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { catalog } from "@hackersandwizards/scaffolding/catalog";
 import type { AstroIntegration } from "astro";
 import { defineConfig } from "astro/config";
-import { brandFile, brandNames, selfContained } from "./brand-urls";
+import { brandFile, brandNames, findBrandFile, selfContained } from "./brand-urls";
 import { readUsage } from "./usage";
 
 const BASE = "/slides";
@@ -15,12 +15,7 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 // The print pages name brand's files under brand/, as in dist/.
 const fileOf = (path: string) => {
   const name = path.match(/^(?:\/slides)?\/brand\/(.+)$/)?.[1];
-  if (!name || name.includes("..")) return undefined;
-  try {
-    return brandFile(name);
-  } catch {
-    return undefined;
-  }
+  return name ? findBrandFile(name) : undefined;
 };
 const types: Record<string, string> = {
   ".svg": "image/svg+xml",

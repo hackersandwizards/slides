@@ -84,7 +84,9 @@ export function brandCut(name: string): [string, number] {
   const known = cuts.get(name);
   if (known) return known;
   const path = brandLogo(name);
-  const [w, h] = imageSize(readFileSync(path))!;
+  const size = imageSize(readFileSync(path));
+  if (!size) throw new Error(`could not read image size of brand logo ${name}: ${path}`);
+  const [w, h] = size;
   cuts.set(name, [path, w / h]);
   return [path, w / h];
 }

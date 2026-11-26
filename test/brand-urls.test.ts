@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brandNames, placeBrandUrls, selfContained } from "../catalog/brand-urls";
+import { brandNames, findBrandFile, placeBrandUrls, selfContained } from "../catalog/brand-urls";
 
 const font = "../node_modules/@hackersandwizards/brand/tokens/fonts/inter.woff2";
 const placed = 'url("../x/fonts/inter.woff2")';
@@ -70,5 +70,22 @@ describe("brandNames", () => {
   it("reads each export name a page links, whatever quotes it", () => {
     const page = `<link href="../../brand/header.css"><iframe srcdoc="&lt;img src=&quot;../../brand/logos/a.svg&quot;&gt;"></iframe><style>a{b:url('../../../brand/fonts/c.woff2')}</style>`;
     expect(brandNames(page)).toEqual(["header.css", "logos/a.svg", "fonts/c.woff2"]);
+  });
+});
+
+describe("findBrandFile", () => {
+  it("resolves existing brand exports and returns undefined for unknown or missing files", () => {
+    expect(findBrandFile("tokens.root.css")).toMatch(/tokens\.root\.css$/);
+    expect(findBrandFile("missing.css")).toBeUndefined();
+    expect(findBrandFile("fonts/does-not-exist.woff2")).toBeUndefined();
+    expect(findBrandFile("../package.json")).toBeUndefined();
+  });
+
+  it("propagates unexpected resolver errors instead of returning undefined", () => {
+    expect(() =>
+      findBrandFile("tokens.root.css", () => {
+        throw new Error("unexpected resolver failure");
+      }),
+    ).toThrow("unexpected resolver failure");
   });
 });

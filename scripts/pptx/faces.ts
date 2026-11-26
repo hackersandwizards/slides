@@ -26,10 +26,11 @@ export interface FaceMetrics {
 }
 
 // WOFF2's table tags by their index in the table directory (WOFF2 §5.1).
-const TAGS =
-  "cmap head hhea hmtx maxp name OS/2 post cvt  fpgm glyf loca prep CFF  VORG EBDT EBLC gasp hdmx kern LTSH PCLT VDMX vhea vmtx BASE GDEF GPOS GSUB EBSC JSTF MATH CBDT CBLC COLR CPAL SVG  sbix acnt avar bdat bloc bsln cvar fdsc feat fmtx fvar gvar hsty just lcar mort morx opbd prop trak Zapf Silf Glat Gloc Feat Sill"
-    .match(/.{4}\s?/g)!
-    .map((t) => t.slice(0, 4));
+const TAG_LIST =
+  "cmap head hhea hmtx maxp name OS/2 post cvt  fpgm glyf loca prep CFF  VORG EBDT EBLC gasp hdmx kern LTSH PCLT VDMX vhea vmtx BASE GDEF GPOS GSUB EBSC JSTF MATH CBDT CBLC COLR CPAL SVG  sbix acnt avar bdat bloc bsln cvar fdsc feat fmtx fvar gvar hsty just lcar mort morx opbd prop trak Zapf Silf Glat Gloc Feat Sill";
+const TAGS = Array.from({ length: Math.ceil(TAG_LIST.length / 5) }, (_, i) =>
+  TAG_LIST.slice(i * 5, i * 5 + 4),
+);
 
 /** The tables of a WOFF2 font, decompressed; glyf and loca stay in their transformed form, which
  *  the measure never reads. */
@@ -116,17 +117,23 @@ function cmapOf(t: Buffer): Map<number, number> {
   throw new Error("no Unicode cmap");
 }
 
+function requireTable(tables: Map<string, Buffer>, tag: string): Buffer {
+  const table = tables.get(tag);
+  if (!table) throw new Error(`WOFF2 font has no ${tag} table`);
+  return table;
+}
+
 /** A face's metrics from its WOFF2 files, the first file holding a code point giving its advance,
  *  as the unicode-range subsets of one face do. */
 export function faceMetrics(files: Buffer[]): FaceMetrics {
   const fonts = files.map((f) => {
     const t = woff2Tables(f);
-    const head = t.get("head")!;
-    const hhea = t.get("hhea")!;
-    const hmtx = t.get("hmtx")!;
+    const head = requireTable(t, "head");
+    const hhea = requireTable(t, "hhea");
+    const hmtx = requireTable(t, "hmtx");
     const upm = head.readUInt16BE(18);
     const metrics = hhea.readUInt16BE(34);
-    const cmap = cmapOf(t.get("cmap")!);
+    const cmap = cmapOf(requireTable(t, "cmap"));
     return {
       upm,
       ascent: hhea.readInt16BE(4) / upm,
@@ -171,8 +178,9 @@ const staticFaces = [
 export const faceFiles = (mono: boolean, bold: boolean) => {
   const name = mono ? MONO : SANS;
   const files = staticFaces
-    .filter((f) => f.file && f.family.startsWith(name) && f.weight === (bold ? 700 : 400))
-    .map((f) => f.file!)
+    .flatMap((f) =>
+      f.file && f.family.startsWith(name) && f.weight === (bold ? 700 : 400) ? [f.file] : [],
+    )
     .sort((x, y) => Number(/-latin-\d/.test(y)) - Number(/-latin-\d/.test(x)));
   if (!files.length)
     throw new Error(`brand's static-fonts.css names no ${name} ${bold ? 700 : 400}`);

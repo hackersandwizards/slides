@@ -12,15 +12,14 @@ declare const __SLIDES_USAGE__: Usage | null;
 const usage = __SLIDES_USAGE__;
 const slideCount = (n: number) => `${n} ${n === 1 ? "slide" : "slides"}`;
 // Numbered anchors are extra tiles for the same entry, so slides-usage omits them.
-const hasCount = (id: string) => !!usage && !/-\d+$/.test(id);
-const tiles = entries.map(({ id, html }) =>
-  hasCount(id)
-    ? html.replace(
-        "</figcaption>",
-        ` <span class="hw-pill" ${usage!.entries[id] ? 'data-tone="neutral"' : 'data-variant="outline"'} data-usage>${slideCount(usage!.entries[id] ?? 0)}</span></figcaption>`,
-      )
-    : html,
-);
+const tiles = entries.map(({ id, html }) => {
+  if (!usage || /-\d+$/.test(id)) return html;
+  const count = usage.entries[id] ?? 0;
+  return html.replace(
+    "</figcaption>",
+    ` <span class="hw-pill" ${count ? 'data-tone="neutral"' : 'data-variant="outline"'} data-usage>${slideCount(count)}</span></figcaption>`,
+  );
+});
 const strays = Object.entries(usage?.entries ?? {}).filter(
   ([id]) => !entries.some((e) => e.id === id),
 );
