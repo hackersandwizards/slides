@@ -3,7 +3,7 @@ import { header } from "../chrome";
 import { mixColor } from "../palette";
 import type { Sheet } from "../sheet";
 import { CORNER, REM, BODY } from "../stage";
-import { topologyLayout, type TeamFrame, type TeamKind } from "./topology-layout";
+import { topologyLayout, topologyStyle, type TeamFrame, type TeamKind } from "./topology-layout";
 
 interface TeamShapeStyle {
   tone: "teal" | "purple" | "neutral";
@@ -50,12 +50,8 @@ export function teamShape(sheet: Sheet, frame: TeamFrame, k: number): void {
  *  colours: the enabling teams in a row of columns on the left, the stream teams beside them one
  *  per row with their roles after the name where they fit, the complicated subsystems as octagons
  *  under them, the platform teams side by side in a dotted frame, then the legend and caption. */
-export function drawTopology(
-  sheet: Sheet,
-  layout: ReturnType<typeof topologyLayout>,
-  k: number,
-): void {
-  for (const { frame, boxes } of layout.bands) {
+export function drawTopology(sheet: Sheet, { bands, k }: ReturnType<typeof topologyLayout>): void {
+  for (const { frame, boxes } of bands) {
     if (frame) teamShape(sheet, frame, k);
     for (const { text, area, o } of boxes) sheet.box(text, area, o);
   }
@@ -65,11 +61,13 @@ export function drawTeamTopology(sheet: Sheet, d: TeamTopologySlide): void {
   const a = BODY(header(sheet, d));
   // The web's fit guard: the whole body shrinks until it fits.
   let k = 1;
-  let layout = topologyLayout(sheet, d, { area: a, k });
+  let scaled = topologyStyle(sheet, k);
+  let layout = topologyLayout(scaled, d, a);
   while (k > 0.6 && layout.height > a.h) {
     k -= 0.02;
-    layout = topologyLayout(sheet, d, { area: a, k });
+    scaled = topologyStyle(sheet, k);
+    layout = topologyLayout(scaled, d, a);
   }
   const area = { ...a, y: a.y + Math.max(0, a.h - layout.height) / 2.25 };
-  drawTopology(sheet, topologyLayout(sheet, d, { area, k }), k);
+  drawTopology(sheet, topologyLayout(scaled, d, area));
 }

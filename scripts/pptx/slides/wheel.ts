@@ -39,14 +39,14 @@ interface WheelRow {
 export function wheelRowHeights(
   look: Look,
   segments: WheelSlide["segments"],
-  measure: WheelText & { width: number },
+  measure: { width: number; style: WheelText },
 ) {
   return segments.map((segment) =>
     Math.max(
       WHEEL_TILE,
-      look.need(segment.title, measure.width, measure.title) +
+      look.need(segment.title, measure.width, measure.style.title) +
         0.25 * REM +
-        look.need(segment.text, measure.width, measure.body),
+        look.need(segment.text, measure.width, measure.style.body),
     ),
   );
 }
@@ -79,13 +79,15 @@ export function wheelLayout(look: Look, d: WheelSlide, a: Area) {
   const { c } = look;
   const dia = 24 * REM;
   const colW = (a.w - dia - 2 * 2 * REM) / 2;
-  const width = colW - WHEEL_TILE - 0.75 * REM;
-  const style: WheelText = {
-    title: { size: PT.h4, ...TITLE, color: c.ink, line: 1.25, tracking: -0.015 },
-    body: { size: PT.sm, color: c.muted, line: 1.375 },
+  const common = {
+    width: colW - WHEEL_TILE - 0.75 * REM,
+    style: {
+      title: { size: PT.h4, ...TITLE, color: c.ink, line: 1.25, tracking: -0.015 },
+      body: { size: PT.sm, color: c.muted, line: 1.375 },
+    },
   };
   const { centres, left, right } = wheelSides(d.segments);
-  const heights = wheelRowHeights(look, d.segments, { ...style, width });
+  const heights = wheelRowHeights(look, d.segments, common);
   const leftH = wheelColumnHeight(left.map((i) => heights[i]));
   const rightH = wheelColumnHeight(right.map((i) => heights[i]));
   const capO: BoxOpts = { size: PT.sm, color: c.muted, line: 1.45 };
@@ -104,10 +106,15 @@ export function wheelLayout(look: Look, d: WheelSlide, a: Area) {
   const leftColumn = {
     x: a.x + colW - Math.min(colW, leftW),
     y: cy - leftH / 2,
-    w: Math.min(width, leftW - WHEEL_TILE - 0.75 * REM),
-    style,
+    w: Math.min(common.width, leftW - WHEEL_TILE - 0.75 * REM),
+    style: common.style,
   };
-  const rightColumn = { x: cx + dia / 2 + 2 * REM, y: cy - rightH / 2, w: width, style };
+  const rightColumn = {
+    x: cx + dia / 2 + 2 * REM,
+    y: cy - rightH / 2,
+    w: common.width,
+    style: common.style,
+  };
   return {
     ring: { dia, cx, cy, centres },
     hub: { dia, cx, cy },

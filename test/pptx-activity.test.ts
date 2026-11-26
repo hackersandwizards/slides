@@ -1,4 +1,4 @@
-import { expect, it, vi } from "vitest";
+import { assert, expect, it, vi } from "vitest";
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { activityFrame, activityPrompt, activitySteps } from "../scripts/pptx/slides/activity";
@@ -86,7 +86,7 @@ const details = [
   },
 ];
 function roundedFrame(frame: ReturnType<typeof activityFrame>) {
-  if (!frame) return frame;
+  assert(frame, "The activity has a side frame");
   const round = ({ x, y, w, h }: typeof frame.area) => ({
     x: +x.toFixed(4),
     y: +y.toFixed(4),
@@ -119,8 +119,11 @@ it.each([
       area: { x: 8.8864, y: 2.25, w: 3.4799, h: 1.1 },
     },
   },
-  { name: "without side details", input: {}, expected: undefined },
 ])("measures the frame $name", ({ input, expected }) => {
   const frame = activityFrame(day, { ...activity, ...input }, 2);
   expect(roundedFrame(frame)).toEqual(expected);
+});
+
+it("returns no frame when the activity has no side details", () => {
+  expect(activityFrame(day, activity, 2)).toBeUndefined();
 });

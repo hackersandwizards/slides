@@ -25,21 +25,21 @@ interface TopologyBlock {
   boxes: TopologyBox[];
 }
 
-interface TopologyStyle {
-  k: number;
-  bd: number;
-  titleO: BoxOpts;
-  textO: BoxOpts;
+/** The look and typography held for one fitting scale. */
+export function topologyStyle(look: Look, k: number) {
+  // Sizes as drawn, in the half points pptxgenjs writes, so a box sized to its text holds it.
+  const size = Math.round(PT.h4 * k * 2) / 2;
+  const titleO: BoxOpts = { size, ...TITLE, color: look.c.ink, line: 1.25, tracking: -0.015 };
+  const textO: BoxOpts = { size, color: look.c.ink, line: 1.375 };
+  return { look, k, bd: (3 / 144) * k, titleO, textO };
 }
 
-interface TopologyLane {
-  area: Area;
-  style: TopologyStyle;
-}
+type ScaledTopology = ReturnType<typeof topologyStyle>;
 
-/** A column of paragraphs in width w, drawn at x, y where both are given; returns its height. */
+/** Measures a stack's height and its text offsets before placing it. */
 export function topologyStack(look: Look, parts: StackItem[], width: number) {
   let height = 0;
+  // Accumulate the gap before the origin is added so the placed coordinates keep their grouping.
   const lines = parts.map(({ text, o, gap }) => {
     const h = look.need(text, width, o);
     height += gap;
@@ -78,13 +78,9 @@ export function topologyLabel(look: Look, text: string, color: string): Para {
 }
 
 /** Measures each enabling column at the width its longest word needs. */
-export function enablingColumns(
-  look: Look,
-  teams: TeamTopologySlide["enabling"],
-  style: TopologyStyle,
-) {
+export function enablingColumns(scaled: ScaledTopology, teams: TeamTopologySlide["enabling"]) {
   // The enabling columns: 14 rem wide, wider where a word needs it, as `md:w-56 md:min-w-min`.
-  const { k, bd, titleO, textO } = style;
+  const { look, k, bd, titleO, textO } = scaled;
   const { c } = look;
   const sp = (v: number) => spacing(v, k);
   return teams.map((team) => {
@@ -108,13 +104,12 @@ export function enablingColumns(
 
 /** The stream-team frames and text with roles beside or below the name. */
 export function streamRows(
-  look: Look,
+  scaled: ScaledTopology,
   teams: TeamTopologySlide["streamAligned"],
-  lane: TopologyLane,
+  area: Area,
 ) {
   // The stream teams, a row each: the roles after the name where both fit one line.
-  const { area, style } = lane;
-  const { k, bd, titleO, textO } = style;
+  const { look, k, bd, titleO, textO } = scaled;
   const { c } = look;
   const sp = (v: number) => spacing(v, k);
   const sIn = area.w - 2 * sp(5) - 2 * bd;
@@ -153,12 +148,11 @@ export function streamRows(
 
 /** Equal-width octagons below the streams, set to the tallest subsystem's text. */
 export function subsystemRow(
-  look: Look,
+  scaled: ScaledTopology,
   teams: NonNullable<TeamTopologySlide["complicatedSubsystem"]>,
-  lane: TopologyLane,
+  area: Area,
 ) {
-  const { area, style } = lane;
-  const { k, bd, titleO, textO } = style;
+  const { look, k, bd, titleO, textO } = scaled;
   if (!teams.length) return { blocks: [], height: 0 };
   const { c } = look;
   const sp = (v: number) => spacing(v, k);
@@ -188,19 +182,15 @@ export function subsystemRow(
 }
 
 /** Enabling columns, streams and subsystems share one body band. */
-export function topologyMain(look: Look, d: TeamTopologySlide, lane: TopologyLane) {
-  const { area: a, style } = lane;
-  const sp = (v: number) => spacing(v, style.k);
-  const enabling = enablingColumns(look, d.enabling, style);
+export function topologyMain(scaled: ScaledTopology, d: TeamTopologySlide, a: Area) {
+  const sp = (v: number) => spacing(v, scaled.k);
+  const enabling = enablingColumns(scaled, d.enabling);
   const mx = a.x + enabling.reduce((sum, team) => sum + team.width + sp(4), 0);
   const main = { x: mx, y: a.y, w: a.x + a.w - mx, h: a.h };
-  const streams = streamRows(look, d.streamAligned, { area: main, style });
+  const streams = streamRows(scaled, d.streamAligned, main);
   const last = streams.at(-1);
   const sy = last ? last.frame.area.y + (last.frame.area.h + sp(3)) : a.y;
-  const subs = subsystemRow(look, d.complicatedSubsystem ?? [], {
-    area: { ...main, y: sy },
-    style,
-  });
+  const subs = subsystemRow(scaled, d.complicatedSubsystem ?? [], { ...main, y: sy });
   const heights = [
     ...streams.map((st) => st.frame.area.h),
     ...(subs.blocks.length ? [subs.height] : []),
@@ -212,8 +202,8 @@ export function topologyMain(look: Look, d: TeamTopologySlide, lane: TopologyLan
   const columns = enabling.map((team): TopologyBlock => {
     const frame: TeamFrame = { kind: "enabling", area: { x, y: a.y, w: team.width, h: height } };
     const boxes = topologyText(team.stack, {
-      x: x + style.bd + sp(4),
-      y: a.y + (height - team.height) / 2 + style.bd + sp(3),
+      x: x + scaled.bd + sp(4),
+      y: a.y + (height - team.height) / 2 + scaled.bd + sp(3),
     });
     x += team.width + sp(4);
     return { frame, boxes };
@@ -222,9 +212,8 @@ export function topologyMain(look: Look, d: TeamTopologySlide, lane: TopologyLan
 }
 
 /** The platform band has a single dotted frame around equal-width stacks. */
-export function platformRow(look: Look, teams: TeamTopologySlide["platform"], lane: TopologyLane) {
-  const { area: a, style } = lane;
-  const { k, bd, titleO, textO } = style;
+export function platformRow(scaled: ScaledTopology, teams: TeamTopologySlide["platform"], a: Area) {
+  const { look, k, bd, titleO, textO } = scaled;
   if (!teams.length) return { height: 0, bands: [] };
   const { c } = look;
   const sp = (v: number) => spacing(v, k);
@@ -262,9 +251,8 @@ export function platformRow(look: Look, teams: TeamTopologySlide["platform"], la
 }
 
 /** The legend's items in rows as `flex-wrap` sets them: x and row of each. */
-export function topologyLegend(look: Look, d: TeamTopologySlide, lane: TopologyLane) {
-  const { area: a, style } = lane;
-  const { k } = style;
+export function topologyLegend(scaled: ScaledTopology, d: TeamTopologySlide, a: Area) {
+  const { look, k } = scaled;
   const sp = (v: number) => spacing(v, k);
   const words = look.words.teams;
   const o: BoxOpts = {
@@ -301,30 +289,22 @@ export function topologyLegend(look: Look, d: TeamTopologySlide, lane: TopologyL
 }
 
 /** Measures and places the bands of a team topology at scale k. */
-export function topologyLayout(look: Look, d: TeamTopologySlide, m: { area: Area; k: number }) {
-  const { area: a, k } = m;
+export function topologyLayout(scaled: ScaledTopology, d: TeamTopologySlide, a: Area) {
+  const { look, k, textO } = scaled;
   const sp = (v: number) => spacing(v, k);
-  // Sizes as drawn, in the half points pptxgenjs writes, so a box sized to its text holds it.
-  const pt = (v: number) => Math.round(v * k * 2) / 2;
-  const style: TopologyStyle = {
-    k,
-    bd: (3 / 144) * k,
-    titleO: { size: pt(PT.h4), ...TITLE, color: look.c.ink, line: 1.25, tracking: -0.015 },
-    textO: { size: pt(PT.h4), color: look.c.ink, line: 1.375 },
-  };
-  const main = topologyMain(look, d, { area: a, style });
+  const main = topologyMain(scaled, d, a);
   let y = a.y;
   if (main.height) y += main.height + sp(4);
-  const platform = platformRow(look, d.platform, { area: { ...a, y }, style });
+  const platform = platformRow(scaled, d.platform, { ...a, y });
   if (platform.height) y += platform.height + sp(4);
-  const legend = topologyLegend(look, d, { area: { ...a, y }, style });
+  const legend = topologyLegend(scaled, d, { ...a, y });
   if (legend.bands.length) y += legend.height + sp(4);
-  const o: BoxOpts = { size: pt(PT.h4), color: look.c.muted, line: 1.4 };
+  const o: BoxOpts = { size: textO.size, color: look.c.muted, line: 1.4 };
   const capH = d.caption ? sp(2) + look.need(d.caption, a.w, o) : 0;
   const caption: TopologyBlock[] = d.caption
     ? [{ boxes: [{ text: d.caption, area: { x: a.x, y: y + sp(2), w: a.w, h: capH - sp(2) }, o }] }]
     : [];
   const rows = [main.height, platform.height, legend.height, capH].filter(Boolean);
   const height = rows.reduce((sum, h) => sum + h, 0) + (rows.length - 1) * sp(4);
-  return { height, bands: [...main.bands, ...platform.bands, ...legend.bands, ...caption] };
+  return { k, height, bands: [...main.bands, ...platform.bands, ...legend.bands, ...caption] };
 }
