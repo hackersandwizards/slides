@@ -3,7 +3,7 @@ import { mixColor, type Palette, type Surface } from "../palette";
 import type { Sheet } from "../sheet";
 import { PT, REM, TITLE, spacing, type Area, type Measure, type Place } from "../stage";
 import { md, type BoxOpts, type Para } from "../text";
-import { rowGrid, type GridCell } from "./grid";
+import { rowGrid, type GridSlot } from "./grid";
 import type { Block, BlockKind } from "./kind";
 
 export type CardScale = "denseWide" | "dense" | "wide" | "normal";
@@ -16,7 +16,7 @@ interface CardStyleSpec {
   titleSize: number;
   titleLine: number;
   balanceTitle: boolean;
-  mutedText: boolean;
+  textTone: "muted" | "ink";
   textLine: number;
   itemAfter: number;
 }
@@ -30,7 +30,7 @@ const CARD_STYLES: Record<CardScale, CardStyleSpec> = {
     titleSize: 17.33,
     titleLine: 1.4,
     balanceTitle: false,
-    mutedText: true,
+    textTone: "muted",
     textLine: 1.5,
     itemAfter: 2,
   },
@@ -42,7 +42,7 @@ const CARD_STYLES: Record<CardScale, CardStyleSpec> = {
     titleSize: PT.h4,
     titleLine: 1.4,
     balanceTitle: false,
-    mutedText: true,
+    textTone: "muted",
     textLine: 1.5,
     itemAfter: 2,
   },
@@ -54,7 +54,7 @@ const CARD_STYLES: Record<CardScale, CardStyleSpec> = {
     titleSize: PT.lead,
     titleLine: 1.25,
     balanceTitle: true,
-    mutedText: false,
+    textTone: "ink",
     textLine: 1.375,
     itemAfter: 3,
   },
@@ -66,7 +66,7 @@ const CARD_STYLES: Record<CardScale, CardStyleSpec> = {
     titleSize: PT.h3,
     titleLine: 1.25,
     balanceTitle: true,
-    mutedText: false,
+    textTone: "ink",
     textLine: 1.375,
     itemAfter: 3,
   },
@@ -106,17 +106,20 @@ export interface CardsLayout {
   titleO: BoxOpts;
   textO: BoxOpts;
   numO: BoxOpts;
-  cells: (CardCellLayout & GridCell)[];
+  cells: (CardCellLayout & GridSlot)[];
   rowH: number[];
   h: number;
 }
 
-function cardScale(dense: boolean, wide: boolean): CardScale {
+/** Picks the card sizing preset from its density and column count. */
+export function cardScale(dense: boolean, wide: boolean): CardScale {
   if (dense) return wide ? "denseWide" : "dense";
   return wide ? "wide" : "normal";
 }
 
-function cardTypography(c: Palette, style: CardStyleSpec, k: number) {
+/** Builds the title, body, and number-tile box styles for a card scale preset at scale `k`. */
+export function cardTypography(c: Palette, scale: CardScale, k: number) {
+  const style = CARD_STYLES[scale];
   const titleO: BoxOpts = {
     size: style.titleSize * k,
     ...TITLE,
@@ -127,7 +130,7 @@ function cardTypography(c: Palette, style: CardStyleSpec, k: number) {
   };
   const textO: BoxOpts = {
     size: PT.base * k,
-    color: style.mutedText ? c.muted : c.ink,
+    color: c[style.textTone],
     line: style.textLine,
   };
   const numO: BoxOpts = {
@@ -142,7 +145,12 @@ function cardTypography(c: Palette, style: CardStyleSpec, k: number) {
   return { titleO, textO, numO };
 }
 
-function cardBody(item: Block<"cards">["items"][number], c: Palette, afterPt: number): Para[] {
+/** Builds a card's body paragraphs from its optional prose text and bulleted items. */
+export function cardBody(
+  item: Block<"cards">["items"][number],
+  c: Palette,
+  afterPt: number,
+): Para[] {
   return [
     ...(item.text ? [{ runs: md(item.text, c), after: item.items?.length ? afterPt : 0 }] : []),
     ...(item.items ?? []).map((line) => ({ runs: md(line, c), bullet: true, after: afterPt })),
@@ -162,20 +170,22 @@ export function cardMark(b: Block<"cards">, index: number, c: Palette): CardMark
 }
 
 /** A cards block as `Cards` sets it: the grid, the padding and gaps of each size, a short teal
- *  rule over the title or a number tile, every card in a row as tall as the tallest. Returns the
- *  measured grid layout and total height `h`. */
+ *  rule over the title or a number tile, every card in a row as tall as the tallest. */
 export function cardsLayout(look: Look, b: Block<"cards">, { w, k }: Measure): CardsLayout {
   const { c } = look;
   const n = b.items.length;
   const cols = b.columns ?? (n === 4 ? 2 : Math.min(n, 3));
-  const style = CARD_STYLES[cardScale(!!b.dense, cols >= 4)];
+  const scale = cardScale(!!b.dense, cols >= 4);
+  const style = CARD_STYLES[scale];
   const sp = (v: number) => spacing(v, k);
   const gap = sp(style.gap);
-  const [padX, padY, inGap] = [sp(style.padX), sp(style.padY), sp(style.inGap)];
+  const padX = sp(style.padX);
+  const padY = sp(style.padY);
+  const inGap = sp(style.inGap);
   const cw = (w - gap * (cols - 1)) / cols;
   const inner = cw - 2 * padX;
   const afterPt = sp(style.itemAfter) * 72;
-  const { titleO, textO, numO } = cardTypography(c, style, k);
+  const { titleO, textO, numO } = cardTypography(c, scale, k);
   const measured = b.items.map((it, i): CardCellLayout => {
     const hi = b.highlight === i;
     const mark = cardMark(b, i, c);
@@ -190,7 +200,7 @@ export function cardsLayout(look: Look, b: Block<"cards">, { w, k }: Measure): C
     const h = parts.reduce((x, y) => x + y, 0) + inGap * (parts.length - 1) + 2 * padY;
     return { surface: hi ? c.litCard : c.plainCard, mark, markH, title, body, th, bh, h };
   });
-  const grid = rowGrid(measured, { cols, cw, gapX: gap, gapY: gap });
+  const grid = rowGrid(measured, cols, gap);
   return {
     cols,
     cw,
@@ -224,9 +234,10 @@ export function drawCards(sheet: Sheet, layout: CardsLayout, at: Place): void {
     sheet.rounded(tile, { fill: mark.kind === "number" ? c.teal : mark.fill }, 10 / 144);
     if (mark.kind === "number") sheet.box({ runs: [{ text: mark.label }] }, tile, layout.numO);
   };
+  let rowY = at.y;
   for (const cell of layout.cells) {
-    const x = at.x + cell.x;
-    const rowY = at.y + cell.y;
+    if (cell.col === 0 && cell.row > 0) rowY += layout.rowH[cell.row - 1] + layout.gap;
+    const x = at.x + cell.col * (layout.cw + layout.gap);
     sheet.card({ x, y: rowY, w: layout.cw, h: cell.rowH }, cell.surface);
     const ix = x + layout.padX;
     let y = rowY + layout.padY;

@@ -1,6 +1,7 @@
 import { minus } from "../../../lib/figure-layout";
 import { continuation } from "../../../lib/process-layout";
 import { textWidth } from "../fit";
+import type { Look } from "../look";
 import type { Palette, Surface } from "../palette";
 import type { Sheet } from "../sheet";
 import { PT, TITLE, W, type Area } from "../stage";
@@ -9,6 +10,13 @@ import { bodyO, type Block, type BlockKind, type Slot } from "./kind";
 
 const LABEL_COLUMN_W = 1.2;
 
+export interface TimelineLineLayout {
+  y: number;
+  from: number;
+  to: number;
+  dashFrom?: number;
+}
+
 export interface TimelineEventLayout {
   x: number;
   w: number;
@@ -16,6 +24,11 @@ export interface TimelineEventLayout {
   segment?: string;
   when?: string;
   paras: Para[];
+}
+
+export interface TimelineLayout {
+  line: TimelineLineLayout;
+  events: TimelineEventLayout[];
 }
 
 /** A timeline event's title, text and result in the figure face, as `EventBody` sets them on the
@@ -41,6 +54,36 @@ export function eventParas(
   ];
 }
 
+/** Computes a timeline's base/dashed line spans and each event's column, dot surface, segment
+ *  label, and body paragraphs inside `area`. */
+export function timelineLayout(look: Look, b: Block<"timeline">, area: Area): TimelineLayout {
+  const { c } = look;
+  const n = b.events.length;
+  const ew = area.w / n;
+  const y = area.y + 0.35;
+  // A timeline continued over slides runs its line in from the slide's edge or out to it.
+  const { into, onward } = continuation(b);
+  const from = into ? 0 : area.x + ew / 2;
+  const to = onward ? W : area.x + area.w - ew / 2;
+  // The line after `now` is dashed, as is a run-out past the last event (`now` defaults to it)
+  // and a run-in where no event has happened (`now` -1).
+  const now = b.now ?? n - 1;
+  const dashFrom =
+    now < n - 1 || onward ? (now < 0 ? from : area.x + ew / 2 + now * ew) : undefined;
+  const events = b.events.map((e, i): TimelineEventLayout => {
+    const hi = i === b.highlight;
+    return {
+      x: area.x + ew * i,
+      w: ew,
+      dot: hi ? { fill: c.teal, line: c.teal } : { fill: c.card, line: c.muted },
+      segment: i > 0 ? e.segment : undefined,
+      when: e.when,
+      paras: eventParas(e, c, hi),
+    };
+  });
+  return { line: { y, from, to, dashFrom }, events };
+}
+
 /** Draws the left-hand label column (when, title, text) for a labelled timeline and returns the
  *  remaining area to its right for the timeline events. */
 export function drawTimelineLabels(
@@ -64,34 +107,22 @@ export function drawTimelineLabels(
   return { ...a, x: a.x + LABEL_COLUMN_W, w: a.w - LABEL_COLUMN_W };
 }
 
-/** Draws a timeline's base line (extended to the slide edge when continued) and overlays the
- *  dashed line after `now`. */
-export function drawTimelineLine(sheet: Sheet, b: Block<"timeline">, area: Area): void {
+/** Draws a timeline's base line and overlays the dashed line when `line.dashFrom` is set. */
+export function drawTimelineLine(sheet: Sheet, line: TimelineLineLayout): void {
   const { slide: s, c } = sheet;
-  const n = b.events.length;
-  const ew = area.w / n;
-  const ly = area.y + 0.35;
-  // A timeline continued over slides runs its line in from the slide's edge or out to it.
-  const { into, onward } = continuation(b);
-  const from = into ? 0 : area.x + ew / 2;
-  const to = onward ? W : area.x + area.w - ew / 2;
   s.addShape("line", {
-    x: from,
-    y: ly,
-    w: to - from,
+    x: line.from,
+    y: line.y,
+    w: line.to - line.from,
     h: 0.001,
     line: { color: c.border, width: 2 },
   });
-  // The line after `now` is dashed, as is a run-out past the last event (`now` defaults to it)
-  // and a run-in where no event has happened (`now` -1).
-  const now = b.now ?? n - 1;
-  if (now < n - 1 || onward) {
-    const dx = now < 0 ? from : area.x + ew / 2 + now * ew;
+  if (line.dashFrom !== undefined) {
     for (const color of [c.bg, c.muted])
       s.addShape("line", {
-        x: dx,
-        y: ly,
-        w: to - dx,
+        x: line.dashFrom,
+        y: line.y,
+        w: line.to - line.dashFrom,
         h: 0.001,
         line: { color, width: 2, dashType: "dash" },
       });
@@ -157,24 +188,9 @@ export const timeline: BlockKind<"timeline"> = {
   },
   draw(sheet, b, slot) {
     const area = b.labels ? drawTimelineLabels(sheet, b.labels, slot) : slot.area;
-    const { c } = sheet;
-    drawTimelineLine(sheet, b, area);
-    const ew = area.w / b.events.length;
+    const layout = timelineLayout(sheet, b, area);
+    drawTimelineLine(sheet, layout.line);
     const eventSlot: Slot = { ...slot, area };
-    b.events.forEach((e, i) => {
-      const hi = i === b.highlight;
-      drawTimelineEvent(
-        sheet,
-        {
-          x: area.x + ew * i,
-          w: ew,
-          dot: hi ? { fill: c.teal, line: c.teal } : { fill: c.card, line: c.muted },
-          segment: i > 0 ? e.segment : undefined,
-          when: e.when,
-          paras: eventParas(e, c, hi),
-        },
-        eventSlot,
-      );
-    });
+    for (const ev of layout.events) drawTimelineEvent(sheet, ev, eventSlot);
   },
 };

@@ -2,15 +2,18 @@ import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { assert, describe, expect, it } from "vitest";
 import {
+  barRole,
   barRoleStyle,
   barSpan,
   barValueText,
   barsFooter,
   barsLayout,
+  barsTrack,
   drawScaleTrack,
   scaleTicks,
   type BarRole,
   type BarRoleStyle,
+  type BarsTrackGeometry,
 } from "../scripts/pptx/blocks/bars";
 import type { Block } from "../scripts/pptx/blocks/kind";
 import { Look } from "../scripts/pptx/look";
@@ -33,6 +36,19 @@ async function drawOnSheet(draw: (sheet: Sheet) => void) {
   assert(file, "slide1.xml");
   return shapesOf(await file.async("string"));
 }
+
+describe("barRole", () => {
+  it.each<{ highlighted: boolean; anyHighlight: boolean; expected: BarRole }>([
+    { highlighted: true, anyHighlight: true, expected: "highlight" },
+    { highlighted: false, anyHighlight: true, expected: "context" },
+    { highlighted: false, anyHighlight: false, expected: "plain" },
+  ])(
+    "returns $expected when highlighted=$highlighted and anyHighlight=$anyHighlight",
+    ({ highlighted, anyHighlight, expected }) => {
+      expect(barRole(highlighted, anyHighlight)).toBe(expected);
+    },
+  );
+});
 
 describe("barRoleStyle", () => {
   const day = palette(false);
@@ -141,6 +157,74 @@ describe("drawScaleTrack", () => {
       { prst: "rect", x: 4.9931, y: 3, w: 0.0139, h: 0.5, fill: "F7F9FA" },
       { prst: "rect", x: 6.4931, y: 3, w: 0.0139, h: 0.5, fill: "F7F9FA" },
     ]);
+  });
+});
+
+describe("barsTrack", () => {
+  it.each<{ label: string; block: Block<"bars">; expected: BarsTrackGeometry }>([
+    {
+      label: "stacked bars with following values",
+      block: {
+        type: "bars",
+        bars: [
+          { label: "A", value: 4 },
+          { label: "B", value: 8 },
+        ],
+      },
+      expected: {
+        mode: "stacked",
+        follow: true,
+        gap: 0.2962916666666666,
+        barH: 0.7407291666666665,
+        rowGap: 0.44443749999999993,
+        labelW: 12,
+        valueW: 2.074041666666666,
+        trackX: 0,
+        trackW: 9.629666666666667,
+      },
+    },
+    {
+      label: "stacked range bars with fixed value column",
+      block: {
+        type: "bars",
+        bars: [
+          { label: "A", from: 2, value: 8 },
+          { label: "B", value: 10 },
+        ],
+      },
+      expected: {
+        mode: "stacked",
+        follow: false,
+        gap: 0.2962916666666666,
+        barH: 0.7407291666666665,
+        rowGap: 0.44443749999999993,
+        labelW: 12,
+        valueW: 2.074041666666666,
+        trackX: 0,
+        trackW: 9.629666666666667,
+      },
+    },
+    {
+      label: "inline bars with a named scale",
+      block: {
+        type: "bars",
+        max: 100,
+        bars: [10, 40, 60, 80].map((value, i) => ({ label: `Item ${i + 1}`, value })),
+      },
+      expected: {
+        mode: "inline",
+        follow: false,
+        gap: 0.2962916666666666,
+        barH: 0.44443749999999993,
+        rowGap: 0.18518229166666664,
+        labelW: 2.666625,
+        valueW: 2.074041666666666,
+        trackX: 2.9629166666666666,
+        trackW: 6.66675,
+      },
+    },
+  ])("computes track geometry for $label", ({ block, expected }) => {
+    expect(barsTrack(block, { w: 12, k: 1 })).toEqual(expected);
   });
 });
 

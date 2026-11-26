@@ -124,7 +124,7 @@ describe("numbersLayout", () => {
       bodyLine: layout.o.line,
       boldLabel: layout.cells[0].paras[0].bold,
       leadOpt: layout.cells[0].figure.runs[0].options,
-      lastY: layout.cells.at(-1)?.y,
+      lastY: layout.cells[layout.cells.length - 1].y,
       sourceH: layout.sourceH,
       h: layout.h,
     }).toEqual(expected);
