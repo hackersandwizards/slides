@@ -102,6 +102,13 @@ it("leaves space for a LinkedIn line across the portrait row", () => {
   });
 });
 
+it.each(["constructor", "unlisted"])("uses the deck language for closing claim %s", (claim) => {
+  const german = new Look(day.c, "de", false);
+  expect(closingTail(german, { type: "closing", claim: claim as "en" })).toEqual(
+    closingTail(german, { type: "closing" }),
+  );
+});
+
 it("uses curly marks and a balanced line for a quote without the brand claim", () => {
   const paras = closingTail(day, { type: "closing", claim: false, closingQuote: "Try it." });
   expect(

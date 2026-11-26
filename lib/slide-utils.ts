@@ -38,8 +38,10 @@ export const slideTitle = (deck: Presentation, index: number) => `${deck.name} -
 
 /** The language of the claim a contact closing shows, or undefined for none: `claim: false` or a
  *  discussion leaves it out, and a deprecated `claim` language wins over the deck's. */
-export const closingClaim = (slide: ClosingSlide, lang: "en" | "de") =>
-  slide.variant === "discussion" || slide.claim === false ? undefined : (slide.claim ?? lang);
+export const closingClaim = (slide: ClosingSlide, lang: "en" | "de") => {
+  if (slide.variant === "discussion" || slide.claim === false) return undefined;
+  return slide.claim === "en" || slide.claim === "de" ? slide.claim : lang;
+};
 
 type SlideOf<T extends Slide["type"]> = Extract<Slide, { type: T }>;
 type Replacement = { to: string; form?: string };
