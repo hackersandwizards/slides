@@ -16,7 +16,12 @@
 // end. Either way a path (`/deck/print`) is read against that server. Exit 1 on any slide below
 // FAIL, marked or unfitted, or any deck that does not render.
 
-import puppeteer, { ProtocolError, type Browser } from "puppeteer";
+import puppeteer, {
+  ConnectionClosedError,
+  ProtocolError,
+  type Browser,
+  type Page,
+} from "puppeteer";
 import { FIT_STYLE } from "../lib/stage-fit";
 import { UNFITTED_SLIDE, settlePrintPage } from "./render-pdf";
 import { serveDir } from "./serve-dir";
@@ -93,7 +98,7 @@ if (import.meta.main) {
       Array.from({ length: Math.min(PAGES, urls.length) }, async () => {
         while (next < urls.length) {
           const i = next++;
-          reports[i] = await check(browser!, urls[i]);
+          reports[i] = await checkDeckDensity(browser!, urls[i]);
         }
       }),
     );
@@ -108,7 +113,31 @@ if (import.meta.main) {
   process.exit(failed || broken ? 1 : 0);
 }
 
-async function check(browser: Browser, url: string): Promise<string[]> {
+function expectedPageCloseFailure(
+  error: unknown,
+  page: Pick<Page, "isClosed">,
+  browser: Pick<Browser, "connected">,
+): boolean {
+  if (error instanceof ConnectionClosedError) return true;
+  if (error instanceof ProtocolError) {
+    return (
+      error.name === "TargetCloseError" ||
+      error.message.startsWith("Protocol error (Target.closeTarget):") ||
+      error.message.startsWith("Target.closeTarget timed out.")
+    );
+  }
+  // Puppeteer's CDP Page.close() also asserts that its connection exists.
+  return (
+    error instanceof Error &&
+    error.message === "Connection closed. Most likely the page has been closed." &&
+    (page.isClosed() || !browser.connected)
+  );
+}
+
+export async function checkDeckDensity(
+  browser: Pick<Browser, "connected" | "newPage">,
+  url: string,
+): Promise<string[]> {
   const deck = new URL(url).pathname.replace(/\/print$/, "").replace(/^\//, "");
   const page = await browser.newPage();
   let reports: string[];
@@ -150,8 +179,7 @@ async function check(browser: Browser, url: string): Promise<string[]> {
       await page.close();
     } catch (error) {
       // If Chrome cannot close the tab, the CLI still closes its browser after all decks run.
-      if (!(error instanceof ProtocolError) && !page.isClosed() && browser.connected)
-        closeFailure = { cause: error };
+      if (!expectedPageCloseFailure(error, page, browser)) closeFailure = { cause: error };
     }
   }
   if (closeFailure) throw closeFailure.cause;

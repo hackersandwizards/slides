@@ -16,6 +16,10 @@ const sources = import.meta.glob<string>("../components/slides/*.tsx", {
   eager: true,
 });
 const sourceOf = (component: string) => sources[`../components/slides/${component}.tsx`] ?? "";
+const primitiveSources = Array.from(
+  sourceOf("primitives").matchAll(/^export \* from "\.\/([\w-]+)";$/gm),
+  ([, component]) => sourceOf(component),
+).join("\n");
 
 // A static render never runs CodeLines' lazy highlighter, so this page's tile colours its code here.
 const staticPart = (name: string) =>
@@ -38,7 +42,7 @@ const partMarkup = (name: string) =>
   );
 
 const partSources: Record<string, string> = {
-  primitives: sourceOf("primitives"),
+  primitives: primitiveSources,
   SlideChrome: sourceOf("SlideChrome"),
   ChartPlots: sourceOf("ChartPlots"),
 };

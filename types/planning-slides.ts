@@ -195,7 +195,3 @@ export interface GanttSlide {
   milestonesLabel?: string;
   footer?: string;
 }
-
-// Team Topologies' visual grammar: stream-aligned teams as horizontal bars, platform teams
-// underneath them, enabling teams as vertical bars beside them, complicated-subsystem teams as
-// their own blocks the stream teams consume.

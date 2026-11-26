@@ -31,6 +31,10 @@ export interface ChartSlide {
   seriesLabel?: string;
   series2Label?: string;
 }
+
+// Team Topologies' visual grammar: stream-aligned teams as horizontal bars, platform teams
+// underneath them, enabling teams as vertical bars beside them, complicated-subsystem teams as
+// their own blocks the stream teams consume.
 export interface TeamTopologySlide {
   type: "team-topology";
   sectionLabel?: string;
@@ -47,6 +51,8 @@ export interface TeamTopologySlide {
   legend?: boolean;
   caption?: string;
 }
+
+// Areas around a central disc: six in practice, four or five still lay out.
 export interface WheelSlide {
   type: "wheel";
   sectionLabel?: string;

@@ -146,7 +146,6 @@ export interface AgendaSlide {
   footer?: string;
 }
 
-// Areas around a central disc: six in practice, four or five still lay out.
 /** The room works instead of the slides: an exercise, a live demo or a debrief. */
 export interface ActivitySlide {
   type: "activity";
