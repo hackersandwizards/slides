@@ -48,6 +48,7 @@ export class Sheet extends Look {
 
   /** A text box at x, y, w, h whose paragraphs shrink together until their measure fits. */
   box(content: Para[] | Para | string, area: Area, o: BoxOpts): void {
+    if (area.h <= 0) return;
     const paras = asParas(content, this.c).filter((p) => p.runs.some((r) => r.text));
     if (!paras.length) return;
     const fitted = boxFit(paras, o, area);

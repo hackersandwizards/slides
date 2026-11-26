@@ -35,6 +35,17 @@ async function drawOnSheet(draw: (sheet: Sheet) => void) {
   return shapesOf(await file.async("string"));
 }
 
+it("draws text only in boxes with positive height", async () => {
+  const shapes = await drawOnSheet((sheet) => {
+    const area = { x: 1, y: 1, w: 2 };
+    const style = { size: 12, color: sheet.c.ink };
+    sheet.box("Negative", { ...area, h: -0.2 }, style);
+    sheet.box("Zero", { ...area, h: 0 }, style);
+    sheet.box("Visible", { ...area, h: 0.5 }, style);
+  });
+  expect(shapes.flatMap((shape) => shape.texts)).toEqual(["Visible"]);
+});
+
 describe("rowGrid", () => {
   it.each<{
     label: string;
