@@ -114,7 +114,7 @@ export const norm = (t: string) =>
     .replace(/\s+/g, "")
     .toLowerCase();
 
-// Each shape of a slide: its preset, frame in inches, fill, line dash and texts.
+// Each shape of a slide: its preset, frame in inches, fill, line colour/width/dash and texts.
 export const shapesOf = (xml: string) =>
   [...xml.matchAll(/<p:sp>(.*?)<\/p:sp>/gs)].map(([, b]) => {
     const [x, y, w, h] = (
@@ -122,6 +122,8 @@ export const shapesOf = (xml: string) =>
     )
       .slice(1)
       .map((v) => +v / 914400);
+    const ln = /<a:ln\b([^>]*)>(.*?)<\/a:ln>/s.exec(b);
+    const lineW = ln ? /\bw="(\d+)"/.exec(ln[1])?.[1] : undefined;
     return {
       prst: /prst="(\w+)"/.exec(b)?.[1],
       x,
@@ -129,6 +131,8 @@ export const shapesOf = (xml: string) =>
       w,
       h,
       fill: /<p:spPr>.*?<a:solidFill><a:srgbClr val="(\w+)"/s.exec(b)?.[1],
+      line: ln ? /<a:solidFill><a:srgbClr val="(\w+)"/.exec(ln[2])?.[1] : undefined,
+      lineW: lineW === undefined ? undefined : Number(lineW) / 12700,
       dash: /<a:prstDash val="(\w+)"/.exec(b)?.[1],
       texts: [...b.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map((m) => m[1]),
       xml: b,

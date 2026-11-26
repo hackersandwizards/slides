@@ -5,7 +5,7 @@ import { mixColor, type Palette } from "../palette";
 import type { Sheet } from "../sheet";
 import { drawStack, stackHeight, type StackItem } from "../stack";
 import { BODY, PT, REM, TITLE, type Area, type Place } from "../stage";
-import { caps, md, type BoxOpts } from "../text";
+import { caps, md, type BoxOpts, type Para } from "../text";
 
 export interface DecisionColumns {
   x: number[];
@@ -27,22 +27,33 @@ export interface MeasuredBranch {
 export interface DecisionBranchLayout extends MeasuredBranch {
   by: number;
   cy: number;
-  labelY: number;
+  labelArea: Area;
+}
+
+export interface DecisionNode {
+  card: Area;
+  box: Area;
+  text: string | Para;
+  o: BoxOpts;
+}
+
+export interface DecisionCaption {
+  text: string;
+  area: Area;
+  o: BoxOpts;
 }
 
 export interface DecisionLayout {
   cols: DecisionColumns;
-  need: Area;
-  question: Area;
-  outcome: Area;
+  need: DecisionNode;
+  question: DecisionNode;
+  outcome: DecisionNode;
   rowH: number;
-  gridH: number;
-  capH: number;
-  top: number;
   mid: number;
   forkX: number;
   joinX: number;
   branches: DecisionBranchLayout[];
+  caption?: DecisionCaption;
 }
 
 const TEAM_COLORS: Record<string, (c: Palette) => DecisionTeamColors> = {
@@ -65,8 +76,11 @@ export function decisionTeamColors(team: string, c: Palette): DecisionTeamColors
 }
 
 /** Builds the stacked title and body text items for one branch of a decision slide. */
-export function decisionBranchItems(br: DecisionSlide["yes"], c: Palette): StackItem[] {
-  const { tone } = decisionTeamColors(br.team, c);
+export function decisionBranchItems(
+  br: DecisionSlide["yes"],
+  c: Palette,
+  tone: string,
+): StackItem[] {
   const titleO: BoxOpts = { size: PT.h4, ...TITLE, color: c.ink, line: 1.25, tracking: -0.015 };
   const textO: BoxOpts = { size: PT.h4, color: c.ink, line: 1.375 };
   return [
@@ -81,10 +95,11 @@ export function measureDecisionBranch(
   br: DecisionSlide["yes"],
   w: number,
 ): MeasuredBranch {
-  const items = decisionBranchItems(br, look.c);
+  const { tone, line } = decisionTeamColors(br.team, look.c);
+  const items = decisionBranchItems(br, look.c, tone);
   return {
     label: br.label,
-    lineColor: decisionTeamColors(br.team, look.c).line,
+    lineColor: line,
     items,
     innerH: stackHeight(look, items, w),
   };
@@ -111,6 +126,48 @@ export function drawDecisionHead(sheet: Sheet, tip: Place): void {
   });
 }
 
+function decisionNodes(
+  look: Look,
+  d: DecisionSlide,
+  at: { cols: DecisionColumns; mid: number },
+): Pick<DecisionLayout, "need" | "question" | "outcome"> {
+  const { c } = look;
+  const { cols, mid } = at;
+  const bold: BoxOpts = { size: PT.h4, bold: true, color: c.ink, line: 1.25 };
+  const needIn = cols.w[0] - 2 * 1.25 * REM;
+  const needH = look.need(d.need, needIn, bold) + 2 * REM;
+  const qPara: Para = { runs: md(d.question, c), align: "center" };
+  const qIn = cols.w[2] - 2 * 1.25 * REM;
+  const qH = look.need(qPara, qIn, bold) + 2 * 1.25 * REM;
+  const oIn = cols.w[6] - 2 * 1.25 * REM;
+  const oH = look.need(d.outcome, oIn, bold) + 2 * REM;
+  return {
+    need: {
+      card: { x: cols.x[0], y: mid - needH / 2, w: cols.w[0], h: needH },
+      box: { x: cols.x[0] + 1.25 * REM, y: mid - needH / 2 + REM, w: needIn, h: needH - 2 * REM },
+      text: d.need,
+      o: bold,
+    },
+    question: {
+      card: { x: cols.x[2], y: mid - qH / 2, w: cols.w[2], h: qH },
+      box: {
+        x: cols.x[2] + 1.25 * REM,
+        y: mid - qH / 2 + 1.25 * REM,
+        w: qIn,
+        h: qH - 2.5 * REM,
+      },
+      text: qPara,
+      o: { ...bold, align: "center" },
+    },
+    outcome: {
+      card: { x: cols.x[6], y: mid - oH / 2, w: cols.w[6], h: oH },
+      box: { x: cols.x[6] + 1.25 * REM, y: mid - oH / 2 + REM, w: oIn, h: oH - 2 * REM },
+      text: d.outcome,
+      o: bold,
+    },
+  };
+}
+
 /** Measures all boxes, branches, fork/join coordinates, and optional caption of a decision slide
  *  inside `area`. */
 export function decisionLayout(look: Look, d: DecisionSlide, area: Area): DecisionLayout {
@@ -120,12 +177,6 @@ export function decisionLayout(look: Look, d: DecisionSlide, area: Area): Decisi
   // the columns `--slide-decision-columns` sets, the branches as tall as the taller, 4 px teal
   // lines with 0.9 rem arrowheads.
   const cols = decisionColumns(area);
-  const bold: BoxOpts = { size: PT.h4, bold: true, color: c.ink, line: 1.25 };
-  const needH = look.need(d.need, cols.w[0] - 2 * 1.25 * REM, bold) + 2 * REM;
-  const qH =
-    look.need({ runs: md(d.question, c), align: "center" }, cols.w[2] - 2 * 1.25 * REM, bold) +
-    2 * 1.25 * REM;
-  const oH = look.need(d.outcome, cols.w[6] - 2 * 1.25 * REM, bold) + 2 * REM;
   const bIn = cols.w[4] - 2 * 1.5 * REM;
   const measured = [d.yes, d.no].map((br) => measureDecisionBranch(look, br, bIn));
   const rowH = Math.max(...measured.map((m) => m.innerH + 2 * 1.25 * REM));
@@ -142,12 +193,31 @@ export function decisionLayout(look: Look, d: DecisionSlide, area: Area): Decisi
   const branches = measured.map((m, r): DecisionBranchLayout => {
     const by = top + r * (rowH + gapY);
     const cy = by + rowH / 2;
-    return { ...m, by, cy, labelY: r ? cy + 3 * REM - lh : cy - 3 * REM };
+    const labelY = r ? cy + 3 * REM - lh : cy - 3 * REM;
+    return {
+      ...m,
+      by,
+      cy,
+      labelArea: { x: forkX + 0.75 * REM, y: labelY, w: cols.w[3] - 2.75 * REM, h: lh },
+    };
   });
-  const need: Area = { x: cols.x[0], y: mid - needH / 2, w: cols.w[0], h: needH };
-  const question: Area = { x: cols.x[2], y: mid - qH / 2, w: cols.w[2], h: qH };
-  const outcome: Area = { x: cols.x[6], y: mid - oH / 2, w: cols.w[6], h: oH };
-  return { cols, need, question, outcome, rowH, gridH, capH, top, mid, forkX, joinX, branches };
+  const caption: DecisionCaption | undefined = d.caption
+    ? {
+        text: d.caption,
+        area: { x: area.x, y: top + gridH + 1.5 * REM, w: area.w, h: capH - 1.5 * REM },
+        o: capO,
+      }
+    : undefined;
+  return {
+    cols,
+    ...decisionNodes(look, d, { cols, mid }),
+    rowH,
+    mid,
+    forkX,
+    joinX,
+    branches,
+    caption,
+  };
 }
 
 /** Draws one decision branch: fork connectors, caps label, tinted card, text stack, and join
@@ -160,15 +230,16 @@ export function drawDecisionBranch(
   const { slide: s, c } = sheet;
   const { cols, rowH, mid, forkX, joinX } = layout;
   const line = { color: c.teal, width: 2 };
-  const lh = (PT.h4 * 1.4) / 72;
   s.addShape("line", { x: forkX, y: Math.min(br.cy, mid), w: 0, h: Math.abs(mid - br.cy), line });
   s.addShape("line", { x: forkX, y: br.cy, w: cols.x[4] - forkX, h: 0, line });
   drawDecisionHead(sheet, { x: cols.x[4], y: br.cy });
-  sheet.box(
-    { runs: [caps(br.label)] },
-    { x: forkX + 0.75 * REM, y: br.labelY, w: cols.w[3] - 2.75 * REM, h: lh },
-    { size: PT.h4, mono: true, color: c.muted, tracking: 0.06, line: 1.4 },
-  );
+  sheet.box({ runs: [caps(br.label)] }, br.labelArea, {
+    size: PT.h4,
+    mono: true,
+    color: c.muted,
+    tracking: 0.06,
+    line: 1.4,
+  });
   sheet.card(
     { x: cols.x[4], y: br.by, w: cols.w[4], h: rowH },
     { fill: mixColor(br.lineColor, c.card, 0.15), line: br.lineColor },
@@ -182,46 +253,28 @@ export function drawDecisionBranch(
   s.addShape("line", { x: joinX, y: Math.min(br.cy, mid), w: 0, h: Math.abs(mid - br.cy), line });
 }
 
-export function drawDecision(sheet: Sheet, d: DecisionSlide): void {
+/** Draws the decision diagram body and optional caption from its measured layout. */
+export function drawDecisionBody(sheet: Sheet, layout: DecisionLayout): void {
   const { c } = sheet;
-  const a = BODY(header(sheet, d));
-  const layout = decisionLayout(sheet, d, a);
-  const { cols, need, question, outcome, gridH, capH, top, mid, joinX } = layout;
-  const bold: BoxOpts = { size: PT.h4, bold: true, color: c.ink, line: 1.25 };
-  const padX = 1.25 * REM;
-  sheet.card(need, { fill: mixColor(c.teal, c.card, 0.07), line: mixColor(c.teal, c.card, 0.4) });
-  sheet.box(
-    d.need,
-    { x: need.x + padX, y: need.y + REM, w: need.w - 2 * padX, h: need.h - 2 * REM },
-    bold,
-  );
+  const { cols, need, question, outcome, mid, joinX, caption } = layout;
+  sheet.card(need.card, {
+    fill: mixColor(c.teal, c.card, 0.07),
+    line: mixColor(c.teal, c.card, 0.4),
+  });
+  sheet.box(need.text, need.box, need.o);
   drawDecisionBar(sheet, { x: cols.x[1], y: mid }, cols.w[1]);
   drawDecisionHead(sheet, { x: cols.x[2], y: mid });
-  sheet.card(question, { fill: c.card, line: c.teal });
-  sheet.box(
-    { runs: md(d.question, c), align: "center" },
-    {
-      x: question.x + padX,
-      y: question.y + padX,
-      w: question.w - 2 * padX,
-      h: question.h - 2 * padX,
-    },
-    { ...bold, align: "center" },
-  );
+  sheet.card(question.card, { fill: c.card, line: c.teal });
+  sheet.box(question.text, question.box, question.o);
   drawDecisionBar(sheet, { x: cols.x[3], y: mid }, 2 * REM);
   for (const br of layout.branches) drawDecisionBranch(sheet, layout, br);
   drawDecisionBar(sheet, { x: joinX, y: mid }, cols.x[6] - joinX);
   drawDecisionHead(sheet, { x: cols.x[6], y: mid });
-  sheet.card(outcome, { fill: mixColor(c.ink, c.bg, 0.07) });
-  sheet.box(
-    d.outcome,
-    { x: outcome.x + padX, y: outcome.y + REM, w: outcome.w - 2 * padX, h: outcome.h - 2 * REM },
-    bold,
-  );
-  if (d.caption)
-    sheet.box(
-      d.caption,
-      { x: a.x, y: top + gridH + 1.5 * REM, w: a.w, h: capH - 1.5 * REM },
-      { size: PT.h4, color: c.muted, line: 1.4, align: "center" },
-    );
+  sheet.card(outcome.card, { fill: mixColor(c.ink, c.bg, 0.07) });
+  sheet.box(outcome.text, outcome.box, outcome.o);
+  if (caption) sheet.box(caption.text, caption.area, caption.o);
+}
+
+export function drawDecision(sheet: Sheet, d: DecisionSlide): void {
+  drawDecisionBody(sheet, decisionLayout(sheet, d, BODY(header(sheet, d))));
 }

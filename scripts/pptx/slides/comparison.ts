@@ -3,6 +3,7 @@ import {
   beforeAfterLayout,
   drawBeforeAfter,
   highlightPara,
+  type BeforeAfterLayout,
   type BeforeAfterMode,
 } from "../blocks/before-after";
 import { header } from "../chrome";
@@ -12,8 +13,6 @@ import type { Palette, Surface } from "../palette";
 import type { Sheet } from "../sheet";
 import { BODY, CW, PT, REM, TITLE, W, type Area } from "../stage";
 import { md, plain, type BoxOpts, type Para } from "../text";
-
-export type ComparisonVariant = "before-after" | "split" | "vs";
 
 export interface ComparisonFootPart {
   paras: Para | Para[];
@@ -154,6 +153,18 @@ const CARD_SIDES: Record<"vs" | "split", CardSideSpec> = {
   },
 };
 
+export interface BeforeAfterComparisonLayout {
+  body: BeforeAfterLayout;
+  bodyArea: Area;
+  foot: ComparisonFootLayout;
+  footY: number;
+}
+
+function comparisonGroupTop(area: Area, ch: number, footH: number): number {
+  // The sides, punchline and footnotes stand as one group where the web's slide body puts it.
+  return area.y + Math.max(0, area.h - ch - footH) / 2.25;
+}
+
 /** Measures the two side cards (`vs` or `split`) and their footer band inside `area`. */
 export function comparisonCardsLayout(
   look: Look,
@@ -165,7 +176,7 @@ export function comparisonCardsLayout(
   // side lists its plus points, then the items starting with "-" as its minus points. A `split`
   // slide draws two plain cards of listed items, its labels read as markdown. Each card as the
   // web's: 2 rem padding, its title 1.5 rem over the items, the items 0.75 rem apart.
-  const spec = CARD_SIDES[d.variant === "split" ? "split" : "vs"];
+  const spec = CARD_SIDES[(d.variant ?? "vs") === "vs" ? "vs" : "split"];
   const foot = comparisonFootLayout(look, d);
   const sides = [d.left, d.right];
   const pad = 2 * REM;
@@ -182,8 +193,7 @@ export function comparisonCardsLayout(
     return { sd, label, items, th, h: 2 * pad + (sd.logo ? logoH : 0) + th + 1.5 * REM + ih };
   });
   const ch = Math.min(area.h - foot.h, Math.max(...measured.map((p) => p.h)));
-  // The sides, punchline and footnotes stand as one group where the web's slide body puts it.
-  const top = area.y + Math.max(0, area.h - ch - foot.h) / 2.25;
+  const top = comparisonGroupTop(area, ch, foot.h);
   const cards = measured.map(({ sd, label, items, th }, i): ComparisonCard => {
     const x = area.x + i * (cw + gap);
     let ty = top + pad;
@@ -199,9 +209,8 @@ export function comparisonCardsLayout(
   return { surface: spec.card(c), titleO, itemO, cards, footY: top + ch, foot };
 }
 
-/** Draws a `vs` or `split` comparison's cards and footer band inside `area`. */
-export function drawComparisonCards(sheet: Sheet, d: ComparisonSidesSlide, area: Area): void {
-  const layout = comparisonCardsLayout(sheet, d, area);
+/** Draws a measured `vs` or `split` comparison's cards and footer band. */
+export function drawComparisonCards(sheet: Sheet, layout: ComparisonCardsLayout): void {
   for (const card of layout.cards) {
     sheet.card({ x: card.x, y: card.y, w: card.w, h: card.h }, layout.surface);
     if (card.logo)
@@ -212,32 +221,48 @@ export function drawComparisonCards(sheet: Sheet, d: ComparisonSidesSlide, area:
   drawComparisonFoot(sheet, layout.foot, layout.footY);
 }
 
-/** Draws a `before-after` comparison slide's body and footer band inside `area`. */
-export function drawBeforeAfterComparison(sheet: Sheet, d: ComparisonSidesSlide, area: Area): void {
-  const foot = comparisonFootLayout(sheet, d);
+/** Measures a `before-after` comparison slide's body and footer band inside `area`. */
+export function beforeAfterComparisonLayout(
+  look: Look,
+  d: ComparisonSidesSlide,
+  area: Area,
+): BeforeAfterComparisonLayout {
+  const foot = comparisonFootLayout(look, d);
   const mode: BeforeAfterMode = d.strike !== false ? "replace" : d.adds ? "add" : "transition";
-  const layout = beforeAfterLayout(
-    sheet,
+  const body = beforeAfterLayout(
+    look,
     { before: d.left, after: d.right, mode },
     { w: area.w, k: 1 },
   );
-  const ch = Math.min(area.h - foot.h, layout.h);
-  // The sides, punchline and footnotes stand as one group where the web's slide body puts it.
-  const top = area.y + Math.max(0, area.h - ch - foot.h) / 2.25;
-  drawBeforeAfter(sheet, layout, { ...area, y: top, h: ch });
-  drawComparisonFoot(sheet, foot, top + ch);
+  const ch = Math.min(area.h - foot.h, body.h);
+  const top = comparisonGroupTop(area, ch, foot.h);
+  return { body, bodyArea: { ...area, y: top, h: ch }, foot, footY: top + ch };
 }
 
+/** Draws a measured `before-after` comparison slide's body and footer band. */
+export function drawBeforeAfterComparison(sheet: Sheet, layout: BeforeAfterComparisonLayout): void {
+  drawBeforeAfter(sheet, layout.body, layout.bodyArea);
+  drawComparisonFoot(sheet, layout.foot, layout.footY);
+}
+
+const drawCardsSlide = (sheet: Sheet, d: ComparisonSidesSlide, area: Area): void => {
+  drawComparisonCards(sheet, comparisonCardsLayout(sheet, d, area));
+};
+
 const COMPARISON_VARIANTS: Record<
-  ComparisonVariant,
+  NonNullable<ComparisonSidesSlide["variant"]>,
   (sheet: Sheet, d: ComparisonSidesSlide, area: Area) => void
 > = {
-  "before-after": drawBeforeAfterComparison,
-  vs: drawComparisonCards,
-  split: drawComparisonCards,
+  "before-after": (sheet, d, area) => {
+    drawBeforeAfterComparison(sheet, beforeAfterComparisonLayout(sheet, d, area));
+  },
+  vs: drawCardsSlide,
+  split: drawCardsSlide,
 };
 
 export function drawComparison(sheet: Sheet, d: ComparisonSidesSlide): void {
   const y = header(sheet, d);
-  COMPARISON_VARIANTS[d.variant ?? "vs"](sheet, d, BODY(y));
+  const key = d.variant ?? "vs";
+  const draw = Object.hasOwn(COMPARISON_VARIANTS, key) ? COMPARISON_VARIANTS[key] : drawCardsSlide;
+  draw(sheet, d, BODY(y));
 }

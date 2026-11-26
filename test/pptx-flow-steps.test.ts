@@ -298,6 +298,7 @@ describe("stepsRow", () => {
   it.each<{
     label: string;
     input: { steps: FlowStep[]; loop?: string; dense?: boolean };
+    measure: { w: number; k: number };
     expected: { colW: number; inner: number; tile: number; loopH: number };
   }>([
     {
@@ -307,6 +308,7 @@ describe("stepsRow", () => {
         loop: "",
         dense: true,
       },
+      measure: { w: 10, k: 1 },
       expected: {
         colW: 1.6666666666666667,
         inner: 1.5185208333333335,
@@ -315,19 +317,23 @@ describe("stepsRow", () => {
       },
     },
     {
-      label: "a 2-step row without a loop",
-      input: { steps: [{ title: "A" }, { title: "B" }] },
+      label: "a scaled 3-step row without a loop",
+      input: { steps: [{ title: "A" }, { title: "B" }, { title: "C" }] },
+      measure: { w: 12, k: 0.8 },
       expected: {
-        colW: 5,
-        inner: 4.629635416666667,
-        tile: 0.8888749999999999,
+        colW: 4,
+        inner: 3.703708333333333,
+        tile: 0.7111,
         loopH: 0,
       },
     },
-  ])("computes column, inner, tile, and loopH metrics for $label", ({ input, expected }) => {
-    const { colW, inner, tile, loopH } = stepsRow(day, input, { w: 10, k: 1 });
-    expect({ colW, inner, tile, loopH }).toEqual(expected);
-  });
+  ])(
+    "computes column, inner, tile, and loopH metrics for $label",
+    ({ input, measure, expected }) => {
+      const { colW, inner, tile, loopH } = stepsRow(day, input, measure);
+      expect({ colW, inner, tile, loopH }).toEqual(expected);
+    },
+  );
 });
 
 describe("stepLayout", () => {
@@ -427,6 +433,38 @@ describe("stepLayout", () => {
             text: { runs: [{ text: "Two", options: { color: "19283A" } }] },
             o: titleO,
             y: 0.4740729166666667,
+            w: 3.6,
+            h: 0.4166666666666667,
+          },
+        ],
+      },
+    },
+    {
+      label: "a plain non-dense step without a label",
+      row: {
+        input: { steps: [{ title: "Plain" }] },
+        k: 1,
+        colW: 4,
+        inner: 3.6,
+        tile: 0.8,
+        loopH: 0,
+        marks: { inTile: false, marks: [undefined] },
+        type: { titleO, labelO, markBase },
+      },
+      index: 0,
+      expected: {
+        cx: 2,
+        tileY: 0,
+        tile: 0.8,
+        tileFill: "F7F9FA",
+        tileBorder: { color: "545861", width: 2 },
+        mark: undefined,
+        markO: { ...markBase, color: "19283A" },
+        boxes: [
+          {
+            text: { runs: [{ text: "Plain", options: { color: "19283A" } }] },
+            o: titleO,
+            y: 1.0592552083333333,
             w: 3.6,
             h: 0.4166666666666667,
           },

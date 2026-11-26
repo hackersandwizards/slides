@@ -67,15 +67,19 @@ describe("drawProcessCaption", () => {
     const file = zip.file("ppt/slides/slide1.xml");
     assert(file, "slide1.xml");
     expect(
-      shapesOf(await file.async("string")).map(({ prst, x, y, w, h, fill, texts }) => ({
-        prst,
-        x: r4(x),
-        y: r4(y),
-        w: r4(w),
-        h: r4(h),
-        fill,
-        texts,
-      })),
+      shapesOf(await file.async("string")).map(
+        ({ prst, x, y, w, h, fill, line, lineW, texts }) => ({
+          prst,
+          x: r4(x),
+          y: r4(y),
+          w: r4(w),
+          h: r4(h),
+          fill,
+          line,
+          lineW,
+          texts,
+        }),
+      ),
     ).toEqual([
       {
         prst: "round2DiagRect",
@@ -84,6 +88,8 @@ describe("drawProcessCaption", () => {
         w: 4,
         h: 0.76,
         fill: "E8F1F3",
+        line: undefined,
+        lineW: undefined,
         texts: [],
       },
       {
@@ -93,6 +99,8 @@ describe("drawProcessCaption", () => {
         w: 3.5163,
         h: 0.4,
         fill: "19283A",
+        line: undefined,
+        lineW: undefined,
         texts: ["Repeat every sprint"],
       },
     ]);
