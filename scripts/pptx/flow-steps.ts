@@ -164,12 +164,9 @@ export function stepsTypography(c: Palette, input: Steps, k: number) {
   return { titleO, labelO, markBase };
 }
 
-/** Steps on one line as the web's `FlowSteps` draws them: a tile each, numbered unless a label
- *  counts already, a grey line with an arrowhead from tile to tile, the title, subtitle, text and
- *  badge centred under the tile, and a `loop` back above, labelled when non-empty. */
-export function stepsLayout(look: Look, input: Steps, { w, k }: Measure): StepsLayout {
-  const { c } = look;
-  const { steps, highlight, loop, dense = false } = input;
+/** Computes the row-wide column, tile, loop and typography metrics for a flow steps row. */
+export function stepsGeometry(c: Palette, input: Steps, { w, k }: Measure) {
+  const { steps, loop, dense = false } = input;
   const sp = (v: number) => spacing(v, k);
   const colW = w / steps.length;
   const inner = colW - 2 * sp(steps.length >= 6 ? 2 : 5);
@@ -177,46 +174,73 @@ export function stepsLayout(look: Look, input: Steps, { w, k }: Measure): StepsL
   const { inTile, marks } = stepMarks(steps);
   const loopH = loop === undefined ? 0 : sp(loop ? 24 : 16) + sp(2);
   const { titleO, labelO, markBase } = stepsTypography(c, input, k);
+  return { k, colW, inner, tile, loopH, dense, inTile, marks, titleO, labelO, markBase };
+}
+
+export type StepsGeometry = ReturnType<typeof stepsGeometry>;
+
+/** Measures and vertically stacks one step's items below its tile using `row`'s widths. */
+export function measureStepBoxes(
+  look: Look,
+  items: readonly StackItem[],
+  row: Pick<StepsGeometry, "colW" | "inner" | "loopH" | "tile">,
+): StepBox[] {
+  let y = row.loopH + row.tile;
+  return items.map((item): StepBox => {
+    const pw = stepBoxWidth(item, row.inner, row.colW);
+    const ph = look.need(item.text, pw, item.o);
+    y += item.gap;
+    const box: StepBox = { text: item.text, o: item.o, y, w: pw, h: ph };
+    y += ph;
+    return box;
+  });
+}
+
+/** Steps on one line as the web's `FlowSteps` draws them: a tile each, numbered unless a label
+ *  counts already, a grey line with an arrowhead from tile to tile, the title, subtitle, text and
+ *  badge centred under the tile, and a `loop` back above, labelled when non-empty. */
+export function stepsLayout(look: Look, input: Steps, m: Measure): StepsLayout {
+  const { c } = look;
+  const { steps, highlight, loop } = input;
+  const row = stepsGeometry(c, input, m);
+  const sp = (v: number) => spacing(v, row.k);
   const placed = steps.map((st, i): FlowStepLayout => {
     const on = highlight === i;
     const colors = stepTone(st, on, c);
-    const labelAbove = inTile ? undefined : st.label;
+    const labelAbove = row.inTile ? undefined : st.label;
     const items: StackItem[] = [
       ...(labelAbove
-        ? [{ text: { runs: [caps(labelAbove, { color: colors.accent })] }, o: labelO, gap: sp(5) }]
+        ? [
+            {
+              text: { runs: [caps(labelAbove, { color: colors.accent })] },
+              o: row.labelO,
+              gap: sp(5),
+            },
+          ]
         : []),
       {
         text: { runs: md(st.title, c, { color: colors.titleColor }) },
-        o: titleO,
-        gap: sp(dense ? 2 : labelAbove ? 3 : 7),
+        o: row.titleO,
+        gap: sp(row.dense ? 2 : labelAbove ? 3 : 7),
       },
-      ...stepBodyItems(st, c, k),
+      ...stepBodyItems(st, c, row.k),
     ];
-    let y = loopH + tile;
-    const boxes = items.map((item): StepBox => {
-      const pw = stepBoxWidth(item, inner, colW);
-      const ph = look.need(item.text, pw, item.o);
-      y += item.gap;
-      const box: StepBox = { text: item.text, o: item.o, y, w: pw, h: ph };
-      y += ph;
-      return box;
-    });
     return {
-      cx: (i + 0.5) * colW,
-      tileY: loopH,
-      tile,
+      cx: (i + 0.5) * row.colW,
+      tileY: row.loopH,
+      tile: row.tile,
       tileFill: on ? c.teal : c.bg,
-      tileBorder: on ? undefined : { color: c.muted, width: 2 * k },
-      mark: marks[i],
-      markO: { ...markBase, color: on ? c.card : colors.tone },
-      boxes,
+      tileBorder: on ? undefined : { color: c.muted, width: 2 * row.k },
+      mark: row.marks[i],
+      markO: { ...row.markBase, color: on ? c.card : colors.tone },
+      boxes: measureStepBoxes(look, items, row),
     };
   });
   const h = placed.reduce((max, step) => {
     const last = step.boxes[step.boxes.length - 1];
     return Math.max(max, last.y + last.h);
   }, 0);
-  return { k, colW, tile, loopH, loop, steps: placed, h };
+  return { k: row.k, colW: row.colW, tile: row.tile, loopH: row.loopH, loop, steps: placed, h };
 }
 
 /** Draws one measured flow step at `at`: its centred text boxes, tile, and optional tile mark. */
