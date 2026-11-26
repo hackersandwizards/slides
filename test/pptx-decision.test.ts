@@ -110,19 +110,19 @@ describe("decisionBranchItems and measureDecisionBranch", () => {
     ]);
   });
 
-  it("measureDecisionBranch returns label, border colour, stacked items, and measured inner height", () => {
+  it("measureDecisionBranch returns label, distinct border colour, team-tinted stacked items, and measured inner height", () => {
     expect(
       measureDecisionBranch(
         look,
-        { label: "No", team: "enabling", title: "Enabling", text: "Coach team" },
+        { label: "Yes", team: "platform", title: "Infra", text: "Own deploys" },
         2.5,
       ),
     ).toEqual<MeasuredBranch>({
-      label: "No",
-      lineColor: "9333EA",
+      label: "Yes",
+      lineColor: "1A7285",
       items: [
         {
-          text: { runs: [{ text: "Enabling", options: { color: "9333EA" } }] },
+          text: { runs: [{ text: "Infra", options: { color: "155B6A" } }] },
           o: {
             size: 18,
             mono: true,
@@ -134,7 +134,7 @@ describe("decisionBranchItems and measureDecisionBranch", () => {
           gap: 0,
         },
         {
-          text: { runs: [{ text: "Coach team", options: {} }] },
+          text: { runs: [{ text: "Own deploys", options: {} }] },
           o: { size: 18, color: "19283A", line: 1.375 },
           gap: 0.07407291666666665,
         },
@@ -202,6 +202,7 @@ describe("decisionLayout, drawDecisionBranch, and drawDecisionBody", () => {
     caption: "Revisit each quarter",
   };
   const bold = { size: 18, bold: true, color: "19283A", line: 1.25 };
+  const labelO = { size: 18, mono: true, color: "545861", tracking: 0.06, line: 1.4 };
   const titleO = {
     size: 18,
     mono: true,
@@ -216,133 +217,262 @@ describe("decisionLayout, drawDecisionBranch, and drawDecisionBody", () => {
     w: [2.2222, 0.5926, 2.074, 1.1111, 2.9631, 0.5185, 2.5185],
   };
 
-  it("decisionLayout measures equal-height branches, endpoint nodes, connectors, and caption", () => {
-    expect(decisionLayout(look, slide, area)).toEqual<DecisionLayout>({
-      cols: {
-        x: [
-          0.6666666666666666, 2.888854166666666, 3.4814374999999993, 5.555479166666665,
-          6.666572916666666, 9.629677083333332, 10.148187499999999,
-        ],
-        w: [
-          2.2221874999999995, 0.5925833333333332, 2.074041666666666, 1.1110937499999998,
-          2.9631041666666675, 0.5185104166666665, 2.5184791666666664,
-        ],
-      },
-      need: {
-        card: {
-          x: 0.6666666666666666,
-          y: 3.3146116898148144,
-          w: 2.2221874999999995,
-          h: 0.6087916666666666,
-        },
-        box: {
-          x: 0.8518489583333333,
-          y: 3.4627575231481478,
-          w: 1.8518229166666662,
-          h: 0.3125,
-        },
-        text: "Need CI",
-        o: bold,
-      },
-      question: {
-        card: {
-          x: 3.4814374999999993,
-          y: 3.277575231481481,
-          w: 2.074041666666666,
-          h: 0.6828645833333333,
-        },
-        box: {
-          x: 3.666619791666666,
-          y: 3.4627575231481478,
-          w: 1.7036770833333328,
-          h: 0.31250000000000006,
-        },
-        text: { runs: [{ text: "Shared?", options: {} }], align: "center" },
-        o: { ...bold, align: "center" },
-      },
-      outcome: {
-        card: {
-          x: 10.148187499999999,
-          y: 3.3146116898148144,
-          w: 2.5184791666666664,
-          h: 0.6087916666666666,
-        },
-        box: {
-          x: 10.333369791666666,
-          y: 3.4627575231481478,
-          w: 2.1481145833333333,
-          h: 0.3125,
-        },
-        text: "Faster delivery",
-        o: bold,
-      },
-      rowH: 1.1006875,
-      mid: 3.6190075231481478,
-      forkX: 5.851770833333332,
-      joinX: 9.851895833333332,
-      branches: [
-        {
-          label: "Yes",
-          lineColor: "1A7285",
-          items: [
-            {
-              text: { runs: [{ text: "Platform", options: { color: "155B6A" } }] },
-              o: titleO,
-              gap: 0,
-            },
-            {
-              text: { runs: [{ text: "Run CI", options: {} }] },
-              o: textO,
-              gap: 0.07407291666666665,
-            },
+  it.each<{ label: string; input: DecisionSlide; expected: DecisionLayout }>([
+    {
+      label: "equal-height branches, endpoint nodes, connectors, and caption",
+      input: slide,
+      expected: {
+        cols: {
+          x: [
+            0.6666666666666666, 2.888854166666666, 3.4814374999999993, 5.555479166666665,
+            6.666572916666666, 9.629677083333332, 10.148187499999999,
           ],
-          innerH: 0.7303229166666667,
-          by: 2.2590648148148147,
-          cy: 2.809408564814815,
-          labelArea: {
-            x: 5.962880208333332,
-            y: 2.364971064814815,
-            w: 0.7036927083333332,
-            h: 0.35,
-          },
-        },
-        {
-          label: "No",
-          lineColor: "9333EA",
-          items: [
-            {
-              text: { runs: [{ text: "Enabling", options: { color: "9333EA" } }] },
-              o: titleO,
-              gap: 0,
-            },
-            {
-              text: { runs: [{ text: "Coach team", options: {} }] },
-              o: textO,
-              gap: 0.07407291666666665,
-            },
+          w: [
+            2.2221874999999995, 0.5925833333333332, 2.074041666666666, 1.1110937499999998,
+            2.9631041666666675, 0.5185104166666665, 2.5184791666666664,
           ],
-          innerH: 0.7303229166666667,
-          by: 3.878262731481481,
-          cy: 4.428606481481481,
-          labelArea: {
-            x: 5.962880208333332,
-            y: 4.523043981481481,
-            w: 0.7036927083333332,
-            h: 0.35,
+        },
+        need: {
+          card: {
+            x: 0.6666666666666666,
+            y: 3.3146116898148144,
+            w: 2.2221874999999995,
+            h: 0.6087916666666666,
           },
+          box: {
+            x: 0.8518489583333333,
+            y: 3.4627575231481478,
+            w: 1.8518229166666662,
+            h: 0.3125,
+          },
+          text: "Need CI",
+          o: bold,
         },
-      ],
-      caption: {
-        text: "Revisit each quarter",
-        area: {
-          x: 0.6666666666666666,
-          y: 5.201168981481481,
-          w: 12,
-          h: 0.35000000000000003,
+        question: {
+          card: {
+            x: 3.4814374999999993,
+            y: 3.277575231481481,
+            w: 2.074041666666666,
+            h: 0.6828645833333333,
+          },
+          box: {
+            x: 3.666619791666666,
+            y: 3.4627575231481478,
+            w: 1.7036770833333328,
+            h: 0.31250000000000006,
+          },
+          text: { runs: [{ text: "Shared?", options: {} }], align: "center" },
+          o: { ...bold, align: "center" },
         },
-        o: { size: 18, color: "545861", line: 1.4, align: "center" },
+        outcome: {
+          card: {
+            x: 10.148187499999999,
+            y: 3.3146116898148144,
+            w: 2.5184791666666664,
+            h: 0.6087916666666666,
+          },
+          box: {
+            x: 10.333369791666666,
+            y: 3.4627575231481478,
+            w: 2.1481145833333333,
+            h: 0.3125,
+          },
+          text: "Faster delivery",
+          o: bold,
+        },
+        rowH: 1.1006875,
+        mid: 3.6190075231481478,
+        forkX: 5.851770833333332,
+        joinX: 9.851895833333332,
+        labelO,
+        branches: [
+          {
+            label: "Yes",
+            lineColor: "1A7285",
+            items: [
+              {
+                text: { runs: [{ text: "Platform", options: { color: "155B6A" } }] },
+                o: titleO,
+                gap: 0,
+              },
+              {
+                text: { runs: [{ text: "Run CI", options: {} }] },
+                o: textO,
+                gap: 0.07407291666666665,
+              },
+            ],
+            innerH: 0.7303229166666667,
+            by: 2.2590648148148147,
+            cy: 2.809408564814815,
+            labelArea: {
+              x: 5.962880208333332,
+              y: 2.364971064814815,
+              w: 0.7036927083333332,
+              h: 0.35,
+            },
+          },
+          {
+            label: "No",
+            lineColor: "9333EA",
+            items: [
+              {
+                text: { runs: [{ text: "Enabling", options: { color: "9333EA" } }] },
+                o: titleO,
+                gap: 0,
+              },
+              {
+                text: { runs: [{ text: "Coach team", options: {} }] },
+                o: textO,
+                gap: 0.07407291666666665,
+              },
+            ],
+            innerH: 0.7303229166666667,
+            by: 3.878262731481481,
+            cy: 4.428606481481481,
+            labelArea: {
+              x: 5.962880208333332,
+              y: 4.523043981481481,
+              w: 0.7036927083333332,
+              h: 0.35,
+            },
+          },
+        ],
+        caption: {
+          text: "Revisit each quarter",
+          area: {
+            x: 0.6666666666666666,
+            y: 5.201168981481481,
+            w: 12,
+            h: 0.35000000000000003,
+          },
+          o: { size: 18, color: "545861", line: 1.4, align: "center" },
+        },
       },
-    });
+    },
+    {
+      label: "the same grid centred without a caption",
+      input: { ...slide, caption: undefined },
+      expected: {
+        cols: {
+          x: [
+            0.6666666666666666, 2.888854166666666, 3.4814374999999993, 5.555479166666665,
+            6.666572916666666, 9.629677083333332, 10.148187499999999,
+          ],
+          w: [
+            2.2221874999999995, 0.5925833333333332, 2.074041666666666, 1.1110937499999998,
+            2.9631041666666675, 0.5185104166666665, 2.5184791666666664,
+          ],
+        },
+        need: {
+          card: {
+            x: 0.6666666666666666,
+            y: 3.568931134259259,
+            w: 2.2221874999999995,
+            h: 0.6087916666666666,
+          },
+          box: {
+            x: 0.8518489583333333,
+            y: 3.7170769675925923,
+            w: 1.8518229166666662,
+            h: 0.3125,
+          },
+          text: "Need CI",
+          o: bold,
+        },
+        question: {
+          card: {
+            x: 3.4814374999999993,
+            y: 3.5318946759259258,
+            w: 2.074041666666666,
+            h: 0.6828645833333333,
+          },
+          box: {
+            x: 3.666619791666666,
+            y: 3.7170769675925923,
+            w: 1.7036770833333328,
+            h: 0.31250000000000006,
+          },
+          text: { runs: [{ text: "Shared?", options: {} }], align: "center" },
+          o: { ...bold, align: "center" },
+        },
+        outcome: {
+          card: {
+            x: 10.148187499999999,
+            y: 3.568931134259259,
+            w: 2.5184791666666664,
+            h: 0.6087916666666666,
+          },
+          box: {
+            x: 10.333369791666666,
+            y: 3.7170769675925923,
+            w: 2.1481145833333333,
+            h: 0.3125,
+          },
+          text: "Faster delivery",
+          o: bold,
+        },
+        rowH: 1.1006875,
+        mid: 3.8733269675925923,
+        forkX: 5.851770833333332,
+        joinX: 9.851895833333332,
+        labelO,
+        branches: [
+          {
+            label: "Yes",
+            lineColor: "1A7285",
+            items: [
+              {
+                text: { runs: [{ text: "Platform", options: { color: "155B6A" } }] },
+                o: titleO,
+                gap: 0,
+              },
+              {
+                text: { runs: [{ text: "Run CI", options: {} }] },
+                o: textO,
+                gap: 0.07407291666666665,
+              },
+            ],
+            innerH: 0.7303229166666667,
+            by: 2.5133842592592592,
+            cy: 3.0637280092592594,
+            labelArea: {
+              x: 5.962880208333332,
+              y: 2.6192905092592595,
+              w: 0.7036927083333332,
+              h: 0.35,
+            },
+          },
+          {
+            label: "No",
+            lineColor: "9333EA",
+            items: [
+              {
+                text: { runs: [{ text: "Enabling", options: { color: "9333EA" } }] },
+                o: titleO,
+                gap: 0,
+              },
+              {
+                text: { runs: [{ text: "Coach team", options: {} }] },
+                o: textO,
+                gap: 0.07407291666666665,
+              },
+            ],
+            innerH: 0.7303229166666667,
+            by: 4.132582175925926,
+            cy: 4.682925925925925,
+            labelArea: {
+              x: 5.962880208333332,
+              y: 4.777363425925926,
+              w: 0.7036927083333332,
+              h: 0.35,
+            },
+          },
+        ],
+        caption: undefined,
+      },
+    },
+  ])("decisionLayout measures $label", ({ input, expected }) => {
+    expect(decisionLayout(look, input, area)).toEqual(expected);
   });
 
   it("drawDecisionBranch draws fork/join lines, arrowhead, caps label, card, and stacked text", async () => {
@@ -390,6 +520,7 @@ describe("decisionLayout, drawDecisionBranch, and drawDecisionBody", () => {
       mid: 3.62,
       forkX: 5.85,
       joinX: 9.85,
+      labelO,
       branches: [branch],
     };
     const shapes = await drawOnSheet((sheet) => {
@@ -510,186 +641,207 @@ describe("decisionLayout, drawDecisionBranch, and drawDecisionBody", () => {
     ]);
   });
 
-  it("drawDecisionBody draws need, question, outcome nodes, connector bars/heads, and caption from layout", async () => {
-    const layout: DecisionLayout = {
-      cols: literalCols,
-      need: {
-        card: { x: 0.6667, y: 3.31, w: 2.2222, h: 0.61 },
-        box: { x: 0.8519, y: 3.4581, w: 1.8518, h: 0.3137 },
-        text: "Need CI",
-        o: bold,
+  const baseBodyLayout: DecisionLayout = {
+    cols: literalCols,
+    need: {
+      card: { x: 0.6667, y: 3.31, w: 2.2222, h: 0.61 },
+      box: { x: 0.8519, y: 3.4581, w: 1.8518, h: 0.3137 },
+      text: "Need CI",
+      o: bold,
+    },
+    question: {
+      card: { x: 3.4815, y: 3.28, w: 2.074, h: 0.68 },
+      box: { x: 3.6667, y: 3.4652, w: 1.7036, h: 0.3096 },
+      text: { runs: [{ text: "Shared?" }], align: "center" },
+      o: { ...bold, align: "center" },
+    },
+    outcome: {
+      card: { x: 10.1482, y: 3.31, w: 2.5185, h: 0.61 },
+      box: { x: 10.3334, y: 3.4581, w: 2.1481, h: 0.3137 },
+      text: "Faster delivery",
+      o: bold,
+    },
+    rowH: 1.12,
+    mid: 3.62,
+    forkX: 5.85,
+    joinX: 9.85,
+    labelO,
+    branches: [],
+  };
+  const bodyCoreShapes = [
+    {
+      prst: "round2DiagRect",
+      x: 0.6667,
+      y: 3.31,
+      w: 2.2222,
+      h: 0.61,
+      fill: "EFF5F6",
+      line: "A3C7CE",
+      lineW: 1,
+      texts: [],
+    },
+    {
+      prst: "rect",
+      x: 0.8519,
+      y: 3.4581,
+      w: 1.8703,
+      h: 0.3137,
+      fill: "19283A",
+      line: undefined,
+      lineW: undefined,
+      texts: ["Need CI"],
+    },
+    {
+      prst: "rect",
+      x: 2.8889,
+      y: 3.6015,
+      w: 0.5926,
+      h: 0.037,
+      fill: "1A7285",
+      line: undefined,
+      lineW: undefined,
+      texts: [],
+    },
+    {
+      prst: "triangle",
+      x: 3.3259,
+      y: 3.5533,
+      w: 0.1778,
+      h: 0.1333,
+      fill: "1A7285",
+      line: undefined,
+      lineW: undefined,
+      texts: [],
+    },
+    {
+      prst: "round2DiagRect",
+      x: 3.4815,
+      y: 3.28,
+      w: 2.074,
+      h: 0.68,
+      fill: "FFFFFF",
+      line: "1A7285",
+      lineW: 1,
+      texts: [],
+    },
+    {
+      prst: "rect",
+      x: 3.6582,
+      y: 3.4652,
+      w: 1.7206,
+      h: 0.3096,
+      fill: "19283A",
+      line: undefined,
+      lineW: undefined,
+      texts: ["Shared?"],
+    },
+    {
+      prst: "rect",
+      x: 5.5555,
+      y: 3.6015,
+      w: 0.2963,
+      h: 0.037,
+      fill: "1A7285",
+      line: undefined,
+      lineW: undefined,
+      texts: [],
+    },
+    {
+      prst: "rect",
+      x: 9.85,
+      y: 3.6015,
+      w: 0.2982,
+      h: 0.037,
+      fill: "1A7285",
+      line: undefined,
+      lineW: undefined,
+      texts: [],
+    },
+    {
+      prst: "triangle",
+      x: 9.9926,
+      y: 3.5533,
+      w: 0.1778,
+      h: 0.1333,
+      fill: "1A7285",
+      line: undefined,
+      lineW: undefined,
+      texts: [],
+    },
+    {
+      prst: "round2DiagRect",
+      x: 10.1482,
+      y: 3.31,
+      w: 2.5185,
+      h: 0.61,
+      fill: "E7EAED",
+      line: undefined,
+      lineW: undefined,
+      texts: [],
+    },
+    {
+      prst: "rect",
+      x: 10.3334,
+      y: 3.4581,
+      w: 2.1696,
+      h: 0.3137,
+      fill: "19283A",
+      line: undefined,
+      lineW: undefined,
+      texts: ["Faster delivery"],
+    },
+  ];
+
+  it.each<{ label: string; layout: DecisionLayout; expected: typeof bodyCoreShapes }>([
+    {
+      label: "with a caption",
+      layout: {
+        ...baseBodyLayout,
+        caption: {
+          text: "Revisit each quarter",
+          area: { x: 0.6667, y: 5.2, w: 12, h: 0.35 },
+          o: { size: 18, color: "545861", line: 1.4, align: "center" },
+        },
       },
-      question: {
-        card: { x: 3.4815, y: 3.28, w: 2.074, h: 0.68 },
-        box: { x: 3.6667, y: 3.4652, w: 1.7036, h: 0.3096 },
-        text: { runs: [{ text: "Shared?" }], align: "center" },
-        o: { ...bold, align: "center" },
-      },
-      outcome: {
-        card: { x: 10.1482, y: 3.31, w: 2.5185, h: 0.61 },
-        box: { x: 10.3334, y: 3.4581, w: 2.1481, h: 0.3137 },
-        text: "Faster delivery",
-        o: bold,
-      },
-      rowH: 1.12,
-      mid: 3.62,
-      forkX: 5.85,
-      joinX: 9.85,
-      branches: [],
-      caption: {
-        text: "Revisit each quarter",
-        area: { x: 0.6667, y: 5.2, w: 12, h: 0.35 },
-        o: { size: 18, color: "545861", line: 1.4, align: "center" },
-      },
-    };
-    const shapes = await drawOnSheet((sheet) => {
-      drawDecisionBody(sheet, layout);
-    });
-    expect(
-      shapes.map(({ prst, x, y, w, h, fill, line, lineW, texts }) => ({
-        prst,
-        x: r4(x),
-        y: r4(y),
-        w: r4(w),
-        h: r4(h),
-        fill,
-        line,
-        lineW,
-        texts,
-      })),
-    ).toEqual([
-      {
-        prst: "round2DiagRect",
-        x: 0.6667,
-        y: 3.31,
-        w: 2.2222,
-        h: 0.61,
-        fill: "EFF5F6",
-        line: "A3C7CE",
-        lineW: 1,
-        texts: [],
-      },
-      {
-        prst: "rect",
-        x: 0.8519,
-        y: 3.4581,
-        w: 1.8703,
-        h: 0.3137,
-        fill: "19283A",
-        line: undefined,
-        lineW: undefined,
-        texts: ["Need CI"],
-      },
-      {
-        prst: "rect",
-        x: 2.8889,
-        y: 3.6015,
-        w: 0.5926,
-        h: 0.037,
-        fill: "1A7285",
-        line: undefined,
-        lineW: undefined,
-        texts: [],
-      },
-      {
-        prst: "triangle",
-        x: 3.3259,
-        y: 3.5533,
-        w: 0.1778,
-        h: 0.1333,
-        fill: "1A7285",
-        line: undefined,
-        lineW: undefined,
-        texts: [],
-      },
-      {
-        prst: "round2DiagRect",
-        x: 3.4815,
-        y: 3.28,
-        w: 2.074,
-        h: 0.68,
-        fill: "FFFFFF",
-        line: "1A7285",
-        lineW: 1,
-        texts: [],
-      },
-      {
-        prst: "rect",
-        x: 3.6582,
-        y: 3.4652,
-        w: 1.7206,
-        h: 0.3096,
-        fill: "19283A",
-        line: undefined,
-        lineW: undefined,
-        texts: ["Shared?"],
-      },
-      {
-        prst: "rect",
-        x: 5.5555,
-        y: 3.6015,
-        w: 0.2963,
-        h: 0.037,
-        fill: "1A7285",
-        line: undefined,
-        lineW: undefined,
-        texts: [],
-      },
-      {
-        prst: "rect",
-        x: 9.85,
-        y: 3.6015,
-        w: 0.2982,
-        h: 0.037,
-        fill: "1A7285",
-        line: undefined,
-        lineW: undefined,
-        texts: [],
-      },
-      {
-        prst: "triangle",
-        x: 9.9926,
-        y: 3.5533,
-        w: 0.1778,
-        h: 0.1333,
-        fill: "1A7285",
-        line: undefined,
-        lineW: undefined,
-        texts: [],
-      },
-      {
-        prst: "round2DiagRect",
-        x: 10.1482,
-        y: 3.31,
-        w: 2.5185,
-        h: 0.61,
-        fill: "E7EAED",
-        line: undefined,
-        lineW: undefined,
-        texts: [],
-      },
-      {
-        prst: "rect",
-        x: 10.3334,
-        y: 3.4581,
-        w: 2.1696,
-        h: 0.3137,
-        fill: "19283A",
-        line: undefined,
-        lineW: undefined,
-        texts: ["Faster delivery"],
-      },
-      {
-        prst: "rect",
-        x: 0.6067,
-        y: 5.2,
-        w: 12.12,
-        h: 0.35,
-        fill: "545861",
-        line: undefined,
-        lineW: undefined,
-        texts: ["Revisit each quarter"],
-      },
-    ]);
-  });
+      expected: [
+        ...bodyCoreShapes,
+        {
+          prst: "rect",
+          x: 0.6067,
+          y: 5.2,
+          w: 12.12,
+          h: 0.35,
+          fill: "545861",
+          line: undefined,
+          lineW: undefined,
+          texts: ["Revisit each quarter"],
+        },
+      ],
+    },
+    {
+      label: "without a caption",
+      layout: baseBodyLayout,
+      expected: bodyCoreShapes,
+    },
+  ])(
+    "drawDecisionBody draws need, question, outcome nodes and connector bars/heads $label",
+    async ({ layout, expected }) => {
+      const shapes = await drawOnSheet((sheet) => {
+        drawDecisionBody(sheet, layout);
+      });
+      expect(
+        shapes.map(({ prst, x, y, w, h, fill, line, lineW, texts }) => ({
+          prst,
+          x: r4(x),
+          y: r4(y),
+          w: r4(w),
+          h: r4(h),
+          fill,
+          line,
+          lineW,
+          texts,
+        })),
+      ).toEqual(expected);
+    },
+  );
 });

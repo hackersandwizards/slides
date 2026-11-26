@@ -29,6 +29,7 @@ export interface SideStatementLayout {
 
 /** Resolves the optional side image or linked image of a side statement slide. */
 export function sideMedia(d: StatementSlide): SideMedia | undefined {
+  // A screenshot's or QR code's link is on the picture.
   if (d.imageSrc)
     return { src: d.imageSrc, alt: d.imageAlt, href: undefined, round: Boolean(d.attribution) };
   if (d.linkedImage)

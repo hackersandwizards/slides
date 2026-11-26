@@ -270,7 +270,12 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
   };
   const itemO = { size: 18, color: "19283A", line: 1.4 };
 
-  it.each<{ label: string; slide: ComparisonSidesSlide; expected: ComparisonCardsLayout }>([
+  it.each<{
+    label: string;
+    slide: ComparisonSidesSlide;
+    box: Area;
+    expected: ComparisonCardsLayout;
+  }>([
     {
       label: "equal-height split cards with logo and markdown labels",
       slide: {
@@ -280,6 +285,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
         left: { label: "**Left**", logo: "logo.png", items: ["Alpha"] },
         right: { label: "Right", items: ["Beta"] },
       },
+      box: area,
       expected: {
         surface: { fill: "FFFFFF", line: "D0D2D8" },
         titleO,
@@ -293,7 +299,12 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
             logo: {
               src: "logo.png",
               alt: "Left",
-              area: { x: 1.2962916666666666, y: 2.9146111111111113, w: 1.4, h: 0.3333333333333333 },
+              area: {
+                x: 1.2962916666666666,
+                y: 2.9146111111111113,
+                w: 1.4,
+                h: 0.3333333333333333,
+              },
             },
             label: { runs: [{ text: "Left", options: { bold: true } }] },
             labelArea: {
@@ -348,6 +359,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
         left: { label: "**Literal**", items: ["- Slow", "+ Fast"] },
         right: { label: "Option B", items: ["Steady"] },
       },
+      box: area,
       expected: {
         surface: { fill: "DCE9EC", line: "1A7285" },
         titleO,
@@ -423,33 +435,406 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
         foot: { h: 0, parts: [] },
       },
     },
-  ])("comparisonCardsLayout measures $label", ({ slide, expected }) => {
-    expect(comparisonCardsLayout(look, slide, area)).toEqual(expected);
+    {
+      label: "split cards lifted upward by a punchline foot band",
+      slide: {
+        type: "comparison",
+        headline: "H",
+        variant: "split",
+        left: { label: "Left", logo: "logo.png", items: ["Alpha"] },
+        right: { label: "Right", items: ["Beta"] },
+        punchline: "Summary",
+      },
+      box: area,
+      expected: {
+        surface: { fill: "FFFFFF", line: "D0D2D8" },
+        titleO,
+        itemO,
+        cards: [
+          {
+            x: 1,
+            y: 2.303712962962963,
+            w: 4.851854166666667,
+            h: 1.9837812499999998,
+            logo: {
+              src: "logo.png",
+              alt: "Left",
+              area: {
+                x: 1.2962916666666666,
+                y: 2.6000046296296295,
+                w: 1.4,
+                h: 0.3333333333333333,
+              },
+            },
+            label: { runs: [{ text: "Left", options: {} }] },
+            labelArea: {
+              x: 1.2962916666666666,
+              y: 3.081483796296296,
+              w: 4.259270833333334,
+              h: 0.3375,
+            },
+            items: [
+              { runs: [{ text: "Alpha", options: {} }], bullet: true, after: 7.9998749999999985 },
+            ],
+            itemsArea: {
+              x: 1.2962916666666666,
+              y: 3.641202546296296,
+              w: 4.259270833333334,
+              h: 0.35000000000000053,
+            },
+          },
+          {
+            x: 6.148145833333333,
+            y: 2.303712962962963,
+            w: 4.851854166666667,
+            h: 1.9837812499999998,
+            logo: undefined,
+            label: { runs: [{ text: "Right", options: {} }] },
+            labelArea: {
+              x: 6.4444375,
+              y: 2.6000046296296295,
+              w: 4.259270833333334,
+              h: 0.3375,
+            },
+            items: [
+              { runs: [{ text: "Beta", options: {} }], bullet: true, after: 7.9998749999999985 },
+            ],
+            itemsArea: {
+              x: 6.4444375,
+              y: 3.1597233796296296,
+              w: 4.259270833333334,
+              h: 0.831479166666667,
+            },
+          },
+        ],
+        footY: 4.287494212962963,
+        foot: {
+          h: 0.7078645833333332,
+          parts: [
+            {
+              paras: { runs: [{ text: "Summary", options: {} }], balance: true },
+              o: {
+                size: 18,
+                mono: true,
+                bold: true,
+                color: "1A7285",
+                align: "center",
+                line: 1.35,
+              },
+              y: 0.3703645833333333,
+              w: 7.110999999999999,
+              h: 0.3375,
+            },
+          ],
+        },
+      },
+    },
+    {
+      label: "split cards clamped to area.h - foot.h when vertical space is tight",
+      slide: {
+        type: "comparison",
+        headline: "H",
+        variant: "split",
+        left: { label: "Left", logo: "logo.png", items: ["Alpha"] },
+        right: { label: "Right", items: ["Beta"] },
+        punchline: "Summary",
+      },
+      box: { x: 1, y: 1.5, w: 10, h: 2.2 },
+      expected: {
+        surface: { fill: "FFFFFF", line: "D0D2D8" },
+        titleO,
+        itemO,
+        cards: [
+          {
+            x: 1,
+            y: 1.5,
+            w: 4.851854166666667,
+            h: 1.492135416666667,
+            logo: {
+              src: "logo.png",
+              alt: "Left",
+              area: {
+                x: 1.2962916666666666,
+                y: 1.7962916666666666,
+                w: 1.4,
+                h: 0.3333333333333333,
+              },
+            },
+            label: { runs: [{ text: "Left", options: {} }] },
+            labelArea: {
+              x: 1.2962916666666666,
+              y: 2.2777708333333333,
+              w: 4.259270833333334,
+              h: 0.3375,
+            },
+            items: [
+              { runs: [{ text: "Alpha", options: {} }], bullet: true, after: 7.9998749999999985 },
+            ],
+            itemsArea: {
+              x: 1.2962916666666666,
+              y: 2.8374895833333333,
+              w: 4.259270833333334,
+              h: -0.14164583333333347,
+            },
+          },
+          {
+            x: 6.148145833333333,
+            y: 1.5,
+            w: 4.851854166666667,
+            h: 1.492135416666667,
+            logo: undefined,
+            label: { runs: [{ text: "Right", options: {} }] },
+            labelArea: {
+              x: 6.4444375,
+              y: 1.7962916666666666,
+              w: 4.259270833333334,
+              h: 0.3375,
+            },
+            items: [
+              { runs: [{ text: "Beta", options: {} }], bullet: true, after: 7.9998749999999985 },
+            ],
+            itemsArea: {
+              x: 6.4444375,
+              y: 2.356010416666667,
+              w: 4.259270833333334,
+              h: 0.339833333333333,
+            },
+          },
+        ],
+        footY: 2.9921354166666667,
+        foot: {
+          h: 0.7078645833333332,
+          parts: [
+            {
+              paras: { runs: [{ text: "Summary", options: {} }], balance: true },
+              o: {
+                size: 18,
+                mono: true,
+                bold: true,
+                color: "1A7285",
+                align: "center",
+                line: 1.35,
+              },
+              y: 0.3703645833333333,
+              w: 7.110999999999999,
+              h: 0.3375,
+            },
+          ],
+        },
+      },
+    },
+  ])("comparisonCardsLayout measures $label", ({ slide, box, expected }) => {
+    expect(comparisonCardsLayout(look, slide, box)).toEqual(expected);
   });
 
-  it("beforeAfterComparisonLayout positions the pair and footer band as one group", () => {
-    const slide: ComparisonSidesSlide = {
-      type: "comparison",
-      headline: "H",
-      variant: "before-after",
-      left: { label: "Before", items: ["Manual"] },
-      right: { label: "After", items: ["Automated"] },
-      punchline: "Faster",
-    };
-    const layout = beforeAfterComparisonLayout(look, slide, area);
-    expect({
-      bodyH: layout.body.h,
-      connector: layout.body.connector,
-      bodyArea: layout.bodyArea,
-      footH: layout.foot.h,
-      footY: layout.footY,
-    }).toEqual({
-      bodyH: 1.475,
-      connector: "arrow",
-      bodyArea: { x: 1, y: 2.5298379629629633, w: 10, h: 1.475 },
-      footH: 0.7078645833333332,
-      footY: 4.004837962962963,
-    });
+  it.each<{
+    label: string;
+    slide: ComparisonSidesSlide;
+    expected: BeforeAfterComparisonLayout;
+  }>([
+    {
+      label: "replace mode (default strike) with a punchline",
+      slide: {
+        type: "comparison",
+        headline: "H",
+        variant: "before-after",
+        left: { label: "Before", items: ["Manual"] },
+        right: { label: "After", items: ["Automated"] },
+        punchline: "Faster",
+      },
+      expected: {
+        body: {
+          k: 1,
+          pad: 0.25,
+          gap: 0.7,
+          half: 4.65,
+          o: { size: 18, color: "19283A" },
+          connector: "arrow",
+          sides: [
+            {
+              surface: { fill: "ECEEEF", line: "D0D2D8" },
+              icon: { kind: "cross", color: "545861", d: 0.325 },
+              indent: 0.445,
+              label: {
+                runs: [{ text: "Before", options: { color: "545861" } }],
+                mono: true,
+                bold: true,
+                rel: 1,
+              },
+              rest: [
+                {
+                  runs: [{ text: "Manual", options: { strike: "sngStrike", color: "545861" } }],
+                  after: 6,
+                },
+              ],
+              labelH: 0.3625,
+              restH: 0.3625,
+            },
+            {
+              surface: { fill: "DCE9EC", line: "1A7285" },
+              icon: { kind: "check", color: "1A7285", d: 0.325 },
+              indent: 0.445,
+              label: {
+                runs: [{ text: "After", options: { color: "1A7285" } }],
+                mono: true,
+                bold: true,
+                rel: 1,
+              },
+              rest: [{ runs: [{ text: "Automated", options: {} }], after: 6 }],
+              labelH: 0.3625,
+              restH: 0.3625,
+            },
+          ],
+          h: 1.475,
+        },
+        bodyArea: { x: 1, y: 2.5298379629629633, w: 10, h: 1.475 },
+        foot: {
+          h: 0.7078645833333332,
+          parts: [
+            {
+              paras: { runs: [{ text: "Faster", options: {} }], balance: true },
+              o: {
+                size: 18,
+                mono: true,
+                bold: true,
+                color: "1A7285",
+                align: "center",
+                line: 1.35,
+              },
+              y: 0.3703645833333333,
+              w: 7.110999999999999,
+              h: 0.3375,
+            },
+          ],
+        },
+        footY: 4.004837962962963,
+      },
+    },
+    {
+      label: "add mode (strike: false, adds: true) with footnotes",
+      slide: {
+        type: "comparison",
+        headline: "H",
+        variant: "before-after",
+        strike: false,
+        adds: true,
+        left: { label: "Stays", items: ["Core API"] },
+        right: { label: "Added", items: ["Webhooks"] },
+        footnotes: ["Note"],
+      },
+      expected: {
+        body: {
+          k: 1,
+          pad: 0.25,
+          gap: 0.7,
+          half: 4.65,
+          o: { size: 18, color: "19283A" },
+          connector: "plus",
+          sides: [
+            {
+              surface: { fill: "FFFFFF", line: "D0D2D8" },
+              icon: undefined,
+              indent: 0,
+              label: {
+                runs: [{ text: "Stays", options: { color: "545861" } }],
+                mono: true,
+                bold: true,
+                rel: 1,
+              },
+              rest: [{ runs: [{ text: "Core API", options: {} }], after: 6 }],
+              labelH: 0.3625,
+              restH: 0.3625,
+            },
+            {
+              surface: { fill: "DCE9EC", line: "1A7285" },
+              icon: undefined,
+              indent: 0,
+              label: {
+                runs: [{ text: "Added", options: { color: "1A7285" } }],
+                mono: true,
+                bold: true,
+                rel: 1,
+              },
+              rest: [{ runs: [{ text: "Webhooks", options: {} }], after: 6 }],
+              labelH: 0.3625,
+              restH: 0.3625,
+            },
+          ],
+          h: 1.475,
+        },
+        bodyArea: { x: 1, y: 2.629013888888889, w: 10, h: 1.475 },
+        foot: {
+          h: 0.4847187499999999,
+          parts: [
+            {
+              paras: [{ runs: [{ text: "Note", options: {} }] }],
+              o: { size: 13.33, color: "545861", line: 1.4 },
+              y: 0.22221874999999996,
+              w: 0.44319332885742196,
+              h: 0.26249999999999996,
+            },
+          ],
+        },
+        footY: 4.10401388888889,
+      },
+    },
+    {
+      label: "transition mode (strike: false without adds) with no foot",
+      slide: {
+        type: "comparison",
+        headline: "H",
+        variant: "before-after",
+        strike: false,
+        left: { label: "Current", items: ["Nightly"] },
+        right: { label: "Target", items: ["Continuous"] },
+      },
+      expected: {
+        body: {
+          k: 1,
+          pad: 0.25,
+          gap: 0.7,
+          half: 4.65,
+          o: { size: 18, color: "19283A" },
+          connector: "arrow",
+          sides: [
+            {
+              surface: { fill: "FFFFFF", line: "D0D2D8" },
+              icon: undefined,
+              indent: 0,
+              label: {
+                runs: [{ text: "Current", options: { color: "545861" } }],
+                mono: true,
+                bold: true,
+                rel: 1,
+              },
+              rest: [{ runs: [{ text: "Nightly", options: {} }], after: 6 }],
+              labelH: 0.3625,
+              restH: 0.3625,
+            },
+            {
+              surface: { fill: "DCE9EC", line: "1A7285" },
+              icon: { kind: "check", color: "1A7285", d: 0.325 },
+              indent: 0.445,
+              label: {
+                runs: [{ text: "Target", options: { color: "1A7285" } }],
+                mono: true,
+                bold: true,
+                rel: 1,
+              },
+              rest: [{ runs: [{ text: "Continuous", options: {} }], after: 6 }],
+              labelH: 0.3625,
+              restH: 0.3625,
+            },
+          ],
+          h: 1.475,
+        },
+        bodyArea: { x: 1, y: 2.844444444444444, w: 10, h: 1.475 },
+        foot: { h: 0, parts: [] },
+        footY: 4.319444444444445,
+      },
+    },
+  ])("beforeAfterComparisonLayout measures $label", ({ slide, expected }) => {
+    expect(beforeAfterComparisonLayout(look, slide, area)).toEqual(expected);
   });
 
   it("drawComparisonCards draws cards, logo picture, label/item boxes, and footer at exact layout coordinates", async () => {
@@ -822,6 +1207,115 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
           line: undefined,
           lineW: undefined,
           texts: ["Second"],
+        },
+      ],
+    });
+  });
+
+  it("drawComparison dispatches variant 'before-after' through the before-after layout", async () => {
+    const slide: ComparisonSidesSlide = {
+      type: "comparison",
+      headline: "Shift",
+      variant: "before-after",
+      strike: false,
+      adds: true,
+      left: { label: "Stays", items: ["Core"] },
+      right: { label: "Adds", items: ["Events"] },
+    };
+    const out = await drawOnSheet(assetsDir, (sheet) => {
+      drawComparison(sheet, slide);
+    });
+    expect(out).toEqual({
+      warnings: [],
+      pics: [],
+      shapes: [
+        {
+          prst: "rect",
+          x: 0.6667,
+          y: 0.8125,
+          w: 12.1197,
+          h: 0.55,
+          fill: "19283A",
+          line: undefined,
+          lineW: undefined,
+          texts: ["Shift"],
+        },
+        {
+          prst: "round2DiagRect",
+          x: 0.6667,
+          y: 3.2662,
+          w: 5.6498,
+          h: 1.475,
+          fill: "FFFFFF",
+          line: "D0D2D8",
+          lineW: 1,
+          texts: [],
+        },
+        {
+          prst: "rect",
+          x: 0.9167,
+          y: 3.5162,
+          w: 5.2013,
+          h: 0.3625,
+          fill: "545861",
+          line: undefined,
+          lineW: undefined,
+          texts: ["Stays"],
+        },
+        {
+          prst: "rect",
+          x: 0.9167,
+          y: 4.0287,
+          w: 5.2013,
+          h: 0.4625,
+          fill: "19283A",
+          line: undefined,
+          lineW: undefined,
+          texts: ["Core"],
+        },
+        {
+          prst: "round2DiagRect",
+          x: 7.0165,
+          y: 3.2662,
+          w: 5.6498,
+          h: 1.475,
+          fill: "DCE9EC",
+          line: "1A7285",
+          lineW: 1,
+          texts: [],
+        },
+        {
+          prst: "rect",
+          x: 7.2665,
+          y: 3.5162,
+          w: 5.2013,
+          h: 0.3625,
+          fill: "1A7285",
+          line: undefined,
+          lineW: undefined,
+          texts: ["Adds"],
+        },
+        {
+          prst: "rect",
+          x: 7.2665,
+          y: 4.0287,
+          w: 5.2013,
+          h: 0.4625,
+          fill: "19283A",
+          line: undefined,
+          lineW: undefined,
+          texts: ["Events"],
+        },
+        {
+          prst: "rect",
+          x: 6.313,
+          y: 3.6537,
+          w: 0.707,
+          h: 0.7,
+          fill: "1A7285",
+          line: undefined,
+          lineW: undefined,
+          texts: ["+"],
         },
       ],
     });
