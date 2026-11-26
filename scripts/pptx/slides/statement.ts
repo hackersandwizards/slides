@@ -1,9 +1,8 @@
+import type { StatementSlide } from "../../../types/slide";
 import type { Sheet } from "../sheet";
-import { drawCentredStatement, type StatementSlide } from "./statement-centred";
+import { drawCentredStatement } from "./statement-centred";
 import { drawQrStatement } from "./statement-qr";
 import { drawSideStatement } from "./statement-side";
-
-export { lineRuns, type StatementSlide } from "./statement-centred";
 
 export type StatementKind = "centred" | "qr" | "side";
 

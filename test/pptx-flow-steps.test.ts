@@ -9,13 +9,16 @@ import {
   measureStepBoxes,
   stepBodyItems,
   stepBoxWidth,
+  stepLayout,
   stepMarks,
-  stepsGeometry,
   stepsLayout,
+  stepsRow,
   stepsTypography,
   stepTone,
   type FlowStep,
-  type StepsGeometry,
+  type FlowStepLayout,
+  type StepBox,
+  type StepsRow,
   type StepTone,
 } from "../scripts/pptx/flow-steps";
 import { Look } from "../scripts/pptx/look";
@@ -289,17 +292,48 @@ describe("stepsTypography", () => {
   });
 });
 
-describe("stepsGeometry", () => {
+describe("stepsRow", () => {
   const day = palette(false);
-  const labelO: BoxOpts = {
-    size: 18,
-    color: "19283A",
-    mono: true,
-    tracking: 0.06,
-    line: 1.4,
-    align: "center",
-  };
-  const titleBase: Omit<BoxOpts, "size"> = {
+
+  it.each<{
+    label: string;
+    input: { steps: FlowStep[]; loop?: string; dense?: boolean };
+    expected: { colW: number; inner: number; tile: number; loopH: number };
+  }>([
+    {
+      label: "a dense 6-step row with an unlabelled loop",
+      input: {
+        steps: Array.from({ length: 6 }, (_, i) => ({ title: `S${i + 1}` })),
+        loop: "",
+        dense: true,
+      },
+      expected: {
+        colW: 1.6666666666666667,
+        inner: 1.5185208333333335,
+        tile: 0.3703645833333333,
+        loopH: 0.66665625,
+      },
+    },
+    {
+      label: "a 2-step row without a loop",
+      input: { steps: [{ title: "A" }, { title: "B" }] },
+      expected: {
+        colW: 5,
+        inner: 4.629635416666667,
+        tile: 0.8888749999999999,
+        loopH: 0,
+      },
+    },
+  ])("computes column, inner, tile, and loopH metrics for $label", ({ input, expected }) => {
+    const { colW, inner, tile, loopH } = stepsRow(day, input, { w: 10, k: 1 });
+    expect({ colW, inner, tile, loopH }).toEqual(expected);
+  });
+});
+
+describe("stepLayout", () => {
+  const look = new Look(palette(false), "en", false);
+  const titleO: BoxOpts = {
+    size: 24,
     mono: true,
     bold: true,
     color: "19283A",
@@ -308,7 +342,16 @@ describe("stepsGeometry", () => {
     align: "center",
     balance: true,
   };
-  const markOpts: Omit<BoxOpts, "size"> = {
+  const labelO: BoxOpts = {
+    size: 18,
+    color: "19283A",
+    mono: true,
+    tracking: 0.06,
+    line: 1.4,
+    align: "center",
+  };
+  const markBase: BoxOpts = {
+    size: 24,
     mono: true,
     bold: true,
     color: "19283A",
@@ -318,51 +361,80 @@ describe("stepsGeometry", () => {
     floor: 0.5,
   };
 
-  it.each<{
-    label: string;
-    input: { steps: FlowStep[]; loop?: string; dense?: boolean };
-    expected: StepsGeometry;
-  }>([
+  it.each<{ label: string; row: StepsRow; index: number; expected: FlowStepLayout }>([
     {
-      label: "a plain 2-step row with a labelled loop",
-      input: { steps: [{ title: "A" }, { title: "B" }], loop: "Repeat" },
-      expected: {
+      label: "a highlighted step with an above-tile label",
+      row: {
+        input: { steps: [{ title: "Ship", label: "Phase 1" }], highlight: 0 },
         k: 1,
-        colW: 5,
-        inner: 4.629635416666667,
-        tile: 0.8888749999999999,
-        loopH: 0.9629479166666666,
-        dense: false,
-        inTile: true,
-        marks: ["1", "2"],
-        titleO: { size: 24, ...titleBase },
-        labelO,
-        markBase: { size: 24, ...markOpts },
+        colW: 4,
+        inner: 3.6,
+        tile: 0.8,
+        loopH: 0.5,
+        marks: { inTile: false, marks: [undefined] },
+        type: { titleO, labelO, markBase },
+      },
+      index: 0,
+      expected: {
+        cx: 2,
+        tileY: 0.5,
+        tile: 0.8,
+        tileFill: "1A7285",
+        tileBorder: undefined,
+        mark: undefined,
+        markO: { ...markBase, color: "FFFFFF" },
+        boxes: [
+          {
+            text: { runs: [{ text: "Phase 1", options: { color: "1A7285", lang: "x-caps" } }] },
+            o: labelO,
+            y: 1.4851822916666666,
+            w: 3.6,
+            h: 0.35,
+          },
+          {
+            text: { runs: [{ text: "Ship", options: { color: "1A7285" } }] },
+            o: titleO,
+            y: 1.9462916666666665,
+            w: 3.6,
+            h: 0.4166666666666667,
+          },
+        ],
       },
     },
     {
-      label: "a dense 6-step row with an unlabelled loop",
-      input: {
-        steps: Array.from({ length: 6 }, (_, i) => ({ title: `S${i + 1}` })),
-        loop: "",
-        dense: true,
-      },
-      expected: {
+      label: "a plain dense step with an in-tile mark",
+      row: {
+        input: { steps: [{ title: "One" }, { title: "Two" }], dense: true },
         k: 1,
-        colW: 1.6666666666666667,
-        inner: 1.5185208333333335,
-        tile: 0.3703645833333333,
-        loopH: 0.66665625,
-        dense: true,
-        inTile: true,
-        marks: ["1", "2", "3", "4", "5", "6"],
-        titleO: { size: 18, ...titleBase },
-        labelO,
-        markBase: { size: 17.33, ...markOpts },
+        colW: 4,
+        inner: 3.6,
+        tile: 0.4,
+        loopH: 0,
+        marks: { inTile: true, marks: ["1", "2"] },
+        type: { titleO, labelO, markBase },
+      },
+      index: 1,
+      expected: {
+        cx: 6,
+        tileY: 0,
+        tile: 0.4,
+        tileFill: "F7F9FA",
+        tileBorder: { color: "545861", width: 2 },
+        mark: "2",
+        markO: { ...markBase, color: "19283A" },
+        boxes: [
+          {
+            text: { runs: [{ text: "Two", options: { color: "19283A" } }] },
+            o: titleO,
+            y: 0.4740729166666667,
+            w: 3.6,
+            h: 0.4166666666666667,
+          },
+        ],
       },
     },
-  ])("computes row metrics for $label", ({ input, expected }) => {
-    expect(stepsGeometry(day, input, { w: 10, k: 1 })).toEqual(expected);
+  ])("places $label", ({ row, index, expected }) => {
+    expect(stepLayout(look, row, index)).toEqual(expected);
   });
 });
 
@@ -374,10 +446,17 @@ describe("measureStepBoxes", () => {
       { text: { runs: [{ text: "Short" }] }, o, gap: 0.1 },
       { text: { runs: [{ text: "scripts/pptx/flow-steps.ts" }] }, o, gap: 0.2 },
     ];
-    const boxes = measureStepBoxes(look, items, { colW: 4, inner: 2, loopH: 0.5, tile: 0.8 });
-    expect(boxes.map(({ y, w, h }) => ({ y: r4(y), w: r4(w), h: r4(h) }))).toEqual([
-      { y: 1.4, w: 2, h: 0.3438 },
-      { y: 1.9438, w: 2.1434, h: 0.6875 },
+    expect(measureStepBoxes(look, items, { colW: 4, inner: 2, loopH: 0.5, tile: 0.8 })).toEqual<
+      StepBox[]
+    >([
+      { text: { runs: [{ text: "Short" }] }, o, y: 1.4000000000000001, w: 2, h: 0.34375 },
+      {
+        text: { runs: [{ text: "scripts/pptx/flow-steps.ts" }] },
+        o,
+        y: 1.94375,
+        w: 2.1434130859375,
+        h: 0.6875,
+      },
     ]);
   });
 });

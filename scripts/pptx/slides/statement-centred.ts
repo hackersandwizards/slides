@@ -1,4 +1,4 @@
-import type { Slide } from "../../../types/slide";
+import type { StatementSlide } from "../../../types/slide";
 import { footer, footerOf, type Footer } from "../chrome";
 import { MONO } from "../faces";
 import { spansOf } from "../fit";
@@ -8,8 +8,6 @@ import { mixColor, type Palette } from "../palette";
 import type { Sheet } from "../sheet";
 import { BOTTOM, CW, LEADING, PT, REM, TOP, W, type Area } from "../stage";
 import { caps, md, type BoxOpts, type Para, type Run } from "../text";
-
-export type StatementSlide = Extract<Slide, { type: "statement" }>;
 
 export interface CentredPart {
   paras: Para[];
@@ -116,13 +114,17 @@ export function centredClosingPart(
   };
 }
 
+/** True when a centred statement carries only its display lines (and optional kicker), so the
+ *  lines stand at 64 pt instead of 48 pt. */
+export function isSimpleStatement(d: StatementSlide): boolean {
+  return !d.points?.length && !d.closing && !d.subtitle && !d.highlighted && !d.crossedOut;
+}
+
 /** Builds the kicker, optional standalone crossed-out claim, and display lines of a centred
  *  statement. */
 export function centredHeadingParts(look: Look, d: StatementSlide, maxW: number): CentredPart[] {
   const { c } = look;
-  const simple = ![d.points?.length, d.closing, d.subtitle, d.highlighted, d.crossedOut].some(
-    Boolean,
-  );
+  const simple = isSimpleStatement(d);
   const parts: CentredPart[] = [];
   if (d.kicker)
     parts.push({

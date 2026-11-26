@@ -1,3 +1,4 @@
+import type { StatementSlide } from "../../../types/slide";
 import { footer, footerOf, type Footer } from "../chrome";
 import { MONO } from "../faces";
 import type { Look } from "../look";
@@ -5,7 +6,7 @@ import type { Palette } from "../palette";
 import type { Sheet } from "../sheet";
 import { BOTTOM, CW, EDGE, PT, TOP, type Area } from "../stage";
 import { caps, md, type BoxOpts, type Para } from "../text";
-import { lineRuns, type StatementSlide } from "./statement-centred";
+import { lineRuns } from "./statement-centred";
 
 export interface SideMedia {
   src: string;

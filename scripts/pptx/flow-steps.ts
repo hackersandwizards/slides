@@ -63,13 +63,15 @@ export interface StepsLayout {
   h: number;
 }
 
+export interface StepMarks {
+  inTile: boolean;
+  marks: (string | undefined)[];
+}
+
 /** Decides whether labels fit inside step tiles (`<= 4` chars) and computes each step's tile mark
  *  (its short label, its 1-based sequence number unless any label contains a digit or the step sets
  *  `numbered: false`, or undefined). */
-export function stepMarks(steps: readonly FlowStep[]): {
-  inTile: boolean;
-  marks: (string | undefined)[];
-} {
+export function stepMarks(steps: readonly FlowStep[]): StepMarks {
   const inTile = steps.every((st) => (st.label?.length ?? 0) <= 4);
   const counted = !steps.some((st) => /\d/.test(st.label ?? ""));
   let count = 0;
@@ -104,34 +106,28 @@ export function stepBoxWidth(item: StackItem, inner: number, colW: number): numb
 export function stepBodyItems(st: FlowStep, c: Palette, k: number): StackItem[] {
   const sp = (v: number) => spacing(v, k);
   const { accent, textColor } = stepTone(st, false, c);
-  const textO: BoxOpts = { size: PT.base * k, color: c.ink, line: 1.375, align: "center" };
-  return [
-    ...(st.subtitle
-      ? [
-          {
-            text: { runs: md(st.subtitle, c, { color: accent }), bold: true, balance: true },
-            o: textO,
-            gap: sp(2),
-          },
-        ]
-      : []),
-    ...(st.text
-      ? [
-          {
-            text: { runs: md(st.text, c, { color: textColor }) },
-            o: textO,
-            gap: sp(3),
-          },
-        ]
-      : []),
-    ...(st.badge
-      ? [{ text: { runs: md(st.badge, c, { color: accent }), bold: true }, o: textO, gap: sp(3) }]
-      : []),
-  ];
+  const o: BoxOpts = { size: PT.base * k, color: c.ink, line: 1.375, align: "center" };
+  const items: StackItem[] = [];
+  if (st.subtitle)
+    items.push({
+      text: { runs: md(st.subtitle, c, { color: accent }), bold: true, balance: true },
+      o,
+      gap: sp(2),
+    });
+  if (st.text) items.push({ text: { runs: md(st.text, c, { color: textColor }) }, o, gap: sp(3) });
+  if (st.badge)
+    items.push({ text: { runs: md(st.badge, c, { color: accent }), bold: true }, o, gap: sp(3) });
+  return items;
+}
+
+export interface StepsTypography {
+  titleO: BoxOpts;
+  labelO: BoxOpts;
+  markBase: BoxOpts;
 }
 
 /** Builds the shared title, above-tile label, and tile-mark text styles for a flow steps row. */
-export function stepsTypography(c: Palette, input: Steps, k: number) {
+export function stepsTypography(c: Palette, input: Steps, k: number): StepsTypography {
   const dense = !!input.dense;
   const narrow = input.steps.length >= 6;
   const titleO: BoxOpts = {
@@ -164,26 +160,36 @@ export function stepsTypography(c: Palette, input: Steps, k: number) {
   return { titleO, labelO, markBase };
 }
 
-/** Computes the row-wide column, tile, loop and typography metrics for a flow steps row. */
-export function stepsGeometry(c: Palette, input: Steps, { w, k }: Measure) {
+export interface StepsRow {
+  input: Steps;
+  k: number;
+  colW: number;
+  inner: number;
+  tile: number;
+  loopH: number;
+  marks: StepMarks;
+  type: StepsTypography;
+}
+
+/** Computes the row-wide column, tile, loop, mark, and typography values consumed by each step in
+ *  the row. */
+export function stepsRow(c: Palette, input: Steps, { w, k }: Measure): StepsRow {
   const { steps, loop, dense = false } = input;
   const sp = (v: number) => spacing(v, k);
   const colW = w / steps.length;
   const inner = colW - 2 * sp(steps.length >= 6 ? 2 : 5);
   const tile = sp(dense ? 10 : 24);
-  const { inTile, marks } = stepMarks(steps);
   const loopH = loop === undefined ? 0 : sp(loop ? 24 : 16) + sp(2);
-  const { titleO, labelO, markBase } = stepsTypography(c, input, k);
-  return { k, colW, inner, tile, loopH, dense, inTile, marks, titleO, labelO, markBase };
+  const marks = stepMarks(steps);
+  const type = stepsTypography(c, input, k);
+  return { input, k, colW, inner, tile, loopH, marks, type };
 }
-
-export type StepsGeometry = ReturnType<typeof stepsGeometry>;
 
 /** Measures and vertically stacks one step's items below its tile using `row`'s widths. */
 export function measureStepBoxes(
   look: Look,
   items: readonly StackItem[],
-  row: Pick<StepsGeometry, "colW" | "inner" | "loopH" | "tile">,
+  row: Pick<StepsRow, "colW" | "inner" | "loopH" | "tile">,
 ): StepBox[] {
   let y = row.loopH + row.tile;
   return items.map((item): StepBox => {
@@ -196,75 +202,69 @@ export function measureStepBoxes(
   });
 }
 
+/** Computes one flow step's tile, mark, and stacked text boxes within `row`. */
+export function stepLayout(look: Look, row: StepsRow, i: number): FlowStepLayout {
+  const { c } = look;
+  const st = row.input.steps[i];
+  const on = row.input.highlight === i;
+  const dense = Boolean(row.input.dense);
+  const sp = (v: number) => spacing(v, row.k);
+  const colors = stepTone(st, on, c);
+  const labelAbove = row.marks.inTile ? undefined : st.label;
+  const items: StackItem[] = [];
+  if (labelAbove)
+    items.push({
+      text: { runs: [caps(labelAbove, { color: colors.accent })] },
+      o: row.type.labelO,
+      gap: sp(5),
+    });
+  items.push(
+    {
+      text: { runs: md(st.title, c, { color: colors.titleColor }) },
+      o: row.type.titleO,
+      gap: sp(dense ? 2 : labelAbove ? 3 : 7),
+    },
+    ...stepBodyItems(st, c, row.k),
+  );
+  return {
+    cx: (i + 0.5) * row.colW,
+    tileY: row.loopH,
+    tile: row.tile,
+    tileFill: on ? c.teal : c.bg,
+    tileBorder: on ? undefined : { color: c.muted, width: 2 * row.k },
+    mark: row.marks.marks[i],
+    markO: { ...row.type.markBase, color: on ? c.card : colors.tone },
+    boxes: measureStepBoxes(look, items, row),
+  };
+}
+
 /** Steps on one line as the web's `FlowSteps` draws them: a tile each, numbered unless a label
  *  counts already, a grey line with an arrowhead from tile to tile, the title, subtitle, text and
  *  badge centred under the tile, and a `loop` back above, labelled when non-empty. */
 export function stepsLayout(look: Look, input: Steps, m: Measure): StepsLayout {
-  const { c } = look;
-  const { steps, highlight, loop } = input;
-  const row = stepsGeometry(c, input, m);
-  const sp = (v: number) => spacing(v, row.k);
-  const placed = steps.map((st, i): FlowStepLayout => {
-    const on = highlight === i;
-    const colors = stepTone(st, on, c);
-    const labelAbove = row.inTile ? undefined : st.label;
-    const items: StackItem[] = [
-      ...(labelAbove
-        ? [
-            {
-              text: { runs: [caps(labelAbove, { color: colors.accent })] },
-              o: row.labelO,
-              gap: sp(5),
-            },
-          ]
-        : []),
-      {
-        text: { runs: md(st.title, c, { color: colors.titleColor }) },
-        o: row.titleO,
-        gap: sp(row.dense ? 2 : labelAbove ? 3 : 7),
-      },
-      ...stepBodyItems(st, c, row.k),
-    ];
-    return {
-      cx: (i + 0.5) * row.colW,
-      tileY: row.loopH,
-      tile: row.tile,
-      tileFill: on ? c.teal : c.bg,
-      tileBorder: on ? undefined : { color: c.muted, width: 2 * row.k },
-      mark: row.marks[i],
-      markO: { ...row.markBase, color: on ? c.card : colors.tone },
-      boxes: measureStepBoxes(look, items, row),
-    };
-  });
-  const h = placed.reduce((max, step) => {
+  const row = stepsRow(look.c, input, m);
+  const steps = input.steps.map((_, i) => stepLayout(look, row, i));
+  const h = steps.reduce((max, step) => {
     const last = step.boxes[step.boxes.length - 1];
     return Math.max(max, last.y + last.h);
   }, 0);
-  return { k: row.k, colW: row.colW, tile: row.tile, loopH: row.loopH, loop, steps: placed, h };
+  const { k, colW, tile, loopH } = row;
+  return { k, colW, tile, loopH, loop: input.loop, steps, h };
 }
 
 /** Draws one measured flow step at `at`: its centred text boxes, tile, and optional tile mark. */
 export function drawStep(sheet: Sheet, step: FlowStepLayout, at: Place): void {
   const cx = at.x + step.cx;
-  const tileY = at.y + step.tileY;
   for (const box of step.boxes)
     sheet.box(box.text, { x: cx - box.w / 2, y: at.y + box.y, w: box.w, h: box.h }, box.o);
-  const tx = cx - step.tile / 2;
+  const tileArea = { x: cx - step.tile / 2, y: at.y + step.tileY, w: step.tile, h: step.tile };
   sheet.slide.addShape("roundRect", {
-    x: tx,
-    y: tileY,
-    w: step.tile,
-    h: step.tile,
+    ...tileArea,
     rectRadius: 10 / 144,
     fill: { color: step.tileFill },
     line: step.tileBorder ?? { type: "none" },
   });
-  if (step.mark !== undefined)
-    sheet.box(
-      { runs: [{ text: step.mark }] },
-      { x: tx, y: tileY, w: step.tile, h: step.tile },
-      step.markO,
-    );
+  if (step.mark !== undefined) sheet.box({ runs: [{ text: step.mark }] }, tileArea, step.markO);
 }
 
 /** Draws the grey connector line and arrowhead from a step's tile centre `from` toward the next. */

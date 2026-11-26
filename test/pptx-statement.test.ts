@@ -7,12 +7,7 @@ import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
-import {
-  lineRuns,
-  statementKind,
-  type StatementKind,
-  type StatementSlide,
-} from "../scripts/pptx/slides/statement";
+import { statementKind, type StatementKind } from "../scripts/pptx/slides/statement";
 import {
   centredClosingPart,
   centredHeadingParts,
@@ -20,6 +15,8 @@ import {
   centredStatementLayout,
   centredSupportParts,
   drawCentredStatement,
+  isSimpleStatement,
+  lineRuns,
   type CentredPart,
   type CentredStatementLayout,
 } from "../scripts/pptx/slides/statement-centred";
@@ -42,6 +39,7 @@ import {
   type SideStatementLayout,
 } from "../scripts/pptx/slides/statement-side";
 import type { Para, Run } from "../scripts/pptx/text";
+import type { StatementSlide } from "../types/slide";
 import { shapesOf } from "./fixtures/rendered-deck";
 
 const MINIMAL_PNG = Buffer.from(
@@ -147,6 +145,44 @@ describe("lineRuns", () => {
     },
   ])("splits runs for $label", ({ line, marks, expected }) => {
     expect(lineRuns(line, marks, look)).toEqual(expected);
+  });
+});
+
+describe("isSimpleStatement", () => {
+  it.each<{ label: string; slide: StatementSlide; expected: boolean }>([
+    { label: "a bare statement", slide: { type: "statement", lines: ["Big"] }, expected: true },
+    {
+      label: "a statement with only a kicker and empty points",
+      slide: { type: "statement", kicker: "Intro", lines: ["Big"], points: [] },
+      expected: true,
+    },
+    {
+      label: "a statement with points",
+      slide: { type: "statement", lines: ["Big"], points: ["One"] },
+      expected: false,
+    },
+    {
+      label: "a statement with a closing",
+      slide: { type: "statement", lines: ["Big"], closing: "End" },
+      expected: false,
+    },
+    {
+      label: "a statement with a subtitle",
+      slide: { type: "statement", lines: ["Big"], subtitle: "Sub" },
+      expected: false,
+    },
+    {
+      label: "a statement with a highlighted phrase",
+      slide: { type: "statement", lines: ["Big"], highlighted: "Big" },
+      expected: false,
+    },
+    {
+      label: "a statement with a crossedOut phrase",
+      slide: { type: "statement", lines: ["Big"], crossedOut: "Old" },
+      expected: false,
+    },
+  ])("returns $expected for $label", ({ slide, expected }) => {
+    expect(isSimpleStatement(slide)).toBe(expected);
   });
 });
 

@@ -203,6 +203,22 @@ describe("openingRow", () => {
   });
 });
 
+function qrPictureOf(xml: string, relsXml: string) {
+  const pics = [...xml.matchAll(/<p:pic>([\s\S]*?)<\/p:pic>/g)];
+  assert(pics.length === 1, "one QR picture");
+  const body = pics[0][1];
+  const frame = /<a:off x="(-?\d+)" y="(-?\d+)"\s*\/>\s*<a:ext cx="(\d+)" cy="(\d+)"/.exec(body);
+  assert(frame, "picture frame");
+  const descr = /descr="([^"]*)"/.exec(body);
+  assert(descr, "picture alt text");
+  const link = /<a:hlinkClick[^>]*r:id="([^"]+)"/.exec(body);
+  assert(link, "picture hyperlink relationship");
+  const target = new RegExp(`Id="${link[1]}"[^>]*Target="([^"]+)"`).exec(relsXml);
+  assert(target, "picture hyperlink target");
+  const [x, y, w, h] = frame.slice(1).map((v) => r4(Number(v) / 914400));
+  return { x, y, w, h, alt: descr[1], href: target[1] };
+}
+
 describe("drawOpeningQr", () => {
   let assetsDir = "";
 
@@ -215,7 +231,7 @@ describe("drawOpeningQr", () => {
     rmSync(assetsDir, { recursive: true, force: true });
   });
 
-  it("draws the QR picture and its centred teal link box", async () => {
+  it("draws the QR picture with its frame, alt text, and hyperlink beside the teal link box", async () => {
     const pptx = new PptxGenJS();
     pptx.layout = "LAYOUT_WIDE";
     const sheet = new Sheet(new Look(palette(false), "en", false), pptx.addSlide(), {
@@ -224,13 +240,25 @@ describe("drawOpeningQr", () => {
       warnings: [],
       charts: new Map(),
     });
-    drawOpeningQr(sheet, openingQr({ src: "qr.png", href: "https://example.com/talk" }, "en", 4.4));
+    const qr: OpeningQrLayout = {
+      src: "qr.png",
+      href: "https://example.com/talk",
+      alt: "QR code: example.com/talk",
+      label: "↗ example.com/talk",
+      image: { x: 10.36, y: 4.4, w: 1.78, h: 1.78 },
+      link: { x: 9.84, y: 6.26, w: 2.83, h: 0.36 },
+      colW: 2.83,
+    };
+    drawOpeningQr(sheet, qr);
     const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
     const file = zip.file("ppt/slides/slide1.xml");
     assert(file, "slide1.xml");
+    const rels = zip.file("ppt/slides/_rels/slide1.xml.rels");
+    assert(rels, "slide1.xml.rels");
     const xml = await file.async("string");
+    const relsXml = await rels.async("string");
     expect({
-      pictures: [...xml.matchAll(/<p:pic>[\s\S]*?<\/p:pic>/g)].length,
+      picture: qrPictureOf(xml, relsXml),
       shapes: shapesOf(xml).map(({ prst, x, y, w, h, fill, texts }) => ({
         prst,
         x: r4(x),
@@ -241,14 +269,21 @@ describe("drawOpeningQr", () => {
         texts,
       })),
     }).toEqual({
-      pictures: 1,
+      picture: {
+        x: 10.36,
+        y: 4.4,
+        w: 1.78,
+        h: 1.78,
+        alt: "QR code: example.com/talk",
+        href: "https://example.com/talk",
+      },
       shapes: [
         {
           prst: "rect",
-          x: 9.8252,
-          y: 6.2611,
-          w: 2.8553,
-          h: 0.3611,
+          x: 9.8258,
+          y: 6.26,
+          w: 2.8583,
+          h: 0.36,
           fill: "1A7285",
           texts: ["↗ example.com/talk"],
         },

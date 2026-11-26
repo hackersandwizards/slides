@@ -1,4 +1,5 @@
 import { linkLabel, qrAlt } from "../../../lib/link-labels";
+import type { StatementSlide } from "../../../types/slide";
 import { footer, footerOf, type Footer } from "../chrome";
 import { MONO } from "../faces";
 import { textWidth } from "../fit";
@@ -6,7 +7,7 @@ import type { Look } from "../look";
 import type { Sheet } from "../sheet";
 import { BOTTOM, CORNER, CW, EDGE, LEADING, PT, REM, TOP, W, type Area } from "../stage";
 import { caps, md, type BoxOpts, type Para } from "../text";
-import { lineRuns, type StatementSlide } from "./statement-centred";
+import { lineRuns } from "./statement-centred";
 
 export interface QrStatementPart {
   paras: Para[];
