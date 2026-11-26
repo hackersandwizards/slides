@@ -57,21 +57,23 @@ export const BLOCK_KINDS = {
   annotated,
 } satisfies Omit<Kinds, keyof typeof BLOCK_REDRAWN>;
 
+function tableLookup<T>(table: Record<string, T>, key: unknown): T | undefined {
+  return typeof key === "string" && Object.hasOwn(table, key) ? table[key] : undefined;
+}
+
 export function kindOf(block: ContentBlock) {
-  const type = block.type;
-  if (typeof type !== "string") return undefined;
-  const redraw = Object.hasOwn(BLOCK_REDRAWN, type)
-    ? (BLOCK_REDRAWN[type as keyof typeof BLOCK_REDRAWN] as (b: ContentBlock) => ContentBlock)
-    : undefined;
+  const redraw = tableLookup(
+    BLOCK_REDRAWN as Record<string, (b: ContentBlock) => ContentBlock>,
+    block.type,
+  );
   const drawn = redraw ? redraw(block) : block;
   const kind = registeredKind(drawn.type);
   return kind ? { block: drawn, kind } : undefined;
 }
 
 function registeredKind(type: BlockType): BlockKind<BlockType> | undefined {
-  if (typeof type !== "string" || !Object.hasOwn(BLOCK_KINDS, type)) return undefined;
   // The table pairs each kind with the discriminant of the block it accepts.
-  return BLOCK_KINDS[type as keyof typeof BLOCK_KINDS] as BlockKind<BlockType>;
+  return tableLookup(BLOCK_KINDS as Record<string, BlockKind<BlockType>>, type);
 }
 
 function usesRemainingRoom(block: ContentBlock): boolean {
@@ -85,42 +87,61 @@ function measuredHeight(look: Look, block: ContentBlock, measure: Measure): numb
   return match?.kind.height?.(look, match.block, measure) ?? NaN;
 }
 
-/** Stacks blocks in the area, shrinking them together until they fit, and returns where they end.
- *  Image blocks take the space the others leave. Blocks that leave space stand as the web's body
- *  does, two spacers sharing it 1 to 1.25, so a little above the middle; `tail` is the height of
- *  what follows them in that body, a footer. */
-export function blocks(
-  sheet: Sheet,
-  list: ContentBlock[],
-  a: Area,
-  centered = false,
-  tail = 0,
-): number {
+export interface BlocksRoom {
+  area: Area;
+  centered: boolean;
+  tail: number;
+}
+
+export interface BlocksLayout {
+  k: number;
+  slots: Slot[];
+  end: number;
+  short: number;
+}
+
+/** Measures a stack of blocks inside `room`, shrinking them together until they fit, and computes
+ *  each block's drawing slot, the stack's end `y`, and any height shortfall. Image blocks take the
+ *  space the others leave. Blocks that leave space stand as the web's body does, two spacers
+ *  sharing it 1 to 1.25, so a little above the middle; `tail` is the height of what follows them in
+ *  that body, a footer. */
+export function blocksLayout(look: Look, list: ContentBlock[], room: BlocksRoom): BlocksLayout {
+  const { area: a, centered, tail } = room;
   const gap = 0.25;
   let k = 1;
   const fixed = (kk: number) =>
     list
       .filter((block) => !usesRemainingRoom(block))
-      .reduce((sum, block) => sum + measuredHeight(sheet, block, { w: a.w, k: kk }), 0);
+      .reduce((sum, block) => sum + measuredHeight(look, block, { w: a.w, k: kk }), 0);
   const grows = list.filter(usesRemainingRoom).length;
-  const room = a.h - tail - gap * (list.length - 1) - grows * 1.5;
-  while (k > 0.62 && fixed(k) > room) k -= 0.04;
-  if (fixed(k) > room)
-    sheet.warn(
-      `blocks ${list.map((b) => b.type).join(", ")}: ${(fixed(k) - room).toFixed(2)} in taller than the slide holds`,
-    );
-  const extra = grows ? (a.h - tail - gap * (list.length - 1) - fixed(k)) / grows : 0;
-  const total = fixed(k) + grows * extra + gap * (list.length - 1);
+  const available = a.h - tail - gap * (list.length - 1) - grows * 1.5;
+  while (k > 0.62 && fixed(k) > available) k -= 0.04;
+  const fixedH = fixed(k);
+  const short = fixedH > available ? fixedH - available : 0;
+  const extra = grows ? (a.h - tail - gap * (list.length - 1) - fixedH) / grows : 0;
+  const total = fixedH + grows * extra + gap * (list.length - 1);
   const free = Math.max(0, a.h - total - tail);
   let y = a.y + (centered ? free / 2 : free / 2.25);
-  for (const b of list) {
+  const slots = list.map((b): Slot => {
     const h = usesRemainingRoom(b)
       ? Math.max(1, extra)
-      : Math.max(0, Math.min(measuredHeight(sheet, b, { w: a.w, k }), a.y + a.h - tail - y));
+      : Math.max(0, Math.min(measuredHeight(look, b, { w: a.w, k }), a.y + a.h - tail - y));
     const slot: Slot = { area: { x: a.x, y, w: a.w, h }, k, centered };
-    const match = kindOf(b);
-    match?.kind.draw(sheet, match.block, slot);
     y += h + gap;
-  }
-  return y - gap;
+    return slot;
+  });
+  return { k, slots, end: y - gap, short };
+}
+
+/** Draws a measured stack of blocks into their computed slots and warns when the stack ran taller
+ *  than its room. */
+export function drawBlocks(sheet: Sheet, list: ContentBlock[], layout: BlocksLayout): void {
+  if (layout.short > 0)
+    sheet.warn(
+      `blocks ${list.map((b) => b.type).join(", ")}: ${layout.short.toFixed(2)} in taller than the slide holds`,
+    );
+  list.forEach((b, i) => {
+    const match = kindOf(b);
+    if (match) match.kind.draw(sheet, match.block, layout.slots[i]);
+  });
 }
