@@ -512,10 +512,10 @@ it("stacks the main band, platform, legend and caption at the fitting scale", ()
   });
 });
 
-it("keeps the negative trailing gap for an empty topology", () => {
+it("measures an empty topology at zero height", () => {
   expect(topologyLayout(topologyStyle(fixedLook(), 1), { ...empty, legend: false }, area)).toEqual({
     k: 1,
-    height: near(-0.1481),
+    height: 0,
     bands: [],
   });
 });

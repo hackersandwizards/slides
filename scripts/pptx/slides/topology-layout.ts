@@ -305,6 +305,6 @@ export function topologyLayout(scaled: ScaledTopology, d: TeamTopologySlide, a: 
     ? [{ boxes: [{ text: d.caption, area: { x: a.x, y: y + sp(2), w: a.w, h: capH - sp(2) }, o }] }]
     : [];
   const rows = [main.height, platform.height, legend.height, capH].filter(Boolean);
-  const height = rows.reduce((sum, h) => sum + h, 0) + (rows.length - 1) * sp(4);
+  const height = rows.reduce((sum, h) => sum + h, 0) + Math.max(0, rows.length - 1) * sp(4);
   return { k, height, bands: [...main.bands, ...platform.bands, ...legend.bands, ...caption] };
 }
