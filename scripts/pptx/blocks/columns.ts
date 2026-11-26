@@ -72,12 +72,14 @@ export const twoColumn: BlockKind<"two-column"> = {
     const { c } = sheet;
     const { area: a } = slot;
     // A deck's JSON is read unchecked: a variant the map lacks draws neutral, as on the web.
-    const [lt, rt] = (TWO_COLUMN_TONES[b.variant ?? "neutral"] ?? TWO_COLUMN_TONES.neutral).map(
-      (tone) => {
-        const hue = SIDE_HUES[tone];
-        return hue === "muted" ? {} : { tone: c[hue], marker: hue };
-      },
-    );
+    const variant = b.variant ?? "neutral";
+    const tones = Object.hasOwn(TWO_COLUMN_TONES, variant)
+      ? TWO_COLUMN_TONES[variant]
+      : TWO_COLUMN_TONES.neutral;
+    const [lt, rt] = tones.map((tone) => {
+      const hue = SIDE_HUES[tone];
+      return hue === "muted" ? {} : { tone: c[hue], marker: hue };
+    });
     const half = a.w / 2 - 0.15;
     itemCard(sheet, { ...b.left, ...lt }, { ...slot, area: { ...a, w: half } });
     itemCard(

@@ -3,7 +3,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
-import { rejection } from "@hackersandwizards/scaffolding/rejection";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 import { itemCard } from "../scripts/pptx/blocks/columns";
@@ -773,22 +772,24 @@ describe("slides-pptx column cards", () => {
     });
   });
 
-  it("throws a TypeError for a prototype-key two-column variant", async () => {
-    const error = await rejection(
-      onlySlide({
-        type: "content",
-        headline: "Columns",
-        content: [
-          {
-            type: "two-column",
-            variant: "constructor" as "neutral",
-            left: { title: "A", items: ["One"] },
-            right: { title: "B", items: ["Two"] },
-          },
-          { type: "paragraph", text: "Tail" },
-        ],
-      }),
-    );
-    expect(error).toMatch(/^TypeError:.*\.map is not a function/);
-  });
+  it.each(["constructor", "unknown"])(
+    "draws %s as a neutral two-column variant",
+    async (variant) => {
+      const slide = (tone: string) =>
+        onlySlide({
+          type: "content",
+          headline: "Columns",
+          content: [
+            {
+              type: "two-column",
+              variant: tone as "neutral",
+              left: { title: "A", items: ["One"] },
+              right: { title: "B", items: ["Two"] },
+            },
+            { type: "paragraph", text: "Tail" },
+          ],
+        });
+      expect(await slide(variant)).toBe(await slide("neutral"));
+    },
+  );
 });
