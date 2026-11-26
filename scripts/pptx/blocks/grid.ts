@@ -18,6 +18,7 @@ export function rowGrid<T extends { h: number }>(
   cols: number,
   gapY: number,
 ): GridLayout<T> {
+  if (items.length === 0) return { cells: [], rowH: [], h: 0 };
   const rows = Math.ceil(items.length / cols);
   const rowH = Array.from({ length: rows }, (_, r) =>
     Math.max(...items.slice(r * cols, r * cols + cols).map((item) => item.h)),

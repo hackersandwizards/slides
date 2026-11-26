@@ -48,18 +48,18 @@ describe("rowGrid", () => {
     };
   }>([
     {
-      label: "no items with positive columns (preserves -gapY height)",
+      label: "no items with positive columns at zero height",
       items: [],
       cols: 2,
       gapY: 0.25,
-      expected: { cells: [], rowH: [], h: -0.25 },
+      expected: { cells: [], rowH: [], h: 0 },
     },
     {
-      label: "no items with zero columns (preserves NaN height)",
+      label: "no items with zero columns at zero height",
       items: [],
       cols: 0,
       gapY: 0.25,
-      expected: { cells: [], rowH: [], h: Number.NaN },
+      expected: { cells: [], rowH: [], h: 0 },
     },
     {
       label: "two rows sized to their tallest item",
