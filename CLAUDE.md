@@ -71,9 +71,10 @@ term, personal data or secret. Decks live in the consumers, except the fictional
   covered where talks runs it over the specimen deck. `slides-usage` counts per anchor of
   `catalog/guidance.ts` and the consumer publishes it: the public engine reads no client deck; its lint of fields that change nothing drawn is
   `ignoredFields`, proven by `test/ignored-fields.test.tsx`.
-  `slides-pptx` writes with pptxgenjs, post-processed with JSZip for the font kinds and bullet colour.
-  `scripts/render-pptx.ts` runs the command, and `scripts/pptx/` holds the exporter modules.
-  `scripts/pptx/lines.ts` measures text with the metrics in `scripts/pptx/faces.ts`.
+  `scripts/render-pptx.ts` runs `slides-pptx` through `scripts/pptx/deck.ts`, with `sheet.ts` drawing
+  through pptxgenjs and `finish.ts` updating the package with JSZip.
+  In `scripts/pptx/`, `slides.ts` and `blocks.ts` dispatch to `slides/` and `blocks/`, and
+  `look.ts` measures layouts with `fit.ts` and `lines.ts` using metrics from `faces.ts`.
   `scripts/pptx/overflow.ts` finds text past its box, which `--strict` fails on.
   `scripts/pptx/embed-fonts.ts` embeds the faces under `--embed-fonts`.
   Its lengths and sizes are measured off the print route at 1920x1080.

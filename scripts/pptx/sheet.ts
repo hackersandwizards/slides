@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import PptxGenJS from "pptxgenjs";
+import type PptxGenJS from "pptxgenjs";
 import {
   altText,
   imageFile,
@@ -36,9 +36,6 @@ export interface RowHeight {
   floor: number;
 }
 
-/** A slide that draws nothing, to measure a layout drawn top-down before placing it. */
-const DRY = new Proxy({}, { get: () => () => undefined }) as PSlide;
-
 export class Sheet extends Look {
   readonly slide: PSlide;
   readonly out: Output;
@@ -47,10 +44,6 @@ export class Sheet extends Look {
     super(look.c, look.lang, look.dark);
     this.slide = slide;
     this.out = out;
-  }
-
-  get dry(): boolean {
-    return this.slide === DRY;
   }
 
   /** A text box at x, y, w, h whose paragraphs shrink together until their measure fits. */
@@ -241,16 +234,6 @@ export class Sheet extends Look {
   }
 
   warn(message: string): void {
-    if (!this.dry) this.out.warnings.push(message);
+    this.out.warnings.push(message);
   }
-}
-
-export function drySheet(look: Look): Sheet {
-  const out = look instanceof Sheet ? look.out : undefined;
-  return new Sheet(look, DRY, {
-    pptx: out?.pptx ?? new PptxGenJS(),
-    assets: out?.assets ?? "",
-    warnings: [],
-    charts: new Map(),
-  });
 }
