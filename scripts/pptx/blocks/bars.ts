@@ -203,15 +203,13 @@ export function barsTrack(b: Block<"bars">, { w, k }: Measure): BarsTrackGeometr
 /** A bars block as `Bars` sets it: four bars and more one row each, the label left of its track,
  *  fewer with the label above; a highlight in teal and bold, the other bars context in grey;
  *  without a named scale each figure follows its bar's end. */
-export function barsLayout(look: Look, b: Block<"bars">, { w, k }: Measure): BarsLayout {
+export function barsLayout(look: Look, b: Block<"bars">, measure: Measure): BarsLayout {
   const { c } = look;
+  const { k } = measure;
   const list = b.order === "given" ? b.bars : [...b.bars].sort((p, q) => q.value - p.value);
   const max = b.max ?? (Math.max(...list.map((x) => x.value), 0) || 1);
   const anyHighlight = list.some((x) => x.highlight);
-  const { mode, follow, gap, barH, rowGap, labelW, valueW, trackX, trackW } = barsTrack(b, {
-    w,
-    k,
-  });
+  const { mode, follow, gap, barH, rowGap, labelW, valueW, trackX, trackW } = barsTrack(b, measure);
   const spec = BAR_MODES[mode];
   const labelO = spec.labelO(c, k);
   const format = (n: number) => look.words.figure(n);
@@ -245,7 +243,7 @@ export function barsLayout(look: Look, b: Block<"bars">, { w, k }: Measure): Bar
       valueX,
     };
   });
-  const { scaleO, scaleH, sourceH } = barsFooter(look, b, { w, k });
+  const { scaleO, scaleH, sourceH } = barsFooter(look, b, measure);
   const scaleY = y - rowGap + 0.75 * REM * k;
   const h = y - rowGap + scaleH + sourceH;
   const ticks = scaleTicks(max, format);

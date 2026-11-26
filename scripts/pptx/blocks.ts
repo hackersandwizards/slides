@@ -1,5 +1,5 @@
 import { labeledGridAsCards, pipelineAsFlow } from "../../lib/content-block-aliases";
-import type { ContentBlock } from "../../types/slide";
+import type { ContentBlock, Slide } from "../../types/slide";
 import { annotated } from "./blocks/annotated";
 import { bars } from "./blocks/bars";
 import { transform } from "./blocks/before-after";
@@ -15,9 +15,12 @@ import { hooks, layers } from "./blocks/rows";
 import { table } from "./blocks/table";
 import { bullets, callout, paragraph, quote } from "./blocks/text";
 import { timeline } from "./blocks/timeline";
+import { footerOf, type Footer } from "./chrome";
 import type { Look } from "./look";
 import type { Sheet } from "./sheet";
 import type { Area, Measure } from "./stage";
+
+type ContentSlide = Extract<Slide, { type: "content" }>;
 
 type BlockType = ContentBlock["type"];
 type Kinds = { [K in BlockType]: BlockKind<K> };
@@ -57,7 +60,8 @@ export const BLOCK_KINDS = {
   annotated,
 } satisfies Omit<Kinds, keyof typeof BLOCK_REDRAWN>;
 
-function tableLookup<T>(table: Record<string, T>, key: unknown): T | undefined {
+/** Looks up an own string key in `table`, returning `undefined` for non-strings and prototype keys. */
+export function tableLookup<T>(table: Record<string, T>, key: unknown): T | undefined {
   return typeof key === "string" && Object.hasOwn(table, key) ? table[key] : undefined;
 }
 
@@ -87,26 +91,25 @@ function measuredHeight(look: Look, block: ContentBlock, measure: Measure): numb
   return match?.kind.height?.(look, match.block, measure) ?? NaN;
 }
 
-export interface BlocksRoom {
-  area: Area;
-  centered: boolean;
-  tail: number;
-}
-
 export interface BlocksLayout {
   k: number;
   slots: Slot[];
   end: number;
   short: number;
+  foot: Footer;
 }
 
-/** Measures a stack of blocks inside `room`, shrinking them together until they fit, and computes
- *  each block's drawing slot, the stack's end `y`, and any height shortfall. Image blocks take the
- *  space the others leave. Blocks that leave space stand as the web's body does, two spacers
- *  sharing it 1 to 1.25, so a little above the middle; `tail` is the height of what follows them in
- *  that body, a footer. */
-export function blocksLayout(look: Look, list: ContentBlock[], room: BlocksRoom): BlocksLayout {
-  const { area: a, centered, tail } = room;
+/** Measures a content slide's block stack inside `area`, shrinking them together until they fit,
+ *  and computes each block's drawing slot, the stack's end `y`, any height shortfall, and its
+ *  measured footer. Image blocks take the space the others leave. Blocks that leave space stand as
+ *  the web's body does, two spacers sharing it 1 to 1.25, so a little above the middle; `tail` is
+ *  the height of what follows them in that body, a footer. */
+export function blocksLayout(look: Look, d: ContentSlide, area: Area): BlocksLayout {
+  const list = d.content;
+  const centered = d.layout === "centered";
+  const foot = footerOf(look, d.footer);
+  const tail = foot.h && foot.h + 0.1;
+  const a = area;
   const gap = 0.25;
   let k = 1;
   const fixed = (kk: number) =>
@@ -130,7 +133,7 @@ export function blocksLayout(look: Look, list: ContentBlock[], room: BlocksRoom)
     y += h + gap;
     return slot;
   });
-  return { k, slots, end: y - gap, short };
+  return { k, slots, end: y - gap, short, foot };
 }
 
 /** Draws a measured stack of blocks into their computed slots and warns when the stack ran taller
