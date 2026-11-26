@@ -4,7 +4,7 @@ import { tokens } from "@hackersandwizards/brand/tokens";
 import { rejection } from "@hackersandwizards/scaffolding/rejection";
 import { assert, beforeAll, describe, expect, it } from "vitest";
 import { slideCatalog, specimenImages } from "../specimen/slide-catalog";
-import type { SectionTheme, Slide } from "../types/slide";
+import type { ActivitySlide, SectionTheme, Slide } from "../types/slide";
 import { dualPillAsRoadmap, evolutionAsProcess } from "../lib/slide-aliases";
 import {
   norm,
@@ -376,6 +376,16 @@ describe("slides-pptx on the specimen deck", () => {
       expect(await slide(theme as SectionTheme)).toBe(await slide("primary"));
     },
   );
+
+  it("draws an activity with a prototype-key kind without a default label", async () => {
+    const slide: ActivitySlide = {
+      type: "activity",
+      kind: "constructor" as "exercise",
+      headline: "Practice",
+      items: ["Try it"],
+    };
+    expect(await onlySlide(slide)).toBe(await onlySlide({ ...slide, label: "" }));
+  });
 
   it("draws a roadmap's items column beside its phased one", async () => {
     const xml = await onlySlide({

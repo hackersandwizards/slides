@@ -6,6 +6,12 @@ import type { Sheet } from "../sheet";
 import { EDGE, BOTTOM, CW, PT } from "../stage";
 import { md, type Para } from "../text";
 
+const ACTIVITY_LABELS: Record<ActivitySlide["kind"], string> = {
+  exercise: "Hands-on",
+  demo: "Live demo",
+  debrief: "Debrief",
+};
+
 /** Measures the optional prompt and its card at the head of the body. */
 export function activityPrompt(look: Look, text: string, top: number) {
   const o = { size: PT.lead, color: look.c.ink };
@@ -57,7 +63,8 @@ export function activityFrame(look: Look, d: ActivitySlide, top: number) {
 
 export function drawActivity(sheet: Sheet, d: ActivitySlide): void {
   const { c } = sheet;
-  const label = d.label ?? { exercise: "Hands-on", demo: "Live demo", debrief: "Debrief" }[d.kind];
+  const label =
+    d.label ?? (Object.hasOwn(ACTIVITY_LABELS, d.kind) ? ACTIVITY_LABELS[d.kind] : undefined);
   const y = header(sheet, { sectionLabel: label, headline: d.headline, subtitle: d.task });
   let top = y + 0.3;
   if (d.prompt) {
