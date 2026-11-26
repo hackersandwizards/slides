@@ -176,16 +176,27 @@ it.each([
     ring: { ...layout.ring, dia: +layout.ring.dia.toFixed(4), cy: +layout.ring.cy.toFixed(4) },
     hub: { ...layout.hub, dia: +layout.hub.dia.toFixed(4), cy: +layout.hub.cy.toFixed(4) },
     columns: layout.columns.map(roundColumn),
-    measuringWidths: vi
-      .mocked(look.need)
-      .mock.calls.slice(0, 6)
-      .map(([, width]) => +width.toFixed(4)),
+    measuringWidths: vi.mocked(look.need).mock.calls.map(([, width]) => +width.toFixed(4)),
     caption: { ...layout.caption, area: roundedArea(layout.caption.area) },
   }).toEqual({
     ring: { dia: 3.5555, cx: 7, cy: 3.5761, centres: [-30, 90, 210] },
     hub: { dia: 3.5555, cx: 7, cy: 3.5761 },
     columns: [{ titleO, textO, items: [item] }, right],
-    measuringWidths: [3.4445, 3.4445, 3.4445, 3.4445, 3.4445, 3.4445],
+    measuringWidths: [
+      3.4445,
+      3.4445,
+      3.4445,
+      3.4445,
+      3.4445,
+      3.4445,
+      12,
+      item.titleArea.w,
+      item.textArea.w,
+      3.4445,
+      3.4445,
+      3.4445,
+      3.4445,
+    ],
     caption: {
       area: { x: 1, y: 5.502, w: 12, h: 0.5 },
       o: { size: 16, color: day.c.muted, line: 1.45 },

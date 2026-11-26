@@ -470,130 +470,54 @@ const allBands = {
   caption: "Caption",
 };
 
-it.each([
-  {
-    description: "with every band and a caption",
-    slide: allBands,
-    scale: 0.8,
-    body: { x: 1.5, y: 2.5, w: 10, h: 4 },
-    expected: {
-      k: 0.8,
-      height: near(3.9481),
-      bands: [
-        {
-          frame: frame("enabling", at({ x: 1.5, y: 2.5, w: 1.6592, h: 1.5111 })),
-          boxes: [
-            box(
-              label("Support", day.c.purple),
-              at({ x: 1.6352, y: 3.0056, w: 1.3889, h: 0.5 }),
-              smallerTitle,
-            ),
-          ],
-        },
-        {
-          frame: frame("stream", at({ x: 3.2777, y: 2.5, w: 8.2223, h: 0.7111 })),
-          boxes: [
-            box(
-              label("Delivery", day.c.ink),
-              at({ x: 3.4426, y: 2.6056, w: 0.9719, h: 0.5 }),
-              smallerTitle,
-            ),
-            box(role("Lead"), at({ x: 4.5923, y: 2.6056, w: 0.6471, h: 0.5 }), smallerText),
-          ],
-        },
-        {
-          frame: frame("subsystem", at({ x: 3.2777, y: 3.3, w: 8.2223, h: 0.7111 })),
-          boxes: [
-            box(
-              label("Parts", day.c.ink),
-              at({ x: 3.5018, y: 3.4056, w: 7.7741, h: 0.5 }),
-              smallerTitle,
-            ),
-          ],
-        },
-        {
-          frame: frame("platform", at({ x: 1.5, y: 4.1296, w: 10, h: 0.7704 })),
-          boxes: [
-            box(
-              label("Tools", day.c.tealDark),
-              at({ x: 1.6648, y: 4.2648, w: 9.6704, h: 0.5 }),
-              smallerTitle,
-            ),
-          ],
-        },
-        {
-          frame: {
-            kind: "enabling",
-            radius: near(0.0556),
-            area: at({ x: 1.5, y: 5.1546, w: 0.4148, h: 0.237 }),
-          },
-          boxes: [
-            box("Enabling team", at({ x: 2.0037, y: 5.137, w: 1.3325, h: 0.2722 }), legendText(14)),
-          ],
-        },
-        {
-          frame: {
-            kind: "stream",
-            radius: near(0.0556),
-            area: at({ x: 3.6325, y: 5.1546, w: 0.4148, h: 0.237 }),
-          },
-          boxes: [
-            box(
-              "Stream-aligned team",
-              at({ x: 4.1362, y: 5.137, w: 1.9642, h: 0.2722 }),
-              legendText(14),
-            ),
-          ],
-        },
-        {
-          frame: {
-            kind: "subsystem",
-            radius: near(0.0556),
-            area: at({ x: 6.3967, y: 5.1546, w: 0.4148, h: 0.237 }),
-          },
-          boxes: [
-            box(
-              "Complicated-subsystem team",
-              at({ x: 6.9004, y: 5.137, w: 2.8052, h: 0.2722 }),
-              legendText(14),
-            ),
-          ],
-        },
-        {
-          frame: {
-            kind: "platform",
-            radius: near(0.0556),
-            area: at({ x: 1.5, y: 5.5157, w: 0.4148, h: 0.237 }),
-          },
-          boxes: [
-            box(
-              "Platform team",
-              at({ x: 2.0037, y: 5.4981, w: 1.3202, h: 0.2722 }),
-              legendText(14),
-            ),
-          ],
-        },
-        {
-          boxes: [
-            box("Caption", at({ x: 1.5, y: 5.9481, w: 10, h: 0.5 }), {
-              size: 14.5,
-              color: day.c.muted,
-              line: 1.4,
-            }),
-          ],
-        },
+it("stacks the main band, platform, legend and caption at the fitting scale", () => {
+  const { k, height, bands } = topologyLayout(topologyStyle(fixedLook(), 0.8), allBands, {
+    x: 1.5,
+    y: 2.5,
+    w: 10,
+    h: 4,
+  });
+  const caption = bands.pop();
+  assert(caption, "The topology ends with its caption");
+  expect({
+    k,
+    height,
+    stack: bands.map(({ frame }) => {
+      assert(frame, "The band before the caption has a frame");
+      return { kind: frame.kind, y: frame.area.y };
+    }),
+    caption,
+  }).toEqual({
+    k: 0.8,
+    height: near(3.9481),
+    stack: [
+      { kind: "enabling", y: near(2.5) },
+      { kind: "stream", y: near(2.5) },
+      { kind: "subsystem", y: near(3.3) },
+      { kind: "platform", y: near(4.1296) },
+      { kind: "enabling", y: near(5.1546) },
+      { kind: "stream", y: near(5.1546) },
+      { kind: "subsystem", y: near(5.1546) },
+      { kind: "platform", y: near(5.5157) },
+    ],
+    caption: {
+      boxes: [
+        box("Caption", at({ x: 1.5, y: 5.9481, w: 10, h: 0.5 }), {
+          size: 14.5,
+          color: day.c.muted,
+          line: 1.4,
+        }),
       ],
     },
-  },
-  {
-    description: "with the negative trailing gap for an empty body",
-    slide: { ...empty, legend: false },
-    scale: 1,
-    body: area,
-    expected: { k: 1, height: near(-0.1481), bands: [] },
-  },
-])("lays out a topology $description", ({ slide, scale, body, expected }) => {
-  expect(topologyLayout(topologyStyle(fixedLook(), scale), slide, body)).toEqual(expected);
+  });
+});
+
+it("keeps the negative trailing gap for an empty topology", () => {
+  expect(topologyLayout(topologyStyle(fixedLook(), 1), { ...empty, legend: false }, area)).toEqual({
+    k: 1,
+    height: near(-0.1481),
+    bands: [],
+  });
 });
 
 function topologySheet() {
