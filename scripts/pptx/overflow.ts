@@ -15,7 +15,7 @@ interface Rect {
 const rectOf = (xml: string): Rect | undefined => {
   const transform = /<(?:a|p):xfrm[^>]*>(.*?)<\/(?:a|p):xfrm>/s.exec(xml)?.[1] ?? "";
   const off = /<a:off x="(-?\d+)" y="(-?\d+)"\/>/.exec(transform);
-  const ext = /<a:ext cx="(\d+)" cy="(\d+)"\/>/.exec(transform);
+  const ext = /<a:ext cx="(-?\d+)" cy="(-?\d+)"\/>/.exec(transform);
   if (!off || !ext) return undefined;
   return { x: +off[1] / EMU, y: +off[2] / EMU, w: +ext[1] / EMU, h: +ext[2] / EMU };
 };
@@ -234,6 +234,10 @@ export function checkSlide(xml: string, w: number, h: number): string[] {
   for (const shape of shapes) {
     const { rect, body } = shape;
     const label = `${shape.name} "${shape.text.slice(0, 40)}"`;
+    if (rect.w < 0 || rect.h < 0) {
+      found.push(`${label}: has a negative extent`);
+      continue;
+    }
     const outside = outsideSlide(rect, w, h);
     if (outside) found.push(`${label} ${outside}`);
     if (!body) continue;

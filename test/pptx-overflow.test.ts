@@ -79,6 +79,16 @@ it("reports a shape crossing the left edge", () => {
   expect(outsideSlide({ x: -0.04, y: 1, w: 2, h: 2 }, 10, 7)).toEqual("stands outside the slide");
 });
 
+it.each([
+  { kind: "sp", name: "Card", width: 914400, height: -1 },
+  { kind: "cxnSp", name: "Line", width: -1, height: 914400 },
+])("reports a negative extent on a $name without text", ({ kind, name, width, height }) => {
+  const xml = `<p:${kind}><p:cNvPr name="${name}"/><a:xfrm>
+    <a:off x="0" y="0"/><a:ext cx="${width}" cy="${height}"/>
+    </a:xfrm></p:${kind}>`;
+  expect(checkSlide(xml, 10, 7)).toEqual([`${name} "": has a negative extent`]);
+});
+
 it("measures a text box's height inside both vertical insets", () => {
   expect(
     tallerThanBox({
