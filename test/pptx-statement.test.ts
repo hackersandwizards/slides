@@ -1,6 +1,9 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
-import { assert, describe, expect, it } from "vitest";
+import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
@@ -20,10 +23,60 @@ import {
   type CentredPart,
   type CentredStatementLayout,
 } from "../scripts/pptx/slides/statement-centred";
-import type { Run } from "../scripts/pptx/text";
+import {
+  drawQrStatement,
+  qrStatementLayout,
+  qrStatementParts,
+  type QrStatementLayout,
+  type QrStatementPart,
+} from "../scripts/pptx/slides/statement-qr";
+import {
+  drawSideStatement,
+  sideBodyParas,
+  sideClosingPara,
+  sideHeadingParas,
+  sideMedia,
+  sideStatementLayout,
+  sideSupportParas,
+  type SideMedia,
+  type SideStatementLayout,
+} from "../scripts/pptx/slides/statement-side";
+import type { Para, Run } from "../scripts/pptx/text";
 import { shapesOf } from "./fixtures/rendered-deck";
 
+const MINIMAL_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+  "base64",
+);
+
 const r4 = (n: number) => Number(n.toFixed(4));
+
+function picsOf(xml: string) {
+  return [...xml.matchAll(/<p:pic>(.*?)<\/p:pic>/gs)].map(([, body]) => {
+    const match = /<a:off x="(-?\d+)" y="(-?\d+)"\s*\/>\s*<a:ext cx="(\d+)" cy="(\d+)"/.exec(body);
+    assert(match, "picture frame coordinates");
+    const [x, y, w, h] = match.slice(1).map((v) => r4(Number(v) / 914400));
+    return { x, y, w, h };
+  });
+}
+
+async function drawStatementOnSheet(assets: string, draw: (sheet: Sheet) => void) {
+  const pptx = new PptxGenJS();
+  pptx.layout = "LAYOUT_WIDE";
+  const warnings: string[] = [];
+  const sheet = new Sheet(new Look(palette(false), "en", false), pptx.addSlide(), {
+    pptx,
+    assets,
+    warnings,
+    charts: new Map(),
+  });
+  draw(sheet);
+  const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
+  const file = zip.file("ppt/slides/slide1.xml");
+  assert(file, "slide1.xml");
+  const xml = await file.async("string");
+  return { shapes: shapesOf(xml), pics: picsOf(xml), warnings };
+}
 
 describe("statementKind", () => {
   it.each<{ label: string; slide: StatementSlide; expected: StatementKind }>([
@@ -411,5 +464,643 @@ describe("centredStatementLayout and drawCentredStatement", () => {
         texts: ["Source 2026"],
       },
     ]);
+  });
+});
+
+describe("QR statement layout and drawing", () => {
+  const look = new Look(palette(false), "en", false);
+  let assetsDir = "";
+
+  beforeAll(() => {
+    assetsDir = mkdtempSync(join(tmpdir(), "pptx-statement-qr-"));
+    writeFileSync(join(assetsDir, "qr.png"), MINIMAL_PNG);
+  });
+
+  afterAll(() => {
+    rmSync(assetsDir, { recursive: true, force: true });
+  });
+
+  it.each<{ label: string; slide: StatementSlide; expected: QrStatementPart[] }>([
+    {
+      label: "only display lines with zero leading gap",
+      slide: { type: "statement", lines: ["Scan me"] },
+      expected: [
+        {
+          paras: [{ runs: [{ text: "Scan me", options: {} }], balance: true }],
+          o: {
+            size: 48,
+            mono: true,
+            bold: true,
+            color: "19283A",
+            tracking: -0.04,
+            line: 1.05,
+          },
+          gap: 0,
+        },
+      ],
+    },
+    {
+      label: "kicker, lines, subtitle, numbered points, and quoted closing",
+      slide: {
+        type: "statement",
+        kicker: "Access",
+        lines: ["Try it"],
+        subtitle: "Open the deck",
+        points: ["First step"],
+        closing: "Bookmark it",
+        closingStyle: "quote",
+      },
+      expected: [
+        {
+          paras: [{ runs: [{ text: "Access", options: { color: "155B6A", lang: "x-caps" } }] }],
+          o: { size: 16, mono: true, color: "155B6A", tracking: 0.06, line: 1.4 },
+          gap: 0,
+        },
+        {
+          paras: [{ runs: [{ text: "Try it", options: {} }], balance: true }],
+          o: {
+            size: 48,
+            mono: true,
+            bold: true,
+            color: "19283A",
+            tracking: -0.04,
+            line: 1.05,
+          },
+          gap: 0.22221874999999996,
+        },
+        {
+          paras: [{ runs: [{ text: "Open the deck", options: {} }] }],
+          o: { size: 24, color: "19283A", line: 1.375 },
+          gap: 0.22221874999999996,
+        },
+        {
+          paras: [
+            {
+              runs: [
+                {
+                  text: "01  ",
+                  options: { color: "1A7285", bold: true, fontFace: "JetBrains Mono" },
+                },
+                { text: "First step", options: { color: "545861" } },
+              ],
+              after: 13.333124999999997,
+            },
+          ],
+          o: { size: 18, color: "545861", line: 1.375 },
+          gap: 0.2962916666666666,
+        },
+        {
+          paras: [{ runs: [{ text: "“Bookmark it”", options: {} }], bold: true }],
+          o: { size: 24, color: "19283A", line: 1.375 },
+          gap: 0.22221874999999996,
+        },
+      ],
+    },
+  ])("qrStatementParts builds $label", ({ slide, expected }) => {
+    expect(qrStatementParts(look, slide)).toEqual(expected);
+  });
+
+  it.each<{ label: string; slide: StatementSlide; expected: QrStatementLayout | undefined }>([
+    {
+      label: "returns undefined when qr is absent",
+      slide: { type: "statement", lines: ["No code"] },
+      expected: undefined,
+    },
+    {
+      label: "measures text boxes, QR card, picture inset, link label, and footer",
+      slide: {
+        type: "statement",
+        lines: ["Scan"],
+        qr: { src: "qr.png", href: "https://example.com/demo" },
+        footer: "Notes",
+      },
+      expected: {
+        boxes: [
+          {
+            paras: [{ runs: [{ text: "Scan", options: {} }], balance: true }],
+            o: {
+              size: 48,
+              mono: true,
+              bold: true,
+              color: "19283A",
+              tracking: -0.04,
+              line: 1.05,
+            },
+            area: {
+              x: 0.6666666666666666,
+              y: 1.1769687500000003,
+              w: 7.3776875,
+              h: 0.7000000000000001,
+            },
+          },
+        ],
+        card: {
+          x: 8.785083333333334,
+          y: 1.1769687500000003,
+          w: 3.8812499999999996,
+          h: 3.8812499999999996,
+        },
+        picture: {
+          x: 9.155447916666668,
+          y: 1.5473333333333337,
+          w: 3.140520833333333,
+          h: 3.140520833333333,
+        },
+        label: "↗ example.com/demo",
+        labelArea: {
+          x: 8.785083333333334,
+          y: 5.206364583333333,
+          w: 3.8812499999999996,
+          h: 0.3625,
+        },
+        foot: { text: "Notes", h: 0.6125 },
+      },
+    },
+  ])("qrStatementLayout $label", ({ slide, expected }) => {
+    expect(qrStatementLayout(look, slide)).toEqual(expected);
+  });
+
+  it("drawQrStatement renders the text box, white QR card, picture, link label, and footer", async () => {
+    const out = await drawStatementOnSheet(assetsDir, (sheet) => {
+      drawQrStatement(sheet, {
+        type: "statement",
+        lines: ["Scan"],
+        qr: { src: "qr.png", href: "https://example.com/demo" },
+        footer: "Notes",
+      });
+    });
+    expect({
+      warnings: out.warnings,
+      pics: out.pics,
+      shapes: out.shapes.map(({ prst, x, y, w, h, fill, texts }) => ({
+        prst,
+        x: r4(x),
+        y: r4(y),
+        w: r4(w),
+        h: r4(h),
+        fill,
+        texts,
+      })),
+    }).toEqual({
+      warnings: [],
+      pics: [{ x: 9.1554, y: 1.5473, w: 3.1405, h: 3.1405 }],
+      shapes: [
+        {
+          prst: "rect",
+          x: 0.6667,
+          y: 1.177,
+          w: 7.4515,
+          h: 0.7,
+          fill: "19283A",
+          texts: ["Scan"],
+        },
+        {
+          prst: "roundRect",
+          x: 8.7851,
+          y: 1.177,
+          w: 3.8813,
+          h: 3.8813,
+          fill: "FFFFFF",
+          texts: [],
+        },
+        {
+          prst: "rect",
+          x: 8.7657,
+          y: 5.2064,
+          w: 3.9201,
+          h: 0.3625,
+          fill: "1A7285",
+          texts: ["↗ example.com/demo"],
+        },
+        {
+          prst: "line",
+          x: 0.6667,
+          y: 6.0833,
+          w: 11.9997,
+          h: 0.001,
+          fill: "D0D2D8",
+          texts: [],
+        },
+        {
+          prst: "rect",
+          x: 0.6667,
+          y: 6.1833,
+          w: 12.1197,
+          h: 0.4625,
+          fill: "19283A",
+          texts: ["Notes"],
+        },
+      ],
+    });
+  });
+
+  it("drawQrStatement draws nothing when qr is absent", async () => {
+    const out = await drawStatementOnSheet(assetsDir, (sheet) => {
+      drawQrStatement(sheet, { type: "statement", lines: ["No code"] });
+    });
+    expect({ shapes: out.shapes, pics: out.pics, warnings: out.warnings }).toEqual({
+      shapes: [],
+      pics: [],
+      warnings: [],
+    });
+  });
+});
+
+describe("side statement parts, layout, and drawing", () => {
+  const look = new Look(palette(false), "en", false);
+  const day = look.c;
+  let assetsDir = "";
+
+  beforeAll(() => {
+    assetsDir = mkdtempSync(join(tmpdir(), "pptx-statement-side-"));
+    writeFileSync(join(assetsDir, "portrait.png"), MINIMAL_PNG);
+  });
+
+  afterAll(() => {
+    rmSync(assetsDir, { recursive: true, force: true });
+  });
+
+  it.each<{ label: string; slide: StatementSlide; expected: SideMedia | undefined }>([
+    {
+      label: "imageSrc without attribution yields non-round media",
+      slide: { type: "statement", lines: ["A"], imageSrc: "shot.png", imageAlt: "Shot" },
+      expected: { src: "shot.png", alt: "Shot", href: undefined, round: false },
+    },
+    {
+      label: "imageSrc with attribution yields a round portrait",
+      slide: {
+        type: "statement",
+        lines: ["A"],
+        imageSrc: "portrait.png",
+        imageAlt: "Ada",
+        attribution: "Ada, CTO",
+      },
+      expected: { src: "portrait.png", alt: "Ada", href: undefined, round: true },
+    },
+    {
+      label: "linkedImage yields non-round linked media",
+      slide: {
+        type: "statement",
+        lines: ["A"],
+        linkedImage: { src: "shot.png", alt: "Shot", href: "https://example.com" },
+      },
+      expected: { src: "shot.png", alt: "Shot", href: "https://example.com", round: false },
+    },
+    {
+      label: "no image fields yields undefined",
+      slide: { type: "statement", lines: ["A"], attribution: "Ada" },
+      expected: undefined,
+    },
+  ])("sideMedia for $label", ({ slide, expected }) => {
+    expect(sideMedia(slide)).toEqual(expected);
+  });
+
+  it.each<{ label: string; slide: StatementSlide; expected: Para[] }>([
+    {
+      label: "kicker, standalone crossedOut claim, and two lines",
+      slide: {
+        type: "statement",
+        kicker: "Myth",
+        crossedOut: "Old",
+        lines: ["Line 1", "Line 2"],
+      },
+      expected: [
+        {
+          runs: [{ text: "Myth", options: { color: "1A7285", lang: "x-caps" } }],
+          mono: true,
+          bold: true,
+          rel: 0.75,
+          after: 16,
+        },
+        {
+          runs: [{ text: "Old", options: { strike: "sngStrike", color: "545861" } }],
+          mono: true,
+          bold: true,
+          rel: 1.3333333333333333,
+          after: 16,
+        },
+        {
+          runs: [{ text: "Line 1", options: {} }],
+          mono: true,
+          bold: true,
+          rel: 2.6666666666666665,
+          after: 0,
+        },
+        {
+          runs: [{ text: "Line 2", options: {} }],
+          mono: true,
+          bold: true,
+          rel: 2.6666666666666665,
+          after: 16,
+        },
+      ],
+    },
+    {
+      label: "crossedOut already present inside a line adds no standalone paragraph",
+      slide: { type: "statement", crossedOut: "slow", lines: ["Not slow today"] },
+      expected: [
+        {
+          runs: [
+            { text: "Not ", options: {} },
+            { text: "slow", options: { strike: "sngStrike", color: "545861" } },
+            { text: " today", options: {} },
+          ],
+          mono: true,
+          bold: true,
+          rel: 2.6666666666666665,
+          after: 16,
+        },
+      ],
+    },
+  ])("sideHeadingParas builds $label", ({ slide, expected }) => {
+    expect(sideHeadingParas(look, slide)).toEqual(expected);
+  });
+
+  it("sideSupportParas builds subtitle and numbered points", () => {
+    expect(
+      sideSupportParas(
+        { type: "statement", lines: ["X"], subtitle: "Context", points: ["First", "Second"] },
+        day,
+      ),
+    ).toEqual<Para[]>([
+      {
+        runs: [{ text: "Context", options: { color: "545861" } }],
+        rel: 1.1111111111111112,
+        after: 16,
+      },
+      {
+        runs: [
+          { text: "01  ", options: { color: "1A7285", bold: true, fontFace: "JetBrains Mono" } },
+          { text: "First", options: {} },
+        ],
+        rel: 1.1111111111111112,
+        after: 6,
+      },
+      {
+        runs: [
+          { text: "02  ", options: { color: "1A7285", bold: true, fontFace: "JetBrains Mono" } },
+          { text: "Second", options: {} },
+        ],
+        rel: 1.1111111111111112,
+        after: 6,
+      },
+    ]);
+  });
+
+  it.each<{
+    label: string;
+    slide: Pick<StatementSlide, "closing" | "closingStyle">;
+    expected: Para[];
+  }>([
+    { label: "no closing", slide: {}, expected: [] },
+    {
+      label: "a quoted closing in italics",
+      slide: { closing: "Ship small", closingStyle: "quote" },
+      expected: [
+        {
+          runs: [{ text: "“Ship small”", options: { italic: true } }],
+          bold: false,
+          rel: 1.1111111111111112,
+          after: 4,
+        },
+      ],
+    },
+    {
+      label: "a plain bold closing",
+      slide: { closing: "Move fast" },
+      expected: [
+        {
+          runs: [{ text: "Move fast", options: {} }],
+          bold: true,
+          rel: 1.1111111111111112,
+          after: 4,
+        },
+      ],
+    },
+  ])("sideClosingPara builds $label", ({ slide, expected }) => {
+    expect(sideClosingPara(slide, day)).toEqual(expected);
+  });
+
+  it.each<{ label: string; slide: StatementSlide; expected: Para[] }>([
+    {
+      label: "attribution places quoted closing before the name and own subtitle after it",
+      slide: {
+        type: "statement",
+        lines: ["Quote"],
+        subtitle: "Takeaway",
+        closing: "More words",
+        closingStyle: "quote",
+        attribution: "Ada, CTO",
+      },
+      expected: [
+        {
+          runs: [{ text: "Quote", options: {} }],
+          mono: true,
+          bold: true,
+          rel: 2.6666666666666665,
+          after: 16,
+        },
+        {
+          runs: [{ text: "“More words”", options: { italic: true } }],
+          bold: false,
+          rel: 1.1111111111111112,
+          after: 4,
+        },
+        {
+          runs: [
+            { text: "Ada", options: { bold: true } },
+            { text: ", CTO", options: { color: "545861" } },
+          ],
+          after: 16,
+        },
+        {
+          runs: [{ text: "Takeaway", options: { color: "545861" } }],
+          rel: 1.1111111111111112,
+          after: 16,
+        },
+      ],
+    },
+    {
+      label: "attribution without own text omits trailing spacing on attribution",
+      slide: { type: "statement", lines: ["Quote"], attribution: "Ada" },
+      expected: [
+        {
+          runs: [{ text: "Quote", options: {} }],
+          mono: true,
+          bold: true,
+          rel: 2.6666666666666665,
+          after: 16,
+        },
+        {
+          runs: [
+            { text: "Ada", options: { bold: true } },
+            { text: "", options: { color: "545861" } },
+          ],
+        },
+      ],
+    },
+    {
+      label: "unattributed slide places support then closing",
+      slide: { type: "statement", lines: ["Headline"], subtitle: "Sub", closing: "End" },
+      expected: [
+        {
+          runs: [{ text: "Headline", options: {} }],
+          mono: true,
+          bold: true,
+          rel: 2.6666666666666665,
+          after: 16,
+        },
+        {
+          runs: [{ text: "Sub", options: { color: "545861" } }],
+          rel: 1.1111111111111112,
+          after: 16,
+        },
+        {
+          runs: [{ text: "End", options: {} }],
+          bold: true,
+          rel: 1.1111111111111112,
+          after: 4,
+        },
+      ],
+    },
+  ])("sideBodyParas for $label", ({ slide, expected }) => {
+    expect(sideBodyParas(look, slide)).toEqual(expected);
+  });
+
+  it.each<{ label: string; slide: StatementSlide; expected: SideStatementLayout }>([
+    {
+      label: "an attributed quotation with a round portrait avatar",
+      slide: {
+        type: "statement",
+        lines: ["Quote"],
+        attribution: "Ada",
+        imageSrc: "portrait.png",
+        imageAlt: "Ada",
+      },
+      expected: {
+        paras: [
+          {
+            runs: [{ text: "Quote", options: {} }],
+            mono: true,
+            bold: true,
+            rel: 2.6666666666666665,
+            after: 16,
+          },
+          {
+            runs: [
+              { text: "Ada", options: { bold: true } },
+              { text: "", options: { color: "545861" } },
+            ],
+          },
+        ],
+        area: { x: 0.6666666666666666, y: 0.8125, w: 7.039793333333333, h: 5.833333333333333 },
+        o: { size: 18, color: "19283A", align: "left", valign: "middle", line: 1.2, floor: 0.5 },
+        foot: { h: 0 },
+        media: { src: "portrait.png", alt: "Ada", href: undefined, round: true },
+        avatar: {
+          x: 9.053063333333334,
+          y: 2.395833333333333,
+          d: 2.6666666666666665,
+        },
+      },
+    },
+    {
+      label: "a linked image beside centred statement text",
+      slide: {
+        type: "statement",
+        lines: ["Look"],
+        linkedImage: { src: "portrait.png", alt: "Shot", href: "https://example.com" },
+      },
+      expected: {
+        paras: [
+          {
+            runs: [{ text: "Look", options: {} }],
+            mono: true,
+            bold: true,
+            rel: 2.6666666666666665,
+            after: 16,
+          },
+        ],
+        area: { x: 0.6666666666666666, y: 0.8125, w: 7.039793333333333, h: 5.833333333333333 },
+        o: { size: 18, color: "19283A", align: "center", valign: "middle", line: 1.2, floor: 0.5 },
+        foot: { h: 0 },
+        media: { src: "portrait.png", alt: "Shot", href: "https://example.com", round: false },
+        mediaArea: {
+          x: 8.10646,
+          y: 0.8125,
+          w: 4.559873333333333,
+          h: 5.833333333333333,
+        },
+      },
+    },
+    {
+      label: "an attributed quotation without a picture uses full content width",
+      slide: { type: "statement", lines: ["Quote"], attribution: "Ada" },
+      expected: {
+        paras: [
+          {
+            runs: [{ text: "Quote", options: {} }],
+            mono: true,
+            bold: true,
+            rel: 2.6666666666666665,
+            after: 16,
+          },
+          {
+            runs: [
+              { text: "Ada", options: { bold: true } },
+              { text: "", options: { color: "545861" } },
+            ],
+          },
+        ],
+        area: { x: 0.6666666666666666, y: 0.8125, w: 11.999666666666666, h: 5.833333333333333 },
+        o: { size: 18, color: "19283A", align: "left", valign: "middle", line: 1.2, floor: 0.5 },
+        foot: { h: 0 },
+      },
+    },
+  ])("sideStatementLayout for $label", ({ slide, expected }) => {
+    expect(sideStatementLayout(look, slide)).toEqual(expected);
+  });
+
+  it.each<{
+    label: string;
+    slide: StatementSlide;
+    expectedPics: Array<{ x: number; y: number; w: number; h: number }>;
+    expectedTexts: string[];
+  }>([
+    {
+      label: "draws a round portrait avatar beside an attributed statement",
+      slide: {
+        type: "statement",
+        lines: ["Quote"],
+        attribution: "Ada",
+        imageSrc: "portrait.png",
+        imageAlt: "Ada",
+      },
+      expectedPics: [{ x: 9.0531, y: 2.3958, w: 2.6667, h: 2.6667 }],
+      expectedTexts: ["Quote", "Ada"],
+    },
+    {
+      label: "draws a contained side picture for a linkedImage statement",
+      slide: {
+        type: "statement",
+        lines: ["Look"],
+        linkedImage: { src: "portrait.png", alt: "Shot", href: "https://example.com" },
+      },
+      expectedPics: [{ x: 8.1065, y: 1.4492, w: 4.5599, h: 4.5599 }],
+      expectedTexts: ["Look"],
+    },
+  ])("drawSideStatement $label", async ({ slide, expectedPics, expectedTexts }) => {
+    const out = await drawStatementOnSheet(assetsDir, (sheet) => {
+      drawSideStatement(sheet, slide);
+    });
+    expect({
+      warnings: out.warnings,
+      pics: out.pics,
+      texts: out.shapes.flatMap((sh) => sh.texts),
+    }).toEqual({
+      warnings: [],
+      pics: expectedPics,
+      texts: expectedTexts,
+    });
   });
 });
