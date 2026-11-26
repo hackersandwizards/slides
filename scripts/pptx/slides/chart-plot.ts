@@ -95,7 +95,11 @@ export function plotFrame(d: ChartSlide, a: Area) {
 type PlotFrame = ReturnType<typeof plotFrame>;
 
 /** The axis text boxes, the visible plot and the native chart including the legend. */
-export function axisLabels(look: Look, d: ChartSlide, { card: f, legend }: PlotFrame) {
+export function axisLabels(
+  look: Look,
+  d: ChartSlide,
+  { card: f, legend }: Pick<PlotFrame, "card" | "legend">,
+) {
   // `Axes`: the y label and the note over the plot, the x label under it.
   const inner = {
     x: f.x + CHART.pad,

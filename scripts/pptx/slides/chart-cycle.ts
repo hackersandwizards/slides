@@ -1,10 +1,11 @@
 import type { ChartSlide } from "../../../types/slide";
 import type { Sheet } from "../sheet";
 import { PT, type Area } from "../stage";
-import { curve } from "./chart-graph";
+import { curve, curveArea, drawCurveAnnotation } from "./chart-graph";
 
 /** Draws the adoption curve and its labelled segment shares. */
-export function drawCycle(sheet: Sheet, d: ChartSlide, a: Area): void {
+export function drawCycle(sheet: Sheet, d: ChartSlide, body: Area): void {
+  const a = curveArea(d, body);
   const { slide: s, c } = sheet;
   // The adoption curve as the web draws it: a bell curve, its area split into the segments'
   // shares, each segment's label and share under it.
@@ -36,4 +37,5 @@ export function drawCycle(sheet: Sheet, d: ChartSlide, a: Area): void {
       { size: PT.sm, color: cur ? c.teal : c.ink, align: "center" },
     );
   });
+  drawCurveAnnotation(sheet, d);
 }

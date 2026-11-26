@@ -1,3 +1,4 @@
+import type { Area } from "../scripts/pptx/stage";
 import PptxGenJS from "pptxgenjs";
 import { expect, it, vi } from "vitest";
 import { Look } from "../scripts/pptx/look";
@@ -61,25 +62,95 @@ it("reserves a second annotation line when the plot card is height constrained",
   });
 });
 
-it("uses the padded card edges when axis labels are absent", () => {
-  const axes = axisLabels(look, bar, {
-    card: { x: 0.5, y: 1, w: 4, h: 2 },
+const axisLabel = (text: string | undefined, area: Area, align: "left" | "right" | "center") => ({
+  text,
+  area,
+  o: { size: 16, color: "545861", align },
+});
+
+it.each([
+  {
+    name: "uses the padded card edges without labels",
+    width: 4,
     legend: false,
-    annotation: { x: 0, y: 0, w: 0, h: 0 },
+    slide: bar,
+    expected: {
+      labels: [
+        axisLabel(undefined, { x: 0.7963, y: 1.2963, w: 0, h: 0.3194 }, "left"),
+        axisLabel(undefined, { x: 4.2037, y: 1.2963, w: 0, h: 0.3194 }, "right"),
+        axisLabel(undefined, { x: 0.7963, y: 2.3842, w: 3.4074, h: 0.3194 }, "center"),
+      ],
+      plot: { x: 0.7963, y: 1.2963, w: 3.4074, h: 1.4074 },
+      chart: { x: 0.7963, y: 1.2963, w: 3.4074, h: 1.4074 },
+    },
+  },
+  {
+    name: "keeps the measured widths when both labels fit",
+    width: 5,
+    legend: true,
+    slide: { ...trend, yLabel: "Units", futureNote: "Later", xLabel: "Year" },
+    expected: {
+      labels: [
+        axisLabel("Units", { x: 0.7963, y: 1.2963, w: 0.5659, h: 0.3194 }, "left"),
+        axisLabel("Later", { x: 4.642, y: 1.2963, w: 0.5617, h: 0.3194 }, "right"),
+        axisLabel("Year", { x: 0.7963, y: 2.3842, w: 4.4074, h: 0.3194 }, "center"),
+      ],
+      plot: { x: 0.7963, y: 1.6899, w: 4.4074, h: 0.6574 },
+      chart: { x: 0.7963, y: 0.5324, w: 4.4074, h: 1.8148 },
+    },
+  },
+  {
+    name: "shrinks both labels by their shares of overflow",
+    width: 2.5,
+    legend: true,
+    slide: { ...trend, yLabel: "Revenue", futureNote: "Expected", xLabel: "Year" },
+    expected: {
+      labels: [
+        axisLabel("Revenue", { x: 0.7963, y: 1.2963, w: 0.778, h: 0.6389 }, "left"),
+        axisLabel("Expected", { x: 1.8706, y: 1.2963, w: 0.8331, h: 0.6389 }, "right"),
+        axisLabel("Year", { x: 0.7963, y: 2.3842, w: 1.9074, h: 0.3194 }, "center"),
+      ],
+      plot: { x: 0.7963, y: 2.0093, w: 1.9074, h: 0.3379 },
+      chart: { x: 0.7963, y: 0.5324, w: 1.9074, h: 1.8148 },
+    },
+  },
+  {
+    name: "lowers the plot for a note that wraps onto two lines",
+    width: 4,
+    legend: true,
+    slide: {
+      ...trend,
+      yLabel: "Units",
+      futureNote: "Forecast for the next planning period",
+      xLabel: "Year",
+    },
+    expected: {
+      labels: [
+        axisLabel("Units", { x: 0.7963, y: 1.2963, w: 0.3899, h: 0.6389 }, "left"),
+        axisLabel(
+          "Forecast for the next planning period",
+          { x: 1.4825, y: 1.2963, w: 2.7212, h: 0.6389 },
+          "right",
+        ),
+        axisLabel("Year", { x: 0.7963, y: 2.3842, w: 3.4074, h: 0.3194 }, "center"),
+      ],
+      plot: { x: 0.7963, y: 2.0093, w: 3.4074, h: 0.3379 },
+      chart: { x: 0.7963, y: 0.5324, w: 3.4074, h: 1.8148 },
+    },
+  },
+])("$name", ({ width, legend, slide, expected }) => {
+  const axes = axisLabels(look, slide, { card: { x: 0.5, y: 1, w: width, h: 2 }, legend });
+  const rounded = ({ x, y, w, h }: Area) => ({
+    x: +x.toFixed(4),
+    y: +y.toFixed(4),
+    w: +w.toFixed(4),
+    h: +h.toFixed(4),
   });
   expect({
-    labels: axes.labels.map(({ text, o }) => [text, o.align]),
-    plot: Object.values(axes.plot).map((value) => +value.toFixed(4)),
-    chart: Object.values(axes.chart).map((value) => +value.toFixed(4)),
-  }).toEqual({
-    labels: [
-      [undefined, "left"],
-      [undefined, "right"],
-      [undefined, "center"],
-    ],
-    plot: [0.7963, 1.2963, 3.4074, 1.4074],
-    chart: [0.7963, 1.2963, 3.4074, 1.4074],
-  });
+    labels: axes.labels.map((label) => ({ ...label, area: rounded(label.area) })),
+    plot: rounded(axes.plot),
+    chart: rounded(axes.chart),
+  }).toEqual(expected);
 });
 
 it("uses minimum end padding when category names are empty", () => {
@@ -153,9 +224,14 @@ it("closes the measured polygon at zero before the planned point", () => {
   ]);
 });
 
-it("fits the middle font size for a one-character category in a narrow band", () => {
+it.each([
+  { width: 0.4, pointSize: 16, name: "the first size" },
+  { width: 0.198, pointSize: 13.33, name: "the middle size" },
+  { width: 0.177, pointSize: 12, name: "the last size" },
+  { width: 0.1, pointSize: undefined, name: "tilted labels" },
+])("selects $name for the one-character category", ({ width, pointSize }) => {
   const series = plotSeries({ ...bar, data: [{ name: "M", value: 4 }] }, "plan");
-  expect(barTicks({ x: 0, y: 0, w: 0.198, h: 1 }, series)).toEqual(13.33);
+  expect(barTicks({ x: 0, y: 0, w: width, h: 1 }, series)).toEqual(pointSize);
 });
 
 function chartSlide() {
@@ -178,7 +254,18 @@ it("registers the bar on the next native chart number", () => {
   });
 });
 
-it("draws the card, annotation, axis text, fill and native chart in stacking order", () => {
+it.each([
+  {
+    name: "unmarked",
+    currentMarker: undefined,
+    expected: ["card", "Note", "YAxis", "XAxis", "custGeom", "line"],
+  },
+  {
+    name: "marked",
+    currentMarker: "B",
+    expected: ["card", "Note", "YAxis", "XAxis", "custGeom", "line", "line", "A", "B"],
+  },
+])("draws a $name trend in stacking order", ({ currentMarker, expected }) => {
   const sheet = chartSlide();
   const draw: string[] = [];
   vi.spyOn(sheet, "card").mockImplementation(() => {
@@ -203,13 +290,14 @@ it("draws the card, annotation, axis text, fill and native chart in stacking ord
         { name: "A", value: 5 },
         { name: "B", value: 10 },
       ],
+      currentMarker,
       yLabel: "YAxis",
       xLabel: "XAxis",
       annotation: "Note",
     },
     { x: 0, y: 1, w: 12, h: 5 },
   );
-  expect(draw).toEqual(["card", "Note", "YAxis", "XAxis", "custGeom", "line"]);
+  expect(draw).toEqual(expected);
 });
 
 it("extends a single-point named trend above its plot without a fill or guide", () => {

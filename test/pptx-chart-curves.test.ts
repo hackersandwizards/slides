@@ -5,7 +5,14 @@ import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
 import { chartKind } from "../scripts/pptx/slides/chart";
 import { drawCycle } from "../scripts/pptx/slides/chart-cycle";
-import { curve, drawGraph, graphCaptions, graphMarker } from "../scripts/pptx/slides/chart-graph";
+import {
+  curve,
+  curveArea,
+  drawCurveAnnotation,
+  drawGraph,
+  graphCaptions,
+  graphMarker,
+} from "../scripts/pptx/slides/chart-graph";
 import type { ChartSlide } from "../types/slide";
 import { onlySlide, shapesOf } from "./fixtures/rendered-deck";
 
@@ -141,10 +148,10 @@ it("places the vertical axis caption at the body edge and the note over half the
   ]);
 });
 
-it("writes the annotation for a graph", async () => {
+it.each(["graph", "cycle"] as const)("writes the annotation for a %s", async (variant) => {
   const xml = await onlySlide({
     type: "chart",
-    variant: "graph",
+    variant,
     annotation: "Illustrative only.",
   });
   expect(
@@ -152,4 +159,32 @@ it("writes the annotation for a graph", async () => {
       .flatMap((shape) => shape.texts)
       .filter((text) => text === "Illustrative only."),
   ).toEqual(["Illustrative only."]);
+});
+
+it("reserves four tenths below an annotated curve", () => {
+  expect(curveArea({ type: "chart", variant: "cycle", annotation: "A note" }, area)).toEqual({
+    x: 1,
+    y: 1,
+    w: 8,
+    h: 3.6,
+  });
+});
+
+it("writes the curve annotation in the footer band", () => {
+  const sheet = curveSheet();
+  const boxes = vi.spyOn(sheet, "box").mockImplementation(() => {});
+  drawCurveAnnotation(sheet, { type: "chart", variant: "graph", annotation: "A note" });
+  expect(
+    boxes.mock.calls.map(([text, { x, y, w, h }, options]) => ({
+      text,
+      area: { x: +x.toFixed(4), y: +y.toFixed(4), w: +w.toFixed(4), h },
+      options,
+    })),
+  ).toEqual([
+    {
+      text: "A note",
+      area: { x: 0.6667, y: 6.2958, w: 11.9997, h: 0.35 },
+      options: { size: 18, color: look.c.purple, align: "center" },
+    },
+  ]);
 });

@@ -2,7 +2,22 @@ import type PptxGenJS from "pptxgenjs";
 import type { ChartSlide } from "../../../types/slide";
 import { mixColor } from "../palette";
 import type { Sheet } from "../sheet";
-import { PT, type Area } from "../stage";
+import { BOTTOM, CW, EDGE, PT, type Area } from "../stage";
+
+/** Reserves space under a curve for its annotation. */
+export function curveArea(d: ChartSlide, body: Area): Area {
+  return { ...body, h: body.h - (d.annotation ? 0.4 : 0) };
+}
+
+// The web's `Annotation`, under the card or the drawing.
+export function drawCurveAnnotation(sheet: Sheet, d: ChartSlide): void {
+  if (d.annotation)
+    sheet.box(
+      d.annotation,
+      { x: EDGE, y: BOTTOM - 0.35, w: CW, h: 0.35 },
+      { size: PT.base, color: sheet.c.purple, align: "center" },
+    );
+}
 
 /** A function over [0, 1] drawn as a polyline in the area, its values in [0, 1] from the bottom,
  *  with the area under it tinted. */
@@ -65,7 +80,8 @@ export function graphCaptions(d: ChartSlide, a: Area, g: Area) {
 }
 
 /** Draws a rising graph with its axes, labels and optional marked point. */
-export function drawGraph(sheet: Sheet, d: ChartSlide, a: Area): void {
+export function drawGraph(sheet: Sheet, d: ChartSlide, body: Area): void {
+  const a = curveArea(d, body);
   const { slide: s, c } = sheet;
   // The graph variant as the web draws it: a curve rising to the right, a marked point at 60 of
   // its 100 steps, the axis labels beside it.
@@ -97,4 +113,5 @@ export function drawGraph(sheet: Sheet, d: ChartSlide, a: Area): void {
       align: "right",
     });
   }
+  drawCurveAnnotation(sheet, d);
 }
