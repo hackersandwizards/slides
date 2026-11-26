@@ -18,10 +18,8 @@ import {
   drawStageMarkers,
   markerChip,
 } from "../scripts/pptx/slides/content";
-import type { ContentBlock, Slide } from "../types/slide";
+import type { ContentBlock, ContentSlide } from "../types/slide";
 import { shapesOf } from "./fixtures/rendered-deck";
-
-type ContentSlide = Extract<Slide, { type: "content" }>;
 
 async function drawOnSheet(draw: (sheet: Sheet) => void) {
   const pptx = new PptxGenJS();
@@ -129,6 +127,7 @@ describe("blocksLayout", () => {
         end: 3.979166666666667,
         short: 0,
         foot: { h: 0 },
+        centered: false,
       },
     },
     {
@@ -153,6 +152,7 @@ describe("blocksLayout", () => {
         end: 3.825,
         short: 0,
         foot: { text: "Source 2026", h: 0.6125 },
+        centered: true,
       },
     },
     {
@@ -175,6 +175,7 @@ describe("blocksLayout", () => {
         end: 6,
         short: 0,
         foot: { h: 0 },
+        centered: false,
       },
     },
     {
@@ -211,6 +212,7 @@ describe("blocksLayout", () => {
         end: 2.9430555555555555,
         short: 0.2645833333333333,
         foot: { h: 0 },
+        centered: false,
       },
     },
   ])("computes layout for $label", ({ slide, area, expected }) => {
@@ -233,6 +235,7 @@ describe("drawBlocks", () => {
       end: 2.85,
       short: 0.42,
       foot: { h: 0 },
+      centered: false,
     };
     const out = await drawOnSheet((sheet) => {
       drawBlocks(sheet, list, layout);
@@ -263,6 +266,7 @@ describe("drawBlocks", () => {
       end: 2.65,
       short: 0,
       foot: { h: 0 },
+      centered: false,
     };
     const out = await drawOnSheet((sheet) => {
       drawBlocks(sheet, list, layout);

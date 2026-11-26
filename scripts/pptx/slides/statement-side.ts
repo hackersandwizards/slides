@@ -15,14 +15,16 @@ export interface SideMedia {
   round: boolean;
 }
 
+export type SidePlacement =
+  | { kind: "avatar"; media: SideMedia; disc: { x: number; y: number; d: number } }
+  | { kind: "picture"; media: SideMedia; area: Area };
+
 export interface SideStatementLayout {
   paras: Para[];
   area: Area;
   o: BoxOpts;
   foot: Footer;
-  media?: SideMedia;
-  mediaArea?: Area;
-  avatar?: { x: number; y: number; d: number };
+  side?: SidePlacement;
 }
 
 /** Resolves the optional side image or linked image of a side statement slide. */
@@ -174,11 +176,20 @@ export function sideStatementLayout(look: Look, d: StatementSlide): SideStatemen
       area,
       o,
       foot,
-      media,
-      avatar: { x: x + (imgW - r) / 2, y: TOP + (h - r) / 2, d: r },
+      side: {
+        kind: "avatar",
+        media,
+        disc: { x: x + (imgW - r) / 2, y: TOP + (h - r) / 2, d: r },
+      },
     };
   }
-  return { paras, area, o, foot, media, mediaArea: { x, y: TOP, w: imgW, h } };
+  return {
+    paras,
+    area,
+    o,
+    foot,
+    side: { kind: "picture", media, area: { x, y: TOP, w: imgW, h } },
+  };
 }
 
 /** Draws a side statement slide from its measured layout. */
@@ -186,11 +197,9 @@ export function drawSideStatement(sheet: Sheet, d: StatementSlide): void {
   const layout = sideStatementLayout(sheet, d);
   sheet.box(layout.paras, layout.area, layout.o);
   footer(sheet, layout.foot);
-  if (!layout.media) return;
-  const metadata = { alt: layout.media.alt, href: layout.media.href };
-  if (layout.avatar) {
-    sheet.avatar(layout.media.src, layout.avatar, metadata);
-  } else if (layout.mediaArea) {
-    sheet.picture(layout.media.src, layout.mediaArea, metadata);
-  }
+  if (!layout.side) return;
+  const metadata = { alt: layout.side.media.alt, href: layout.side.media.href };
+  if (layout.side.kind === "avatar")
+    sheet.avatar(layout.side.media.src, layout.side.disc, metadata);
+  else sheet.picture(layout.side.media.src, layout.side.area, metadata);
 }

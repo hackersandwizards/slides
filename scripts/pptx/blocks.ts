@@ -1,5 +1,5 @@
 import { labeledGridAsCards, pipelineAsFlow } from "../../lib/content-block-aliases";
-import type { ContentBlock, Slide } from "../../types/slide";
+import type { ContentBlock, ContentSlide } from "../../types/slide";
 import { annotated } from "./blocks/annotated";
 import { bars } from "./blocks/bars";
 import { transform } from "./blocks/before-after";
@@ -19,8 +19,6 @@ import { footerOf, type Footer } from "./chrome";
 import type { Look } from "./look";
 import type { Sheet } from "./sheet";
 import type { Area, Measure } from "./stage";
-
-type ContentSlide = Extract<Slide, { type: "content" }>;
 
 type BlockType = ContentBlock["type"];
 type Kinds = { [K in BlockType]: BlockKind<K> };
@@ -97,19 +95,19 @@ export interface BlocksLayout {
   end: number;
   short: number;
   foot: Footer;
+  centered: boolean;
 }
 
-/** Measures a content slide's block stack inside `area`, shrinking them together until they fit,
+/** Measures a content slide's block stack inside `a`, shrinking them together until they fit,
  *  and computes each block's drawing slot, the stack's end `y`, any height shortfall, and its
  *  measured footer. Image blocks take the space the others leave. Blocks that leave space stand as
  *  the web's body does, two spacers sharing it 1 to 1.25, so a little above the middle; `tail` is
  *  the height of what follows them in that body, a footer. */
-export function blocksLayout(look: Look, d: ContentSlide, area: Area): BlocksLayout {
+export function blocksLayout(look: Look, d: ContentSlide, a: Area): BlocksLayout {
   const list = d.content;
   const centered = d.layout === "centered";
   const foot = footerOf(look, d.footer);
   const tail = foot.h && foot.h + 0.1;
-  const a = area;
   const gap = 0.25;
   let k = 1;
   const fixed = (kk: number) =>
@@ -133,7 +131,7 @@ export function blocksLayout(look: Look, d: ContentSlide, area: Area): BlocksLay
     y += h + gap;
     return slot;
   });
-  return { k, slots, end: y - gap, short, foot };
+  return { k, slots, end: y - gap, short, foot, centered };
 }
 
 /** Draws a measured stack of blocks into their computed slots and warns when the stack ran taller

@@ -1,4 +1,4 @@
-import type { ComparisonSide, Slide } from "../../../types/slide";
+import type { ComparisonSide, ComparisonSidesSlide } from "../../../types/slide";
 import {
   beforeAfterLayout,
   drawBeforeAfter,
@@ -12,11 +12,6 @@ import type { Palette, Surface } from "../palette";
 import type { Sheet } from "../sheet";
 import { BODY, CW, PT, REM, TITLE, W, type Area } from "../stage";
 import { md, plain, type BoxOpts, type Para } from "../text";
-
-export type DrawnComparisonSlide = Exclude<
-  Extract<Slide, { type: "comparison" }>,
-  { variant: "guidance" | "positions" }
->;
 
 export type ComparisonVariant = "before-after" | "split" | "vs";
 
@@ -162,7 +157,7 @@ const CARD_SIDES: Record<"vs" | "split", CardSideSpec> = {
 /** Measures the two side cards (`vs` or `split`) and their footer band inside `area`. */
 export function comparisonCardsLayout(
   look: Look,
-  d: DrawnComparisonSlide,
+  d: ComparisonSidesSlide,
   area: Area,
 ): ComparisonCardsLayout {
   const { c } = look;
@@ -205,7 +200,7 @@ export function comparisonCardsLayout(
 }
 
 /** Draws a `vs` or `split` comparison's cards and footer band inside `area`. */
-export function drawComparisonCards(sheet: Sheet, d: DrawnComparisonSlide, area: Area): void {
+export function drawComparisonCards(sheet: Sheet, d: ComparisonSidesSlide, area: Area): void {
   const layout = comparisonCardsLayout(sheet, d, area);
   for (const card of layout.cards) {
     sheet.card({ x: card.x, y: card.y, w: card.w, h: card.h }, layout.surface);
@@ -218,7 +213,7 @@ export function drawComparisonCards(sheet: Sheet, d: DrawnComparisonSlide, area:
 }
 
 /** Draws a `before-after` comparison slide's body and footer band inside `area`. */
-export function drawBeforeAfterComparison(sheet: Sheet, d: DrawnComparisonSlide, area: Area): void {
+export function drawBeforeAfterComparison(sheet: Sheet, d: ComparisonSidesSlide, area: Area): void {
   const foot = comparisonFootLayout(sheet, d);
   const mode: BeforeAfterMode = d.strike !== false ? "replace" : d.adds ? "add" : "transition";
   const layout = beforeAfterLayout(
@@ -235,14 +230,14 @@ export function drawBeforeAfterComparison(sheet: Sheet, d: DrawnComparisonSlide,
 
 const COMPARISON_VARIANTS: Record<
   ComparisonVariant,
-  (sheet: Sheet, d: DrawnComparisonSlide, area: Area) => void
+  (sheet: Sheet, d: ComparisonSidesSlide, area: Area) => void
 > = {
   "before-after": drawBeforeAfterComparison,
   vs: drawComparisonCards,
   split: drawComparisonCards,
 };
 
-export function drawComparison(sheet: Sheet, d: DrawnComparisonSlide): void {
+export function drawComparison(sheet: Sheet, d: ComparisonSidesSlide): void {
   const y = header(sheet, d);
   COMPARISON_VARIANTS[d.variant ?? "vs"](sheet, d, BODY(y));
 }

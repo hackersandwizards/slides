@@ -1,12 +1,10 @@
-import type { Slide } from "../../../types/slide";
+import type { RegularSlide } from "../../../types/slide";
 import { header } from "../chrome";
 import type { Palette } from "../palette";
 import { profileLink } from "../people";
 import type { Sheet } from "../sheet";
 import { BODY, PT, TITLE, type Area } from "../stage";
 import { md, type BoxOpts, type Para } from "../text";
-
-type RegularSlide = Extract<Slide, { type: "regular" }>;
 
 /** Draws a regular slide's left profile sidebar (portrait, name, title, and optional LinkedIn
  *  link) and returns the narrowed remaining area for the sections column. */

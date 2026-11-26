@@ -1,12 +1,10 @@
-import type { Slide } from "../../../types/slide";
+import type { ContentSlide } from "../../../types/slide";
 import { blocksLayout, drawBlocks } from "../blocks";
 import { footerAt, header } from "../chrome";
 import { chipArea, drawChip, type Chip } from "../chips";
 import type { Look } from "../look";
 import type { Sheet } from "../sheet";
 import { W, EDGE, TOP, PT, BODY } from "../stage";
-
-type ContentSlide = Extract<Slide, { type: "content" }>;
 
 /** Builds the teal label chip used for a content slide's badge and stage markers. */
 export function markerChip(look: Look, text: string): Chip {
@@ -62,5 +60,5 @@ export function drawContent(sheet: Sheet, d: ContentSlide): void {
   const y = contentHead(sheet, d);
   const layout = blocksLayout(sheet, d, BODY(y));
   drawBlocks(sheet, d.content, layout);
-  footerAt(sheet, { ...layout.foot, centered: d.layout === "centered" }, layout.end + 0.1);
+  footerAt(sheet, { ...layout.foot, centered: layout.centered }, layout.end + 0.1);
 }

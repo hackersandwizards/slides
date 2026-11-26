@@ -17,26 +17,17 @@ import {
   vsSideItems,
   type ComparisonCardsLayout,
   type ComparisonFootLayout,
-  type DrawnComparisonSlide,
 } from "../scripts/pptx/slides/comparison";
 import type { Area } from "../scripts/pptx/stage";
 import type { Para } from "../scripts/pptx/text";
-import { shapesOf } from "./fixtures/rendered-deck";
+import type { ComparisonSidesSlide } from "../types/slide";
+import { picsOf, shapesOf } from "./fixtures/rendered-deck";
 
 const MINIMAL_PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
   "base64",
 );
 const r4 = (n: number) => Number(n.toFixed(4));
-
-function picsOf(xml: string) {
-  return [...xml.matchAll(/<p:pic>(.*?)<\/p:pic>/gs)].map(([, body]) => {
-    const match = /<a:off x="(-?\d+)" y="(-?\d+)"\s*\/>\s*<a:ext cx="(\d+)" cy="(\d+)"/.exec(body);
-    assert(match, "picture frame coordinates");
-    const [x, y, w, h] = match.slice(1).map((v) => r4(Number(v) / 914400));
-    return { x, y, w, h };
-  });
-}
 
 async function drawOnSheet(assets: string, draw: (sheet: Sheet) => void) {
   const pptx = new PptxGenJS();
@@ -53,7 +44,11 @@ async function drawOnSheet(assets: string, draw: (sheet: Sheet) => void) {
   const file = zip.file("ppt/slides/slide1.xml");
   assert(file, "slide1.xml");
   const xml = await file.async("string");
-  return { shapes: shapesOf(xml), pics: picsOf(xml), warnings };
+  return {
+    shapes: shapesOf(xml),
+    pics: picsOf(xml).map(({ x, y, w, h }) => ({ x: r4(x), y: r4(y), w: r4(w), h: r4(h) })),
+    warnings,
+  };
 }
 
 describe("comparisonFootLayout and drawComparisonFoot", () => {
@@ -216,7 +211,7 @@ describe("comparisonCardsLayout, drawComparisonCards, and drawBeforeAfterCompari
   });
 
   it("comparisonCardsLayout measures equal-height split cards with logo and markdown labels", () => {
-    const slide: DrawnComparisonSlide = {
+    const slide: ComparisonSidesSlide = {
       type: "comparison",
       headline: "H",
       variant: "split",
@@ -292,7 +287,7 @@ describe("comparisonCardsLayout, drawComparisonCards, and drawBeforeAfterCompari
   });
 
   it("drawComparisonCards draws both cards, logo picture, and footer", async () => {
-    const slide: DrawnComparisonSlide = {
+    const slide: ComparisonSidesSlide = {
       type: "comparison",
       headline: "H",
       variant: "split",
@@ -322,7 +317,7 @@ describe("comparisonCardsLayout, drawComparisonCards, and drawBeforeAfterCompari
   });
 
   it("drawBeforeAfterComparison draws before/after sides and punchline", async () => {
-    const slide: DrawnComparisonSlide = {
+    const slide: ComparisonSidesSlide = {
       type: "comparison",
       headline: "H",
       variant: "before-after",

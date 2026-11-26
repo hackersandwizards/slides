@@ -40,7 +40,7 @@ import {
 } from "../scripts/pptx/slides/statement-side";
 import type { Para, Run } from "../scripts/pptx/text";
 import type { StatementSlide } from "../types/slide";
-import { shapesOf } from "./fixtures/rendered-deck";
+import { linksOf, picsOf, shapesOf } from "./fixtures/rendered-deck";
 
 const MINIMAL_PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
@@ -48,15 +48,6 @@ const MINIMAL_PNG = Buffer.from(
 );
 
 const r4 = (n: number) => Number(n.toFixed(4));
-
-function picsOf(xml: string) {
-  return [...xml.matchAll(/<p:pic>(.*?)<\/p:pic>/gs)].map(([, body]) => {
-    const match = /<a:off x="(-?\d+)" y="(-?\d+)"\s*\/>\s*<a:ext cx="(\d+)" cy="(\d+)"/.exec(body);
-    assert(match, "picture frame coordinates");
-    const [x, y, w, h] = match.slice(1).map((v) => r4(Number(v) / 914400));
-    return { x, y, w, h };
-  });
-}
 
 async function drawStatementOnSheet(assets: string, draw: (sheet: Sheet) => void) {
   const pptx = new PptxGenJS();
@@ -72,8 +63,31 @@ async function drawStatementOnSheet(assets: string, draw: (sheet: Sheet) => void
   const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Buffer);
   const file = zip.file("ppt/slides/slide1.xml");
   assert(file, "slide1.xml");
+  const rels = zip.file("ppt/slides/_rels/slide1.xml.rels");
+  assert(rels, "slide1.xml.rels");
   const xml = await file.async("string");
-  return { shapes: shapesOf(xml), pics: picsOf(xml), warnings };
+  const relsXml = await rels.async("string");
+  return {
+    shapes: shapesOf(xml).map(({ prst, x, y, w, h, fill, texts, xml: shapeXml }) => ({
+      prst,
+      x: r4(x),
+      y: r4(y),
+      w: r4(w),
+      h: r4(h),
+      fill,
+      texts,
+      links: linksOf(shapeXml, relsXml),
+    })),
+    pics: picsOf(xml, relsXml).map(({ x, y, w, h, alt, href }) => ({
+      x: r4(x),
+      y: r4(y),
+      w: r4(w),
+      h: r4(h),
+      alt,
+      href,
+    })),
+    warnings,
+  };
 }
 
 describe("statementKind", () => {
@@ -611,6 +625,9 @@ describe("QR statement layout and drawing", () => {
         footer: "Notes",
       },
       expected: {
+        src: "qr.png",
+        alt: "QR code: example.com/demo",
+        href: "https://example.com/demo",
         boxes: [
           {
             paras: [{ runs: [{ text: "Scan", options: {} }], balance: true }],
@@ -656,7 +673,7 @@ describe("QR statement layout and drawing", () => {
     expect(qrStatementLayout(look, slide)).toEqual(expected);
   });
 
-  it("drawQrStatement renders the text box, white QR card, picture, link label, and footer", async () => {
+  it("drawQrStatement renders the text box, white QR card, linked picture with alt text, linked label, and footer", async () => {
     const out = await drawStatementOnSheet(assetsDir, (sheet) => {
       drawQrStatement(sheet, {
         type: "statement",
@@ -665,21 +682,18 @@ describe("QR statement layout and drawing", () => {
         footer: "Notes",
       });
     });
-    expect({
-      warnings: out.warnings,
-      pics: out.pics,
-      shapes: out.shapes.map(({ prst, x, y, w, h, fill, texts }) => ({
-        prst,
-        x: r4(x),
-        y: r4(y),
-        w: r4(w),
-        h: r4(h),
-        fill,
-        texts,
-      })),
-    }).toEqual({
+    expect(out).toEqual({
       warnings: [],
-      pics: [{ x: 9.1554, y: 1.5473, w: 3.1405, h: 3.1405 }],
+      pics: [
+        {
+          x: 9.1554,
+          y: 1.5473,
+          w: 3.1405,
+          h: 3.1405,
+          alt: "QR code: example.com/demo",
+          href: "https://example.com/demo",
+        },
+      ],
       shapes: [
         {
           prst: "rect",
@@ -689,6 +703,7 @@ describe("QR statement layout and drawing", () => {
           h: 0.7,
           fill: "19283A",
           texts: ["Scan"],
+          links: [],
         },
         {
           prst: "roundRect",
@@ -698,6 +713,7 @@ describe("QR statement layout and drawing", () => {
           h: 3.8813,
           fill: "FFFFFF",
           texts: [],
+          links: [],
         },
         {
           prst: "rect",
@@ -707,6 +723,7 @@ describe("QR statement layout and drawing", () => {
           h: 0.3625,
           fill: "1A7285",
           texts: ["↗ example.com/demo"],
+          links: ["https://example.com/demo"],
         },
         {
           prst: "line",
@@ -716,6 +733,7 @@ describe("QR statement layout and drawing", () => {
           h: 0.001,
           fill: "D0D2D8",
           texts: [],
+          links: [],
         },
         {
           prst: "rect",
@@ -725,6 +743,7 @@ describe("QR statement layout and drawing", () => {
           h: 0.4625,
           fill: "19283A",
           texts: ["Notes"],
+          links: [],
         },
       ],
     });
@@ -1032,11 +1051,14 @@ describe("side statement parts, layout, and drawing", () => {
         area: { x: 0.6666666666666666, y: 0.8125, w: 7.039793333333333, h: 5.833333333333333 },
         o: { size: 18, color: "19283A", align: "left", valign: "middle", line: 1.2, floor: 0.5 },
         foot: { h: 0 },
-        media: { src: "portrait.png", alt: "Ada", href: undefined, round: true },
-        avatar: {
-          x: 9.053063333333334,
-          y: 2.395833333333333,
-          d: 2.6666666666666665,
+        side: {
+          kind: "avatar",
+          media: { src: "portrait.png", alt: "Ada", href: undefined, round: true },
+          disc: {
+            x: 9.053063333333334,
+            y: 2.395833333333333,
+            d: 2.6666666666666665,
+          },
         },
       },
     },
@@ -1060,12 +1082,15 @@ describe("side statement parts, layout, and drawing", () => {
         area: { x: 0.6666666666666666, y: 0.8125, w: 7.039793333333333, h: 5.833333333333333 },
         o: { size: 18, color: "19283A", align: "center", valign: "middle", line: 1.2, floor: 0.5 },
         foot: { h: 0 },
-        media: { src: "portrait.png", alt: "Shot", href: "https://example.com", round: false },
-        mediaArea: {
-          x: 8.10646,
-          y: 0.8125,
-          w: 4.559873333333333,
-          h: 5.833333333333333,
+        side: {
+          kind: "picture",
+          media: { src: "portrait.png", alt: "Shot", href: "https://example.com", round: false },
+          area: {
+            x: 8.10646,
+            y: 0.8125,
+            w: 4.559873333333333,
+            h: 5.833333333333333,
+          },
         },
       },
     },
@@ -1100,11 +1125,30 @@ describe("side statement parts, layout, and drawing", () => {
   it.each<{
     label: string;
     slide: StatementSlide;
-    expectedPics: Array<{ x: number; y: number; w: number; h: number }>;
-    expectedTexts: string[];
+    expected: {
+      warnings: string[];
+      pics: Array<{
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+        alt: string | undefined;
+        href: string | undefined;
+      }>;
+      shapes: Array<{
+        prst: string | undefined;
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+        fill: string | undefined;
+        texts: string[];
+        links: string[];
+      }>;
+    };
   }>([
     {
-      label: "draws a round portrait avatar beside an attributed statement",
+      label: "draws a round portrait avatar with alt text beside an attributed statement box",
       slide: {
         type: "statement",
         lines: ["Quote"],
@@ -1112,31 +1156,81 @@ describe("side statement parts, layout, and drawing", () => {
         imageSrc: "portrait.png",
         imageAlt: "Ada",
       },
-      expectedPics: [{ x: 9.0531, y: 2.3958, w: 2.6667, h: 2.6667 }],
-      expectedTexts: ["Quote", "Ada"],
+      expected: {
+        warnings: [],
+        pics: [{ x: 9.0531, y: 2.3958, w: 2.6667, h: 2.6667, alt: "Ada", href: undefined }],
+        shapes: [
+          {
+            prst: "rect",
+            x: 0.6667,
+            y: 0.8125,
+            w: 7.1102,
+            h: 5.8333,
+            fill: "19283A",
+            texts: ["Quote", "Ada"],
+            links: [],
+          },
+        ],
+      },
     },
     {
-      label: "draws a contained side picture for a linkedImage statement",
+      label: "draws a linked side picture with alt text, hyperlink, and footer",
       slide: {
         type: "statement",
         lines: ["Look"],
         linkedImage: { src: "portrait.png", alt: "Shot", href: "https://example.com" },
+        footer: "Source 2026",
       },
-      expectedPics: [{ x: 8.1065, y: 1.4492, w: 4.5599, h: 4.5599 }],
-      expectedTexts: ["Look"],
+      expected: {
+        warnings: [],
+        pics: [
+          {
+            x: 8.1065,
+            y: 1.143,
+            w: 4.5599,
+            h: 4.5599,
+            alt: "Shot",
+            href: "https://example.com",
+          },
+        ],
+        shapes: [
+          {
+            prst: "rect",
+            x: 0.6315,
+            y: 0.8125,
+            w: 7.1102,
+            h: 5.2208,
+            fill: "19283A",
+            texts: ["Look"],
+            links: [],
+          },
+          {
+            prst: "line",
+            x: 0.6667,
+            y: 6.0833,
+            w: 11.9997,
+            h: 0.001,
+            fill: "D0D2D8",
+            texts: [],
+            links: [],
+          },
+          {
+            prst: "rect",
+            x: 0.6667,
+            y: 6.1833,
+            w: 12.1197,
+            h: 0.4625,
+            fill: "19283A",
+            texts: ["Source 2026"],
+            links: [],
+          },
+        ],
+      },
     },
-  ])("drawSideStatement $label", async ({ slide, expectedPics, expectedTexts }) => {
+  ])("drawSideStatement $label", async ({ slide, expected }) => {
     const out = await drawStatementOnSheet(assetsDir, (sheet) => {
       drawSideStatement(sheet, slide);
     });
-    expect({
-      warnings: out.warnings,
-      pics: out.pics,
-      texts: out.shapes.flatMap((sh) => sh.texts),
-    }).toEqual({
-      warnings: [],
-      pics: expectedPics,
-      texts: expectedTexts,
-    });
+    expect(out).toEqual(expected);
   });
 });

@@ -22,6 +22,9 @@ export interface QrStatementBox {
 }
 
 export interface QrStatementLayout {
+  src: string;
+  alt: string;
+  href: string;
   boxes: QrStatementBox[];
   card: Area;
   picture: Area;
@@ -110,6 +113,9 @@ export function qrStatementLayout(look: Look, d: StatementSlide): QrStatementLay
   const x = W - EDGE - colW + (colW - q) / 2;
   const pad = 2.5 * REM;
   return {
+    src: qr.src,
+    alt: qrAlt(qr.href, look.lang),
+    href: qr.href,
     boxes,
     card: { x, y: top, w: q, h: q },
     picture: { x: x + pad, y: top + pad, w: q - 2 * pad, h: q - 2 * pad },
@@ -121,14 +127,13 @@ export function qrStatementLayout(look: Look, d: StatementSlide): QrStatementLay
 
 /** Draws a QR statement slide from its measured layout. */
 export function drawQrStatement(sheet: Sheet, d: StatementSlide): void {
-  const qr = d.qr;
   const layout = qrStatementLayout(sheet, d);
-  if (!qr || !layout) return;
+  if (!layout) return;
   for (const box of layout.boxes) sheet.box(box.paras, box.area, box.o);
   sheet.rounded(layout.card, { fill: "FFFFFF", line: sheet.c.border }, CORNER);
-  sheet.picture(qr.src, layout.picture, { alt: qrAlt(qr.href, sheet.lang), href: qr.href });
+  sheet.picture(layout.src, layout.picture, { alt: layout.alt, href: layout.href });
   sheet.box(
-    { runs: [{ text: layout.label, options: { hyperlink: { url: qr.href } } }] },
+    { runs: [{ text: layout.label, options: { hyperlink: { url: layout.href } } }] },
     layout.labelArea,
     { size: PT.base, mono: true, color: sheet.c.teal, align: "center" },
   );
