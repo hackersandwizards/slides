@@ -11,7 +11,6 @@ export function activityPrompt(look: Look, text: string, top: number) {
   const o = { size: PT.lead, color: look.c.ink };
   const h = look.need(text, CW - 0.6, o) + 0.3;
   return {
-    text,
     o,
     card: { x: EDGE, y: top, w: CW, h },
     area: { x: EDGE + 0.3, y: top + 0.15, w: CW - 0.6, h: h - 0.3 },
@@ -64,7 +63,7 @@ export function drawActivity(sheet: Sheet, d: Extract<Slide, { type: "activity" 
   if (d.prompt) {
     const prompt = activityPrompt(sheet, d.prompt, top);
     sheet.card(prompt.card, c.litCard);
-    sheet.box(prompt.text, prompt.area, prompt.o);
+    sheet.box(d.prompt, prompt.area, prompt.o);
     top = prompt.next;
   }
   const frame = activityFrame(sheet, d, top);

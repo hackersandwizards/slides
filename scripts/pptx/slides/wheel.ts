@@ -22,77 +22,99 @@ export function wheelSides(segments: WheelSlide["segments"]) {
   return { centres, left, right };
 }
 
-interface WheelSide {
-  indices: number[];
-  x: number;
-  w: number;
+const WHEEL_TILE = 10 * 0.25 * REM;
+
+interface WheelText {
+  title: BoxOpts;
+  body: BoxOpts;
 }
 
-/** Measures the full-width rows and the natural width of the left column. */
-export function wheelMeasure(look: Look, d: WheelSlide, width: number) {
-  // As `WheelSlide`: a ring of segments at 40 % teal, a 1.5 degree gap each side, numbered from
-  // the top clockwise, the centre on a soft disc; each segment's tile, title and text on the side
-  // its centre lies on, both columns against the ring.
-  const { c } = look;
-  const dia = 24 * REM;
-  const tile = 10 * 0.25 * REM;
-  const colW = (width - dia - 2 * 2 * REM) / 2;
-  const textW = colW - tile - 0.75 * REM;
-  const titleO: BoxOpts = { size: PT.h4, ...TITLE, color: c.ink, line: 1.25, tracking: -0.015 };
-  const textO: BoxOpts = { size: PT.sm, color: c.muted, line: 1.375 };
-  const { centres, left, right } = wheelSides(d.segments);
-  const heights = d.segments.map((segment) =>
+interface WheelRow {
+  segment: WheelSlide["segments"][number];
+  number: number;
+  height: number;
+}
+
+/** Heights of the rows at one common text width. */
+export function wheelRowHeights(
+  look: Look,
+  segments: WheelSlide["segments"],
+  measure: WheelText & { width: number },
+) {
+  return segments.map((segment) =>
     Math.max(
-      tile,
-      look.need(segment.title, textW, titleO) + 0.25 * REM + look.need(segment.text, textW, textO),
+      WHEEL_TILE,
+      look.need(segment.title, measure.width, measure.title) +
+        0.25 * REM +
+        look.need(segment.text, measure.width, measure.body),
     ),
   );
+}
+
+/** Natural width of the left column, including its tiles and text inset. */
+export function wheelLeftWidth(segments: WheelSlide["segments"], left: number[]): number {
   // The left column stands against the ring, as `justify-self-end` sets it.
-  const leftW = Math.max(
+  return Math.max(
     0,
     ...left.map(
       (k) =>
-        tile +
+        WHEEL_TILE +
         0.75 * REM +
         Math.max(
-          textWidth(d.segments[k].title, { size: PT.h4, ...TITLE }),
-          textWidth(d.segments[k].text, textO),
+          textWidth(segments[k].title, { size: PT.h4, ...TITLE }),
+          textWidth(segments[k].text, { size: PT.sm }),
         ) +
         0.02,
     ),
   );
-  return { dia, tile, colW, textW, titleO, textO, centres, left, right, heights, leftW };
 }
 
-/** Positions the measured wheel and its two columns around the shared centre. */
+/** Height of a column with gaps between its rows. */
+export function wheelColumnHeight(rows: readonly number[]): number {
+  return rows.reduce((sum, height, i) => sum + height + (i ? 1.75 * REM : 0), 0);
+}
+
+/** Positions each part of the wheel at the body size. */
 export function wheelLayout(look: Look, d: WheelSlide, a: Area) {
   const { c } = look;
-  const { dia, tile, colW, textW, titleO, textO, centres, left, right, heights, leftW } =
-    wheelMeasure(look, d, a.w);
-  const colH = (list: number[]) =>
-    list.reduce((sum, k, i) => sum + heights[k] + (i ? 1.75 * REM : 0), 0);
+  const dia = 24 * REM;
+  const colW = (a.w - dia - 2 * 2 * REM) / 2;
+  const width = colW - WHEEL_TILE - 0.75 * REM;
+  const style: WheelText = {
+    title: { size: PT.h4, ...TITLE, color: c.ink, line: 1.25, tracking: -0.015 },
+    body: { size: PT.sm, color: c.muted, line: 1.375 },
+  };
+  const { centres, left, right } = wheelSides(d.segments);
+  const heights = wheelRowHeights(look, d.segments, { ...style, width });
+  const leftH = wheelColumnHeight(left.map((i) => heights[i]));
+  const rightH = wheelColumnHeight(right.map((i) => heights[i]));
   const capO: BoxOpts = { size: PT.sm, color: c.muted, line: 1.45 };
   const capH = d.caption ? REM + look.need(d.caption, a.w, capO) : 0;
-  const h = Math.max(dia, colH(left), colH(right));
+  const h = Math.max(dia, leftH, rightH);
   const top = a.y + Math.max(0, a.h - h - capH) / 2.25;
   const cx = a.x + colW + 2 * REM + dia / 2;
   const cy = top + h / 2;
+  const leftW = wheelLeftWidth(d.segments, left);
+  const rows = (indices: number[]) =>
+    indices.map((i) => ({
+      segment: d.segments[i],
+      number: i + 1,
+      height: heights[i],
+    }));
+  const leftColumn = {
+    x: a.x + colW - Math.min(colW, leftW),
+    y: cy - leftH / 2,
+    w: Math.min(width, leftW - WHEEL_TILE - 0.75 * REM),
+    style,
+  };
+  const rightColumn = { x: cx + dia / 2 + 2 * REM, y: cy - rightH / 2, w: width, style };
   return {
-    dia,
-    cx,
-    cy,
-    centres,
-    heights,
-    tile,
-    titleO,
-    textO,
-    segments: d.segments,
-    left: {
-      indices: left,
-      x: a.x + colW - Math.min(colW, leftW),
-      w: Math.min(textW, leftW - tile - 0.75 * REM),
-    },
-    right: { indices: right, x: cx + dia / 2 + 2 * REM, w: textW },
+    ring: { dia, cx, cy, centres },
+    hub: { dia, cx, cy },
+    columns: [
+      wheelColumnLayout(look, rows(left), leftColumn),
+      wheelColumnLayout(look, rows(right), rightColumn),
+    ],
     caption: { area: { x: a.x, y: top + h + REM, w: a.w, h: capH - REM }, o: capO },
   };
 }
@@ -100,7 +122,7 @@ export function wheelLayout(look: Look, d: WheelSlide, a: Area) {
 type WheelLayout = ReturnType<typeof wheelLayout>;
 
 /** Places the numbered arcs in clockwise order. */
-export function wheelRing(sheet: Sheet, { dia, cx, cy, centres }: WheelLayout): void {
+export function wheelRing(sheet: Sheet, { dia, cx, cy, centres }: WheelLayout["ring"]): void {
   const { slide: s, c } = sheet;
   const n = centres.length;
   const unit = dia / 200;
@@ -135,7 +157,7 @@ export function wheelRing(sheet: Sheet, { dia, cx, cy, centres }: WheelLayout): 
 }
 
 /** Draws the disc and label at the centre of the ring. */
-export function wheelHub(sheet: Sheet, center: string, { dia, cx, cy }: WheelLayout): void {
+export function wheelHub(sheet: Sheet, center: string, { dia, cx, cy }: WheelLayout["hub"]): void {
   const { slide: s, c } = sheet;
   const hub = dia * 0.56;
   s.addShape("ellipse", {
@@ -160,28 +182,33 @@ export function wheelHub(sheet: Sheet, center: string, { dia, cx, cy }: WheelLay
 }
 
 /** Measures the title and body in this column's actual text width. */
-export function wheelColumnLayout(look: Look, layout: WheelLayout, side: WheelSide) {
-  const { cy, heights, segments, tile, titleO, textO } = layout;
-  const { indices, x, w } = side;
-  const height = indices.reduce((sum, k, i) => sum + heights[k] + (i ? 1.75 * REM : 0), 0);
-  let y = cy - height / 2;
-  const items = indices.map((k) => {
-    const { title, text } = segments[k];
+export function wheelColumnLayout(
+  look: Look,
+  rows: readonly WheelRow[],
+  column: Pick<Area, "x" | "y" | "w"> & { style: WheelText },
+) {
+  const {
+    x,
+    w,
+    style: { title: titleO, body: textO },
+  } = column;
+  let y = column.y;
+  const items = rows.map(({ segment: { title, text }, number, height }) => {
     const th = look.need(title, w, titleO);
     const item = {
-      number: String(k + 1),
+      number: String(number),
       title,
       text,
-      tile: { x, y, w: tile, h: tile },
-      titleArea: { x: x + tile + 0.75 * REM, y, w, h: th },
+      tile: { x, y, w: WHEEL_TILE, h: WHEEL_TILE },
+      titleArea: { x: x + WHEEL_TILE + 0.75 * REM, y, w, h: th },
       textArea: {
-        x: x + tile + 0.75 * REM,
+        x: x + WHEEL_TILE + 0.75 * REM,
         y: y + th + 0.25 * REM,
         w,
         h: look.need(text, w, textO),
       },
     };
-    y += heights[k] + 1.75 * REM;
+    y += height + 1.75 * REM;
     return item;
   });
   return { items, titleO, textO };
@@ -207,10 +234,12 @@ export function wheelColumn(sheet: Sheet, column: ReturnType<typeof wheelColumnL
 }
 
 export function drawWheel(sheet: Sheet, d: Extract<Slide, { type: "wheel" }>): void {
+  // As `WheelSlide`: a ring of segments at 40 % teal, a 1.5 degree gap each side, numbered from
+  // the top clockwise, the centre on a soft disc; each segment's tile, title and text on the side
+  // its centre lies on, both columns against the ring.
   const layout = wheelLayout(sheet, d, BODY(header(sheet, d)));
-  wheelRing(sheet, layout);
-  wheelHub(sheet, d.center, layout);
-  wheelColumn(sheet, wheelColumnLayout(sheet, layout, layout.left));
-  wheelColumn(sheet, wheelColumnLayout(sheet, layout, layout.right));
+  wheelRing(sheet, layout.ring);
+  wheelHub(sheet, d.center, layout.hub);
+  for (const column of layout.columns) wheelColumn(sheet, column);
   if (d.caption) sheet.box(d.caption, layout.caption.area, layout.caption.o);
 }

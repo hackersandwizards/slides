@@ -188,3 +188,14 @@ it("writes the curve annotation in the footer band", () => {
     },
   ]);
 });
+
+it("uses the full body for an unannotated curve", () => {
+  expect(curveArea({ type: "chart", variant: "graph" }, area)).toEqual({ x: 1, y: 1, w: 8, h: 4 });
+});
+
+it("draws no annotation box when a curve has none", () => {
+  const sheet = curveSheet();
+  const boxes = vi.spyOn(sheet, "box").mockImplementation(() => {});
+  drawCurveAnnotation(sheet, { type: "chart", variant: "cycle" });
+  expect(boxes.mock.calls).toEqual([]);
+});
