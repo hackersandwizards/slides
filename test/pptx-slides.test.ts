@@ -666,10 +666,10 @@ describe("slides-pptx slide variants", () => {
     expect(xml).toBe(await onlySlide(replacement));
   });
 
-  it("rejects a slide with an unknown type", async () => {
-    const unsupported = { type: "nope" } as unknown as Slide;
+  it.each(["nope", "constructor"])("rejects an unsupported slide type %s", async (type) => {
+    const unsupported = { type } as unknown as Slide;
     expect(await rejection(onlySlide(unsupported))).toBe(
-      'Error: slide 1 is a "nope", which slides-pptx cannot draw',
+      `Error: slide 1 is a "${type}", which slides-pptx cannot draw`,
     );
   });
 

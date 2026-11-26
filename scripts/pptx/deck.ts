@@ -21,8 +21,6 @@ import { Sheet, type Output } from "./sheet";
 import { SLIDES, slideDrawn } from "./slides";
 import { W, H } from "./stage";
 
-type Render = (sheet: Sheet, slide: never) => void;
-
 export function slidePartNumber(part: string): number | undefined {
   const match = /^ppt\/slides\/slide(\d+)\.xml$/.exec(part);
   return match ? Number(match[1]) : undefined;
@@ -63,11 +61,11 @@ export function buildSlides(
     const sheet = new Sheet(lookOf(slide), s, out);
     frame(sheet, deck, i);
     const drawn = slideDrawn(slide);
-    const render = SLIDES[drawn.type as keyof typeof SLIDES] as Render | undefined;
-    if (!render)
+    if (!Object.hasOwn(SLIDES, drawn.type))
       throw new Error(
         `slide ${i + 1} is a ${JSON.stringify(slide.type)}, which slides-pptx cannot draw`,
       );
+    const render = SLIDES[drawn.type as keyof typeof SLIDES];
     render(sheet, drawn as never);
   });
 }
