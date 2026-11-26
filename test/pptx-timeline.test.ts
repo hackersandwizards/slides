@@ -7,11 +7,17 @@ import {
   drawTimelineLabels,
   drawTimelineLine,
   eventParas,
+  timelineLayout,
+  type TimelineLayout,
+  type TimelineLineLayout,
 } from "../scripts/pptx/blocks/timeline";
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
+import type { Para } from "../scripts/pptx/text";
 import { shapesOf } from "./fixtures/rendered-deck";
+
+const r4 = (n: number) => Number(n.toFixed(4));
 
 async function drawOnSheet(draw: (sheet: Sheet) => void) {
   const pptx = new PptxGenJS();
@@ -29,6 +35,19 @@ async function drawOnSheet(draw: (sheet: Sheet) => void) {
   return shapesOf(await file.async("string"));
 }
 
+function shapeGeometry(sh: ReturnType<typeof shapesOf>[number]) {
+  return {
+    prst: sh.prst,
+    x: r4(sh.x),
+    y: r4(sh.y),
+    w: r4(sh.w),
+    h: r4(sh.h),
+    fill: sh.fill,
+    dash: sh.dash,
+    texts: sh.texts,
+  };
+}
+
 describe("eventParas", () => {
   const day = palette(false);
 
@@ -36,33 +55,206 @@ describe("eventParas", () => {
     label: string;
     event: Block<"timeline">["events"][number];
     hi: boolean;
-    expected: {
-      count: number;
-      titleColor: string | undefined;
-      textAfter: number | undefined;
-      figure: string | undefined;
-    };
+    expected: Para[];
   }>([
     {
       label: "a highlighted event with text and negative figure",
       event: { title: "Launch", text: "Live", figure: "-5%" },
       hi: true,
-      expected: { count: 3, titleColor: "1A7285", textAfter: 16, figure: "−5%" },
+      expected: [
+        {
+          runs: [{ text: "Launch", options: { color: "1A7285" } }],
+          mono: true,
+          bold: true,
+          after: 4,
+        },
+        { runs: [{ text: "Live", options: { color: "545861" } }], rel: 0.9, after: 16 },
+        {
+          runs: [{ text: "−5%", options: { color: "1A7285" } }],
+          mono: true,
+          bold: true,
+          rel: 2.2222222222222223,
+        },
+      ],
     },
     {
       label: "a plain event without text or figure",
       event: { title: "Plan" },
       hi: false,
-      expected: { count: 2, titleColor: "19283A", textAfter: 8, figure: undefined },
+      expected: [
+        {
+          runs: [{ text: "Plan", options: { color: "19283A" } }],
+          mono: true,
+          bold: true,
+          after: 4,
+        },
+        { runs: [], rel: 0.9, after: 8 },
+      ],
     },
   ])("builds paragraphs for $label", ({ event, hi, expected }) => {
-    const paras = eventParas(event, day, hi);
-    expect({
-      count: paras.length,
-      titleColor: paras[0].runs[0].options?.color,
-      textAfter: paras[1].after,
-      figure: paras[2]?.runs[0].text,
-    }).toEqual(expected);
+    expect(eventParas(event, day, hi)).toEqual(expected);
+  });
+});
+
+describe("timelineLayout", () => {
+  const look = new Look(palette(false), "en", false);
+  const area = { x: 1, y: 2, w: 9, h: 3 };
+
+  it.each<{
+    label: string;
+    block: Block<"timeline">;
+    expected: TimelineLayout;
+  }>([
+    {
+      label:
+        "a highlighted event, suppressed first segment, kept second segment, and mid-timeline now",
+      block: {
+        type: "timeline",
+        events: [
+          { title: "Start", segment: "ignored", when: "Q1" },
+          { title: "Ship", text: "Cut release", segment: "2 weeks", when: "Q2", figure: "-5%" },
+          { title: "Scale", when: "Q3" },
+        ],
+        highlight: 1,
+        now: 1,
+      },
+      expected: {
+        line: { y: 2.35, from: 2.5, to: 8.5, dashFrom: 5.5 },
+        events: [
+          {
+            x: 1,
+            w: 3,
+            dot: { fill: "FFFFFF", line: "545861" },
+            segment: undefined,
+            when: "Q1",
+            paras: [
+              {
+                runs: [{ text: "Start", options: { color: "19283A" } }],
+                mono: true,
+                bold: true,
+                after: 4,
+              },
+              { runs: [], rel: 0.9, after: 8 },
+            ],
+          },
+          {
+            x: 4,
+            w: 3,
+            dot: { fill: "1A7285", line: "1A7285" },
+            segment: "2 weeks",
+            when: "Q2",
+            paras: [
+              {
+                runs: [{ text: "Ship", options: { color: "1A7285" } }],
+                mono: true,
+                bold: true,
+                after: 4,
+              },
+              {
+                runs: [{ text: "Cut release", options: { color: "545861" } }],
+                rel: 0.9,
+                after: 16,
+              },
+              {
+                runs: [{ text: "−5%", options: { color: "1A7285" } }],
+                mono: true,
+                bold: true,
+                rel: 2.2222222222222223,
+              },
+            ],
+          },
+          {
+            x: 7,
+            w: 3,
+            dot: { fill: "FFFFFF", line: "545861" },
+            segment: undefined,
+            when: "Q3",
+            paras: [
+              {
+                runs: [{ text: "Scale", options: { color: "19283A" } }],
+                mono: true,
+                bold: true,
+                after: 4,
+              },
+              { runs: [], rel: 0.9, after: 8 },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      label: "a continued timeline with now before the first event",
+      block: {
+        type: "timeline",
+        events: [{ title: "A" }, { title: "B" }],
+        continues: "both",
+        now: -1,
+      },
+      expected: {
+        line: { y: 2.35, from: 0, to: 13.333, dashFrom: 0 },
+        events: [
+          {
+            x: 1,
+            w: 4.5,
+            dot: { fill: "FFFFFF", line: "545861" },
+            segment: undefined,
+            when: undefined,
+            paras: [
+              {
+                runs: [{ text: "A", options: { color: "19283A" } }],
+                mono: true,
+                bold: true,
+                after: 4,
+              },
+              { runs: [], rel: 0.9, after: 8 },
+            ],
+          },
+          {
+            x: 5.5,
+            w: 4.5,
+            dot: { fill: "FFFFFF", line: "545861" },
+            segment: undefined,
+            when: undefined,
+            paras: [
+              {
+                runs: [{ text: "B", options: { color: "19283A" } }],
+                mono: true,
+                bold: true,
+                after: 4,
+              },
+              { runs: [], rel: 0.9, after: 8 },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      label: "a completed timeline without continuation or dashed run-out",
+      block: { type: "timeline", events: [{ title: "Done" }] },
+      expected: {
+        line: { y: 2.35, from: 5.5, to: 5.5, dashFrom: undefined },
+        events: [
+          {
+            x: 1,
+            w: 9,
+            dot: { fill: "FFFFFF", line: "545861" },
+            segment: undefined,
+            when: undefined,
+            paras: [
+              {
+                runs: [{ text: "Done", options: { color: "19283A" } }],
+                mono: true,
+                bold: true,
+                after: 4,
+              },
+              { runs: [], rel: 0.9, after: 8 },
+            ],
+          },
+        ],
+      },
+    },
+  ])("computes layout for $label", ({ block, expected }) => {
+    expect(timelineLayout(look, block, area)).toEqual(expected);
   });
 });
 
@@ -76,92 +268,172 @@ describe("drawTimelineLabels", () => {
         { area: { x: 1, y: 2, w: 10, h: 3 }, k: 1 },
       );
     });
-    expect({
-      rest,
-      labels: shapes.map(({ y, texts }) => ({ y, text: texts.join("") })),
-    }).toEqual({
+    expect({ rest, shapes: shapes.map(shapeGeometry) }).toEqual({
       rest: { x: 2.2, y: 2, w: 8.8, h: 3 },
-      labels: [
-        { y: 2, text: "Year" },
-        { y: 2.55, text: "Phase" },
-        { y: 2.8, text: "Note" },
+      shapes: [
+        {
+          prst: "rect",
+          x: 0.989,
+          y: 2,
+          w: 1.111,
+          h: 0.25,
+          fill: "545861",
+          dash: undefined,
+          texts: ["Year"],
+        },
+        {
+          prst: "rect",
+          x: 0.989,
+          y: 2.55,
+          w: 1.111,
+          h: 0.25,
+          fill: "545861",
+          dash: undefined,
+          texts: ["Phase"],
+        },
+        {
+          prst: "rect",
+          x: 0.989,
+          y: 2.8,
+          w: 1.111,
+          h: 0.25,
+          fill: "545861",
+          dash: undefined,
+          texts: ["Note"],
+        },
       ],
     });
   });
 });
 
 describe("drawTimelineLine", () => {
-  const threeEvents = [{ title: "A" }, { title: "B" }, { title: "C" }];
-
   it.each<{
     label: string;
-    block: Block<"timeline">;
-    expected: { x: number; w: number; dash: string | undefined }[];
+    line: TimelineLineLayout;
+    expected: ReturnType<typeof shapeGeometry>[];
   }>([
     {
-      label: "a mid-timeline now splitting solid and dashed segments",
-      block: { type: "timeline", events: threeEvents, now: 1 },
+      label: "a base line with a mid-timeline dashed overlay",
+      line: { y: 2.35, from: 2.5, to: 8.5, dashFrom: 5.5 },
       expected: [
-        { x: 2.5, w: 6, dash: "solid" },
-        { x: 5.5, w: 3, dash: "dash" },
-        { x: 5.5, w: 3, dash: "dash" },
+        {
+          prst: "line",
+          x: 2.5,
+          y: 2.35,
+          w: 6,
+          h: 0.001,
+          fill: "D0D2D8",
+          dash: "solid",
+          texts: [],
+        },
+        {
+          prst: "line",
+          x: 5.5,
+          y: 2.35,
+          w: 3,
+          h: 0.001,
+          fill: "F7F9FA",
+          dash: "dash",
+          texts: [],
+        },
+        {
+          prst: "line",
+          x: 5.5,
+          y: 2.35,
+          w: 3,
+          h: 0.001,
+          fill: "545861",
+          dash: "dash",
+          texts: [],
+        },
       ],
     },
     {
-      label: "a continued timeline with now before the first event",
-      block: {
-        type: "timeline",
-        events: threeEvents,
-        continues: "both",
-        now: -1,
-      },
+      label: "a completed solid line with no dashed overlay",
+      line: { y: 2.35, from: 2.5, to: 8.5, dashFrom: undefined },
       expected: [
-        { x: 0, w: 13.33299978127734, dash: "solid" },
-        { x: 0, w: 13.33299978127734, dash: "dash" },
-        { x: 0, w: 13.33299978127734, dash: "dash" },
+        {
+          prst: "line",
+          x: 2.5,
+          y: 2.35,
+          w: 6,
+          h: 0.001,
+          fill: "D0D2D8",
+          dash: "solid",
+          texts: [],
+        },
       ],
     },
-  ])("draws base and dashed overlay lines for $label", async ({ block, expected }) => {
+  ])("draws $label", async ({ line, expected }) => {
     const shapes = await drawOnSheet((sheet) => {
-      drawTimelineLine(sheet, block, { x: 1, y: 2, w: 9, h: 3 });
+      drawTimelineLine(sheet, line);
     });
-    expect(shapes.map(({ x, w, dash }) => ({ x, w, dash }))).toEqual(expected);
+    expect(shapes.map(shapeGeometry)).toEqual(expected);
   });
 });
 
 describe("drawTimelineEvent", () => {
   it("draws the highlighted dot, segment pill, when heading and body text", async () => {
-    const day = palette(false);
+    const look = new Look(palette(false), "en", false);
+    const area = { x: 1, y: 2, w: 9, h: 3 };
+    const layout = timelineLayout(
+      look,
+      {
+        type: "timeline",
+        events: [
+          { title: "Start", when: "Q1" },
+          { title: "Ship", text: "Cut release", segment: "2 weeks", when: "Q2", figure: "-5%" },
+          { title: "Scale", when: "Q3" },
+        ],
+        highlight: 1,
+        now: 1,
+      },
+      area,
+    );
     const shapes = await drawOnSheet((sheet) => {
-      drawTimelineEvent(
-        sheet,
-        {
-          x: 4,
-          w: 3,
-          dot: { fill: day.teal, line: day.teal },
-          segment: "2 weeks",
-          when: "Q2",
-          paras: eventParas({ title: "Ship", text: "Cut release" }, day, true),
-        },
-        { area: { x: 1, y: 2, w: 9, h: 3 }, k: 1, centered: false },
-      );
+      drawTimelineEvent(sheet, layout.events[1], { area, k: 1, centered: false });
     });
-    const dot = shapes.find((sh) => sh.prst === "ellipse");
-    const segment = shapes.find((sh) => sh.texts.includes("2 weeks"));
-    const when = shapes.find((sh) => sh.texts.includes("Q2"));
-    assert(dot, "dot");
-    assert(segment, "segment");
-    assert(when, "when");
-    expect({
-      dot: { fill: dot.fill, x: Number(dot.x.toFixed(4)), y: Number(dot.y.toFixed(4)) },
-      segmentFill: segment.fill,
-      whenY: when.y,
-      allTexts: shapes.flatMap((sh) => sh.texts),
-    }).toEqual({
-      dot: { fill: "1A7285", x: 5.41, y: 2.26 },
-      segmentFill: "F7F9FA",
-      whenY: 2,
-      allTexts: ["2 weeks", "Q2", "Ship", "Cut release"],
-    });
+    expect(shapes.map(shapeGeometry)).toEqual([
+      {
+        prst: "ellipse",
+        x: 5.41,
+        y: 2.26,
+        w: 0.18,
+        h: 0.18,
+        fill: "1A7285",
+        dash: "solid",
+        texts: [],
+      },
+      {
+        prst: "rect",
+        x: 3.5223,
+        y: 2.24,
+        w: 0.9554,
+        h: 0.22,
+        fill: "F7F9FA",
+        dash: undefined,
+        texts: ["2 weeks"],
+      },
+      {
+        prst: "rect",
+        x: 4.0355,
+        y: 2,
+        w: 2.929,
+        h: 0.22,
+        fill: "545861",
+        dash: undefined,
+        texts: ["Q2"],
+      },
+      {
+        prst: "rect",
+        x: 4.0557,
+        y: 2.55,
+        w: 2.8886,
+        h: 2.45,
+        fill: "1A7285",
+        dash: undefined,
+        texts: ["Ship", "Cut release", "−5%"],
+      },
+    ]);
   });
 });

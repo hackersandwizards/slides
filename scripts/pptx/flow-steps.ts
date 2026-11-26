@@ -103,7 +103,7 @@ export function stepBoxWidth(item: StackItem, inner: number, colW: number): numb
 /** Builds the subtitle, body text, and badge stack items under a step's title. */
 export function stepBodyItems(st: FlowStep, c: Palette, k: number): StackItem[] {
   const sp = (v: number) => spacing(v, k);
-  const accent = st.dim ? c.muted : c.teal;
+  const { accent, textColor } = stepTone(st, false, c);
   const textO: BoxOpts = { size: PT.base * k, color: c.ink, line: 1.375, align: "center" };
   return [
     ...(st.subtitle
@@ -118,7 +118,7 @@ export function stepBodyItems(st: FlowStep, c: Palette, k: number): StackItem[] 
     ...(st.text
       ? [
           {
-            text: { runs: md(st.text, c, { color: st.dim ? c.muted : c.ink }) },
+            text: { runs: md(st.text, c, { color: textColor }) },
             o: textO,
             gap: sp(3),
           },
@@ -166,8 +166,7 @@ export function stepsTypography(c: Palette, input: Steps, k: number) {
 
 /** Steps on one line as the web's `FlowSteps` draws them: a tile each, numbered unless a label
  *  counts already, a grey line with an arrowhead from tile to tile, the title, subtitle, text and
- *  badge centred under the tile, and a `loop` back above, labelled when non-empty. Returns the
- *  measured step layout and total height `h`. */
+ *  badge centred under the tile, and a `loop` back above, labelled when non-empty. */
 export function stepsLayout(look: Look, input: Steps, { w, k }: Measure): StepsLayout {
   const { c } = look;
   const { steps, highlight, loop, dense = false } = input;
@@ -178,7 +177,6 @@ export function stepsLayout(look: Look, input: Steps, { w, k }: Measure): StepsL
   const { inTile, marks } = stepMarks(steps);
   const loopH = loop === undefined ? 0 : sp(loop ? 24 : 16) + sp(2);
   const { titleO, labelO, markBase } = stepsTypography(c, input, k);
-  let h = 0;
   const placed = steps.map((st, i): FlowStepLayout => {
     const on = highlight === i;
     const colors = stepTone(st, on, c);
@@ -203,7 +201,6 @@ export function stepsLayout(look: Look, input: Steps, { w, k }: Measure): StepsL
       y += ph;
       return box;
     });
-    h = Math.max(h, y);
     return {
       cx: (i + 0.5) * colW,
       tileY: loopH,
@@ -215,6 +212,10 @@ export function stepsLayout(look: Look, input: Steps, { w, k }: Measure): StepsL
       boxes,
     };
   });
+  const h = placed.reduce((max, step) => {
+    const last = step.boxes[step.boxes.length - 1];
+    return Math.max(max, last.y + last.h);
+  }, 0);
   return { k, colW, tile, loopH, loop, steps: placed, h };
 }
 
@@ -273,12 +274,12 @@ export function drawConnector(sheet: Sheet, layout: StepsLayout, from: Place): v
 export function drawLoop(sheet: Sheet, layout: StepsLayout, at: Place): void {
   if (layout.loop === undefined) return;
   const { slide: s, c } = sheet;
-  const { k, loop, loopH, steps } = layout;
+  const { k, colW, loop, loopH, steps } = layout;
   const sp = (v: number) => spacing(v, k);
   const tileY = at.y + loopH;
   // Out of the last tile, back along the top and down into the first, with its arrowhead.
   const top = at.y + (loop ? sp(6) : sp(2));
-  const [x0, x1] = [at.x + steps[0].cx, at.x + steps[steps.length - 1].cx];
+  const [x0, x1] = [at.x + 0.5 * colW, at.x + (steps.length - 1 + 0.5) * colW];
   const line = { color: c.muted, width: 2 * k };
   s.addShape("line", { x: x0, y: top, w: x1 - x0, h: 0, line });
   s.addShape("line", { x: x1, y: top, w: 0, h: tileY - sp(2) - top, line });

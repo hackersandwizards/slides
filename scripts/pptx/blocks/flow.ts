@@ -56,8 +56,7 @@ export function flowNotes(
 }
 
 /** Measures a framed flow block as `Framed` frames it: the teal dashed frame, its label over the
- *  steps, its notes beside them under a rule, and its footer under a line. Returns the measured
- *  frame layout and total height `h`. */
+ *  steps, its notes beside them under a rule, and its footer under a line. */
 export function flowFrameLayout(look: Look, b: FramedFlow, { w, k }: Measure): FlowFrameLayout {
   const { c } = look;
   const sp = (v: number) => spacing(v, k);

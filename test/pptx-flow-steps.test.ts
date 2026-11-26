@@ -18,7 +18,11 @@ import {
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
+import type { StackItem } from "../scripts/pptx/stack";
+import type { BoxOpts } from "../scripts/pptx/text";
 import { shapesOf } from "./fixtures/rendered-deck";
+
+const r4 = (n: number) => Number(n.toFixed(4));
 
 async function drawOnSheet(draw: (sheet: Sheet) => void) {
   const pptx = new PptxGenJS();
@@ -34,6 +38,20 @@ async function drawOnSheet(draw: (sheet: Sheet) => void) {
   const file = out.file("ppt/slides/slide1.xml");
   assert(file, "slide1.xml");
   return shapesOf(await file.async("string"));
+}
+
+function shapeGeometry(sh: ReturnType<typeof shapesOf>[number]) {
+  return {
+    prst: sh.prst,
+    x: r4(sh.x),
+    y: r4(sh.y),
+    w: r4(sh.w),
+    h: r4(sh.h),
+    fill: sh.fill,
+    dash: sh.dash,
+    rot: [...sh.xml.matchAll(/rot="(\d+)"/g)].map((m) => Number(m[1])),
+    texts: sh.texts,
+  };
 }
 
 describe("stepMarks", () => {
@@ -137,55 +155,134 @@ describe("stepBoxWidth", () => {
 });
 
 describe("stepBodyItems", () => {
-  it("builds muted subtitle, body text and badge stack items for a dimmed step", () => {
-    const day = palette(false);
-    const items = stepBodyItems(
-      { title: "Step", subtitle: "Sub", text: "Body", badge: "Tag", dim: true },
-      day,
-      1,
-    );
-    expect(
-      items.map((item) => ({
-        text: item.text.runs[0].text,
-        color: item.text.runs[0].options?.color,
-        bold: item.text.bold,
-        gap: item.gap,
-      })),
-    ).toEqual([
-      { text: "Sub", color: "545861", bold: true, gap: 0.07407291666666665 },
-      { text: "Body", color: "545861", bold: undefined, gap: 0.11110937499999998 },
-      { text: "Tag", color: "545861", bold: true, gap: 0.11110937499999998 },
-    ]);
+  const day = palette(false);
+  const textO: BoxOpts = { size: 18, color: "19283A", line: 1.375, align: "center" };
+
+  it.each<{ label: string; step: FlowStep; expected: StackItem[] }>([
+    {
+      label: "a dimmed step with subtitle, body text and badge",
+      step: { title: "Step", subtitle: "Sub", text: "Body", badge: "Tag", dim: true },
+      expected: [
+        {
+          text: {
+            runs: [{ text: "Sub", options: { color: "545861" } }],
+            bold: true,
+            balance: true,
+          },
+          o: textO,
+          gap: 0.07407291666666665,
+        },
+        {
+          text: { runs: [{ text: "Body", options: { color: "545861" } }] },
+          o: textO,
+          gap: 0.11110937499999998,
+        },
+        {
+          text: { runs: [{ text: "Tag", options: { color: "545861" } }], bold: true },
+          o: textO,
+          gap: 0.11110937499999998,
+        },
+      ],
+    },
+    {
+      label: "a plain step with teal accent and ink body text",
+      step: { title: "Step", subtitle: "Sub", text: "Body", badge: "Tag" },
+      expected: [
+        {
+          text: {
+            runs: [{ text: "Sub", options: { color: "1A7285" } }],
+            bold: true,
+            balance: true,
+          },
+          o: textO,
+          gap: 0.07407291666666665,
+        },
+        {
+          text: { runs: [{ text: "Body", options: { color: "19283A" } }] },
+          o: textO,
+          gap: 0.11110937499999998,
+        },
+        {
+          text: { runs: [{ text: "Tag", options: { color: "1A7285" } }], bold: true },
+          o: textO,
+          gap: 0.11110937499999998,
+        },
+      ],
+    },
+    {
+      label: "a title-only step with no body items",
+      step: { title: "Only" },
+      expected: [],
+    },
+  ])("builds stack items for $label", ({ step, expected }) => {
+    expect(stepBodyItems(step, day, 1)).toEqual(expected);
   });
 });
 
 describe("stepsTypography", () => {
   const day = palette(false);
   const many = (n: number): FlowStep[] => Array.from({ length: n }, (_, i) => ({ title: `S${i}` }));
+  const labelO: BoxOpts = {
+    size: 18,
+    color: "19283A",
+    mono: true,
+    tracking: 0.06,
+    line: 1.4,
+    align: "center",
+  };
+  const titleBase: Omit<BoxOpts, "size"> = {
+    mono: true,
+    bold: true,
+    color: "19283A",
+    line: 1.25,
+    tracking: -0.015,
+    align: "center",
+    balance: true,
+  };
+  const markOpts: Omit<BoxOpts, "size"> = {
+    mono: true,
+    bold: true,
+    color: "19283A",
+    align: "center",
+    valign: "middle",
+    line: 1,
+    floor: 0.5,
+  };
 
   it.each<{
     label: string;
     input: { steps: FlowStep[]; dense?: boolean };
-    expected: { titleSize: number; markSize: number };
+    expected: { titleO: BoxOpts; labelO: BoxOpts; markBase: BoxOpts };
   }>([
     {
       label: "a normal 3-step row",
       input: { steps: many(3) },
-      expected: { titleSize: 24, markSize: 24 },
+      expected: {
+        titleO: { size: 24, ...titleBase },
+        labelO,
+        markBase: { size: 24, ...markOpts },
+      },
     },
     {
       label: "a narrow 6-step row",
       input: { steps: many(6) },
-      expected: { titleSize: 18, markSize: 24 },
+      expected: {
+        titleO: { size: 18, ...titleBase },
+        labelO,
+        markBase: { size: 24, ...markOpts },
+      },
     },
     {
       label: "a dense 3-step row",
       input: { steps: many(3), dense: true },
-      expected: { titleSize: 18, markSize: 17.33 },
+      expected: {
+        titleO: { size: 18, ...titleBase },
+        labelO,
+        markBase: { size: 17.33, ...markOpts },
+      },
     },
-  ])("picks title and tile mark sizes for $label", ({ input, expected }) => {
-    const { titleO, markBase } = stepsTypography(day, input, 1);
-    expect({ titleSize: titleO.size, markSize: markBase.size }).toEqual(expected);
+  ])("builds typography styles for $label", ({ input, expected }) => {
+    expect(stepsTypography(day, input, 1)).toEqual(expected);
   });
 });
 
@@ -200,53 +297,185 @@ describe("stepsLayout and drawing", () => {
     loop: "Iterate",
   };
   const layout = stepsLayout(look, loopedInput, { w: 10, k: 1 });
+  const plainLayout = stepsLayout(
+    look,
+    { steps: [{ title: "One" }, { title: "Two" }] },
+    { w: 10, k: 1 },
+  );
 
   it("measures a highlighted looped flow with above-tile labels", () => {
     expect({
+      k: layout.k,
       colW: layout.colW,
       tile: layout.tile,
       loopH: layout.loopH,
+      loop: layout.loop,
       h: layout.h,
-      steps: layout.steps.map(({ cx, tileFill, mark, boxes }) => ({
+      steps: layout.steps.map(({ cx, tileY, tileFill, tileBorder, mark, markO, boxes }) => ({
         cx,
+        tileY,
         tileFill,
+        tileBorder,
         mark,
-        boxCount: boxes.length,
+        markColor: markO.color,
+        boxes: boxes.map(({ y, w, h }) => ({ y: r4(y), w: r4(w), h: r4(h) })),
       })),
     }).toEqual({
+      k: 1,
       colW: 5,
       tile: 0.8888749999999999,
       loopH: 0.9629479166666666,
+      loop: "Iterate",
       h: 4.242322916666666,
       steps: [
-        { cx: 2.5, tileFill: "F7F9FA", mark: undefined, boxCount: 5 },
-        { cx: 7.5, tileFill: "1A7285", mark: undefined, boxCount: 2 },
+        {
+          cx: 2.5,
+          tileY: 0.9629479166666666,
+          tileFill: "F7F9FA",
+          tileBorder: { color: "545861", width: 2 },
+          mark: undefined,
+          markColor: "19283A",
+          boxes: [
+            { y: 2.037, w: 4.6296, h: 0.35 },
+            { y: 2.4981, w: 4.6296, h: 0.4167 },
+            { y: 2.9889, w: 4.6296, h: 0.3438 },
+            { y: 3.4437, w: 4.6296, h: 0.3438 },
+            { y: 3.8986, w: 4.6296, h: 0.3438 },
+          ],
+        },
+        {
+          cx: 7.5,
+          tileY: 0.9629479166666666,
+          tileFill: "1A7285",
+          tileBorder: undefined,
+          mark: undefined,
+          markColor: "FFFFFF",
+          boxes: [
+            { y: 2.037, w: 4.6296, h: 0.35 },
+            { y: 2.4981, w: 4.6296, h: 0.4167 },
+          ],
+        },
       ],
     });
   });
 
-  it("draws one step's texts and tile via drawStep", async () => {
+  it.each<{
+    label: string;
+    step: (typeof layout.steps)[number];
+    expected: ReturnType<typeof shapeGeometry>[];
+  }>([
+    {
+      label: "a numbered step with tile border and mark",
+      step: plainLayout.steps[0],
+      expected: [
+        {
+          prst: "rect",
+          x: 1.162,
+          y: 2.1481,
+          w: 4.6759,
+          h: 0.4167,
+          fill: "19283A",
+          dash: undefined,
+          rot: [],
+          texts: ["One"],
+        },
+        {
+          prst: "roundRect",
+          x: 3.0556,
+          y: 1,
+          w: 0.8889,
+          h: 0.8889,
+          fill: "F7F9FA",
+          dash: "solid",
+          rot: [],
+          texts: [],
+        },
+        {
+          prst: "rect",
+          x: 3.0511,
+          y: 1,
+          w: 0.8978,
+          h: 0.8889,
+          fill: "19283A",
+          dash: undefined,
+          rot: [],
+          texts: ["1"],
+        },
+      ],
+    },
+    {
+      label: "a highlighted step with above-tile label and teal tile",
+      step: layout.steps[1],
+      expected: [
+        {
+          prst: "rect",
+          x: 6.162,
+          y: 3.037,
+          w: 4.6759,
+          h: 0.35,
+          fill: "1A7285",
+          dash: undefined,
+          rot: [],
+          texts: ["Phase 2"],
+        },
+        {
+          prst: "rect",
+          x: 6.162,
+          y: 3.4981,
+          w: 4.6759,
+          h: 0.4167,
+          fill: "1A7285",
+          dash: undefined,
+          rot: [],
+          texts: ["Build"],
+        },
+        {
+          prst: "roundRect",
+          x: 8.0556,
+          y: 1.9629,
+          w: 0.8889,
+          h: 0.8889,
+          fill: "1A7285",
+          dash: undefined,
+          rot: [],
+          texts: [],
+        },
+      ],
+    },
+  ])("draws $label via drawStep", async ({ step, expected }) => {
     const shapes = await drawOnSheet((sheet) => {
-      drawStep(sheet, layout.steps[1], { x: 1, y: 1 });
+      drawStep(sheet, step, { x: 1, y: 1 });
     });
-    expect({
-      texts: shapes.filter((sh) => sh.texts.length > 0).map((sh) => sh.texts.join("")),
-      tileFills: shapes.filter((sh) => sh.prst === "roundRect").map((sh) => sh.fill),
-    }).toEqual({
-      texts: ["Phase 2", "Build"],
-      tileFills: ["1A7285"],
-    });
+    expect(shapes.map(shapeGeometry)).toEqual(expected);
   });
 
   it("draws a step connector line and 90-degree arrowhead via drawConnector", async () => {
     const shapes = await drawOnSheet((sheet) => {
       drawConnector(sheet, layout, { x: 3.5, y: 2 });
     });
-    expect(
-      shapes.map((sh) => ({ prst: sh.prst, hasRot90: sh.xml.includes('rot="5400000"') })),
-    ).toEqual([
-      { prst: "line", hasRot90: false },
-      { prst: "triangle", hasRot90: true },
+    expect(shapes.map(shapeGeometry)).toEqual([
+      {
+        prst: "line",
+        x: 3.9444,
+        y: 2,
+        w: 3.7408,
+        h: 0,
+        fill: "545861",
+        dash: "solid",
+        rot: [],
+        texts: [],
+      },
+      {
+        prst: "triangle",
+        x: 7.6667,
+        y: 1.8889,
+        w: 0.2593,
+        h: 0.2222,
+        fill: "545861",
+        dash: undefined,
+        rot: [5400000],
+        texts: [],
+      },
     ]);
   });
 
@@ -254,31 +483,105 @@ describe("stepsLayout and drawing", () => {
     const shapes = await drawOnSheet((sheet) => {
       drawLoop(sheet, layout, { x: 1, y: 1 });
     });
-    expect({
-      lines: shapes.filter((sh) => sh.prst === "line").length,
-      triangles: shapes
-        .filter((sh) => sh.prst === "triangle")
-        .map((sh) => sh.xml.includes('rot="10800000"')),
-      labels: shapes.flatMap((sh) => sh.texts),
-    }).toEqual({
-      lines: 3,
-      triangles: [true],
-      labels: ["Iterate"],
-    });
+    expect(shapes.map(shapeGeometry)).toEqual([
+      {
+        prst: "line",
+        x: 3.5,
+        y: 1.2222,
+        w: 5,
+        h: 0,
+        fill: "545861",
+        dash: "solid",
+        rot: [],
+        texts: [],
+      },
+      {
+        prst: "line",
+        x: 8.5,
+        y: 1.2222,
+        w: 0,
+        h: 0.6667,
+        fill: "545861",
+        dash: "solid",
+        rot: [],
+        texts: [],
+      },
+      {
+        prst: "line",
+        x: 3.5,
+        y: 1.2222,
+        w: 0,
+        h: 0.5185,
+        fill: "545861",
+        dash: "solid",
+        rot: [],
+        texts: [],
+      },
+      {
+        prst: "triangle",
+        x: 3.3704,
+        y: 1.6667,
+        w: 0.2593,
+        h: 0.2222,
+        fill: "545861",
+        dash: undefined,
+        rot: [10800000],
+        texts: [],
+      },
+      {
+        prst: "rect",
+        x: 5.3747,
+        y: 1.0472,
+        w: 1.2505,
+        h: 0.35,
+        fill: "F7F9FA",
+        dash: undefined,
+        rot: [],
+        texts: ["Iterate"],
+      },
+    ]);
   });
 
-  it("draws all steps, connectors and loop together via drawSteps", async () => {
+  it("preserves non-throwing loop output when steps is empty", async () => {
+    const empty = stepsLayout(look, { steps: [], loop: "" }, { w: 10, k: 1 });
+    const shapes = await drawOnSheet((sheet) => {
+      drawLoop(sheet, empty, { x: 1, y: 1 });
+    });
+    expect(
+      shapes.map((sh) => ({
+        prst: sh.prst,
+        fill: sh.fill,
+        rot: [...sh.xml.matchAll(/rot="(\d+)"/g)].map((m) => Number(m[1])),
+      })),
+    ).toEqual([
+      { prst: "line", fill: "545861", rot: [] },
+      { prst: "line", fill: "545861", rot: [] },
+      { prst: "line", fill: "545861", rot: [] },
+      { prst: "triangle", fill: "545861", rot: [10800000] },
+    ]);
+  });
+
+  it("places step 0, connector, step 1 and loop in order at their offsets via drawSteps", async () => {
     const shapes = await drawOnSheet((sheet) => {
       drawSteps(sheet, layout, { x: 1, y: 1 });
     });
-    expect({
-      tiles: shapes.filter((sh) => sh.prst === "roundRect").map((sh) => sh.fill),
-      arrows: shapes.filter((sh) => sh.prst === "triangle").length,
-      hasLoopLabel: shapes.some((sh) => sh.texts.includes("Iterate")),
-    }).toEqual({
-      tiles: ["F7F9FA", "1A7285"],
-      arrows: 2,
-      hasLoopLabel: true,
-    });
+    expect(shapes.map((sh) => ({ prst: sh.prst, x: r4(sh.x), y: r4(sh.y) }))).toEqual([
+      { prst: "rect", x: 1.162, y: 3.037 },
+      { prst: "rect", x: 1.162, y: 3.4981 },
+      { prst: "rect", x: 1.162, y: 3.9889 },
+      { prst: "rect", x: 1.162, y: 4.4437 },
+      { prst: "rect", x: 1.162, y: 4.8986 },
+      { prst: "roundRect", x: 3.0556, y: 1.9629 },
+      { prst: "line", x: 3.9444, y: 2.4074 },
+      { prst: "triangle", x: 7.6667, y: 2.2963 },
+      { prst: "rect", x: 6.162, y: 3.037 },
+      { prst: "rect", x: 6.162, y: 3.4981 },
+      { prst: "roundRect", x: 8.0556, y: 1.9629 },
+      { prst: "line", x: 3.5, y: 1.2222 },
+      { prst: "line", x: 8.5, y: 1.2222 },
+      { prst: "line", x: 3.5, y: 1.2222 },
+      { prst: "triangle", x: 3.3704, y: 1.6667 },
+      { prst: "rect", x: 5.3747, y: 1.0472 },
+    ]);
   });
 });
