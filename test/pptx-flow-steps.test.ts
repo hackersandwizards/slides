@@ -103,6 +103,12 @@ describe("stepMarks", () => {
 describe("stepTone", () => {
   const day = palette(false);
 
+  it.each(["constructor", "unlisted"])("uses the plain step colors for tone %s", (tone) => {
+    expect(stepTone({ title: "A", tone: tone as "red" }, false, day)).toEqual(
+      stepTone({ title: "A" }, false, day),
+    );
+  });
+
   it.each<{ label: string; step: FlowStep; active: boolean; expected: StepTone }>([
     {
       label: "an inactive plain step",

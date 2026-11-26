@@ -85,7 +85,8 @@ export function stepMarks(steps: readonly FlowStep[]): StepMarks {
 
 /** Resolves a step's colours from its `dim`, `tone`, and active highlight state. */
 export function stepTone(step: FlowStep, active: boolean, c: Palette): StepTone {
-  const tone = step.dim ? c.muted : step.tone ? c[step.tone] : c.ink;
+  const key = step.tone === "red" || step.tone === "green" ? step.tone : "ink";
+  const tone = c[step.dim ? "muted" : key];
   const accent = step.dim ? c.muted : c.teal;
   return {
     tone,
