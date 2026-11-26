@@ -1,5 +1,8 @@
+import PptxGenJS from "pptxgenjs";
 import { assert, expect, it, vi } from "vitest";
 import { Look } from "../scripts/pptx/look";
+import { Sheet } from "../scripts/pptx/sheet";
+import { drawTopology, teamShape } from "../scripts/pptx/slides/team-topology";
 import { palette } from "../scripts/pptx/palette";
 import type { Area } from "../scripts/pptx/stage";
 import {
@@ -241,4 +244,92 @@ it("starts a fresh legend row when its next item cannot fit", () => {
 it("keeps the original negative trailing gap of an entirely empty topology", () => {
   const result = topologyLayout(day, { ...empty, legend: false }, { area, k: 1 });
   expect({ ...result, height: round(result.height) }).toEqual({ height: -0.1481, bands: [] });
+});
+
+function topologySheet() {
+  const pptx = new PptxGenJS();
+  return new Sheet(day, pptx.addSlide(), { pptx, assets: "", warnings: [], charts: new Map() });
+}
+
+it.each([
+  {
+    name: "enabling frame",
+    kind: "enabling",
+    radius: undefined,
+    preset: "round2DiagRect",
+    r: 0.1,
+    fill: { color: "F0EBF9" },
+    line: { color: "9333EA", width: 1.5 },
+  },
+  {
+    name: "stream swatch",
+    kind: "stream",
+    radius: 0.07,
+    preset: "roundRect",
+    r: 0.07,
+    fill: { color: "E8F0F2" },
+    line: { color: "1A7285", width: 1.5 },
+  },
+  {
+    name: "subsystem",
+    kind: "subsystem",
+    radius: undefined,
+    preset: "octagon",
+    r: 0.1333,
+    fill: { color: "EEF1F3" },
+    line: { color: "7C849C", width: 1.5 },
+  },
+  {
+    name: "platform",
+    kind: "platform",
+    radius: undefined,
+    preset: "round2DiagRect",
+    r: 0.1,
+    fill: { type: "none" },
+    line: { color: "1A7285", width: 1.5, dashType: "sysDot" },
+  },
+] as const)("draws a $name with its shape style", ({ kind, radius, preset, r, fill, line }) => {
+  const sheet = topologySheet();
+  const shape = vi.spyOn(sheet.slide, "addShape").mockReturnValue(sheet.slide);
+  teamShape(sheet, { kind, radius, area: { x: 1, y: 2, w: 0.2, h: 0.3 } }, 1);
+  expect(
+    shape.mock.calls.map(([type, options]) => {
+      assert(options, "The team shape has a frame");
+      return [type, { ...options, rectRadius: round(Number(options.rectRadius)) }];
+    }),
+  ).toEqual([[preset, { x: 1, y: 2, w: 0.2, h: 0.3, rectRadius: r, fill, line }]]);
+});
+
+it("draws each topology frame before its text and leaves the caption last", () => {
+  const sheet = topologySheet();
+  const events: unknown[] = [];
+  vi.spyOn(sheet.slide, "addShape").mockImplementation((type) => {
+    events.push(type);
+    return sheet.slide;
+  });
+  vi.spyOn(sheet, "box").mockImplementation((text, area) => {
+    events.push({ text, area });
+  });
+  drawTopology(
+    sheet,
+    {
+      height: 4,
+      bands: [
+        {
+          frame: { kind: "subsystem", area },
+          boxes: [{ text: "Subsystem", area, o: style.titleO }],
+        },
+        { frame: { kind: "platform", area }, boxes: [{ text: "Platform", area, o: style.titleO }] },
+        { boxes: [{ text: "Caption", area, o: style.textO }] },
+      ],
+    },
+    1,
+  );
+  expect(events).toEqual([
+    "octagon",
+    { text: "Subsystem", area },
+    "round2DiagRect",
+    { text: "Platform", area },
+    { text: "Caption", area },
+  ]);
 });
