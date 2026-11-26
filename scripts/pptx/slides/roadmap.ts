@@ -1,9 +1,9 @@
-import type { MarkerTone, RoadmapColumn, RoadmapItem, RoadmapSlide } from "../../../types/slide";
+import type { RoadmapColumn, RoadmapItem, RoadmapSlide } from "../../../types/slide";
 import { header } from "../chrome";
 import { chipArea, drawChip, type Chip } from "../chips";
 import { cellAreas } from "../cells";
 import { MONO } from "../faces";
-import { mixColor, THEME } from "../palette";
+import { mixColor, THEME, themePaletteKey } from "../palette";
 import type { Look } from "../look";
 import type { Sheet } from "../sheet";
 import { PT, BODY, type Area } from "../stage";
@@ -20,7 +20,7 @@ export function columnGroups(look: Look, col: RoadmapColumn) {
   }[] = col.phases
     ? col.phases.map((p) => ({
         label: p.label,
-        hue: c[THEME[p.theme ?? "secondary"]] as string,
+        hue: c[themePaletteKey(p.theme) ?? THEME.secondary],
         items: p.items,
       }))
     : [{ hue: tone, items: col.items ?? [] }];
@@ -36,8 +36,8 @@ export function roadmapParas(
   const { c } = look;
   // A row's own marker colour: `tone`, or the class its deprecated `dotColor` names.
   const marker = (it: Pick<RoadmapItem, "tone" | "dotColor">) => {
-    const t = it.tone ?? it.dotColor?.slice(3);
-    return t ? (c[THEME[t as MarkerTone]] as string) : undefined;
+    const key = themePaletteKey(it.tone ?? it.dotColor?.slice(3));
+    return key ? c[key] : undefined;
   };
   return [
     { runs: md(col.title, c), mono: true, bold: true, rel: PT.h3 / PT.base, after: 4 },

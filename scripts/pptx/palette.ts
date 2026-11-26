@@ -114,11 +114,15 @@ export function palette(dark: boolean) {
 
 export type Palette = ReturnType<typeof palette>;
 
-export const THEME: Record<SectionTheme, keyof Palette> = {
+export const THEME = {
   primary: "teal",
   secondary: "purple",
   accent: "amber",
   warning: "amber",
   success: "green",
   deepdive: "purple",
-};
+} satisfies Record<SectionTheme, keyof Palette>;
+
+export function themePaletteKey(theme?: string) {
+  return theme && Object.hasOwn(THEME, theme) ? THEME[theme as SectionTheme] : undefined;
+}

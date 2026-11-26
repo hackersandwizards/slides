@@ -4,7 +4,7 @@ import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
 import { columnGroups, roadmapColumn, roadmapParas } from "../scripts/pptx/slides/roadmap";
-import type { RoadmapColumn } from "../types/slide";
+import type { RoadmapColumn, SectionTheme } from "../types/slide";
 
 const day = new Look(palette(false), "en", false);
 const column: RoadmapColumn = { label: "A", title: "Path", accent: "ingredients" };
@@ -13,6 +13,19 @@ it("lets an explicitly empty phase list override flat roadmap items", () => {
   expect(columnGroups(day, { ...column, phases: [], items: [{ title: "Flat" }] })).toEqual({
     tone: day.c.teal,
     groups: [],
+  });
+});
+
+it.each(["constructor", "unlisted"])("uses secondary for roadmap phase theme %s", (theme) => {
+  const items = [{ title: "Item" }];
+  expect(
+    columnGroups(day, {
+      ...column,
+      phases: [{ label: "Phase", theme: theme as SectionTheme, items }],
+    }),
+  ).toEqual({
+    tone: day.c.teal,
+    groups: [{ label: "Phase", hue: day.c.purple, items }],
   });
 });
 

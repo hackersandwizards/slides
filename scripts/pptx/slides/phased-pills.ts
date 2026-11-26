@@ -1,7 +1,7 @@
 import type { Slide, SectionTheme } from "../../../types/slide";
 import { header } from "../chrome";
 import { chipArea, drawChip, drawChipRow, layoutChipRow, type ChipRow } from "../chips";
-import { mixColor, THEME } from "../palette";
+import { mixColor, THEME, themePaletteKey } from "../palette";
 import type { Sheet } from "../sheet";
 import { EDGE, TOP, BOTTOM, CW, PT, type Area } from "../stage";
 import { caps } from "../text";
@@ -20,7 +20,7 @@ function pillPhases(
   const ph = Math.min(1, a.h / phases.length);
   phases.forEach((p, i) => {
     const py = a.y + i * ph;
-    const tone = c[THEME[p.theme ?? "primary"]] as string;
+    const tone = c[themePaletteKey(p.theme) ?? THEME.primary];
     sheet.box(
       { runs: [{ text: "• " }, caps(p.label)] },
       { x: a.x, y: py, w: a.w, h: 0.25 },
