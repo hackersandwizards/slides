@@ -8,8 +8,7 @@ export type StatementKind = "centred" | "qr" | "side";
 
 /** Picks the statement layout variant from its attribution, QR code, and side-media fields. */
 export function statementKind(d: StatementSlide): StatementKind {
-  // Attribution keeps its portrait side layout even when a QR code is present; otherwise a QR code
-  // takes the QR layout, a side image takes the side layout, and bare statements stay centred.
+  // As the slide picks it: a quotation keeps its portrait and drops a QR code.
   if (d.attribution) return "side";
   if (d.qr) return "qr";
   return d.imageSrc || d.linkedImage ? "side" : "centred";

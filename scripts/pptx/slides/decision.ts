@@ -52,6 +52,7 @@ export interface DecisionLayout {
   mid: number;
   forkX: number;
   joinX: number;
+  labelO: BoxOpts;
   branches: DecisionBranchLayout[];
   caption?: DecisionCaption;
 }
@@ -189,7 +190,9 @@ export function decisionLayout(look: Look, d: DecisionSlide, area: Area): Decisi
   // The fork's vertical 2 rem into its column, the join's 2 rem before the outcome.
   const forkX = cols.x[3] + 2 * REM;
   const joinX = cols.x[6] - 2 * REM;
-  const lh = (PT.h4 * 1.4) / 72;
+  const labelLine = 1.4;
+  const labelO = { size: PT.h4, mono: true, color: c.muted, tracking: 0.06, line: labelLine };
+  const lh = (PT.h4 * labelLine) / 72;
   const branches = measured.map((m, r): DecisionBranchLayout => {
     const by = top + r * (rowH + gapY);
     const cy = by + rowH / 2;
@@ -215,6 +218,7 @@ export function decisionLayout(look: Look, d: DecisionSlide, area: Area): Decisi
     mid,
     forkX,
     joinX,
+    labelO,
     branches,
     caption,
   };
@@ -228,18 +232,12 @@ export function drawDecisionBranch(
   br: DecisionBranchLayout,
 ): void {
   const { slide: s, c } = sheet;
-  const { cols, rowH, mid, forkX, joinX } = layout;
+  const { cols, rowH, mid, forkX, joinX, labelO } = layout;
   const line = { color: c.teal, width: 2 };
   s.addShape("line", { x: forkX, y: Math.min(br.cy, mid), w: 0, h: Math.abs(mid - br.cy), line });
   s.addShape("line", { x: forkX, y: br.cy, w: cols.x[4] - forkX, h: 0, line });
   drawDecisionHead(sheet, { x: cols.x[4], y: br.cy });
-  sheet.box({ runs: [caps(br.label)] }, br.labelArea, {
-    size: PT.h4,
-    mono: true,
-    color: c.muted,
-    tracking: 0.06,
-    line: 1.4,
-  });
+  sheet.box({ runs: [caps(br.label)] }, br.labelArea, labelO);
   sheet.card(
     { x: cols.x[4], y: br.by, w: cols.w[4], h: rowH },
     { fill: mixColor(br.lineColor, c.card, 0.15), line: br.lineColor },
