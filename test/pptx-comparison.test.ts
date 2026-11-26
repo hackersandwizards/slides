@@ -837,6 +837,29 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
     expect(beforeAfterComparisonLayout(look, slide, area)).toEqual(expected);
   });
 
+  it("allocates zero height to the comparison sides when the footer fills the body", async () => {
+    const slide: ComparisonSidesSlide = {
+      type: "comparison",
+      left: { label: "Left", items: ["Alpha"] },
+      right: { label: "Right", items: ["Beta"] },
+      punchline: "Summary",
+    };
+    const box = { ...area, h: 0.5 };
+    const cards = comparisonCardsLayout(look, slide, box);
+    const pair = beforeAfterComparisonLayout(look, slide, box);
+    expect({
+      heights: [...cards.cards.map((card) => card.h), pair.bodyArea.h],
+      footPositions: [cards.footY, pair.footY],
+    }).toEqual({ heights: [0, 0, 0], footPositions: [box.y, box.y] });
+    for (const draw of [
+      (sheet: Sheet) => drawComparisonCards(sheet, cards),
+      (sheet: Sheet) => drawBeforeAfterComparison(sheet, pair),
+    ]) {
+      const { shapes } = await drawOnSheet(assetsDir, draw);
+      expect(shapes.map((shape) => shape.texts)).toEqual([["Summary"]]);
+    }
+  });
+
   it("omits the comparison item box with no remaining height", async () => {
     const slide: ComparisonSidesSlide = {
       type: "comparison",

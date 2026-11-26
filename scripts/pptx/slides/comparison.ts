@@ -192,7 +192,7 @@ export function comparisonCardsLayout(
     const ih = look.need(items, cw - 2 * pad, itemO);
     return { sd, label, items, th, h: 2 * pad + (sd.logo ? logoH : 0) + th + 1.5 * REM + ih };
   });
-  const ch = Math.min(area.h - foot.h, Math.max(...measured.map((p) => p.h)));
+  const ch = Math.max(0, Math.min(area.h - foot.h, Math.max(...measured.map((p) => p.h))));
   const top = comparisonGroupTop(area, ch, foot.h);
   const cards = measured.map(({ sd, label, items, th }, i): ComparisonCard => {
     const x = area.x + i * (cw + gap);
@@ -217,6 +217,7 @@ export function comparisonCardsLayout(
 /** Draws a measured `vs` or `split` comparison's cards and footer band. */
 export function drawComparisonCards(sheet: Sheet, layout: ComparisonCardsLayout): void {
   for (const card of layout.cards) {
+    if (card.h <= 0) continue;
     sheet.card({ x: card.x, y: card.y, w: card.w, h: card.h }, layout.surface);
     if (card.logo)
       sheet.picture(card.logo.src, card.logo.area, { align: "left", alt: card.logo.alt });
@@ -239,14 +240,14 @@ export function beforeAfterComparisonLayout(
     { before: d.left, after: d.right, mode },
     { w: area.w, k: 1 },
   );
-  const ch = Math.min(area.h - foot.h, body.h);
+  const ch = Math.max(0, Math.min(area.h - foot.h, body.h));
   const top = comparisonGroupTop(area, ch, foot.h);
   return { body, bodyArea: { ...area, y: top, h: ch }, foot, footY: top + ch };
 }
 
 /** Draws a measured `before-after` comparison slide's body and footer band. */
 export function drawBeforeAfterComparison(sheet: Sheet, layout: BeforeAfterComparisonLayout): void {
-  drawBeforeAfter(sheet, layout.body, layout.bodyArea);
+  if (layout.bodyArea.h > 0) drawBeforeAfter(sheet, layout.body, layout.bodyArea);
   drawComparisonFoot(sheet, layout.foot, layout.footY);
 }
 
