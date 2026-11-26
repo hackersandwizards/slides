@@ -1,4 +1,4 @@
-import type { MarkerTone, RoadmapColumn, RoadmapItem, Slide } from "../../../types/slide";
+import type { MarkerTone, RoadmapColumn, RoadmapItem, RoadmapSlide } from "../../../types/slide";
 import { header } from "../chrome";
 import { chipArea, drawChip, type Chip } from "../chips";
 import { cellAreas } from "../cells";
@@ -96,7 +96,7 @@ export function roadmapColumn(sheet: Sheet, col: RoadmapColumn, r: Area): void {
 
 // As the web's RoadmapSlide: each column a card holding its items, or its phases as groups of
 // rows under a caps label.
-export function drawRoadmap(sheet: Sheet, d: Extract<Slide, { type: "roadmap" }>): void {
+export function drawRoadmap(sheet: Sheet, d: RoadmapSlide): void {
   const y = header(sheet, d);
   cellAreas(d.columns.length, BODY(y), 0.35).forEach((r, i) =>
     roadmapColumn(sheet, d.columns[i], r),

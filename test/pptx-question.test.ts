@@ -33,7 +33,7 @@ function questionLook() {
 it("centres the heading and positions each letter, answer and count within its card", () => {
   const { heading, rows } = questionLayout(questionLook(), slide);
   expect({
-    heading: { text: heading.text, area: round(heading.area) },
+    heading: { ...heading, area: round(heading.area) },
     rows: rows.map(({ option, card, letter, answer, count }) => ({
       option,
       card: round(card),
@@ -45,6 +45,15 @@ it("centres the heading and positions each letter, answer and count within its c
     heading: {
       text: { runs: [{ text: "Which?" }], balance: true },
       area: { x: 0.6667, y: 1.9692, w: 11.9997, h: 0.6 },
+      options: {
+        size: 40,
+        mono: true,
+        bold: true,
+        color: day.c.ink,
+        tracking: -0.04,
+        line: 1.05,
+        align: "center",
+      },
     },
     rows: [
       {
@@ -80,22 +89,28 @@ it("draws card, literal letter, answer and right-aligned vote count in order", (
   vi.spyOn(sheet, "box").mockImplementation((text, area, options) => {
     events.push({ text, area: round(area), options });
   });
-  questionRow(sheet, questionLayout(questionLook(), slide).rows[0]);
+  questionRow(sheet, {
+    option: { label: "A", text: "Red" },
+    card: { x: 1, y: 2, w: 8, h: 1 },
+    letter: { x: 1.25, y: 2, w: 0.5, h: 1 },
+    answer: { x: 2, y: 2, w: 5, h: 1 },
+    count: { x: 8, y: 2, w: 0.5, h: 1 },
+  });
   expect(events).toEqual([
-    { area: { x: 2.5184, y: 3.0877, w: 8.2962, h: 0.7204 }, surface: day.c.plainCard },
+    { area: { x: 1, y: 2, w: 8, h: 1 }, surface: day.c.plainCard },
     {
       text: { runs: [{ text: "A" }] },
-      area: { x: 2.7406, y: 3.0877, w: 0.2963, h: 0.7204 },
+      area: { x: 1.25, y: 2, w: 0.5, h: 1 },
       options: { size: 14, mono: true, bold: true, color: day.c.muted, valign: "middle" },
     },
     {
       text: "Red",
-      area: { x: 3.1851, y: 3.0877, w: 6.8147, h: 0.7204 },
+      area: { x: 2, y: 2, w: 5, h: 1 },
       options: { size: 17.5, color: day.c.ink, line: 1.4, valign: "middle" },
     },
     {
       text: { runs: [{ text: "0" }] },
-      area: { x: 9.9998, y: 3.0877, w: 0.5926, h: 0.7204 },
+      area: { x: 8, y: 2, w: 0.5, h: 1 },
       options: {
         size: 18,
         mono: true,

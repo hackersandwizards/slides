@@ -42,9 +42,8 @@ it("reserves a code box and its gap before allocating lane height", () => {
 });
 
 it("positions two lane frames and labels with the row gap", () => {
-  const layout = lanesBody(day, slide, 1);
   expect(
-    laneBands(layout, 0.47).map(({ lane, first, area, label }) => ({
+    laneBands(slide.lanes, 1, 0.47).map(({ lane, first, area, label }) => ({
       lane: lane.label,
       first,
       area: round(area),
@@ -66,7 +65,30 @@ it("positions two lane frames and labels with the row gap", () => {
   ]);
 });
 
-it("draws the first lane's highlighted frame before its label", () => {
+it("gives the lane rows the full body when the snippet is absent", () => {
+  const layout = lanesBody(day, slide, 1);
+  expect({ ...layout, room: +layout.room.toFixed(4) }).toEqual({
+    foot: { text: undefined, h: 0 },
+    room: 5.3458,
+    snippet: undefined,
+    top: 1,
+  });
+});
+
+it.each([
+  {
+    name: "highlighted",
+    first: true,
+    surface: { fill: day.c.purpleTint, line: day.c.purple },
+    color: day.c.purple,
+  },
+  {
+    name: "ordinary",
+    first: false,
+    surface: { fill: day.c.card, line: day.c.border },
+    color: day.c.muted,
+  },
+])("draws the $name lane frame before its label", ({ first, surface, color }) => {
   const pptx = new PptxGenJS();
   const sheet = new Sheet(day, pptx.addSlide(), {
     pptx,
@@ -81,17 +103,22 @@ it("draws the first lane's highlighted frame before its label", () => {
   vi.spyOn(sheet, "box").mockImplementation((text, area, o) => {
     events.push({ text, area: round(area), o });
   });
-  drawLane(sheet, laneBands(lanesBody(day, slide, 1), 0.47)[0]);
+  drawLane(sheet, {
+    lane: { label: "Build", stages: [] },
+    first,
+    area: { x: 1, y: 2, w: 7, h: 0.5 },
+    label: { x: 1.25, y: 2, w: 1.5, h: 0.5 },
+  });
   expect(events).toEqual([
     {
-      area: { x: 0.6667, y: 1, w: 11.9997, h: 0.47 },
-      surface: { fill: day.c.purpleTint, line: day.c.purple },
+      area: { x: 1, y: 2, w: 7, h: 0.5 },
+      surface,
       radius: 0.08,
     },
     {
-      text: { runs: [{ text: "First" }] },
-      area: { x: 0.9167, y: 1, w: 1.6, h: 0.47 },
-      o: { size: 16, mono: true, bold: true, color: day.c.purple, valign: "middle" },
+      text: { runs: [{ text: "Build" }] },
+      area: { x: 1.25, y: 2, w: 1.5, h: 0.5 },
+      o: { size: 16, mono: true, bold: true, color, valign: "middle" },
     },
   ]);
 });

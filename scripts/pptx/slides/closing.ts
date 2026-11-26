@@ -1,4 +1,4 @@
-import type { ClosingSlide, Slide } from "../../../types/slide";
+import type { ClosingSlide } from "../../../types/slide";
 import { header } from "../chrome";
 import type { Sheet } from "../sheet";
 import { PT, REM, BODY } from "../stage";
@@ -30,7 +30,7 @@ const CLOSINGS = new Map<ClosingSlide["variant"], typeof drawContact>([
   ["contact", drawContact],
 ]);
 
-export function drawClosing(sheet: Sheet, d: Extract<Slide, { type: "closing" }>): void {
+export function drawClosing(sheet: Sheet, d: ClosingSlide): void {
   const draw = CLOSINGS.get(d.variant) ?? drawContact;
   draw(sheet, d);
 }

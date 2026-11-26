@@ -1,4 +1,4 @@
-import type { GuidanceExample, Slide } from "../../../types/slide";
+import type { GuidanceExample, GuidanceSlide } from "../../../types/slide";
 import { header } from "../chrome";
 import { cellAreas } from "../cells";
 import type { Sheet } from "../sheet";
@@ -45,7 +45,7 @@ export function guidanceExample(sheet: Sheet, ex: GuidanceExample, area: Area): 
   });
 }
 
-export function drawGuidance(sheet: Sheet, d: Extract<Slide, { type: "guidance" }>): void {
+export function drawGuidance(sheet: Sheet, d: GuidanceSlide): void {
   const { c } = sheet;
   let y = header(sheet, d);
   const intro: Para[] = [

@@ -176,18 +176,15 @@ export function contactMark(look: Look, d: ClosingSlide) {
   const pad = 0.35;
   const partnerW = partners.map((p) => (lockH * p.width) / p.height);
   let x = (W - lockW - partnerW.reduce((sum, w) => sum + w + 2 * pad + times, 0)) / 2;
-  const logos = new Array<{ src: string; alt: string; x: number; w: number; timesX: number }>(
-    partners.length,
-  );
+  const logos = [];
   for (const [i, p] of partners.entries()) {
-    if (!(i in partners)) continue;
-    logos[i] = {
+    logos.push({
       src: p.src,
       alt: p.alt ?? p.company,
       x,
       w: partnerW[i],
       timesX: x + partnerW[i] + pad,
-    };
+    });
     x += partnerW[i] + 2 * pad + times;
   }
   return { path, lockX: x, lockW, lockH, times, logos };

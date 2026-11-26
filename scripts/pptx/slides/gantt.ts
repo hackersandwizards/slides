@@ -1,4 +1,4 @@
-import type { GanttSlide, Slide } from "../../../types/slide";
+import type { GanttSlide } from "../../../types/slide";
 import { footer, footerOf, header } from "../chrome";
 import type { Look } from "../look";
 import { mixColor } from "../palette";
@@ -153,7 +153,7 @@ export function milestones(sheet: Sheet, grid: GanttGrid, y: number): void {
   }
 }
 
-export function drawGantt(sheet: Sheet, d: Extract<Slide, { type: "gantt" }>): void {
+export function drawGantt(sheet: Sheet, d: GanttSlide): void {
   const y = header(sheet, d);
   const grid = ganttGrid(sheet, d, y);
   monthRow(sheet, grid);

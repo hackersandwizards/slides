@@ -1,4 +1,4 @@
-import type { Slide, WheelSlide } from "../../../types/slide";
+import type { WheelSlide } from "../../../types/slide";
 import { header } from "../chrome";
 import { textWidth } from "../fit";
 import type { Look } from "../look";
@@ -233,7 +233,7 @@ export function wheelColumn(sheet: Sheet, column: ReturnType<typeof wheelColumnL
   }
 }
 
-export function drawWheel(sheet: Sheet, d: Extract<Slide, { type: "wheel" }>): void {
+export function drawWheel(sheet: Sheet, d: WheelSlide): void {
   // As `WheelSlide`: a ring of segments at 40 % teal, a 1.5 degree gap each side, numbered from
   // the top clockwise, the centre on a soft disc; each segment's tile, title and text on the side
   // its centre lies on, both columns against the ring.

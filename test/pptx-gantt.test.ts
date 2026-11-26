@@ -98,11 +98,7 @@ it("writes a caps time label before its matching rule", () => {
 
 it("draws background tracks before the labelled work bar", () => {
   const sheet = ganttSheet();
-  const grid = ganttGrid(
-    day,
-    { ...twoColumns, rows: [{ label: "Build", bars: [{ label: "Pilot", start: 1, span: 2 }] }] },
-    1,
-  );
+  const grid = ganttGrid(day, fixture, 1);
   const events: unknown[] = [];
   vi.spyOn(sheet, "rounded").mockImplementation((area) => {
     events.push({ rounded: round(area) });
@@ -113,10 +109,11 @@ it("draws background tracks before the labelled work bar", () => {
   ganttRow(sheet, grid, ganttSchedule(grid, 0.3).bands[0]);
   expect(events).toEqual([
     { text: [{ runs: [{ text: "Build" }] }], box: { x: 0.6667, y: 1.406, w: 2.9629, h: 0.2259 } },
-    { rounded: { x: 3.7777, y: 1.519, w: 4.4258, h: 0.113 } },
-    { rounded: { x: 8.2405, y: 1.519, w: 4.4258, h: 0.113 } },
-    { rounded: { x: 3.7777, y: 1.519, w: 8.8886, h: 0.113 } },
-    { text: "Pilot", box: { x: 3.7777, y: 1.406, w: 8.8886, h: 0.2344 } },
+    { rounded: { x: 3.7777, y: 1.519, w: 2.9382, h: 0.113 } },
+    { rounded: { x: 6.7529, y: 1.519, w: 2.9382, h: 0.113 } },
+    { rounded: { x: 9.7282, y: 1.519, w: 2.9382, h: 0.113 } },
+    { rounded: { x: 6.7529, y: 1.519, w: 5.9134, h: 0.113 } },
+    { text: "Pilot", box: { x: 6.7529, y: 1.406, w: 5.9134, h: 0.2344 } },
   ]);
 });
 
@@ -143,4 +140,29 @@ it("draws one rule for each milestone group and stacks the labels", () => {
     3.7777,
     ["Early", 2.0694],
   ]);
+});
+
+it("tints continuous Gantt work and styles the row's sublabel", () => {
+  const sheet = ganttSheet();
+  const grid = ganttGrid(day, twoColumns, 1);
+  const shapes = vi.spyOn(sheet, "rounded").mockImplementation(() => {});
+  const boxes = vi.spyOn(sheet, "box").mockImplementation(() => {});
+  ganttRow(sheet, grid, {
+    y: 2,
+    h: 0.5,
+    barY: 2.25,
+    barH: 0.25,
+    row: {
+      label: "Maintain",
+      sublabel: "Weekly",
+      bars: [{ label: "Review", start: 1, span: 1, continuous: true }],
+    },
+  });
+  expect({ label: boxes.mock.calls[0][0], bar: shapes.mock.calls[2][1] }).toEqual({
+    label: [
+      { runs: [{ text: "Maintain" }] },
+      { runs: [{ text: "Weekly", options: { color: day.c.muted } }], rel: 0.75 },
+    ],
+    bar: { fill: "A3C7CE", line: "5F9CAA" },
+  });
 });

@@ -1,5 +1,5 @@
 import PptxGenJS from "pptxgenjs";
-import { assert, expect, it, vi } from "vitest";
+import { expect, it, vi } from "vitest";
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
@@ -30,11 +30,7 @@ it("places contrasting guidance cards and preserves a blank code line", () => {
   });
   expect({
     cards: cards.mock.calls.map(([area, surface]) => ({ area: round(area), surface })),
-    boxes: boxes.mock.calls.map(([text, area]) => {
-      assert(typeof text === "object", "The example has structured paragraphs");
-      const paras = [text].flat();
-      return { lines: paras.map((para) => para.runs.map((r) => r.text)), area: round(area) };
-    }),
+    boxes: boxes.mock.calls.map(([text, area, options]) => ({ text, area: round(area), options })),
   }).toEqual({
     cards: [
       { area: { x: 1, y: 2.35, w: 3.875, h: 1.65 }, surface: { fill: day.redTint, line: day.red } },
@@ -44,9 +40,39 @@ it("places contrasting guidance cards and preserves a blank code line", () => {
       },
     ],
     boxes: [
-      { lines: [["Pair"]], area: { x: 1, y: 2, w: 8, h: 0.3 } },
-      { lines: [["Bad"], ["One"], [" "], ["Two"]], area: { x: 1.2, y: 2.5, w: 3.475, h: 1.4 } },
-      { lines: [["Good"], ["Three"]], area: { x: 5.325, y: 2.5, w: 3.475, h: 1.4 } },
+      {
+        text: { runs: [{ text: "Pair", options: {} }] },
+        area: { x: 1, y: 2, w: 8, h: 0.3 },
+        options: { size: 18, mono: true, bold: true, color: day.ink },
+      },
+      {
+        text: [
+          {
+            runs: [{ text: "Bad", options: { color: day.red, lang: "x-caps" } }],
+            bold: true,
+            rel: 0.75,
+            after: 4,
+          },
+          { runs: [{ text: "One" }] },
+          { runs: [{ text: " " }] },
+          { runs: [{ text: "Two" }] },
+        ],
+        area: { x: 1.2, y: 2.5, w: 3.475, h: 1.4 },
+        options: { size: 16, mono: true, color: day.muted, line: 1.3 },
+      },
+      {
+        text: [
+          {
+            runs: [{ text: "Good", options: { color: day.green, lang: "x-caps" } }],
+            bold: true,
+            rel: 0.75,
+            after: 4,
+          },
+          { runs: [{ text: "Three" }] },
+        ],
+        area: { x: 5.325, y: 2.5, w: 3.475, h: 1.4 },
+        options: { size: 16, mono: true, color: day.muted, line: 1.3 },
+      },
     ],
   });
 });

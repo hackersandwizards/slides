@@ -1,4 +1,4 @@
-import type { LanesSlide, Slide } from "../../../types/slide";
+import type { LanesSlide } from "../../../types/slide";
 import { code } from "../blocks/code";
 import { footer, footerOf, header } from "../chrome";
 import { chipArea, drawChip, drawChipRow, layoutChipRow, type ChipRow } from "../chips";
@@ -34,25 +34,27 @@ function drawLaneStages(sheet: Sheet, labels: string[], lane: Area) {
 
 /** Reserves space for the code snippet and footer and measures the room shared by the lanes. */
 export function lanesBody(look: Look, d: LanesSlide, y: number) {
-  const codeH = d.codeSnippet
-    ? (d.codeSnippet.code.split("\n").length * PT.sm * 1.3) / 72 + 0.45
-    : 0;
+  const { codeSnippet } = d;
+  let codeH = 0;
+  let top = y;
+  let snippet;
+  if (codeSnippet) {
+    codeH = (codeSnippet.code.split("\n").length * PT.sm * 1.3) / 72 + 0.45;
+    snippet = {
+      block: { type: "code" as const, ...codeSnippet },
+      slot: { area: { x: EDGE, y, w: CW, h: codeH - 0.1 }, k: 1, centered: false },
+    };
+    top += codeH + 0.1;
+  }
   const foot = footerOf(look, d.footer);
   const room = BOTTOM - y - codeH - foot.h - 0.3;
-  const snippet = d.codeSnippet
-    ? {
-        block: { type: "code" as const, ...d.codeSnippet },
-        slot: { area: { x: EDGE, y, w: CW, h: codeH - 0.1 }, k: 1, centered: false },
-      }
-    : undefined;
-  const top = d.codeSnippet ? y + (codeH + 0.1) : y;
-  return { foot, room, snippet, top, lanes: d.lanes };
+  return { foot, room, snippet, top };
 }
 
 /** Positions lane and label boxes at the allotted pitch. */
-export function laneBands(body: ReturnType<typeof lanesBody>, lh: number) {
-  return body.lanes.map((lane, i) => {
-    const y = body.top + i * (lh + 0.12);
+export function laneBands(lanes: LanesSlide["lanes"], top: number, lh: number) {
+  return lanes.map((lane, i) => {
+    const y = top + i * (lh + 0.12);
     return {
       lane,
       first: i === 0,
@@ -82,10 +84,10 @@ export function drawLane(sheet: Sheet, { lane, first, area, label }: LaneBand): 
   drawLaneStages(sheet, lane.stages, area);
 }
 
-export function drawLanes(sheet: Sheet, d: Extract<Slide, { type: "lanes" }>): void {
+export function drawLanes(sheet: Sheet, d: LanesSlide): void {
   const body = lanesBody(sheet, d, header(sheet, d));
-  const lh = sheet.rowShare(LANE_ROWS, body.room, body.lanes.length) - 0.12;
+  const lh = sheet.rowShare(LANE_ROWS, body.room, d.lanes.length) - 0.12;
   if (body.snippet) code.draw(sheet, body.snippet.block, body.snippet.slot);
-  for (const band of laneBands(body, lh)) drawLane(sheet, band);
+  for (const band of laneBands(d.lanes, body.top, lh)) drawLane(sheet, band);
   footer(sheet, body.foot);
 }

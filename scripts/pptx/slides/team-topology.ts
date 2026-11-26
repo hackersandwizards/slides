@@ -1,4 +1,4 @@
-import type { Slide } from "../../../types/slide";
+import type { TeamTopologySlide } from "../../../types/slide";
 import { header } from "../chrome";
 import { mixColor } from "../palette";
 import type { Sheet } from "../sheet";
@@ -61,7 +61,7 @@ export function drawTopology(
   }
 }
 
-export function drawTeamTopology(sheet: Sheet, d: Extract<Slide, { type: "team-topology" }>): void {
+export function drawTeamTopology(sheet: Sheet, d: TeamTopologySlide): void {
   const a = BODY(header(sheet, d));
   // The web's fit guard: the whole body shrinks until it fits.
   let k = 1;

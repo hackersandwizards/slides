@@ -1,4 +1,4 @@
-import type { ChartSlide, Slide } from "../../../types/slide";
+import type { ChartSlide } from "../../../types/slide";
 import { header } from "../chrome";
 import type { Sheet } from "../sheet";
 import { BODY } from "../stage";
@@ -14,6 +14,6 @@ export function chartKind(d: ChartSlide): keyof typeof CHARTS {
   return d.variant === "cycle" ? "cycle" : "graph";
 }
 
-export function drawChart(sheet: Sheet, d: Extract<Slide, { type: "chart" }>): void {
+export function drawChart(sheet: Sheet, d: ChartSlide): void {
   CHARTS[chartKind(d)](sheet, d, BODY(header(sheet, d)));
 }

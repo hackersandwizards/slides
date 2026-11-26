@@ -1,4 +1,4 @@
-import type { ActivitySlide, Slide } from "../../../types/slide";
+import type { ActivitySlide } from "../../../types/slide";
 import { header } from "../chrome";
 import { MONO } from "../faces";
 import type { Look } from "../look";
@@ -55,7 +55,7 @@ export function activityFrame(look: Look, d: ActivitySlide, top: number) {
   };
 }
 
-export function drawActivity(sheet: Sheet, d: Extract<Slide, { type: "activity" }>): void {
+export function drawActivity(sheet: Sheet, d: ActivitySlide): void {
   const { c } = sheet;
   const label = d.label ?? { exercise: "Hands-on", demo: "Live demo", debrief: "Debrief" }[d.kind];
   const y = header(sheet, { sectionLabel: label, headline: d.headline, subtitle: d.task });

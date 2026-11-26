@@ -1,4 +1,4 @@
-import type { QuestionSlide, Slide } from "../../../types/slide";
+import type { QuestionSlide } from "../../../types/slide";
 import type { Look } from "../look";
 import type { Sheet } from "../sheet";
 import { W, EDGE, TOP, BOTTOM, CW, PT, LEADING, REM } from "../stage";
@@ -68,7 +68,7 @@ export function questionRow(sheet: Sheet, row: AnswerRow): void {
   });
 }
 
-export function drawQuestion(sheet: Sheet, d: Extract<Slide, { type: "question" }>): void {
+export function drawQuestion(sheet: Sheet, d: QuestionSlide): void {
   const { heading, rows } = questionLayout(sheet, d);
   sheet.box(heading.text, heading.area, heading.options);
   for (const row of rows) questionRow(sheet, row);
