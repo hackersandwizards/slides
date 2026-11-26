@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import PptxGenJS from "pptxgenjs";
 import { tokens } from "@hackersandwizards/brand/tokens";
 import { afterAll, assert, beforeAll, describe, expect, it } from "vitest";
-import { itemCard } from "../scripts/pptx/blocks/columns";
+import { fourColumn, itemCard } from "../scripts/pptx/blocks/columns";
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
@@ -732,6 +732,13 @@ describe("slides-pptx picture headers", () => {
 });
 
 describe("slides-pptx column cards", () => {
+  it("measures an empty four-column block at zero height", () => {
+    const look = new Look(palette(false), "en", false);
+    expect(fourColumn.height?.(look, { type: "four-column", columns: [] }, { w: 10, k: 1 })).toBe(
+      0,
+    );
+  });
+
   it("draws an itemCard with its tone border, title, subtitle, text and marker bullet", async () => {
     const pptx = new PptxGenJS();
     pptx.layout = "LAYOUT_WIDE";

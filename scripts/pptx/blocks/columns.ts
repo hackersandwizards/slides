@@ -92,6 +92,7 @@ export const twoColumn: BlockKind<"two-column"> = {
 
 export const fourColumn: BlockKind<"four-column"> = {
   height(look, b, { w, k }) {
+    if (b.columns.length === 0) return 0;
     const { c } = look;
     const o = bodyO(c, k);
     return (
