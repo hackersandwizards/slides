@@ -331,7 +331,11 @@ describe("markdown in a headline", () => {
 });
 
 describe("deprecated", () => {
-  const source = readFileSync(join(import.meta.dirname, "..", "types", "slide.ts"), "utf8");
+  const typesDir = join(import.meta.dirname, "..", "types");
+  const entry = readFileSync(join(typesDir, "slide.ts"), "utf8");
+  const source = Array.from(entry.matchAll(/^export type \* from "\.\/(.+)";$/gm), ([, name]) =>
+    readFileSync(join(typesDir, `${name}.ts`), "utf8"),
+  ).join("\n");
   const taggedCount = [...source.matchAll(/@deprecated/g)].length;
 
   it("names exactly the props and types types/slide.ts marks @deprecated", () => {

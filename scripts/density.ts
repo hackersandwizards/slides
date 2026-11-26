@@ -16,7 +16,7 @@
 // end. Either way a path (`/deck/print`) is read against that server. Exit 1 on any slide below
 // FAIL, marked or unfitted, or any deck that does not render.
 
-import puppeteer, { type Browser } from "puppeteer";
+import puppeteer, { ProtocolError, type Browser } from "puppeteer";
 import { FIT_STYLE } from "../lib/stage-fit";
 import { UNFITTED_SLIDE, settlePrintPage } from "./render-pdf";
 import { serveDir } from "./serve-dir";
@@ -111,12 +111,14 @@ if (import.meta.main) {
 async function check(browser: Browser, url: string): Promise<string[]> {
   const deck = new URL(url).pathname.replace(/\/print$/, "").replace(/^\//, "");
   const page = await browser.newPage();
+  let reports: string[];
+  let closeFailure: { cause: unknown } | undefined;
   try {
     await page.setViewport({ width: 1920, height: 1080 });
     await settlePrintPage(page, url);
     const snapshots = await page.$$eval(".print-slide", snapshotSlides, SLIDE_FIT, NOTICE);
     const rows = snapshots.flatMap(classifySlide);
-    return rows.map((r) => {
+    reports = rows.map((r) => {
       if ("unfitted" in r) {
         failed++;
         return `FAIL /${deck}/${r.i} "${r.title}": ${UNFITTED}`;
@@ -142,11 +144,18 @@ async function check(browser: Browser, url: string): Promise<string[]> {
     });
   } catch (e) {
     broken++;
-    return [`FAIL ${deck} did not render: ${(e as Error).message}`];
+    reports = [`FAIL ${deck} did not render: ${(e as Error).message}`];
   } finally {
-    // A crashed page rejects close: its deck is already counted as broken.
-    await page.close().catch(() => {});
+    try {
+      await page.close();
+    } catch (error) {
+      // If Chrome cannot close the tab, the CLI still closes its browser after all decks run.
+      if (!(error instanceof ProtocolError) && !page.isClosed() && browser.connected)
+        closeFailure = { cause: error };
+    }
   }
+  if (closeFailure) throw closeFailure.cause;
+  return reports;
 }
 
 /** A slide the fit guard never fitted, one of the wrong type, one with a heading shrunk to fit a

@@ -67,29 +67,31 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
     </button>
     <script is:inline>
       (() => {
-        const embed = document.currentScript?.parentElement;
-        if (!embed) return;
-        const stage = embed.querySelector(".story-stage");
-        const frame = stage?.firstElementChild;
-        const pane = embed.parentElement;
-        if (!(stage instanceof HTMLElement) || !(frame instanceof HTMLIFrameElement) || !pane)
-          return;
-        const popover = typeof stage.showPopover === "function";
-        const fit = () => {
-          if (popover && stage.matches(":popover-open")) {
-            stage.style.width = "";
-            const { clientWidth: w, clientHeight: h } = stage;
-            const [slideW, slideH] = [frame.offsetWidth, frame.offsetHeight];
-            const turned = h > w;
-            stage.toggleAttribute("data-turned", turned);
-            const scale = turned
-              ? Math.min(h / slideW, w / slideH)
-              : Math.min(w / slideW, h / slideH);
-            frame.style.transform = turned
-              ? `translate(${(w + slideH * scale) / 2}px, ${(h - slideW * scale) / 2}px) rotate(90deg) scale(${scale})`
-              : `translate(${(w - slideW * scale) / 2}px, ${(h - slideH * scale) / 2}px) scale(${scale})`;
-            return;
-          }
+        /**
+         * @param {HTMLElement} stage
+         * @param {HTMLIFrameElement} frame
+         */
+        function fitPopover(stage, frame) {
+          stage.style.width = "";
+          const { clientWidth: w, clientHeight: h } = stage;
+          const [slideW, slideH] = [frame.offsetWidth, frame.offsetHeight];
+          const turned = h > w;
+          stage.toggleAttribute("data-turned", turned);
+          const scale = turned
+            ? Math.min(h / slideW, w / slideH)
+            : Math.min(w / slideW, h / slideH);
+          frame.style.transform = turned
+            ? `translate(${(w + slideH * scale) / 2}px, ${(h - slideW * scale) / 2}px) rotate(90deg) scale(${scale})`
+            : `translate(${(w - slideW * scale) / 2}px, ${(h - slideH * scale) / 2}px) scale(${scale})`;
+        }
+
+        /**
+         * @param {HTMLElement} embed
+         * @param {HTMLElement} pane
+         * @param {HTMLElement} stage
+         * @param {HTMLIFrameElement} frame
+         */
+        function fitInPane(embed, pane, stage, frame) {
           const box = stage.getBoundingClientRect();
           const top = box.top - pane.getBoundingClientRect().top;
           const below = embed.getBoundingClientRect().bottom - box.bottom;
@@ -97,19 +99,48 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
           // With no height left the card takes the page's width and the pane scrolls.
           stage.style.width = height > 0 ? `${(height * 16) / 9}px` : "";
           frame.style.transform = `scale(${stage.clientWidth / frame.offsetWidth})`;
-        };
-        new ResizeObserver(fit).observe(pane);
-        stage.addEventListener("toggle", fit);
-        const enlarge = embed.querySelector(".story-enlarge");
-        const close = embed.querySelector(".story-close");
-        if (enlarge instanceof HTMLButtonElement) {
-          if (popover) enlarge.onclick = () => stage.showPopover();
-          else enlarge.remove();
         }
-        if (popover && close instanceof HTMLButtonElement)
-          close.onclick = () => stage.hidePopover();
-        // A face that loads late changes the story bar's height but not the pane's.
-        void document.fonts.ready.then(fit);
+
+        /**
+         * @param {HTMLElement} embed
+         * @param {HTMLElement} stage
+         * @param {boolean} popover
+         */
+        function wireControls(embed, stage, popover) {
+          const enlarge = embed.querySelector(".story-enlarge");
+          const close = embed.querySelector(".story-close");
+          if (enlarge instanceof HTMLButtonElement) {
+            if (popover) enlarge.onclick = () => stage.showPopover();
+            else enlarge.remove();
+          }
+          if (popover && close instanceof HTMLButtonElement)
+            close.onclick = () => stage.hidePopover();
+        }
+
+        function initializeStoryEmbed() {
+          const embed = document.currentScript?.parentElement;
+          if (!embed) return;
+          const stage = embed.querySelector(".story-stage");
+          const frame = stage?.firstElementChild;
+          const pane = embed.parentElement;
+          if (!(stage instanceof HTMLElement) || !(frame instanceof HTMLIFrameElement) || !pane)
+            return;
+          const popover = typeof stage.showPopover === "function";
+          const fit = () => {
+            if (popover && stage.matches(":popover-open")) {
+              fitPopover(stage, frame);
+              return;
+            }
+            fitInPane(embed, pane, stage, frame);
+          };
+          new ResizeObserver(fit).observe(pane);
+          stage.addEventListener("toggle", fit);
+          wireControls(embed, stage, popover);
+          // A face that loads late changes the story bar's height but not the pane's.
+          void document.fonts.ready.then(fit);
+        }
+
+        initializeStoryEmbed();
       })();
     </script>
   </div>

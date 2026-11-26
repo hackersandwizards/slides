@@ -1,6 +1,7 @@
 "use client";
 
 import type { WheelSlide as WheelSlideType } from "../../types/slide";
+import { wheelLabelColumns, wheelSegmentAngle } from "../../lib/wheel-layout";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
 import { SectionHeader } from "./SectionHeader";
@@ -24,28 +25,10 @@ function arc(from: number, to: number) {
   return `M ${point(R_OUT, from)} A ${R_OUT} ${R_OUT} 0 ${large} 1 ${point(R_OUT, to)} L ${point(R_IN, to)} A ${R_IN} ${R_IN} 0 ${large} 0 ${point(R_IN, from)} Z`;
 }
 
-function segmentCentre(count: number, index: number) {
-  return -90 + (360 * (index + 0.5)) / count;
-}
-
-// Segments run clockwise from the top. Each label goes to the side its segment's centre lies on,
-// top to bottom; a segment centred on the vertical axis goes to the shorter column. The PPTX
-// exporter places them by the same rule.
-function wheelSides(n: number) {
-  const centres = Array.from({ length: n }, (_, k) => segmentCentre(n, k));
-  const cos = centres.map((a) => Math.cos((a * Math.PI) / 180));
-  const right = cos.flatMap((c, k) => (c > 1e-6 ? [k] : []));
-  const left = cos.flatMap((c, k) => (c < -1e-6 ? [k] : []));
-  cos.forEach((c, k) => {
-    if (Math.abs(c) <= 1e-6) (right.length <= left.length ? right : left).push(k);
-  });
-  const bySin = (a: number, b: number) =>
-    Math.sin((centres[a] * Math.PI) / 180) - Math.sin((centres[b] * Math.PI) / 180);
-  return { left: left.sort(bySin), right: right.sort(bySin) };
-}
-
 export function WheelSlide({ slide }: Props) {
-  const { left, right } = wheelSides(slide.segments.length);
+  const count = slide.segments.length;
+  const centres = Array.from({ length: count }, (_, index) => wheelSegmentAngle(count, index));
+  const { left, right } = wheelLabelColumns(centres);
 
   return (
     <SlideShell>
@@ -95,7 +78,7 @@ function WheelDiagram({ segments, center }: Pick<WheelSlideType, "segments" | "c
         {segments.map((segment, k) => {
           const from = -90 + (360 * k) / n + GAP;
           const to = -90 + (360 * (k + 1)) / n - GAP;
-          const [x, y] = point((R_OUT + R_IN) / 2, segmentCentre(n, k)).split(" ");
+          const [x, y] = point((R_OUT + R_IN) / 2, wheelSegmentAngle(n, k)).split(" ");
           return (
             <g key={segment.title}>
               <path d={arc(from, to)} className="fill-primary/40" />

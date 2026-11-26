@@ -1,4 +1,5 @@
 import type { WheelSlide } from "../../../types/slide";
+import { wheelLabelColumns, wheelSegmentAngle } from "../../../lib/wheel-layout";
 import { header } from "../chrome";
 import { textWidth } from "../fit";
 import type { Look } from "../look";
@@ -10,15 +11,8 @@ import { md, type BoxOpts } from "../text";
 /** The clockwise angles and top-to-bottom segment indices on either side of the ring. */
 export function wheelSides(segments: WheelSlide["segments"]) {
   const n = segments.length;
-  const centres = segments.map((_, k) => -90 + (360 * (k + 0.5)) / n);
-  const cos = centres.map((deg) => Math.cos((deg * Math.PI) / 180));
-  const right = cos.flatMap((v, k) => (v > 1e-6 ? [k] : []));
-  const left = cos.flatMap((v, k) => (v < -1e-6 ? [k] : []));
-  cos.forEach((v, k) => {
-    if (Math.abs(v) <= 1e-6) (right.length <= left.length ? right : left).push(k);
-  });
-  const sin = (k: number) => Math.sin((centres[k] * Math.PI) / 180);
-  for (const list of [left, right]) list.sort((p, q) => sin(p) - sin(q));
+  const centres = segments.map((_, k) => wheelSegmentAngle(n, k));
+  const { left, right } = wheelLabelColumns(centres);
   return { centres, left, right };
 }
 
