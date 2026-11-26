@@ -6,10 +6,15 @@ import { Sheet } from "../scripts/pptx/sheet";
 import {
   closingTail,
   drawContact,
-  drawDiscussion,
+  contactBody,
+  contactLayout,
+  contactMark,
+  drawContactMark,
+  portraitLayout,
   portraitRow,
   speakerParas,
-} from "../scripts/pptx/slides/closing";
+} from "../scripts/pptx/slides/closing-contact";
+import { drawDiscussion } from "../scripts/pptx/slides/closing";
 
 const day = new Look(palette(false), "en", false);
 
@@ -66,16 +71,13 @@ it("leaves space for a LinkedIn line across the portrait row", () => {
   const sheet = closingSheet();
   const pics = vi.spyOn(sheet, "portrait").mockImplementation(() => {});
   vi.spyOn(sheet, "box").mockImplementation(() => {});
-  const height = portraitRow(
-    sheet,
-    [
-      { name: "Pat", company: "Partner" },
-      { name: "Lee", company: "Example", linkedIn: "https://www.linkedin.com/in/example" },
-    ],
-    2,
-  );
+  const layout = portraitLayout(day, [
+    { name: "Pat", company: "Partner" },
+    { name: "Lee", company: "Example", linkedIn: "https://www.linkedin.com/in/example" },
+  ]);
+  portraitRow(sheet, layout, 2);
   expect({
-    height,
+    height: layout.height,
     portraits: pics.mock.calls.map(([person, disc]) => ({
       name: person.name,
       x: +disc.x.toFixed(4),
@@ -116,4 +118,117 @@ it("places a contact-only lockup according to the column's final gap adjustment"
       h: Number(image.h).toFixed(4),
     })),
   ).toEqual([{ y: "3.3205", h: "0.6368" }]);
+});
+
+it("sizes the partner mark to the lockup and inserts the separator before the lockup", () => {
+  const { logos, lockX, lockH, times } = contactMark(day, {
+    type: "closing",
+    partners: [{ src: "/mark.png", company: "Partner", width: 2, height: 1 }],
+  });
+  const [logo] = logos;
+  expect({
+    logos: logos.map(({ src, alt, w }) => ({ src, alt, w: +w.toFixed(4) })),
+    lockH: +lockH.toFixed(4),
+    separator: [+(logo.timesX - logo.x - logo.w).toFixed(4), times],
+    afterSeparator: +(lockX - logo.timesX - times).toFixed(4),
+  }).toEqual({
+    logos: [{ src: "/mark.png", alt: "Partner", w: 1.2736 }],
+    lockH: 0.6368,
+    separator: [0.35, 0.5],
+    afterSeparator: 0.35,
+  });
+});
+
+it("gives a portrait caption without a LinkedIn line its shorter height", () => {
+  const { captions, width, captionHeight, height } = portraitLayout(day, [
+    { name: "Pat", company: "Example", contact: "555 0100" },
+  ]);
+  expect({
+    width,
+    captionHeight,
+    height,
+    captions: captions.map(({ paras, portraitX }) => ({
+      x: +portraitX.toFixed(4),
+      lines: paras.map(({ runs }) => runs.map(({ text, options }) => [text, options?.hyperlink])),
+    })),
+  }).toEqual({
+    width: 3.2,
+    captionHeight: 1,
+    height: 2.35,
+    captions: [
+      {
+        x: 6.1165,
+        lines: [[["Pat", undefined]], [["Example", undefined]], [["555 0100", undefined]]],
+      },
+    ],
+  });
+});
+
+it("keeps independent advances for the lockup, each caption and the final gap", () => {
+  const look = new Look(day.c, "en", false);
+  vi.spyOn(look, "need").mockReturnValue(0.5);
+  const bands = contactBody(look, {
+    type: "closing",
+    speakers: [
+      { name: "Pat", company: "Example" },
+      { name: "Lee", company: "Partner" },
+    ],
+  });
+  expect(bands.map(({ kind, advance }) => [kind, +advance.toFixed(4)])).toEqual([
+    ["mark", 1.1553],
+    ["text", 0.7963],
+    ["text", 0.7963],
+    ["space", 0.2222],
+  ]);
+});
+
+it("includes the measured head and quote around the contact column", () => {
+  const look = new Look(day.c, "en", false);
+  vi.spyOn(look, "need").mockReturnValue(0.5);
+  const layout = contactLayout(look, {
+    type: "closing",
+    line1: "Thanks",
+    claim: false,
+    closingQuote: "Try it.",
+  });
+  expect({
+    height: +layout.height.toFixed(4),
+    bands: layout.bands.map(({ kind, advance }) => [kind, +advance.toFixed(4)]),
+  }).toEqual({
+    height: 2.896,
+    bands: [
+      ["text", 1.0185],
+      ["mark", 1.1553],
+      ["space", 0.2222],
+      ["text", 0.5],
+    ],
+  });
+});
+
+it("draws a literal separator after each partner and puts the brand mark last", () => {
+  const sheet = closingSheet();
+  const events: string[] = [];
+  vi.spyOn(sheet, "picture").mockImplementation((src, area) => {
+    events.push(src);
+    return area;
+  });
+  vi.spyOn(sheet, "box").mockImplementation((text) => {
+    events.push(String(text));
+  });
+  vi.spyOn(sheet.slide, "addImage").mockImplementation(() => {
+    events.push("brand");
+    return sheet.slide;
+  });
+  drawContactMark(
+    sheet,
+    contactMark(day, {
+      type: "closing",
+      partners: [
+        { src: "/first.png", company: "First", width: 2, height: 1 },
+        { src: "/second.png", company: "Second", width: 1, height: 2 },
+      ],
+    }),
+    1,
+  );
+  expect(events).toEqual(["/first.png", "×", "/second.png", "×", "brand"]);
 });
