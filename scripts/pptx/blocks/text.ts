@@ -2,6 +2,7 @@ import { textWidth } from "../fit";
 import { mixColor, type Palette } from "../palette";
 import { PT, REM } from "../stage";
 import { bulletParas, md, type Para } from "../text";
+import { profileRow } from "../people";
 import { bodyO, slotBodyO, type Block, type BlockKind } from "./kind";
 
 /** The rule and its gap before a quote's words: brand's 2 px and 1.25 rem on the 1920 stage. */
@@ -30,6 +31,15 @@ export const paragraph: BlockKind<"paragraph"> = {
       slot.area,
       slotBodyO(c, slot),
     );
+  },
+};
+
+export const profileLinks: BlockKind<"profile-links"> = {
+  height(look, b, { w, k }) {
+    return look.need(profileRow(b, look.c), w, bodyO(look.c, k));
+  },
+  draw(sheet, b, { area: a, k }) {
+    return sheet.box(profileRow(b, sheet.c), a, bodyO(sheet.c, k));
   },
 };
 

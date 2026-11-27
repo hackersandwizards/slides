@@ -188,7 +188,7 @@ describe("slides-pptx on the specimen deck", () => {
     const slides = [...slideCatalog.slides.entries()].filter(
       ([, slide]) => !specialTextSlides.has(slide),
     );
-    expect(slides).toHaveLength(134);
+    expect(slides).toHaveLength(135);
     const missing = slides.flatMap(([i, slide]) => {
       const shown = norm(unescapeNamedEntities(slideText[i]));
       return texts(slideDrawn(slide))

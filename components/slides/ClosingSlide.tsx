@@ -9,7 +9,7 @@ import { DeckLang, SlideShell, groundOf } from "./SlideShell";
 import { HW_LOGO } from "../../lib/logo";
 import {
   DisplayHeading,
-  LinkCaption,
+  ProfileLinks,
   Portrait,
   SlideCard,
   SlideTitle,
@@ -71,10 +71,12 @@ function ClosingLine({ children, claim }: { children: ReactNode; claim?: boolean
 function PortraitSpeakerLinks({
   contact,
   linkedIn,
+  github,
   hue,
 }: {
   contact?: string;
   linkedIn?: string;
+  github?: string;
   hue: (typeof HUE)[keyof typeof HUE];
 }) {
   return (
@@ -90,7 +92,7 @@ function PortraitSpeakerLinks({
           <span>{contact}</span>
         </a>
       )}
-      {linkedIn && <LinkCaption href={linkedIn} variant="linkedin" />}
+      <ProfileLinks linkedIn={linkedIn} github={github} />
     </div>
   );
 }
@@ -128,7 +130,12 @@ function PortraitSpeaker({
             {speaker.company}
           </p>
         )}
-        <PortraitSpeakerLinks contact={speaker.contact} linkedIn={speaker.linkedIn} hue={hue} />
+        <PortraitSpeakerLinks
+          contact={speaker.contact}
+          linkedIn={speaker.linkedIn}
+          github={speaker.github}
+          hue={hue}
+        />
       </div>
       {!isLast && (
         <div aria-hidden="true" className="hidden w-px self-stretch bg-text-subtle/25 md:block" />
@@ -200,6 +207,16 @@ function SpeakerList({
                 className="block text-base font-medium text-teal sm:text-lg"
               >
                 {profileLabel(speaker.linkedIn)}
+              </a>
+            )}
+            {speaker.github && (
+              <a
+                href={speaker.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-base font-medium text-teal sm:text-lg"
+              >
+                {profileLabel(speaker.github)}
               </a>
             )}
           </div>

@@ -37,6 +37,7 @@ const BLOCKS: Record<ContentBlock["type"], true> = {
   "labeled-grid": true,
   terminal: true,
   "linked-image": true,
+  "profile-links": true,
   "image-and-grid": true,
   positions: true,
   flow: true,

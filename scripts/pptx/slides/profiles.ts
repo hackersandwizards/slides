@@ -1,7 +1,7 @@
 import type { Slide } from "../../../types/slide";
 import { personAccent } from "../../../lib/people-slides";
 import { footer, footerOf, header } from "../chrome";
-import { profileLink } from "../people";
+import { profileLink, profileUrls } from "../people";
 import { cellAreas } from "../cells";
 import type { Sheet } from "../sheet";
 import { BOTTOM, PT, TITLE, BODY } from "../stage";
@@ -14,7 +14,7 @@ export function drawProfiles(sheet: Sheet, d: Extract<Slide, { type: "profiles" 
   const a = { ...BODY(y), h: BOTTOM - y - foot.h };
   const body = (p: (typeof d.profiles)[number]): Para[] => [
     ...bulletParas(p.bullets ?? [], c),
-    ...(p.linkedIn ? [profileLink(p.linkedIn, c)] : []),
+    ...profileUrls(p).map((url) => profileLink(url, c)),
   ];
   const ch = Math.min(
     a.h,

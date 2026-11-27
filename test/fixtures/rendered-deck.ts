@@ -74,6 +74,7 @@ const NOT_TEXT = new Set([
   "logo",
   "href",
   "linkedIn",
+  "github",
   "url",
   "icon",
   "notes",

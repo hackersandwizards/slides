@@ -13,6 +13,7 @@ const {
   DisplayHeading,
   LinkCaption,
   PictureLink,
+  ProfileLinks,
   NumberTile,
   Quote,
   Portrait,
@@ -111,7 +112,13 @@ export const PARTS: Record<string, () => ReactNode> = {
     inRow(
       h(LinkCaption, { href: "https://example.com/harness" }),
       h(LinkCaption, { href: "https://www.linkedin.com/in/example", variant: "linkedin" }),
+      h(LinkCaption, { href: "https://github.com/example", variant: "github" }),
     ),
+  ProfileLinks: () =>
+    h(ProfileLinks, {
+      linkedIn: "https://www.linkedin.com/in/example",
+      github: "https://github.com/example",
+    }),
   PictureLink: () =>
     h(PictureLink, {
       href: "https://example.com/harness",

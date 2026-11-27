@@ -178,6 +178,21 @@ export const imageStepsSlide: Slide = {
   notes: "content blocks: image-steps, three pictures replacing each other in place.",
 };
 
+export const profileLinksSlide: Slide = {
+  type: "content",
+  sectionLabel: "Block: profile links",
+  headline: "Mara Lindqvist",
+  content: [
+    { type: "paragraph", text: "Platform lead at Lumen Freight, ten years of platform work." },
+    {
+      type: "profile-links",
+      linkedIn: "https://www.linkedin.com/in/example-profile-name",
+      github: "https://github.com/example-profile-name",
+    },
+  ],
+  notes: "content blocks: paragraph, profile-links.",
+};
+
 export const mediaSlides: Slide[] = [
   {
     type: "media",

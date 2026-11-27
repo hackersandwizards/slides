@@ -59,6 +59,7 @@ export interface Profile {
   company: string;
   imageSrc?: string;
   linkedIn?: string;
+  github?: string;
   bullets: string[];
 }
 
@@ -104,6 +105,7 @@ export interface ClosingSlide extends Grounded {
     company: string;
     imageSrc?: string;
     linkedIn?: string;
+    github?: string;
   }[];
   /** Partners' logos before the lockup of a contact closing without portraits, each followed by
    *  a ×, at the lockup's height; `width` and `height` are the file's. A speaker whose `company`

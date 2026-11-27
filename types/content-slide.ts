@@ -103,6 +103,8 @@ export type ContentBlock =
     }
   | { type: "terminal"; commands: { prefix: string; text: string }[] }
   | { type: "linked-image"; src: string; alt?: string; href?: string }
+  /** A person's profiles in one row under their bio, such as a trainer's introduction. */
+  | { type: "profile-links"; linkedIn?: string; github?: string }
   | {
       type: "image-and-grid";
       /** `sketch`: a drawing on a transparent or plain ground, such as a marker sketch, which
@@ -152,6 +154,7 @@ export interface ProfileInfo {
   title: string;
   imageSrc?: string;
   linkedIn?: string;
+  github?: string;
 }
 
 /** Renders through the content blocks (`regularAsContent` in `lib/regular-sections.ts`): two titled

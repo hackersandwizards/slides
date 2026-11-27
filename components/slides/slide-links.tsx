@@ -3,12 +3,13 @@
 import { type ReactNode } from "react";
 import ArrowUpRight from "lucide-react/icons/arrow-up-right";
 import { linkLabel, profileLabel } from "../../lib/link-labels";
-import { Linkedin } from "../../lib/icons";
+import { Github, Linkedin } from "../../lib/icons";
 
 /** A link spelled out under a picture or a QR code: the address's one link for the keyboard and
- *  screen readers. `linkedin`: a profile card's short address (`in/name`) behind the LinkedIn
- *  glyph, not the word "LinkedIn" in teal or an outlined button. */
-export function LinkCaption({ href, variant }: { href: string; variant?: "linkedin" }) {
+ *  screen readers. `linkedin`, `github`: a profile card's short address (`in/name`, `name`) behind
+ *  the network's glyph, not the network's name in teal or an outlined button. */
+export function LinkCaption({ href, variant }: { href: string; variant?: "linkedin" | "github" }) {
+  const Glyph = variant === "github" ? Github : Linkedin;
   return (
     <a
       href={href}
@@ -21,12 +22,23 @@ export function LinkCaption({ href, variant }: { href: string; variant?: "linked
       }
     >
       {variant ? (
-        <Linkedin className="size-5 shrink-0" />
+        <Glyph className="size-5 shrink-0" />
       ) : (
         <ArrowUpRight className="size-(--slide-link-icon) shrink-0" strokeWidth={2.25} />
       )}
       {variant ? profileLabel(href) : linkLabel(href)}
     </a>
+  );
+}
+
+/** A person's profiles side by side, LinkedIn first; nothing where they have none. */
+export function ProfileLinks({ linkedIn, github }: { linkedIn?: string; github?: string }) {
+  if (!linkedIn && !github) return null;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-x-6 gap-y-2">
+      {linkedIn && <LinkCaption href={linkedIn} variant="linkedin" />}
+      {github && <LinkCaption href={github} variant="github" />}
+    </span>
   );
 }
 

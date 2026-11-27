@@ -1,7 +1,7 @@
 import type { RegularSlide } from "../../../types/slide";
 import { header } from "../chrome";
 import type { Palette } from "../palette";
-import { profileLink } from "../people";
+import { profileLink, profileUrls } from "../people";
 import type { Sheet } from "../sheet";
 import { BODY, PT, TITLE, type Area } from "../stage";
 import { md, type BoxOpts, type Para } from "../text";
@@ -19,7 +19,7 @@ export function profileSidebar(
   const who: Para[] = [
     { runs: [{ text: profile.name }], ...TITLE, after: 4 },
     { runs: [{ text: profile.title, options: { color: c.teal } }], rel: 0.9 },
-    ...(profile.linkedIn ? [{ ...profileLink(profile.linkedIn, c), rel: 0.9 }] : []),
+    ...profileUrls(profile).map((url) => ({ ...profileLink(url, c), rel: 0.9 })),
   ];
   const o: BoxOpts = { size: PT.base, color: c.ink, align: "center" };
   sheet.box(

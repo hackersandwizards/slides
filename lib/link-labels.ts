@@ -11,7 +11,11 @@ export function linkLabel(href: string): string {
   return href.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 }
 
-/** A LinkedIn profile as a slide spells it out, short enough for one line: `in/name`. */
+/** A LinkedIn or GitHub profile as a slide spells it out, short enough for one line: `in/name`,
+ *  `name`. */
 export function profileLabel(href: string): string {
-  return linkLabel(href.replace(/[?#].*$/, "")).replace(/^([a-z]{2,3}\.)?linkedin\.com\//, "");
+  return linkLabel(href.replace(/[?#].*$/, "")).replace(
+    /^(([a-z]{2,3}\.)?linkedin\.com|github\.com)\//,
+    "",
+  );
 }

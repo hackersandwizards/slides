@@ -158,6 +158,7 @@ const JOB_OF: Record<string, Job[]> = {
   gallery: ["image"],
   video: ["image", "code"],
   "linked-image": ["image"],
+  "profile-links": ["people"],
   "image-and-grid": ["image", "explain"],
   annotated: ["image"],
   cards: ["explain"],
