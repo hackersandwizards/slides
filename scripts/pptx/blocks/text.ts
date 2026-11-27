@@ -110,7 +110,7 @@ export const callout: BlockKind<"callout"> = {
     // the ground with its border at 25 %, the text the tone mixed 60 % with ink.
     const tone = b.variant === "warning" ? c.amber : b.variant === "success" ? c.green : undefined;
     const ink = tone ? mixColor(tone, c.ink, 0.6) : c.ink;
-    // As wide as its text, at the body size, brand's callout padding round it.
+    // Fit the callout to its text and brand padding within the available width, or fill it with `fullWidth`.
     const pad = CALLOUT_PAD * k;
     const w = b.fullWidth ? a.w : Math.min(a.w, textWidth(b.text, o) + 2 * pad + 0.02);
     const fill = tone ? mixColor(tone, c.bg, 0.07) : c.callout(c.purple);

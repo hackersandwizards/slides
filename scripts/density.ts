@@ -190,8 +190,6 @@ export async function checkDeckDensity(
   return reports;
 }
 
-/** A slide the fit guard never fitted, one of the wrong type, one with a heading shrunk to fit a
- *  word, or one the fit guard shrank. */
 type Row =
   | { i: number; title: string; unfitted: true }
   | { i: number; title: string; use: true }

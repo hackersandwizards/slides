@@ -2,7 +2,7 @@
 
 import { type ReactNode } from "react";
 import ArrowUpRight from "lucide-react/icons/arrow-up-right";
-import { linkLabel, profileLabel } from "../../lib/link-labels";
+import { linkLabel, profileLabel, profileLinks } from "../../lib/link-labels";
 import { Github, Linkedin } from "../../lib/icons";
 
 /** A link spelled out under a picture or a QR code: the address's one link for the keyboard and
@@ -31,13 +31,15 @@ export function LinkCaption({ href, variant }: { href: string; variant?: "linked
   );
 }
 
-/** A person's profiles side by side, LinkedIn first; nothing where they have none. */
+/** Shows the available profile links in a wrapping row, with LinkedIn first. */
 export function ProfileLinks({ linkedIn, github }: { linkedIn?: string; github?: string }) {
-  if (!linkedIn && !github) return null;
+  const links = profileLinks({ linkedIn, github });
+  if (!links.length) return null;
   return (
     <span className="inline-flex flex-wrap items-center gap-x-6 gap-y-2">
-      {linkedIn && <LinkCaption href={linkedIn} variant="linkedin" />}
-      {github && <LinkCaption href={github} variant="github" />}
+      {links.map(({ url, variant }) => (
+        <LinkCaption key={variant} href={url} variant={variant} />
+      ))}
     </span>
   );
 }

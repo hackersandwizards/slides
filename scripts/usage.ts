@@ -259,11 +259,11 @@ if (import.meta.main) {
         for (const field of ignoredFields(slide))
           findings.push(`${name} slide ${i + 1}: draws nothing, ${field}: remove it`);
       } catch (e) {
-        const prefix = `no catalogue entry for ${name} slide ${i + 1}:`;
+        const at = `${name} slide ${i + 1}:`;
         findings.push(
           e instanceof MissingBlockEntry
-            ? `${prefix} malformed, ${e.message}`
-            : `${prefix} malformed slide data (${(e as Error).message}) cannot be counted. Fix the slide or block fields to match their types in types/slide.`,
+            ? `${at} ${e.message}`
+            : `${at} malformed slide data (${(e as Error).message}) cannot be counted. Fix the slide or block fields to match their types in types/slide.`,
         );
       }
     });

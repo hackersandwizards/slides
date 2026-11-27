@@ -38,7 +38,6 @@ export const CODE_SAMPLE = 'claude --print "fix the failing test" # one run';
 export const codePanel = (lines: ReactNode) =>
   h(CodePanel, { as: "pre", className: "p-8 font-code text-xl" }, lines);
 
-/** A part missing here fails the build (print-parts.ts). */
 export const PARTS: Record<string, () => ReactNode> = {
   DisplayHeading: () =>
     h(

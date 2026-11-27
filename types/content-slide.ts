@@ -103,7 +103,7 @@ export type ContentBlock =
     }
   | { type: "terminal"; commands: { prefix: string; text: string }[] }
   | { type: "linked-image"; src: string; alt?: string; href?: string }
-  /** A person's profiles in one row under their bio, such as a trainer's introduction. */
+  /** A person's LinkedIn and GitHub links, which can wrap on a narrow slide. */
   | { type: "profile-links"; linkedIn?: string; github?: string }
   | {
       type: "image-and-grid";

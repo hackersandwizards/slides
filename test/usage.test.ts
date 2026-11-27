@@ -148,7 +148,7 @@ describe("slides-usage", () => {
     const { code, err } = run({ lang: "en", slides: [{ type: "content", headline: "x" }] });
     expect(code).toBe(1);
     expect(err).toBe(
-      `slides-usage: no catalogue entry for ${join(dir, "0.json")} slide 1: ${malformedSlide("undefined is not an object (evaluating 'content.length')")}\n`,
+      `slides-usage: ${join(dir, "0.json")} slide 1: ${malformedSlide("undefined is not an object (evaluating 'content.length')")}\n`,
     );
   });
 
@@ -232,7 +232,7 @@ describe("slides-usage", () => {
     const { code, err } = run(deckWithBlockType("constructor"));
     expect(code).toBe(1);
     expect(err).toBe(
-      `slides-usage: no catalogue entry for ${join(dir, "0.json")} slide 1: malformed, ${blockFinding("block-constructor")}\n`,
+      `slides-usage: ${join(dir, "0.json")} slide 1: ${blockFinding("block-constructor")}\n`,
     );
   });
 
@@ -240,7 +240,7 @@ describe("slides-usage", () => {
     const { code, err } = run(deckWithBlockType("image-and-grid"));
     expect(code).toBe(1);
     expect(err).toBe(
-      `slides-usage: no catalogue entry for ${join(dir, "0.json")} slide 1: ${malformedSlide("undefined is not an object (evaluating 'block.image.sketch')")}\n`,
+      `slides-usage: ${join(dir, "0.json")} slide 1: ${malformedSlide("undefined is not an object (evaluating 'block.image.sketch')")}\n`,
     );
   });
 

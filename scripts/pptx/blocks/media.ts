@@ -154,7 +154,6 @@ export function videoCover(
   });
 }
 
-/** Draws the placeholder card and records a warning for a missing video asset. */
 export function videoMissing(sheet: Sheet, b: Block<"video">, slot: Slot): void {
   const { c } = sheet;
   const { area: a } = slot;

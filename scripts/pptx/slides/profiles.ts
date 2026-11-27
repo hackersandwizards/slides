@@ -1,7 +1,8 @@
 import type { Slide } from "../../../types/slide";
+import { profileUrls } from "../../../lib/link-labels";
 import { personAccent } from "../../../lib/people-slides";
 import { footer, footerOf, header } from "../chrome";
-import { profileLink, profileUrls } from "../people";
+import { profileLink } from "../people";
 import { cellAreas } from "../cells";
 import type { Sheet } from "../sheet";
 import { BOTTOM, PT, TITLE, BODY } from "../stage";

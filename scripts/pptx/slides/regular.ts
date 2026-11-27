@@ -1,13 +1,13 @@
 import type { RegularSlide } from "../../../types/slide";
+import { profileUrls } from "../../../lib/link-labels";
 import { header } from "../chrome";
 import type { Palette } from "../palette";
-import { profileLink, profileUrls } from "../people";
+import { profileLink } from "../people";
 import type { Sheet } from "../sheet";
 import { BODY, PT, TITLE, type Area } from "../stage";
 import { md, type BoxOpts, type Para } from "../text";
 
-/** Draws a regular slide's left profile sidebar (portrait, name, title, and optional LinkedIn
- *  link) and returns the narrowed remaining area for the sections column. */
+/** Draws the left profile sidebar with any LinkedIn and GitHub links and returns the remaining area for the sections. */
 export function profileSidebar(
   sheet: Sheet,
   profile: NonNullable<RegularSlide["profile"]>,

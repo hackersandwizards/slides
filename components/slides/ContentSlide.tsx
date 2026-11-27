@@ -28,10 +28,10 @@ import {
   SlideSubtitle,
   SlideFooter,
   DisplayHeading,
+  ProfileLinks,
   Quote,
 } from "./primitives";
 import { TableBlock } from "./TableBlock";
-import { ProfileLinks } from "./slide-links";
 import {
   GalleryBlock,
   ImageAndGridBlock,

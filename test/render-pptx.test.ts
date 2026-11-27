@@ -183,7 +183,6 @@ describe("slides-pptx on the specimen deck", () => {
   // Image steps show their last step, as print does: a file has no arrow steps.
   const specialTextSlides = new Set<Slide>([stats, versus, imageSteps, questions, partnerClosing]);
 
-  // An overview draws as phased pills, its stage descriptions gone, as on the web.
   it("sets every text of a slide as text on that slide", () => {
     const slides = [...slideCatalog.slides.entries()].filter(
       ([, slide]) => !specialTextSlides.has(slide),

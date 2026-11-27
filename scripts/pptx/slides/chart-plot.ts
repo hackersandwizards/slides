@@ -82,7 +82,6 @@ export function plotFrame(d: ChartSlide, a: Area) {
     w: CHART.w,
     h,
   };
-  // The web's `Annotation`, under the card or the drawing.
   const annotation = {
     x: card.x,
     y: card.y + card.h + CHART.note,

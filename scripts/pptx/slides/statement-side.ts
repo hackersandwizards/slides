@@ -28,7 +28,6 @@ export interface SideStatementLayout {
 
 /** Resolves the optional side image or linked image of a side statement slide. */
 export function sideMedia(d: StatementSlide): SideMedia | undefined {
-  // A screenshot's or QR code's link is on the picture.
   if (d.imageSrc)
     return { src: d.imageSrc, alt: d.imageAlt, href: undefined, round: Boolean(d.attribution) };
   if (d.linkedImage)
@@ -121,8 +120,6 @@ export function sideBodyParas(look: Look, d: StatementSlide): Para[] {
   const support = sideSupportParas(d, c);
   const closing = sideClosingPara(d, c);
   if (d.attribution) {
-    // The name follows the words said, the lines and a quoted closing; the slide's own words
-    // come after it.
     const quoted = d.closingStyle === "quote";
     const name = d.attribution.split(",")[0];
     const attribution: Para = {
@@ -153,7 +150,7 @@ export function sideStatementLayout(look: Look, d: StatementSlide): SideStatemen
   const o: BoxOpts = {
     size: PT.base,
     color: c.ink,
-    // A quotation and a closing with a QR code stand at the left edge, as on the slide.
+    // Attributed quotations align left to match the web slide.
     align: d.attribution ? "left" : "center",
     valign: "middle",
     line: 1.2,

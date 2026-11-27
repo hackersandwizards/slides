@@ -107,13 +107,12 @@ export async function renderPdf(
   }
 }
 
-/** A slide the fit guard has not fitted, which only a page that never hydrated keeps. */
+/** Matches slide content whose first fit pass has yet to complete. */
 export const UNFITTED_SLIDE = ".slide-shell > .slide-content:not([data-fitted])";
 
-/** Loads a deck's print route and waits until it stands as printed: the route answered, every
- *  chart and code block drawn after hydration (network idle can come first), the web fonts in,
- *  every slide fitted, and the fit guard's refit after them landed. `slides-density` measures the page this leaves.
- *  With `fitted`, a slide still unfitted after 300 s throws rather than going on, as `renderPdf` needs. */
+/** Opens the print route and waits for charts, code highlighting and fonts past network idle,
+ *  letting `slides-density` inspect unfitted slides after 10 s and failing PDF export after 300 s
+ *  if any slides remain unfitted. */
 export async function settlePrintPage(
   page: import("puppeteer").Page,
   url: string,

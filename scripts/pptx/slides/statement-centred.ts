@@ -55,7 +55,6 @@ export function centredPointsPart(
   return { paras, o: pointO, w: Math.min(maxW, 56 * REM, longestPoint), gap: 3.5 * REM };
 }
 
-/** Builds the optional closing block for a centred statement, quoted or plain. */
 export function centredClosingPart(
   d: Pick<StatementSlide, "closing" | "closingStyle">,
   c: Palette,

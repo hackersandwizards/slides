@@ -1,5 +1,18 @@
 import type { TitleSlide } from "../types/slide";
 
+type Profile = { linkedIn?: string; github?: string };
+
+export function profileLinks({ linkedIn, github }: Profile) {
+  const links = [
+    { url: linkedIn, variant: "linkedin" },
+    { url: github, variant: "github" },
+  ] as const;
+  return links.flatMap(({ url, variant }) => (url ? [{ url, variant }] : []));
+}
+
+export const profileUrls = (profile: Profile): string[] =>
+  profileLinks(profile).map(({ url }) => url);
+
 /** The alt text of a slide's QR code, in the deck's language. */
 export function qrAlt(href: string, lang?: TitleSlide["lang"]): string {
   return `${lang === "de" ? "QR-Code" : "QR code"}: ${linkLabel(href)}`;

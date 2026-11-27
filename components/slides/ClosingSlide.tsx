@@ -18,7 +18,7 @@ import {
 import { claimParts, companiesWithLogo } from "../../lib/closing-copy";
 import { closingClaim } from "../../lib/slide-utils";
 import { personAccent } from "../../lib/people-slides";
-import { profileLabel } from "../../lib/link-labels";
+import { profileLabel, profileUrls } from "../../lib/link-labels";
 import { WORDS } from "../../lib/slide-words";
 
 interface Props {
@@ -199,26 +199,17 @@ function SpeakerList({
             {speaker.contact && (
               <p className="text-base font-medium text-teal sm:text-lg">{speaker.contact}</p>
             )}
-            {speaker.linkedIn && (
+            {profileUrls(speaker).map((url, linkIndex) => (
               <a
-                href={speaker.linkedIn}
+                key={`${linkIndex}:${url}`}
+                href={url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block text-base font-medium text-teal sm:text-lg"
               >
-                {profileLabel(speaker.linkedIn)}
+                {profileLabel(url)}
               </a>
-            )}
-            {speaker.github && (
-              <a
-                href={speaker.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-base font-medium text-teal sm:text-lg"
-              >
-                {profileLabel(speaker.github)}
-              </a>
-            )}
+            ))}
           </div>
         ))}
       </div>
