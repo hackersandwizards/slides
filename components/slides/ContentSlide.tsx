@@ -31,6 +31,7 @@ import {
   Quote,
 } from "./primitives";
 import { TableBlock } from "./TableBlock";
+import { ProfileLinks } from "./slide-links";
 import {
   GalleryBlock,
   ImageAndGridBlock,
@@ -100,6 +101,7 @@ const BLOCK_RENDERERS: BlockRendererMap = {
   terminal: (block) => <TerminalBlock block={block} />,
   "linked-image": (block) => <LinkedImageBlock block={block} />,
   positions: (block) => <Positions block={block} />,
+  "profile-links": (block) => <ProfileLinks linkedIn={block.linkedIn} github={block.github} />,
 };
 
 function ContentBlockRenderer({

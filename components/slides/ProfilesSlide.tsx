@@ -11,7 +11,7 @@ import {
   SlideTitle,
   SlideCard,
   SlideFooter,
-  LinkCaption,
+  ProfileLinks,
   Portrait,
 } from "./primitives";
 import { personAccent } from "../../lib/people-slides";
@@ -110,9 +110,9 @@ function ProfileBiography({
           ))}
         </ul>
 
-        {profile.linkedIn && (
+        {(profile.linkedIn || profile.github) && (
           <span className="mt-8 self-start">
-            <LinkCaption href={profile.linkedIn} variant="linkedin" />
+            <ProfileLinks linkedIn={profile.linkedIn} github={profile.github} />
           </span>
         )}
       </SlideCard>

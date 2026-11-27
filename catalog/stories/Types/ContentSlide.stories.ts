@@ -61,3 +61,4 @@ export const NumbersLabelBelow = state("content", 53, "ContentSlide");
 export const NumbersFiveDigits = state("content", 54, "ContentSlide");
 export const TableReveal = state("content", 55, "ContentSlide");
 export const BlockImageSteps = state("content", 56, "ContentSlide");
+export const BlockProfileLinks = state("content", 57, "ContentSlide");

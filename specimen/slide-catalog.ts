@@ -17,6 +17,7 @@ import {
   mediaBlockSlides,
   galleryAndImageSlides,
   imageStepsSlide,
+  profileLinksSlide,
   mediaSlides,
 } from "./slides/content-media";
 import {
@@ -74,6 +75,7 @@ export const slideCatalog: Presentation = {
     ...largeFigureSlides,
     revealedTableSlide,
     imageStepsSlide,
+    profileLinksSlide,
   ],
 };
 

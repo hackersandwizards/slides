@@ -10,6 +10,7 @@ export const profileAndStatementSlides: Slide[] = [
       title: "Platform lead, Lumen Freight",
       imageSrc: specimenImages["portrait-a.png"],
       linkedIn: "https://www.linkedin.com/in/example-profile-name",
+      github: "https://github.com/example-profile-name",
     },
     sections: [
       { title: "What she built", items: ["One harness", "Shared checks"] },
@@ -168,6 +169,7 @@ export const profileSlides: Slide[] = [
         imageSrc: specimenImages["portrait-a.png"],
         bullets: ["Built the harness", "Ten years of platform work"],
         linkedIn: "https://www.linkedin.com/in/example",
+        github: "https://github.com/example",
       },
       {
         name: "Jonas Okafor",

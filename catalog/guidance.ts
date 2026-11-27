@@ -230,6 +230,11 @@ export const GUIDANCE: Record<string, Guidance> = {
     "Link the page it shows.",
     "Use it for a page behind a login.",
   ),
+  "block-profile-links": g(
+    "A person introducing themselves: their LinkedIn and GitHub under their bio.",
+    "Link the profiles the room may follow up on.",
+    "List a network the person does not keep current.",
+  ),
   "block-image-and-grid": g(
     "A picture with a few short facts beside it.",
     "Let each fact point at the picture.",

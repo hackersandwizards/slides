@@ -61,6 +61,7 @@ const BLOCK_ENTRY: { [K in ContentBlock["type"]]: BlockResolver<K> } = {
   "linked-image": null,
   paragraph: null,
   pipeline: null,
+  "profile-links": null,
   quote: null,
   table: null,
   timeline: null,

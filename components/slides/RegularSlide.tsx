@@ -6,7 +6,7 @@ import { SlideShell } from "./SlideShell";
 import User from "lucide-react/icons/user";
 import { regularAsContent } from "../../lib/regular-sections";
 import { AgendaSlide } from "./AgendaSlide";
-import { LinkCaption, Portrait, SlideTitle, TitledContent } from "./primitives";
+import { Portrait, ProfileLinks, SlideTitle, TitledContent } from "./primitives";
 import { ContentSlide } from "./ContentSlide";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
 import { usePrintMode } from "../../lib/print-context";
@@ -32,9 +32,9 @@ function ProfileCard({ profile }: { profile: NonNullable<RegularSlideType["profi
           <p className="mt-1 text-base font-medium text-balance text-teal md:text-lg">
             {profile.title}
           </p>
-          {profile.linkedIn && (
+          {(profile.linkedIn || profile.github) && (
             <span className="mt-3">
-              <LinkCaption href={profile.linkedIn} variant="linkedin" />
+              <ProfileLinks linkedIn={profile.linkedIn} github={profile.github} />
             </span>
           )}
         </div>

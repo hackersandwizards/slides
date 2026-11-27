@@ -76,6 +76,28 @@ describe("regular slide", () => {
     expect(profileLabel(url)).toBe("in/mara-lindqvist");
   });
 
+  it("shortens a GitHub profile to the user name", () => {
+    expect(profileLabel("https://github.com/mara-lindqvist/")).toBe("mara-lindqvist");
+  });
+
+  it("shows a profile's GitHub beside its LinkedIn, behind the GitHub glyph", () => {
+    const slide = {
+      type: "regular",
+      headline: "Headline",
+      profile: {
+        name: "Mara",
+        title: "Partner",
+        linkedIn: "https://www.linkedin.com/in/mara-lindqvist/",
+        github: "https://github.com/mara-lindqvist",
+      },
+      sections: [{ title: "One", items: ["a"] }],
+    };
+    const { getByText } = render(<slideComponents.regular slide={slide as Slide} />);
+    const link = getByText("mara-lindqvist").closest("a");
+    expect(link?.getAttribute("href")).toBe("https://github.com/mara-lindqvist");
+    expect(link?.querySelector(".lucide-github")).not.toBeNull();
+  });
+
   it("keeps a profile's own drawing in the cards layout too", () => {
     const slide: RegularSlide = { type: "regular", headline: "H", layout: "cards", sections: [] };
     expect(

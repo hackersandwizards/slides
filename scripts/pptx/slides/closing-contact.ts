@@ -6,7 +6,7 @@ import { closingClaim } from "../../../lib/slide-utils";
 import { personAccent } from "../../../lib/people-slides";
 import { centredMark } from "../chrome";
 import { brandCut } from "../images";
-import { profileLink } from "../people";
+import { profileLink, profileUrls } from "../people";
 import type { Look } from "../look";
 import { mixColor } from "../palette";
 import type { Sheet } from "../sheet";
@@ -46,18 +46,9 @@ export function speakerParas(look: Look, sp: ClosingSpeaker, shown: ReadonlySet<
           },
         ]
       : []),
-    ...(sp.linkedIn
-      ? [
-          {
-            runs: [
-              {
-                text: profileLabel(sp.linkedIn),
-                options: { color: c.teal, hyperlink: { url: sp.linkedIn } },
-              },
-            ],
-          },
-        ]
-      : []),
+    ...profileUrls(sp).map((url) => ({
+      runs: [{ text: profileLabel(url), options: { color: c.teal, hyperlink: { url } } }],
+    })),
   ];
 }
 
@@ -65,8 +56,8 @@ export function speakerParas(look: Look, sp: ClosingSpeaker, shown: ReadonlySet<
 export function portraitLayout(look: Look, speakers: ClosingSpeaker[]) {
   const { c } = look;
   const sw = Math.min(3.2, CW / speakers.length);
-  // The LinkedIn address under the contact, a line at 0.8 of the size.
-  const linked = speakers.some((sp) => sp.linkedIn) ? 0.3 : 0;
+  // The LinkedIn and GitHub addresses under the contact, a line each at 0.8 of the size.
+  const linked = 0.3 * Math.max(0, ...speakers.map((sp) => profileUrls(sp).length));
   const sx = (W - sw * speakers.length) / 2;
   const captions = speakers.map((sp, i) => {
     const x = sx + i * sw;
@@ -98,7 +89,7 @@ export function portraitLayout(look: Look, speakers: ClosingSpeaker[]) {
             },
           ]
         : []),
-      ...(sp.linkedIn ? [{ ...profileLink(sp.linkedIn, c), rel: 0.8 }] : []),
+      ...profileUrls(sp).map((url) => ({ ...profileLink(url, c), rel: 0.8 })),
     ];
     return { sp, tone, paras, x, portraitX: x + sw / 2 - 0.55 };
   });

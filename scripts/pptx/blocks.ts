@@ -13,7 +13,7 @@ import { numbers } from "./blocks/numbers";
 import { positionsKind } from "./blocks/positions";
 import { hooks, layers } from "./blocks/rows";
 import { table } from "./blocks/table";
-import { bullets, callout, paragraph, quote } from "./blocks/text";
+import { bullets, callout, paragraph, profileLinks, quote } from "./blocks/text";
 import { timeline } from "./blocks/timeline";
 import { footerOf, type Footer } from "./chrome";
 import type { Look } from "./look";
@@ -56,6 +56,7 @@ export const BLOCK_KINDS = {
   video,
   "image-and-grid": imageAndGrid,
   annotated,
+  "profile-links": profileLinks,
 } satisfies Omit<Kinds, keyof typeof BLOCK_REDRAWN>;
 
 /** Looks up an own string key in `table`, returning `undefined` for non-strings and prototype keys. */
