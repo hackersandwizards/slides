@@ -22,10 +22,19 @@ const deps = pkg && typeof pkg === "object" && "dependencies" in pkg ? pkg.depen
 const devDeps =
   pkg && typeof pkg === "object" && "devDependencies" in pkg ? pkg.devDependencies : undefined;
 const pin = hasBrandPin(devDeps) ? devDeps[BRAND] : hasBrandPin(deps) ? deps[BRAND] : undefined;
-if (!pin) fail("package.json pins no version; pin it as the slides README shows");
-if (typeof pin !== "string") fail("package.json brand pin must be a string");
+if (!pin)
+  fail(
+    "package.json pins no version, so dependencies can install without the slide styles and fonts. Add a version pin to dependencies or devDependencies as shown in the slides README.",
+  );
+if (typeof pin !== "string")
+  fail(
+    "The brand pin in package.json must be a string so the check can verify its version. Replace the value in dependencies or devDependencies with a version string as shown in the slides README.",
+  );
 
 const version = /(?:#v?|^(?:[\^~]|>=)?)(\d+\.\d+\.\d+)$/.exec(pin)?.[1];
-if (!version) fail(`${pin} names no version; pin a tag as the slides README shows`);
+if (!version)
+  fail(
+    `${pin} names no version, so the check cannot verify the minimum. Set the pin in package.json to a version tag as shown in the slides README.`,
+  );
 if (version.localeCompare(MINIMUM, "en", { numeric: true }) < 0)
   fail(`${pin} is below the minimum this engine needs, v${MINIMUM}: raise the pin`);

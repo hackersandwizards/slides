@@ -18,7 +18,9 @@ it("names the status of a print route that fails", async () => {
       await rejection(
         renderPdf(`http://127.0.0.1:${port}/d/print`, "/dev/null", { title: "T", slideCount: 1 }),
       ),
-    ).toMatch(/HTTP 500/);
+    ).toBe(
+      `Error: HTTP 500 from http://127.0.0.1:${port}/d/print prevented the print route from loading. Check the route URL and fix any error in the server log.`,
+    );
   } finally {
     server.close();
   }

@@ -101,6 +101,8 @@ function drawnAs(slide: Slide): Slide | undefined {
   if (slide.type === "regular") return regularAsContent(slide);
 }
 
+class MissingBlockEntry extends Error {}
+
 function contentEntries(slide: ContentSlide): string[] {
   // A slide of one or two short bullets still draws as bullets: the print page marks it, and
   // it counts as what it draws.
@@ -108,7 +110,10 @@ function contentEntries(slide: ContentSlide): string[] {
   if (twoColumnAsSplit(slide)) return ["comparison-split"];
   const blocks = slide.content.map((b) => blockEntry(drawnBlock(b)));
   const strays = blocks.filter((b) => !known(b) && !PLAIN.has(b));
-  if (strays.length) throw new Error(`no catalogue entry for ${strays.join(", ")}`);
+  if (strays.length)
+    throw new MissingBlockEntry(
+      `No catalogue entry for ${strays.join(", ")}, so the blocks cannot be counted. Set each affected content block's type to a supported ContentBlock type from types/slide.`,
+    );
   const form = slide.layout === "centered" ? "content-centered" : "content";
   const entries = new Set([form, ...blocks.filter(known)]);
   if (blocks.filter((b) => b === "block-image").length > 1) {
@@ -206,6 +211,9 @@ if (import.meta.main) {
   const check = args.includes("--check");
   const paths = args.filter((arg) => arg !== "--check");
   if (!paths.length || ((at >= 0 || check) && !out)) {
+    console.error(
+      "slides-usage: The check needs deck JSON to count and --check needs a file to compare. Pass a deck JSON path or - for standard input, and supply a file path after --out when using --out or --check.",
+    );
     console.error(usage);
     process.exit(2);
   }
@@ -220,7 +228,9 @@ if (import.meta.main) {
     });
   });
   if (!decks.length) {
-    console.error("slides-usage: no deck to count");
+    console.error(
+      "slides-usage: The input contains no deck, so there is nothing to count. Pass a deck JSON file or pipe a deck or nonempty array of decks to -.",
+    );
     process.exit(1);
   }
   const counts = new Map<string, number>();
@@ -228,23 +238,32 @@ if (import.meta.main) {
   let slides = 0;
   for (const { deck, name } of decks) {
     if (!Array.isArray(deck?.slides)) {
-      console.error(`slides-usage: ${name} is no deck: it has no slides list`);
+      console.error(
+        `slides-usage: ${name} has no slides array, so the check cannot count it as a deck. Supply a Presentation with a slides array as defined in types/slide.`,
+      );
       process.exit(1);
     }
     if (!namedLang(deck))
-      findings.push(`${name} names no lang, on the deck or a title slide: set the deck's lang`);
+      findings.push(
+        `${name} names no supported lang on the deck or a title slide, so the deck defaults to English. Set the deck's lang to en or de.`,
+      );
     deck.slides.forEach((slide, i) => {
       slides++;
       try {
         const ids = entriesOf(slide);
         if (!ids.length)
-          findings.push(`no catalogue entry for ${name} slide ${i + 1}: type ${slide.type}`);
+          findings.push(
+            `no catalogue entry for ${name} slide ${i + 1}: type ${slide.type} cannot be counted. Set the slide's type to a supported Slide type from types/slide.`,
+          );
         for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
         for (const field of ignoredFields(slide))
           findings.push(`${name} slide ${i + 1}: draws nothing, ${field}: remove it`);
       } catch (e) {
+        const prefix = `no catalogue entry for ${name} slide ${i + 1}:`;
         findings.push(
-          `no catalogue entry for ${name} slide ${i + 1}: malformed, ${(e as Error).message}`,
+          e instanceof MissingBlockEntry
+            ? `${prefix} malformed, ${e.message}`
+            : `${prefix} malformed slide data (${(e as Error).message}) cannot be counted. Fix the slide or block fields to match their types in types/slide.`,
         );
       }
     });

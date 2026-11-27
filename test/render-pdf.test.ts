@@ -6,8 +6,8 @@ import { rejection } from "@hackersandwizards/scaffolding/rejection";
 it.each(["file:///etc/passwd", "data:text/html,x", "javascript:alert(1)"])(
   "refuses to print %s before it starts a browser",
   async (url) => {
-    expect(await rejection(renderPdf(url, "/dev/null", { title: "T", slideCount: 1 }))).toMatch(
-      /http\(s\) page/,
+    expect(await rejection(renderPdf(url, "/dev/null", { title: "T", slideCount: 1 }))).toBe(
+      `Error: Cannot print the ${new URL(url).protocol} URL ${url} because PDF export loads a served print route. Pass the route's http or https URL to renderPdf.`,
     );
   },
 );
@@ -42,6 +42,29 @@ function evaluatePrintImages(page: ReturnType<typeof mockPrintPage>, images: obj
 
 const printMockDeck = (title: string) =>
   renderPdf("https://example.test/print", "/dev/null", { title, slideCount: 2 });
+
+it("explains how to fix a print route with the wrong slide count", async () => {
+  mockPrintPage().$$eval.mockResolvedValue(3);
+  expect(await rejection(printMockDeck("Incomplete"))).toBe(
+    "Error: The page rendered 3 slides but the deck holds 2, so PDF export stopped. Pass the full presentation to PrintDeck and its slides.length as slideCount to renderPdf.",
+  );
+});
+
+it("explains how to fix a print route with no slides", async () => {
+  mockPrintPage().$.mockResolvedValue(null);
+  expect(await rejection(printMockDeck("Empty"))).toBe(
+    "Error: No .print-slide elements found, so there are no slides to print or measure. Render PrintDeck with the deck in the print route.",
+  );
+});
+
+it("explains how to fix unfitted slides in the print route", async () => {
+  mockPrintPage()
+    .waitForFunction.mockResolvedValueOnce(undefined)
+    .mockRejectedValueOnce(Object.assign(new Error("fixture timed out"), { name: "TimeoutError" }));
+  expect(await rejection(printMockDeck("Unfitted"))).toBe(
+    "Error: Slides are still unfitted after 300 s at https://example.test/print, so PDF export stopped. Mount PrintDeck with client:load in the print route and fix any hydration error in the browser console.",
+  );
+});
 
 it("prints two slides with the positional title and slide count", async () => {
   const page = mockPrintPage();

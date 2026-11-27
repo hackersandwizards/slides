@@ -89,7 +89,9 @@ describe("slides-usage", () => {
     const side = { title: "t", items: ["a"] };
     // Drawn as bullets, which the print page marks: counted as drawn (F32).
     expect(content([{ type: "bullets", items: ["a"] }])).toEqual(["content"]);
-    expect(() => content([{ type: "bulets", items: ["a"] }])).toThrow(/bulets/);
+    expect(() => content([{ type: "bulets", items: ["a"] }])).toThrow(
+      new Error(blockFinding("block-bulets")),
+    );
     expect(content([{ type: "two-column", left: side, right: side }])).toEqual([
       "comparison-split",
     ]);
@@ -119,14 +121,35 @@ describe("slides-usage", () => {
     });
   });
 
-  it("fails on a slide no entry draws, naming it, and on a file that is no deck", () => {
+  const blockFinding = (ids: string) =>
+    `No catalogue entry for ${ids}, so the blocks cannot be counted. Set each affected content block's type to a supported ContentBlock type from types/slide.`;
+  const unknownSlide = (type: string) =>
+    `type ${type} cannot be counted. Set the slide's type to a supported Slide type from types/slide.`;
+  const missingSlides =
+    "has no slides array, so the check cannot count it as a deck. Supply a Presentation with a slides array as defined in types/slide.";
+  const malformedSlide = (detail: string) =>
+    `malformed slide data (${detail}) cannot be counted. Fix the slide or block fields to match their types in types/slide.`;
+
+  it("explains how to replace a slide type with no catalogue entry", () => {
     const { code, err } = run({ lang: "en", slides: [{ type: "nope" }] });
     expect(code).toBe(1);
-    expect(err).toContain("slide 1: type nope");
-    expect(run({ headline: "x" }).code).toBe(1);
-    const malformed = run({ lang: "en", slides: [{ type: "content", headline: "x" }] });
-    expect(malformed.code).toBe(1);
-    expect(malformed.err).toContain("slide 1: malformed");
+    expect(err).toBe(
+      `slides-usage: no catalogue entry for ${join(dir, "0.json")} slide 1: ${unknownSlide("nope")}\n`,
+    );
+  });
+
+  it("explains how to supply a deck with a slides array", () => {
+    const { code, err } = run({ headline: "x" });
+    expect(code).toBe(1);
+    expect(err).toBe(`slides-usage: ${join(dir, "0.json")} ${missingSlides}\n`);
+  });
+
+  it("explains how to repair a malformed content slide", () => {
+    const { code, err } = run({ lang: "en", slides: [{ type: "content", headline: "x" }] });
+    expect(code).toBe(1);
+    expect(err).toBe(
+      `slides-usage: no catalogue entry for ${join(dir, "0.json")} slide 1: ${malformedSlide("undefined is not an object (evaluating 'content.length')")}\n`,
+    );
   });
 
   it("reads an array of decks from standard input, counting each deck", () => {
@@ -144,7 +167,9 @@ describe("slides-usage", () => {
     expect(run([deck, deck]).json).toMatchObject({ decks: 2, entries: { agenda: 2 } });
     const empty = spawnSync("bun", [script, "-"], { encoding: "utf8", input: "[]" });
     expect(empty.status).toBe(1);
-    expect(empty.stderr).toContain("no deck");
+    expect(empty.stderr).toBe(
+      "slides-usage: The input contains no deck, so there is nothing to count. Pass a deck JSON file or pipe a deck or nonempty array of decks to -.\n",
+    );
   });
 
   const validDeck = { lang: "en", slides: [{ type: "agenda", headline: "h", items: [] }] };
@@ -153,27 +178,27 @@ describe("slides-usage", () => {
     [
       "its slug at index 1",
       [validDeck, { lang: "en", slug: "kickoff", slides: [{ type: "nope" }] }],
-      /kickoff \(\S+\[1\]\) slide 1: type nope/,
+      `no catalogue entry for kickoff (${join(dir, "0.json")}[1]) slide 1: ${unknownSlide("nope")}`,
     ],
     [
       "its name when slug is empty at index 2",
       [validDeck, validDeck, { lang: "en", slug: "", name: "Retro", slides: [{ type: "nope" }] }],
-      /Retro \(\S+\[2\]\) slide 1: type nope/,
+      `no catalogue entry for Retro (${join(dir, "0.json")}[2]) slide 1: ${unknownSlide("nope")}`,
     ],
     [
       "its file and index when unnamed at index 3",
       [validDeck, validDeck, validDeck, { lang: "en", slides: [{ type: "nope" }] }],
-      /\.json\[3\] slide 1: type nope/,
+      `no catalogue entry for ${join(dir, "0.json")}[3] slide 1: ${unknownSlide("nope")}`,
     ],
     [
       "its name when the item is no deck at index 1",
       [validDeck, { name: "Draft" }],
-      /Draft \(\S+\[1\]\) is no deck/,
+      `Draft (${join(dir, "0.json")}[1]) ${missingSlides}`,
     ],
   ])("names a broken deck in an array by %s", (_label, decks, expected) => {
     const { code, err } = run(decks);
     expect(code).toBe(1);
-    expect(err).toMatch(expected);
+    expect(err).toBe(`slides-usage: ${expected}\n`);
   });
 
   it("reports every broken deck in one run", () => {
@@ -181,7 +206,12 @@ describe("slides-usage", () => {
     const brokenDecks = unknownTypes.map((type) => ({ lang: "en", slides: [{ type }] }));
     const { code, err } = run([validDeck, ...brokenDecks]);
     expect(code).toBe(1);
-    expect(err.match(/(?<=: type )\S+/g)).toEqual(unknownTypes);
+    expect(err.trimEnd().split("\n")).toEqual(
+      unknownTypes.map(
+        (type, i) =>
+          `slides-usage: no catalogue entry for ${join(dir, "0.json")}[${i + 1}] slide 1: ${unknownSlide(type)}`,
+      ),
+    );
   });
 
   const deckWithBlockType = (type: unknown) => ({
@@ -201,13 +231,17 @@ describe("slides-usage", () => {
   it("reports constructor as an unknown block type", () => {
     const { code, err } = run(deckWithBlockType("constructor"));
     expect(code).toBe(1);
-    expect(err).toMatch(/slide 1: malformed, no catalogue entry for block-constructor\n$/);
+    expect(err).toBe(
+      `slides-usage: no catalogue entry for ${join(dir, "0.json")} slide 1: malformed, ${blockFinding("block-constructor")}\n`,
+    );
   });
 
   it("reports a missing image using the block expression in the diagnostic", () => {
     const { code, err } = run(deckWithBlockType("image-and-grid"));
     expect(code).toBe(1);
-    expect(err).toContain("(evaluating 'block.image.sketch')");
+    expect(err).toBe(
+      `slides-usage: no catalogue entry for ${join(dir, "0.json")} slide 1: ${malformedSlide("undefined is not an object (evaluating 'block.image.sketch')")}\n`,
+    );
   });
 
   // A deck-data lint for what the type checker cannot see: each rule hit by a planted field, and
@@ -319,17 +353,36 @@ describe("slides-usage", () => {
     expect(ignoredFields(split as Slide)).toEqual([]);
   });
 
-  it("fails on such a field and on a deck that names no language, title slides counted", () => {
+  it("fails on an ignored field and accepts lang from a title slide", () => {
     const agenda = { type: "agenda", headline: "h", items: [] };
     const lanes = { type: "lanes", headline: "h", lanes: [], sectionTheme: "accent" };
     const dead = run({ lang: "en", slides: [agenda, lanes] });
     expect(dead.code).toBe(1);
     expect(dead.err).toMatch(/slide 2: draws nothing, sectionTheme/);
-    const silent = run({ name: "Untitled", slides: [agenda] });
-    expect(silent.code).toBe(1);
-    expect(silent.err).toContain("names no lang");
     expect(run({ slides: [{ type: "title", title: "t", lang: "de" }, agenda] }).code).toBe(0);
   });
+
+  it("explains which lang values give the deck the right language", () => {
+    const silent = run({
+      name: "Untitled",
+      slides: [{ type: "agenda", headline: "h", items: [] }],
+    });
+    expect(silent.code).toBe(1);
+    expect(silent.err).toBe(
+      `slides-usage: ${join(dir, "0.json")} names no supported lang on the deck or a title slide, so the deck defaults to English. Set the deck's lang to en or de.\n`,
+    );
+  });
+
+  it.each([{ args: [] }, { args: ["--check", "-"] }, { args: ["-", "--out"] }])(
+    "explains which arguments the check needs ($args)",
+    ({ args }) => {
+      const result = spawnSync("bun", [script, ...args], { encoding: "utf8" });
+      expect(result.status).toBe(2);
+      expect(result.stderr.split("\n")[0]).toBe(
+        "slides-usage: The check needs deck JSON to count and --check needs a file to compare. Pass a deck JSON path or - for standard input, and supply a file path after --out when using --out or --check.",
+      );
+    },
+  );
 
   describe("--out and --check", () => {
     const deck = join(dir, "check.json");

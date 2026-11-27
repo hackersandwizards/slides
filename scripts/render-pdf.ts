@@ -69,7 +69,9 @@ export async function renderPdf(
   // A deck's print route, served: a file:// or other local URL would print whatever file it names.
   const { protocol } = new URL(url);
   if (protocol !== "http:" && protocol !== "https:")
-    throw new Error(`renderPdf prints an http(s) page, not a ${protocol} URL: ${url}`);
+    throw new Error(
+      `Cannot print the ${protocol} URL ${url} because PDF export loads a served print route. Pass the route's http or https URL to renderPdf.`,
+    );
   const browser = await puppeteer.launch({
     headless: true,
     protocolTimeout: 300_000,
@@ -82,7 +84,9 @@ export async function renderPdf(
 
     const slides = await page.$$eval(".print-slide", (nodes) => nodes.length);
     if (slides !== deck.slideCount) {
-      throw new Error(`page rendered ${slides} slides, the deck holds ${deck.slideCount}`);
+      throw new Error(
+        `The page rendered ${slides} slides but the deck holds ${deck.slideCount}, so PDF export stopped. Pass the full presentation to PrintDeck and its slides.length as slideCount to renderPdf.`,
+      );
     }
 
     await downsamplePrintImages(page);
@@ -116,7 +120,10 @@ export async function settlePrintPage(
   { fitted = false }: { fitted?: boolean } = {},
 ) {
   const res = await page.goto(url, { waitUntil: "networkidle0", timeout: 300_000 });
-  if (!res?.ok()) throw new Error(`HTTP ${res?.status()} from ${url}`);
+  if (!res?.ok())
+    throw new Error(
+      `HTTP ${res?.status()} from ${url} prevented the print route from loading. Check the route URL and fix any error in the server log.`,
+    );
   await page.waitForFunction(
     () =>
       [...document.querySelectorAll("[data-chart-plot]")].every((box) =>
@@ -125,7 +132,10 @@ export async function settlePrintPage(
     { timeout: 300_000 },
   );
   await page.evaluate(() => document.fonts.ready);
-  if (!(await page.$(".print-slide"))) throw new Error("no .print-slide elements found");
+  if (!(await page.$(".print-slide")))
+    throw new Error(
+      "No .print-slide elements found, so there are no slides to print or measure. Render PrintDeck with the deck in the print route.",
+    );
   // A page that never hydrates goes on after the wait, and slides-density fails its unfitted slides.
   // An export never goes on: a late hydration printed its slides unfitted.
   await page
@@ -138,7 +148,7 @@ export async function settlePrintPage(
       if (e.name !== "TimeoutError") throw e;
       if (fitted)
         throw new Error(
-          `slides still unfitted after 300 s, the print route did not hydrate: ${url}`,
+          `Slides are still unfitted after 300 s at ${url}, so PDF export stopped. Mount PrintDeck with client:load in the print route and fix any hydration error in the browser console.`,
         );
     });
   // The fit guard refits on its ResizeObserver: two frames and a pause let it land.

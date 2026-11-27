@@ -65,7 +65,7 @@ it(
       'FAIL /measured/0 "Misused": one or two short bullets leave the slide empty: make it the statement slide bulletsAsStatement in @hackersandwizards/slides/lib/slide-utils returns',
       'FAIL /measured/1 heading scale 0.75 "Narrow": a heading\'s word is wider than its box and shrinks the heading: shorten the word or give it a wider box',
       'NOTICE /measured/2 heading scale 0.85 "Tight": a heading\'s word is wider than its box and shrinks the heading: shorten the word or give it a wider box',
-      'FAIL /measured/3 scale 0.75 "List": split into 2 slides by list item: 1 | 2',
+      'FAIL /measured/3 scale 0.75 "List": The slide shrinks to fit its content. Split into 2 slides by list item: 1 | 2',
       'NOTICE /measured/4 scale 0.85 "Tall": one block is taller than the slide: split its text or show it as a diagram',
       "[slides-density] 1 decks: 3 findings below 0.8, of the wrong type or unfitted (fail), 2 below 0.9 (notice)",
     ]);

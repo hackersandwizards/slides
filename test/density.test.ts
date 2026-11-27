@@ -1,3 +1,5 @@
+import { spawnSync } from "node:child_process";
+import { join } from "node:path";
 import { ConnectionClosedError, ProtocolError, type Page } from "puppeteer";
 import { expect, it } from "vitest";
 import { checkDeckDensity } from "../scripts/density";
@@ -98,3 +100,17 @@ it.each([
     expect(observed).toBe(error);
   },
 );
+
+it.each([
+  { args: [] },
+  { args: ["--site", "dist", "--serve", "preview", "/deck/print"] },
+  { args: ["--site", "dist", url] },
+])("explains which print route and server arguments the check needs (%j)", ({ args }) => {
+  const run = spawnSync("bun", [join(__dirname, "../scripts/density.ts"), ...args], {
+    encoding: "utf8",
+  });
+  expect(run.status).toBe(2);
+  expect(run.stderr.split("\n")[0]).toBe(
+    'slides-density: The check needs at least one print route and must know which server to measure. Pass absolute print URLs, or use one of --site <dir> and --serve "<command>" with print paths.',
+  );
+});

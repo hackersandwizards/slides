@@ -64,19 +64,25 @@ describe("slides-pins", () => {
     for (const pin of ["git+https://github.com/hackersandwizards/brand.git#main", "*", "latest"]) {
       const { code, err } = consumer(pin);
       expect(code, pin).toBe(1);
-      expect(err).toContain("names no version");
+      expect(err).toBe(
+        `slides-pins: @hackersandwizards/brand: ${pin} names no version, so the check cannot verify the minimum. Set the pin in package.json to a version tag as shown in the slides README.\n`,
+      );
     }
   });
 
   it("fails a consumer without a brand pin, naming it", () => {
     const { code, err } = consumer();
     expect(code).toBe(1);
-    expect(err).toContain("@hackersandwizards/brand: package.json pins no version");
+    expect(err).toBe(
+      "slides-pins: @hackersandwizards/brand: package.json pins no version, so dependencies can install without the slide styles and fonts. Add a version pin to dependencies or devDependencies as shown in the slides README.\n",
+    );
   });
 
   it("reports a malformed brand pin without coercing it to a string", () => {
     const { code, err } = consumer({ toString: null });
     expect(code).toBe(1);
-    expect(err).toContain("@hackersandwizards/brand: package.json brand pin must be a string");
+    expect(err).toBe(
+      "slides-pins: @hackersandwizards/brand: The brand pin in package.json must be a string so the check can verify its version. Replace the value in dependencies or devDependencies with a version string as shown in the slides README.\n",
+    );
   });
 });

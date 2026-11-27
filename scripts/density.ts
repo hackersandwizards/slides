@@ -73,6 +73,9 @@ if (import.meta.main) {
   // measure whatever answers there.
   const absolute = (arg: string) => URL.canParse(arg);
   if (!args.length || (site && serve) || ((site || serve) && args.some(absolute))) {
+    console.error(
+      'slides-density: The check needs at least one print route and must know which server to measure. Pass absolute print URLs, or use one of --site <dir> and --serve "<command>" with print paths.',
+    );
     console.error(USAGE);
     process.exit(2);
   }
@@ -168,7 +171,7 @@ export async function checkDeckDensity(
       else noticed++;
       const hint =
         r.groups > 1
-          ? `split into ${r.groups} slides by ${r.label}: ${r.split}`
+          ? `The slide shrinks to fit its content. Split into ${r.groups} slides by ${r.label}: ${r.split}`
           : `one ${r.label} is taller than the slide: split its text or show it as a diagram`;
       return `${level} /${deck}/${r.i} scale ${r.scale.toFixed(2)} "${r.title}": ${hint}`;
     });
