@@ -23,3 +23,7 @@ export const bodyO = (c: Palette, k: number, extra: Partial<BoxOpts> = {}): BoxO
   color: c.ink,
   ...extra,
 });
+
+export function slotBodyO(c: Palette, { k, centered }: Slot): BoxOpts {
+  return bodyO(c, k, centered ? { align: "center" } : {});
+}

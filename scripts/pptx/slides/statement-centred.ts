@@ -7,7 +7,8 @@ import type { Look } from "../look";
 import { mixColor, type Palette } from "../palette";
 import type { Sheet } from "../sheet";
 import { BOTTOM, CW, LEADING, PT, REM, TOP, W, type Area } from "../stage";
-import { caps, md, type BoxOpts, type Para, type Run } from "../text";
+import { md, type BoxOpts, type Para } from "../text";
+import { lineRuns, statementKicker } from "./statement-text";
 
 export interface CentredPart {
   paras: Para[];
@@ -25,37 +26,6 @@ export interface CentredStatementBox {
 export interface CentredStatementLayout {
   boxes: CentredStatementBox[];
   foot: Footer;
-}
-
-/** Splits a statement line around its optional `highlighted` and `crossedOut` substrings, styling
- *  highlighted spans in teal and crossed-out spans with a muted strikethrough. */
-export function lineRuns(
-  line: string,
-  d: Pick<StatementSlide, "highlighted" | "crossedOut">,
-  look: Look,
-): Run[] {
-  const { c } = look;
-  const out: Run[] = [];
-  const marks = [d.highlighted, d.crossedOut].filter((m): m is string => Boolean(m));
-  let rest = line;
-  while (rest) {
-    const hits = marks
-      .map((m) => [rest.indexOf(m), m] as const)
-      .filter(([i]) => i >= 0)
-      .sort((p, q) => p[0] - q[0]);
-    if (!hits.length) {
-      out.push(...md(rest, c));
-      break;
-    }
-    const [i, m] = hits[0];
-    if (i) out.push(...md(rest.slice(0, i), c));
-    out.push({
-      text: m,
-      options: m === d.highlighted ? { color: c.teal } : { strike: "sngStrike", color: c.muted },
-    });
-    rest = rest.slice(i + m.length);
-  }
-  return out;
 }
 
 /** Builds the numbered points block for a centred statement, fitted to its longest line up to
@@ -126,20 +96,10 @@ export function centredHeadingParts(look: Look, d: StatementSlide, maxW: number)
   const { c } = look;
   const simple = isSimpleStatement(d);
   const parts: CentredPart[] = [];
-  if (d.kicker)
-    parts.push({
-      paras: [{ runs: [caps(d.kicker, { color: c.tealDark })] }],
-      o: {
-        size: PT.sm,
-        mono: true,
-        color: c.tealDark,
-        tracking: 0.06,
-        line: 1.4,
-        align: "center",
-      },
-      w: maxW,
-      gap: 0,
-    });
+  if (d.kicker) {
+    const { paras, o } = statementKicker(d.kicker, c);
+    parts.push({ paras, o: { ...o, align: "center" }, w: maxW, gap: 0 });
+  }
   const crossed = d.crossedOut;
   if (crossed && !d.lines.some((l) => l.includes(crossed)))
     parts.push({

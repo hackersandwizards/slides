@@ -4,8 +4,7 @@ import type { WheelSlide as WheelSlideType } from "../../types/slide";
 import { wheelLabelColumns, wheelSegmentAngle } from "../../lib/wheel-layout";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { SectionHeader } from "./SectionHeader";
-import { TitledContent, SlideTitle, SlideSubtitle, NumberTile } from "./primitives";
+import { TitledContent, NumberTile } from "./primitives";
 
 interface Props {
   slide: WheelSlideType;
@@ -32,10 +31,7 @@ export function WheelSlide({ slide }: Props) {
 
   return (
     <SlideShell>
-      <TitledContent>
-        <SectionHeader label={slide.sectionLabel} />
-        <SlideTitle>{slide.headline}</SlideTitle>
-        {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
+      <TitledContent heading={slide} lead={{ text: slide.subtitle }}>
         <div className="slide-body">
           <BlurFade delay={0.2} duration={0.5}>
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-8">

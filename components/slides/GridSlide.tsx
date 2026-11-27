@@ -5,9 +5,8 @@ import { SlideShell, groundOf } from "./SlideShell";
 import { gridAsContent } from "../../lib/slide-aliases";
 import { isDeepDive } from "../../lib/slide-framing";
 import { ContentSlide } from "./ContentSlide";
-import { SectionHeader } from "./SectionHeader";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { Portrait, TitledContent, SlideTitle } from "./primitives";
+import { Portrait, TitledContent } from "./primitives";
 
 interface Props {
   slide: GridSlideType;
@@ -53,10 +52,9 @@ function QuoteGrid({ slide }: { slide: Exclude<GridSlideType, { variant: "stats"
 
   return (
     <SlideShell ground={groundOf(slide)} night={isDeepDive(slide)}>
-      <TitledContent>
-        <SectionHeader label={slide.sectionLabel} />
-        <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
-
+      <TitledContent
+        heading={{ sectionLabel: slide.sectionLabel, headline: slide.headline, duration: 0.6 }}
+      >
         <div className="slide-body items-center">
           <div className={`grid w-full max-w-5xl gap-8 ${gridCols}`}>
             {slide.cards.map((card, index) => (

@@ -1,26 +1,55 @@
 "use client";
 
-import { type CSSProperties, type ReactNode } from "react";
+import { createElement, type CSSProperties, type ReactNode } from "react";
 import { DEFAULT_SECTION_STYLE } from "../../lib/section-styles";
 import { BlurFade } from "../ui/blur-fade";
 import { keepCompounds, renderMarkdown } from "../../lib/markdown";
+import { SectionHeader } from "./SectionHeader";
+
+const CONTENT_INSETS = {
+  inset: "px-12",
+  wide: "px-16",
+};
+
+type ContentLayout = "column" | keyof typeof CONTENT_INSETS;
+
+function titledContentClass(layout: ContentLayout, titled: boolean): string {
+  if (layout === "column")
+    return `slide-content ${titled ? "slide-titled" : "justify-center"} relative z-10 flex flex-col`;
+  return `slide-content relative z-10 flex flex-col items-center justify-center ${CONTENT_INSETS[layout]} ${titled ? "slide-titled" : ""}`;
+}
 
 /** A titled slide's column: headline on top, `.slide-body` below, both under the fit guard. */
 export function TitledContent({
   children,
   titled = true,
+  layout = "column",
+  heading,
+  lead,
 }: {
   children: ReactNode;
   /** False on a slide without a headline: its body then stands centred, as on any untitled slide. */
   titled?: boolean;
+  layout?: ContentLayout;
+  heading?: {
+    sectionLabel?: string;
+    headline?: string;
+    duration?: number;
+  };
+  lead?: { text?: ReactNode; delay?: number };
 }) {
-  return (
-    <div
-      className={`slide-content ${titled ? "slide-titled" : "justify-center"} relative z-10 flex flex-col`}
-    >
-      {children}
-    </div>
+  const className = titledContentClass(layout, titled);
+  if (!heading) return <div className={className}>{children}</div>;
+  const section = <SectionHeader label={heading.sectionLabel} />;
+  const title = heading.headline !== undefined && (
+    <SlideTitle as={layout === "column" ? "h1" : "h2"} duration={heading.duration}>
+      {heading.headline}
+    </SlideTitle>
   );
+  // Keep each heading slot a sibling of the body so its server-rendered useId values stay stable.
+  if (!lead) return createElement("div", { className }, section, title, children);
+  const subtitle = lead.text && <SlideSubtitle delay={lead.delay}>{lead.text}</SlideSubtitle>;
+  return createElement("div", { className }, section, title, subtitle, children);
 }
 
 /** The slide headline (`.slide-title`), fading in. `as="h2"` where the slide already has an h1. */

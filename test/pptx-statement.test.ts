@@ -8,6 +8,7 @@ import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
 import { statementKind, type StatementKind } from "../scripts/pptx/slides/statement";
+import { lineRuns } from "../scripts/pptx/slides/statement-text";
 import {
   centredClosingPart,
   centredHeadingParts,
@@ -16,7 +17,6 @@ import {
   centredSupportParts,
   drawCentredStatement,
   isSimpleStatement,
-  lineRuns,
   type CentredPart,
   type CentredStatementLayout,
 } from "../scripts/pptx/slides/statement-centred";

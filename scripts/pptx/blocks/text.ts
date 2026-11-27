@@ -2,7 +2,7 @@ import { textWidth } from "../fit";
 import { mixColor, type Palette } from "../palette";
 import { PT, REM } from "../stage";
 import { bulletParas, md, type Para } from "../text";
-import { bodyO, type Block, type BlockKind } from "./kind";
+import { bodyO, slotBodyO, type Block, type BlockKind } from "./kind";
 
 /** The rule and its gap before a quote's words: brand's 2 px and 1.25 rem on the 1920 stage. */
 const QUOTE_INDENT = 2 / 144 + 1.25 * REM;
@@ -23,13 +23,12 @@ export const paragraph: BlockKind<"paragraph"> = {
     const o = bodyO(c, k);
     return look.need(b.text, w, o);
   },
-  draw(sheet, b, { area: a, k, centered }) {
+  draw(sheet, b, slot) {
     const { c } = sheet;
-    const o = bodyO(c, k, centered ? { align: "center" } : {});
     return sheet.box(
-      { runs: md(b.text, c), align: b.centered || centered ? "center" : "left" },
-      a,
-      o,
+      { runs: md(b.text, c), align: b.centered || slot.centered ? "center" : "left" },
+      slot.area,
+      slotBodyO(c, slot),
     );
   },
 };
@@ -40,13 +39,13 @@ export const bullets: BlockKind<"bullets"> = {
     const o = bodyO(c, k);
     return look.need(bulletParas(b.items, c, b.ordered), w, o);
   },
-  draw(sheet, b, { area: a, k, centered }) {
+  draw(sheet, b, slot) {
     const { c } = sheet;
-    const o = bodyO(c, k, centered ? { align: "center" } : {});
-    return sheet.box(bulletParas(b.items, c, b.ordered), a, {
-      ...o,
-      align: "left",
-    });
+    return sheet.box(
+      bulletParas(b.items, c, b.ordered),
+      slot.area,
+      bodyO(c, slot.k, { align: "left" }),
+    );
   },
 };
 
@@ -59,15 +58,15 @@ export const quote: BlockKind<"quote"> = {
       0,
     );
   },
-  draw(sheet, b, { area: a, k, centered }) {
+  draw(sheet, b, slot) {
     const { c } = sheet;
-    const o = bodyO(c, k, centered ? { align: "center" } : {});
+    const { area: a, k } = slot;
     // Brand's quote: a purple rule, the words in ink behind it, the source under them.
     sheet.rect({ x: a.x, y: a.y, w: 2 / 144, h: a.h }, c.purple);
     return sheet.box(
       quoteParas(b, c, k).map(([p, size]) => ({ ...p, rel: size / (PT.base * k) })),
       { x: a.x + QUOTE_INDENT * k, y: a.y, w: a.w - QUOTE_INDENT * k, h: a.h },
-      { ...o, align: "left" },
+      bodyO(c, k, { align: "left" }),
     );
   },
 };
@@ -78,9 +77,10 @@ export const callout: BlockKind<"callout"> = {
     const o = bodyO(c, k);
     return look.need(b.text, w - 2 * CALLOUT_PAD * k, o) + 2 * CALLOUT_PAD * k;
   },
-  draw(sheet, b, { area: a, k, centered }) {
+  draw(sheet, b, slot) {
     const { c } = sheet;
-    const o = bodyO(c, k, centered ? { align: "center" } : {});
+    const { area: a, k, centered } = slot;
+    const o = slotBodyO(c, slot);
     if (centered) {
       const w = Math.min(a.w, 7.5);
       sheet.card({ x: a.x + (a.w - w) / 2, y: a.y, w, h: a.h }, sheet.c.plainCard);

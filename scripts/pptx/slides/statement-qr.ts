@@ -1,13 +1,12 @@
 import { linkLabel, qrAlt } from "../../../lib/link-labels";
 import type { StatementSlide } from "../../../types/slide";
 import { footer, footerOf, type Footer } from "../chrome";
-import { MONO } from "../faces";
 import { textWidth } from "../fit";
 import type { Look } from "../look";
 import type { Sheet } from "../sheet";
 import { BOTTOM, CORNER, CW, EDGE, LEADING, PT, REM, TOP, W, type Area } from "../stage";
-import { caps, md, type BoxOpts, type Para } from "../text";
-import { lineRuns } from "./statement-centred";
+import { md, type BoxOpts, type Para } from "../text";
+import { columnPointNumber, lineRuns, statementKicker } from "./statement-text";
 
 export interface QrStatementPart {
   paras: Para[];
@@ -38,12 +37,7 @@ export function qrStatementParts(look: Look, d: StatementSlide): QrStatementPart
   const { c } = look;
   const parts: QrStatementPart[] = [];
   const support: BoxOpts = { size: PT.h3, color: c.ink, line: 1.375 };
-  if (d.kicker)
-    parts.push({
-      paras: [{ runs: [caps(d.kicker, { color: c.tealDark })] }],
-      o: { size: PT.sm, mono: true, color: c.tealDark, tracking: 0.06, line: 1.4 },
-      gap: 0,
-    });
+  if (d.kicker) parts.push({ ...statementKicker(d.kicker, c), gap: 0 });
   parts.push({
     paras: d.lines.map((l) => ({ runs: lineRuns(l, d, look), balance: true })),
     o: {
@@ -60,13 +54,7 @@ export function qrStatementParts(look: Look, d: StatementSlide): QrStatementPart
   if (d.points?.length)
     parts.push({
       paras: d.points.map((pt, i) => ({
-        runs: [
-          {
-            text: `${String(i + 1).padStart(2, "0")}  `,
-            options: { color: c.teal, bold: true, fontFace: MONO },
-          },
-          ...md(pt, c, { color: c.muted }),
-        ],
+        runs: [columnPointNumber(i, c), ...md(pt, c, { color: c.muted })],
         after: 1.25 * REM * 72,
       })),
       o: { size: PT.base, color: c.muted, line: 1.375 },

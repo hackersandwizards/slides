@@ -2,10 +2,9 @@
 
 import type { ProcessSlide as ProcessSlideType } from "../../types/slide";
 import { SlideShell, groundOf } from "./SlideShell";
-import { SectionHeader } from "./SectionHeader";
 import { LONG_FLOW, isHighlightPhase } from "../../lib/process-layout";
 import { useProgressiveReveal } from "../../lib/use-progressive-reveal";
-import { TitledContent, SlideTitle, SlideCaption } from "./primitives";
+import { TitledContent, SlideCaption } from "./primitives";
 import { FlowSteps } from "./Visuals";
 import { ProcessCircle } from "./ProcessCircle";
 
@@ -28,10 +27,9 @@ export function ProcessSlide({ slide }: Props) {
   const named = slide.nodes.findIndex((node) => isHighlightPhase(node.title, slide.highlightPhase));
   return (
     <SlideShell ground={groundOf(slide)}>
-      <TitledContent>
-        <SectionHeader label={slide.sectionLabel} />
-        <SlideTitle duration={0.6}>{slide.headline}</SlideTitle>
-
+      <TitledContent
+        heading={{ sectionLabel: slide.sectionLabel, headline: slide.headline, duration: 0.6 }}
+      >
         <div className="slide-body items-center">
           <div className="flex w-full flex-col items-center gap-10">
             {/* Desktop and print: the steps on one line as the flow block draws them, the loop

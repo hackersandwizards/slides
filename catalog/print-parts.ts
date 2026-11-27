@@ -82,10 +82,18 @@ const reach = (component: string, seen = new Set<string>()): string => {
   ].join("\n");
 };
 const typeSources = typeFiles.map(({ type, component }) => ({ type, source: reach(component) }));
-const usedBy = (name: string) =>
-  typeSources
-    .filter(({ source }) => new RegExp(`<${name}[\\s/>]`).test(source))
+const titledContentParts: Partial<Record<string, string>> = {
+  SlideTitle: "heading",
+  SlideSubtitle: "lead",
+};
+const usedBy = (name: string) => {
+  const direct = new RegExp(`<${name}[\\s/>]`);
+  const prop = titledContentParts[name];
+  const nested = prop ? new RegExp(`<TitledContent\\s+[^>]*\\b${prop}=`) : undefined;
+  return typeSources
+    .filter(({ source }) => direct.test(source) || nested?.test(source))
     .map(({ type }) => type);
+};
 
 export const partFrames = partNames.map(({ name, file }) => ({
   name,

@@ -8,8 +8,7 @@ import type {
 import { keepCompounds } from "../../lib/markdown";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { SectionHeader } from "./SectionHeader";
-import { TitledContent, SlideTitle, SlideSubtitle, SlideCard } from "./primitives";
+import { TitledContent, SlideCard } from "./primitives";
 
 interface Props {
   slide: DecisionSlideType;
@@ -166,10 +165,7 @@ function GridDecisionFlow({ flow: { need, question, yes, no, outcome } }: { flow
 export function DecisionSlide({ slide }: Props) {
   return (
     <SlideShell>
-      <TitledContent>
-        <SectionHeader label={slide.sectionLabel} />
-        <SlideTitle>{slide.headline}</SlideTitle>
-        {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
+      <TitledContent heading={slide} lead={{ text: slide.subtitle }}>
         <div className="slide-body items-center">
           <BlurFade delay={0.2} duration={0.5} className="w-full">
             <StackedDecisionFlow flow={slide} />

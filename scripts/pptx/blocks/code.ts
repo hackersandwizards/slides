@@ -1,7 +1,7 @@
 import { mixColor } from "../palette";
 import { PT } from "../stage";
 import { CAPS, md } from "../text";
-import { bodyO, type BlockKind } from "./kind";
+import { bodyO, slotBodyO, type BlockKind } from "./kind";
 
 /** A code block's lines without their common indent, as the web shows them. */
 function codeLines(code: string) {
@@ -91,9 +91,8 @@ export const codeAndText: BlockKind<"code-and-text"> = {
     );
   },
   draw(sheet, b, slot) {
-    const { area: a, k, centered } = slot;
+    const { area: a } = slot;
     const { c } = sheet;
-    const o = bodyO(c, k, centered ? { align: "center" } : {});
     const half = a.w / 2 - 0.15;
     code.draw(
       sheet,
@@ -111,7 +110,7 @@ export const codeAndText: BlockKind<"code-and-text"> = {
         { runs: md(sc.text, c), after: 10 },
       ]),
       { x: a.x + half + 0.3, y: a.y, w: half, h: a.h },
-      o,
+      slotBodyO(c, slot),
     );
   },
 };

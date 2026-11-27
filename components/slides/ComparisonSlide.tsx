@@ -18,10 +18,8 @@ import {
   DisplayHeading,
   SideHighlight,
   SlideCard,
-  SlideSubtitle,
-  SlideTitle,
+  TitledContent,
 } from "./primitives";
-import { SectionHeader } from "./SectionHeader";
 import { ComparisonGuidance } from "./ComparisonGuidance";
 
 /** Consumers import it from this path. */
@@ -308,19 +306,18 @@ export function ComparisonSlide({ slide }: Props) {
 
   return (
     <SlideShell>
-      <div
-        className={`slide-content relative z-10 flex flex-col items-center justify-center px-16 ${titled ? "slide-titled" : ""}`}
+      <TitledContent
+        layout="wide"
+        titled={Boolean(titled)}
+        heading={{
+          sectionLabel: slide.sectionLabel,
+          headline: slide.headline || undefined,
+          duration: 0.6,
+        }}
+        lead={{ text: subtitle && renderMarkdown(subtitle), delay: 0.22 }}
       >
-        <SectionHeader label={slide.sectionLabel} />
-        {slide.headline && (
-          <SlideTitle as="h2" duration={0.6}>
-            {slide.headline}
-          </SlideTitle>
-        )}
-        {subtitle && <SlideSubtitle delay={0.22}>{renderMarkdown(subtitle)}</SlideSubtitle>}
-
         <div className="slide-body items-center">{renderComparisonBody(variant, slide)}</div>
-      </div>
+      </TitledContent>
     </SlideShell>
   );
 }

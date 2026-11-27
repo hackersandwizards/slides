@@ -5,8 +5,7 @@ import { useChartPlotMotion } from "../../lib/use-chart-plot-motion";
 import type { ChartSlide as ChartSlideType } from "../../types/slide";
 import { BlurFade } from "../ui/blur-fade";
 import { SlideShell } from "./SlideShell";
-import { SectionHeader } from "./SectionHeader";
-import { ChartFrame, SlideTitle } from "./primitives";
+import { ChartFrame, TitledContent } from "./primitives";
 import { CycleVariant, GraphVariant } from "./ChartDrawing";
 // recharts is most of a deck page's script and only the trend and bar charts use it, after mount:
 // it loads with the first of them.
@@ -94,16 +93,15 @@ function BarVariant({ slide }: { slide: ChartSlideType }) {
 export function ChartSlide({ slide }: Props) {
   return (
     <SlideShell direction="col">
-      <div
-        className={`slide-content relative z-10 flex flex-col items-center justify-center px-12 ${slide.headline ? "slide-titled" : ""}`}
+      <TitledContent
+        layout="inset"
+        titled={Boolean(slide.headline)}
+        heading={{
+          sectionLabel: slide.sectionLabel,
+          headline: slide.headline || undefined,
+          duration: 0.6,
+        }}
       >
-        <SectionHeader label={slide.sectionLabel} />
-        {slide.headline && (
-          <SlideTitle as="h2" duration={0.6}>
-            {slide.headline}
-          </SlideTitle>
-        )}
-
         <div className="slide-body items-center">
           {slide.variant === "cycle" && <CycleVariant slide={slide} />}
           {slide.variant === "graph" && <GraphVariant slide={slide} />}
@@ -115,7 +113,7 @@ export function ChartSlide({ slide }: Props) {
             </BlurFade>
           )}
         </div>
-      </div>
+      </TitledContent>
     </SlideShell>
   );
 }

@@ -7,8 +7,7 @@ import { BlurFade } from "../ui/blur-fade";
 import { teamTypesDrawn } from "../../lib/people-slides";
 import { WORDS } from "../../lib/slide-words";
 import { DeckLang, SlideShell } from "./SlideShell";
-import { SectionHeader } from "./SectionHeader";
-import { TitledContent, SlideTitle, SlideSubtitle } from "./primitives";
+import { TitledContent } from "./primitives";
 
 interface Props {
   slide: TeamTopologySlideType;
@@ -77,10 +76,7 @@ function Roles({ labels, className }: { labels: string[]; className: string }) {
 export function TeamTopologySlide({ slide }: Props) {
   return (
     <SlideShell>
-      <TitledContent>
-        <SectionHeader label={slide.sectionLabel} />
-        <SlideTitle>{slide.headline}</SlideTitle>
-        {slide.subtitle && <SlideSubtitle>{slide.subtitle}</SlideSubtitle>}
+      <TitledContent heading={slide} lead={{ text: slide.subtitle }}>
         <div className="slide-body">
           <BlurFade delay={0.2} duration={0.5} className="flex flex-col gap-4">
             <TopologyTeamLanes

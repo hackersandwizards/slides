@@ -1,12 +1,11 @@
 import type { StatementSlide } from "../../../types/slide";
 import { footer, footerOf, type Footer } from "../chrome";
-import { MONO } from "../faces";
 import type { Look } from "../look";
 import type { Palette } from "../palette";
 import type { Sheet } from "../sheet";
 import { BOTTOM, CW, EDGE, PT, TOP, type Area } from "../stage";
 import { caps, md, type BoxOpts, type Para } from "../text";
-import { lineRuns } from "./statement-centred";
+import { columnPointNumber, lineRuns } from "./statement-text";
 
 export interface SideMedia {
   src: string;
@@ -89,13 +88,7 @@ export function sideSupportParas(d: StatementSlide, c: Palette): Para[] {
     });
   for (const [i, pt] of (d.points ?? []).entries()) {
     support.push({
-      runs: [
-        {
-          text: `${String(i + 1).padStart(2, "0")}  `,
-          options: { color: c.teal, bold: true, fontFace: MONO },
-        },
-        ...md(pt, c),
-      ],
+      runs: [columnPointNumber(i, c), ...md(pt, c)],
       rel: PT.lead / PT.base,
       after: 6,
     });

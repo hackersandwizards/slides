@@ -7,7 +7,7 @@ import { assetFile } from "../images";
 import type { Sheet } from "../sheet";
 import { PT, type Area } from "../stage";
 import { cards } from "./cards";
-import { bodyO, type Block, type BlockKind, type Slot } from "./kind";
+import { slotBodyO, type Block, type BlockKind, type Slot } from "./kind";
 
 /** Draws one cell of a gallery: either a video block or a contained picture with its caption. */
 export function galleryCell(
@@ -74,9 +74,10 @@ export const image: BlockKind<"image"> = {
 };
 
 export const imageSteps: BlockKind<"image-steps"> = {
-  draw(sheet, b, { area: a, k, centered }) {
+  draw(sheet, b, slot) {
+    const { area: a } = slot;
     const { c } = sheet;
-    const o = bodyO(c, k, centered ? { align: "center" } : {});
+    const o = slotBodyO(c, slot);
     // A file has no arrow steps: the last picture, the one the slide ends on, as print shows it.
     const last = b.steps[b.steps.length - 1];
     const h = a.h - (last.caption ? 0.35 : 0);
@@ -102,9 +103,10 @@ export const gallery: BlockKind<"gallery"> = {
 };
 
 export const linkedImage: BlockKind<"linked-image"> = {
-  draw(sheet, b, { area: a, k, centered }) {
+  draw(sheet, b, slot) {
+    const { area: a } = slot;
     const { c } = sheet;
-    const o = bodyO(c, k, centered ? { align: "center" } : {});
+    const o = slotBodyO(c, slot);
     // The link spelled out under the picture, as on the slide.
     const line = b.href ? 0.42 : 0;
     const p = sheet.picture(
@@ -155,8 +157,8 @@ export function videoCover(
 /** Draws the placeholder card and records a warning for a missing video asset. */
 export function videoMissing(sheet: Sheet, b: Block<"video">, slot: Slot): void {
   const { c } = sheet;
-  const { area: a, k, centered } = slot;
-  const o = bodyO(c, k, centered ? { align: "center" } : {});
+  const { area: a } = slot;
+  const o = slotBodyO(c, slot);
   sheet.warn(`video ${b.src}: not found under ${sheet.out.assets}`);
   sheet.card(a, { fill: c.tint, line: c.border });
   sheet.box(b.alt || b.src, a, {
@@ -169,14 +171,14 @@ export function videoMissing(sheet: Sheet, b: Block<"video">, slot: Slot): void 
 
 export const video: BlockKind<"video"> = {
   draw(sheet, b, slot) {
-    const { area: a, k, centered } = slot;
+    const { area: a } = slot;
     const h = a.h - (b.caption ? 0.35 : 0);
     const frame: Area = { x: a.x, y: a.y, w: a.w, h };
     const path = assetFile(sheet.out.assets, b.src);
     if (existsSync(path)) videoCover(sheet, b, { area: frame, path });
     else videoMissing(sheet, b, { ...slot, area: frame });
     if (b.caption) {
-      const o = bodyO(sheet.c, k, centered ? { align: "center" } : {});
+      const o = slotBodyO(sheet.c, slot);
       sheet.box(
         b.caption,
         { x: a.x, y: a.y + h + 0.08, w: a.w, h: 0.27 },
@@ -193,9 +195,7 @@ export const video: BlockKind<"video"> = {
 
 export const imageAndGrid: BlockKind<"image-and-grid"> = {
   draw(sheet, b, slot) {
-    const { area: a, k, centered } = slot;
-    const { c } = sheet;
-    const o = bodyO(c, k, centered ? { align: "center" } : {});
+    const { area: a } = slot;
     const iw = a.w * 0.42;
     sheet.picture(b.image.src, { x: a.x, y: a.y, w: iw, h: a.h }, { alt: b.image.alt });
     let y = a.y;
@@ -204,7 +204,7 @@ export const imageAndGrid: BlockKind<"image-and-grid"> = {
         b.gridTitle,
         { x: a.x + iw + 0.3, y, w: a.w - iw - 0.3, h: 0.3 },
         {
-          ...o,
+          ...slotBodyO(sheet.c, slot),
           mono: true,
           bold: true,
         },

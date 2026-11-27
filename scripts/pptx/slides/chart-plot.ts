@@ -168,20 +168,28 @@ export function trendScale(plot: Area, { data, labels, now }: PlotSeries) {
 
 type TrendScale = ReturnType<typeof trendScale>;
 
+function trendCoordinates({ g, hi, lo }: TrendScale, count: number) {
+  const intervals = Math.max(1, count - 1);
+  return {
+    tickWidth: g.w / intervals,
+    xAt: (i: number) => (i / intervals) * g.w,
+    yAt: (v: number) => ((hi - v) / (hi - lo)) * g.h,
+  };
+}
+
 /** The guide and text boxes of a marked trend. */
-export function trendNames({ g, hi, lo }: TrendScale, { data, labels, now }: PlotSeries) {
+export function trendNames(scale: TrendScale, { data, labels, now }: PlotSeries) {
   // A chart's category names take one style, so a marked trend sets each as text under its
   // point, the marked one in teal and bold as the web's tick, and a dashed guide from the dot
   // down to the axis.
-  const wide = g.w / Math.max(1, data.length - 1);
-  const xAt = (i: number) => (i / Math.max(1, data.length - 1)) * g.w;
-  const yAt = (v: number) => ((hi - v) / (hi - lo)) * g.h;
+  const { g } = scale;
+  const { tickWidth, xAt, yAt } = trendCoordinates(scale, data.length);
   // From under the dot, a marker of 11 pt, so the guide stays behind it as on the web.
   const dot = g.y + yAt(data[now].value) + 11 / 72 / 2;
   const guide = { x: g.x + xAt(now), y: dot, w: 0.001, h: Math.max(0, g.y + g.h - dot) };
   const names = labels.map((name, i) => {
     const edge = textWidth(name, { size: PT.sm, bold: i === now }) / 2;
-    const lw = Math.min(wide, 2 * edge + 0.1);
+    const lw = Math.min(tickWidth, 2 * edge + 0.1);
     return {
       name,
       bold: i === now,
@@ -192,13 +200,12 @@ export function trendNames({ g, hi, lo }: TrendScale, { data, labels, now }: Plo
 }
 
 /** The measured polygon under a lone series, when it spans two or more points. */
-export function trendFill({ g, hi, lo }: TrendScale, { now, two, data }: PlotSeries) {
+export function trendFill(scale: TrendScale, { now, two, data }: PlotSeries) {
   // recharts fills a lone series' measured part down to 0; a chart's area series would
   // fall to zero after its last value, so the fill is a shape under the chart's plot.
   const filled = now < 0 ? data.length : now + 1;
   if (two || filled <= 1) return undefined;
-  const xAt = (i: number) => (i / Math.max(1, data.length - 1)) * g.w;
-  const yAt = (v: number) => ((hi - v) / (hi - lo)) * g.h;
+  const { xAt, yAt } = trendCoordinates(scale, data.length);
   return [
     { x: 0, y: yAt(0), moveTo: true },
     ...data.slice(0, filled).map((p, i) => ({ x: xAt(i), y: yAt(p.value) })),
