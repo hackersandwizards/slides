@@ -59,7 +59,6 @@ describe("SlideHints", () => {
       act(() => {
         vi.advanceTimersByTime(5000);
       });
-      // The title slide in front of the audience carries no key hints.
       expect(first.queryByText("to go to next slide")).toBeNull();
       first.unmount();
       // A slide change remounts the hints: back on the first slide they stay away.

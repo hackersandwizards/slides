@@ -12,7 +12,6 @@ import { readUsage } from "./usage";
 const BASE = "/slides";
 const root = fileURLToPath(new URL("..", import.meta.url));
 
-// The print pages name brand's files under brand/, as in dist/.
 const fileOf = (path: string) => {
   const name = path.match(/^(?:\/slides)?\/brand\/(.+)$/)?.[1];
   return name ? findBrandFile(name) : undefined;
@@ -46,8 +45,6 @@ const files: AstroIntegration = {
   },
 };
 
-// The consumers' slide counts, which name client decks: only `astro dev` reads them, so no build,
-// the public Pages build included, holds a count (test/pages/astro.test.ts).
 const usage: AstroIntegration = {
   name: "slide-usage",
   hooks: {

@@ -35,7 +35,7 @@ const WORD =
 const UNFITTED =
   "the fit guard never ran on this slide, so its scale cannot be read: check the page's console for an error and its print route for client:load";
 const STATEMENT =
-  "one or two short bullets leave the slide empty: make it the statement slide bulletsAsStatement in lib/content-redraw returns";
+  "one or two short bullets leave the slide empty: make it the statement slide bulletsAsStatement in @hackersandwizards/slides/lib/slide-utils returns";
 
 const USAGE = [
   'usage: slides-density --site <dir> | --serve "<command>" </deck/print> ...',

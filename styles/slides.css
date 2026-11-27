@@ -46,7 +46,6 @@
     @apply font-sans antialiased;
     /* What a part paints to cut a line, such as a future dot; each ground class sets its own. */
     --slide-ground: var(--background);
-    /* A word wider than its box breaks where it overflows rather than running out of it. */
     overflow-wrap: break-word;
   }
   /* A boxed heading's long word breaks at a syllable, with a hyphen, by the dictionary of the

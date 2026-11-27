@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import { slideComponents } from "@hackersandwizards/slides/lib/slide-components";
 import type { Slide } from "../types/slide";
 
-// A person is coloured by position in the logo's order, whoever they are.
 const two = [
   { name: "Mara Lindqvist", company: "Lumen Freight" },
   { name: "Jonas Okafor", company: "Lumen Freight" },

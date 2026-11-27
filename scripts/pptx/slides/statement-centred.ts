@@ -204,7 +204,6 @@ export function centredStatementLayout(look: Look, d: StatementSlide): CentredSt
   return { boxes, foot };
 }
 
-/** Draws a centred statement slide from its measured layout. */
 export function drawCentredStatement(sheet: Sheet, d: StatementSlide): void {
   const { boxes, foot } = centredStatementLayout(sheet, d);
   for (const box of boxes) sheet.box(box.paras, box.area, box.o);

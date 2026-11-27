@@ -81,7 +81,10 @@ class EditField {
     const { deck, value } = this.target;
     const to = area.value;
     if (to === value) return this.close();
-    const answer = await submitDeckEdit(deck, value, to);
+    const answer = await submitDeckEdit(deck, value, to).catch((error: unknown) => {
+      console.error("Could not save the deck edit", error);
+      return { ok: false, error: "The write failed. Try again." };
+    });
     if (answer.ok) {
       this.close(this);
       this.onNote({ text: "Saved. The slide reloads.", error: false });

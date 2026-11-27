@@ -91,7 +91,6 @@ export function comparisonFootLayout(
   return { h, parts };
 }
 
-/** Draws a measured comparison foot band starting at `y`. */
 export function drawComparisonFoot(sheet: Sheet, foot: ComparisonFootLayout, y: number): void {
   for (const part of foot.parts)
     sheet.box(part.paras, { x: (W - part.w) / 2, y: y + part.y, w: part.w, h: part.h }, part.o);
@@ -249,7 +248,6 @@ export function beforeAfterComparisonLayout(
   return { body, bodyArea: { ...area, y: top, h: ch }, foot, footY: top + ch };
 }
 
-/** Draws a measured `before-after` comparison slide's body and footer band. */
 export function drawBeforeAfterComparison(sheet: Sheet, layout: BeforeAfterComparisonLayout): void {
   if (layout.bodyArea.h > 0) drawBeforeAfter(sheet, layout.body, layout.bodyArea);
   else for (const side of layout.body.sides) sheet.warnCutText([side.label, ...side.rest]);

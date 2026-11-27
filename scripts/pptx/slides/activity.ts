@@ -39,7 +39,6 @@ export function activitySteps(look: Look, d: ActivitySlide): Para[] {
   }));
 }
 
-/** The side card for the duration, mode and outcome. */
 export function activityFrame(look: Look, d: ActivitySlide, top: number) {
   const { c } = look;
   const frame = [d.duration, d.mode, d.outcome].filter((t): t is string => !!t);

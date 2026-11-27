@@ -19,7 +19,6 @@ export interface FlowStep {
   tone?: "red" | "green";
 }
 
-/** Input to `stepsLayout`: the steps plus optional active highlight, loop label, and dense flag. */
 export interface Steps {
   steps: FlowStep[];
   highlight?: number;
@@ -330,7 +329,6 @@ export function drawLoop(sheet: Sheet, layout: StepsLayout, at: Place): void {
   }
 }
 
-/** Draws a measured flow steps row at `at`: each step, its connector to the next, and any loop. */
 export function drawSteps(sheet: Sheet, layout: StepsLayout, at: Place): void {
   const mid = at.y + layout.loopH + layout.tile / 2;
   layout.steps.forEach((step, i) => {

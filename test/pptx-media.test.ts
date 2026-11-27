@@ -223,7 +223,7 @@ describe("videoCover and videoMissing", () => {
       area: { x: 1, y: 1, w: 4, h: 3.6 },
       expectedPics: [{ x: 1, y: 1, w: 4, h: 3.6 }],
       expectedCoverMatches: false,
-      expectedWarnings: (dir) => [`video demo.mp4: poster poster.jpg is no PNG under ${dir}`],
+      expectedWarnings: (dir) => [`video source.mp4: poster poster.jpg is no PNG under ${dir}`],
     },
     {
       label: "a width-limited frame without a poster",
@@ -237,7 +237,11 @@ describe("videoCover and videoMissing", () => {
     "embeds $label",
     async ({ poster, area, expectedPics, expectedCoverMatches, expectedWarnings }) => {
       const out = await drawOnSheet(assetsDir, (sheet) => {
-        videoCover(sheet, { type: "video", src: "demo.mp4", poster }, area);
+        videoCover(
+          sheet,
+          { type: "video", src: "source.mp4", poster },
+          { area, path: join(assetsDir, "demo.mp4") },
+        );
       });
       const coverBase64 = await videoCoverBase64(out.zip);
       expect({

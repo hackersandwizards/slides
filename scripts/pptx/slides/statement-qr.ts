@@ -125,7 +125,6 @@ export function qrStatementLayout(look: Look, d: StatementSlide): QrStatementLay
   };
 }
 
-/** Draws a QR statement slide from its measured layout. */
 export function drawQrStatement(sheet: Sheet, d: StatementSlide): void {
   const layout = qrStatementLayout(sheet, d);
   if (!layout) return;

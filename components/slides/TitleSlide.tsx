@@ -4,6 +4,7 @@ import { useContext } from "react";
 import Image from "../ui/image";
 import type { TitleSlide as TitleSlideType } from "../../types/slide";
 import { isOpening, speakerLine } from "../../lib/title-slide";
+import { knownLang } from "../../lib/slide-utils";
 import { qrAlt } from "../../lib/link-labels";
 import { BlurFade } from "../ui/blur-fade";
 import { DeckLang, SlideShell } from "./SlideShell";
@@ -50,7 +51,7 @@ function Opening({ slide }: Props) {
 
 function OpeningCredits({ slide }: Props) {
   const deckLang = useContext(DeckLang);
-  const lang = slide.lang ?? deckLang;
+  const lang = knownLang(slide.lang) ?? deckLang;
   return (
     <BlurFade
       delay={0.25}

@@ -1,5 +1,6 @@
 import type { TitleSlide } from "../../../types/slide";
 import { speakerLine } from "../../../lib/title-slide";
+import { knownLang } from "../../../lib/slide-utils";
 import { linkLabel, qrAlt } from "../../../lib/link-labels";
 import { textWidth } from "../fit";
 import type { Look } from "../look";
@@ -33,7 +34,6 @@ export interface OpeningRowLayout {
 
 /** Builds each line of an opening slide's heading with its options and the gap above it. */
 export function openingHeading(d: TitleSlide, c: Palette): StackItem[] {
-  // Each line of the heading with its options and the gap above it.
   return [
     ...(d.kicker
       ? [
@@ -107,7 +107,7 @@ export function openingQr(
 /** Computes the opening slide's bottom row layout (speakers, event, optional QR column) and the
  *  heading bottom boundary above it. */
 export function openingRow(look: Look, d: TitleSlide): OpeningRowLayout {
-  const lang = d.lang ?? look.lang;
+  const lang = knownLang(d.lang) ?? look.lang;
   let rowH = 119 / 144;
   let textW = CW;
   let qr: OpeningQrLayout | undefined;
@@ -136,7 +136,6 @@ export function openingRow(look: Look, d: TitleSlide): OpeningRowLayout {
   return { headEnd, speakers, event, qr };
 }
 
-/** Draws the opening slide's QR picture and its linked label underneath. */
 export function drawOpeningQr(sheet: Sheet, qr: OpeningQrLayout): void {
   sheet.picture(qr.src, qr.image, { alt: qr.alt, href: qr.href });
   sheet.box({ runs: [{ text: qr.label, options: { hyperlink: { url: qr.href } } }] }, qr.link, {

@@ -126,8 +126,11 @@ export const linkedImage: BlockKind<"linked-image"> = {
 };
 
 /** Embeds a video asset inside `area`, attaching its PNG poster cover when present and valid. */
-export function videoCover(sheet: Sheet, b: Block<"video">, area: Area): void {
-  const path = assetFile(sheet.out.assets, b.src);
+export function videoCover(
+  sheet: Sheet,
+  b: Block<"video">,
+  { area, path }: { area: Area; path: string },
+): void {
   const w = Math.min(area.w, (area.h * 16) / 9);
   // pptxgenjs stores the cover as a PNG part whatever its bytes: anything else stays out.
   let cover: string | undefined;
@@ -169,7 +172,8 @@ export const video: BlockKind<"video"> = {
     const { area: a, k, centered } = slot;
     const h = a.h - (b.caption ? 0.35 : 0);
     const frame: Area = { x: a.x, y: a.y, w: a.w, h };
-    if (existsSync(assetFile(sheet.out.assets, b.src))) videoCover(sheet, b, frame);
+    const path = assetFile(sheet.out.assets, b.src);
+    if (existsSync(path)) videoCover(sheet, b, { area: frame, path });
     else videoMissing(sheet, b, { ...slot, area: frame });
     if (b.caption) {
       const o = bodyO(sheet.c, k, centered ? { align: "center" } : {});

@@ -1,7 +1,6 @@
 import { isOpening } from "./title-slide";
 import type { Slide } from "../types/slide";
 
-/** A catalogue entry's anchor from its name. */
 export const anchorSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
 type SlideOf<T extends Slide["type"]> = Extract<Slide, { type: T }>;

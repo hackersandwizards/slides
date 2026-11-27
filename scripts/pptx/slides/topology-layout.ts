@@ -72,7 +72,6 @@ export function topologyRoles(look: Look, labels: string[]): Para {
   };
 }
 
-/** Renders a team's name or description as a coloured Markdown paragraph. */
 export function topologyLabel(look: Look, text: string, color: string): Para {
   return { runs: md(text, look.c, { color }) };
 }

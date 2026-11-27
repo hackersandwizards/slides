@@ -142,7 +142,6 @@ export function PhasedPillsSlide({ slide }: Props) {
           className={`relative mt-6 ${wrap ? "w-full" : "w-fit"} max-w-(--slide-measure-phases) px-6 pt-10 pb-8 md:px-12`}
         >
           {title && (
-            // The fade itself is placed: test/enter-animation-anchor.test.ts says why.
             <BlurFade
               delay={0.05}
               duration={0.35}

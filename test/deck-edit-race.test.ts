@@ -8,7 +8,6 @@ import { afterAll, expect, it, vi } from "vitest";
 const dir = mkdtempSync(join(tmpdir(), "deck-edit-race-"));
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
 let onCheck = () => {};
-// An editor saves the deck while the endpoint formats its edit.
 vi.mock("prettier", async (original) => {
   const prettier = await original<typeof import("prettier")>();
   return {

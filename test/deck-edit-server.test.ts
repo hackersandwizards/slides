@@ -12,6 +12,7 @@ const files: Record<string, string> = {
   "/deck": "deck.ts",
   "/missing": "missing.ts",
   "/dir": "subdir",
+  "/not-dir": "deck.ts/child.ts",
 };
 const deckFile = (deck: unknown) =>
   typeof deck === "string" && deck in files ? join(dir, files[deck]) : null;
@@ -145,5 +146,12 @@ describe("deckEditHandler", () => {
     const { status, payload } = await post(JSON.stringify({ deck: "/dir", texts: ["Agenda"] }));
     expect(status).toBe(500);
     expect(String(payload.error)).toMatch(/EISDIR/);
+  });
+
+  it("answers 500 when a deck path traverses a regular file", async () => {
+    deck('export const deck = { title: "Agenda" };\n');
+    const { status, payload } = await post(JSON.stringify({ deck: "/not-dir", texts: ["Agenda"] }));
+    expect(status).toBe(500);
+    expect(String(payload.error)).toMatch(/ENOTDIR/);
   });
 });

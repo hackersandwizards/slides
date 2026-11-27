@@ -76,7 +76,6 @@ export const placeBrandUrls = (css: string, href: string) =>
     return `url("${href}/${name}")`;
   });
 
-/** Whether a stylesheet the build copies alone reaches for no further file. */
 export const selfContained = (css: string) =>
   !/@import/i.test(css) && [...css.matchAll(urlToken)].every(([, , url]) => inline(url));
 

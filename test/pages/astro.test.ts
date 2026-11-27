@@ -67,7 +67,6 @@ const countOf = (html: string, id: string) =>
     ),
   )?.[1];
 
-// CLAUDE.md: `bun run preview` serves the build.
 it(
   "bun run preview serves the built catalog",
   async () => {

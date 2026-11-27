@@ -46,7 +46,6 @@ const partSources: Record<string, string> = {
   SlideChrome: sourceOf("SlideChrome"),
   ChartPlots: sourceOf("ChartPlots"),
 };
-// The chart's category label is a part too, the one of ChartPlots.tsx a deck sees alone.
 const partNames = [
   ...Object.entries({ primitives, SlideChrome: chrome }).flatMap(([file, mod]) =>
     Object.entries(mod)

@@ -145,7 +145,6 @@ describe("createDeckSync", () => {
     expect(audience.view).toEqual({ slide: 2, revealed: 0 });
     presenter.press("ArrowLeft");
     await settle();
-    // Arriving backwards opens the slide fully revealed, in both windows.
     expect(audience.view).toEqual({ slide: 1, revealed: 3 });
     expect(presenter.view).toEqual({ slide: 1, revealed: 3 });
   });

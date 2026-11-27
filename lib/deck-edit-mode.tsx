@@ -157,10 +157,9 @@ function useDeckEditSession(
       if (!outside(event)) return;
       event.preventDefault();
       event.stopPropagation();
-      if (committing) {
-        committing = false;
-        return;
-      }
+      const wasCommitting = committing;
+      committing = false;
+      if (wasCommitting) return;
       const chain = collectElementChain(event.target);
       // A click on the page itself, outside every element, has no text to edit.
       if (!chain.length) return;
@@ -168,6 +167,10 @@ function useDeckEditSession(
         open: (target) => overlay.open(target),
         flash,
         mark: (element) => marks.mark(element),
+      }).catch((error: unknown) => {
+        console.error("Could not look up the deck edit", error);
+        flash({ text: "This text cannot be edited here.", error: true });
+        marks.mark(chain[0]);
       });
     };
 

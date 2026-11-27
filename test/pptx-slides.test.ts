@@ -135,6 +135,17 @@ describe("slides-pptx on the specimen deck", () => {
     expect(unescapeNamedEntities(xml)).toContain('descr="QR-Code: example.com"');
   });
 
+  it.each(["constructor", "en_US"])(
+    "draws English speakers on a title slide with lang %s",
+    async (lang) => {
+      const { slideXml } = await rendered({
+        name: "D",
+        slides: [{ type: "title", title: "T", lang: lang as "en", speakers: ["A", "B"] }],
+      });
+      expect(shapesOf(slideXml[0]).flatMap((shape) => shape.texts)).toContain("A and B");
+    },
+  );
+
   it("prints its own words in the deck's language and marks no unnamed cycle segment", async () => {
     const segments = [
       { label: "A", percentage: 50 },

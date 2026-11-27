@@ -68,6 +68,60 @@ describe("edit mode", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps the edit after a rejected write and saves it on the next Enter", async () => {
+    const { fetch, page } = setup([{ value: "Old text", index: 0 }]);
+    const error = new Error("unexpected write failure");
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    fetch.mockRejectedValueOnce(error).mockResolvedValueOnce(new Response('{"ok":true}'));
+    await act(async () => page.click());
+    await opened();
+    const input = document.querySelector("iframe")?.contentDocument?.querySelector("textarea");
+    assert(input, "edit textarea should be mounted");
+    input.value = "New text";
+    const enter = () =>
+      act(async () =>
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })),
+      );
+    await enter();
+    expect({
+      note: screen.getByRole("status").textContent,
+      connected: input.isConnected,
+      value: input.value,
+      focused: input.ownerDocument.activeElement === input,
+    }).toEqual({
+      note: "The write failed. Try again.",
+      connected: true,
+      value: "New text",
+      focused: true,
+    });
+    expect(logged).toHaveBeenCalledWith(expect.any(String), error);
+
+    await enter();
+    expect(fetch).toHaveBeenLastCalledWith(
+      "/api/deck-edit",
+      expect.objectContaining({
+        body: JSON.stringify({ deck: "/d", from: "Old text", to: "New text" }),
+      }),
+    );
+    expect({
+      requests: fetch.mock.calls.length,
+      frame: document.querySelector("iframe"),
+      note: screen.getByRole("status").textContent,
+    }).toEqual({ requests: 3, frame: null, note: "Saved. The slide reloads." });
+  });
+
+  it("marks the clicked text when the lookup rejects", async () => {
+    const { fetch, page } = setup([]);
+    const error = new Error("unexpected lookup failure");
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    fetch.mockRejectedValueOnce(error);
+    await act(async () => page.click());
+    expect(screen.getByRole("status").textContent).toBe("This text cannot be edited here.");
+    expect(page.style.outline).toContain("var(--color-red)");
+    expect(document.querySelector("iframe")).toBeNull();
+    expect(logged).toHaveBeenCalledWith(expect.any(String), error);
+  });
+
   // A stray E while presenting from the dev server saved into the deck file: `?edit` opts in.
   it("starts with E only in a tab opened with ?edit", async () => {
     const press = () =>

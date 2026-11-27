@@ -47,7 +47,6 @@ export function flowNotes(
   const o: BoxOpts = { size: 16 * k, color: c.muted, line: 1.45 };
   const paras: Para[] = notes.map((t) => ({ runs: md(t, c), bullet: true, after: sp(1.5) * 72 }));
   if (!notes.length) return { paras, o, w: 0, h: 0 };
-  // As wide as the longest note, and never more than a third of the frame, so long notes wrap.
   const nw = Math.min(
     w / 3,
     Math.max(...notes.map((t) => textWidth(t, o))) + BULLET_INDENT / 72 + 0.05,

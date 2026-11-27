@@ -10,12 +10,18 @@ import type {
   TitleSlide,
 } from "../types/slide";
 
+export { bulletsAsStatement };
+
 const unnamedLang = new WeakSet<Presentation>();
+
+export const knownLang = (lang: unknown) => (lang === "en" || lang === "de" ? lang : undefined);
 
 /** The language a deck names, on itself or on the first title slide that sets one. */
 export const namedLang = (deck: Presentation) =>
-  deck.lang ??
-  deck.slides.find((slide): slide is TitleSlide => slide.type === "title" && !!slide.lang)?.lang;
+  knownLang(deck.lang) ??
+  knownLang(
+    deck.slides.find((slide): slide is TitleSlide => slide.type === "title" && !!slide.lang)?.lang,
+  );
 
 /** The deck's language, for the `lang` of the page and the file that show it: the deck's own
  *  `lang`, else the first title slide's that sets one, else English, with a warning once per deck
@@ -40,7 +46,7 @@ export const slideTitle = (deck: Presentation, index: number) => `${deck.name} -
  *  discussion leaves it out, and a deprecated `claim` language wins over the deck's. */
 export const closingClaim = (slide: ClosingSlide, lang: "en" | "de") => {
   if (slide.variant === "discussion" || slide.claim === false) return undefined;
-  return slide.claim === "en" || slide.claim === "de" ? slide.claim : lang;
+  return knownLang(slide.claim) ?? lang;
 };
 
 type SlideOf<T extends Slide["type"]> = Extract<Slide, { type: T }>;

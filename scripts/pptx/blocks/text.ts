@@ -10,7 +10,6 @@ const QUOTE_INDENT = 2 / 144 + 1.25 * REM;
 /** brand's callout padding at 1920, 1.75 rem. */
 export const CALLOUT_PAD = 1.75 * REM;
 
-/** A quote block's paragraphs, each with its type size: the words, then the source in grey. */
 function quoteParas(b: Block<"quote">, c: Palette, k: number) {
   const words: [Para, number] = [{ runs: md(b.text, c), after: 8 }, PT.h3 * k];
   return b.source

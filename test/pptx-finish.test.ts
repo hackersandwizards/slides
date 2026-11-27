@@ -36,9 +36,9 @@ it("strips stale panose attributes on brand faces and leaves non-brand faces unc
   );
 });
 
-it.each(["en", "constructor"])("stamps %s as en-US and preserves other language tags", (lang) => {
+it("stamps en as en-US and preserves other language tags", () => {
   const xml = `<a:rPr lang="en-US"/><a:rPr lang="${CAPS}"/><a:rPr lang="fr-FR"/>`;
-  expect(setTextLanguage(xml, lang as "en")).toEqual(
+  expect(setTextLanguage(xml, "en")).toEqual(
     '<a:rPr lang="en-US"/><a:rPr lang="en-US" cap="all"/><a:rPr lang="fr-FR"/>',
   );
 });

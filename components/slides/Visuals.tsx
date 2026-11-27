@@ -260,7 +260,6 @@ export function Framed({ frame, children }: { frame: FlowFrame; children: ReactN
   return (
     <DashedFrame tone="primary" active={!!frame.label} className="w-full p-6">
       <FrameHeader label={frame.label} logos={frame.logos} />
-      {/* On a phone the notes go under the steps, which take the frame's whole width (Visuals.css). */}
       <div className={`flex flex-wrap items-center justify-center ${notes ? "gap-6" : "gap-4"}`}>
         <div className="slide-framed-steps min-w-0 flex-1">{children}</div>
         {notes && <FrameNotes notes={notes} />}

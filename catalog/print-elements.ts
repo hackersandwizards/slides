@@ -23,7 +23,6 @@ const onNight = (child: ReactNode) =>
   );
 const onDay = (child: ReactNode) => h("div", { className: "bg-background p-6 text-text" }, child);
 const USES: Record<string, () => ReactNode> = {
-  // The deck tile: the linked card and its print view, an arrow link.
   "arrow-link": () =>
     h(DeckTile, {
       href: "#elements",

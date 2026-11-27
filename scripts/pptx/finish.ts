@@ -81,7 +81,7 @@ export function setFontPitch(xml: string): string {
 // pptxgenjs marks every run en-US, so PowerPoint's spelling and hyphenation take a German
 // deck for English.
 export function setTextLanguage(xml: string, language: Lang): string {
-  const lang = Object.hasOwn(XML_LANG, language) ? XML_LANG[language] : XML_LANG.en;
+  const lang = XML_LANG[language];
   return xml
     .replaceAll('lang="en-US"', `lang="${lang}"`)
     .replaceAll(`lang="${CAPS}"`, `lang="${lang}" cap="all"`);

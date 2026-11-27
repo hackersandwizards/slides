@@ -74,7 +74,6 @@ export function kindOf(block: ContentBlock) {
 }
 
 function registeredKind(type: BlockType): BlockKind<BlockType> | undefined {
-  // The table pairs each kind with the discriminant of the block it accepts.
   return tableLookup(BLOCK_KINDS as Record<string, BlockKind<BlockType>>, type);
 }
 

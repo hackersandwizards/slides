@@ -177,7 +177,6 @@ describe("PresenterView", () => {
 });
 
 describe("DeckEdit", () => {
-  // Opted in, as a tab opened with `?edit` is.
   beforeEach(() => sessionStorage.setItem("deck-edit-armed", "on"));
 
   it("stays off in the speaker window, whose own notes editor would lose its clicks to it", () => {

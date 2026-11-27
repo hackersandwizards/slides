@@ -174,7 +174,6 @@ function CycleSegment({ segment, active }: { segment: CycleSegmentPosition; acti
 
 export function CycleVariant({ slide }: { slide: ChartSlideType }) {
   const { dividers, labels } = cycleSegmentPositions(slide.segments ?? []);
-  // No segment is marked where the slide names none.
   const currentSegmentIndex = slide.currentSegmentIndex ?? -1;
   return (
     <BlurFade delay={0.2} duration={0.8} className="w-full max-w-(--slide-measure-chart)">

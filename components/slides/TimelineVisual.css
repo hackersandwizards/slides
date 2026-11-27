@@ -1,4 +1,3 @@
-/* A timeline's line between two stages, as its stage sets it (`timelineRule`). */
 .slide-timeline-link,
 .slide-timeline-lead {
   border-top: var(--slide-timeline-rule, none);

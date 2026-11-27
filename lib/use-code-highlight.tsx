@@ -39,10 +39,15 @@ export async function loadHighlighter(
 }
 
 const load = () => {
-  loading ??= loadHighlighter().then((m) => {
-    loaded = m;
-    listeners.forEach((l) => l());
-  });
+  loading ??= loadHighlighter()
+    .catch((error: unknown) => {
+      console.error("Could not load the slide code highlighter", error);
+      return fallbackHighlighter;
+    })
+    .then((m) => {
+      loaded = m;
+      listeners.forEach((l) => l());
+    });
 };
 
 /** `highlightLines` from `code-highlight` once it has loaded, plain lines until then. */

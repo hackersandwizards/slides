@@ -37,7 +37,6 @@ const ACCENT = {
 } satisfies Record<Accent, Record<string, string>>;
 
 export function ProfilesSlide({ slide }: Props) {
-  // At -1 no profile is highlighted.
   const [highlightIndex, , stepped] = useCarousel({ count: slide.profiles.length, min: -1 });
 
   return (

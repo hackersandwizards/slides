@@ -1,6 +1,5 @@
 import type { ContentBlock, GalleryItem, MediaSlide, ContentSlide } from "../types/slide";
 
-/** Whether a gallery item is a video: so marked, or a video file. */
 export const isVideo = (item: GalleryItem) =>
   item.kind === "video" || /\.(mp4|webm|mov)$/i.test(item.src);
 

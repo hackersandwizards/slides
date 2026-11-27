@@ -46,7 +46,6 @@ describe("slides-pptx on the specimen deck", () => {
       [[chart]] = renderedTrend.slideCharts;
     });
 
-    // The planned half starts at the marked point, the measured one ends there.
     it.each([
       {
         marker: "first point",

@@ -62,7 +62,7 @@ it(
     });
     expect(run.status).toBe(1);
     expect(run.stdout.trim().split("\n")).toEqual([
-      'FAIL /measured/0 "Misused": one or two short bullets leave the slide empty: make it the statement slide bulletsAsStatement in lib/content-redraw returns',
+      'FAIL /measured/0 "Misused": one or two short bullets leave the slide empty: make it the statement slide bulletsAsStatement in @hackersandwizards/slides/lib/slide-utils returns',
       'FAIL /measured/1 heading scale 0.75 "Narrow": a heading\'s word is wider than its box and shrinks the heading: shorten the word or give it a wider box',
       'NOTICE /measured/2 heading scale 0.85 "Tight": a heading\'s word is wider than its box and shrinks the heading: shorten the word or give it a wider box',
       'FAIL /measured/3 scale 0.75 "List": split into 2 slides by list item: 1 | 2',
@@ -72,6 +72,11 @@ it(
   },
   limit(120_000),
 );
+
+it("publishes the statement conversion named in the density diagnostic", async () => {
+  const slideUtils = await import("@hackersandwizards/slides/lib/slide-utils");
+  expect(slideUtils).toHaveProperty("bulletsAsStatement", expect.any(Function));
+});
 
 it("groups block ranges into slides that fit within the available height", () => {
   expect(

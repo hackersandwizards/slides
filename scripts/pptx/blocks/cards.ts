@@ -145,7 +145,6 @@ export function cardTypography(c: Palette, scale: CardScale, k: number) {
   return { titleO, textO, numO };
 }
 
-/** Builds a card's body paragraphs from its optional prose text and bulleted items. */
 export function cardBody(
   item: Block<"cards">["items"][number],
   c: Palette,

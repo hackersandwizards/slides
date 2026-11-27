@@ -148,7 +148,6 @@ function useDeckSyncNavigation(currentIndex: number, totalSlides: number, basePa
 
 function useSlideTouchSwipe() {
   useEffect(() => {
-    // The frames inside the speaker window only follow.
     const follows = deckSync.follows();
     let startX: number | null = null;
     let startY: number | null = null;
@@ -199,7 +198,6 @@ function useSlideKeyShortcuts(
   basePath: string,
 ) {
   useEffect(() => {
-    // The frames inside the speaker window only follow.
     const follows = deckSync.follows();
     const openHelp = () => {
       if (!dialogOpen()) onOpenHelp();

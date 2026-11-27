@@ -271,7 +271,6 @@ export function contactLayout(look: Look, d: ClosingSlide) {
   return { bands, height: tail.length ? end : end - CONTACT_GAP };
 }
 
-/** Draws the partner marks, separators and the brand lockup. */
 export function drawContactMark(
   sheet: Sheet,
   mark: ReturnType<typeof contactMark>,

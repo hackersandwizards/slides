@@ -12,15 +12,13 @@ export class Look {
   readonly c: Palette;
   readonly lang: Lang;
   readonly dark: boolean;
-
-  /** The words the engine prints itself, in the deck's language. */
   readonly words: Words;
 
   constructor(c: Palette, lang: Lang, dark: boolean) {
     this.c = c;
-    this.lang = Object.hasOwn(WORDS, lang) ? lang : "en";
+    this.lang = lang;
     this.dark = dark;
-    this.words = WORDS[this.lang];
+    this.words = WORDS[lang];
   }
 
   /** The height a box of `content` needs at full size, capped at the slide height. */

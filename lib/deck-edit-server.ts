@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { check, format, resolveConfig } from "prettier";
@@ -30,7 +29,6 @@ const isMissingFile = (error: unknown): boolean =>
   error instanceof Error && "code" in error && error.code === "ENOENT";
 
 async function readExistingFile(file: string): Promise<string | null> {
-  if (!existsSync(file)) return null;
   try {
     return await readFile(file, "utf8");
   } catch (error) {

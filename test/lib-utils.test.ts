@@ -114,6 +114,15 @@ describe("deckLang", () => {
     expect(deckLang({ ...de, slides: [{ type: "title", title: "T", lang: "en" }] })).toBe("de");
   });
 
+  const invalid = "en_US" as "en";
+  const title = { type: "title", title: "T" } as const;
+  it.each([
+    ["deck", { name: "D", lang: invalid, slides: [title] }],
+    ["title slide", { name: "D", slides: [{ ...title, lang: invalid }] }],
+  ])("defaults to English for an invalid language on the %s", (_where, deck) => {
+    expect(deckLang(deck)).toBe("en");
+  });
+
   it("warns once outside a browser for a deck that names no language", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.stubGlobal("document", undefined);

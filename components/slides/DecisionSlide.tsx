@@ -163,7 +163,6 @@ function GridDecisionFlow({ flow: { need, question, yes, no, outcome } }: { flow
   );
 }
 
-// A need, a question, two branches (yes up, no down) that join again on the outcome.
 export function DecisionSlide({ slide }: Props) {
   return (
     <SlideShell>

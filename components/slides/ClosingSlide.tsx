@@ -212,7 +212,6 @@ function SpeakerList({
 function ClosingClaim({ lang }: { lang: NonNullable<ReturnType<typeof closingClaim>> }) {
   return (
     <ClosingLine claim>
-      {/* The word brand names for its claim in the brand colour. */}
       {claimParts(lang).map((part, i) =>
         i === 1 ? (
           <span key={i} className="text-primary">
