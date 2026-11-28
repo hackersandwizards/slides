@@ -526,6 +526,123 @@ describe("drawCards", () => {
         smallRadii: [expect.closeTo(smallCorner, 3), expect.closeTo(smallCorner, 3)],
       },
     },
+    {
+      label: "keeps the brand corner on a single seed question",
+      slide: {
+        type: "closing",
+        variant: "discussion",
+        headline: "Topics",
+        seedQuestions: ["Why?"],
+      },
+      expected: { brand: 1, smallRadii: [] },
+    },
+    {
+      label: "draws three seed questions with the small radius",
+      slide: {
+        type: "closing",
+        variant: "discussion",
+        headline: "Topics",
+        seedQuestions: ["Why?", "How?", "When?"],
+      },
+      expected: { brand: 0, smallRadii: Array(3).fill(expect.closeTo(smallCorner, 3)) },
+    },
+    {
+      label: "keeps the brand corner on a poll's single option",
+      slide: {
+        type: "question",
+        headline: "Which?",
+        storageKey: "one",
+        options: [{ label: "A", text: "Red" }],
+      },
+      expected: { brand: 1, smallRadii: [] },
+    },
+    {
+      label: "draws three poll options with the small radius",
+      slide: {
+        type: "question",
+        headline: "Which?",
+        storageKey: "three",
+        options: [
+          { label: "A", text: "Red" },
+          { label: "B", text: "Blue" },
+          { label: "C", text: "Green" },
+        ],
+      },
+      expected: { brand: 0, smallRadii: Array(3).fill(expect.closeTo(smallCorner, 3)) },
+    },
+    {
+      // Each column also draws a pill under its label (the larger radius).
+      label: "draws both roadmap columns with the small radius",
+      slide: {
+        type: "roadmap",
+        headline: "Plan",
+        columns: [
+          { label: "Now", title: "Now", accent: "ingredients", items: [{ title: "Item" }] },
+          { label: "Next", title: "Next", accent: "ingredients", items: [{ title: "Item" }] },
+        ],
+      },
+      expected: {
+        brand: 0,
+        smallRadii: [
+          expect.closeTo(smallCorner, 3),
+          expect.closeTo(0.1514, 3),
+          expect.closeTo(smallCorner, 3),
+          expect.closeTo(0.1514, 3),
+        ],
+      },
+    },
+    {
+      label: "draws a guidance example's two sides with the small radius",
+      slide: {
+        type: "comparison",
+        variant: "guidance",
+        headline: "Do",
+        examples: [{ title: "Prompt", bad: "Fix it", good: "Fix the failing test" }],
+      },
+      expected: { brand: 0, smallRadii: Array(2).fill(expect.closeTo(smallCorner, 3)) },
+    },
+    {
+      // A neutral two-column alone on a slide is redrawn as a comparison split.
+      label: "draws a toned two-column block's sides with the small radius",
+      slide: {
+        type: "content",
+        headline: "Two columns",
+        content: [
+          {
+            type: "two-column",
+            variant: "success-error",
+            left: { title: "L", items: ["one"] },
+            right: { title: "R", items: ["two"] },
+          },
+        ],
+      },
+      expected: { brand: 0, smallRadii: Array(2).fill(expect.closeTo(smallCorner, 3)) },
+    },
+    {
+      label: "keeps the brand corner on a topology's single stream, platform and enabling team",
+      slide: {
+        type: "team-topology",
+        headline: "Teams",
+        streamAligned: [{ name: "Stream", roles: [] }],
+        platform: [{ name: "Platform" }],
+        enabling: [{ name: "Enabling", experts: [] }],
+        legend: false,
+      },
+      expected: { brand: 3, smallRadii: [] },
+    },
+    {
+      // Six teams of each kind scale the diagram to 0.8, and the small radius with it.
+      label: "draws repeated stream and enabling teams and the legend with the scaled small radius",
+      slide: {
+        type: "team-topology",
+        headline: "Teams",
+        streamAligned: Array.from({ length: 6 }, (_, i) => ({ name: `S${i}`, roles: ["Dev"] })),
+        platform: [{ name: "Platform", description: "Shared" }],
+        enabling: Array.from({ length: 6 }, (_, i) => ({ name: `E${i}`, experts: ["One"] })),
+        legend: true,
+      },
+      expected: { brand: 1, smallRadii: Array(15).fill(expect.closeTo(smallCorner * 0.8, 3)) },
+    },
   ])("$label", async ({ slide, expected }) => {
     const shapes = shapesOf(await onlySlide(slide));
     expect({
