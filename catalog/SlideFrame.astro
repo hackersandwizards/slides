@@ -1,6 +1,7 @@
 ---
 import brand from "@hackersandwizards/brand/tokens.json";
 import stage from "@hackersandwizards/brand/stage.css?raw";
+import card from "@hackersandwizards/brand/elements/card.css?raw";
 
 // The preview page is framed at brand's slide page size and scaled into the card, since at the
 // card's own size a phone's window was too short for the slide.
@@ -31,7 +32,13 @@ const size = ["--slide-page-width", "--slide-page-height"]
   })
   .join(";");
 const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
+// Brand's card stylesheet goes into the page as written, outside the frame's bundled style: each
+// brand release grows it, and once that style passed Astro's 4 KB inline limit every state's page
+// waited on a stylesheet of its own.
+const cardCss = card.replace(/\/\*[\s\S]*?\*\//g, "");
 ---
+
+<style is:inline set:html={cardCss} />
 
 {preview ? (
   <div class="slide-story" data-story-of={component} data-hw-scale="stage">
@@ -146,11 +153,9 @@ const corner = `--hw-card-corner:${brand.tokens["--radius-brand"]};${size}`;
 )}
 
 <style is:global>
-  /* Unscoped, as brand writes them: scoped, every selector carried the component's attribute and
-     the frame's style passed Astro's 4 KB inline limit. Every class below is scoped by its own
-     `slide-story` or `story-*` prefix. */
-  @import "@hackersandwizards/brand/elements/card.css";
-
+  /* Unscoped: scoped, every selector carried the component's attribute and the frame's style
+     passed Astro's 4 KB inline limit. Every class below is scoped by its own `slide-story` or
+     `story-*` prefix. */
   /* A deck's page stays light behind a light slide when the catalog is dark. */
   .slide-story {
     position: fixed;
