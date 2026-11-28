@@ -7,6 +7,7 @@ export default {
     include: [
       "test/use-{carousel,progressive-reveal,slide-keyboard}.test.tsx",
       "test/**/*.prop.test.ts",
+      "test/pptx-*.test.ts",
       "test/{brand-urls,deck-edit,vite}.test.ts",
     ],
   },
