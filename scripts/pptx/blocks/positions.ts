@@ -72,7 +72,7 @@ export function drawPositions(sheet: Sheet, layout: PositionsLayout, at: Place):
   const x0 = at.x + xOffset;
   sides.forEach((items, i) => {
     const x = x0 + i * (cw + gap);
-    sheet.card({ x, y: at.y, w: cw, h: cardH }, sheet.c.plainCard);
+    sheet.card({ x, y: at.y, w: cw, h: cardH }, sheet.c.plainCard, "small");
     drawStack(sheet, items, { x: x + pad, y: at.y + pad, w: inner });
   });
   drawStack(sheet, resolution, { x: x0, y: at.y + cardH + resGap, w });

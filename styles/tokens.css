@@ -87,9 +87,14 @@
 
 /* Names an app stylesheet shares, Tailwind's type steps and brand's corner, take the slide's values
    only on the engine's own roots: at :root they would turn an app page that loads this stylesheet
-   too, depending on which of the two loads last. */
-:where([data-hw-scale="stage"], .slide-viewport, .print-slide, .slide-presenter) {
+   too, depending on which of the two loads last. The presenter window is an internal tool
+   (data-hw-surface="internal") and leaves --radius-brand to brand's internal rule, while the slides
+   inside its previews keep the stage corner on their own roots. */
+:where([data-hw-scale="stage"], .slide-viewport, .print-slide) {
   --radius-brand: var(--slide-radius);
+}
+
+:where([data-hw-scale="stage"], .slide-viewport, .print-slide, .slide-presenter) {
   --text-xs: calc(var(--type-label-size) * var(--slide-stage));
   --text-base: calc(var(--type-body-size) * var(--slide-stage));
   --text-xl: calc(var(--type-h4-size) * var(--slide-stage));

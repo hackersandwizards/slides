@@ -614,7 +614,7 @@ describe("slides-pptx block variants", () => {
   it("draws two position cards when the middle label is absent", async () => {
     const xml = await onlySlide(pptxBlockVariants.positions);
     const shapes = shapesOf(xml);
-    expect(shapes.filter((shape) => shape.prst === "round2DiagRect")).toHaveLength(2);
+    expect(shapes.filter((shape) => shape.prst === "roundRect")).toHaveLength(2);
     const headings = shapes.filter((shape) =>
       shape.texts.some((text) => ["Ari", "Bea"].includes(text)),
     );

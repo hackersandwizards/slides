@@ -241,6 +241,7 @@ export function drawDecisionBranch(
   sheet.card(
     { x: cols.x[4], y: br.by, w: cols.w[4], h: rowH },
     { fill: mixColor(br.lineColor, c.card, 0.15), line: br.lineColor },
+    "small",
   );
   drawStack(sheet, br.items, {
     x: cols.x[4] + 1.5 * REM,

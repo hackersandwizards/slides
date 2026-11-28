@@ -189,7 +189,7 @@ export function drawBeforeAfter(sheet: Sheet, layout: BeforeAfterLayout, area: A
   const { k, pad, gap, half, o, connector, sides } = layout;
   sides.forEach((side, i) => {
     const x = area.x + i * (half + gap);
-    sheet.card({ x, y: area.y, w: half, h: area.h }, side.surface);
+    sheet.card({ x, y: area.y, w: half, h: area.h }, side.surface, "small");
     const top = area.y + pad;
     if (side.icon) {
       const { d } = side.icon;

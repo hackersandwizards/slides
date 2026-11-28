@@ -215,13 +215,14 @@ export function comparisonCardsLayout(
 
 /** Draws a measured `vs` or `split` comparison's cards and footer band. */
 export function drawComparisonCards(sheet: Sheet, layout: ComparisonCardsLayout): void {
+  const corner = layout.cards.length > 1 ? "small" : "brand";
   for (const card of layout.cards) {
     if (card.h <= 0) {
       sheet.warnCutText([card.label, ...card.items]);
       if (card.logo) sheet.warn(`image ${card.logo.src}: no height left in its card`);
       continue;
     }
-    sheet.card({ x: card.x, y: card.y, w: card.w, h: card.h }, layout.surface);
+    sheet.card({ x: card.x, y: card.y, w: card.w, h: card.h }, layout.surface, corner);
     if (card.logo)
       sheet.picture(card.logo.src, card.logo.area, { align: "left", alt: card.logo.alt });
     sheet.box(card.label, card.labelArea, layout.titleO);

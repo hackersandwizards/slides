@@ -11,7 +11,7 @@ import {
 import { boxFit, boxPlace, boxRuns } from "./fit";
 import type { ProfileInfo } from "../../types/slide";
 import { hex, type Surface } from "./palette";
-import { CORNER, PT, type Area, type Disc, type Place } from "./stage";
+import { CORNER, CORNER_SM, PT, type Area, type Disc, type Place } from "./stage";
 import { asParas, type BoxOpts, type Para } from "./text";
 import { Look } from "./look";
 
@@ -35,6 +35,8 @@ export interface RowHeight {
   cap: number;
   floor: number;
 }
+
+export type CardCorner = "brand" | "small";
 
 export class Sheet extends Look {
   readonly slide: PSlide;
@@ -63,7 +65,11 @@ export class Sheet extends Look {
     });
   }
 
-  card(area: Area, surface: Surface): void {
+  card(area: Area, surface: Surface, corner: CardCorner = "brand"): void {
+    if (corner === "small") {
+      this.rounded(area, surface, CORNER_SM);
+      return;
+    }
     const { x, y, w, h } = area;
     const { fill, line } = surface;
     this.slide.addShape("round2DiagRect", {

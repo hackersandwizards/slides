@@ -16,8 +16,10 @@ import type { Block } from "../scripts/pptx/blocks/kind";
 import { Look } from "../scripts/pptx/look";
 import { palette } from "../scripts/pptx/palette";
 import { Sheet } from "../scripts/pptx/sheet";
+import type { Slide } from "../types/slide";
+import { CORNER } from "../scripts/pptx/stage";
 import type { BoxOpts, Para } from "../scripts/pptx/text";
-import { shapesOf } from "./fixtures/rendered-deck";
+import { onlySlide, shapesOf } from "./fixtures/rendered-deck";
 
 async function drawOnSheet(draw: (sheet: Sheet) => void, warnings: string[] = []) {
   const pptx = new PptxGenJS();
@@ -413,8 +415,9 @@ describe("drawCards", () => {
       drawCards(sheet, layout, { x: 1, y: 1.5 });
     });
     const round = (n: number) => Number(n.toFixed(4));
-    const cards = shapes.filter((sh) => sh.prst === "round2DiagRect");
-    const tiles = shapes.filter((sh) => sh.prst === "roundRect");
+    const rounded = shapes.filter((sh) => sh.prst === "roundRect");
+    const cards = rounded.filter((sh) => sh.line !== undefined);
+    const tiles = rounded.filter((sh) => sh.line === undefined);
     const numbers = shapes.filter((sh) => ["5", "6"].includes(sh.texts.join("")));
     expect({
       cards: cards.map(({ x, y, fill }) => ({ x: round(x), y: round(y), fill })),
@@ -460,6 +463,74 @@ describe("drawCards", () => {
         .filter((sh) => sh.texts.length === 0)
         .filter((sh) => sh.prst === "rect")
         .map((sh) => sh.fill),
+    }).toEqual(expected);
+  });
+
+  const smallCorner = CORNER / 4;
+  const roundRectRadius = (sh: ReturnType<typeof shapesOf>[number]) => {
+    const adj = /<a:gd name="adj" fmla="val (\d+)"\/>/.exec(sh.xml);
+    assert(adj, "roundRect corner adjustment");
+    return (Number(adj[1]) / 100000) * Math.min(sh.w, sh.h);
+  };
+
+  it.each<{
+    label: string;
+    slide: Slide;
+    expected: { brand: number; smallRadii: unknown[] };
+  }>([
+    {
+      label: "keeps round2DiagRect on a single-card control",
+      slide: {
+        type: "content",
+        headline: "Single card",
+        content: [{ type: "cards", items: [{ title: "Alone", text: "One card" }] }],
+      },
+      expected: { brand: 1, smallRadii: [] },
+    },
+    {
+      label: "draws three roundRect cards with the small radius for a three-card block",
+      slide: {
+        type: "content",
+        headline: "Three cards",
+        content: [
+          {
+            type: "cards",
+            items: [
+              { title: "One", text: "A" },
+              { title: "Two", text: "B" },
+              { title: "Three", text: "C" },
+            ],
+          },
+        ],
+      },
+      expected: {
+        brand: 0,
+        smallRadii: [
+          expect.closeTo(smallCorner, 3),
+          expect.closeTo(smallCorner, 3),
+          expect.closeTo(smallCorner, 3),
+        ],
+      },
+    },
+    {
+      label: "draws two small-cornered roundRect sides for a before/after slide",
+      slide: {
+        type: "comparison",
+        variant: "before-after",
+        headline: "Before and after",
+        left: { label: "Before", items: ["Manual"] },
+        right: { label: "After", items: ["Automated"] },
+      },
+      expected: {
+        brand: 0,
+        smallRadii: [expect.closeTo(smallCorner, 3), expect.closeTo(smallCorner, 3)],
+      },
+    },
+  ])("$label", async ({ slide, expected }) => {
+    const shapes = shapesOf(await onlySlide(slide));
+    expect({
+      brand: shapes.filter((sh) => sh.prst === "round2DiagRect").length,
+      smallRadii: shapes.filter((sh) => sh.prst === "roundRect").map(roundRectRadius),
     }).toEqual(expected);
   });
 });

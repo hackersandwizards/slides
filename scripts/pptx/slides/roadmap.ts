@@ -73,12 +73,11 @@ export function roadmapParas(
   ];
 }
 
-/** Draws one roadmap column as a card, accent rule, chip and its text. */
+/** Draws one roadmap column's accent rule, chip and text inside its card area. */
 export function roadmapColumn(sheet: Sheet, col: RoadmapColumn, r: Area): void {
   const { c } = sheet;
   const { tone, groups } = columnGroups(sheet, col);
   const paras = roadmapParas(sheet, col, groups);
-  sheet.card(r, { fill: mixColor(tone, c.bg, 0.05), line: c.border });
   sheet.rect({ x: r.x + 0.15, y: r.y, w: r.w - 0.3, h: 0.05 }, tone);
   const label: Chip = {
     text: col.label,
@@ -98,7 +97,11 @@ export function roadmapColumn(sheet: Sheet, col: RoadmapColumn, r: Area): void {
 // rows under a caps label.
 export function drawRoadmap(sheet: Sheet, d: RoadmapSlide): void {
   const y = header(sheet, d);
-  cellAreas(d.columns.length, BODY(y), 0.35).forEach((r, i) =>
-    roadmapColumn(sheet, d.columns[i], r),
-  );
+  const corner = d.columns.length > 1 ? "small" : "brand";
+  cellAreas(d.columns.length, BODY(y), 0.35).forEach((r, i) => {
+    const col = d.columns[i];
+    const { tone } = columnGroups(sheet, col);
+    sheet.card(r, { fill: mixColor(tone, sheet.c.bg, 0.05), line: sheet.c.border }, corner);
+    roadmapColumn(sheet, col, r);
+  });
 }

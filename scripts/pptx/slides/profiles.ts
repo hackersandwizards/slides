@@ -29,10 +29,11 @@ export function drawProfiles(sheet: Sheet, d: Extract<Slide, { type: "profiles" 
         ),
       ),
   );
+  const corner = d.profiles.length > 1 ? "small" : "brand";
   cellAreas(d.profiles.length, { ...a, h: ch }, 0.3).forEach((r, i) => {
     const p = d.profiles[i];
     const tone = personAccent(i) === "secondary" ? c.purple : c.teal;
-    sheet.card(r, sheet.c.plainCard);
+    sheet.card(r, sheet.c.plainCard, corner);
     sheet.portrait(p, { x: r.x + 0.25, y: r.y + 0.25, d: 0.9 }, tone);
     sheet.box(
       [

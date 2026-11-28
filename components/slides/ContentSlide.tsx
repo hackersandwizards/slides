@@ -163,33 +163,46 @@ function CenteredContentSlide({ slide }: Props) {
   );
 }
 
+function StandardContentHeader({
+  slide,
+  pillColor,
+}: {
+  slide: ContentSlideType;
+  pillColor?: string;
+}) {
+  return (
+    /* The badge shares the section label's row, in the flow: placed absolutely in the corner,
+       a long headline ran underneath it. */
+    <div className="flex items-start justify-between gap-8">
+      <SectionHeader
+        label={slide.sectionLabel}
+        principle={slide.principle}
+        pillColor={pillColor}
+        stageMarker={slide.stageMarker}
+        stagePrefix={slide.stagePrefix}
+      />
+      {slide.badge && (
+        <div
+          className="hw-label hw-label-box shrink-0 items-baseline gap-2.5 [--hw-label-size:var(--text-sm)]"
+          data-hue="teal"
+        >
+          <span className="hw-marker" />
+          <span>{slide.badge}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StandardContentSlide({ slide }: Props) {
   const styles = getSectionStyle(slide.sectionTheme);
   const pictures = slide.content.filter((b) => MEDIA_BLOCKS.has(b.type)).length;
+  const repeated = new Set(slide.content.map((b) => b.type)).size < slide.content.length;
 
   return (
     <SlideShell ground={groundOf(slide)} night={isDeepDive(slide)}>
       <TitledContent titled={!!slide.headline}>
-        {/* The badge shares the section label's row, in the flow: placed absolutely in the corner,
-            a long headline ran underneath it. */}
-        <div className="flex items-start justify-between gap-8">
-          <SectionHeader
-            label={slide.sectionLabel}
-            principle={slide.principle}
-            pillColor={styles.pill}
-            stageMarker={slide.stageMarker}
-            stagePrefix={slide.stagePrefix}
-          />
-          {slide.badge && (
-            <div
-              className="hw-label hw-label-box shrink-0 items-baseline gap-2.5 [--hw-label-size:var(--text-sm)]"
-              data-hue="teal"
-            >
-              <span className="hw-marker" />
-              <span>{slide.badge}</span>
-            </div>
-          )}
-        </div>
+        <StandardContentHeader slide={slide} pillColor={styles.pill} />
 
         {slide.headline && <SlideTitle delay={0.15}>{renderMarkdown(slide.headline)}</SlideTitle>}
 
@@ -198,7 +211,10 @@ function StandardContentSlide({ slide }: Props) {
         )}
 
         <div className="slide-body">
-          <div className={`slide-blocks space-y-6 ${pictures > 1 ? "slide-media-stack" : ""}`}>
+          <div
+            className={`slide-blocks space-y-6 ${pictures > 1 ? "slide-media-stack" : ""}`}
+            data-hw-repeat={repeated ? "" : undefined}
+          >
             {slide.content.map((block, index) => (
               <BlurFade key={index} delay={0.2 + index * 0.1} duration={0.5}>
                 <ContentBlockRenderer block={block} sectionTheme={slide.sectionTheme} />

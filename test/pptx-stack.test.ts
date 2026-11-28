@@ -250,7 +250,7 @@ describe("drawPositions", () => {
       drawPositions(sheet, layout, { x: 0.5, y: 1 });
     });
     const round = (n: number) => Number(n.toFixed(4));
-    const cards = shapes.filter((sh) => sh.prst === "round2DiagRect");
+    const cards = shapes.filter((sh) => sh.prst === "roundRect");
     const middle = shapes.find((sh) => sh.texts.includes("Both hold"));
     const resolution = shapes.find((sh) => sh.texts.includes("Ship small with tests"));
     assert(middle, "middle label");

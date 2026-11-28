@@ -18,8 +18,9 @@ export function drawDiscussion(sheet: Sheet, d: ClosingSlide): void {
   const hs = qs.map((q) => sheet.need(literal(q), a.w - 2 * padX, o));
   const total = hs.reduce((sum, h) => sum + h + 2 * padY, 0) + Math.max(0, qs.length - 1) * gap;
   let qy = a.y + Math.max(0, a.h - total) / 2.25;
+  const corner = qs.length > 1 ? "small" : "brand";
   qs.forEach((q, i) => {
-    sheet.card({ x: a.x, y: qy, w: a.w, h: hs[i] + 2 * padY }, sheet.c.plainCard);
+    sheet.card({ x: a.x, y: qy, w: a.w, h: hs[i] + 2 * padY }, sheet.c.plainCard, corner);
     sheet.box(literal(q), { x: a.x + padX, y: qy + padY, w: a.w - 2 * padX, h: hs[i] }, o);
     qy += hs[i] + 2 * padY + gap;
   });

@@ -58,6 +58,7 @@ function SpeakerWindow({ notes, basePath }: Props) {
     <div
       data-theme="dark"
       data-hw-scale="dense"
+      data-hw-surface="internal"
       className="slide-presenter fixed inset-0 z-[55] flex flex-col gap-4 bg-night p-4 font-sans text-night-ink"
     >
       <PresenterHeader slide={slide} total={total} pending={pending} />

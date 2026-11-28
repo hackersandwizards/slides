@@ -822,7 +822,7 @@ describe("slides-pptx slide variants", () => {
     const [x, y, w, h] = picture.slice(1).map((value) => Number(value) / 914400);
     const label = shapesOf(xml).find((shape) => shape.texts.includes("First supplier"));
     assert(label, "first supplier's label");
-    const card = shapesOf(xml).find((shape) => shape.prst === "round2DiagRect");
+    const card = shapesOf(xml).find((shape) => shape.prst === "roundRect");
     assert(card, "first supplier's card");
     expect(x).toBeGreaterThan(card.x);
     expect(x + w).toBeLessThan(card.x + card.w);

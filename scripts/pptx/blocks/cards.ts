@@ -233,11 +233,12 @@ export function drawCards(sheet: Sheet, layout: CardsLayout, at: Place): void {
     sheet.rounded(tile, { fill: mark.kind === "number" ? c.teal : mark.fill }, 10 / 144);
     if (mark.kind === "number") sheet.box({ runs: [{ text: mark.label }] }, tile, layout.numO);
   };
+  const corner = layout.cells.length > 1 ? "small" : "brand";
   let rowY = at.y;
   for (const cell of layout.cells) {
     if (cell.col === 0 && cell.row > 0) rowY += layout.rowH[cell.row - 1] + layout.gap;
     const x = at.x + cell.col * (layout.cw + layout.gap);
-    sheet.card({ x, y: rowY, w: layout.cw, h: cell.rowH }, cell.surface);
+    sheet.card({ x, y: rowY, w: layout.cw, h: cell.rowH }, cell.surface, corner);
     const ix = x + layout.padX;
     let y = rowY + layout.padY;
     if (cell.mark) {

@@ -28,7 +28,7 @@ export function guidanceExample(sheet: Sheet, ex: GuidanceExample, area: Area): 
     0.25,
   ).forEach((r, i) => {
     const [label, text, tone, tint] = sides[i];
-    sheet.card(r, { fill: tint, line: tone });
+    sheet.card(r, { fill: tint, line: tone }, "small");
     sheet.box(
       [
         {

@@ -63,6 +63,9 @@ export const TITLE = (() => {
  *  quarter of it at the other two, which the post-processing sets. */
 export const CORNER = 40 / 144;
 
+/** The small corner, `--slide-radius-sm` at 1920: a quarter of the brand corner (10 px). */
+export const CORNER_SM = CORNER / 4;
+
 /** A rem of the print route's stage, in inches. */
 export const REM = STAGE.rem / 144;
 

@@ -1,6 +1,6 @@
 import type { QuestionSlide } from "../../../types/slide";
 import type { Look } from "../look";
-import type { Sheet } from "../sheet";
+import type { CardCorner, Sheet } from "../sheet";
 import { W, EDGE, TOP, BOTTOM, CW, PT, LEADING, REM } from "../stage";
 import { literal, type Para, type BoxOpts } from "../text";
 
@@ -41,9 +41,9 @@ export function questionLayout(look: Look, d: QuestionSlide) {
 type AnswerRow = ReturnType<typeof questionLayout>["rows"][number];
 
 /** Draws a question option with a letter, answer and zero-vote count. */
-export function questionRow(sheet: Sheet, row: AnswerRow): void {
+export function questionRow(sheet: Sheet, row: AnswerRow, corner: CardCorner = "brand"): void {
   const { c } = sheet;
-  sheet.card(row.card, c.plainCard);
+  sheet.card(row.card, c.plainCard, corner);
   const mid = { valign: "middle" } as const;
   sheet.box(literal(row.option.label), row.letter, {
     size: 14,
@@ -70,6 +70,7 @@ export function questionRow(sheet: Sheet, row: AnswerRow): void {
 
 export function drawQuestion(sheet: Sheet, d: QuestionSlide): void {
   const { heading, rows } = questionLayout(sheet, d);
+  const corner = rows.length > 1 ? "small" : "brand";
   sheet.box(heading.text, heading.area, heading.options);
-  for (const row of rows) questionRow(sheet, row);
+  for (const row of rows) questionRow(sheet, row, corner);
 }

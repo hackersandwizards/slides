@@ -584,7 +584,7 @@ describe("decisionLayout, drawDecisionBranch, and drawDecisionBody", () => {
         texts: ["Yes"],
       },
       {
-        prst: "round2DiagRect",
+        prst: "roundRect",
         x: 6.6666,
         y: 2.24,
         w: 2.9631,

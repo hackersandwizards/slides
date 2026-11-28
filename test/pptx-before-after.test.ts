@@ -177,7 +177,7 @@ describe("drawBeforeAfter", () => {
       );
       drawBeforeAfter(sheet, layout, { x: 1.5, y: 2, w: 10, h: 3.5 });
     });
-    const cards = shapes.filter((sh) => sh.prst === "round2DiagRect");
+    const cards = shapes.filter((sh) => sh.prst === "roundRect");
     const icons = shapes.filter((sh) => sh.prst === "ellipse");
     const arrow = shapes.find((sh) => sh.xml.includes('tailEnd type="triangle"'));
     const labels = shapes.filter((sh) => ["Old", "New"].includes(sh.texts.join("")));

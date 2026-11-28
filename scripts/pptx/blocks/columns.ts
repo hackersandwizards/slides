@@ -1,5 +1,5 @@
 import { TWO_COLUMN_TONES, type SideTone } from "../../../lib/two-column-tones";
-import type { Sheet } from "../sheet";
+import type { CardCorner, Sheet } from "../sheet";
 import { PT, TITLE } from "../stage";
 import { md, type MarkerHue, type Para } from "../text";
 import { bodyO, type BlockKind, type Slot } from "./kind";
@@ -18,13 +18,14 @@ export interface ItemCard {
   text?: string;
   tone?: string;
   marker?: MarkerHue;
+  corner?: CardCorner;
 }
 
 /** A card with a title and items or text, as two-column, four-column and comparison sides draw. */
 export function itemCard(sheet: Sheet, card: ItemCard, slot: Slot): void {
   const { c } = sheet;
   const { area: a, k } = slot;
-  sheet.card(a, { fill: c.card, line: card.tone ?? c.border });
+  sheet.card(a, { fill: c.card, line: card.tone ?? c.border }, card.corner);
   const pad = 0.2;
   const paras: Para[] = [];
   if (card.title)
@@ -81,10 +82,10 @@ export const twoColumn: BlockKind<"two-column"> = {
       return hue === "muted" ? {} : { tone: c[hue], marker: hue };
     });
     const half = a.w / 2 - 0.15;
-    itemCard(sheet, { ...b.left, ...lt }, { ...slot, area: { ...a, w: half } });
+    itemCard(sheet, { ...b.left, ...lt, corner: "small" }, { ...slot, area: { ...a, w: half } });
     itemCard(
       sheet,
-      { ...b.right, ...rt },
+      { ...b.right, ...rt, corner: "small" },
       { ...slot, area: { ...a, x: a.x + half + 0.3, w: half } },
     );
   },
@@ -114,8 +115,13 @@ export const fourColumn: BlockKind<"four-column"> = {
     const { area: a } = slot;
     const n = b.columns.length;
     const cw = (a.w - (n - 1) * 0.2) / n;
+    const corner = n > 1 ? "small" : "brand";
     b.columns.forEach((col, i) =>
-      itemCard(sheet, col, { ...slot, area: { ...a, x: a.x + i * (cw + 0.2), w: cw } }),
+      itemCard(
+        sheet,
+        { ...col, corner },
+        { ...slot, area: { ...a, x: a.x + i * (cw + 0.2), w: cw } },
+      ),
     );
   },
 };

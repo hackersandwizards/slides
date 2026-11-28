@@ -115,7 +115,10 @@ export function BeforeAfterSides({
   adds?: boolean;
 }) {
   return (
-    <div className="grid w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-stretch gap-6">
+    <div
+      className="grid w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-stretch gap-6"
+      data-hw-repeat
+    >
       <BeforeSideCard side={left} strike={strike} revealed={after} />
 
       <div

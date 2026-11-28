@@ -932,7 +932,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
       pics: [{ x: 1.3, y: 2.3, w: 0.35, h: 0.35, alt: "Left" }],
       shapes: [
         {
-          prst: "round2DiagRect",
+          prst: "roundRect",
           x: 1,
           y: 2,
           w: 4.8,
@@ -965,7 +965,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
           texts: ["Alpha"],
         },
         {
-          prst: "round2DiagRect",
+          prst: "roundRect",
           x: 6.2,
           y: 2,
           w: 4.8,
@@ -1064,7 +1064,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
       pics: [],
       shapes: [
         {
-          prst: "round2DiagRect",
+          prst: "roundRect",
           x: 1,
           y: 2.4,
           w: 4.7,
@@ -1097,7 +1097,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
           texts: ["Manual"],
         },
         {
-          prst: "round2DiagRect",
+          prst: "roundRect",
           x: 6.3,
           y: 2.4,
           w: 4.7,
@@ -1187,7 +1187,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
           texts: ["Compare"],
         },
         {
-          prst: "round2DiagRect",
+          prst: "roundRect",
           x: 0.6667,
           y: 3.2541,
           w: 5.8517,
@@ -1220,7 +1220,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
           texts: ["- Plain bullet"],
         },
         {
-          prst: "round2DiagRect",
+          prst: "roundRect",
           x: 6.8146,
           y: 3.2541,
           w: 5.8517,
@@ -1285,7 +1285,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
           texts: ["Shift"],
         },
         {
-          prst: "round2DiagRect",
+          prst: "roundRect",
           x: 0.6667,
           y: 3.2662,
           w: 5.6498,
@@ -1318,7 +1318,7 @@ describe("comparisonCardsLayout, beforeAfterComparisonLayout, and drawing", () =
           texts: ["Core"],
         },
         {
-          prst: "round2DiagRect",
+          prst: "roundRect",
           x: 7.0165,
           y: 3.2662,
           w: 5.6498,

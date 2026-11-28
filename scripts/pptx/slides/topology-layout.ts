@@ -2,7 +2,7 @@ import type { TeamTopologySlide } from "../../../types/slide";
 import { teamTypesDrawn } from "../../../lib/people-slides";
 import { textWidth } from "../fit";
 import type { Look } from "../look";
-import { PT, TITLE, type Area, type Place, spacing } from "../stage";
+import { CORNER_SM, PT, TITLE, type Area, type Place, spacing } from "../stage";
 import type { StackItem } from "../stack";
 import { md, type Para, type BoxOpts } from "../text";
 
@@ -112,6 +112,7 @@ export function streamRows(
   const { c } = look;
   const sp = (v: number) => spacing(v, k);
   const sIn = area.w - 2 * sp(5) - 2 * bd;
+  const corner = teams.length > 1 ? { radius: CORNER_SM * k } : {};
   let sy = area.y;
   return teams.map((t) => {
     const nw = textWidth(t.name, titleO) + 0.02;
@@ -126,7 +127,11 @@ export function streamRows(
     const tx = area.x + bd + sp(5);
     const ty = sy + bd + sp(3);
     const line = beside ? Math.max(nh, rh) : nh;
-    const frame: TeamFrame = { kind: "stream", area: { x: area.x, y: sy, w: area.w, h } };
+    const frame: TeamFrame = {
+      kind: "stream",
+      area: { x: area.x, y: sy, w: area.w, h },
+      ...corner,
+    };
     const boxes: TopologyBox[] = [
       {
         text: name,
@@ -198,8 +203,13 @@ export function topologyMain(scaled: ScaledTopology, d: TeamTopologySlide, a: Ar
   const height =
     enabling.length || heights.length ? Math.max(mainH, ...enabling.map((team) => team.height)) : 0;
   let x = a.x;
+  const enablingCorner = enabling.length > 1 ? { radius: CORNER_SM * scaled.k } : {};
   const columns = enabling.map((team): TopologyBlock => {
-    const frame: TeamFrame = { kind: "enabling", area: { x, y: a.y, w: team.width, h: height } };
+    const frame: TeamFrame = {
+      kind: "enabling",
+      area: { x, y: a.y, w: team.width, h: height },
+      ...enablingCorner,
+    };
     const boxes = topologyText(team.stack, {
       x: x + scaled.bd + sp(4),
       y: a.y + (height - team.height) / 2 + scaled.bd + sp(3),
@@ -276,7 +286,7 @@ export function topologyLegend(scaled: ScaledTopology, d: TeamTopologySlide, a: 
     const ly = a.y + sp(4) + row * (legRow + sp(3));
     const frame = {
       kind: type,
-      radius: (10 / 144) * k,
+      radius: CORNER_SM * k,
       area: { x: a.x + x, y: ly + (legRow - sp(8)) / 2, w: sp(14), h: sp(8) },
     };
     const box = { text: words[type], area: { x: a.x + x + sp(17), y: ly, w: tw, h: legRow }, o };
