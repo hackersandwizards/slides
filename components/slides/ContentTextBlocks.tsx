@@ -135,7 +135,7 @@ export function TwoColumnBlock({
   ] as const;
 
   return (
-    <div className="grid grid-cols-2 gap-10">
+    <div className="grid grid-cols-2 gap-10" data-hw-repeat>
       {sides.map(({ data, style }, i) => (
         <SlideCard key={i} tone={style.card} look="line" className="card-pad-7">
           {data.title && (
@@ -162,7 +162,7 @@ export function TwoColumnBlock({
 
 export function HooksBlock({ block }: { block: Extract<ContentBlock, { type: "hooks" }> }) {
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2.5" data-hw-repeat={block.items.length > 1 ? "" : undefined}>
       {block.items.map((hook, i) => (
         <SlideCard key={i} className="flex items-baseline gap-4 text-base card-pad-3">
           <code className="hw-inline-code text-text">{hook.name}</code>

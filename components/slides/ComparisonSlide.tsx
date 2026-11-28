@@ -141,7 +141,7 @@ function VsVariant({ slide }: { slide: ComparisonSidesSlide }) {
 
   return (
     <>
-      <div className="grid w-full grid-cols-2 gap-8">
+      <div className="grid w-full grid-cols-2 gap-8" data-hw-repeat>
         {sides.map((side, i) => (
           <BlurFade key={i} delay={0.2 + i * 0.1} duration={0.6}>
             <VsSideCard side={side} active={!stepped || Math.min(activeIndex, 1) === i} />
@@ -204,7 +204,7 @@ function BeforeAfterVariant({ slide }: { slide: ComparisonSidesSlide }) {
 function SplitVariant({ slide }: { slide: ComparisonSidesSlide }) {
   return (
     <>
-      <div className="grid w-full grid-cols-2 gap-8">
+      <div className="grid w-full grid-cols-2 gap-8" data-hw-repeat>
         {[slide.left, slide.right].map((side, i) => (
           <BlurFade key={i} delay={0.2 + i * 0.1} duration={0.6}>
             <SlideCard className="h-full card-pad-8">
@@ -243,7 +243,7 @@ export function Positions({
 }) {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-12">
-      <div className="grid w-full grid-cols-2 gap-8">
+      <div className="grid w-full grid-cols-2 gap-8" data-hw-repeat>
         {[block.left, block.right].map((side, i) => (
           <SlideCard key={i} className="h-full card-pad-8">
             <p className="hw-label mb-4 [--hw-label-size:var(--text-base)]" data-tone="muted">

@@ -171,7 +171,12 @@ export function QuestionSlide({ slide }: Props) {
           </DisplayHeading>
         </BlurFade>
 
-        <div className="w-full max-w-4xl space-y-4" role="group" aria-label={headline}>
+        <div
+          className="w-full max-w-4xl space-y-4"
+          role="group"
+          aria-label={headline}
+          data-hw-repeat={options.length > 1 ? "" : undefined}
+        >
           {options.map((option, i) => (
             <PollChoice
               key={i}

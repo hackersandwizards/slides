@@ -72,7 +72,7 @@ function Elbow({
 function GridBranch({ branch, row }: { branch: DecisionBranch; row: 1 | 2 }) {
   return (
     <div
-      className={`col-start-5 ${row === 1 ? "row-start-1" : "row-start-2"} flex flex-col justify-center rounded-brand border px-6 py-5 ${decisionTeamClasses(branch.team)}`}
+      className={`col-start-5 ${row === 1 ? "row-start-1" : "row-start-2"} flex flex-col justify-center rounded-brand-sm border px-6 py-5 ${decisionTeamClasses(branch.team)}`}
     >
       <p className="card-title text-2xl leading-tight">{keepCompounds(branch.title)}</p>
       <p className="mt-2 text-xl leading-snug text-text">{keepCompounds(branch.text)}</p>
@@ -104,7 +104,7 @@ function StackedDecisionFlow({
       {[yes, no].map((branch) => (
         <div
           key={branch.label}
-          className={`rounded-brand border px-4 py-3 ${decisionTeamClasses(branch.team)}`}
+          className={`rounded-brand-sm border px-4 py-3 ${decisionTeamClasses(branch.team)}`}
         >
           <p className="hw-label [--hw-label-size:var(--text-sm)]" data-tone="muted">
             {branch.label}

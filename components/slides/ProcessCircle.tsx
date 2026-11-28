@@ -243,6 +243,7 @@ export function ProcessCircle({
     <div
       className="process-canvas relative max-md:[zoom:0.44]"
       style={{ width: `${geometry.width / 16}rem`, height: `${geometry.height / 16}rem` }}
+      data-hw-repeat={nodes.length > 1 ? "" : undefined}
     >
       <CycleArrows geometry={geometry} revealedCount={revealedCount} />
       {nodes.map((node, index) => (

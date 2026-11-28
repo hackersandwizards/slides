@@ -138,7 +138,11 @@ export function Cards({ block }: { block: CardsBlock }) {
   const { revealedCount } = useProgressiveReveal({ totalSteps: n, startFull: !block.reveal });
   const from = block.numberFrom ?? 1;
   return (
-    <div className={`grid w-full ${VISUAL_COLUMNS} ${look.gridGap}`} style={visualColumns(cols)}>
+    <div
+      className={`grid w-full ${VISUAL_COLUMNS} ${look.gridGap}`}
+      style={visualColumns(cols)}
+      data-hw-repeat={n > 1 ? "" : undefined}
+    >
       {block.items.map((item, i) => (
         <VisualCard
           key={i}

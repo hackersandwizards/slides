@@ -188,6 +188,7 @@ export function GalleryBlock({ block }: { block: Extract<ContentBlock, { type: "
   return (
     <div className="flex flex-col items-center gap-6">
       <div
+        data-hw-repeat={block.items.length > 1 ? "" : undefined}
         className={
           row
             ? // One bottom line, so the captions under pictures of different heights align; on a
@@ -241,7 +242,7 @@ export function ImageAndGridBlock({
           />
         </div>
       )}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4" data-hw-repeat={block.items.length > 1 ? "" : undefined}>
         {block.gridTitle && (
           <h2 className="hw-label mb-2 [--hw-label-size:var(--text-base)]" data-hue="purple">
             {renderMarkdown(block.gridTitle)}

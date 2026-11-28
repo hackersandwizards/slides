@@ -37,7 +37,10 @@ function LaneRow({
           {lane.label}
         </span>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div
+          className="flex flex-wrap items-center gap-3"
+          data-hw-repeat={lane.stages.length > 1 ? "" : undefined}
+        >
           {lane.stages.map((stage, stageIndex) => (
             <div key={stageIndex} className="flex items-center gap-3">
               <div
@@ -80,7 +83,7 @@ export function LanesSlide({ slide }: Props) {
             </BlurFade>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-4" data-hw-repeat={slide.lanes.length > 1 ? "" : undefined}>
             {slide.lanes.map((lane, index) => (
               <LaneRow key={index} lane={lane} primary={index === 0} delay={0.25 + index * 0.1} />
             ))}

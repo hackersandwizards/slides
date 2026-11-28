@@ -144,7 +144,10 @@ export function RoadmapSlide({ slide }: Props) {
           <SlideSubtitle delay={0.1}>{renderMarkdown(slide.subtitle)}</SlideSubtitle>
         )}
         <div className="slide-body">
-          <div className="grid w-full grid-cols-2 gap-8">
+          <div
+            className="grid w-full grid-cols-2 gap-8"
+            data-hw-repeat={parts.length > 1 ? "" : undefined}
+          >
             {parts.map((part, i) => (
               <PartCard key={i} part={part} />
             ))}

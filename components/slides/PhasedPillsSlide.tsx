@@ -105,6 +105,7 @@ function PhaseGroup({
     <div
       className={`gap-x-4 gap-y-2.5 ${styles.container}`}
       style={styles.track?.(phase.items.length)}
+      data-hw-repeat={phase.items.length > 1 ? "" : undefined}
     >
       <BlurFade delay={0.1 + phaseIndex * 0.12} duration={0.3} className={styles.heading}>
         <div

@@ -49,6 +49,7 @@ export function ProfilesSlide({ slide }: Props) {
               bullets get full lines instead of a narrow column that outgrows the slide. */}
           <div
             className={`flex w-full flex-col justify-center gap-10 md:flex-row ${slide.profiles.length === 1 ? "max-w-5xl" : ""}`}
+            data-hw-repeat={slide.profiles.length > 1 ? "" : undefined}
           >
             {slide.profiles.map((profile, index) => (
               <ProfileBiography

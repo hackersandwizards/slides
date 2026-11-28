@@ -35,7 +35,10 @@ function DiscussionVariant({ slide }: { slide: ClosingSlideType }) {
         <SlideTitle>{slide.headline ?? slide.line1 ?? WORDS[lang].discussion}</SlideTitle>
         {slide.seedQuestions && slide.seedQuestions.length > 0 && (
           <div className="slide-body">
-            <div className="w-full space-y-6">
+            <div
+              className="w-full space-y-6"
+              data-hw-repeat={slide.seedQuestions.length > 1 ? "" : undefined}
+            >
               {slide.seedQuestions.map((question, index) => (
                 <BlurFade key={index} delay={0.15 + index * 0.06} duration={0.4}>
                   <SlideCard className="card-pad-5/8">
@@ -250,7 +253,10 @@ function ContactVariant({ slide }: { slide: ClosingSlideType }) {
 
         {portraitSpeakers ? (
           <BlurFade delay={0.2} duration={0.5}>
-            <div className="mx-auto flex max-w-5xl flex-col items-stretch gap-10 md:flex-row md:gap-14">
+            <div
+              className="mx-auto flex max-w-5xl flex-col items-stretch gap-10 md:flex-row md:gap-14"
+              data-hw-repeat={portraitSpeakers.length > 1 ? "" : undefined}
+            >
               {portraitSpeakers.map((speaker, index) => (
                 <PortraitSpeaker
                   key={index}

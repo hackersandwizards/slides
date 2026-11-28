@@ -111,7 +111,10 @@ function TopologyTeamLanes({
 
       {/* A stream team's roles follow its name on one line where they fit, so a team of
           one role takes one line of height. */}
-      <div className="flex flex-1 flex-col gap-3">
+      <div
+        className="flex flex-1 flex-col gap-3"
+        data-hw-repeat={streamAligned.length > 1 ? "" : undefined}
+      >
         {streamAligned.map((team) => (
           <TopologyStreamTeam key={team.name} team={team} />
         ))}
